@@ -1,0 +1,20 @@
+{
+  "name": "eas-build-local",
+  "version": "0.0.1",
+  "description": "Tool for running EAS compatible builds on a local machine.",
+  "main": "index.js",
+  "bin": {
+    "eas-build-local": "./bin/run"
+  },
+  "scripts": {
+    "start": "tsc --watch",
+    "build": "tsc",
+    "prepublishOnly": "tsc -p tsconfig.build.json"
+  },
+  "engines": {
+    "node": ">=10"
+  },
+  "author": "Expo <support@expo.io>",
+  "bugs": "https://github.com/expo/eas-build/issues",
+  "license": "BUSL-1.1"
+}

@@ -1,0 +1,14 @@
+.vscode/
+.history/
+node_modules/
+yarn-error.log
+
+**/tsconfig.tsbuildinfo
+
+*.swp
+*.swo
+.DS_Store
+
+dist
+
+coverage
