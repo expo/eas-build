@@ -1,10 +1,11 @@
 {
   "name": "eas-build",
+  "private": "true",
   "scripts": {
     "start": "lerna bootstrap && lerna run start --parallel",
     "watch": "lerna bootstrap && lerna run watch --parallel",
     "build": "lerna bootstrap && lerna run build",
-    "lint": "eslint 'src/**/src/**/*.ts' 'database/**/*.ts'",
+    "lint": "eslint 'packages/*/src/**/*.ts'",
     "test:unit": "lerna run test:unit",
     "test:integration": "lerna run test:integration"
   },
@@ -12,6 +13,8 @@
     "node": ">=10"
   },
   "devDependencies": {
+    "@babel/core": "^7.13.14",
+    "@babel/eslint-parser": "^7.13.14",
     "@types/node": "^14.14.31",
     "eslint": "^7.20.0",
     "eslint-config-universe": "^7.0.1",

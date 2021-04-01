@@ -7,7 +7,8 @@
     "eas-build-local": "./bin/run"
   },
   "scripts": {
-    "start": "tsc --watch",
+    "start": "yarn watch",
+    "watch": "tsc --watch",
     "build": "tsc",
     "prepublishOnly": "tsc -p tsconfig.build.json"
   },
@@ -16,5 +17,26 @@
   },
   "author": "Expo <support@expo.io>",
   "bugs": "https://github.com/expo/eas-build/issues",
-  "license": "MIT"
+  "license": "MIT",
+  "dependencies": {
+    "@expo/build-tools": "^0.1.49",
+    "@expo/bunyan": "^4.0.0",
+    "@expo/eas-build-job": "^0.2.23",
+    "@expo/spawn-async": "^1.5.0",
+    "@hapi/joi": "^17.1.1",
+    "chalk": "^4.1.0",
+    "expo-cli": "^4.3.2",
+    "fs-extra": "^9.1.0",
+    "get-stdin": "^8.0.0",
+    "lodash": "^4.17.21",
+    "semver": "^7.3.5",
+    "uuid": "^8.3.2"
+  },
+  "devDependencies": {
+    "@types/fs-extra": "^9.0.9",
+    "@types/hapi__joi": "^17.1.6",
+    "@types/lodash": "^4.14.168",
+    "@types/semver": "^7.3.4",
+    "@types/uuid": "^8.3.0"
+  }
 }
