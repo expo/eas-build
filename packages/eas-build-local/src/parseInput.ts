@@ -2,7 +2,6 @@ import { Job, sanitizeJob, ArchiveSourceType } from '@expo/eas-build-job';
 import Joi from '@hapi/joi';
 import chalk from 'chalk';
 import fs from 'fs-extra';
-import getStdin from 'get-stdin';
 
 import { registerHandler } from './exit';
 
@@ -17,7 +16,7 @@ const ParamsSchema = Joi.object<Params>({
 });
 
 export async function parseInputAsync(): Promise<Params> {
-  const rawInput = await getStdin();
+  const rawInput = process.argv[2];
 
   if (!rawInput) {
     displayHelp();
@@ -25,11 +24,9 @@ export async function parseInputAsync(): Promise<Params> {
   }
   let parsedParams;
   try {
-    parsedParams = JSON.parse(rawInput);
+    parsedParams = JSON.parse(Buffer.from(rawInput, 'base64').toString('utf8'));
   } catch (err) {
-    console.error(
-      `${chalk.red('The input passed to stdin is not a valid json.')}\n-----\n${rawInput}\n-----`
-    );
+    console.error(`${chalk.red('The input passed as a argument is not base64 encoded json.')}`);
     throw err;
   }
   const params = validateParams(parsedParams);
