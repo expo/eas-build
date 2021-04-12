@@ -1,5 +1,5 @@
 {
-  "name": "eas-build-local",
+  "name": "eas-cli-local-build-plugin",
   "version": "0.0.1",
   "description": "Tool for running EAS compatible builds on a local machine.",
   "main": "index.js",
@@ -13,7 +13,7 @@
     "prepublishOnly": "tsc -p tsconfig.build.json"
   },
   "engines": {
-    "node": ">=10"
+    "node": ">=12.9.0"
   },
   "author": "Expo <support@expo.io>",
   "bugs": "https://github.com/expo/eas-build/issues",
