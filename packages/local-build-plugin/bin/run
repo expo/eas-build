@@ -4,7 +4,7 @@ function red(text) {
   return '\u001b[31m' + text + '\u001b[39m';
 }
 
-if (require('semver').gte(process.version, '12.9.0')) {
+if (!require('semver').gte(process.version, '12.9.0')) {
   console.error(red('Node.js version 12.9.0 or newer is required.'));
   process.exit(1);
 }
