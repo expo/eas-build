@@ -1,10 +1,10 @@
 {
   "name": "eas-cli-local-build-plugin",
-  "version": "0.0.1",
+  "version": "0.0.2",
   "description": "Tool for running EAS compatible builds on a local machine.",
-  "main": "index.js",
+  "main": "dist/main.js",
   "bin": {
-    "eas-build-local": "./bin/run"
+    "eas-cli-local-build-plugin": "./bin/run"
   },
   "scripts": {
     "start": "yarn watch",
