@@ -1,23 +1,29 @@
 import path from 'path';
 
-import envPaths from 'env-paths';
+import chalk from 'chalk';
 import fs from 'fs-extra';
-import { v4 as uuidv4 } from 'uuid';
 
+import config from './config';
 import logger from './logger';
 import { registerHandler } from './exit';
 
-const { temp } = envPaths('eas-build-local');
-
 export async function prepareWorkingdirAsync(): Promise<string> {
-  const workingdir = path.join(temp, uuidv4());
+  const { workingdir } = config;
   logger.info({ phase: 'SETUP_WORKINGDIR' }, `Preparing workingdir ${workingdir}`);
 
-  await fs.remove(workingdir);
+  if ((await fs.pathExists(workingdir)) && (await fs.readdir(workingdir)).length > 0) {
+    throw new Error('Workingdir is not empty.');
+  }
   await fs.mkdirp(path.join(workingdir, 'artifacts'));
   await fs.mkdirp(path.join(workingdir, 'build'));
   registerHandler(async () => {
-    await fs.remove(workingdir);
+    if (!config.skipCleanup) {
+      await fs.remove(workingdir);
+    } else {
+      console.error(
+        chalk.yellow("EAS_LOCAL_BUILD_SKIP_CLEANUP is set, working dir won't be removed.")
+      );
+    }
   });
   return workingdir;
 }
