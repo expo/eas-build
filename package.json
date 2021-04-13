@@ -6,8 +6,7 @@
     "watch": "lerna bootstrap && lerna run watch --parallel",
     "build": "lerna bootstrap && lerna run build",
     "lint": "eslint 'packages/*/src/**/*.ts'",
-    "test:unit": "lerna run test:unit",
-    "test:integration": "lerna run test:integration"
+    "test": "lerna run test"
   },
   "engines": {
     "node": ">=10"
