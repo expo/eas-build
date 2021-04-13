@@ -10,7 +10,7 @@
     "start": "yarn watch",
     "watch": "tsc --watch",
     "build": "tsc",
-    "prepublishOnly": "tsc -p tsconfig.build.json"
+    "prepack": "rm -rf dist && tsc -p tsconfig.build.json"
   },
   "engines": {
     "node": ">=12.9.0"
