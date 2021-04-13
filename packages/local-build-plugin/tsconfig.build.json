@@ -1,4 +1,4 @@
 {
   "extends": "./tsconfig.json",
-  "exclude": ["src/**/__mocks__/**/*.ts", "src/**/__unit__/**/*.ts", "src/**/__integration__/**/*.ts"]
+  "exclude": ["src/**/__mocks__/**/*.ts", "src/**/__test__/**/*.ts"]
 }
