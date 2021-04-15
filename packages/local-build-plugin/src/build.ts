@@ -26,7 +26,7 @@ export async function buildAsync(job: Job): Promise<void> {
     }
     console.log();
     console.log(chalk.green('Build successful'));
-    console.log(chalk.green(`Build results were copied to ${artifactPath}`));
+    console.log(chalk.green(`You can find the build artifacts in ${artifactPath}`));
   } catch (e) {
     console.error();
     console.error(chalk.red(`Build failed`));

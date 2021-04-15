@@ -12,7 +12,7 @@ const envArtifactsDir = process.env.EAS_LOCAL_BUILD_ARTIFACTS_DIR;
 
 if (envLoggerLevel && !['info', 'warn', 'error'].includes(envLoggerLevel)) {
   throw new Error(
-    'Invalid value for EAS_LOCAL_BUILD_LOGGER_LEVEL, one of info, warn or error is expected'
+    'Invalid value for EAS_LOCAL_BUILD_LOGGER_LEVEL, one of info, warn, or error is expected'
   );
 }
 
