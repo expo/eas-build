@@ -5,6 +5,7 @@ import omit from 'lodash/omit';
 import { LocalExpoCliEjectProvider } from './eject';
 import logger, { logBuffer } from './logger';
 import { BuildParams } from './types';
+import { prepareBuildArtifact } from './buildArtifact';
 
 export async function buildIosAsync(
   job: Ios.Job,
@@ -18,7 +19,7 @@ export async function buildIosAsync(
 
   const artifactPaths = await build(ctx);
 
-  return artifactPaths[0];
+  return await prepareBuildArtifact(ctx, artifactPaths);
 }
 
 function createBuildContext(job: Ios.Job, { env, workingdir }: BuildParams): BuildContext<Ios.Job> {

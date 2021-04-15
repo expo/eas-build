@@ -5,6 +5,8 @@ import chalk from 'chalk';
 import omit from 'lodash/omit';
 import { LogBuffer } from '@expo/build-tools';
 
+import config from './config';
+
 interface Log {
   msg: string;
   level: number;
@@ -123,7 +125,7 @@ const defaultlogger = bunyan.createLogger({
   serializers: bunyan.stdSerializers,
   streams: [
     {
-      level: 'info',
+      level: config.logger.level,
       stream: new PrettyStream(),
     },
     {
