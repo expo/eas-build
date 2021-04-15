@@ -16,6 +16,10 @@ const ParamsSchema = Joi.object<Params>({
 });
 
 export async function parseInputAsync(): Promise<Params> {
+  if (process.argv.findIndex((arg) => arg === '--version' || arg === '-v') !== -1) {
+    console.log(packageJson.version);
+    process.exit(0);
+  }
   const rawInput = process.argv[2];
 
   if (!rawInput) {
