@@ -12,7 +12,10 @@ export async function buildAsync(job: Job): Promise<void> {
   const workingdir = await prepareWorkingdirAsync();
 
   try {
-    const env = pickBy(process.env, (val?: string): val is string => !!val);
+    const env = {
+      ...pickBy(process.env, (val?: string): val is string => !!val),
+      EAS_BUILD: '1',
+    };
     let artifactPath: string | undefined;
     switch (job.platform) {
       case Platform.ANDROID: {
