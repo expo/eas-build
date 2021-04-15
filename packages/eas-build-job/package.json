@@ -8,19 +8,15 @@
   ],
   "scripts": {
     "start": "yarn watch",
-    "watch": "yarn compile --watch --preserveWatchOutput",
-    "build": "npm run clean && npm run compile",
-    "clean": "rm -rf ./dist",
-    "clean-all": "yarn clean && rm -rf node_modules",
-    "compile": "tsc -p tsconfig.build.json",
-    "prepublishOnly": "npm run build",
-    "test:unit": "./resources/jest --config jest.config.unit.js",
-    "test:unit:watch": "./resources/jest --config jest.config.unit.js --watch"
+    "watch": "tsc --watch --preserveWatchOutput",
+    "build": "tsc",
+    "prepack": "rm -rf dist && tsc -p tsconfig.build.json",
+    "test": "jest --config jest.config.js",
+    "test:watch": "jest --config jest.config.js --watch"
   },
-  "volta": {
-    "node": "14.15.1",
-    "yarn": "1.22.10"
-  },
+  "author": "Expo <support@expo.io>",
+  "bugs": "https://github.com/expo/eas-build/issues",
+  "license": "MIT",
   "devDependencies": {
     "@types/jest": "^26.0.20",
     "@types/node": "^14.14.31",
