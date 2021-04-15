@@ -1,10 +1,11 @@
 import { Job, Platform, ArchiveSourceType } from '@expo/eas-build-job';
 import pickBy from 'lodash/pickBy';
 import fs from 'fs-extra';
+import chalk from 'chalk';
 
 import { buildAndroidAsync } from './android';
+import config from './config';
 import { buildIosAsync } from './ios';
-import logger from './logger';
 import { prepareWorkingdirAsync } from './workingdir';
 
 export async function buildAsync(job: Job): Promise<void> {
@@ -12,26 +13,34 @@ export async function buildAsync(job: Job): Promise<void> {
 
   try {
     const env = pickBy(process.env, (val?: string): val is string => !!val);
-    let artifactUrl: string | undefined;
+    let artifactPath: string | undefined;
     switch (job.platform) {
       case Platform.ANDROID: {
-        artifactUrl = await buildAndroidAsync(job, { env, workingdir });
+        artifactPath = await buildAndroidAsync(job, { env, workingdir });
         break;
       }
       case Platform.IOS: {
-        artifactUrl = await buildIosAsync(job, { env, workingdir });
+        artifactPath = await buildIosAsync(job, { env, workingdir });
         break;
       }
     }
-    console.log(artifactUrl);
+    console.log();
+    console.log(chalk.green('Build successful'));
+    console.log(chalk.green(`You can find the build artifacts in ${artifactPath}`));
   } catch (e) {
-    logger.error({ phase: 'BUILD_ERROR' }, `Build failed at ${workingdir}`);
+    console.error();
+    console.error(chalk.red(`Build failed`));
     throw e;
   } finally {
-    await fs.remove(workingdir);
+    if (!config.skipCleanup) {
+      await fs.remove(workingdir);
+    } else {
+      console.error(
+        chalk.yellow("EAS_LOCAL_BUILD_SKIP_CLEANUP is set, working dir won't be removed.")
+      );
+    }
     if (job.projectArchive.type === ArchiveSourceType.PATH) {
       await fs.remove(job.projectArchive.path);
     }
   }
-  logger.info({ phase: 'BUILD_SUCCESS' }, `Build successful at ${workingdir}`);
 }
