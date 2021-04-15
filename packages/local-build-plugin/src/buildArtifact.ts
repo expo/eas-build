@@ -11,7 +11,7 @@ export async function prepareBuildArtifact(
   ctx: BuildContext<Job>,
   artifactPaths: string[]
 ): Promise<string | undefined> {
-  ctx.logger.info('Archiving artifacts');
+  ctx.logger.info({ phase: 'PREPARE_ARTIFACTS' }, 'Archiving artifacts');
   let suffix;
   let localPath;
   if (artifactPaths.length === 1 && !(await fs.lstat(artifactPaths[0])).isDirectory()) {
@@ -40,7 +40,8 @@ export async function prepareBuildArtifact(
   }
   const artifactName = `build-${formatDateForFilename(new Date())}${suffix}`;
   const destPath = path.join(config.artifactsDir, artifactName);
-  await fs.move(localPath, destPath);
+  await fs.copy(localPath, destPath);
+  ctx.logger.info({ phase: 'PREPARE_ARTIFACTS' }, `Writing artifacts to ${destPath}`);
   return destPath;
 }
 

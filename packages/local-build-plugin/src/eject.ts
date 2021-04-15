@@ -2,7 +2,7 @@ import path from 'path';
 
 import { BuildContext, EjectProvider } from '@expo/build-tools';
 import { Android, Ios } from '@expo/eas-build-job';
-import spawnAsync from '@expo/spawn-async';
+import spawnAsync from '@expo/turtle-spawn';
 import fs from 'fs-extra';
 
 type ManagedJob = Android.ManagedJob | Ios.ManagedJob;
@@ -15,7 +15,7 @@ export class LocalExpoCliEjectProvider implements EjectProvider<ManagedJob> {
 
     const spawnOptions = {
       cwd: ctx.buildDirectory,
-      stdio: ['pipe', 'inherit', 'inherit'] as ('pipe' | 'inherit')[],
+      logger: ctx.logger,
       env: ctx.env,
     };
 
