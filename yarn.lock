@@ -1160,14 +1160,14 @@
   resolved "https://registry.yarnpkg.com/@expo/apple-utils/-/apple-utils-0.0.0-alpha.17.tgz#d10cc0ef4b0f29508eaf6dd3e694b0d6edac946d"
   integrity sha512-ecpC6e3xTtMVVKWpp231L8vptoSPqwtKSmfJ8sXfMlQRtWbq8Bu1pCHR/pdAx9X4IYzygjrTa9IDAPpbGuSaMg==
 
-"@expo/build-tools@0.1.51":
-  version "0.1.51"
-  resolved "https://registry.yarnpkg.com/@expo/build-tools/-/build-tools-0.1.51.tgz#de2179cd8e42f47fb24fd75beb2c632802ffbd0f"
-  integrity sha512-cL4p6VG+F8/Osu5ySp6WhMd6z79nyewjovckVy7w2QCkndYINwPCe3+/0J90jmKYqQbSKN8fESqg2nrlpzHWlA==
+"@expo/build-tools@0.1.52":
+  version "0.1.52"
+  resolved "https://registry.yarnpkg.com/@expo/build-tools/-/build-tools-0.1.52.tgz#d75580f69a08a6794e2bda8d34612861619af76c"
+  integrity sha512-mapM6Bsi39Gl8h8p8XhSMUmu69zgugiW8xMpT5ZZ0vOgcsy/TZHz67I2c/mxLH/vJv8IJovJQYzrC68gZgQhGQ==
   dependencies:
     "@expo/config-plugins" "1.0.24"
     "@expo/downloader" "0.0.14"
-    "@expo/eas-build-job" "0.2.24"
+    "@expo/eas-build-job" "0.2.25"
     "@expo/fastlane" "0.0.22"
     "@expo/logger" "0.0.19"
     "@expo/package-manager" "^0.0.34"
