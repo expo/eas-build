@@ -1,0 +1,14 @@
+suppress_xcode_output(true)
+clean(<%- CLEAN %>)
+
+scheme("<%- SCHEME %>")
+<% if (SCHEME_BUILD_CONFIGURATION) { %>
+configuration("<%- SCHEME_BUILD_CONFIGURATION %>")
+<% } %>
+
+derived_data_path("<%- DERIVED_DATA_PATH %>")
+skip_package_ipa(true)
+skip_archive(true)
+destination("generic/platform=iOS Simulator")
+
+disable_xcpretty(true)
