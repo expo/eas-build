@@ -8,7 +8,7 @@
   },
   "scripts": {
     "start": "yarn watch",
-    "watch": "tsc --watch",
+    "watch": "tsc --watch --preserveWatchOutput",
     "build": "tsc",
     "prepack": "rm -rf dist && tsc -p tsconfig.build.json"
   },
