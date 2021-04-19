@@ -1,7 +1,21 @@
-import { mocks } from '@expo/turtle-test-utils';
+import bunyan from '@expo/bunyan';
 
-const {
-  ExpoLogger: { createLogger, LoggerLevel },
-} = mocks;
+export function createLogger(): bunyan {
+  const logger = {
+    info: () => {},
+    debug: () => {},
+    error: () => {},
+    warn: () => {},
+    child: (_fields) => logger,
+  } as bunyan;
+  return logger;
+}
 
-export { createLogger, LoggerLevel };
+export enum LoggerLevel {
+  TRACE = 'trace',
+  DEBUG = 'debug',
+  INFO = 'info',
+  WARN = 'warn',
+  ERROR = 'error',
+  FATAL = 'fatal',
+}
