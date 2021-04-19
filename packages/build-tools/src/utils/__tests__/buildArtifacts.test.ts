@@ -4,7 +4,6 @@ import fs from 'fs-extra';
 import { findBuildArtifacts } from '../buildArtifacts';
 
 jest.mock('fs');
-jest.mock('@expo/s3');
 
 describe(findBuildArtifacts, () => {
   beforeEach(async () => {
