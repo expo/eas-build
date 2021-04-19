@@ -2,10 +2,10 @@ module.exports = {
   preset: 'ts-jest',
   testEnvironment: 'node',
   rootDir: 'src',
-  testMatch: ['**/__unit__/*.test.ts'],
+  testMatch: ['**/__tests__/*.test.ts'],
   collectCoverage: true,
   coverageReporters: ['json', 'lcov'],
-  coverageDirectory: '../coverage/unit-tests/',
+  coverageDirectory: '../coverage/tests/',
   clearMocks: true,
-  setupFilesAfterEnv: ['<rootDir>/../jest/unit-setup.ts'],
+  setupFilesAfterEnv: ['<rootDir>/../jest/setup-tests.ts'],
 };

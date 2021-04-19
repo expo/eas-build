@@ -1,1 +1,0 @@
-test-secret-env.sh filter=git-crypt diff=git-crypt

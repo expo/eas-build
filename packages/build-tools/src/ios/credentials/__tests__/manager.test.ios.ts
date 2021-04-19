@@ -4,7 +4,7 @@ import { jobs } from '@expo/turtle-test-utils';
 import { createLogger } from '@expo/logger';
 
 import { BuildContext } from '../../../context';
-import { distributionCertificateValid, provisioningProfileValid } from '../__unit__/fixtures';
+import { distributionCertificateValid, provisioningProfileValid } from '../__tests__/fixtures';
 import IosCredentialsManager from '../manager';
 
 jest.setTimeout(60 * 1000);
