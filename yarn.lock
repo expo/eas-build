@@ -1160,29 +1160,6 @@
   resolved "https://registry.yarnpkg.com/@expo/apple-utils/-/apple-utils-0.0.0-alpha.17.tgz#d10cc0ef4b0f29508eaf6dd3e694b0d6edac946d"
   integrity sha512-ecpC6e3xTtMVVKWpp231L8vptoSPqwtKSmfJ8sXfMlQRtWbq8Bu1pCHR/pdAx9X4IYzygjrTa9IDAPpbGuSaMg==
 
-"@expo/build-tools@0.1.52":
-  version "0.1.52"
-  resolved "https://registry.yarnpkg.com/@expo/build-tools/-/build-tools-0.1.52.tgz#d75580f69a08a6794e2bda8d34612861619af76c"
-  integrity sha512-mapM6Bsi39Gl8h8p8XhSMUmu69zgugiW8xMpT5ZZ0vOgcsy/TZHz67I2c/mxLH/vJv8IJovJQYzrC68gZgQhGQ==
-  dependencies:
-    "@expo/config-plugins" "1.0.24"
-    "@expo/downloader" "0.0.14"
-    "@expo/eas-build-job" "0.2.25"
-    "@expo/fastlane" "0.0.22"
-    "@expo/logger" "0.0.19"
-    "@expo/package-manager" "^0.0.34"
-    "@expo/plist" "^0.0.11"
-    "@expo/template-file" "0.1.17"
-    "@expo/turtle-spawn" "0.0.19"
-    fast-glob "^3.2.5"
-    find-yarn-workspace-root "^2.0.0"
-    fs-extra "^9.0.0"
-    node-forge "^0.9.1"
-    nullthrows "^1.1.1"
-    plist "^3.0.1"
-    uuid "^3.3.3"
-    xml2js "^0.4.23"
-
 "@expo/bunyan@4.0.0", "@expo/bunyan@^4.0.0":
   version "4.0.0"
   resolved "https://registry.yarnpkg.com/@expo/bunyan/-/bunyan-4.0.0.tgz#be0c1de943c7987a9fbd309ea0b1acd605890c7b"
@@ -1332,22 +1309,6 @@
     tmp "^0.0.33"
     tslib "^1.10.0"
 
-"@expo/downloader@0.0.14":
-  version "0.0.14"
-  resolved "https://registry.yarnpkg.com/@expo/downloader/-/downloader-0.0.14.tgz#6d6638fa62e4955343f96a9a6a5a2e36af445ff0"
-  integrity sha512-IrC9NuU3FjJdd9s2tifOb2GaK6CbJ9ShbX3r03PsBmzgfZZ2w0Q/AFhH+IpTvp1uAl3RvcLz3El68PeBFSl2AA==
-  dependencies:
-    fs-extra "^9.0.0"
-    got "^11.1.4"
-
-"@expo/fastlane@0.0.22":
-  version "0.0.22"
-  resolved "https://registry.yarnpkg.com/@expo/fastlane/-/fastlane-0.0.22.tgz#d51e837b5dfa0b3f507f77d17216084ed2105021"
-  integrity sha512-hcgWcqtbVsnMAlLH+hBYmr2M4sYHTBKx6VZCHnW79AKZkEiKS0bOxYyDebVPLiM/YvEF62yFwu/YxWHkCIcwHw==
-  dependencies:
-    "@expo/logger" "0.0.19"
-    "@expo/turtle-spawn" "0.0.19"
-
 "@expo/image-utils@0.3.11":
   version "0.3.11"
   resolved "https://registry.yarnpkg.com/@expo/image-utils/-/image-utils-0.3.11.tgz#2a2ddf48af14eb0faf5b1b296b16eb6518b22d79"
@@ -1412,13 +1373,6 @@
     fs-extra "9.0.0"
     json5 "^1.0.1"
     write-file-atomic "^2.3.0"
-
-"@expo/logger@0.0.19":
-  version "0.0.19"
-  resolved "https://registry.yarnpkg.com/@expo/logger/-/logger-0.0.19.tgz#3ec88ec04dc64d5dfdd8c7c4977aeef63133e266"
-  integrity sha512-nGpQWnMzJo3Ot5/s8Uwge1iukKj91tXnSTZp/A5WyNiR37UZnJtftrU8u+4y25EvYrjT58E+usP0XXU0mHxz3Q==
-  dependencies:
-    "@expo/bunyan" "^3.0.4"
 
 "@expo/metro-config@0.1.59":
   version "0.1.59"
@@ -1513,22 +1467,6 @@
   integrity sha512-LB7jWkqrHo+5fJHNrLAFdimuSXQ2MQ4lA7SQW5bf/HbsXuV2VrT/jN/M8f/KoWt0uJMGN4k/j7Opx4AvOOxSew==
   dependencies:
     cross-spawn "^6.0.5"
-
-"@expo/template-file@0.1.17":
-  version "0.1.17"
-  resolved "https://registry.yarnpkg.com/@expo/template-file/-/template-file-0.1.17.tgz#2e89928321a1138d48825b57c24d5bb3bdb10c4d"
-  integrity sha512-3df3T+nRuqWDTSVWhG3TZ4LLGxsjVScPBvw/Bx48wviN/F66Wb5SzP5fBDKwYxgesewEAc05F1JVBc4PdIBy+A==
-  dependencies:
-    fs-extra "^9.0.0"
-    lodash "^4.17.20"
-
-"@expo/turtle-spawn@0.0.19":
-  version "0.0.19"
-  resolved "https://registry.yarnpkg.com/@expo/turtle-spawn/-/turtle-spawn-0.0.19.tgz#e219d75b51d4550c4ef274fee025a6b972603017"
-  integrity sha512-ERdSbOnNqB31tYeb6Kch+m/o2G3aYj7NtrTwYTjZ0nPhmgV+HIaHlAwyCD+asi7gcDQL5dFLk2vmEfZZLSx21w==
-  dependencies:
-    "@expo/logger" "0.0.19"
-    "@expo/spawn-async" "^1.5.0"
 
 "@expo/webpack-config@0.12.63":
   version "0.12.63"
@@ -3132,6 +3070,13 @@
     "@types/node" "*"
     "@types/responselike" "*"
 
+"@types/fs-extra@^9.0.1":
+  version "9.0.11"
+  resolved "https://registry.yarnpkg.com/@types/fs-extra/-/fs-extra-9.0.11.tgz#8cc99e103499eab9f347dbc6ca4e99fb8d2c2b87"
+  integrity sha512-mZsifGG4QeQ7hlkhO56u7zt/ycBgGxSVsFI/6lGTU34VtwkiqrrSDgw0+ygs8kFGWcXnFQWMrzF2h7TtDFNixA==
+  dependencies:
+    "@types/node" "*"
+
 "@types/fs-extra@^9.0.9":
   version "9.0.9"
   resolved "https://registry.yarnpkg.com/@types/fs-extra/-/fs-extra-9.0.9.tgz#11ed43b3f3c6b3490f1ef9bd17f58da896e2d861"
@@ -3221,7 +3166,14 @@
   dependencies:
     "@types/node" "*"
 
-"@types/lodash@^4.14.168":
+"@types/lodash.template@^4.4.6":
+  version "4.5.0"
+  resolved "https://registry.yarnpkg.com/@types/lodash.template/-/lodash.template-4.5.0.tgz#277654af717ed37ce2687c69f8f221c550276b7a"
+  integrity sha512-4LgHxK16IPbGR7TmXpPvNT7iNGsLCdQY6Rc0mi1a/JECt8et/D4hx6NMVAJej/d932sj1mJsg0QYHKL189O0Qw==
+  dependencies:
+    "@types/lodash" "*"
+
+"@types/lodash@*", "@types/lodash@^4.14.167", "@types/lodash@^4.14.168":
   version "4.14.168"
   resolved "https://registry.yarnpkg.com/@types/lodash/-/lodash-4.14.168.tgz#fe24632e79b7ade3f132891afff86caa5e5ce008"
   integrity sha512-oVfRvqHV/V6D1yifJbVRU3TMp8OT6o6BG+U9MkwuJ3U8/CsDHvalRpsxBqivn71ztOFZBTfJMvETbqHiaNSj7Q==
@@ -3243,6 +3195,13 @@
   dependencies:
     "@types/node" "*"
 
+"@types/node-forge@^0.8.6":
+  version "0.8.7"
+  resolved "https://registry.yarnpkg.com/@types/node-forge/-/node-forge-0.8.7.tgz#5a32cbe05fecb0a34ac5550e7b54acaac0056b08"
+  integrity sha512-xDtriZLWYx21QvMeTUD7EYQ+kPUxsKzNK+3Wl037RsRotR57MwrzTv6jy2vOJtWQV7S7jMI/hqMxunEqdLHK8Q==
+  dependencies:
+    "@types/node" "*"
+
 "@types/node@*", "@types/node@>= 8", "@types/node@^14.14.31":
   version "14.14.37"
   resolved "https://registry.yarnpkg.com/@types/node/-/node-14.14.37.tgz#a3dd8da4eb84a996c36e331df98d82abd76b516e"
@@ -3257,6 +3216,14 @@
   version "2.4.0"
   resolved "https://registry.yarnpkg.com/@types/normalize-package-data/-/normalize-package-data-2.4.0.tgz#e486d0d97396d79beedd0a6e33f4534ff6b4973e"
   integrity sha512-f5j5b/Gf71L+dbqxIpQ4Z2WlmI/mPJ0fOkGGmFgtb6sAu97EPczzbS3/tJKxmcYDj55OX6ssqwDAWOHIYDRDGA==
+
+"@types/plist@^3.0.2":
+  version "3.0.2"
+  resolved "https://registry.yarnpkg.com/@types/plist/-/plist-3.0.2.tgz#61b3727bba0f5c462fe333542534a0c3e19ccb01"
+  integrity sha512-ULqvZNGMv0zRFvqn8/4LSPtnmN4MfhlPNtJCTpKuIIxGVGZ2rYWzFXrvEBoh9CVyqSE7D6YFRJ1hydLHI6kbWw==
+  dependencies:
+    "@types/node" "*"
+    xmlbuilder ">=11.0.1"
 
 "@types/prettier@^2.0.0":
   version "2.2.3"
@@ -3320,6 +3287,11 @@
   dependencies:
     source-map "^0.6.1"
 
+"@types/uuid@^3.4.5":
+  version "3.4.9"
+  resolved "https://registry.yarnpkg.com/@types/uuid/-/uuid-3.4.9.tgz#fcf01997bbc9f7c09ae5f91383af076d466594e1"
+  integrity sha512-XDwyIlt/47l2kWLTzw/mtrpLdB+GPSskR2n/PIcPn+VYhVO77rGhRncIR5GPU0KRzXuqkDO+J5qqrG0Y8P6jzQ==
+
 "@types/uuid@^8.3.0":
   version "8.3.0"
   resolved "https://registry.yarnpkg.com/@types/uuid/-/uuid-8.3.0.tgz#215c231dff736d5ba92410e6d602050cce7e273f"
@@ -3345,6 +3317,13 @@
     "@types/uglify-js" "*"
     "@types/webpack-sources" "*"
     source-map "^0.6.0"
+
+"@types/xml2js@^0.4.5":
+  version "0.4.8"
+  resolved "https://registry.yarnpkg.com/@types/xml2js/-/xml2js-0.4.8.tgz#84c120c864a5976d0b5cf2f930a75d850fc2b03a"
+  integrity sha512-EyvT83ezOdec7BhDaEcsklWy7RSIdi6CNe95tmOAK0yx/Lm30C9K75snT3fYayK59ApC2oyW+rcHErdG05FHJA==
+  dependencies:
+    "@types/node" "*"
 
 "@types/yargs-parser@*":
   version "20.2.0"
@@ -7582,6 +7561,11 @@ fs-minipass@^2.0.0, fs-minipass@^2.1.0:
   dependencies:
     minipass "^3.0.0"
 
+fs-monkey@1.0.3:
+  version "1.0.3"
+  resolved "https://registry.yarnpkg.com/fs-monkey/-/fs-monkey-1.0.3.tgz#ae3ac92d53bb328efe0e9a1d9541f6ad8d48e2d3"
+  integrity sha512-cybjIfiiE+pTWicSCLFHSrXZ6EilF30oh91FDP9S2B051prEa7QWfrVTQm10/dDpswBDXZugPa1Ogu8Yh+HV0Q==
+
 fs-write-stream-atomic@^1.0.8:
   version "1.0.10"
   resolved "https://registry.yarnpkg.com/fs-write-stream-atomic/-/fs-write-stream-atomic-1.0.10.tgz#b47df53493ef911df75731e70a9ded0189db40c9"
@@ -10311,6 +10295,13 @@ media-typer@0.3.0:
   version "0.3.0"
   resolved "https://registry.yarnpkg.com/media-typer/-/media-typer-0.3.0.tgz#8710d7af0aa626f8fffa1ce00168545263255748"
   integrity sha1-hxDXrwqmJvj/+hzgAWhUUmMlV0g=
+
+memfs@^3.2.0:
+  version "3.2.2"
+  resolved "https://registry.yarnpkg.com/memfs/-/memfs-3.2.2.tgz#5de461389d596e3f23d48bb7c2afb6161f4df40e"
+  integrity sha512-RE0CwmIM3CEvpcdK3rZ19BC4E6hv9kADkMN5rPduRak58cNArWLi/9jFLsa4rhsjfVxMP3v0jO7FHXq7SvFY5Q==
+  dependencies:
+    fs-monkey "1.0.3"
 
 memory-cache@~0.2.0:
   version "0.2.0"
@@ -16216,6 +16207,11 @@ xml2js@^0.4.23, xml2js@^0.4.5:
   dependencies:
     sax ">=0.6.0"
     xmlbuilder "~11.0.0"
+
+xmlbuilder@>=11.0.1:
+  version "15.1.1"
+  resolved "https://registry.yarnpkg.com/xmlbuilder/-/xmlbuilder-15.1.1.tgz#9dcdce49eea66d8d10b42cae94a79c3c8d0c2ec5"
+  integrity sha512-yMqGBqtXyeN1e3TGYvgNgDVZ3j84W4cwkOXQswghol6APgZWaff9lnbvN7MHYJOiXsvGPXtjTYJEiC9J2wv9Eg==
 
 xmlbuilder@^14.0.0:
   version "14.0.0"
