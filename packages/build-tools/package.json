@@ -1,6 +1,6 @@
 {
   "name": "@expo/build-tools",
-  "version": "0.1.52",
+  "version": "0.1.53",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "files": [
@@ -20,14 +20,14 @@
   "license": "BUSL-1.1",
   "dependencies": {
     "@expo/config-plugins": "1.0.27",
-    "@expo/downloader": "0.0.14",
-    "@expo/eas-build-job": "0.2.25",
-    "@expo/fastlane": "0.0.22",
-    "@expo/logger": "0.0.19",
+    "@expo/downloader": "0.0.15",
+    "@expo/eas-build-job": "0.2.26",
+    "@expo/fastlane": "0.0.23",
+    "@expo/logger": "0.0.20",
     "@expo/package-manager": "^0.0.34",
     "@expo/plist": "^0.0.11",
-    "@expo/template-file": "0.1.17",
-    "@expo/turtle-spawn": "0.0.19",
+    "@expo/template-file": "0.1.18",
+    "@expo/turtle-spawn": "0.0.20",
     "fast-glob": "^3.2.5",
     "find-yarn-workspace-root": "^2.0.0",
     "fs-extra": "^9.0.0",
