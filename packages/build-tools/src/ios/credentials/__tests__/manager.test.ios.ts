@@ -1,0 +1,84 @@
+import assert from 'assert';
+
+import { createLogger } from '@expo/logger';
+import { Ios, Workflow, ArchiveSourceType, Platform } from '@expo/eas-build-job';
+
+import { BuildContext } from '../../../context';
+import { distributionCertificateValid, provisioningProfileValid } from '../__tests__/fixtures';
+import IosCredentialsManager from '../manager';
+
+jest.setTimeout(60 * 1000);
+
+const mockLogger = createLogger({ name: 'mock-logger' });
+
+const iosCredentials: Ios.BuildCredentials = {
+  testapp: {
+    provisioningProfileBase64: '',
+    distributionCertificate: {
+      dataBase64: '',
+      password: '',
+    },
+  },
+};
+
+function createTestIosJob({
+  buildCredentials = iosCredentials,
+}: {
+  buildCredentials?: Ios.BuildCredentials;
+} = {}): Ios.Job {
+  return {
+    platform: Platform.IOS,
+    type: Workflow.GENERIC,
+    projectArchive: {
+      type: ArchiveSourceType.URL,
+      url: 'https://turtle-v2-test-fixtures.s3.us-east-2.amazonaws.com/project.tar.gz',
+    },
+    scheme: 'turtlebareproj',
+    schemeBuildConfiguration: Ios.SchemeBuildConfiguration.RELEASE,
+    artifactPath: './ios/build/*.ipa',
+    projectRootDirectory: '.',
+    cache: {
+      disabled: false,
+      cacheDefaultPaths: true,
+      customPaths: [],
+    },
+    secrets: {
+      buildCredentials,
+    },
+  };
+}
+
+describe(IosCredentialsManager, () => {
+  describe('.prepare', () => {
+    it('should prepare credentials for the build process', async () => {
+      const targetName = 'testapp';
+      const job = createTestIosJob({
+        buildCredentials: {
+          [targetName]: {
+            distributionCertificate: distributionCertificateValid,
+            provisioningProfileBase64: provisioningProfileValid.dataBase64,
+          },
+        },
+      });
+      const ctx = new BuildContext(job, {
+        workingdir: '/workingdir',
+        logBuffer: { getLogs: () => [], getPhaseLogs: () => [] },
+        logger: mockLogger,
+        env: {},
+      });
+      const manager = new IosCredentialsManager(ctx);
+      const credentials = await manager.prepare();
+      await manager.cleanUp();
+
+      assert(credentials, 'credentials must be defined');
+
+      expect(credentials.teamId).toBe('QL76XYH73P');
+      expect(credentials.distributionType).toBe('app-store');
+
+      const profile = credentials.targetProvisioningProfiles[targetName];
+      expect(profile.bundleIdentifier).toBe('org.reactjs.native.example.testapp.turtlev2');
+      expect(profile.distributionType).toBe('app-store');
+      expect(profile.teamId).toBe('QL76XYH73P');
+    });
+  });
+});
