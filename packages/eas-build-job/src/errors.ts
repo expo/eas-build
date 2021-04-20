@@ -9,6 +9,8 @@ export enum ErrorCode {
   INVALID_KEYSTORE_ALIAS_ERROR = 'EAS_BUILD_INVALID_KEYSTORE_ALIAS_ERROR',
   MISSING_GOOGLE_SERVICES_JSON_ERROR = 'EAS_BUILD_MISSING_GOOGLE_SERVICES_JSON_ERROR',
   MISSING_GOOGLE_SERVICES_PLIST_ERROR = 'EAS_BUILD_MISSING_GOOGLE_SERVICES_PLIST_ERROR',
+  INCOMPATIBLE_PODS_MANAGED_WORKFLOW_ERROR = 'EAS_BUILD_INCOMPATIBLE_PODS_MANAGED_WORKFLOW_ERROR',
+  INCOMPATIBLE_PODS_GENERIC_WORKFLOW_ERROR = 'EAS_BUILD_INCOMPATIBLE_PODS_GENERIC_WORKFLOW_ERROR',
   UNKNOWN_FASTLANE_ERROR = 'EAS_BUILD_UNKNOWN_FASTLANE_ERROR',
   UNKNOWN_GRADLE_ERROR = 'EAS_BUILD_UNKNOWN_GRADLE_ERROR',
 }
@@ -100,6 +102,40 @@ export class UnknownFastlaneError extends UserError {
   errorCode = ErrorCode.UNKNOWN_FASTLANE_ERROR;
   message = `Fastlane build failed with unknown error. Please refer to the "Run fastlane" and "Xcode Logs" phases.
 Fastlane errors in most cases are not printed at the end of the output, so you may not find any useful information in the last lines of output when looking for an error message.`;
+}
+
+export class IncompatiblePodsManagedWorkflowError extends UserError {
+  errorCode = ErrorCode.INCOMPATIBLE_PODS_MANAGED_WORKFLOW_ERROR;
+
+  constructor(usingDefaultCacheConfig: boolean) {
+    super();
+    this.message = `Compatible version of some pods could not be resolved.
+You are seeing this error because either:
+  - Versions in the Podfile.lock cached by EAS do not match required values for some of the libraries, it can be triggered when upgrading Expo SDK or any other library with native code. To fix that ${
+    usingDefaultCacheConfig
+      ? 'add "cache.key" field (it can be set to any value) in eas.json to invalidate the cache.'
+      : 'update value of "cache.key" field in the eas.json to invalidate the cache.'
+  }
+  - Some of your npm packages have native code that depend on different versions of the same pod. Please see logs for more info.
+`;
+  }
+}
+
+export class IncompatiblePodsGenericWorkflowError extends UserError {
+  errorCode = ErrorCode.INCOMPATIBLE_PODS_GENERIC_WORKFLOW_ERROR;
+
+  constructor(usingDefaultCacheConfig: boolean) {
+    super();
+    this.message = `Compatible version of some pods could not be resolved.
+You are seeing this error because either:
+  - Versions in the Podfile.lock cached by EAS do not match required values in podspecs of some of the libraries. To fix that ${
+    usingDefaultCacheConfig
+      ? 'add "cache.key" field (it can be set to any value) in eas.json to invalidate the cache.'
+      : 'update value of "cache.key" field in the eas.json to invalidate the cache.'
+  }
+  - Some of the pods used in your project depend on different versions of the same pod. Please see logs for more info.
+`;
+  }
 }
 
 export class UnknownGradleError extends UserError {

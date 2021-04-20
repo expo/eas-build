@@ -68,11 +68,10 @@ export class BuildContext<TJob extends Job> {
       if (err instanceof errors.UserError) {
         userError = err;
       } else {
-        const detectedError = detectUserError(
-          this.logBuffer.getPhaseLogs(buildPhase),
-          this.job.platform,
-          buildPhase
-        );
+        const detectedError = detectUserError(this.logBuffer.getPhaseLogs(buildPhase), {
+          job: this.job,
+          phase: buildPhase,
+        });
         if (detectedError) {
           detectedError.innerError = err;
           userError = detectedError;

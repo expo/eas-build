@@ -1,10 +1,18 @@
-import { errors, Platform, BuildPhase } from '@expo/eas-build-job';
+import { Job, errors, Platform, BuildPhase, Workflow } from '@expo/eas-build-job';
+
+interface ErrorContext {
+  phase: BuildPhase;
+  job: Job;
+}
 
 interface ErrorHandler {
   regexp: RegExp;
   platform?: Platform;
   phase?: BuildPhase;
-  createError: (matchResult: RegExpMatchArray) => errors.UserError | undefined;
+  createError: (
+    matchResult: RegExpMatchArray,
+    errCtx: ErrorContext
+  ) => errors.UserError | undefined;
 }
 
 const errorHandlers: ErrorHandler[] = [
@@ -70,6 +78,28 @@ const errorHandlers: ErrorHandler[] = [
     },
   },
   {
+    platform: Platform.IOS,
+    phase: BuildPhase.INSTALL_PODS,
+    // example log:
+    // [!] CocoaPods could not find compatible versions for pod "Firebase/Core":
+    //   In snapshot (Podfile.lock):
+    //     Firebase/Core (= 6.14.0)
+    //   In Podfile:
+    //     EXFirebaseCore (from `../node_modules/expo-firebase-core/ios`) was resolved to 3.0.0, which depends on
+    //       Firebase/Core (= 7.7.0)
+    // You have either:
+    //  * out-of-date source repos which you can update with `pod repo update` or with `pod install --repo-update`.
+    //  * changed the constraints of dependency `Firebase/Core` inside your development pod `EXFirebaseCore`.
+    //    You should run `pod update Firebase/Core` to apply changes you've made.
+    regexp: /CocoaPods could not find compatible versions for pod /,
+    createError: (_, { job }) => {
+      const usingDefaultCacheConfig = job.cache.key === '' || !job.cache.key;
+      return job.type === Workflow.MANAGED
+        ? new errors.IncompatiblePodsManagedWorkflowError(usingDefaultCacheConfig)
+        : new errors.IncompatiblePodsGenericWorkflowError(usingDefaultCacheConfig);
+    },
+  },
+  {
     platform: Platform.ANDROID,
     phase: BuildPhase.RUN_GRADLEW,
     regexp: /.*/,
@@ -85,9 +115,9 @@ const errorHandlers: ErrorHandler[] = [
 
 export function detectUserError(
   logLines: string[],
-  platform: Platform,
-  phase: BuildPhase
+  { job, phase }: ErrorContext
 ): errors.UserError | undefined {
+  const { platform } = job;
   const logs = logLines.join('\n');
   const handlers = errorHandlers
     .filter((handler) => handler.platform === platform || !handler.platform)
@@ -95,7 +125,7 @@ export function detectUserError(
   for (const handler of handlers) {
     const match = logs.match(handler.regexp);
     if (match) {
-      return handler.createError(match);
+      return handler.createError(match, { job, phase });
     }
   }
   return undefined;
