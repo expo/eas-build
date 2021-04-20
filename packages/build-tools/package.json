@@ -19,7 +19,7 @@
   "bugs": "https://github.com/expo/eas-build/issues",
   "license": "BUSL-1.1",
   "dependencies": {
-    "@expo/config-plugins": "1.0.24",
+    "@expo/config-plugins": "1.0.27",
     "@expo/downloader": "0.0.14",
     "@expo/eas-build-job": "0.2.25",
     "@expo/fastlane": "0.0.22",
