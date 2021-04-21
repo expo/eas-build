@@ -71,6 +71,11 @@ export type Metadata = {
    * Git commit hash (e.g. aab03fbdabb6e536ea78b28df91575ad488f5f21)
    */
   gitCommitHash?: string;
+
+  /**
+   * Username of the initiating user
+   */
+  username?: string;
 };
 
 export const MetadataSchema = Joi.object({
@@ -86,4 +91,5 @@ export const MetadataSchema = Joi.object({
   appIdentifier: Joi.string(),
   buildProfile: Joi.string(),
   gitCommitHash: Joi.string().length(40).hex(),
+  username: Joi.string(),
 });
