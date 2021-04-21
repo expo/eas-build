@@ -51,6 +51,7 @@ export const EnvSchema = Joi.object().pattern(Joi.string(), Joi.string());
 
 export interface Cache {
   disabled: boolean;
+  clear: boolean;
   key?: string;
   cacheDefaultPaths: boolean;
   customPaths: string[];
@@ -58,6 +59,7 @@ export interface Cache {
 
 export const CacheSchema = Joi.object({
   disabled: Joi.boolean().default(false),
+  clear: Joi.boolean().default(false),
   key: Joi.string().allow('').max(128),
   cacheDefaultPaths: Joi.boolean().default(true),
   customPaths: Joi.array().items(Joi.string()).default([]),

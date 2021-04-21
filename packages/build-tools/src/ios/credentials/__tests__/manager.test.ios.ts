@@ -38,6 +38,7 @@ function createTestIosJob({
     artifactPath: './ios/build/*.ipa',
     projectRootDirectory: '.',
     cache: {
+      clear: false,
       disabled: false,
       cacheDefaultPaths: true,
       customPaths: [],
