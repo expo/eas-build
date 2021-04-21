@@ -12,6 +12,7 @@ describe('MetadataSchema', () => {
       gitCommitHash: '752e99d2b8fde1bf07ebb8af1b4a3c26a6703943',
       trackingContext: {},
       workflow: 'generic',
+      username: 'notdominik',
     };
     const { value, error } = MetadataSchema.validate(metadata, {
       stripUnknown: true,
@@ -32,6 +33,7 @@ describe('MetadataSchema', () => {
       gitCommitHash: 'inv4lid-h@sh',
       trackingContext: {},
       workflow: 'generic',
+      username: 'notdominik',
     };
     const { error } = MetadataSchema.validate(metadata, {
       stripUnknown: true,
