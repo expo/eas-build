@@ -14,6 +14,7 @@ export async function buildAsync(job: Job): Promise<void> {
   try {
     const env = {
       ...pickBy(process.env, (val?: string): val is string => !!val),
+      ...job.builderEnvironment?.env,
       EAS_BUILD: '1',
     };
     let artifactPath: string | undefined;
