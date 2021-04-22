@@ -9,6 +9,8 @@ import { provisioningProfile } from './fixtures';
 
 const mockLogger = createLogger({ name: 'mock-logger' });
 
+jest.setTimeout(60 * 1000);
+
 describe('ProvisioningProfile class', () => {
   describe('verifyCertificate method', () => {
     let ctx: BuildContext<Ios.Job>;
