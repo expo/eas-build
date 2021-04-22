@@ -8,7 +8,7 @@ import fs from 'fs-extra';
 import { BuildContext } from '../../../context';
 import Keychain from '../keychain';
 
-import { distributionCertificateValid } from './fixtures';
+import { distributionCertificate } from './fixtures';
 
 const mockLogger = createLogger({ name: 'mock-logger' });
 
@@ -24,7 +24,7 @@ describe('Keychain class', () => {
     beforeAll(async () => {
       await fs.writeFile(
         certificatePath,
-        Buffer.from(distributionCertificateValid.dataBase64, 'base64')
+        Buffer.from(distributionCertificate.dataBase64, 'base64')
       );
     });
 
@@ -50,18 +50,18 @@ describe('Keychain class', () => {
     it("should throw an error if the certificate hasn't been imported", async () => {
       await expect(
         keychain.ensureCertificateImported(
-          distributionCertificateValid.teamId,
-          distributionCertificateValid.fingerprint
+          distributionCertificate.teamId,
+          distributionCertificate.fingerprint
         )
       ).rejects.toThrowError(/hasn't been imported successfully/);
     });
 
     it("shouldn't throw any error if the certificate has been imported successfully", async () => {
-      await keychain.importCertificate(certificatePath, distributionCertificateValid.password);
+      await keychain.importCertificate(certificatePath, distributionCertificate.password);
       await expect(
         keychain.ensureCertificateImported(
-          distributionCertificateValid.teamId,
-          distributionCertificateValid.fingerprint
+          distributionCertificate.teamId,
+          distributionCertificate.fingerprint
         )
       ).resolves.not.toThrow();
     });
