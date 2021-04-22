@@ -4,7 +4,7 @@ import { createLogger } from '@expo/logger';
 import { Ios, Workflow, ArchiveSourceType, Platform } from '@expo/eas-build-job';
 
 import { BuildContext } from '../../../context';
-import { distributionCertificateValid, provisioningProfileValid } from '../__tests__/fixtures';
+import { distributionCertificate, provisioningProfile } from '../__tests__/fixtures';
 import IosCredentialsManager from '../manager';
 
 jest.setTimeout(60 * 1000);
@@ -56,8 +56,8 @@ describe(IosCredentialsManager, () => {
       const job = createTestIosJob({
         buildCredentials: {
           [targetName]: {
-            distributionCertificate: distributionCertificateValid,
-            provisioningProfileBase64: provisioningProfileValid.dataBase64,
+            distributionCertificate,
+            provisioningProfileBase64: provisioningProfile.dataBase64,
           },
         },
       });
@@ -77,7 +77,7 @@ describe(IosCredentialsManager, () => {
       expect(credentials.distributionType).toBe('app-store');
 
       const profile = credentials.targetProvisioningProfiles[targetName];
-      expect(profile.bundleIdentifier).toBe('org.reactjs.native.example.testapp.turtlev2');
+      expect(profile.bundleIdentifier).toBe('org.reactjs.native.example.testapp.turtlev2.test');
       expect(profile.distributionType).toBe('app-store');
       expect(profile.teamId).toBe('QL76XYH73P');
     });
