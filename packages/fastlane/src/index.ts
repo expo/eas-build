@@ -22,7 +22,6 @@ async function runFastlane(
     FASTLANE_SKIP_UPDATE_CHECK: '1',
     SKIP_SLOW_FASTLANE_WARNING: 'true',
     FASTLANE_HIDE_TIMESTAMP: 'true',
-    CI: '1',
     LC_ALL: 'en_US.UTF-8',
     ...envs,
   };
