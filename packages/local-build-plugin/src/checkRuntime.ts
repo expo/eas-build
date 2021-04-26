@@ -41,7 +41,7 @@ const validators: Validator[] = [
             : versionFromJob;
           if (sanitizedVersion !== sanitizedVersionFromJob) {
             warn(
-              'Node.js version in your eas.json does not match the Node.js currently installed in your system.'
+              'Node.js version in your eas.json does not match the Node.js currently installed in your system'
             );
           }
         }
@@ -58,7 +58,7 @@ const validators: Validator[] = [
         const versionFromJob = job.builderEnvironment?.yarn;
         if (versionFromJob && versionFromJob !== version) {
           warn(
-            'Yarn version in your eas.json does not match the yarn currently installed in your system.'
+            'Yarn version in your eas.json does not match the yarn currently installed in your system'
           );
         }
       } catch (err) {
@@ -109,7 +109,7 @@ const validators: Validator[] = [
         const versionFromJob = job.platform === Platform.IOS && job.builderEnvironment?.cocoapods;
         if (versionFromJob && versionFromJob !== version) {
           warn(
-            'Cocoapods version in your eas.json does not match the version currently installed in your system.'
+            'Cocoapods version in your eas.json does not match the version currently installed in your system'
           );
         }
       } catch (err) {
