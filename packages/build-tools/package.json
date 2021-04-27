@@ -1,6 +1,6 @@
 {
   "name": "@expo/build-tools",
-  "version": "0.1.55",
+  "version": "0.1.56",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "files": [
@@ -21,8 +21,8 @@
   "dependencies": {
     "@expo/config-plugins": "1.0.28",
     "@expo/downloader": "0.0.15",
-    "@expo/eas-build-job": "0.2.28",
-    "@expo/fastlane": "0.0.23",
+    "@expo/eas-build-job": "0.2.29",
+    "@expo/fastlane": "0.0.24",
     "@expo/logger": "0.0.20",
     "@expo/package-manager": "^0.0.34",
     "@expo/plist": "^0.0.11",
