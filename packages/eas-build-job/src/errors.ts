@@ -11,6 +11,7 @@ export enum ErrorCode {
   MISSING_GOOGLE_SERVICES_PLIST_ERROR = 'EAS_BUILD_MISSING_GOOGLE_SERVICES_PLIST_ERROR',
   INCOMPATIBLE_PODS_MANAGED_WORKFLOW_ERROR = 'EAS_BUILD_INCOMPATIBLE_PODS_MANAGED_WORKFLOW_ERROR',
   INCOMPATIBLE_PODS_GENERIC_WORKFLOW_ERROR = 'EAS_BUILD_INCOMPATIBLE_PODS_GENERIC_WORKFLOW_ERROR',
+  YARN_LOCK_CHECKSUM_ERROR = 'EAS_BUILD_YARN_LOCK_CHECKSUM_ERROR',
   UNKNOWN_FASTLANE_ERROR = 'EAS_BUILD_UNKNOWN_FASTLANE_ERROR',
   UNKNOWN_GRADLE_ERROR = 'EAS_BUILD_UNKNOWN_GRADLE_ERROR',
 }
@@ -135,6 +136,18 @@ You are seeing this error because either:
   }
   - Some of the pods used in your project depend on different versions of the same pod. Please see logs for more info.
 `;
+  }
+}
+
+export class YarnLockChecksumError extends UserError {
+  errorCode = ErrorCode.YARN_LOCK_CHECKSUM_ERROR;
+
+  constructor(packageName: string) {
+    super();
+    this.message = `Checksum for package "${packageName}" does not match value in registry. To fix that:
+- run "yarn cache clean"
+- remove yarn.lock (or only the section for that package)
+- run "yarn install --force"`;
   }
 }
 
