@@ -100,6 +100,18 @@ const errorHandlers: ErrorHandler[] = [
     },
   },
   {
+    phase: BuildPhase.INSTALL_DEPENDENCIES,
+    // example log:
+    // [stderr] error https://github.com/expo/react-native/archive/sdk-41.0.0.tar.gz: Integrity check failed for "react-native" (computed integrity doesn't match our records, got "sha512-3jHI2YufrJi7eIABRf/DN/I2yOkmIZ0vAyezTz+PAUJiEs4v//5LLojWEU+W53AZsnuaEMcl/4fVy4bd+OuUbA== sha1-o9QuQTXIkc8VozXPaZIullB9a40=")
+    regexp: /Integrity check failed for "(.*)" \(computed integrity doesn't match our records, got/,
+    createError: (matchResult: RegExpMatchArray) => {
+      if (matchResult.length >= 2) {
+        return new errors.YarnLockChecksumError(matchResult[1]);
+      }
+      return undefined;
+    },
+  },
+  {
     platform: Platform.ANDROID,
     phase: BuildPhase.RUN_GRADLEW,
     regexp: /.*/,
