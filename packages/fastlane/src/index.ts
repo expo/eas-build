@@ -23,10 +23,10 @@ async function runFastlane(
     SKIP_SLOW_FASTLANE_WARNING: 'true',
     FASTLANE_HIDE_TIMESTAMP: 'true',
     LC_ALL: 'en_US.UTF-8',
-    ...envs,
+    ...(envs ?? process.env),
   };
   return await spawn('fastlane', fastlaneArgs, {
-    env: { ...process.env, ...fastlaneEnvVars },
+    env: fastlaneEnvVars,
     logger,
     cwd,
   });
