@@ -146,7 +146,7 @@ export class YarnLockChecksumError extends UserError {
     super();
     this.message = `Checksum for package "${packageName}" does not match value in registry. To fix that:
 - run "yarn cache clean"
-- remove section of yarn.lock for that package (or entire yarn.lock)
+- remove yarn.lock (or only the section for that package)
 - run "yarn install --force"`;
   }
 }
