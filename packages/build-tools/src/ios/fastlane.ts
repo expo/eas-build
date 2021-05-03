@@ -14,15 +14,15 @@ export async function runFastlaneGym<TJob extends Ios.Job>(
   ctx: BuildContext<TJob>,
   {
     scheme,
-    schemeBuildConfiguration,
+    buildConfiguration,
     credentials,
   }: {
     scheme: string;
-    schemeBuildConfiguration?: Ios.SchemeBuildConfiguration;
+    buildConfiguration?: string;
     credentials: Credentials | null;
   }
 ): Promise<void> {
-  await ensureGymfileExists(ctx, { scheme, schemeBuildConfiguration, credentials });
+  await ensureGymfileExists(ctx, { scheme, buildConfiguration, credentials });
   await fastlane(['gym'], {
     cwd: path.join(ctx.reactNativeProjectDirectory, 'ios'),
     logger: ctx.logger,
@@ -34,11 +34,11 @@ async function ensureGymfileExists<TJob extends Ios.Job>(
   ctx: BuildContext<TJob>,
   {
     scheme,
-    schemeBuildConfiguration,
+    buildConfiguration,
     credentials,
   }: {
     scheme: string;
-    schemeBuildConfiguration?: Ios.SchemeBuildConfiguration;
+    buildConfiguration?: string;
     credentials: Credentials | null;
   }
 ): Promise<void> {
@@ -54,7 +54,7 @@ async function ensureGymfileExists<TJob extends Ios.Job>(
     await createGymfileForSimulatorBuild({
       outputFile: gymfilePath,
       scheme,
-      schemeBuildConfiguration: schemeBuildConfiguration ?? Ios.SchemeBuildConfiguration.RELEASE,
+      buildConfiguration: buildConfiguration ?? 'release',
       derivedDataPath: './build',
       clean: false,
     });
@@ -63,7 +63,7 @@ async function ensureGymfileExists<TJob extends Ios.Job>(
       outputFile: gymfilePath,
       credentials: nullthrows(credentials, 'credentials must exist for non-simulator builds'),
       scheme,
-      schemeBuildConfiguration,
+      buildConfiguration,
       outputDirectory: './build',
       clean: false,
     });

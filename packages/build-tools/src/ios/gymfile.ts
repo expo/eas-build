@@ -1,7 +1,6 @@
 import path from 'path';
 
 import templateFile from '@expo/template-file';
-import { Ios } from '@expo/eas-build-job';
 
 import { Credentials } from './credentials/manager';
 
@@ -15,7 +14,7 @@ interface ArchiveBuildOptions {
   outputFile: string;
   credentials: Credentials;
   scheme: string;
-  schemeBuildConfiguration?: Ios.SchemeBuildConfiguration;
+  buildConfiguration?: string;
   outputDirectory: string;
   clean: boolean;
 }
@@ -23,7 +22,7 @@ interface ArchiveBuildOptions {
 interface SimulatorBuildOptions {
   outputFile: string;
   scheme: string;
-  schemeBuildConfiguration?: Ios.SchemeBuildConfiguration;
+  buildConfiguration?: string;
   derivedDataPath: string;
   clean: boolean;
 }
@@ -33,7 +32,7 @@ export async function createGymfileForArchiveBuild({
   clean,
   credentials,
   scheme,
-  schemeBuildConfiguration,
+  buildConfiguration,
   outputDirectory,
 }: ArchiveBuildOptions): Promise<void> {
   const PROFILES = [];
@@ -52,7 +51,7 @@ export async function createGymfileForArchiveBuild({
     vars: {
       KEYCHAIN_PATH: credentials.keychainPath,
       SCHEME: scheme,
-      SCHEME_BUILD_CONFIGURATION: schemeBuildConfiguration,
+      SCHEME_BUILD_CONFIGURATION: buildConfiguration,
       OUTPUT_DIRECTORY: outputDirectory,
       EXPORT_METHOD: credentials.distributionType,
       CLEAN: String(clean),
@@ -65,7 +64,7 @@ export async function createGymfileForSimulatorBuild({
   outputFile,
   clean,
   scheme,
-  schemeBuildConfiguration,
+  buildConfiguration,
   derivedDataPath,
 }: SimulatorBuildOptions): Promise<void> {
   await createGymfile({
@@ -73,7 +72,7 @@ export async function createGymfileForSimulatorBuild({
     outputFile,
     vars: {
       SCHEME: scheme,
-      SCHEME_BUILD_CONFIGURATION: schemeBuildConfiguration,
+      SCHEME_BUILD_CONFIGURATION: buildConfiguration,
       DERIVED_DATA_PATH: derivedDataPath,
       CLEAN: String(clean),
     },

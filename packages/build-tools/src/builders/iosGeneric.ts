@@ -47,7 +47,7 @@ export default async function iosGenericBuilder(
       await runFastlaneGym(ctx, {
         credentials,
         scheme: ctx.job.scheme,
-        schemeBuildConfiguration: ctx.job.schemeBuildConfiguration,
+        buildConfiguration: ctx.job.buildConfiguration,
       });
     });
 
