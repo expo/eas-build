@@ -35,6 +35,7 @@ describe('Ios.GenericJobSchema', () => {
       distribution: 'store',
       scheme: 'testapp',
       schemeBuildConfiguration: Ios.SchemeBuildConfiguration.RELEASE,
+      buildConfiguration: 'release',
       artifactPath: 'ios/build/*.ipa',
       releaseChannel: 'default',
       builderEnvironment: {

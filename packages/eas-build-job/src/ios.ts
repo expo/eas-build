@@ -106,6 +106,7 @@ export interface GenericJob extends BaseJob {
   type: Workflow.GENERIC;
   scheme: string;
   schemeBuildConfiguration?: SchemeBuildConfiguration;
+  buildConfiguration?: string;
   artifactPath: string;
 }
 
@@ -114,6 +115,7 @@ export const GenericJobSchema = BaseJobSchema.concat(
     type: Joi.string().valid(Workflow.GENERIC),
     scheme: Joi.string().required(),
     schemeBuildConfiguration: Joi.string().valid('Release', 'Debug'),
+    buildConfiguration: Joi.string(),
     artifactPath: Joi.alternatives().conditional('distribution', {
       is: 'simulator',
       then: Joi.string().default('ios/build/Build/Products/*-iphonesimulator/*.app'),
