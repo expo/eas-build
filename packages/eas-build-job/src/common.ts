@@ -64,3 +64,23 @@ export const CacheSchema = Joi.object({
   cacheDefaultPaths: Joi.boolean().default(true),
   customPaths: Joi.array().items(Joi.string()).default([]),
 });
+
+type UpdatesRequestHeaders = {
+  [key: string]: string;
+};
+
+export type CommonJob = {
+  projectArchive: ArchiveSource;
+  releaseChannel?: string;
+  updatesRequestHeaders?: UpdatesRequestHeaders;
+  projectRootDirectory: string;
+  cache: Cache;
+};
+
+export const CommonJobSchema = {
+  projectArchive: ArchiveSourceSchema.required(),
+  releaseChannel: Joi.string(),
+  updatesRequestHeaders: Joi.object().pattern(Joi.string(), Joi.string()),
+  projectRootDirectory: Joi.string().required(),
+  cache: CacheSchema.default(),
+};

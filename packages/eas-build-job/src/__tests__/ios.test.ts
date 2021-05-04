@@ -37,6 +37,7 @@ describe('Ios.GenericJobSchema', () => {
       schemeBuildConfiguration: Ios.SchemeBuildConfiguration.RELEASE,
       artifactPath: 'ios/build/*.ipa',
       releaseChannel: 'default',
+      updatesRequestHeaders: { 'expo-channel-name': 'main' },
       builderEnvironment: {
         image: 'default',
         node: '1.2.3',
@@ -93,6 +94,7 @@ describe('Ios.ManagedJobSchema', () => {
       buildType: Ios.ManagedBuildType.RELEASE,
       username: 'turtle-tutorial',
       releaseChannel: 'default',
+      updatesRequestHeaders: { 'expo-channel-name': 'main' },
       builderEnvironment: {
         image: 'default',
         node: '1.2.3',

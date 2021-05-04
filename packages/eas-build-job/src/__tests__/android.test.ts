@@ -34,6 +34,7 @@ describe('Android.GenericJobSchema', () => {
       artifactPath: 'android/app/build/outputs/bundle/release/app-release.aab',
       projectRootDirectory: '.',
       releaseChannel: 'default',
+      updatesRequestHeaders: { 'expo-channel-name': 'main' },
       builderEnvironment: {
         image: 'default',
         node: '1.2.3',
@@ -86,6 +87,7 @@ describe('Android.ManagedJobSchema', () => {
       },
       projectRootDirectory: '.',
       releaseChannel: 'default',
+      updatesRequestHeaders: { 'expo-channel-name': 'main' },
       builderEnvironment: {
         image: 'default',
         node: '1.2.3',

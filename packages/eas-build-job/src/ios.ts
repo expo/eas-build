@@ -1,15 +1,6 @@
 import Joi from '@hapi/joi';
 
-import {
-  ArchiveSource,
-  ArchiveSourceSchema,
-  Env,
-  EnvSchema,
-  Platform,
-  Workflow,
-  Cache,
-  CacheSchema,
-} from './common';
+import { Env, EnvSchema, Platform, Workflow, CommonJobSchema, CommonJob } from './common';
 
 export type DistributionType = 'store' | 'internal' | 'simulator';
 
@@ -74,32 +65,25 @@ const BuilderEnvironmentSchema = Joi.object({
   env: EnvSchema,
 });
 
-interface BaseJob {
-  projectArchive: ArchiveSource;
+interface BaseJob extends CommonJob {
   platform: Platform.IOS;
-  projectRootDirectory: string;
-  releaseChannel?: string;
   distribution?: DistributionType;
   secrets: {
     buildCredentials?: BuildCredentials;
     environmentSecrets?: Env;
   };
   builderEnvironment?: BuilderEnvironment;
-  cache: Cache;
 }
 
 const BaseJobSchema = Joi.object().keys({
-  projectArchive: ArchiveSourceSchema.required(),
+  ...CommonJobSchema,
   platform: Joi.string().valid(Platform.IOS).required(),
-  projectRootDirectory: Joi.string().required(),
-  releaseChannel: Joi.string(),
   distribution: Joi.string().valid('store', 'internal', 'simulator'),
   secrets: Joi.object({
     buildCredentials: BuildCredentialsSchema,
     environmentSecrets: EnvSchema,
   }).required(),
   builderEnvironment: BuilderEnvironmentSchema,
-  cache: CacheSchema.default(),
 });
 
 export interface GenericJob extends BaseJob {
