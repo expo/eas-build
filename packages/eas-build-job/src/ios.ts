@@ -13,11 +13,6 @@ import {
 
 export type DistributionType = 'store' | 'internal' | 'simulator';
 
-export enum SchemeBuildConfiguration {
-  RELEASE = 'Release',
-  DEBUG = 'Debug',
-}
-
 const TargetCredentialsSchema = Joi.object().keys({
   provisioningProfileBase64: Joi.string().required(),
   distributionCertificate: Joi.object({
@@ -105,7 +100,7 @@ const BaseJobSchema = Joi.object().keys({
 export interface GenericJob extends BaseJob {
   type: Workflow.GENERIC;
   scheme: string;
-  schemeBuildConfiguration?: SchemeBuildConfiguration;
+  buildConfiguration?: string;
   artifactPath: string;
 }
 
@@ -113,7 +108,7 @@ export const GenericJobSchema = BaseJobSchema.concat(
   Joi.object().keys({
     type: Joi.string().valid(Workflow.GENERIC),
     scheme: Joi.string().required(),
-    schemeBuildConfiguration: Joi.string().valid('Release', 'Debug'),
+    buildConfiguration: Joi.string(),
     artifactPath: Joi.alternatives().conditional('distribution', {
       is: 'simulator',
       then: Joi.string().default('ios/build/Build/Products/*-iphonesimulator/*.app'),
