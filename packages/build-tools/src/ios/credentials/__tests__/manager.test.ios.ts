@@ -34,7 +34,7 @@ function createTestIosJob({
       url: 'https://turtle-v2-test-fixtures.s3.us-east-2.amazonaws.com/project.tar.gz',
     },
     scheme: 'turtlebareproj',
-    buildConfiguration: 'release',
+    buildConfiguration: 'Release',
     artifactPath: './ios/build/*.ipa',
     projectRootDirectory: '.',
     cache: {
