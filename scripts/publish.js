@@ -43,7 +43,7 @@ async function run() {
     } catch (e) {
       const response = JSON.parse(e.stdout);
       if (response.error && response.error.code === 'E404') {
-        toPublish.push({ name, location });
+        toPublish.push({ name, location, version });
         console.log(`* ${name} 🆕`);
       } else {
         throw e;
@@ -63,12 +63,17 @@ async function run() {
     return;
   }
 
-  for (const { name, location } of toPublish) {
+  for (const { name, location, version } of toPublish) {
     console.log();
     console.log('🚢 Publishing', name);
     const args = ['publish'];
     if (shouldPrerelease) {
       args.push('--tag', 'alpha');
+    } else if (name === 'eas-cli-local-build-plugin') {
+      args.push('--tag', 'next');
+      console.log(`  using dist-tag 'next', run 'npm dist-tag add ${name}@${version} latest'`);
+      console.log(`  after testing the release to promote it to the latest tag`);
+      console.log(`  in case of breaking changes new eas-cli needs to be released`);
     }
 
     await spawnAsync('npm', args, {
