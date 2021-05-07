@@ -1,0 +1,7 @@
+# eas-cli-local-build-plugin
+
+`eas-cli-local-build-plugin` is a light wrapper around `@expo/build-tools` library that runs builds locally. Job object is passed as base64 encoded string in the argument. This tool is not intended for direct use, it's used internally by `eas build --local`.
+
+## Repository
+
+https://github.com/expo/eas-build/tree/main/src/packages/fastlane
