@@ -6,6 +6,8 @@ import fs from 'fs-extra';
 
 import { BuildContext } from '../context';
 
+import { PackageManager } from './packageManager';
+
 export enum Hook {
   PRE_INSTALL = 'eas-build-pre-install',
   POST_INSTALL = 'eas-build-post-install',
@@ -30,7 +32,13 @@ export async function runHookIfPresent<TJob extends Job>(
   }
   if (packageJson.scripts?.[hook]) {
     ctx.logger.info(`Script '${hook}' is present in package.json, running it...`);
-    await spawn(ctx.packageManager, ['run', hook], {
+    // when using yarn 2, it's not possible to run any scripts before running 'yarn install'
+    // use 'npm' in that case
+    const packageManager =
+      (await isUsingYarn2(projectDir)) && hook === Hook.PRE_INSTALL
+        ? PackageManager.NPM
+        : ctx.packageManager;
+    await spawn(packageManager, ['run', hook], {
       cwd: projectDir,
       logger: ctx.logger,
       env: ctx.env,
@@ -45,4 +53,9 @@ async function readPackageJson(projectDir: string): Promise<PackageJson> {
   }
   const contents = await fs.readFile(packageJsonPath, 'utf-8');
   return JSON.parse(contents);
+}
+
+async function isUsingYarn2(projectDir: string): Promise<boolean> {
+  const yarnrcPath = path.join(projectDir, '.yarnrc.yml');
+  return await fs.pathExists(yarnrcPath);
 }
