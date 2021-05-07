@@ -17,7 +17,7 @@
   },
   "author": "Expo <support@expo.io>",
   "bugs": "https://github.com/expo/eas-build/issues",
-  "license": "MIT",
+  "license": "BUSL-1.1",
   "dependencies": {
     "@expo/build-tools": "0.1.58",
     "@expo/bunyan": "^4.0.0",
