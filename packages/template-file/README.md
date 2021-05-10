@@ -34,4 +34,4 @@ await templateFile('abc.json.template', 'abc.json', { ABC: 123, XYZ: 789 });
 
 ## Repository
 
-https://github.com/expo/turtle-v2/tree/master/src/libs/template-file
+https://github.com/expo/eas-build/tree/main/src/packages/template-file

@@ -1,7 +1,7 @@
 # @expo/fastlane
 
-TODO
+`@expo/fastlane` is a light wrapper that calls fastlane executable in your PATH.
 
 ## Repository
 
-https://github.com/expo/turtle-v2/tree/master/src/libs/fastlane
+https://github.com/expo/eas-build/tree/main/src/packages/fastlane

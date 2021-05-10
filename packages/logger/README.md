@@ -1,7 +1,7 @@
 # @expo/logger
 
-TODO
+`@expo/logger` is a wrapper around `@expo/bunyan` library.
 
 ## Repository
 
-https://github.com/expo/turtle-v2/tree/master/src/libs/logger
+https://github.com/expo/eas-build/tree/main/src/packages/logger
