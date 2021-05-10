@@ -30,8 +30,8 @@ TIMESTAMP_NOW=$(date -u +%s)
 
 # When updating "Change Date" will be set to three years into the future
 CHANGE_PERIOD=94608000 # 3 * 365 * 24 * 60 * 60
-# Update will happen only if new "Change Date" is at least three months after current one
-# It's inteded to minimize amount of updates
+# We'll update "Change Date" only if the new is at least three months after the current one
+# It's intended to minimize the number of updates
 UPDATE_PERIOD=7776000 # 3 * 30 * 24 * 60 * 60
 
 
@@ -50,5 +50,5 @@ if (( $TIMESTAMP_NOW + $CHANGE_PERIOD - $UPDATE_PERIOD > $TIMESTAMP_FROM_LICENSE
     exit 1
   fi
   echo "\"Change Date\" updated to $NEW_CHANGE_DATE"
-  echo "Make sure to commit those changes"
+  echo "Make sure to commit this change"
 fi
