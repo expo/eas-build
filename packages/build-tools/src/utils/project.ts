@@ -4,11 +4,11 @@ import downloadFile from '@expo/downloader';
 import { ArchiveSourceType, BuildPhase, Job } from '@expo/eas-build-job';
 import spawn from '@expo/turtle-spawn';
 import fs from 'fs-extra';
-import findYarnWorkspaceRoot from 'find-yarn-workspace-root';
 
 import { BuildContext } from '../context';
 
 import { Hook, runHookIfPresent } from './hooks';
+import { findPackagerRootDir } from './packageManager';
 
 export async function setup<TJob extends Job>(ctx: BuildContext<TJob>): Promise<void> {
   await ctx.runBuildPhase(BuildPhase.PREPARE_PROJECT, async () => {
@@ -74,8 +74,4 @@ async function installDependencies<TJob extends Job>(ctx: BuildContext<TJob>): P
     logger: ctx.logger,
     env: ctx.env,
   });
-}
-
-export function findPackagerRootDir(currentDir: string): string {
-  return findYarnWorkspaceRoot(currentDir) ?? currentDir;
 }

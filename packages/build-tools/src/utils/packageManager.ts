@@ -1,4 +1,5 @@
 import { isUsingYarn } from '@expo/package-manager';
+import findYarnWorkspaceRoot from 'find-yarn-workspace-root';
 
 export enum PackageManager {
   YARN = 'yarn',
@@ -11,4 +12,8 @@ export function resolvePackageManager(directory: string): PackageManager {
   } catch {
     return PackageManager.YARN;
   }
+}
+
+export function findPackagerRootDir(currentDir: string): string {
+  return findYarnWorkspaceRoot(currentDir) ?? currentDir;
 }

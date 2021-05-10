@@ -6,7 +6,7 @@ import fs from 'fs-extra';
 
 import { BuildContext } from '../context';
 
-import { PackageManager } from './packageManager';
+import { PackageManager, findPackagerRootDir } from './packageManager';
 
 export enum Hook {
   PRE_INSTALL = 'eas-build-pre-install',
@@ -55,7 +55,11 @@ async function readPackageJson(projectDir: string): Promise<PackageJson> {
   return JSON.parse(contents);
 }
 
+/**
+ * check if .yarnrc.yml exists in the project dir or in the workspace root dir
+ */
 async function isUsingYarn2(projectDir: string): Promise<boolean> {
   const yarnrcPath = path.join(projectDir, '.yarnrc.yml');
-  return await fs.pathExists(yarnrcPath);
+  const yarnrcRootPath = path.join(findPackagerRootDir(projectDir), '.yarnrc.yml');
+  return (await fs.pathExists(yarnrcPath)) || (await fs.pathExists(yarnrcRootPath));
 }
