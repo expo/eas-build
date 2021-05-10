@@ -11,4 +11,4 @@
 [![Expo Developers Discord](https://img.shields.io/badge/Expo%20Developers-e01563.svg?logo=discord)](https://discord.gg/4gtbPAdpaE)
 [![Expo Forums](https://img.shields.io/badge/Expo%20Forums-blue.svg)](https://forums.expo.io/)
 
-This repository contains set of libraries used by EAS Build service to process builds.
+This repository contains a set of libraries used by EAS Build service to process builds.

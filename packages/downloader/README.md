@@ -1,6 +1,6 @@
 # @expo/downloader
 
-`@expo/downloader` is small helper library that is used to download files.
+`@expo/downloader` is a small helper library used to download files.
 
 ## Repository
 
