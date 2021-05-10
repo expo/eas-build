@@ -82,6 +82,8 @@ async function run() {
     });
     console.log('✅ Published', name);
   }
+
+  await spawnAsync(path.join(__dirname, './bumpLicenseChangeDate.sh'), [], { stdio: 'inherit' });
 }
 
 run().catch((error) => {
