@@ -15,14 +15,14 @@ export interface Keystore {
   dataBase64: string;
   keystorePassword: string;
   keyAlias: string;
-  keyPassword: string;
+  keyPassword?: string;
 }
 
 const KeystoreSchema = Joi.object({
   dataBase64: Joi.string().required(),
-  keystorePassword: Joi.string().required(),
+  keystorePassword: Joi.string().allow('').required(),
   keyAlias: Joi.string().required(),
-  keyPassword: Joi.string().required(),
+  keyPassword: Joi.string().allow(''),
 });
 
 export const builderBaseImages = [
