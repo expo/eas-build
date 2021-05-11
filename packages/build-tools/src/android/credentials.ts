@@ -14,7 +14,7 @@ async function restoreCredentials(ctx: BuildContext<Android.Job>): Promise<void>
   }
   ctx.logger.info("Writing secrets to the project's directory");
   const projectDir = ctx.reactNativeProjectDirectory;
-  const keystorePath = `keystore-${uuidv4()}.jks`;
+  const keystorePath = `keystore-${uuidv4()}`;
   await fs.writeFile(
     path.join(projectDir, keystorePath),
     Buffer.from(buildCredentials.keystore.dataBase64, 'base64')
