@@ -51,6 +51,7 @@ export interface BuilderEnvironment {
   image: typeof builderBaseImages[number];
   node?: string;
   yarn?: string;
+  expoCli?: string;
   bundler?: string;
   fastlane?: string;
   cocoapods?: string;
@@ -63,6 +64,7 @@ const BuilderEnvironmentSchema = Joi.object({
     .default('default'),
   node: Joi.string(),
   yarn: Joi.string(),
+  expoCli: Joi.string(),
   bundler: Joi.string(),
   fastlane: Joi.string(),
   cocoapods: Joi.string(),

@@ -36,6 +36,7 @@ export interface BuilderEnvironment {
   image: typeof builderBaseImages[number];
   node?: string;
   yarn?: string;
+  expoCli?: string;
   ndk?: string;
   env?: Env;
 }
@@ -46,6 +47,7 @@ const BuilderEnvironmentSchema = Joi.object({
     .default('default'),
   node: Joi.string(),
   yarn: Joi.string(),
+  expoCli: Joi.string(),
   ndk: Joi.string(),
   env: EnvSchema,
 });
