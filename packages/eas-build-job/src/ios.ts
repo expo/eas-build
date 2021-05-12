@@ -76,6 +76,7 @@ interface BaseJob {
   platform: Platform.IOS;
   projectRootDirectory: string;
   releaseChannel?: string;
+  channel?: string;
   distribution?: DistributionType;
   secrets: {
     buildCredentials?: BuildCredentials;
@@ -90,6 +91,7 @@ const BaseJobSchema = Joi.object().keys({
   platform: Joi.string().valid(Platform.IOS).required(),
   projectRootDirectory: Joi.string().required(),
   releaseChannel: Joi.string(),
+  channel: Joi.string(),
   distribution: Joi.string().valid('store', 'internal', 'simulator'),
   secrets: Joi.object({
     buildCredentials: BuildCredentialsSchema,

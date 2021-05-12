@@ -50,10 +50,16 @@ export type Metadata = {
   sdkVersion?: string;
 
   /**
-   * Release channel (for expo-updates)
-   * It's undefined if the expo-updates package is not installed for the project.
+   * Release channel (for classic expo-updates)
+   * It's undefined if the classic expo-updates package is not installed for the project.
    */
   releaseChannel?: string;
+
+  /**
+   * Channel (for expo-updates)
+   * It's undefined if the expo-updates package is not installed for the project.
+   */
+  channel?: string;
 
   /**
    * Distribution type

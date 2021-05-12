@@ -57,6 +57,7 @@ interface BaseJob {
   platform: Platform.ANDROID;
   projectRootDirectory: string;
   releaseChannel?: string;
+  channel?: string;
   secrets: {
     buildCredentials?: {
       keystore: Keystore;
@@ -72,6 +73,7 @@ const BaseJobSchema = Joi.object({
   platform: Joi.string().valid(Platform.ANDROID).required(),
   projectRootDirectory: Joi.string().required(),
   releaseChannel: Joi.string(),
+  channel: Joi.string(),
   secrets: Joi.object({
     buildCredentials: Joi.object({ keystore: KeystoreSchema.required() }),
     environmentSecrets: EnvSchema,
