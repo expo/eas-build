@@ -80,7 +80,7 @@ const BaseJobSchema = Joi.object({
   }).required(),
   builderEnvironment: BuilderEnvironmentSchema,
   cache: CacheSchema.default(),
-});
+}).oxor('releaseChannel', 'channel');
 
 export interface GenericJob extends BaseJob {
   type: Workflow.GENERIC;

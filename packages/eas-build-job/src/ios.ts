@@ -86,20 +86,22 @@ interface BaseJob {
   cache: Cache;
 }
 
-const BaseJobSchema = Joi.object().keys({
-  projectArchive: ArchiveSourceSchema.required(),
-  platform: Joi.string().valid(Platform.IOS).required(),
-  projectRootDirectory: Joi.string().required(),
-  releaseChannel: Joi.string(),
-  channel: Joi.string(),
-  distribution: Joi.string().valid('store', 'internal', 'simulator'),
-  secrets: Joi.object({
-    buildCredentials: BuildCredentialsSchema,
-    environmentSecrets: EnvSchema,
-  }).required(),
-  builderEnvironment: BuilderEnvironmentSchema,
-  cache: CacheSchema.default(),
-});
+const BaseJobSchema = Joi.object()
+  .keys({
+    projectArchive: ArchiveSourceSchema.required(),
+    platform: Joi.string().valid(Platform.IOS).required(),
+    projectRootDirectory: Joi.string().required(),
+    releaseChannel: Joi.string(),
+    channel: Joi.string(),
+    distribution: Joi.string().valid('store', 'internal', 'simulator'),
+    secrets: Joi.object({
+      buildCredentials: BuildCredentialsSchema,
+      environmentSecrets: EnvSchema,
+    }).required(),
+    builderEnvironment: BuilderEnvironmentSchema,
+    cache: CacheSchema.default(),
+  })
+  .oxor('releaseChannel', 'channel');
 
 export interface GenericJob extends BaseJob {
   type: Workflow.GENERIC;

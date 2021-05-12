@@ -37,7 +37,6 @@ describe('Ios.GenericJobSchema', () => {
       buildConfiguration: 'Release',
       artifactPath: 'ios/build/*.ipa',
       releaseChannel: 'default',
-      channel: 'main',
       builderEnvironment: {
         image: 'default',
         node: '1.2.3',
@@ -94,7 +93,6 @@ describe('Ios.ManagedJobSchema', () => {
       buildType: Ios.ManagedBuildType.RELEASE,
       username: 'turtle-tutorial',
       releaseChannel: 'default',
-      channel: 'main',
       builderEnvironment: {
         image: 'default',
         node: '1.2.3',
@@ -133,5 +131,47 @@ describe('Ios.ManagedJobSchema', () => {
       '"projectArchive.url" must be a valid uri. "projectRootDirectory" must be a string'
     );
     expect(value).not.toMatchObject(managedJob);
+  });
+  test('validates channel', () => {
+    const managedJob = {
+      secrets: {
+        buildCredentials,
+      },
+      type: Workflow.MANAGED,
+      platform: Platform.IOS,
+      channel: 'main',
+      projectArchive: {
+        type: ArchiveSourceType.URL,
+        url: 'http://localhost:3000',
+      },
+      projectRootDirectory: '.',
+      distribution: 'store',
+    };
+
+    const { value, error } = Ios.ManagedJobSchema.validate(managedJob, joiOptions);
+    expect(value).toMatchObject(managedJob);
+    expect(error).toBeFalsy();
+  });
+  test('fails when both releaseChannel and channel are defined.', () => {
+    const managedJob = {
+      secrets: {
+        buildCredentials,
+      },
+      type: Workflow.MANAGED,
+      platform: Platform.IOS,
+      releaseChannel: 'default',
+      channel: 'main',
+      projectArchive: {
+        type: ArchiveSourceType.URL,
+        url: 'http://localhost:3000',
+      },
+      projectRootDirectory: '.',
+      distribution: 'store',
+    };
+
+    const { error } = Ios.ManagedJobSchema.validate(managedJob, joiOptions);
+    expect(error?.message).toBe(
+      '"value" contains a conflict between optional exclusive peers [releaseChannel, channel]'
+    );
   });
 });

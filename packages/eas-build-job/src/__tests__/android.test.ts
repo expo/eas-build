@@ -34,7 +34,6 @@ describe('Android.GenericJobSchema', () => {
       artifactPath: 'android/app/build/outputs/bundle/release/app-release.aab',
       projectRootDirectory: '.',
       releaseChannel: 'default',
-      channel: 'main',
       builderEnvironment: {
         image: 'default',
         node: '1.2.3',
@@ -87,7 +86,6 @@ describe('Android.ManagedJobSchema', () => {
       },
       projectRootDirectory: '.',
       releaseChannel: 'default',
-      channel: 'main',
       builderEnvironment: {
         image: 'default',
         node: '1.2.3',
@@ -124,5 +122,41 @@ describe('Android.ManagedJobSchema', () => {
       '"projectArchive.url" must be a valid uri. "username" must be a string'
     );
     expect(value).not.toMatchObject(managedJob);
+  });
+  test('validates channel', () => {
+    const managedJob = {
+      secrets,
+      type: Workflow.MANAGED,
+      platform: Platform.ANDROID,
+      channel: 'main',
+      projectArchive: {
+        type: ArchiveSourceType.URL,
+        url: 'http://localhost:3000',
+      },
+      projectRootDirectory: '.',
+    };
+
+    const { value, error } = Android.ManagedJobSchema.validate(managedJob, joiOptions);
+    expect(value).toMatchObject(managedJob);
+    expect(error).toBeFalsy();
+  });
+  test('fails when both releaseChannel and channel are defined.', () => {
+    const managedJob = {
+      secrets,
+      type: Workflow.MANAGED,
+      platform: Platform.ANDROID,
+      releaseChannel: 'default',
+      channel: 'main',
+      projectArchive: {
+        type: ArchiveSourceType.URL,
+        url: 'http://localhost:3000',
+      },
+      projectRootDirectory: '.',
+    };
+
+    const { error } = Android.ManagedJobSchema.validate(managedJob, joiOptions);
+    expect(error?.message).toBe(
+      '"value" contains a conflict between optional exclusive peers [releaseChannel, channel]'
+    );
   });
 });
