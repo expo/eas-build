@@ -142,7 +142,7 @@ describe('Android.ManagedJobSchema', () => {
     expect(value).toMatchObject(managedJob);
     expect(error).toBeFalsy();
   });
-  test('fails when both releaseChannel and channel are defined.', () => {
+  test('fails when both releaseChannel and updates.channel are defined.', () => {
     const managedJob = {
       secrets,
       type: Workflow.MANAGED,
