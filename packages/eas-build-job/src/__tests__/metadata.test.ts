@@ -46,30 +46,4 @@ describe('MetadataSchema', () => {
       '"credentialsSource" must be one of [local, remote]. "gitCommitHash" length must be 40 characters long. "gitCommitHash" must only contain hexadecimal characters'
     );
   });
-  test('fails when both releaseChannel and updates.channel are defined.', () => {
-    const metadata = {
-      appName: 'testapp',
-      appVersion: '1.0.0',
-      cliVersion: '1.2.3',
-      buildProfile: 'release',
-      credentialsSource: 'remote',
-      distribution: 'store',
-      gitCommitHash: '752e99d2b8fde1bf07ebb8af1b4a3c26a6703943',
-      trackingContext: {},
-      workflow: 'generic',
-      username: 'definitelynotdominik',
-      releaseChannel: 'default',
-      updates: {
-        channel: 'main',
-      },
-    };
-    const { error } = MetadataSchema.validate(metadata, {
-      stripUnknown: true,
-      convert: true,
-      abortEarly: false,
-    });
-    expect(error?.message).toBe(
-      '"value" contains a conflict between optional exclusive peers [releaseChannel, updates.channel]'
-    );
-  });
 });

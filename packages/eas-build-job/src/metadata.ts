@@ -56,15 +56,10 @@ export type Metadata = {
   releaseChannel?: string;
 
   /**
-   * Configuration for Expo Updates
+   * Channel (for Expo Updates when it is configured for for use with EAS)
+   * It's undefined if the expo-updates package is not configured for use with EAS.
    */
-  updates?: {
-    /**
-     * Channel (for Expo Updates when it is configured for for use with EAS)
-     * It's undefined if the expo-updates package is not configured for use with EAS.
-     */
-    channel?: string;
-  };
+  channel?: string;
 
   /**
    * Distribution type
@@ -110,12 +105,10 @@ export const MetadataSchema = Joi.object({
   credentialsSource: Joi.string().valid('local', 'remote'),
   sdkVersion: Joi.string(),
   releaseChannel: Joi.string(),
-  updates: Joi.object({
-    channel: Joi.string(),
-  }),
+  channel: Joi.string(),
   appName: Joi.string(),
   appIdentifier: Joi.string(),
   buildProfile: Joi.string(),
   gitCommitHash: Joi.string().length(40).hex(),
   username: Joi.string(),
-}).oxor('releaseChannel', 'updates.channel');
+});
