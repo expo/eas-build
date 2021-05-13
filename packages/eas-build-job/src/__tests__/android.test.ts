@@ -160,7 +160,7 @@ describe('Android.ManagedJobSchema', () => {
 
     const { error } = Android.ManagedJobSchema.validate(managedJob, joiOptions);
     expect(error?.message).toBe(
-      '\"value\" contains a conflict between optional exclusive peers [releaseChannel, updates.channel]'
+      '"value" contains a conflict between optional exclusive peers [releaseChannel, updates.channel]'
     );
   });
 });
