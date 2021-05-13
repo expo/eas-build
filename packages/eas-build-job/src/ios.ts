@@ -17,7 +17,7 @@ const TargetCredentialsSchema = Joi.object().keys({
   provisioningProfileBase64: Joi.string().required(),
   distributionCertificate: Joi.object({
     dataBase64: Joi.string().required(),
-    password: Joi.string().required(),
+    password: Joi.string().allow('').required(),
   }).required(),
 });
 

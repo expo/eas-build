@@ -14,7 +14,11 @@ function getCertData(certificateBase64: string, password: string): any {
   const p12Asn1 = forge.asn1.fromDer(p12Der);
   let p12: forge.pkcs12.Pkcs12Pfx;
   try {
-    p12 = forge.pkcs12.pkcs12FromAsn1(p12Asn1, password);
+    if (password) {
+      p12 = forge.pkcs12.pkcs12FromAsn1(p12Asn1, password);
+    } else {
+      p12 = forge.pkcs12.pkcs12FromAsn1(p12Asn1);
+    }
   } catch (_error) {
     const error: Error = _error;
     if (/Invalid password/.exec(error.message)) {
