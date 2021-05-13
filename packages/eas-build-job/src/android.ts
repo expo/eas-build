@@ -57,7 +57,9 @@ interface BaseJob {
   platform: Platform.ANDROID;
   projectRootDirectory: string;
   releaseChannel?: string;
-  channel?: string;
+  updates?: {
+    channel?: string;
+  };
   secrets: {
     buildCredentials?: {
       keystore: Keystore;
@@ -73,14 +75,16 @@ const BaseJobSchema = Joi.object({
   platform: Joi.string().valid(Platform.ANDROID).required(),
   projectRootDirectory: Joi.string().required(),
   releaseChannel: Joi.string(),
-  channel: Joi.string(),
+  updates: Joi.object({
+    channel: Joi.string(),
+  }),
   secrets: Joi.object({
     buildCredentials: Joi.object({ keystore: KeystoreSchema.required() }),
     environmentSecrets: EnvSchema,
   }).required(),
   builderEnvironment: BuilderEnvironmentSchema,
   cache: CacheSchema.default(),
-}).oxor('releaseChannel', 'channel');
+}).oxor('releaseChannel', 'updates.channel');
 
 export interface GenericJob extends BaseJob {
   type: Workflow.GENERIC;

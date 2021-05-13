@@ -128,7 +128,9 @@ describe('Android.ManagedJobSchema', () => {
       secrets,
       type: Workflow.MANAGED,
       platform: Platform.ANDROID,
-      channel: 'main',
+      updates: {
+        channel: 'main',
+      },
       projectArchive: {
         type: ArchiveSourceType.URL,
         url: 'http://localhost:3000',
@@ -146,7 +148,9 @@ describe('Android.ManagedJobSchema', () => {
       type: Workflow.MANAGED,
       platform: Platform.ANDROID,
       releaseChannel: 'default',
-      channel: 'main',
+      updates: {
+        channel: 'main',
+      },
       projectArchive: {
         type: ArchiveSourceType.URL,
         url: 'http://localhost:3000',
@@ -156,7 +160,7 @@ describe('Android.ManagedJobSchema', () => {
 
     const { error } = Android.ManagedJobSchema.validate(managedJob, joiOptions);
     expect(error?.message).toBe(
-      '"value" contains a conflict between optional exclusive peers [releaseChannel, channel]'
+      '\"value\" contains a conflict between optional exclusive peers [releaseChannel, updates.channel]'
     );
   });
 });

@@ -56,10 +56,15 @@ export type Metadata = {
   releaseChannel?: string;
 
   /**
-   * Channel (for Expo Updates when it is configured for for use with EAS)
-   * It's undefined if the expo-updates package is not configured for use with EAS.
+   * Configuration for Expo Updates
    */
-  channel?: string;
+  updates?: {
+    /**
+     * Channel (for Expo Updates when it is configured for for use with EAS)
+     * It's undefined if the expo-updates package is not configured for use with EAS.
+     */
+    channel?: string;
+  };
 
   /**
    * Distribution type
