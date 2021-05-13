@@ -110,10 +110,12 @@ export const MetadataSchema = Joi.object({
   credentialsSource: Joi.string().valid('local', 'remote'),
   sdkVersion: Joi.string(),
   releaseChannel: Joi.string(),
-  channel: Joi.string(),
+  updates: Joi.object({
+    channel: Joi.string(),
+  }),
   appName: Joi.string(),
   appIdentifier: Joi.string(),
   buildProfile: Joi.string(),
   gitCommitHash: Joi.string().length(40).hex(),
   username: Joi.string(),
-});
+}).oxor('releaseChannel', 'updates.channel');
