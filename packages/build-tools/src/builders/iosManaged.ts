@@ -54,6 +54,8 @@ export default async function iosManagedBuilder(
       await runFastlaneGym(ctx, {
         credentials,
         scheme: resolveScheme(ctx),
+        buildConfiguration:
+          ctx.job.buildType === Ios.ManagedBuildType.DEVELOPMENT_CLIENT ? 'Debug' : 'Release',
       });
     });
 
