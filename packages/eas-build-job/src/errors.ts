@@ -152,6 +152,6 @@ export class YarnLockChecksumError extends UserError {
 }
 
 export class UnknownGradleError extends UserError {
-  errorCode = ErrorCode.UNKNOWN_FASTLANE_ERROR;
+  errorCode = ErrorCode.UNKNOWN_GRADLE_ERROR;
   message = 'Gradle build failed with unknown error. Please see logs for the "Run gradlew" phase.';
 }
