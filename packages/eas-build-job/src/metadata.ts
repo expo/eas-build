@@ -10,7 +10,11 @@ export type Metadata = {
   trackingContext: Record<string, string | number>;
 
   /**
-   * Application version (the expo.version key in app.json/app.config.js)
+   * Application version:
+   * - managed projects: expo.version in app.json/app.config.js
+   * - generic projects:
+   *   * iOS: CFBundleShortVersionString in Info.plist
+   *   * Android: versionName in build.gradle
    */
   appVersion?: string;
 
@@ -76,6 +80,16 @@ export type Metadata = {
    * Username of the initiating user
    */
   username?: string;
+
+  /**
+   * Android version code
+   */
+  versionCode?: number;
+
+  /**
+   * iOS build number
+   */
+  buildNumber?: string;
 };
 
 export const MetadataSchema = Joi.object({
@@ -92,4 +106,6 @@ export const MetadataSchema = Joi.object({
   buildProfile: Joi.string(),
   gitCommitHash: Joi.string().length(40).hex(),
   username: Joi.string(),
+  versionCode: Joi.number(),
+  buildNumber: Joi.string(),
 });
