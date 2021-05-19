@@ -12,3 +12,4 @@ skip_archive(true)
 destination("generic/platform=iOS Simulator")
 
 disable_xcpretty(true)
+buildlog_path("<%- LOGS_DIRECTORY %>")

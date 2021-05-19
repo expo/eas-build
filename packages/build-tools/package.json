@@ -28,6 +28,7 @@
     "@expo/plist": "^0.0.11",
     "@expo/template-file": "0.1.19",
     "@expo/turtle-spawn": "0.0.21",
+    "@expo/xcpretty": "^2.0.1",
     "fast-glob": "^3.2.5",
     "find-yarn-workspace-root": "^2.0.0",
     "fs-extra": "^9.0.0",
