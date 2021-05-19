@@ -13,6 +13,8 @@ describe('MetadataSchema', () => {
       trackingContext: {},
       workflow: 'generic',
       username: 'notdominik',
+      versionCode: 123,
+      buildNumber: '123',
     };
     const { value, error } = MetadataSchema.validate(metadata, {
       stripUnknown: true,
@@ -34,6 +36,8 @@ describe('MetadataSchema', () => {
       trackingContext: {},
       workflow: 'generic',
       username: 'notdominik',
+      versionCode: 123,
+      buildNumber: '123',
     };
     const { error } = MetadataSchema.validate(metadata, {
       stripUnknown: true,
