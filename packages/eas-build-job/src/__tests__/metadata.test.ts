@@ -5,6 +5,7 @@ describe('MetadataSchema', () => {
     const metadata = {
       appName: 'testapp',
       appVersion: '1.0.0',
+      appBuildVersion: '123',
       cliVersion: '1.2.3',
       buildProfile: 'release',
       credentialsSource: 'remote',
@@ -13,8 +14,6 @@ describe('MetadataSchema', () => {
       trackingContext: {},
       workflow: 'generic',
       username: 'notdominik',
-      versionCode: 123,
-      buildNumber: '123',
     };
     const { value, error } = MetadataSchema.validate(metadata, {
       stripUnknown: true,
@@ -28,6 +27,7 @@ describe('MetadataSchema', () => {
     const metadata = {
       appName: 'testapp',
       appVersion: '1.0.0',
+      appBuildVersion: '123',
       cliVersion: '1.2.3',
       buildProfile: 'release',
       credentialsSource: 'blah',
@@ -36,8 +36,6 @@ describe('MetadataSchema', () => {
       trackingContext: {},
       workflow: 'generic',
       username: 'notdominik',
-      versionCode: 123,
-      buildNumber: '123',
     };
     const { error } = MetadataSchema.validate(metadata, {
       stripUnknown: true,

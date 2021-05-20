@@ -19,6 +19,13 @@ export type Metadata = {
   appVersion?: string;
 
   /**
+   * Application build version:
+   * - Android: version code
+   * - iOS: build number
+   */
+  appBuildVersion?: string;
+
+  /**
    * EAS CLI version
    */
   cliVersion?: string;
@@ -80,21 +87,12 @@ export type Metadata = {
    * Username of the initiating user
    */
   username?: string;
-
-  /**
-   * Android version code
-   */
-  versionCode?: number;
-
-  /**
-   * iOS build number
-   */
-  buildNumber?: string;
 };
 
 export const MetadataSchema = Joi.object({
   trackingContext: Joi.object().pattern(Joi.string(), [Joi.string(), Joi.number()]).required(),
   appVersion: Joi.string(),
+  appBuildVersion: Joi.string(),
   cliVersion: Joi.string(),
   workflow: Joi.string().valid('generic', 'managed'),
   distribution: Joi.string().valid('store', 'internal', 'simulator'),
@@ -106,6 +104,4 @@ export const MetadataSchema = Joi.object({
   buildProfile: Joi.string(),
   gitCommitHash: Joi.string().length(40).hex(),
   username: Joi.string(),
-  versionCode: Joi.number(),
-  buildNumber: Joi.string(),
 });
