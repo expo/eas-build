@@ -26,7 +26,7 @@ export async function runFastlaneGym<TJob extends Ios.Job>(
   const logsDirectory = path.join(ctx.workingdir, 'logs');
   await ensureGymfileExists(ctx, { scheme, buildConfiguration, credentials, logsDirectory });
   const buildLogger = new XcodeBuildLogger(ctx.logger, ctx.reactNativeProjectDirectory);
-  buildLogger.watchLogFiles(logsDirectory);
+  void buildLogger.watchLogFiles(logsDirectory);
   try {
     await fastlane(['gym'], {
       cwd: path.join(ctx.reactNativeProjectDirectory, 'ios'),

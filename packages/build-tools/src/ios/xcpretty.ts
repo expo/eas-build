@@ -6,6 +6,8 @@ import { Formatter } from '@expo/xcpretty';
 import spawnAsync, { SpawnPromise, SpawnResult } from '@expo/spawn-async';
 import fg from 'fast-glob';
 
+const CHECK_FILE_INTERVAL_MS = 1000;
+
 class CustomFormatter extends Formatter {
   public shouldShowCompileWarning(
     filePath: string,
@@ -17,32 +19,25 @@ class CustomFormatter extends Formatter {
 }
 
 export class XcodeBuildLogger {
-  private checkFilesInterval?: NodeJS.Timeout;
   private loggerError?: Error;
   private flushing: boolean = false;
   private logReaderPromise?: SpawnPromise<SpawnResult>;
 
   constructor(private readonly logger: bunyan, private readonly projectRoot: string) {}
 
-  public watchLogFiles(logsDirectory: string): void {
-    this.checkFilesInterval = setInterval(async () => {
+  public async watchLogFiles(logsDirectory: string): Promise<void> {
+    while (!this.flushing) {
       const logsFilename = await this.getBuildLogFilename(logsDirectory);
       if (logsFilename) {
         void this.startBuildLogger(path.join(logsDirectory, logsFilename));
-        if (this.checkFilesInterval) {
-          clearInterval(this.checkFilesInterval);
-          this.checkFilesInterval = undefined;
-        }
+        return;
       }
-    }, 1000);
+      await new Promise((res) => setTimeout(res, CHECK_FILE_INTERVAL_MS));
+    }
   }
 
   public async flush(): Promise<void> {
     this.flushing = true;
-    if (this.checkFilesInterval) {
-      clearInterval(this.checkFilesInterval);
-      this.checkFilesInterval = undefined;
-    }
     if (this.loggerError) {
       throw this.loggerError;
     }
@@ -55,10 +50,7 @@ export class XcodeBuildLogger {
   }
   private async getBuildLogFilename(logsDirectory: string): Promise<string | undefined> {
     const paths = await fg('*.log', { cwd: logsDirectory });
-    if (paths.length >= 1) {
-      return paths[0];
-    }
-    return undefined;
+    return paths.length >= 1 ? paths[0] : undefined;
   }
 
   private async startBuildLogger(logsPath: string): Promise<void> {
