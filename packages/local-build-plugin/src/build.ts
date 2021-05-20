@@ -34,6 +34,9 @@ export async function buildAsync(job: Job): Promise<void> {
   } catch (e) {
     console.error();
     console.error(chalk.red(`Build failed`));
+    if (config.logger.level === 'debug') {
+      console.error(e.innerError);
+    }
     throw e;
   } finally {
     if (!config.skipCleanup) {

@@ -1,6 +1,7 @@
 import path from 'path';
 
 import templateFile from '@expo/template-file';
+import fs from 'fs-extra';
 
 import { Credentials } from './credentials/manager';
 
@@ -17,6 +18,7 @@ interface ArchiveBuildOptions {
   buildConfiguration?: string;
   outputDirectory: string;
   clean: boolean;
+  logsDirectory: string;
 }
 
 interface SimulatorBuildOptions {
@@ -25,6 +27,7 @@ interface SimulatorBuildOptions {
   buildConfiguration?: string;
   derivedDataPath: string;
   clean: boolean;
+  logsDirectory: string;
 }
 
 export async function createGymfileForArchiveBuild({
@@ -34,6 +37,7 @@ export async function createGymfileForArchiveBuild({
   scheme,
   buildConfiguration,
   outputDirectory,
+  logsDirectory,
 }: ArchiveBuildOptions): Promise<void> {
   const PROFILES = [];
   const targets = Object.keys(credentials.targetProvisioningProfiles);
@@ -45,6 +49,7 @@ export async function createGymfileForArchiveBuild({
     });
   }
 
+  await fs.mkdirp(logsDirectory);
   await createGymfile({
     template: ARCHIVE_TEMPLATE_FILE_PATH,
     outputFile,
@@ -55,6 +60,7 @@ export async function createGymfileForArchiveBuild({
       OUTPUT_DIRECTORY: outputDirectory,
       EXPORT_METHOD: credentials.distributionType,
       CLEAN: String(clean),
+      LOGS_DIRECTORY: logsDirectory,
       PROFILES,
     },
   });
@@ -66,7 +72,9 @@ export async function createGymfileForSimulatorBuild({
   scheme,
   buildConfiguration,
   derivedDataPath,
+  logsDirectory,
 }: SimulatorBuildOptions): Promise<void> {
+  await fs.mkdirp(logsDirectory);
   await createGymfile({
     template: SIMULATOR_TEMPLATE_FILE_PATH,
     outputFile,
@@ -75,6 +83,7 @@ export async function createGymfileForSimulatorBuild({
       SCHEME_BUILD_CONFIGURATION: buildConfiguration,
       DERIVED_DATA_PATH: derivedDataPath,
       CLEAN: String(clean),
+      LOGS_DIRECTORY: logsDirectory,
     },
   });
 }
