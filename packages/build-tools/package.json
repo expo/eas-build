@@ -35,8 +35,7 @@
     "node-forge": "^0.9.1",
     "nullthrows": "^1.1.1",
     "plist": "^3.0.1",
-    "uuid": "^3.3.3",
-    "xml2js": "^0.4.23"
+    "uuid": "^3.3.3"
   },
   "devDependencies": {
     "@types/fs-extra": "^9.0.1",

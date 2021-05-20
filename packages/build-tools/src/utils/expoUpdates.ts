@@ -1,14 +1,18 @@
 import assert from 'assert';
-import path from 'path';
 
-import fs from 'fs-extra';
 import { Ios, Android, Platform } from '@expo/eas-build-job';
-import { AndroidConfig } from '@expo/config-plugins';
-import plist from '@expo/plist';
 
-import { AndroidMetadataName } from '../android/expoUpdates';
+import {
+  androidSetChannelNativelyAsync,
+  androidSetReleaseChannelNativelyAsync,
+  androidGetNativelyDefinedReleaseChannelAsync,
+} from '../android/expoUpdates';
+import {
+  iosSetChannelNativelyAsync,
+  iosSetReleaseChannelNativelyAsync,
+  iosGetNativelyDefinedReleaseChannelAsync,
+} from '../ios/expoUpdates';
 import { BuildContext } from '../context';
-import { getExpoPlistDirectoryAsync, IosMetadataName } from '../ios/expoUpdates';
 import { ManagedBuildContext, ManagedJob } from '../managed/context';
 
 import isExpoUpdatesInstalledAsync from './isExpoUpdatesInstalled';
@@ -19,12 +23,11 @@ export type GenericJob = Ios.GenericJob | Android.GenericJob;
  * @param ctx
  * @param platform
  */
-export async function setChannelNativelyAsync(
+export const setChannelNativelyAsync = async (
   ctx: ManagedBuildContext<ManagedJob> | BuildContext<GenericJob>,
   platform: Platform
-): Promise<void> {
+): Promise<void> => {
   assert(ctx.job.updates?.channel, 'updates.channel must be defined');
-  // TODO combine with pre-existing updateRequestHeaders
   const newUpdateRequestHeaders: Record<string, string> = {
     'expo-channel-name': ctx.job.updates.channel,
   };
@@ -38,65 +41,17 @@ export async function setChannelNativelyAsync(
 
   switch (platform) {
     case Platform.ANDROID: {
-      const manifestPath = path.join(
-        getAndroidManifestDirectory(ctx.reactNativeProjectDirectory),
-        'AndroidManifest.xml'
-      );
-      if (!(await fs.pathExists(manifestPath))) {
-        throw new Error(`Couldn't find Android manifest at ${manifestPath}`);
-      }
-
-      const androidManifest = await AndroidConfig.Manifest.readAndroidManifestAsync(manifestPath);
-      const mainApp = AndroidConfig.Manifest.getMainApplicationOrThrow(androidManifest);
-      const stringifiedUpdatesRequestHeaders = AndroidConfig.Manifest.getMainApplicationMetaDataValue(
-        androidManifest,
-        AndroidMetadataName.UPDATES_CONFIGURATION_REQUEST_HEADERS_KEY
-      );
-      AndroidConfig.Manifest.addMetaDataItemToMainApplication(
-        mainApp,
-        AndroidMetadataName.UPDATES_CONFIGURATION_REQUEST_HEADERS_KEY,
-        JSON.stringify({
-          ...JSON.parse(stringifiedUpdatesRequestHeaders ?? '{}'),
-          'expo-channel-name': ctx.job.updates.channel,
-        }),
-        'value'
-      );
-      await AndroidConfig.Manifest.writeAndroidManifestAsync(manifestPath, androidManifest);
+      await androidSetChannelNativelyAsync(ctx);
       return;
     }
     case Platform.IOS: {
-      const expoPlistPath = path.resolve(
-        await getExpoPlistDirectoryAsync(ctx.reactNativeProjectDirectory),
-        'Expo.plist'
-      );
-
-      let items: Record<string, string | Record<string, string>> = {};
-      if (!(await fs.pathExists(expoPlistPath))) {
-        throw new Error(`${expoPlistPath} does no exist`);
-      }
-
-      const expoPlistContent = await fs.readFile(expoPlistPath, 'utf8');
-      items = plist.parse(expoPlistContent);
-      items[IosMetadataName.UPDATES_CONFIGURATION_REQUEST_HEADERS_KEY] = {
-        ...((items[IosMetadataName.UPDATES_CONFIGURATION_REQUEST_HEADERS_KEY] as Record<
-          string,
-          string
-        >) ?? {}),
-        'expo-channel-name': ctx.job.updates.channel,
-      };
-      const expoPlist = plist.build(items);
-
-      await fs.writeFile(expoPlistPath, expoPlist);
+      await iosSetChannelNativelyAsync(ctx);
       return;
     }
     default:
       throw new Error(`Platform ${platform} is not supported.`);
   }
-}
-
-export function getAndroidManifestDirectory(reactNativeProjectDirectory: string): string {
-  return path.join(reactNativeProjectDirectory, 'android', 'app', 'src', 'main');
-}
+};
 
 /**
  * Used for classic Expo Updates
@@ -114,42 +69,11 @@ export const setReleaseChannelNativelyAsync = async (
 
   switch (platform) {
     case Platform.ANDROID: {
-      const manifestPath = path.join(
-        getAndroidManifestDirectory(ctx.reactNativeProjectDirectory),
-        'AndroidManifest.xml'
-      );
-      if (!(await fs.pathExists(manifestPath))) {
-        throw new Error(`Couldn't find Android manifest at ${manifestPath}`);
-      }
-
-      const androidManifest = await AndroidConfig.Manifest.readAndroidManifestAsync(manifestPath);
-      const mainApp = AndroidConfig.Manifest.getMainApplicationOrThrow(androidManifest);
-      AndroidConfig.Manifest.addMetaDataItemToMainApplication(
-        mainApp,
-        AndroidMetadataName.RELEASE_CHANNEL,
-        ctx.job.releaseChannel,
-        'value'
-      );
-      await AndroidConfig.Manifest.writeAndroidManifestAsync(manifestPath, androidManifest);
+      await androidSetReleaseChannelNativelyAsync(ctx);
       return;
     }
     case Platform.IOS: {
-      const expoPlistPath = path.resolve(
-        await getExpoPlistDirectoryAsync(ctx.reactNativeProjectDirectory),
-        'Expo.plist'
-      );
-
-      let items: Record<string, string | Record<string, string>> = {};
-      if (!(await fs.pathExists(expoPlistPath))) {
-        throw new Error(`${expoPlistPath} does no exist`);
-      }
-
-      const expoPlistContent = await fs.readFile(expoPlistPath, 'utf8');
-      items = plist.parse(expoPlistContent);
-      items[IosMetadataName.RELEASE_CHANNEL] = ctx.job.releaseChannel;
-      const expoPlist = plist.build(items);
-
-      await fs.writeFile(expoPlistPath, expoPlist);
+      await iosSetReleaseChannelNativelyAsync(ctx);
       return;
     }
     default:
@@ -168,34 +92,10 @@ export const getNativelyDefinedReleaseChannelAsync = async (
 ): Promise<string | undefined | null> => {
   switch (platform) {
     case Platform.ANDROID: {
-      const manifestPath = path.join(
-        getAndroidManifestDirectory(ctx.reactNativeProjectDirectory),
-        'AndroidManifest.xml'
-      );
-      if (!(await fs.pathExists(manifestPath))) {
-        return;
-      }
-
-      const androidManifest = await AndroidConfig.Manifest.readAndroidManifestAsync(manifestPath);
-      return AndroidConfig.Manifest.getMainApplicationMetaDataValue(
-        androidManifest,
-        AndroidMetadataName.RELEASE_CHANNEL
-      );
+      return androidGetNativelyDefinedReleaseChannelAsync(ctx);
     }
     case Platform.IOS: {
-      const expoPlistPath = path.resolve(
-        await getExpoPlistDirectoryAsync(ctx.reactNativeProjectDirectory),
-        'Expo.plist'
-      );
-      if (!(await fs.pathExists(expoPlistPath))) {
-        return;
-      }
-      const expoPlistContent = await fs.readFile(expoPlistPath, 'utf8');
-      const parsedPlist = plist.parse(expoPlistContent);
-      if (!parsedPlist) {
-        return;
-      }
-      return parsedPlist[IosMetadataName.RELEASE_CHANNEL];
+      return iosGetNativelyDefinedReleaseChannelAsync(ctx);
     }
     default:
       throw new Error(`Platform ${platform} is not supported.`);
@@ -238,10 +138,10 @@ export const configureEASExpoUpdatesAsync = async (
   await setChannelNativelyAsync(ctx, platform);
 };
 
-export async function configureExpoUpdatesIfInstalledAsync(
+export const configureExpoUpdatesIfInstalledAsync = async (
   ctx: ManagedBuildContext<ManagedJob> | BuildContext<GenericJob>,
   platform: Platform
-): Promise<void> {
+): Promise<void> => {
   if (!(await isExpoUpdatesInstalledAsync(ctx.reactNativeProjectDirectory))) {
     return;
   }
@@ -255,4 +155,4 @@ export async function configureExpoUpdatesIfInstalledAsync(
       await configureClassicExpoUpdatesAsync(ctx, platform);
     }
   }
-}
+};

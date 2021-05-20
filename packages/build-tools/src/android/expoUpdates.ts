@@ -1,103 +1,89 @@
 import path from 'path';
+import assert from 'assert';
 
-import * as xml from 'xml2js';
 import fs from 'fs-extra';
+import { AndroidConfig } from '@expo/config-plugins';
 
+import { ManagedBuildContext, ManagedJob } from '../managed/context';
+import { BuildContext } from '../context';
+import { GenericJob } from '../utils/expoUpdates';
 export enum AndroidMetadataName {
   UPDATES_CONFIGURATION_REQUEST_HEADERS_KEY = 'expo.modules.updates.UPDATES_CONFIGURATION_REQUEST_HEADERS_KEY',
   RELEASE_CHANNEL = 'expo.modules.updates.EXPO_RELEASE_CHANNEL',
 }
-
-export async function setAndroidMetadataEntryAsync({
-  reactNativeProjectDirectory,
-  androidMetadataValue,
-  androidMetadataName,
-}: {
-  reactNativeProjectDirectory: string;
-  androidMetadataValue: string;
-  androidMetadataName: AndroidMetadataName;
-}): Promise<void> {
-  const manifestPath = path.join(
-    reactNativeProjectDirectory,
-    'android',
-    'app',
-    'src',
-    'main',
-    'AndroidManifest.xml'
-  );
-
-  if (!(await fs.pathExists(manifestPath))) {
-    throw new Error(`Couldn't find Android manifest at ${manifestPath}`);
-  }
-
-  const manifestContent = await fs.readFile(manifestPath, 'utf8');
-  const manifest = await xml.parseStringPromise(manifestContent);
-
-  const mainApplication = manifest?.manifest?.application?.find(
-    (e: any) => e?.['$']?.['android:name'] === '.MainApplication'
-  );
-
-  if (!mainApplication) {
-    throw new Error(`Couldn't find '.MainApplication' in the manifest at ${manifestPath}`);
-  }
-
-  const newItem = {
-    $: {
-      'android:name': androidMetadataName,
-      'android:value': androidMetadataValue,
-    },
-  };
-
-  if (mainApplication['meta-data']) {
-    const existingMetaDataItem = mainApplication['meta-data'].find(
-      (e: any) => e.$['android:name'] === androidMetadataName
-    );
-
-    if (existingMetaDataItem) {
-      existingMetaDataItem.$['android:value'] = androidMetadataValue;
-    } else {
-      mainApplication['meta-data'].push(newItem);
-    }
-  } else {
-    mainApplication['meta-data'] = [newItem];
-  }
-
-  const manifestXml = new xml.Builder().buildObject(manifest);
-  await fs.writeFile(manifestPath, manifestXml);
+export function getAndroidManifestDirectory(reactNativeProjectDirectory: string): string {
+  return path.join(reactNativeProjectDirectory, 'android', 'app', 'src', 'main');
 }
 
-export async function getAndroidMetadataEntryAsync({
-  reactNativeProjectDirectory,
-  androidMetadataName,
-}: {
-  reactNativeProjectDirectory: string;
-  androidMetadataName: AndroidMetadataName;
-}): Promise<string | undefined> {
+export async function androidSetChannelNativelyAsync(
+  ctx: ManagedBuildContext<ManagedJob> | BuildContext<GenericJob>
+): Promise<void> {
+  assert(ctx.job.updates?.channel, 'updates.channel must be defined');
+
   const manifestPath = path.join(
-    reactNativeProjectDirectory,
-    'android',
-    'app',
-    'src',
-    'main',
+    getAndroidManifestDirectory(ctx.reactNativeProjectDirectory),
     'AndroidManifest.xml'
   );
-
   if (!(await fs.pathExists(manifestPath))) {
     throw new Error(`Couldn't find Android manifest at ${manifestPath}`);
   }
 
-  const manifestContent = await fs.readFile(manifestPath, 'utf8');
-  const manifest = await xml.parseStringPromise(manifestContent);
-
-  const mainApplication = manifest?.manifest?.application?.find(
-    (e: any) => e?.['$']?.['android:name'] === '.MainApplication'
+  const androidManifest = await AndroidConfig.Manifest.readAndroidManifestAsync(manifestPath);
+  const mainApp = AndroidConfig.Manifest.getMainApplicationOrThrow(androidManifest);
+  const stringifiedUpdatesRequestHeaders = AndroidConfig.Manifest.getMainApplicationMetaDataValue(
+    androidManifest,
+    AndroidMetadataName.UPDATES_CONFIGURATION_REQUEST_HEADERS_KEY
   );
+  AndroidConfig.Manifest.addMetaDataItemToMainApplication(
+    mainApp,
+    AndroidMetadataName.UPDATES_CONFIGURATION_REQUEST_HEADERS_KEY,
+    JSON.stringify({
+      ...JSON.parse(stringifiedUpdatesRequestHeaders ?? '{}'),
+      'expo-channel-name': ctx.job.updates.channel,
+    }),
+    'value'
+  );
+  await AndroidConfig.Manifest.writeAndroidManifestAsync(manifestPath, androidManifest);
+}
 
-  if (!mainApplication?.['meta-data']) {
+export const androidSetReleaseChannelNativelyAsync = async (
+  ctx: ManagedBuildContext<ManagedJob> | BuildContext<GenericJob>
+): Promise<void> => {
+  assert(ctx.job.releaseChannel, 'releaseChannel must be defined');
+
+  const manifestPath = path.join(
+    getAndroidManifestDirectory(ctx.reactNativeProjectDirectory),
+    'AndroidManifest.xml'
+  );
+  if (!(await fs.pathExists(manifestPath))) {
+    throw new Error(`Couldn't find Android manifest at ${manifestPath}`);
+  }
+
+  const androidManifest = await AndroidConfig.Manifest.readAndroidManifestAsync(manifestPath);
+  const mainApp = AndroidConfig.Manifest.getMainApplicationOrThrow(androidManifest);
+  AndroidConfig.Manifest.addMetaDataItemToMainApplication(
+    mainApp,
+    AndroidMetadataName.RELEASE_CHANNEL,
+    ctx.job.releaseChannel,
+    'value'
+  );
+  await AndroidConfig.Manifest.writeAndroidManifestAsync(manifestPath, androidManifest);
+};
+
+export const androidGetNativelyDefinedReleaseChannelAsync = async (
+  ctx: ManagedBuildContext<ManagedJob> | BuildContext<GenericJob>,
+): Promise<string | undefined | null> => {
+  const manifestPath = path.join(
+    getAndroidManifestDirectory(ctx.reactNativeProjectDirectory),
+    'AndroidManifest.xml'
+  );
+  if (!(await fs.pathExists(manifestPath))) {
     return;
   }
-  const existingMetaDataItem = mainApplication['meta-data'].find(
-    (e: any) => e.$['android:name'] === androidMetadataName
+
+  const androidManifest = await AndroidConfig.Manifest.readAndroidManifestAsync(manifestPath);
+  return AndroidConfig.Manifest.getMainApplicationMetaDataValue(
+    androidManifest,
+    AndroidMetadataName.RELEASE_CHANNEL
   );
-  return existingMetaDataItem?.$?.['android:value'];
-}
+};
