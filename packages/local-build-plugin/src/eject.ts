@@ -11,6 +11,7 @@ const expoCliPackage = require.resolve('expo-cli');
 
 export class LocalExpoCliEjectProvider implements EjectProvider<ManagedJob> {
   async runEject(ctx: BuildContext<ManagedJob>): Promise<void> {
+    console.log('LocalExpoCliEjectProvider runEject');
     const { logger, job } = ctx;
 
     const spawnOptions = {
@@ -43,7 +44,14 @@ export class LocalExpoCliEjectProvider implements EjectProvider<ManagedJob> {
 
     const expoCliBinPath =
       process.env.EXPO_CLI_PATH ?? path.resolve(path.dirname(expoCliPackage), '../bin/expo.js');
+    console.log({ expoCliBinPath });
+    console.log('dir', ctx.reactNativeProjectDirectory);
     logger.debug(`${expoCliBinPath} prebuild --non-interactive --platform ${job.platform}`);
+
+    console.log(['prebuild', '--non-interactive', '--platform', job.platform], {
+      ...spawnOptions,
+      cwd: ctx.reactNativeProjectDirectory,
+    });
     await spawnAsync(
       expoCliBinPath,
       ['prebuild', '--non-interactive', '--platform', job.platform],

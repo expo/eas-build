@@ -1,14 +1,13 @@
 import assert from 'assert';
 
 import { IOSConfig } from '@expo/config-plugins';
-import { BuildPhase, Ios } from '@expo/eas-build-job';
+import { BuildPhase, Ios, Platform } from '@expo/eas-build-job';
 
 import { ManagedBuildContext } from '../managed/context';
-import { configureExpoUpdatesIfInstalled } from '../managed/expoUpdates';
+import { configureExpoUpdatesIfInstalledAsync } from '../utils/expoUpdates';
 import { setup } from '../utils/project';
 import { findSingleBuildArtifact } from '../utils/buildArtifacts';
 import { Hook, runHookIfPresent } from '../utils/hooks';
-import { updateReleaseChannel } from '../ios/releaseChannel';
 import { configureXcodeProject } from '../ios/configure';
 import CredentialsManager from '../ios/credentials/manager';
 import { runFastlaneGym } from '../ios/fastlane';
@@ -17,6 +16,9 @@ import { installPods } from '../ios/pod';
 export default async function iosManagedBuilder(
   ctx: ManagedBuildContext<Ios.ManagedJob>
 ): Promise<string[]> {
+  console.log('STARTING IOS MANAGED');
+  console.log('STARTING IOS MANAGED');
+  console.log('STARTING IOS MANAGED');
   await setup(ctx);
 
   await ctx.runBuildPhase(BuildPhase.PREBUILD, async () => {
@@ -47,7 +49,7 @@ export default async function iosManagedBuilder(
     }
 
     await ctx.runBuildPhase(BuildPhase.CONFIGURE_EXPO_UPDATES, async () => {
-      await configureExpoUpdatesIfInstalled(ctx, updateReleaseChannel);
+      await configureExpoUpdatesIfInstalledAsync(ctx, Platform.IOS);
     });
 
     await ctx.runBuildPhase(BuildPhase.RUN_FASTLANE, async () => {

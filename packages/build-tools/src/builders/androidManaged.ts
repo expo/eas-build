@@ -1,12 +1,11 @@
 import { AndroidConfig } from '@expo/config-plugins';
-import { Android, BuildPhase } from '@expo/eas-build-job';
+import { Android, BuildPhase, Platform } from '@expo/eas-build-job';
 
 import { ManagedBuildContext } from '../managed/context';
-import { configureExpoUpdatesIfInstalled } from '../managed/expoUpdates';
+import { configureExpoUpdatesIfInstalledAsync } from '../utils/expoUpdates';
 import { setup } from '../utils/project';
 import { findSingleBuildArtifact } from '../utils/buildArtifacts';
 import { Hook, runHookIfPresent } from '../utils/hooks';
-import { updateReleaseChannel } from '../android/releaseChannel';
 import { restoreCredentials } from '../android/credentials';
 import { runGradleCommand } from '../android/gradle';
 
@@ -33,7 +32,7 @@ export default async function androidManagedBuilder(
     });
   }
   await ctx.runBuildPhase(BuildPhase.CONFIGURE_EXPO_UPDATES, async () => {
-    await configureExpoUpdatesIfInstalled(ctx, updateReleaseChannel);
+    await configureExpoUpdatesIfInstalledAsync(ctx, Platform.ANDROID);
   });
 
   await ctx.runBuildPhase(BuildPhase.RUN_GRADLEW, async () => {

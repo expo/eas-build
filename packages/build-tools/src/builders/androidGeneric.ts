@@ -1,13 +1,12 @@
-import { Android, BuildPhase } from '@expo/eas-build-job';
+import { Android, BuildPhase, Platform } from '@expo/eas-build-job';
 
 import { BuildContext } from '../context';
 import { setup } from '../utils/project';
 import { findBuildArtifacts } from '../utils/buildArtifacts';
 import { Hook, runHookIfPresent } from '../utils/hooks';
-import { getReleaseChannel, updateReleaseChannel } from '../android/releaseChannel';
 import { restoreCredentials } from '../android/credentials';
 import { runGradleCommand, ensureLFLineEndingsInGradlewScript } from '../android/gradle';
-import { configureExpoUpdatesIfInstalled } from '../generic/expoUpdates';
+import { configureExpoUpdatesIfInstalledAsync } from '../utils/expoUpdates';
 
 export default async function androidGenericBuilder(
   ctx: BuildContext<Android.GenericJob>
@@ -33,7 +32,8 @@ export default async function androidGenericBuilder(
   }
 
   await ctx.runBuildPhase(BuildPhase.CONFIGURE_EXPO_UPDATES, async () => {
-    await configureExpoUpdatesIfInstalled(ctx, { getReleaseChannel, updateReleaseChannel });
+    console.log('In androidGeneric, starting configureExpoUpdatesIfInstalled');
+    await configureExpoUpdatesIfInstalledAsync(ctx, Platform.ANDROID);
   });
 
   await ctx.runBuildPhase(BuildPhase.RUN_GRADLEW, async () => {

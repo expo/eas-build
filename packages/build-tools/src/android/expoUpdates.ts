@@ -3,12 +3,20 @@ import path from 'path';
 import * as xml from 'xml2js';
 import fs from 'fs-extra';
 
-const RELEASE_CHANNEL = 'expo.modules.updates.EXPO_RELEASE_CHANNEL';
+export enum AndroidMetadataName {
+  UPDATES_CONFIGURATION_REQUEST_HEADERS_KEY = 'expo.modules.updates.UPDATES_CONFIGURATION_REQUEST_HEADERS_KEY',
+  RELEASE_CHANNEL = 'expo.modules.updates.EXPO_RELEASE_CHANNEL',
+}
 
-async function updateReleaseChannel(
-  reactNativeProjectDirectory: string,
-  releaseChannel: string
-): Promise<void> {
+export async function setAndroidMetadataEntryAsync({
+  reactNativeProjectDirectory,
+  androidMetadataValue,
+  androidMetadataName,
+}: {
+  reactNativeProjectDirectory: string;
+  androidMetadataValue: string;
+  androidMetadataName: AndroidMetadataName;
+}): Promise<void> {
   const manifestPath = path.join(
     reactNativeProjectDirectory,
     'android',
@@ -35,18 +43,18 @@ async function updateReleaseChannel(
 
   const newItem = {
     $: {
-      'android:name': RELEASE_CHANNEL,
-      'android:value': releaseChannel,
+      'android:name': androidMetadataName,
+      'android:value': androidMetadataValue,
     },
   };
 
   if (mainApplication['meta-data']) {
     const existingMetaDataItem = mainApplication['meta-data'].find(
-      (e: any) => e.$['android:name'] === RELEASE_CHANNEL
+      (e: any) => e.$['android:name'] === androidMetadataName
     );
 
     if (existingMetaDataItem) {
-      existingMetaDataItem.$['android:value'] = releaseChannel;
+      existingMetaDataItem.$['android:value'] = androidMetadataValue;
     } else {
       mainApplication['meta-data'].push(newItem);
     }
@@ -58,7 +66,13 @@ async function updateReleaseChannel(
   await fs.writeFile(manifestPath, manifestXml);
 }
 
-async function getReleaseChannel(reactNativeProjectDirectory: string): Promise<string | undefined> {
+export async function getAndroidMetadataEntryAsync({
+  reactNativeProjectDirectory,
+  androidMetadataName,
+}: {
+  reactNativeProjectDirectory: string;
+  androidMetadataName: AndroidMetadataName;
+}): Promise<string | undefined> {
   const manifestPath = path.join(
     reactNativeProjectDirectory,
     'android',
@@ -83,9 +97,7 @@ async function getReleaseChannel(reactNativeProjectDirectory: string): Promise<s
     return;
   }
   const existingMetaDataItem = mainApplication['meta-data'].find(
-    (e: any) => e.$['android:name'] === RELEASE_CHANNEL
+    (e: any) => e.$['android:name'] === androidMetadataName
   );
   return existingMetaDataItem?.$?.['android:value'];
 }
-
-export { getReleaseChannel, updateReleaseChannel };

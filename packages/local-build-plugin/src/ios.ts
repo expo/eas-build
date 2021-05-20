@@ -31,6 +31,12 @@ function createBuildContext(job: Ios.Job, { env, workingdir }: BuildParams): Bui
       env,
     });
   } else {
+    console.log('creating managed build context');
+    console.log('creating managed build context');
+    console.log('creating managed build context');
+    console.log('creating managed build context');
+    console.log('creating managed build context');
+    console.log('creating managed build context');
     return new ManagedBuildContext<Ios.ManagedJob>(job, {
       workingdir,
       logger,
