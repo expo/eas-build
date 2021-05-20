@@ -10,8 +10,8 @@ import { BuildContext } from '../context';
 import { GenericJob } from '../utils/expoUpdates';
 
 export enum IosMetadataName {
-  UPDATES_CONFIGURATION_REQUEST_HEADERS_KEY = 'expo.modules.updates.EXUpdatesRequestHeaders',
-  RELEASE_CHANNEL = 'expo.modules.updates.EXPO_RELEASE_CHANNEL',
+  UPDATES_CONFIGURATION_REQUEST_HEADERS_KEY = 'EXUpdatesRequestHeaders',
+  RELEASE_CHANNEL = 'EXUpdatesReleaseChannel',
 }
 
 export async function getExpoPlistDirectoryAsync(
