@@ -1,4 +1,3 @@
-
 import { Platform } from '@expo/eas-build-job';
 
 import { ManagedBuildContext, ManagedJob } from '../../managed/context';

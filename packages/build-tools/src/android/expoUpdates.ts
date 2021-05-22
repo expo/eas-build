@@ -71,7 +71,7 @@ export const androidSetReleaseChannelNativelyAsync = async (
 };
 
 export const androidGetNativelyDefinedReleaseChannelAsync = async (
-  ctx: ManagedBuildContext<ManagedJob> | BuildContext<GenericJob>,
+  ctx: ManagedBuildContext<ManagedJob> | BuildContext<GenericJob>
 ): Promise<string | undefined | null> => {
   const manifestPath = path.join(
     getAndroidManifestDirectory(ctx.reactNativeProjectDirectory),
