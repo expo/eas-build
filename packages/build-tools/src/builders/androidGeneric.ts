@@ -32,7 +32,6 @@ export default async function androidGenericBuilder(
   }
 
   await ctx.runBuildPhase(BuildPhase.CONFIGURE_EXPO_UPDATES, async () => {
-    console.log('In androidGeneric, starting configureExpoUpdatesIfInstalled');
     await configureExpoUpdatesIfInstalledAsync(ctx, Platform.ANDROID);
   });
 

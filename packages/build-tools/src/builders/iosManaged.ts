@@ -16,9 +16,6 @@ import { installPods } from '../ios/pod';
 export default async function iosManagedBuilder(
   ctx: ManagedBuildContext<Ios.ManagedJob>
 ): Promise<string[]> {
-  console.log('STARTING IOS MANAGED');
-  console.log('STARTING IOS MANAGED');
-  console.log('STARTING IOS MANAGED');
   await setup(ctx);
 
   await ctx.runBuildPhase(BuildPhase.PREBUILD, async () => {

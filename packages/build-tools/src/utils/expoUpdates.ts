@@ -122,11 +122,6 @@ export const configureClassicExpoUpdatesAsync = async (
       );
       ctx.logger.warn('Please add the "releaseChannel" field to your build profile (eas.json)');
     } catch (_) {
-      // only difference between generic and managed is that managed doesn't even try to look for the release channel in native code.
-      // if (ctx instanceof ManagedBuildContext) {
-      //   return undefined;
-      // }
-
       ctx.logger.info(`Using default release channel for 'expo-updates' (default)`);
     }
   }
