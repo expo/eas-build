@@ -116,6 +116,7 @@ export const configureClassicExpoUpdatesAsync = async (
      */
     try {
       const releaseChannel = await getNativelyDefinedReleaseChannelAsync(ctx, platform);
+      assert(releaseChannel, 'release channel is not defined natively');
       ctx.logger.info(
         `Using the release channel pre-configured in native project (${releaseChannel})`
       );
