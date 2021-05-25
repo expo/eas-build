@@ -72,7 +72,7 @@ export const iosSetReleaseChannelNativelyAsync = async (
 
   let items: Record<string, string | Record<string, string>> = {};
   if (!(await fs.pathExists(expoPlistPath))) {
-    throw new Error(`${expoPlistPath} does no exist`);
+    throw new Error(`${expoPlistPath} does not exist`);
   }
 
   const expoPlistContent = await fs.readFile(expoPlistPath, 'utf8');

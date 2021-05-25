@@ -7,10 +7,12 @@ import { AndroidConfig } from '@expo/config-plugins';
 import { ManagedBuildContext, ManagedJob } from '../managed/context';
 import { BuildContext } from '../context';
 import { GenericJob } from '../utils/expoUpdates';
+
 export enum AndroidMetadataName {
   UPDATES_CONFIGURATION_REQUEST_HEADERS_KEY = 'expo.modules.updates.UPDATES_CONFIGURATION_REQUEST_HEADERS_KEY',
   RELEASE_CHANNEL = 'expo.modules.updates.EXPO_RELEASE_CHANNEL',
 }
+
 export function getAndroidManifestDirectory(reactNativeProjectDirectory: string): string {
   return path.join(reactNativeProjectDirectory, 'android', 'app', 'src', 'main');
 }
