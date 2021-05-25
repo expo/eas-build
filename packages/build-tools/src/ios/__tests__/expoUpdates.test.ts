@@ -2,9 +2,9 @@ import path from 'path';
 
 import fs from 'fs-extra';
 import plist from '@expo/plist';
+import { IOSConfig } from '@expo/config-plugins';
 
 import {
-  getExpoPlistDirectoryAsync,
   iosGetNativelyDefinedReleaseChannelAsync,
   IosMetadataName,
   iosSetChannelNativelyAsync,
@@ -33,14 +33,14 @@ describe(iosSetReleaseChannelNativelyAsync, () => {
       logger: { info: () => {} },
     };
 
-    fs.ensureDirSync(path.join(reactNativeProjectDirectory, '/ios/Pods.xcodeproj/'));
+    fs.ensureDirSync(path.join(reactNativeProjectDirectory, '/ios/test/'));
     fs.writeFileSync(
-      path.join(reactNativeProjectDirectory, '/ios/Pods.xcodeproj/project.pbxproj'),
+      path.join(reactNativeProjectDirectory, '/ios/test/AppDelegate.m'),
       Buffer.from('placeholder')
     );
 
-    const expoPlistDirectory = await getExpoPlistDirectoryAsync(reactNativeProjectDirectory);
-    const expoPlistPath = path.join(expoPlistDirectory, 'Expo.plist');
+    const expoPlistPath = IOSConfig.Paths.getExpoPlistPath(ctx.reactNativeProjectDirectory);
+    const expoPlistDirectory = path.dirname(expoPlistPath);
 
     fs.ensureDirSync(expoPlistDirectory);
     fs.writeFileSync(expoPlistPath, noItemsExpoPlist);
@@ -68,8 +68,14 @@ describe(iosSetChannelNativelyAsync, () => {
       Buffer.from('placeholder')
     );
 
-    const expoPlistDirectory = await getExpoPlistDirectoryAsync(reactNativeProjectDirectory);
-    const expoPlistPath = path.join(expoPlistDirectory, 'Expo.plist');
+    fs.ensureDirSync(path.join(reactNativeProjectDirectory, '/ios/test/'));
+    fs.writeFileSync(
+      path.join(reactNativeProjectDirectory, '/ios/test/AppDelegate.m'),
+      Buffer.from('placeholder')
+    );
+
+    const expoPlistPath = IOSConfig.Paths.getExpoPlistPath(ctx.reactNativeProjectDirectory);
+    const expoPlistDirectory = path.dirname(expoPlistPath);
 
     fs.ensureDirSync(expoPlistDirectory);
     fs.writeFileSync(expoPlistPath, noItemsExpoPlist);
@@ -109,8 +115,14 @@ describe(iosGetNativelyDefinedReleaseChannelAsync, () => {
       Buffer.from('placeholder')
     );
 
-    const expoPlistDirectory = await getExpoPlistDirectoryAsync(reactNativeProjectDirectory);
-    const expoPlistPath = path.join(expoPlistDirectory, 'Expo.plist');
+    fs.ensureDirSync(path.join(reactNativeProjectDirectory, '/ios/test/'));
+    fs.writeFileSync(
+      path.join(reactNativeProjectDirectory, '/ios/test/AppDelegate.m'),
+      Buffer.from('placeholder')
+    );
+
+    const expoPlistPath = IOSConfig.Paths.getExpoPlistPath(ctx.reactNativeProjectDirectory);
+    const expoPlistDirectory = path.dirname(expoPlistPath);
 
     fs.ensureDirSync(expoPlistDirectory);
     fs.writeFileSync(expoPlistPath, releaseChannelInPlist);
