@@ -8,6 +8,9 @@ jest.mock('../isExpoUpdatesInstalled', () => jest.fn());
 jest.mock('fs');
 
 describe(expoUpdates.configureExpoUpdatesIfInstalledAsync, () => {
+  beforeAll(() => {
+    jest.restoreAllMocks();
+  });
   it('aborts if expo-updates is not installed', async () => {
     (isExpoUpdatesInstalledAsync as jest.Mock).mockReturnValue(false);
     jest.spyOn(expoUpdates, 'configureEASExpoUpdatesAsync');
@@ -39,8 +42,8 @@ describe(expoUpdates.configureExpoUpdatesIfInstalledAsync, () => {
 
   it('configures for classic updates if the updates.channel field is not set', async () => {
     (isExpoUpdatesInstalledAsync as jest.Mock).mockReturnValue(true);
-    jest.spyOn(expoUpdates, 'configureEASExpoUpdatesAsync').mockImplementation();
-    jest.spyOn(expoUpdates, 'configureClassicExpoUpdatesAsync');
+    jest.spyOn(expoUpdates, 'configureEASExpoUpdatesAsync');
+    jest.spyOn(expoUpdates, 'configureClassicExpoUpdatesAsync').mockImplementation();
 
     const managedCtx: ManagedBuildContext<ManagedJob> = {
       job: { platform: Platform.IOS },
@@ -55,6 +58,9 @@ describe(expoUpdates.configureExpoUpdatesIfInstalledAsync, () => {
 });
 
 describe(expoUpdates.configureClassicExpoUpdatesAsync, () => {
+  beforeAll(() => {
+    jest.restoreAllMocks();
+  });
   it('sets the release channel if it is supplied in ctx.job.releaseChannel', async () => {
     (isExpoUpdatesInstalledAsync as jest.Mock).mockReturnValue(true);
     jest.spyOn(expoUpdates, 'setClassicReleaseChannelNativelyAsync').mockImplementation();
@@ -82,8 +88,8 @@ describe(expoUpdates.configureClassicExpoUpdatesAsync, () => {
     (isExpoUpdatesInstalledAsync as jest.Mock).mockReturnValue(true);
     jest
       .spyOn(expoUpdates, 'getNativelyDefinedClassicReleaseChannelAsync')
-      .mockImplementation(() => {
-        throw new Error();
+      .mockImplementation(async () => {
+        return null;
       });
 
     const infoLogger = jest.fn();
@@ -95,8 +101,4 @@ describe(expoUpdates.configureClassicExpoUpdatesAsync, () => {
 
     expect(infoLogger).toBeCalledWith(`Using default release channel for 'expo-updates' (default)`);
   });
-});
-
-describe(expoUpdates.configureEASExpoUpdatesAsync, () => {
-  // maybe an e2e test instead of just the mocked out calls for the two functions as well?
 });
