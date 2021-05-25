@@ -43,7 +43,7 @@ export async function androidSetChannelNativelyAsync(
   await AndroidConfig.Manifest.writeAndroidManifestAsync(manifestPath, androidManifest);
 }
 
-export const androidSetReleaseChannelNativelyAsync = async (
+export const androidSetClassicReleaseChannelNativelyAsync = async (
   ctx: ManagedBuildContext<ManagedJob> | BuildContext<GenericJob>
 ): Promise<void> => {
   assert(ctx.job.releaseChannel, 'releaseChannel must be defined');

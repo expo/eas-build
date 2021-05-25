@@ -4,7 +4,7 @@ import { Ios, Android, Platform } from '@expo/eas-build-job';
 
 import {
   androidSetChannelNativelyAsync,
-  androidSetReleaseChannelNativelyAsync,
+  androidSetClassicReleaseChannelNativelyAsync,
   androidGetNativelyDefinedReleaseChannelAsync,
 } from '../android/expoUpdates';
 import {
@@ -69,7 +69,7 @@ export const setReleaseChannelNativelyAsync = async (
 
   switch (platform) {
     case Platform.ANDROID: {
-      await androidSetReleaseChannelNativelyAsync(ctx);
+      await androidSetClassicReleaseChannelNativelyAsync(ctx);
       return;
     }
     case Platform.IOS: {

@@ -7,7 +7,7 @@ import {
   AndroidMetadataName,
   androidGetNativelyDefinedReleaseChannelAsync,
   androidSetChannelNativelyAsync,
-  androidSetReleaseChannelNativelyAsync,
+  androidSetClassicReleaseChannelNativelyAsync,
 } from '../expoUpdates';
 
 jest.mock('fs');
@@ -42,7 +42,7 @@ const noMetadataAndroidManifest = `
 
 </manifest>
 `;
-describe(androidSetReleaseChannelNativelyAsync, () => {
+describe(androidSetClassicReleaseChannelNativelyAsync, () => {
   test('sets the release channel', async () => {
     const reactNativeProjectDirectory = fs.mkdtempSync('/expo-project-');
     fs.ensureDirSync(reactNativeProjectDirectory);
@@ -66,7 +66,7 @@ describe(androidSetReleaseChannelNativelyAsync, () => {
       AndroidConfig.Manifest.getMainApplicationMetaDataValue(androidManifest, 'releaseChannel')
     ).toBe(null);
 
-    await androidSetReleaseChannelNativelyAsync(ctx as any);
+    await androidSetClassicReleaseChannelNativelyAsync(ctx as any);
 
     const newAndroidManifest = await AndroidConfig.Manifest.readAndroidManifestAsync(manifestPath);
     expect(
