@@ -2,19 +2,16 @@ import assert from 'assert';
 
 import fs from 'fs-extra';
 import { AndroidConfig } from '@expo/config-plugins';
+import { Job } from '@expo/eas-build-job';
 
-import { ManagedBuildContext, ManagedJob } from '../managed/context';
 import { BuildContext } from '../context';
-import { GenericJob } from '../utils/expoUpdates';
 
 export enum AndroidMetadataName {
   UPDATES_CONFIGURATION_REQUEST_HEADERS_KEY = 'expo.modules.updates.UPDATES_CONFIGURATION_REQUEST_HEADERS_KEY',
   RELEASE_CHANNEL = 'expo.modules.updates.EXPO_RELEASE_CHANNEL',
 }
 
-export async function androidSetChannelNativelyAsync(
-  ctx: ManagedBuildContext<ManagedJob> | BuildContext<GenericJob>
-): Promise<void> {
+export async function androidSetChannelNativelyAsync(ctx: BuildContext<Job>): Promise<void> {
   assert(ctx.job.updates?.channel, 'updates.channel must be defined');
 
   const manifestPath = await AndroidConfig.Paths.getAndroidManifestAsync(
@@ -44,7 +41,7 @@ export async function androidSetChannelNativelyAsync(
 }
 
 export const androidSetClassicReleaseChannelNativelyAsync = async (
-  ctx: ManagedBuildContext<ManagedJob> | BuildContext<GenericJob>
+  ctx: BuildContext<Job>
 ): Promise<void> => {
   assert(ctx.job.releaseChannel, 'releaseChannel must be defined');
 
@@ -67,7 +64,7 @@ export const androidSetClassicReleaseChannelNativelyAsync = async (
 };
 
 export const androidGetNativelyDefinedReleaseChannelAsync = async (
-  ctx: ManagedBuildContext<ManagedJob> | BuildContext<GenericJob>
+  ctx: BuildContext<Job>
 ): Promise<string | undefined | null> => {
   const manifestPath = await AndroidConfig.Paths.getAndroidManifestAsync(
     ctx.reactNativeProjectDirectory

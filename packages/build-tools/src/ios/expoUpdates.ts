@@ -4,10 +4,9 @@ import assert from 'assert';
 import fs from 'fs-extra';
 import plist from '@expo/plist';
 import fg from 'fast-glob';
+import { Job } from '@expo/eas-build-job';
 
-import { ManagedBuildContext, ManagedJob } from '../managed/context';
 import { BuildContext } from '../context';
-import { GenericJob } from '../utils/expoUpdates';
 
 export enum IosMetadataName {
   UPDATES_CONFIGURATION_REQUEST_HEADERS_KEY = 'EXUpdatesRequestHeaders',
@@ -31,9 +30,7 @@ export async function getExpoPlistDirectoryAsync(
   );
 }
 
-export async function iosSetChannelNativelyAsync(
-  ctx: ManagedBuildContext<ManagedJob> | BuildContext<GenericJob>
-): Promise<void> {
+export async function iosSetChannelNativelyAsync(ctx: BuildContext<Job>): Promise<void> {
   assert(ctx.job.updates?.channel, 'updates.channel must be defined');
 
   const expoPlistPath = path.resolve(
@@ -60,9 +57,7 @@ export async function iosSetChannelNativelyAsync(
   await fs.writeFile(expoPlistPath, expoPlist);
 }
 
-export const iosSetReleaseChannelNativelyAsync = async (
-  ctx: ManagedBuildContext<ManagedJob> | BuildContext<GenericJob>
-): Promise<void> => {
+export const iosSetReleaseChannelNativelyAsync = async (ctx: BuildContext<Job>): Promise<void> => {
   assert(ctx.job.releaseChannel, 'releaseChannel must be defined');
 
   const expoPlistPath = path.resolve(
@@ -84,7 +79,7 @@ export const iosSetReleaseChannelNativelyAsync = async (
 };
 
 export const iosGetNativelyDefinedReleaseChannelAsync = async (
-  ctx: ManagedBuildContext<ManagedJob> | BuildContext<GenericJob>
+  ctx: BuildContext<Job>
 ): Promise<string | undefined | null> => {
   const expoPlistPath = path.resolve(
     await getExpoPlistDirectoryAsync(ctx.reactNativeProjectDirectory),

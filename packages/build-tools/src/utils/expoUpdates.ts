@@ -1,6 +1,6 @@
 import assert from 'assert';
 
-import { Ios, Android, Platform } from '@expo/eas-build-job';
+import { Ios, Android, Platform, Job } from '@expo/eas-build-job';
 
 import {
   androidSetChannelNativelyAsync,
@@ -13,7 +13,6 @@ import {
   iosGetNativelyDefinedReleaseChannelAsync,
 } from '../ios/expoUpdates';
 import { BuildContext } from '../context';
-import { ManagedBuildContext, ManagedJob } from '../managed/context';
 
 import isExpoUpdatesInstalledAsync from './isExpoUpdatesInstalled';
 export type GenericJob = Ios.GenericJob | Android.GenericJob;
@@ -24,7 +23,7 @@ export type GenericJob = Ios.GenericJob | Android.GenericJob;
  * @param platform
  */
 export const setChannelNativelyAsync = async (
-  ctx: ManagedBuildContext<ManagedJob> | BuildContext<GenericJob>,
+  ctx: BuildContext<Job>,
   platform: Platform
 ): Promise<void> => {
   assert(ctx.job.updates?.channel, 'updates.channel must be defined');
@@ -59,7 +58,7 @@ export const setChannelNativelyAsync = async (
  * @param platform
  */
 export const setReleaseChannelNativelyAsync = async (
-  ctx: ManagedBuildContext<ManagedJob> | BuildContext<GenericJob>,
+  ctx: BuildContext<Job>,
   platform: Platform
 ): Promise<void> => {
   assert(ctx.job.releaseChannel, 'releaseChannel must be defined');
@@ -87,7 +86,7 @@ export const setReleaseChannelNativelyAsync = async (
  * @param platform
  */
 export const getNativelyDefinedReleaseChannelAsync = async (
-  ctx: ManagedBuildContext<ManagedJob> | BuildContext<GenericJob>,
+  ctx: BuildContext<Job>,
   platform: Platform
 ): Promise<string | undefined | null> => {
   switch (platform) {
@@ -103,7 +102,7 @@ export const getNativelyDefinedReleaseChannelAsync = async (
 };
 
 export const configureClassicExpoUpdatesAsync = async (
-  ctx: ManagedBuildContext<ManagedJob> | BuildContext<GenericJob>,
+  ctx: BuildContext<Job>,
   platform: Platform
 ): Promise<void> => {
   if (ctx.job.releaseChannel) {
@@ -128,14 +127,14 @@ export const configureClassicExpoUpdatesAsync = async (
 };
 
 export const configureEASExpoUpdatesAsync = async (
-  ctx: ManagedBuildContext<ManagedJob> | BuildContext<GenericJob>,
+  ctx: BuildContext<Job>,
   platform: Platform
 ): Promise<void> => {
   await setChannelNativelyAsync(ctx, platform);
 };
 
 export const configureExpoUpdatesIfInstalledAsync = async (
-  ctx: ManagedBuildContext<ManagedJob> | BuildContext<GenericJob>,
+  ctx: BuildContext<Job>,
   platform: Platform
 ): Promise<void> => {
   if (!(await isExpoUpdatesInstalledAsync(ctx.reactNativeProjectDirectory))) {
