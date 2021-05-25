@@ -57,7 +57,7 @@ describe(expoUpdates.configureExpoUpdatesIfInstalledAsync, () => {
 describe(expoUpdates.configureClassicExpoUpdatesAsync, () => {
   it('sets the release channel if it is supplied in ctx.job.releaseChannel', async () => {
     (isExpoUpdatesInstalledAsync as jest.Mock).mockReturnValue(true);
-    jest.spyOn(expoUpdates, 'setReleaseChannelNativelyAsync').mockImplementation();
+    jest.spyOn(expoUpdates, 'setClassicReleaseChannelNativelyAsync').mockImplementation();
 
     const managedCtx: ManagedBuildContext<ManagedJob> = {
       job: { releaseChannel: 'default', platform: Platform.IOS },
@@ -68,7 +68,7 @@ describe(expoUpdates.configureClassicExpoUpdatesAsync, () => {
   });
   it('searches for the natively defined releaseChannel if it is not supplied by ctx.job.releaseChannel', async () => {
     (isExpoUpdatesInstalledAsync as jest.Mock).mockReturnValue(true);
-    jest.spyOn(expoUpdates, 'getNativelyDefinedReleaseChannelAsync').mockImplementation();
+    jest.spyOn(expoUpdates, 'getNativelyDefinedClassicReleaseChannelAsync').mockImplementation();
 
     const managedCtx: ManagedBuildContext<ManagedJob> = {
       job: { platform: Platform.IOS },
@@ -80,9 +80,11 @@ describe(expoUpdates.configureClassicExpoUpdatesAsync, () => {
   });
   it('uses the default release channel if the releaseChannel is not defined in ctx.job.releaseChannel nor natively.', async () => {
     (isExpoUpdatesInstalledAsync as jest.Mock).mockReturnValue(true);
-    jest.spyOn(expoUpdates, 'getNativelyDefinedReleaseChannelAsync').mockImplementation(() => {
-      throw new Error();
-    });
+    jest
+      .spyOn(expoUpdates, 'getNativelyDefinedClassicReleaseChannelAsync')
+      .mockImplementation(() => {
+        throw new Error();
+      });
 
     const infoLogger = jest.fn();
     const managedCtx: ManagedBuildContext<ManagedJob> = {
