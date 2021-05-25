@@ -127,13 +127,9 @@ export const configureExpoUpdatesIfInstalledAsync = async (
     return;
   }
 
-  switch (true) {
-    case !!ctx.job.updates?.channel: {
-      await configureEASExpoUpdatesAsync(ctx);
-      return;
-    }
-    default: {
-      await configureClassicExpoUpdatesAsync(ctx);
-    }
+  if (ctx.job.updates?.channel) {
+    await configureEASExpoUpdatesAsync(ctx);
+  } else {
+    await configureClassicExpoUpdatesAsync(ctx);
   }
 };

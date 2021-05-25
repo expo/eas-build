@@ -40,9 +40,9 @@ export async function androidSetChannelNativelyAsync(ctx: BuildContext<Job>): Pr
   await AndroidConfig.Manifest.writeAndroidManifestAsync(manifestPath, androidManifest);
 }
 
-export const androidSetClassicReleaseChannelNativelyAsync = async (
+export async function androidSetClassicReleaseChannelNativelyAsync(
   ctx: BuildContext<Job>
-): Promise<void> => {
+): Promise<void> {
   assert(ctx.job.releaseChannel, 'releaseChannel must be defined');
 
   const manifestPath = await AndroidConfig.Paths.getAndroidManifestAsync(
@@ -61,11 +61,11 @@ export const androidSetClassicReleaseChannelNativelyAsync = async (
     'value'
   );
   await AndroidConfig.Manifest.writeAndroidManifestAsync(manifestPath, androidManifest);
-};
+}
 
-export const androidGetNativelyDefinedReleaseChannelAsync = async (
+export async function androidGetNativelyDefinedReleaseChannelAsync(
   ctx: BuildContext<Job>
-): Promise<string | undefined | null> => {
+): Promise<string | undefined | null> {
   const manifestPath = await AndroidConfig.Paths.getAndroidManifestAsync(
     ctx.reactNativeProjectDirectory
   );
@@ -78,4 +78,4 @@ export const androidGetNativelyDefinedReleaseChannelAsync = async (
     androidManifest,
     AndroidMetadataName.RELEASE_CHANNEL
   );
-};
+}

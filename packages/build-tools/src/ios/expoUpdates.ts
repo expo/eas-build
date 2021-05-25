@@ -35,7 +35,7 @@ export async function iosSetChannelNativelyAsync(ctx: BuildContext<Job>): Promis
   await fs.writeFile(expoPlistPath, expoPlist);
 }
 
-export const iosSetReleaseChannelNativelyAsync = async (ctx: BuildContext<Job>): Promise<void> => {
+export async function iosSetReleaseChannelNativelyAsync(ctx: BuildContext<Job>): Promise<void> {
   assert(ctx.job.releaseChannel, 'releaseChannel must be defined');
 
   const expoPlistPath = IOSConfig.Paths.getExpoPlistPath(ctx.reactNativeProjectDirectory);
@@ -50,11 +50,11 @@ export const iosSetReleaseChannelNativelyAsync = async (ctx: BuildContext<Job>):
   const expoPlist = plist.build(items);
 
   await fs.writeFile(expoPlistPath, expoPlist);
-};
+}
 
-export const iosGetNativelyDefinedReleaseChannelAsync = async (
+export async function iosGetNativelyDefinedReleaseChannelAsync(
   ctx: BuildContext<Job>
-): Promise<string | undefined | null> => {
+): Promise<string | undefined | null> {
   const expoPlistPath = IOSConfig.Paths.getExpoPlistPath(ctx.reactNativeProjectDirectory);
   if (!(await fs.pathExists(expoPlistPath))) {
     return;
@@ -65,4 +65,4 @@ export const iosGetNativelyDefinedReleaseChannelAsync = async (
     return;
   }
   return parsedPlist[IosMetadataName.RELEASE_CHANNEL];
-};
+}
