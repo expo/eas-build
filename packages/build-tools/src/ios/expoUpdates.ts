@@ -54,15 +54,15 @@ export async function iosSetReleaseChannelNativelyAsync(ctx: BuildContext<Job>):
 
 export async function iosGetNativelyDefinedReleaseChannelAsync(
   ctx: BuildContext<Job>
-): Promise<string | undefined | null> {
+): Promise<string | null> {
   const expoPlistPath = IOSConfig.Paths.getExpoPlistPath(ctx.reactNativeProjectDirectory);
   if (!(await fs.pathExists(expoPlistPath))) {
-    return;
+    return null;
   }
   const expoPlistContent = await fs.readFile(expoPlistPath, 'utf8');
   const parsedPlist = plist.parse(expoPlistContent);
   if (!parsedPlist) {
-    return;
+    return null;
   }
-  return parsedPlist[IosMetadataName.RELEASE_CHANNEL];
+  return parsedPlist[IosMetadataName.RELEASE_CHANNEL] ?? null;
 }

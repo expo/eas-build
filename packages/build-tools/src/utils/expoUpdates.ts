@@ -81,7 +81,7 @@ export const setReleaseChannelNativelyAsync = async (ctx: BuildContext<Job>): Pr
  */
 export const getNativelyDefinedReleaseChannelAsync = async (
   ctx: BuildContext<Job>
-): Promise<string | undefined | null> => {
+): Promise<string | null> => {
   switch (ctx.job.platform) {
     case Platform.ANDROID: {
       return androidGetNativelyDefinedReleaseChannelAsync(ctx);

@@ -65,12 +65,12 @@ export async function androidSetClassicReleaseChannelNativelyAsync(
 
 export async function androidGetNativelyDefinedReleaseChannelAsync(
   ctx: BuildContext<Job>
-): Promise<string | undefined | null> {
+): Promise<string | null> {
   const manifestPath = await AndroidConfig.Paths.getAndroidManifestAsync(
     ctx.reactNativeProjectDirectory
   );
   if (!(await fs.pathExists(manifestPath))) {
-    return;
+    return null;
   }
 
   const androidManifest = await AndroidConfig.Manifest.readAndroidManifestAsync(manifestPath);
