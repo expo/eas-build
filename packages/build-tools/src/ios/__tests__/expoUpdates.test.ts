@@ -5,10 +5,10 @@ import plist from '@expo/plist';
 import { IOSConfig } from '@expo/config-plugins';
 
 import {
-  iosGetNativelyDefinedReleaseChannelAsync,
+  iosGetNativelyDefinedClassicReleaseChannelAsync,
   IosMetadataName,
   iosSetChannelNativelyAsync,
-  iosSetReleaseChannelNativelyAsync,
+  iosSetClassicReleaseChannelNativelyAsync,
 } from '../../ios/expoUpdates';
 
 jest.mock('fs');
@@ -22,7 +22,7 @@ const noItemsExpoPlist = `
 </plist>`;
 const channel = 'main';
 
-describe(iosSetReleaseChannelNativelyAsync, () => {
+describe(iosSetClassicReleaseChannelNativelyAsync, () => {
   test('sets the release channel', async () => {
     const reactNativeProjectDirectory = fs.mkdtempSync('/expo-project-');
     fs.ensureDirSync(reactNativeProjectDirectory);
@@ -45,7 +45,7 @@ describe(iosSetReleaseChannelNativelyAsync, () => {
     fs.ensureDirSync(expoPlistDirectory);
     fs.writeFileSync(expoPlistPath, noItemsExpoPlist);
 
-    await iosSetReleaseChannelNativelyAsync(ctx as any);
+    await iosSetClassicReleaseChannelNativelyAsync(ctx as any);
 
     const newExpoPlist = await fs.readFile(expoPlistPath, 'utf8');
     expect(plist.parse(newExpoPlist)[IosMetadataName.RELEASE_CHANNEL]).toEqual(releaseChannel);
@@ -89,7 +89,7 @@ describe(iosSetChannelNativelyAsync, () => {
   });
 });
 
-describe(iosGetNativelyDefinedReleaseChannelAsync, () => {
+describe(iosGetNativelyDefinedClassicReleaseChannelAsync, () => {
   it('gets the natively defined release channel', async () => {
     const reactNativeProjectDirectory = fs.mkdtempSync('/expo-project-');
     fs.ensureDirSync(reactNativeProjectDirectory);
@@ -127,7 +127,7 @@ describe(iosGetNativelyDefinedReleaseChannelAsync, () => {
     fs.ensureDirSync(expoPlistDirectory);
     fs.writeFileSync(expoPlistPath, releaseChannelInPlist);
 
-    const nativelyDefinedReleaseChannel = await iosGetNativelyDefinedReleaseChannelAsync(
+    const nativelyDefinedReleaseChannel = await iosGetNativelyDefinedClassicReleaseChannelAsync(
       ctx as any
     );
 

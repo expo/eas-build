@@ -63,7 +63,7 @@ export async function androidSetClassicReleaseChannelNativelyAsync(
   await AndroidConfig.Manifest.writeAndroidManifestAsync(manifestPath, androidManifest);
 }
 
-export async function androidGetNativelyDefinedReleaseChannelAsync(
+export async function androidGetNativelyDefinedClassicReleaseChannelAsync(
   ctx: BuildContext<Job>
 ): Promise<string | null> {
   const manifestPath = await AndroidConfig.Paths.getAndroidManifestAsync(

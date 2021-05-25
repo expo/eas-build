@@ -5,7 +5,7 @@ import { AndroidConfig } from '@expo/config-plugins';
 
 import {
   AndroidMetadataName,
-  androidGetNativelyDefinedReleaseChannelAsync,
+  androidGetNativelyDefinedClassicReleaseChannelAsync,
   androidSetChannelNativelyAsync,
   androidSetClassicReleaseChannelNativelyAsync,
 } from '../expoUpdates';
@@ -115,7 +115,7 @@ describe(androidSetChannelNativelyAsync, () => {
     expect(JSON.parse(newValue!)).toEqual({ 'expo-channel-name': channel });
   });
 });
-describe(androidGetNativelyDefinedReleaseChannelAsync, () => {
+describe(androidGetNativelyDefinedClassicReleaseChannelAsync, () => {
   it('gets the natively defined release channel', async () => {
     const reactNativeProjectDirectory = fs.mkdtempSync('/expo-project-');
     fs.ensureDirSync(reactNativeProjectDirectory);
@@ -148,7 +148,7 @@ describe(androidGetNativelyDefinedReleaseChannelAsync, () => {
     fs.ensureDirSync(manifestDirectory);
     fs.writeFileSync(manifestPath, releaseChannelInAndroidManifest);
 
-    const nativelyDefinedReleaseChannel = await androidGetNativelyDefinedReleaseChannelAsync(
+    const nativelyDefinedReleaseChannel = await androidGetNativelyDefinedClassicReleaseChannelAsync(
       ctx as any
     );
     expect(nativelyDefinedReleaseChannel).toBe(releaseChannel);

@@ -5,12 +5,12 @@ import { Ios, Android, Platform, Job } from '@expo/eas-build-job';
 import {
   androidSetChannelNativelyAsync,
   androidSetClassicReleaseChannelNativelyAsync,
-  androidGetNativelyDefinedReleaseChannelAsync,
+  androidGetNativelyDefinedClassicReleaseChannelAsync,
 } from '../android/expoUpdates';
 import {
   iosSetChannelNativelyAsync,
-  iosSetReleaseChannelNativelyAsync,
-  iosGetNativelyDefinedReleaseChannelAsync,
+  iosSetClassicReleaseChannelNativelyAsync,
+  iosGetNativelyDefinedClassicReleaseChannelAsync,
 } from '../ios/expoUpdates';
 import { BuildContext } from '../context';
 
@@ -54,7 +54,9 @@ export const setChannelNativelyAsync = async (ctx: BuildContext<Job>): Promise<v
  * @param ctx
  * @param platform
  */
-export const setReleaseChannelNativelyAsync = async (ctx: BuildContext<Job>): Promise<void> => {
+export const setClassicReleaseChannelNativelyAsync = async (
+  ctx: BuildContext<Job>
+): Promise<void> => {
   assert(ctx.job.releaseChannel, 'releaseChannel must be defined');
 
   const configFile = ctx.job.platform === Platform.ANDROID ? 'AndroidManifest.xml' : 'Expo.plist';
@@ -66,7 +68,7 @@ export const setReleaseChannelNativelyAsync = async (ctx: BuildContext<Job>): Pr
       return;
     }
     case Platform.IOS: {
-      await iosSetReleaseChannelNativelyAsync(ctx);
+      await iosSetClassicReleaseChannelNativelyAsync(ctx);
       return;
     }
     default:
@@ -79,15 +81,15 @@ export const setReleaseChannelNativelyAsync = async (ctx: BuildContext<Job>): Pr
  * @param ctx
  * @param platform
  */
-export const getNativelyDefinedReleaseChannelAsync = async (
+export const getNativelyDefinedClassicReleaseChannelAsync = async (
   ctx: BuildContext<Job>
 ): Promise<string | null> => {
   switch (ctx.job.platform) {
     case Platform.ANDROID: {
-      return androidGetNativelyDefinedReleaseChannelAsync(ctx);
+      return androidGetNativelyDefinedClassicReleaseChannelAsync(ctx);
     }
     case Platform.IOS: {
-      return iosGetNativelyDefinedReleaseChannelAsync(ctx);
+      return iosGetNativelyDefinedClassicReleaseChannelAsync(ctx);
     }
     default:
       throw new Error(`Platform is not supported.`);
@@ -96,14 +98,14 @@ export const getNativelyDefinedReleaseChannelAsync = async (
 
 export const configureClassicExpoUpdatesAsync = async (ctx: BuildContext<Job>): Promise<void> => {
   if (ctx.job.releaseChannel) {
-    await setReleaseChannelNativelyAsync(ctx);
+    await setClassicReleaseChannelNativelyAsync(ctx);
   } else {
     /**
      * If releaseChannel is not defined:
      *  1. Try to infer it from the native value.
      *  2. If it is not set, fallback to 'default'.
      */
-    const releaseChannel = await getNativelyDefinedReleaseChannelAsync(ctx);
+    const releaseChannel = await getNativelyDefinedClassicReleaseChannelAsync(ctx);
     if (releaseChannel) {
       ctx.logger.info(
         `Using the release channel pre-configured in native project (${releaseChannel})`

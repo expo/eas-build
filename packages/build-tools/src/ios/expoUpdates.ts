@@ -35,7 +35,9 @@ export async function iosSetChannelNativelyAsync(ctx: BuildContext<Job>): Promis
   await fs.writeFile(expoPlistPath, expoPlist);
 }
 
-export async function iosSetReleaseChannelNativelyAsync(ctx: BuildContext<Job>): Promise<void> {
+export async function iosSetClassicReleaseChannelNativelyAsync(
+  ctx: BuildContext<Job>
+): Promise<void> {
   assert(ctx.job.releaseChannel, 'releaseChannel must be defined');
 
   const expoPlistPath = IOSConfig.Paths.getExpoPlistPath(ctx.reactNativeProjectDirectory);
@@ -52,7 +54,7 @@ export async function iosSetReleaseChannelNativelyAsync(ctx: BuildContext<Job>):
   await fs.writeFile(expoPlistPath, expoPlist);
 }
 
-export async function iosGetNativelyDefinedReleaseChannelAsync(
+export async function iosGetNativelyDefinedClassicReleaseChannelAsync(
   ctx: BuildContext<Job>
 ): Promise<string | null> {
   const expoPlistPath = IOSConfig.Paths.getExpoPlistPath(ctx.reactNativeProjectDirectory);

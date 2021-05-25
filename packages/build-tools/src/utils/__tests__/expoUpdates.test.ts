@@ -64,7 +64,7 @@ describe(expoUpdates.configureClassicExpoUpdatesAsync, () => {
     } as any;
     await expoUpdates.configureExpoUpdatesIfInstalledAsync(managedCtx);
 
-    expect(expoUpdates.setReleaseChannelNativelyAsync).toBeCalledTimes(1);
+    expect(expoUpdates.setClassicReleaseChannelNativelyAsync).toBeCalledTimes(1);
   });
   it('searches for the natively defined releaseChannel if it is not supplied by ctx.job.releaseChannel', async () => {
     (isExpoUpdatesInstalledAsync as jest.Mock).mockReturnValue(true);
@@ -76,7 +76,7 @@ describe(expoUpdates.configureClassicExpoUpdatesAsync, () => {
     } as any;
     await expoUpdates.configureExpoUpdatesIfInstalledAsync(managedCtx);
 
-    expect(expoUpdates.getNativelyDefinedReleaseChannelAsync).toBeCalledTimes(1);
+    expect(expoUpdates.getNativelyDefinedClassicReleaseChannelAsync).toBeCalledTimes(1);
   });
   it('uses the default release channel if the releaseChannel is not defined in ctx.job.releaseChannel nor natively.', async () => {
     (isExpoUpdatesInstalledAsync as jest.Mock).mockReturnValue(true);
