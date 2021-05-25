@@ -13,7 +13,9 @@ describe(expoUpdates.configureExpoUpdatesIfInstalledAsync, () => {
     jest.spyOn(expoUpdates, 'configureEASExpoUpdatesAsync');
     jest.spyOn(expoUpdates, 'configureClassicExpoUpdatesAsync');
 
-    await expoUpdates.configureExpoUpdatesIfInstalledAsync({} as any, Platform.IOS);
+    await expoUpdates.configureExpoUpdatesIfInstalledAsync({
+      job: { Platform: Platform.IOS },
+    } as any);
 
     expect(expoUpdates.configureEASExpoUpdatesAsync).not.toBeCalled();
     expect(expoUpdates.configureClassicExpoUpdatesAsync).not.toBeCalled();
@@ -26,9 +28,9 @@ describe(expoUpdates.configureExpoUpdatesIfInstalledAsync, () => {
     jest.spyOn(expoUpdates, 'configureClassicExpoUpdatesAsync');
 
     const managedCtx: ManagedBuildContext<ManagedJob> = {
-      job: { updates: { channel: 'main' } },
+      job: { updates: { channel: 'main' }, Platform: Platform.IOS },
     } as any;
-    await expoUpdates.configureExpoUpdatesIfInstalledAsync(managedCtx, Platform.IOS);
+    await expoUpdates.configureExpoUpdatesIfInstalledAsync(managedCtx);
 
     expect(expoUpdates.configureEASExpoUpdatesAsync).toBeCalledTimes(1);
     expect(expoUpdates.configureClassicExpoUpdatesAsync).not.toBeCalled();
@@ -41,10 +43,10 @@ describe(expoUpdates.configureExpoUpdatesIfInstalledAsync, () => {
     jest.spyOn(expoUpdates, 'configureClassicExpoUpdatesAsync');
 
     const managedCtx: ManagedBuildContext<ManagedJob> = {
-      job: {},
+      job: { platform: Platform.IOS },
       logger: { info: () => {} },
     } as any;
-    await expoUpdates.configureExpoUpdatesIfInstalledAsync(managedCtx, Platform.IOS);
+    await expoUpdates.configureExpoUpdatesIfInstalledAsync(managedCtx);
 
     expect(expoUpdates.configureEASExpoUpdatesAsync).not.toBeCalled();
     expect(expoUpdates.configureClassicExpoUpdatesAsync).toBeCalledTimes(1);
@@ -58,9 +60,9 @@ describe(expoUpdates.configureClassicExpoUpdatesAsync, () => {
     jest.spyOn(expoUpdates, 'setReleaseChannelNativelyAsync').mockImplementation();
 
     const managedCtx: ManagedBuildContext<ManagedJob> = {
-      job: { releaseChannel: 'default' },
+      job: { releaseChannel: 'default', platform: Platform.IOS },
     } as any;
-    await expoUpdates.configureExpoUpdatesIfInstalledAsync(managedCtx, Platform.IOS);
+    await expoUpdates.configureExpoUpdatesIfInstalledAsync(managedCtx);
 
     expect(expoUpdates.setReleaseChannelNativelyAsync).toBeCalledTimes(1);
   });
@@ -69,10 +71,10 @@ describe(expoUpdates.configureClassicExpoUpdatesAsync, () => {
     jest.spyOn(expoUpdates, 'getNativelyDefinedReleaseChannelAsync').mockImplementation();
 
     const managedCtx: ManagedBuildContext<ManagedJob> = {
-      job: {},
+      job: { platform: Platform.IOS },
       logger: { info: () => {}, warn: () => {} },
     } as any;
-    await expoUpdates.configureExpoUpdatesIfInstalledAsync(managedCtx, Platform.IOS);
+    await expoUpdates.configureExpoUpdatesIfInstalledAsync(managedCtx);
 
     expect(expoUpdates.getNativelyDefinedReleaseChannelAsync).toBeCalledTimes(1);
   });
@@ -84,10 +86,10 @@ describe(expoUpdates.configureClassicExpoUpdatesAsync, () => {
 
     const infoLogger = jest.fn();
     const managedCtx: ManagedBuildContext<ManagedJob> = {
-      job: {},
+      job: { platform: Platform.IOS },
       logger: { info: infoLogger },
     } as any;
-    await expoUpdates.configureExpoUpdatesIfInstalledAsync(managedCtx, Platform.IOS);
+    await expoUpdates.configureExpoUpdatesIfInstalledAsync(managedCtx);
 
     expect(infoLogger).toBeCalledWith(`Using default release channel for 'expo-updates' (default)`);
   });

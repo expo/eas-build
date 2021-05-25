@@ -1,4 +1,4 @@
-import { BuildPhase, Ios, Platform } from '@expo/eas-build-job';
+import { BuildPhase, Ios } from '@expo/eas-build-job';
 
 import { BuildContext } from '../context';
 import { setup } from '../utils/project';
@@ -39,7 +39,7 @@ export default async function iosGenericBuilder(
     }
 
     await ctx.runBuildPhase(BuildPhase.CONFIGURE_EXPO_UPDATES, async () => {
-      await configureExpoUpdatesIfInstalledAsync(ctx, Platform.IOS);
+      await configureExpoUpdatesIfInstalledAsync(ctx);
     });
 
     await ctx.runBuildPhase(BuildPhase.RUN_FASTLANE, async () => {

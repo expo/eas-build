@@ -22,10 +22,7 @@ export type GenericJob = Ios.GenericJob | Android.GenericJob;
  * @param ctx
  * @param platform
  */
-export const setChannelNativelyAsync = async (
-  ctx: BuildContext<Job>,
-  platform: Platform
-): Promise<void> => {
+export const setChannelNativelyAsync = async (ctx: BuildContext<Job>): Promise<void> => {
   assert(ctx.job.updates?.channel, 'updates.channel must be defined');
   const newUpdateRequestHeaders: Record<string, string> = {
     'expo-channel-name': ctx.job.updates.channel,
@@ -38,7 +35,7 @@ export const setChannelNativelyAsync = async (
     )}'`
   );
 
-  switch (platform) {
+  switch (ctx.job.platform) {
     case Platform.ANDROID: {
       await androidSetChannelNativelyAsync(ctx);
       return;
@@ -48,7 +45,7 @@ export const setChannelNativelyAsync = async (
       return;
     }
     default:
-      throw new Error(`Platform ${platform} is not supported.`);
+      throw new Error(`Platform is not supported.`);
   }
 };
 
@@ -57,16 +54,13 @@ export const setChannelNativelyAsync = async (
  * @param ctx
  * @param platform
  */
-export const setReleaseChannelNativelyAsync = async (
-  ctx: BuildContext<Job>,
-  platform: Platform
-): Promise<void> => {
+export const setReleaseChannelNativelyAsync = async (ctx: BuildContext<Job>): Promise<void> => {
   assert(ctx.job.releaseChannel, 'releaseChannel must be defined');
 
   const configFile = ctx.job.platform === Platform.ANDROID ? 'AndroidManifest.xml' : 'Expo.plist';
   ctx.logger.info(`Setting the release channel in '${configFile}' to '${ctx.job.releaseChannel}'`);
 
-  switch (platform) {
+  switch (ctx.job.platform) {
     case Platform.ANDROID: {
       await androidSetClassicReleaseChannelNativelyAsync(ctx);
       return;
@@ -76,7 +70,7 @@ export const setReleaseChannelNativelyAsync = async (
       return;
     }
     default:
-      throw new Error(`Platform ${platform} is not supported.`);
+      throw new Error(`Platform is not supported.`);
   }
 };
 
@@ -86,10 +80,9 @@ export const setReleaseChannelNativelyAsync = async (
  * @param platform
  */
 export const getNativelyDefinedReleaseChannelAsync = async (
-  ctx: BuildContext<Job>,
-  platform: Platform
+  ctx: BuildContext<Job>
 ): Promise<string | undefined | null> => {
-  switch (platform) {
+  switch (ctx.job.platform) {
     case Platform.ANDROID: {
       return androidGetNativelyDefinedReleaseChannelAsync(ctx);
     }
@@ -97,16 +90,13 @@ export const getNativelyDefinedReleaseChannelAsync = async (
       return iosGetNativelyDefinedReleaseChannelAsync(ctx);
     }
     default:
-      throw new Error(`Platform ${platform} is not supported.`);
+      throw new Error(`Platform is not supported.`);
   }
 };
 
-export const configureClassicExpoUpdatesAsync = async (
-  ctx: BuildContext<Job>,
-  platform: Platform
-): Promise<void> => {
+export const configureClassicExpoUpdatesAsync = async (ctx: BuildContext<Job>): Promise<void> => {
   if (ctx.job.releaseChannel) {
-    await setReleaseChannelNativelyAsync(ctx, platform);
+    await setReleaseChannelNativelyAsync(ctx);
   } else {
     /**
      * If releaseChannel is not defined:
@@ -114,7 +104,7 @@ export const configureClassicExpoUpdatesAsync = async (
      *  2. If it is not set, fallback to 'default'.
      */
     try {
-      const releaseChannel = await getNativelyDefinedReleaseChannelAsync(ctx, platform);
+      const releaseChannel = await getNativelyDefinedReleaseChannelAsync(ctx);
       assert(releaseChannel, 'release channel is not defined natively');
       ctx.logger.info(
         `Using the release channel pre-configured in native project (${releaseChannel})`
@@ -126,16 +116,12 @@ export const configureClassicExpoUpdatesAsync = async (
   }
 };
 
-export const configureEASExpoUpdatesAsync = async (
-  ctx: BuildContext<Job>,
-  platform: Platform
-): Promise<void> => {
-  await setChannelNativelyAsync(ctx, platform);
+export const configureEASExpoUpdatesAsync = async (ctx: BuildContext<Job>): Promise<void> => {
+  await setChannelNativelyAsync(ctx);
 };
 
 export const configureExpoUpdatesIfInstalledAsync = async (
-  ctx: BuildContext<Job>,
-  platform: Platform
+  ctx: BuildContext<Job>
 ): Promise<void> => {
   if (!(await isExpoUpdatesInstalledAsync(ctx.reactNativeProjectDirectory))) {
     return;
@@ -143,11 +129,11 @@ export const configureExpoUpdatesIfInstalledAsync = async (
 
   switch (true) {
     case !!ctx.job.updates?.channel: {
-      await configureEASExpoUpdatesAsync(ctx, platform);
+      await configureEASExpoUpdatesAsync(ctx);
       return;
     }
     default: {
-      await configureClassicExpoUpdatesAsync(ctx, platform);
+      await configureClassicExpoUpdatesAsync(ctx);
     }
   }
 };

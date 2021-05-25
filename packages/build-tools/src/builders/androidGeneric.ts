@@ -1,4 +1,4 @@
-import { Android, BuildPhase, Platform } from '@expo/eas-build-job';
+import { Android, BuildPhase } from '@expo/eas-build-job';
 
 import { BuildContext } from '../context';
 import { setup } from '../utils/project';
@@ -32,7 +32,7 @@ export default async function androidGenericBuilder(
   }
 
   await ctx.runBuildPhase(BuildPhase.CONFIGURE_EXPO_UPDATES, async () => {
-    await configureExpoUpdatesIfInstalledAsync(ctx, Platform.ANDROID);
+    await configureExpoUpdatesIfInstalledAsync(ctx);
   });
 
   await ctx.runBuildPhase(BuildPhase.RUN_GRADLEW, async () => {

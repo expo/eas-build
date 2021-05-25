@@ -1,5 +1,5 @@
 import { AndroidConfig } from '@expo/config-plugins';
-import { Android, BuildPhase, Platform } from '@expo/eas-build-job';
+import { Android, BuildPhase } from '@expo/eas-build-job';
 
 import { ManagedBuildContext } from '../managed/context';
 import { configureExpoUpdatesIfInstalledAsync } from '../utils/expoUpdates';
@@ -32,7 +32,7 @@ export default async function androidManagedBuilder(
     });
   }
   await ctx.runBuildPhase(BuildPhase.CONFIGURE_EXPO_UPDATES, async () => {
-    await configureExpoUpdatesIfInstalledAsync(ctx, Platform.ANDROID);
+    await configureExpoUpdatesIfInstalledAsync(ctx);
   });
 
   await ctx.runBuildPhase(BuildPhase.RUN_GRADLEW, async () => {

@@ -1,7 +1,7 @@
 import assert from 'assert';
 
 import { IOSConfig } from '@expo/config-plugins';
-import { BuildPhase, Ios, Platform } from '@expo/eas-build-job';
+import { BuildPhase, Ios } from '@expo/eas-build-job';
 
 import { ManagedBuildContext } from '../managed/context';
 import { configureExpoUpdatesIfInstalledAsync } from '../utils/expoUpdates';
@@ -46,7 +46,7 @@ export default async function iosManagedBuilder(
     }
 
     await ctx.runBuildPhase(BuildPhase.CONFIGURE_EXPO_UPDATES, async () => {
-      await configureExpoUpdatesIfInstalledAsync(ctx, Platform.IOS);
+      await configureExpoUpdatesIfInstalledAsync(ctx);
     });
 
     await ctx.runBuildPhase(BuildPhase.RUN_FASTLANE, async () => {
