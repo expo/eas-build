@@ -5,7 +5,6 @@ import { AndroidConfig } from '@expo/config-plugins';
 
 import {
   AndroidMetadataName,
-  getAndroidManifestDirectory,
   androidGetNativelyDefinedReleaseChannelAsync,
   androidSetChannelNativelyAsync,
   androidSetReleaseChannelNativelyAsync,
@@ -54,8 +53,11 @@ describe(androidSetReleaseChannelNativelyAsync, () => {
       logger: { info: () => {} },
     };
 
-    const manifestDirectory = getAndroidManifestDirectory(reactNativeProjectDirectory);
-    const manifestPath = path.join(manifestDirectory, 'AndroidManifest.xml');
+    fs.ensureDirSync(path.join(reactNativeProjectDirectory, 'android'));
+    const manifestPath = await AndroidConfig.Paths.getAndroidManifestAsync(
+      reactNativeProjectDirectory
+    );
+    const manifestDirectory = path.dirname(manifestPath);
 
     fs.ensureDirSync(manifestDirectory);
     fs.writeFileSync(manifestPath, Buffer.from(noMetadataAndroidManifest));
@@ -85,8 +87,11 @@ describe(androidSetChannelNativelyAsync, () => {
       logger: { info: () => {} },
     };
 
-    const manifestDirectory = getAndroidManifestDirectory(reactNativeProjectDirectory);
-    const manifestPath = path.join(manifestDirectory, 'AndroidManifest.xml');
+    fs.ensureDirSync(path.join(reactNativeProjectDirectory, 'android'));
+    const manifestPath = await AndroidConfig.Paths.getAndroidManifestAsync(
+      reactNativeProjectDirectory
+    );
+    const manifestDirectory = path.dirname(manifestPath);
 
     fs.ensureDirSync(manifestDirectory);
     fs.writeFileSync(manifestPath, noMetadataAndroidManifest);
@@ -134,8 +139,11 @@ describe(androidGetNativelyDefinedReleaseChannelAsync, () => {
       <meta-data android:name="expo.modules.updates.EXPO_RELEASE_CHANNEL" android:value="default"/>
     </application>
     </manifest>`;
-    const manifestDirectory = getAndroidManifestDirectory(reactNativeProjectDirectory);
-    const manifestPath = path.join(manifestDirectory, 'AndroidManifest.xml');
+    fs.ensureDirSync(path.join(reactNativeProjectDirectory, 'android'));
+    const manifestPath = await AndroidConfig.Paths.getAndroidManifestAsync(
+      reactNativeProjectDirectory
+    );
+    const manifestDirectory = path.dirname(manifestPath);
 
     fs.ensureDirSync(manifestDirectory);
     fs.writeFileSync(manifestPath, releaseChannelInAndroidManifest);

@@ -1,4 +1,3 @@
-import path from 'path';
 import assert from 'assert';
 
 import fs from 'fs-extra';
@@ -13,19 +12,15 @@ export enum AndroidMetadataName {
   RELEASE_CHANNEL = 'expo.modules.updates.EXPO_RELEASE_CHANNEL',
 }
 
-export function getAndroidManifestDirectory(reactNativeProjectDirectory: string): string {
-  return path.join(reactNativeProjectDirectory, 'android', 'app', 'src', 'main');
-}
-
 export async function androidSetChannelNativelyAsync(
   ctx: ManagedBuildContext<ManagedJob> | BuildContext<GenericJob>
 ): Promise<void> {
   assert(ctx.job.updates?.channel, 'updates.channel must be defined');
 
-  const manifestPath = path.join(
-    getAndroidManifestDirectory(ctx.reactNativeProjectDirectory),
-    'AndroidManifest.xml'
+  const manifestPath = await AndroidConfig.Paths.getAndroidManifestAsync(
+    ctx.reactNativeProjectDirectory
   );
+
   if (!(await fs.pathExists(manifestPath))) {
     throw new Error(`Couldn't find Android manifest at ${manifestPath}`);
   }
@@ -53,9 +48,8 @@ export const androidSetReleaseChannelNativelyAsync = async (
 ): Promise<void> => {
   assert(ctx.job.releaseChannel, 'releaseChannel must be defined');
 
-  const manifestPath = path.join(
-    getAndroidManifestDirectory(ctx.reactNativeProjectDirectory),
-    'AndroidManifest.xml'
+  const manifestPath = await AndroidConfig.Paths.getAndroidManifestAsync(
+    ctx.reactNativeProjectDirectory
   );
   if (!(await fs.pathExists(manifestPath))) {
     throw new Error(`Couldn't find Android manifest at ${manifestPath}`);
@@ -75,9 +69,8 @@ export const androidSetReleaseChannelNativelyAsync = async (
 export const androidGetNativelyDefinedReleaseChannelAsync = async (
   ctx: ManagedBuildContext<ManagedJob> | BuildContext<GenericJob>
 ): Promise<string | undefined | null> => {
-  const manifestPath = path.join(
-    getAndroidManifestDirectory(ctx.reactNativeProjectDirectory),
-    'AndroidManifest.xml'
+  const manifestPath = await AndroidConfig.Paths.getAndroidManifestAsync(
+    ctx.reactNativeProjectDirectory
   );
   if (!(await fs.pathExists(manifestPath))) {
     return;
