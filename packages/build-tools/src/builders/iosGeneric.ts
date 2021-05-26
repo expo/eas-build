@@ -4,12 +4,11 @@ import { BuildContext } from '../context';
 import { setup } from '../utils/project';
 import { findBuildArtifacts } from '../utils/buildArtifacts';
 import { Hook, runHookIfPresent } from '../utils/hooks';
-import { updateReleaseChannel, getReleaseChannel } from '../ios/releaseChannel';
 import CredentialsManager from '../ios/credentials/manager';
 import { configureXcodeProject } from '../ios/configure';
 import { runFastlaneGym } from '../ios/fastlane';
 import { installPods } from '../ios/pod';
-import { configureExpoUpdatesIfInstalled } from '../generic/expoUpdates';
+import { configureExpoUpdatesIfInstalledAsync } from '../utils/expoUpdates';
 
 export default async function iosGenericBuilder(
   ctx: BuildContext<Ios.GenericJob>
@@ -40,7 +39,7 @@ export default async function iosGenericBuilder(
     }
 
     await ctx.runBuildPhase(BuildPhase.CONFIGURE_EXPO_UPDATES, async () => {
-      await configureExpoUpdatesIfInstalled(ctx, { getReleaseChannel, updateReleaseChannel });
+      await configureExpoUpdatesIfInstalledAsync(ctx);
     });
 
     await ctx.runBuildPhase(BuildPhase.RUN_FASTLANE, async () => {

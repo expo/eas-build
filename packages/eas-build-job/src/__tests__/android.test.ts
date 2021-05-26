@@ -123,4 +123,44 @@ describe('Android.ManagedJobSchema', () => {
     );
     expect(value).not.toMatchObject(managedJob);
   });
+  test('validates channel', () => {
+    const managedJob = {
+      secrets,
+      type: Workflow.MANAGED,
+      platform: Platform.ANDROID,
+      updates: {
+        channel: 'main',
+      },
+      projectArchive: {
+        type: ArchiveSourceType.URL,
+        url: 'http://localhost:3000',
+      },
+      projectRootDirectory: '.',
+    };
+
+    const { value, error } = Android.ManagedJobSchema.validate(managedJob, joiOptions);
+    expect(value).toMatchObject(managedJob);
+    expect(error).toBeFalsy();
+  });
+  test('fails when both releaseChannel and updates.channel are defined', () => {
+    const managedJob = {
+      secrets,
+      type: Workflow.MANAGED,
+      platform: Platform.ANDROID,
+      releaseChannel: 'default',
+      updates: {
+        channel: 'main',
+      },
+      projectArchive: {
+        type: ArchiveSourceType.URL,
+        url: 'http://localhost:3000',
+      },
+      projectRootDirectory: '.',
+    };
+
+    const { error } = Android.ManagedJobSchema.validate(managedJob, joiOptions);
+    expect(error?.message).toBe(
+      '"value" contains a conflict between optional exclusive peers [releaseChannel, updates.channel]'
+    );
+  });
 });

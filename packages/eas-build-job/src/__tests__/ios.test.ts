@@ -132,4 +132,50 @@ describe('Ios.ManagedJobSchema', () => {
     );
     expect(value).not.toMatchObject(managedJob);
   });
+  test('validates channel', () => {
+    const managedJob = {
+      secrets: {
+        buildCredentials,
+      },
+      type: Workflow.MANAGED,
+      platform: Platform.IOS,
+      updates: {
+        channel: 'main',
+      },
+      projectArchive: {
+        type: ArchiveSourceType.URL,
+        url: 'http://localhost:3000',
+      },
+      projectRootDirectory: '.',
+      distribution: 'store',
+    };
+
+    const { value, error } = Ios.ManagedJobSchema.validate(managedJob, joiOptions);
+    expect(value).toMatchObject(managedJob);
+    expect(error).toBeFalsy();
+  });
+  test('fails when both releaseChannel and updates.channel are defined', () => {
+    const managedJob = {
+      secrets: {
+        buildCredentials,
+      },
+      type: Workflow.MANAGED,
+      platform: Platform.IOS,
+      releaseChannel: 'default',
+      updates: {
+        channel: 'main',
+      },
+      projectArchive: {
+        type: ArchiveSourceType.URL,
+        url: 'http://localhost:3000',
+      },
+      projectRootDirectory: '.',
+      distribution: 'store',
+    };
+
+    const { error } = Ios.ManagedJobSchema.validate(managedJob, joiOptions);
+    expect(error?.message).toBe(
+      '"value" contains a conflict between optional exclusive peers [releaseChannel, updates.channel]'
+    );
+  });
 });
