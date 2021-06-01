@@ -8,7 +8,6 @@ import fg from 'fast-glob';
 
 const CHECK_FILE_INTERVAL_MS = 1000;
 
-
 export class XcodeBuildLogger {
   private loggerError?: Error;
   private flushing: boolean = false;
@@ -46,8 +45,8 @@ export class XcodeBuildLogger {
 
   private async startBuildLogger(logsPath: string): Promise<void> {
     try {
-      const formatter = ExpoRunFormatter.create(this.projectRoot, { 
-        isDebug: false  
+      const formatter = ExpoRunFormatter.create(this.projectRoot, {
+        isDebug: false,
         // TODO: Can provide xcode project name for better parsing
       });
       this.logReaderPromise = spawnAsync('tail', ['-n', '+0', '-f', logsPath], { stdio: 'pipe' });
