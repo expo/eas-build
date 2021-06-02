@@ -2,21 +2,11 @@ import assert from 'assert';
 import path from 'path';
 
 import { bunyan } from '@expo/logger';
-import { Formatter } from '@expo/xcpretty';
+import { ExpoRunFormatter } from '@expo/xcpretty';
 import spawnAsync, { SpawnPromise, SpawnResult } from '@expo/spawn-async';
 import fg from 'fast-glob';
 
 const CHECK_FILE_INTERVAL_MS = 1000;
-
-class CustomFormatter extends Formatter {
-  public shouldShowCompileWarning(
-    filePath: string,
-    _lineNumber?: string,
-    _columnNumber?: string
-  ): boolean {
-    return !filePath.match(/node_modules/) && !filePath.match(/\/ios\/Pods\//);
-  }
-}
 
 export class XcodeBuildLogger {
   private loggerError?: Error;
@@ -55,7 +45,10 @@ export class XcodeBuildLogger {
 
   private async startBuildLogger(logsPath: string): Promise<void> {
     try {
-      const formatter = new CustomFormatter({ projectRoot: this.projectRoot });
+      const formatter = ExpoRunFormatter.create(this.projectRoot, {
+        isDebug: false,
+        // TODO: Can provide xcode project name for better parsing
+      });
       this.logReaderPromise = spawnAsync('tail', ['-n', '+0', '-f', logsPath], { stdio: 'pipe' });
       assert(this.logReaderPromise.child.stdout, 'stdout is not available');
       this.logReaderPromise.child.stdout.on('data', (data: string) => {
@@ -65,6 +58,8 @@ export class XcodeBuildLogger {
         }
       });
       await this.logReaderPromise;
+
+      this.logger.info(formatter.getBuildSummary());
     } catch (err) {
       if (!this.flushing) {
         this.loggerError = err;
