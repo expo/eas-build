@@ -34,7 +34,10 @@ export default async function iosGenericBuilder(
     });
     if (credentials) {
       await ctx.runBuildPhase(BuildPhase.CONFIGURE_XCODE_PROJECT, async () => {
-        await configureXcodeProject(ctx, credentials);
+        await configureXcodeProject(ctx, {
+          credentials,
+          buildConfiguration: ctx.job.buildConfiguration,
+        });
       });
     }
 
