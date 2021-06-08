@@ -7,7 +7,13 @@ import { Credentials } from './credentials/manager';
 
 async function configureXcodeProject<TJob extends Ios.Job>(
   ctx: BuildContext<TJob>,
-  credentials: Credentials
+  {
+    credentials,
+    buildConfiguration,
+  }: {
+    credentials: Credentials;
+    buildConfiguration?: string;
+  }
 ): Promise<void> {
   ctx.logger.info('Configuring Xcode project');
   const targetNames = Object.keys(credentials.targetProvisioningProfiles);
@@ -22,6 +28,7 @@ async function configureXcodeProject<TJob extends Ios.Job>(
         targetName,
         profileName: profile.name,
         appleTeamId: profile.teamId,
+        buildConfiguration,
       }
     );
   }

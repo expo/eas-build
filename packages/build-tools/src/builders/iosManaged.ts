@@ -39,9 +39,11 @@ export default async function iosManagedBuilder(
     const credentials = await ctx.runBuildPhase(BuildPhase.PREPARE_CREDENTIALS, async () => {
       return await credentialsManager.prepare();
     });
+    const buildConfiguration =
+      ctx.job.buildType === Ios.ManagedBuildType.DEVELOPMENT_CLIENT ? 'Debug' : 'Release';
     if (credentials) {
       await ctx.runBuildPhase(BuildPhase.CONFIGURE_XCODE_PROJECT, async () => {
-        await configureXcodeProject(ctx, credentials);
+        await configureXcodeProject(ctx, { credentials, buildConfiguration });
       });
     }
 
@@ -53,8 +55,7 @@ export default async function iosManagedBuilder(
       await runFastlaneGym(ctx, {
         credentials,
         scheme: resolveScheme(ctx),
-        buildConfiguration:
-          ctx.job.buildType === Ios.ManagedBuildType.DEVELOPMENT_CLIENT ? 'Debug' : 'Release',
+        buildConfiguration,
       });
     });
 
