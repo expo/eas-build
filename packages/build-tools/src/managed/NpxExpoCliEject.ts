@@ -6,18 +6,21 @@ import fs from 'fs-extra';
 
 import { BuildContext } from '../context';
 
-import { EjectProvider } from './EjectProvider';
+import { EjectProvider, EjectOptions } from './EjectProvider';
 
 type ManagedJob = Android.ManagedJob | Ios.ManagedJob;
 
 class NpxExpoCliEjectProvider implements EjectProvider<ManagedJob> {
-  async runEject(ctx: BuildContext<ManagedJob>): Promise<void> {
+  async runEject(ctx: BuildContext<ManagedJob>, options?: EjectOptions): Promise<void> {
     const { logger, job } = ctx;
 
     const spawnOptions = {
       cwd: ctx.buildDirectory,
       logger,
-      env: ctx.env,
+      env: {
+        ...options?.extraEnvs,
+        ...ctx.env,
+      },
     };
 
     await fs.remove(path.join(ctx.reactNativeProjectDirectory, 'android'));

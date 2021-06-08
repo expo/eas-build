@@ -18,27 +18,31 @@ export default async function iosManagedBuilder(
 ): Promise<string[]> {
   await setup(ctx);
 
-  await ctx.runBuildPhase(BuildPhase.PREBUILD, async () => {
-    await ejectProject(ctx);
-  });
-
-  await ctx.runBuildPhase(BuildPhase.RESTORE_CACHE, async () => {
-    await ctx.cacheManager?.restoreCache(ctx);
-  });
-
-  await ctx.runBuildPhase(BuildPhase.INSTALL_PODS, async () => {
-    await installPods(ctx);
-  });
-
-  await ctx.runBuildPhase(BuildPhase.POST_INSTALL_HOOK, async () => {
-    await runHookIfPresent(ctx, Hook.POST_INSTALL);
-  });
-
   const credentialsManager = new CredentialsManager(ctx);
   try {
     const credentials = await ctx.runBuildPhase(BuildPhase.PREPARE_CREDENTIALS, async () => {
       return await credentialsManager.prepare();
     });
+
+    await ctx.runBuildPhase(BuildPhase.PREBUILD, async () => {
+      const extraEnvs: Record<string, string> = credentials?.teamId
+        ? { APPLE_TEAM_ID: credentials.teamId }
+        : {};
+      await ctx.ejectProvider.runEject(ctx, { extraEnvs });
+    });
+
+    await ctx.runBuildPhase(BuildPhase.RESTORE_CACHE, async () => {
+      await ctx.cacheManager?.restoreCache(ctx);
+    });
+
+    await ctx.runBuildPhase(BuildPhase.INSTALL_PODS, async () => {
+      await installPods(ctx);
+    });
+
+    await ctx.runBuildPhase(BuildPhase.POST_INSTALL_HOOK, async () => {
+      await runHookIfPresent(ctx, Hook.POST_INSTALL);
+    });
+
     const buildConfiguration =
       ctx.job.buildType === Ios.ManagedBuildType.DEVELOPMENT_CLIENT ? 'Debug' : 'Release';
     if (credentials) {
@@ -93,8 +97,4 @@ function resolveScheme(ctx: ManagedBuildContext<Ios.ManagedJob>): string {
   const schemes = IOSConfig.BuildScheme.getSchemesFromXcodeproj(ctx.reactNativeProjectDirectory);
   assert(schemes.length === 1, 'Ejected project should have exactly one scheme');
   return schemes[0];
-}
-
-async function ejectProject(ctx: ManagedBuildContext<Ios.ManagedJob>): Promise<void> {
-  await ctx.ejectProvider.runEject(ctx);
 }
