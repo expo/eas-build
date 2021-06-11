@@ -4,4 +4,4 @@ export { Builders };
 
 export { BuildContext, CacheManager, LogBuffer } from './context';
 export { ManagedBuildContext } from './managed/context';
-export { EjectProvider } from './managed/EjectProvider';
+export { EjectProvider, EjectOptions } from './managed/EjectProvider';

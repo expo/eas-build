@@ -1,6 +1,6 @@
 import path from 'path';
 
-import { BuildContext, EjectProvider } from '@expo/build-tools';
+import { BuildContext, EjectProvider, EjectOptions } from '@expo/build-tools';
 import { Android, Ios } from '@expo/eas-build-job';
 import spawnAsync from '@expo/turtle-spawn';
 import fs from 'fs-extra';
@@ -10,13 +10,16 @@ type ManagedJob = Android.ManagedJob | Ios.ManagedJob;
 const expoCliPackage = require.resolve('expo-cli');
 
 export class LocalExpoCliEjectProvider implements EjectProvider<ManagedJob> {
-  async runEject(ctx: BuildContext<ManagedJob>): Promise<void> {
+  async runEject(ctx: BuildContext<ManagedJob>, options?: EjectOptions): Promise<void> {
     const { logger, job } = ctx;
 
     const spawnOptions = {
       cwd: ctx.buildDirectory,
       logger: ctx.logger,
-      env: ctx.env,
+      env: {
+        ...options?.extraEnvs,
+        ...ctx.env,
+      },
     };
 
     await fs.remove(path.join(ctx.reactNativeProjectDirectory, 'android'));
