@@ -2,8 +2,10 @@ import { Job } from '@expo/eas-build-job';
 
 import { BuildContext } from '../context';
 
-interface EjectProvider<TJob extends Job> {
-  runEject(ctx: BuildContext<TJob>): Promise<void>;
+export interface EjectOptions {
+  extraEnvs?: Record<string, string>;
 }
 
-export { EjectProvider };
+export interface EjectProvider<TJob extends Job> {
+  runEject(ctx: BuildContext<TJob>, options?: EjectOptions): Promise<void>;
+}
