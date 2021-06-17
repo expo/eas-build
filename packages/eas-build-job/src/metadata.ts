@@ -7,7 +7,7 @@ export type Metadata = {
    * Tracking context
    * It's used to track build process across different Expo services and tools.
    */
-  trackingContext: Record<string, string | number>;
+  trackingContext: Record<string, string | number | boolean>;
 
   /**
    * Application version:
