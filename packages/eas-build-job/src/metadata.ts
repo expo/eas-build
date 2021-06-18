@@ -96,7 +96,9 @@ export type Metadata = {
 };
 
 export const MetadataSchema = Joi.object({
-  trackingContext: Joi.object().pattern(Joi.string(), [Joi.string(), Joi.number()]).required(),
+  trackingContext: Joi.object()
+    .pattern(Joi.string(), [Joi.string(), Joi.number(), Joi.boolean()])
+    .required(),
   appVersion: Joi.string(),
   appBuildVersion: Joi.string(),
   cliVersion: Joi.string(),
