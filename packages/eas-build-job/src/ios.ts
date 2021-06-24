@@ -39,6 +39,11 @@ export interface DistributionCertificate {
   password: string;
 }
 
+export enum BuildType {
+  RELEASE = 'release',
+  DEVELOPMENT_CLIENT = 'development-client',
+}
+
 export const builderBaseImages = [
   'default',
   'latest',
@@ -74,7 +79,8 @@ const BuilderEnvironmentSchema = Joi.object({
   env: EnvSchema,
 });
 
-interface BaseJob {
+export interface Job {
+  type: Workflow;
   projectArchive: ArchiveSource;
   platform: Platform.IOS;
   projectRootDirectory: string;
@@ -89,72 +95,40 @@ interface BaseJob {
   };
   builderEnvironment?: BuilderEnvironment;
   cache: Cache;
-}
 
-const BaseJobSchema = Joi.object()
-  .keys({
-    projectArchive: ArchiveSourceSchema.required(),
-    platform: Joi.string().valid(Platform.IOS).required(),
-    projectRootDirectory: Joi.string().required(),
-    releaseChannel: Joi.string(),
-    updates: Joi.object({
-      channel: Joi.string(),
-    }),
-    distribution: Joi.string().valid('store', 'internal', 'simulator'),
-    secrets: Joi.object({
-      buildCredentials: BuildCredentialsSchema,
-      environmentSecrets: EnvSchema,
-    }).required(),
-    builderEnvironment: BuilderEnvironmentSchema,
-    cache: CacheSchema.default(),
-  })
-  .oxor('releaseChannel', 'updates.channel');
-
-export interface GenericJob extends BaseJob {
-  type: Workflow.GENERIC;
-  scheme: string;
+  scheme?: string;
   buildConfiguration?: string;
   artifactPath: string;
-}
 
-export const GenericJobSchema = BaseJobSchema.concat(
-  Joi.object().keys({
-    type: Joi.string().valid(Workflow.GENERIC),
-    scheme: Joi.string().required(),
-    buildConfiguration: Joi.string(),
-    artifactPath: Joi.alternatives().conditional('distribution', {
-      is: 'simulator',
-      then: Joi.string().default('ios/build/Build/Products/*-iphonesimulator/*.app'),
-      otherwise: Joi.string().default('ios/build/*.ipa'),
-    }),
-  })
-);
-
-export enum ManagedBuildType {
-  RELEASE = 'release',
-  DEVELOPMENT_CLIENT = 'development-client',
-}
-
-export interface ManagedJob extends BaseJob {
-  type: Workflow.MANAGED;
-  buildType?: ManagedBuildType;
+  buildType?: BuildType;
   username?: string;
 }
-
-export const ManagedJobSchema = BaseJobSchema.concat(
-  Joi.object({
-    type: Joi.string().valid(Workflow.MANAGED),
-    buildType: Joi.string().valid(...Object.values(ManagedBuildType)),
-    username: Joi.string(),
-  })
-);
-
-export type Job = GenericJob | ManagedJob;
 
 export const JobSchema = Joi.object({
   type: Joi.string()
     .valid(...Object.values(Workflow))
     .required(),
-})
-  .when(Joi.object({ type: Workflow.GENERIC }).unknown(), { then: GenericJobSchema })
-  .when(Joi.object({ type: Workflow.MANAGED }).unknown(), { then: ManagedJobSchema });
+  projectArchive: ArchiveSourceSchema.required(),
+  platform: Joi.string().valid(Platform.IOS).required(),
+  projectRootDirectory: Joi.string().required(),
+  releaseChannel: Joi.string(),
+  updates: Joi.object({
+    channel: Joi.string(),
+  }),
+  distribution: Joi.string().valid('store', 'internal', 'simulator'),
+  secrets: Joi.object({
+    buildCredentials: BuildCredentialsSchema,
+    environmentSecrets: EnvSchema,
+  }).required(),
+  builderEnvironment: BuilderEnvironmentSchema,
+  cache: CacheSchema.default(),
+
+  // generic
+  scheme: Joi.string(),
+  buildConfiguration: Joi.string(),
+  artifactPath: Joi.string(),
+
+  // managed
+  buildType: Joi.string().valid(...Object.values(BuildType)),
+  username: Joi.string(),
+}).oxor('releaseChannel', 'updates.channel');

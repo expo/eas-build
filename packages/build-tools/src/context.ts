@@ -5,6 +5,8 @@ import { bunyan } from '@expo/logger';
 
 import { PackageManager, resolvePackageManager } from './utils/packageManager';
 import { detectUserError } from './utils/detectUserError';
+import { EjectProvider } from './managed/EjectProvider';
+import { NpxExpoCliEjectProvider } from './managed/NpxExpoCliEject';
 
 export interface CacheManager {
   saveCache(ctx: BuildContext<Job>): Promise<void>;
@@ -16,12 +18,13 @@ export interface LogBuffer {
   getPhaseLogs(buildPhase: string): string[];
 }
 
-export interface BuildContextOptions {
+export interface BuildContextOptions<TJob extends Job> {
   workingdir: string;
   logger: bunyan;
   logBuffer: LogBuffer;
   env: Env;
   cacheManager?: CacheManager;
+  ejectProvider?: EjectProvider<TJob>;
 }
 
 export class BuildContext<TJob extends Job> {
@@ -30,16 +33,18 @@ export class BuildContext<TJob extends Job> {
   public readonly logBuffer: LogBuffer;
   public readonly env: Env;
   public readonly cacheManager?: CacheManager;
+  public readonly ejectProvider: EjectProvider<TJob>;
 
   private readonly defaultLogger: bunyan;
   private buildPhase?: BuildPhase;
 
-  constructor(public readonly job: TJob, options: BuildContextOptions) {
+  constructor(public readonly job: TJob, options: BuildContextOptions<TJob>) {
     this.workingdir = options.workingdir;
     this.defaultLogger = options.logger;
     this.logger = this.defaultLogger;
     this.logBuffer = options.logBuffer;
     this.cacheManager = options.cacheManager;
+    this.ejectProvider = options.ejectProvider ?? new NpxExpoCliEjectProvider();
     this.env = {
       ...options.env,
       ...job?.builderEnvironment?.env,

@@ -1,6 +1,6 @@
-import { Platform } from '@expo/eas-build-job';
+import { Platform, Job } from '@expo/eas-build-job';
 
-import { ManagedBuildContext, ManagedJob } from '../../managed/context';
+import { BuildContext } from '../../context';
 import * as expoUpdates from '../expoUpdates';
 import isExpoUpdatesInstalledAsync from '../isExpoUpdatesInstalled';
 
@@ -30,7 +30,7 @@ describe(expoUpdates.configureExpoUpdatesIfInstalledAsync, () => {
     jest.spyOn(expoUpdates, 'configureEASExpoUpdatesAsync').mockImplementation();
     jest.spyOn(expoUpdates, 'configureClassicExpoUpdatesAsync');
 
-    const managedCtx: ManagedBuildContext<ManagedJob> = {
+    const managedCtx: BuildContext<Job> = {
       job: { updates: { channel: 'main' }, Platform: Platform.IOS },
     } as any;
     await expoUpdates.configureExpoUpdatesIfInstalledAsync(managedCtx);
@@ -45,7 +45,7 @@ describe(expoUpdates.configureExpoUpdatesIfInstalledAsync, () => {
     jest.spyOn(expoUpdates, 'configureEASExpoUpdatesAsync');
     jest.spyOn(expoUpdates, 'configureClassicExpoUpdatesAsync').mockImplementation();
 
-    const managedCtx: ManagedBuildContext<ManagedJob> = {
+    const managedCtx: BuildContext<Job> = {
       job: { platform: Platform.IOS },
       logger: { info: () => {} },
     } as any;
@@ -65,7 +65,7 @@ describe(expoUpdates.configureClassicExpoUpdatesAsync, () => {
     (isExpoUpdatesInstalledAsync as jest.Mock).mockReturnValue(true);
     jest.spyOn(expoUpdates, 'setClassicReleaseChannelNativelyAsync').mockImplementation();
 
-    const managedCtx: ManagedBuildContext<ManagedJob> = {
+    const managedCtx: BuildContext<Job> = {
       job: { releaseChannel: 'default', platform: Platform.IOS },
     } as any;
     await expoUpdates.configureExpoUpdatesIfInstalledAsync(managedCtx);
@@ -76,7 +76,7 @@ describe(expoUpdates.configureClassicExpoUpdatesAsync, () => {
     (isExpoUpdatesInstalledAsync as jest.Mock).mockReturnValue(true);
     jest.spyOn(expoUpdates, 'getNativelyDefinedClassicReleaseChannelAsync').mockImplementation();
 
-    const managedCtx: ManagedBuildContext<ManagedJob> = {
+    const managedCtx: BuildContext<Job> = {
       job: { platform: Platform.IOS },
       logger: { info: () => {}, warn: () => {} },
     } as any;
@@ -93,7 +93,7 @@ describe(expoUpdates.configureClassicExpoUpdatesAsync, () => {
       });
 
     const infoLogger = jest.fn();
-    const managedCtx: ManagedBuildContext<ManagedJob> = {
+    const managedCtx: BuildContext<Job> = {
       job: { platform: Platform.IOS },
       logger: { info: infoLogger },
     } as any;

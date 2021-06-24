@@ -1,6 +1,4 @@
-import androidGenericBuilder from './androidGeneric';
-import androidManagedBuilder from './androidManaged';
-import iosGenericBuilder from './iosGeneric';
-import iosManagedBuilder from './iosManaged';
+import androidBuilder from './android';
+import iosBuilder from './ios';
 
-export { androidGenericBuilder, androidManagedBuilder, iosGenericBuilder, iosManagedBuilder };
+export { androidBuilder, iosBuilder };

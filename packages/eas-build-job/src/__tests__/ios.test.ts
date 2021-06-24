@@ -19,8 +19,8 @@ const buildCredentials: Ios.BuildCredentials = {
   },
 };
 
-describe('Ios.GenericJobSchema', () => {
-  test('valid job', () => {
+describe('Ios.JobSchema', () => {
+  test('valid generic job', () => {
     const genericJob = {
       secrets: {
         buildCredentials,
@@ -49,12 +49,12 @@ describe('Ios.GenericJobSchema', () => {
       },
     };
 
-    const { value, error } = Ios.GenericJobSchema.validate(genericJob, joiOptions);
+    const { value, error } = Ios.JobSchema.validate(genericJob, joiOptions);
     expect(value).toMatchObject(genericJob);
     expect(error).toBeFalsy();
   });
 
-  test('invalid job', () => {
+  test('invalid generic job', () => {
     const genericJob = {
       secrets: {
         buildCredentials,
@@ -70,14 +70,12 @@ describe('Ios.GenericJobSchema', () => {
       uknownField: 'field',
     };
 
-    const { value, error } = Ios.GenericJobSchema.validate(genericJob, joiOptions);
-    expect(error?.message).toBe('"projectArchive.url" must be a valid uri. "scheme" is required');
+    const { value, error } = Ios.JobSchema.validate(genericJob, joiOptions);
+    expect(error?.message).toBe('"projectArchive.url" must be a valid uri');
     expect(value).not.toMatchObject(genericJob);
   });
-});
 
-describe('Ios.ManagedJobSchema', () => {
-  test('valid job', () => {
+  test('valid managed job', () => {
     const managedJob = {
       secrets: {
         buildCredentials,
@@ -90,7 +88,7 @@ describe('Ios.ManagedJobSchema', () => {
       },
       projectRootDirectory: '.',
       distribution: 'store',
-      buildType: Ios.ManagedBuildType.RELEASE,
+      buildType: Ios.BuildType.RELEASE,
       username: 'turtle-tutorial',
       releaseChannel: 'default',
       builderEnvironment: {
@@ -105,12 +103,12 @@ describe('Ios.ManagedJobSchema', () => {
       },
     };
 
-    const { value, error } = Ios.ManagedJobSchema.validate(managedJob, joiOptions);
+    const { value, error } = Ios.JobSchema.validate(managedJob, joiOptions);
     expect(value).toMatchObject(managedJob);
     expect(error).toBeFalsy();
   });
 
-  test('invalid job', () => {
+  test('invalid managed job', () => {
     const managedJob = {
       secrets: {
         buildCredentials,
@@ -126,7 +124,7 @@ describe('Ios.ManagedJobSchema', () => {
       uknownField: 'field',
     };
 
-    const { value, error } = Ios.ManagedJobSchema.validate(managedJob, joiOptions);
+    const { value, error } = Ios.JobSchema.validate(managedJob, joiOptions);
     expect(error?.message).toBe(
       '"projectArchive.url" must be a valid uri. "projectRootDirectory" must be a string'
     );
@@ -150,7 +148,7 @@ describe('Ios.ManagedJobSchema', () => {
       distribution: 'store',
     };
 
-    const { value, error } = Ios.ManagedJobSchema.validate(managedJob, joiOptions);
+    const { value, error } = Ios.JobSchema.validate(managedJob, joiOptions);
     expect(value).toMatchObject(managedJob);
     expect(error).toBeFalsy();
   });
@@ -173,7 +171,7 @@ describe('Ios.ManagedJobSchema', () => {
       distribution: 'store',
     };
 
-    const { error } = Ios.ManagedJobSchema.validate(managedJob, joiOptions);
+    const { error } = Ios.JobSchema.validate(managedJob, joiOptions);
     expect(error?.message).toBe(
       '"value" contains a conflict between optional exclusive peers [releaseChannel, updates.channel]'
     );

@@ -1,22 +1,28 @@
 import { AndroidConfig } from '@expo/config-plugins';
 import { Android, BuildPhase } from '@expo/eas-build-job';
+import fs from 'fs-extra';
 
-import { ManagedBuildContext } from '../managed/context';
+import { BuildContext } from '../context';
 import { configureExpoUpdatesIfInstalledAsync } from '../utils/expoUpdates';
+import { runGradleCommand, ensureLFLineEndingsInGradlewScript } from '../android/gradle';
 import { setup } from '../utils/project';
-import { findSingleBuildArtifact } from '../utils/buildArtifacts';
+import { findBuildArtifacts } from '../utils/buildArtifacts';
 import { Hook, runHookIfPresent } from '../utils/hooks';
 import { restoreCredentials } from '../android/credentials';
-import { runGradleCommand } from '../android/gradle';
 
-export default async function androidManagedBuilder(
-  ctx: ManagedBuildContext<Android.ManagedJob>
-): Promise<string[]> {
+export default async function androidBuilder(ctx: BuildContext<Android.Job>): Promise<string[]> {
   await setup(ctx);
+  const hasNativeCode = await hasNativeCodeAsync(ctx.reactNativeProjectDirectory);
 
-  await ctx.runBuildPhase(BuildPhase.PREBUILD, async () => {
-    await ejectProject(ctx);
-  });
+  if (hasNativeCode) {
+    await ctx.runBuildPhase(BuildPhase.FIX_GRADLEW, async () => {
+      await ensureLFLineEndingsInGradlewScript(ctx);
+    });
+  } else {
+    await ctx.runBuildPhase(BuildPhase.PREBUILD, async () => {
+      await ejectProject(ctx);
+    });
+  }
 
   await ctx.runBuildPhase(BuildPhase.RESTORE_CACHE, async () => {
     await ctx.cacheManager?.restoreCache(ctx);
@@ -36,7 +42,7 @@ export default async function androidManagedBuilder(
   });
 
   await ctx.runBuildPhase(BuildPhase.RUN_GRADLEW, async () => {
-    const gradleCommand = resolveGradleCommand(ctx.job.buildType);
+    const gradleCommand = resolveGradleCommand(ctx.job);
     await runGradleCommand(ctx, gradleCommand);
   });
 
@@ -45,13 +51,11 @@ export default async function androidManagedBuilder(
   });
 
   const buildArtifacts = await ctx.runBuildPhase(BuildPhase.PREPARE_ARTIFACTS, async () => {
-    const buildArtifacts = [
-      await findSingleBuildArtifact(
-        ctx.reactNativeProjectDirectory,
-        'android/app/build/outputs/**/*.{apk,aab}',
-        ctx.logger
-      ),
-    ];
+    const buildArtifacts = await findBuildArtifacts(
+      ctx.reactNativeProjectDirectory,
+      ctx.job.artifactPath ?? 'android/app/build/outputs/**/*.{apk,aab}',
+      ctx.logger
+    );
     ctx.logger.info(`Build artifacts: ${buildArtifacts.join(', ')}`);
     return buildArtifacts;
   });
@@ -63,20 +67,38 @@ export default async function androidManagedBuilder(
   return buildArtifacts;
 }
 
-function resolveGradleCommand(buildType: Android.ManagedBuildType): string {
-  switch (buildType) {
-    case Android.ManagedBuildType.APK:
+function resolveGradleCommand(job: Android.Job): string {
+  if (job.gradleCommand) {
+    return job.gradleCommand;
+  }
+  if (!job.buildType) {
+    return ':app:bundleRelease';
+  }
+  switch (job.buildType) {
+    case Android.BuildType.APK:
       return ':app:assembleRelease';
-    case Android.ManagedBuildType.APP_BUNDLE:
+    case Android.BuildType.APP_BUNDLE:
       return ':app:bundleRelease';
-    case Android.ManagedBuildType.DEVELOPMENT_CLIENT:
+    case Android.BuildType.DEVELOPMENT_CLIENT:
       return ':app:assembleDebug';
     default:
-      throw new Error(`unknown artifact type ${buildType}`);
+      throw new Error(`unknown artifact type ${job.buildType}`);
   }
 }
 
-async function ejectProject(ctx: ManagedBuildContext<Android.ManagedJob>): Promise<void> {
+async function ejectProject(ctx: BuildContext<Android.Job>): Promise<void> {
   await ctx.ejectProvider.runEject(ctx);
   await AndroidConfig.EasBuild.configureEasBuildAsync(ctx.reactNativeProjectDirectory);
+}
+
+// TODO move to config-plugins
+async function hasNativeCodeAsync(reactNativeProjectDirectory: string): Promise<boolean> {
+  try {
+    const androidManifestPath = await AndroidConfig.Paths.getAndroidManifestAsync(
+      reactNativeProjectDirectory
+    );
+    return await fs.pathExists(androidManifestPath);
+  } catch {
+    return false;
+  }
 }

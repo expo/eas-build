@@ -1,16 +1,13 @@
 import path from 'path';
 
+import { Job } from '@expo/eas-build-job';
 import { BuildContext, EjectProvider, EjectOptions } from '@expo/build-tools';
-import { Android, Ios } from '@expo/eas-build-job';
 import spawnAsync from '@expo/turtle-spawn';
-import fs from 'fs-extra';
-
-type ManagedJob = Android.ManagedJob | Ios.ManagedJob;
 
 const expoCliPackage = require.resolve('expo-cli');
 
-export class LocalExpoCliEjectProvider implements EjectProvider<ManagedJob> {
-  async runEject(ctx: BuildContext<ManagedJob>, options?: EjectOptions): Promise<void> {
+export class LocalExpoCliEjectProvider implements EjectProvider<Job> {
+  async runEject(ctx: BuildContext<Job>, options?: EjectOptions): Promise<void> {
     const { logger, job } = ctx;
 
     const spawnOptions = {
@@ -21,28 +18,6 @@ export class LocalExpoCliEjectProvider implements EjectProvider<ManagedJob> {
         ...ctx.env,
       },
     };
-
-    await fs.remove(path.join(ctx.reactNativeProjectDirectory, 'android'));
-    await fs.remove(path.join(ctx.reactNativeProjectDirectory, 'ios'));
-
-    if (!(await fs.pathExists(path.join(ctx.buildDirectory, '.git')))) {
-      await spawnAsync('git', ['init', '.'], spawnOptions);
-      await spawnAsync('git', ['add', '-A'], spawnOptions);
-      await spawnAsync(
-        'git',
-        [
-          '-c',
-          "user.name='EAS Build'",
-          '-c',
-          "user.email='secure@expo.io'",
-          'commit',
-          '-q',
-          '-m',
-          '"init"',
-        ],
-        spawnOptions
-      );
-    }
 
     const expoCliBinPath =
       process.env.EXPO_CLI_PATH ?? path.resolve(path.dirname(expoCliPackage), '../bin/expo.js');
