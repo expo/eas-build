@@ -1,22 +1,22 @@
 import assert from 'assert';
 
+import fs from 'fs-extra';
 import { IOSConfig } from '@expo/config-plugins';
 import { BuildPhase, Ios } from '@expo/eas-build-job';
 
-import { ManagedBuildContext } from '../managed/context';
+import { BuildContext } from '../context';
 import { configureExpoUpdatesIfInstalledAsync } from '../utils/expoUpdates';
 import { setup } from '../utils/project';
-import { findSingleBuildArtifact } from '../utils/buildArtifacts';
+import { findBuildArtifacts } from '../utils/buildArtifacts';
 import { Hook, runHookIfPresent } from '../utils/hooks';
 import { configureXcodeProject } from '../ios/configure';
 import CredentialsManager from '../ios/credentials/manager';
 import { runFastlaneGym } from '../ios/fastlane';
 import { installPods } from '../ios/pod';
 
-export default async function iosManagedBuilder(
-  ctx: ManagedBuildContext<Ios.ManagedJob>
-): Promise<string[]> {
+export default async function iosBuilder(ctx: BuildContext<Ios.Job>): Promise<string[]> {
   await setup(ctx);
+  const hasNativeCode = await hasNativeCodeAsync(ctx.reactNativeProjectDirectory);
 
   const credentialsManager = new CredentialsManager(ctx);
   try {
@@ -24,12 +24,14 @@ export default async function iosManagedBuilder(
       return await credentialsManager.prepare();
     });
 
-    await ctx.runBuildPhase(BuildPhase.PREBUILD, async () => {
-      const extraEnvs: Record<string, string> = credentials?.teamId
-        ? { APPLE_TEAM_ID: credentials.teamId }
-        : {};
-      await ctx.ejectProvider.runEject(ctx, { extraEnvs });
-    });
+    if (!hasNativeCode) {
+      await ctx.runBuildPhase(BuildPhase.PREBUILD, async () => {
+        const extraEnvs: Record<string, string> = credentials?.teamId
+          ? { APPLE_TEAM_ID: credentials.teamId }
+          : {};
+        await ctx.ejectProvider.runEject(ctx, { extraEnvs });
+      });
+    }
 
     await ctx.runBuildPhase(BuildPhase.RESTORE_CACHE, async () => {
       await ctx.cacheManager?.restoreCache(ctx);
@@ -43,8 +45,7 @@ export default async function iosManagedBuilder(
       await runHookIfPresent(ctx, Hook.POST_INSTALL);
     });
 
-    const buildConfiguration =
-      ctx.job.buildType === Ios.ManagedBuildType.DEVELOPMENT_CLIENT ? 'Debug' : 'Release';
+    const buildConfiguration = resolveBuildConfiguration(ctx);
     if (credentials) {
       await ctx.runBuildPhase(BuildPhase.CONFIGURE_XCODE_PROJECT, async () => {
         await configureXcodeProject(ctx, { credentials, buildConfiguration });
@@ -68,15 +69,11 @@ export default async function iosManagedBuilder(
     });
 
     const buildArtifacts = await ctx.runBuildPhase(BuildPhase.PREPARE_ARTIFACTS, async () => {
-      const buildArtifacts = [
-        await findSingleBuildArtifact(
-          ctx.reactNativeProjectDirectory,
-          ctx.job.distribution === 'simulator'
-            ? 'ios/build/Build/Products/*-iphonesimulator/*.app'
-            : 'ios/build/*.ipa',
-          ctx.logger
-        ),
-      ];
+      const buildArtifacts = await findBuildArtifacts(
+        ctx.reactNativeProjectDirectory,
+        resolveArtifactPath(ctx),
+        ctx.logger
+      );
       ctx.logger.info(`Build artifacts: ${buildArtifacts.join(', ')}`);
       return buildArtifacts;
     });
@@ -93,8 +90,41 @@ export default async function iosManagedBuilder(
   }
 }
 
-function resolveScheme(ctx: ManagedBuildContext<Ios.ManagedJob>): string {
+function resolveScheme(ctx: BuildContext<Ios.Job>): string {
+  if (ctx.job.scheme) {
+    return ctx.job.scheme;
+  }
   const schemes = IOSConfig.BuildScheme.getSchemesFromXcodeproj(ctx.reactNativeProjectDirectory);
   assert(schemes.length === 1, 'Ejected project should have exactly one scheme');
   return schemes[0];
+}
+
+function resolveArtifactPath(ctx: BuildContext<Ios.Job>): string {
+  if (ctx.job.artifactPath) {
+    return ctx.job.artifactPath;
+  }
+  if (ctx.job.distribution === 'simulator') {
+    return 'ios/build/Build/Products/*-iphonesimulator/*.app';
+  }
+  return 'ios/build/*.ipa';
+}
+
+function resolveBuildConfiguration(ctx: BuildContext<Ios.Job>): string {
+  if (ctx.job.buildConfiguration) {
+    return ctx.job.buildConfiguration;
+  }
+  if (ctx.job.buildType === Ios.BuildType.DEVELOPMENT_CLIENT) {
+    return 'Debug';
+  }
+  return 'Release';
+}
+
+// TODO move to config-plugins
+export async function hasNativeCodeAsync(projectRoot: string): Promise<boolean> {
+  try {
+    const pbxprojPath = IOSConfig.Paths.getXcodeProjectPath(projectRoot);
+    return await fs.pathExists(pbxprojPath);
+  } catch {
+    return false;
+  }
 }

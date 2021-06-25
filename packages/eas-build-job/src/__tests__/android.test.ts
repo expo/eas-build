@@ -20,7 +20,7 @@ const secrets = {
   },
 };
 
-describe('Android.GenericJobSchema', () => {
+describe('Android.JobSchema', () => {
   test('valid job', () => {
     const genericJob = {
       secrets,
@@ -45,7 +45,7 @@ describe('Android.GenericJobSchema', () => {
       },
     };
 
-    const { value, error } = Android.GenericJobSchema.validate(genericJob, joiOptions);
+    const { value, error } = Android.JobSchema.validate(genericJob, joiOptions);
     expect(value).toMatchObject(genericJob);
     expect(error).toBeFalsy();
   });
@@ -64,7 +64,7 @@ describe('Android.GenericJobSchema', () => {
       projectRootDirectory: '.',
     };
 
-    const { value, error } = Android.GenericJobSchema.validate(genericJob, joiOptions);
+    const { value, error } = Android.JobSchema.validate(genericJob, joiOptions);
     expect(error?.message).toBe(
       '"projectArchive.url" must be a valid uri. "gradleCommand" must be a string'
     );
@@ -72,13 +72,13 @@ describe('Android.GenericJobSchema', () => {
   });
 });
 
-describe('Android.ManagedJobSchema', () => {
+describe('Android.JobSchema', () => {
   test('valid job', () => {
     const managedJob = {
       secrets,
       platform: Platform.ANDROID,
       type: Workflow.MANAGED,
-      buildType: Android.ManagedBuildType.APP_BUNDLE,
+      buildType: Android.BuildType.APP_BUNDLE,
       username: 'turtle-tutorial',
       projectArchive: {
         type: ArchiveSourceType.URL,
@@ -97,7 +97,7 @@ describe('Android.ManagedJobSchema', () => {
       },
     };
 
-    const { value, error } = Android.ManagedJobSchema.validate(managedJob, joiOptions);
+    const { value, error } = Android.JobSchema.validate(managedJob, joiOptions);
     expect(value).toMatchObject(managedJob);
     expect(error).toBeFalsy();
   });
@@ -107,7 +107,7 @@ describe('Android.ManagedJobSchema', () => {
       secrets,
       platform: Platform.ANDROID,
       type: Workflow.MANAGED,
-      buildType: Android.ManagedBuildType.APP_BUNDLE,
+      buildType: Android.BuildType.APP_BUNDLE,
       username: 3,
       projectArchive: {
         type: ArchiveSourceType.URL,
@@ -117,7 +117,7 @@ describe('Android.ManagedJobSchema', () => {
       uknownField: 'field',
     };
 
-    const { value, error } = Android.ManagedJobSchema.validate(managedJob, joiOptions);
+    const { value, error } = Android.JobSchema.validate(managedJob, joiOptions);
     expect(error?.message).toBe(
       '"projectArchive.url" must be a valid uri. "username" must be a string'
     );
@@ -138,7 +138,7 @@ describe('Android.ManagedJobSchema', () => {
       projectRootDirectory: '.',
     };
 
-    const { value, error } = Android.ManagedJobSchema.validate(managedJob, joiOptions);
+    const { value, error } = Android.JobSchema.validate(managedJob, joiOptions);
     expect(value).toMatchObject(managedJob);
     expect(error).toBeFalsy();
   });
@@ -158,7 +158,7 @@ describe('Android.ManagedJobSchema', () => {
       projectRootDirectory: '.',
     };
 
-    const { error } = Android.ManagedJobSchema.validate(managedJob, joiOptions);
+    const { error } = Android.JobSchema.validate(managedJob, joiOptions);
     expect(error?.message).toBe(
       '"value" contains a conflict between optional exclusive peers [releaseChannel, updates.channel]'
     );

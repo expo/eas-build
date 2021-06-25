@@ -1,5 +1,5 @@
-import { Android, BuildPhase, Workflow } from '@expo/eas-build-job';
-import { Builders, BuildContext, ManagedBuildContext } from '@expo/build-tools';
+import { Android, BuildPhase } from '@expo/eas-build-job';
+import { Builders, BuildContext } from '@expo/build-tools';
 import omit from 'lodash/omit';
 
 import { LocalExpoCliEjectProvider } from './eject';
@@ -9,45 +9,21 @@ import { prepareBuildArtifact } from './buildArtifact';
 
 export async function buildAndroidAsync(
   job: Android.Job,
-  buildParams: BuildParams
+  { workingdir, env }: BuildParams
 ): Promise<string | undefined> {
-  const ctx = createBuildContext(job, buildParams);
+  const ctx = new BuildContext<Android.Job>(job, {
+    workingdir,
+    logger,
+    logBuffer,
+    ejectProvider: new LocalExpoCliEjectProvider(),
+    env,
+  });
 
   await ctx.runBuildPhase(BuildPhase.START_BUILD, async () => {
     ctx.logger.info({ job: omit(ctx.job, 'secrets') }, 'Starting build');
   });
 
-  const artifactPaths = await build(ctx);
+  const artifactPaths = await Builders.androidBuilder(ctx);
 
   return await prepareBuildArtifact(ctx, artifactPaths);
-}
-
-function createBuildContext(
-  job: Android.Job,
-  { env, workingdir }: BuildParams
-): BuildContext<Android.Job> {
-  if (job.type === Workflow.GENERIC) {
-    return new BuildContext(job, {
-      workingdir,
-      logger,
-      logBuffer,
-      env,
-    });
-  } else {
-    return new ManagedBuildContext<Android.ManagedJob>(job, {
-      workingdir,
-      logger,
-      logBuffer,
-      ejectProvider: new LocalExpoCliEjectProvider(),
-      env,
-    });
-  }
-}
-
-async function build(ctx: BuildContext<Android.Job>): Promise<string[]> {
-  if (ctx.job.type === Workflow.GENERIC) {
-    return await Builders.androidGenericBuilder(ctx as BuildContext<Android.GenericJob>);
-  } else {
-    return await Builders.androidManagedBuilder(ctx as ManagedBuildContext<Android.ManagedJob>);
-  }
 }

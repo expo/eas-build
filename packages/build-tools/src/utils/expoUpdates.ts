@@ -1,6 +1,6 @@
 import assert from 'assert';
 
-import { Ios, Android, Platform, Job } from '@expo/eas-build-job';
+import { Platform, Job } from '@expo/eas-build-job';
 
 import {
   androidSetChannelNativelyAsync,
@@ -15,7 +15,6 @@ import {
 import { BuildContext } from '../context';
 
 import isExpoUpdatesInstalledAsync from './isExpoUpdatesInstalled';
-export type GenericJob = Ios.GenericJob | Android.GenericJob;
 
 /**
  * Used for when Expo Updates is pointed at an EAS server.

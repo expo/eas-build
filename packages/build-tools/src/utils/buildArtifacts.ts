@@ -21,19 +21,6 @@ export async function findBuildArtifacts(
   return files.map((relativePath) => path.join(rootDir, relativePath));
 }
 
-export async function findSingleBuildArtifact(
-  rootDir: string,
-  patternOrPath: string,
-  buildLogger: bunyan
-): Promise<string> {
-  const files = await findBuildArtifacts(rootDir, patternOrPath, buildLogger);
-  if (files.length > 1) {
-    buildLogger.warn({ files }, `Multiple artifacts found, uploading ${files[0]}.`);
-    // TODO: report to sentry
-  }
-  return files[0];
-}
-
 async function logMissingFileError(artifactPath: string, buildLogger: bunyan): Promise<void> {
   let currentPath = artifactPath;
   while (!(await fs.pathExists(currentPath))) {

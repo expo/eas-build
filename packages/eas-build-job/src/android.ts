@@ -25,6 +25,12 @@ const KeystoreSchema = Joi.object({
   keyPassword: Joi.string().allow(''),
 });
 
+export enum BuildType {
+  APK = 'apk',
+  APP_BUNDLE = 'app-bundle',
+  DEVELOPMENT_CLIENT = 'development-client',
+}
+
 export const builderBaseImages = [
   'default',
   'latest',
@@ -52,7 +58,8 @@ const BuilderEnvironmentSchema = Joi.object({
   env: EnvSchema,
 });
 
-interface BaseJob {
+export interface Job {
+  type: Workflow;
   projectArchive: ArchiveSource;
   platform: Platform.ANDROID;
   projectRootDirectory: string;
@@ -68,9 +75,20 @@ interface BaseJob {
   };
   builderEnvironment?: BuilderEnvironment;
   cache: Cache;
+
+  // generic
+  gradleCommand?: string;
+  artifactPath?: string;
+
+  // managed
+  buildType?: BuildType;
+  username?: string;
 }
 
-const BaseJobSchema = Joi.object({
+export const JobSchema = Joi.object({
+  type: Joi.string()
+    .valid(...Object.values(Workflow))
+    .required(),
   projectArchive: ArchiveSourceSchema.required(),
   platform: Joi.string().valid(Platform.ANDROID).required(),
   projectRootDirectory: Joi.string().required(),
@@ -84,50 +102,10 @@ const BaseJobSchema = Joi.object({
   }).required(),
   builderEnvironment: BuilderEnvironmentSchema,
   cache: CacheSchema.default(),
+
+  gradleCommand: Joi.string(),
+  artifactPath: Joi.string(),
+
+  buildType: Joi.string().valid(...Object.values(BuildType)),
+  username: Joi.string(),
 }).oxor('releaseChannel', 'updates.channel');
-
-export interface GenericJob extends BaseJob {
-  type: Workflow.GENERIC;
-  gradleCommand: string;
-  artifactPath: string;
-}
-
-export const GenericJobSchema = BaseJobSchema.concat(
-  Joi.object({
-    type: Joi.string().valid(Workflow.GENERIC),
-    gradleCommand: Joi.string().default(':app:bundleRelease'),
-    artifactPath: Joi.string().default('android/app/build/outputs/**/*.{apk,aab}'),
-  })
-);
-
-export enum ManagedBuildType {
-  APK = 'apk',
-  APP_BUNDLE = 'app-bundle',
-  DEVELOPMENT_CLIENT = 'development-client',
-}
-
-export interface ManagedJob extends BaseJob {
-  type: Workflow.MANAGED;
-  buildType: ManagedBuildType;
-  username?: string;
-}
-
-export const ManagedJobSchema = BaseJobSchema.concat(
-  Joi.object().keys({
-    type: Joi.string().valid(Workflow.MANAGED),
-    buildType: Joi.string()
-      .valid(...Object.values(ManagedBuildType))
-      .default(ManagedBuildType.APP_BUNDLE),
-    username: Joi.string(),
-  })
-);
-
-export type Job = GenericJob | ManagedJob;
-
-export const JobSchema = Joi.object({
-  type: Joi.string()
-    .valid(...Object.values(Workflow))
-    .required(),
-})
-  .when(Joi.object({ type: Workflow.GENERIC }).unknown(), { then: GenericJobSchema })
-  .when(Joi.object({ type: Workflow.MANAGED }).unknown(), { then: ManagedJobSchema });
