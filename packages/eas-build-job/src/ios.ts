@@ -98,7 +98,7 @@ export interface Job {
 
   scheme?: string;
   buildConfiguration?: string;
-  artifactPath: string;
+  artifactPath?: string;
 
   buildType?: BuildType;
   username?: string;
