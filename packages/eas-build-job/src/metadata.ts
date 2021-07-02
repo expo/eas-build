@@ -50,6 +50,11 @@ export type Metadata = {
   sdkVersion?: string;
 
   /**
+   * Runtime version (for Expo Updates)
+   */
+  runtimeVersion?: string;
+
+  /**
    * Release channel (for classic expo-updates)
    * It's undefined if the classic expo-updates package is not installed for the project.
    */
@@ -106,6 +111,7 @@ export const MetadataSchema = Joi.object({
   distribution: Joi.string().valid('store', 'internal', 'simulator'),
   credentialsSource: Joi.string().valid('local', 'remote'),
   sdkVersion: Joi.string(),
+  runtimeVersion: Joi.string(),
   releaseChannel: Joi.string(),
   channel: Joi.string(),
   appName: Joi.string(),
