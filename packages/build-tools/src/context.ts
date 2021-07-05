@@ -1,6 +1,7 @@
 import path from 'path';
 
-import { BuildPhase, Job, LogMarker, Env, errors } from '@expo/eas-build-job';
+import { BuildPhase, Job, LogMarker, Env, errors, Metadata } from '@expo/eas-build-job';
+import { getConfig, ExpoConfig } from '@expo/config';
 import { bunyan } from '@expo/logger';
 
 import { PackageManager, resolvePackageManager } from './utils/packageManager';
@@ -25,6 +26,7 @@ export interface BuildContextOptions<TJob extends Job> {
   env: Env;
   cacheManager?: CacheManager;
   ejectProvider?: EjectProvider<TJob>;
+  metadata?: Metadata;
 }
 
 export class BuildContext<TJob extends Job> {
@@ -34,9 +36,11 @@ export class BuildContext<TJob extends Job> {
   public readonly env: Env;
   public readonly cacheManager?: CacheManager;
   public readonly ejectProvider: EjectProvider<TJob>;
+  public readonly metadata?: Metadata;
 
   private readonly defaultLogger: bunyan;
   private buildPhase?: BuildPhase;
+  private _appConfig?: ExpoConfig;
 
   constructor(public readonly job: TJob, options: BuildContextOptions<TJob>) {
     this.workingdir = options.workingdir;
@@ -45,6 +49,7 @@ export class BuildContext<TJob extends Job> {
     this.logBuffer = options.logBuffer;
     this.cacheManager = options.cacheManager;
     this.ejectProvider = options.ejectProvider ?? new NpxExpoCliEjectProvider();
+    this.metadata = options.metadata;
     this.env = {
       ...options.env,
       ...job?.builderEnvironment?.env,
@@ -60,6 +65,24 @@ export class BuildContext<TJob extends Job> {
   }
   public get packageManager(): PackageManager {
     return resolvePackageManager(this.reactNativeProjectDirectory);
+  }
+  public get appConfig(): ExpoConfig {
+    if (!this._appConfig) {
+      const originalProcessEnv: NodeJS.ProcessEnv = { ...process.env };
+      try {
+        for (const [key, value] of Object.entries(this.env)) {
+          process.env[key] = value;
+        }
+        const { exp } = getConfig(this.reactNativeProjectDirectory, {
+          skipSDKVersionRequirement: true,
+          isPublicConfig: true,
+        });
+        this._appConfig = exp;
+      } finally {
+        process.env = originalProcessEnv;
+      }
+    }
+    return this._appConfig;
   }
 
   public async runBuildPhase<T>(buildPhase: BuildPhase, phase: () => Promise<T>): Promise<T> {

@@ -8,6 +8,7 @@ import {
   androidGetNativelyDefinedClassicReleaseChannelAsync,
   androidSetChannelNativelyAsync,
   androidSetClassicReleaseChannelNativelyAsync,
+  androidGetNativelyDefinedRuntimeVersionAsync,
 } from '../expoUpdates';
 
 jest.mock('fs');
@@ -152,5 +153,45 @@ describe(androidGetNativelyDefinedClassicReleaseChannelAsync, () => {
       ctx as any
     );
     expect(nativelyDefinedReleaseChannel).toBe(releaseChannel);
+  });
+});
+describe(androidGetNativelyDefinedRuntimeVersionAsync, () => {
+  it('gets the native runtime version', async () => {
+    const reactNativeProjectDirectory = fs.mkdtempSync('/expo-project-');
+    fs.ensureDirSync(reactNativeProjectDirectory);
+    const runtimeVersion = 'default';
+    const ctx = {
+      reactNativeProjectDirectory,
+      logger: { info: () => {} },
+    };
+
+    const runtimeVersionInAndroidManifest = `
+    <manifest xmlns:android="http://schemas.android.com/apk/res/android" package="com.expo.mycoolapp">
+    <uses-permission android:name="android.permission.INTERNET"/>
+    <application android:name=".MainApplication" android:label="@string/app_name" android:icon="@mipmap/ic_launcher" android:roundIcon="@mipmap/ic_launcher_round" android:allowBackup="true" android:theme="@style/AppTheme">
+      <activity android:name=".MainActivity" android:launchMode="singleTask" android:label="@string/app_name" android:configChanges="keyboard|keyboardHidden|orientation|screenSize" android:windowSoftInputMode="adjustResize">
+        <intent-filter>
+          <action android:name="android.intent.action.MAIN"/>
+          <category android:name="android.intent.category.LAUNCHER"/>
+        </intent-filter>
+      </activity>
+      <activity android:name="com.facebook.react.devsupport.DevSettingsActivity"/>
+      <meta-data android:name="expo.modules.updates.EXPO_RELEASE_CHANNEL" android:value="default"/>
+      <meta-data android:name="expo.modules.updates.EXPO_RUNTIME_VERSION" android:value="${runtimeVersion}"/>
+    </application>
+    </manifest>`;
+    fs.ensureDirSync(path.join(reactNativeProjectDirectory, 'android'));
+    const manifestPath = await AndroidConfig.Paths.getAndroidManifestAsync(
+      reactNativeProjectDirectory
+    );
+    const manifestDirectory = path.dirname(manifestPath);
+
+    fs.ensureDirSync(manifestDirectory);
+    fs.writeFileSync(manifestPath, runtimeVersionInAndroidManifest);
+
+    const nativelyDefinedRuntimeVersion = await androidGetNativelyDefinedRuntimeVersionAsync(
+      ctx as any
+    );
+    expect(nativelyDefinedRuntimeVersion).toBe(runtimeVersion);
   });
 });

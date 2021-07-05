@@ -9,6 +9,7 @@ import { BuildContext } from '../context';
 export enum AndroidMetadataName {
   UPDATES_CONFIGURATION_REQUEST_HEADERS_KEY = 'expo.modules.updates.UPDATES_CONFIGURATION_REQUEST_HEADERS_KEY',
   RELEASE_CHANNEL = 'expo.modules.updates.EXPO_RELEASE_CHANNEL',
+  RUNTIME_VERSION = 'expo.modules.updates.EXPO_RUNTIME_VERSION',
 }
 
 export async function androidSetChannelNativelyAsync(ctx: BuildContext<Job>): Promise<void> {
@@ -77,5 +78,22 @@ export async function androidGetNativelyDefinedClassicReleaseChannelAsync(
   return AndroidConfig.Manifest.getMainApplicationMetaDataValue(
     androidManifest,
     AndroidMetadataName.RELEASE_CHANNEL
+  );
+}
+
+export async function androidGetNativelyDefinedRuntimeVersionAsync(
+  ctx: BuildContext<Job>
+): Promise<string | null> {
+  const manifestPath = await AndroidConfig.Paths.getAndroidManifestAsync(
+    ctx.reactNativeProjectDirectory
+  );
+  if (!(await fs.pathExists(manifestPath))) {
+    return null;
+  }
+
+  const androidManifest = await AndroidConfig.Manifest.readAndroidManifestAsync(manifestPath);
+  return AndroidConfig.Manifest.getMainApplicationMetaDataValue(
+    androidManifest,
+    AndroidMetadataName.RUNTIME_VERSION
   );
 }

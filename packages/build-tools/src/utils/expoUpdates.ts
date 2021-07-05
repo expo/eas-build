@@ -6,11 +6,13 @@ import {
   androidSetChannelNativelyAsync,
   androidSetClassicReleaseChannelNativelyAsync,
   androidGetNativelyDefinedClassicReleaseChannelAsync,
+  androidGetNativelyDefinedRuntimeVersionAsync,
 } from '../android/expoUpdates';
 import {
   iosSetChannelNativelyAsync,
   iosSetClassicReleaseChannelNativelyAsync,
   iosGetNativelyDefinedClassicReleaseChannelAsync,
+  iosGetNativelyDefinedRuntimeVersionAsync,
 } from '../ios/expoUpdates';
 import { BuildContext } from '../context';
 
@@ -127,9 +129,34 @@ export const configureExpoUpdatesIfInstalledAsync = async (
     return;
   }
 
+  if (
+    ctx.metadata?.runtimeVersion &&
+    ctx.metadata?.runtimeVersion !== ctx.appConfig.runtimeVersion
+  ) {
+    ctx.logger.warn(
+      `Runtime version from the app config evaluated on your local machine (${ctx.metadata.runtimeVersion}) does not match the one resolved here (${ctx.appConfig.runtimeVersion}).`
+    );
+    ctx.logger.warn(
+      "If you're using conditional app configs, e.g. depending on an environment variable, make sure to set the variable in eas.json or configure it with EAS Secret."
+    );
+  }
+
   if (ctx.job.updates?.channel) {
     await configureEASExpoUpdatesAsync(ctx);
   } else {
     await configureClassicExpoUpdatesAsync(ctx);
+  }
+};
+
+export const getRuntimeVersionAsync = async (ctx: BuildContext<Job>): Promise<string | null> => {
+  switch (ctx.job.platform) {
+    case Platform.ANDROID: {
+      return await androidGetNativelyDefinedRuntimeVersionAsync(ctx);
+    }
+    case Platform.IOS: {
+      return await iosGetNativelyDefinedRuntimeVersionAsync(ctx);
+    }
+    default:
+      throw new Error(`Platform is not supported.`);
   }
 };

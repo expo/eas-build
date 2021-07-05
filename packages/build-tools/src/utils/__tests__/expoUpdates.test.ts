@@ -31,7 +31,7 @@ describe(expoUpdates.configureExpoUpdatesIfInstalledAsync, () => {
     jest.spyOn(expoUpdates, 'configureClassicExpoUpdatesAsync');
 
     const managedCtx: BuildContext<Job> = {
-      job: { updates: { channel: 'main' }, Platform: Platform.IOS },
+      job: { updates: { channel: 'main' }, platform: Platform.IOS },
     } as any;
     await expoUpdates.configureExpoUpdatesIfInstalledAsync(managedCtx);
 
