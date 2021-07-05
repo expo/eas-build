@@ -7,12 +7,6 @@ import isExpoUpdatesInstalledAsync from '../isExpoUpdatesInstalled';
 jest.mock('../isExpoUpdatesInstalled', () => jest.fn());
 jest.mock('fs');
 
-beforeEach(() => {
-  jest.spyOn(expoUpdates, 'getRuntimeVersionAsync').mockImplementation(async () => {
-    return null;
-  });
-});
-
 describe(expoUpdates.configureExpoUpdatesIfInstalledAsync, () => {
   beforeAll(() => {
     jest.restoreAllMocks();

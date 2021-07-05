@@ -137,19 +137,8 @@ export const configureExpoUpdatesIfInstalledAsync = async (
       `Runtime version from the app config evaluated on your local machine (${ctx.metadata.runtimeVersion}) does not match the one resolved here (${ctx.appConfig.runtimeVersion}).`
     );
     ctx.logger.warn(
-      "If you're using conditional app configs, e.g. depending on an environment variable, make sure to set the variable in eas.json."
+      "If you're using conditional app configs, e.g. depending on an environment variable, make sure to set the variable in eas.json or configure it with EAS Secret."
     );
-  }
-
-  const nativelyDefinedRuntimeVersion = await getRuntimeVersionAsync(ctx);
-  if (
-    nativelyDefinedRuntimeVersion &&
-    ctx.appConfig.runtimeVersion !== nativelyDefinedRuntimeVersion
-  ) {
-    ctx.logger.warn(
-      `Runtime version defined natively (${nativelyDefinedRuntimeVersion}) does not match the value from the app config (${ctx.appConfig.runtimeVersion}).`
-    );
-    ctx.logger.warn('You should keep those values in sync.');
   }
 
   if (ctx.job.updates?.channel) {
