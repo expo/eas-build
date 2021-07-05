@@ -7,6 +7,12 @@ import isExpoUpdatesInstalledAsync from '../isExpoUpdatesInstalled';
 jest.mock('../isExpoUpdatesInstalled', () => jest.fn());
 jest.mock('fs');
 
+beforeEach(() => {
+  jest.spyOn(expoUpdates, 'getRuntimeVersionAsync').mockImplementation(async () => {
+    return null;
+  });
+});
+
 describe(expoUpdates.configureExpoUpdatesIfInstalledAsync, () => {
   beforeAll(() => {
     jest.restoreAllMocks();
@@ -31,7 +37,7 @@ describe(expoUpdates.configureExpoUpdatesIfInstalledAsync, () => {
     jest.spyOn(expoUpdates, 'configureClassicExpoUpdatesAsync');
 
     const managedCtx: BuildContext<Job> = {
-      job: { updates: { channel: 'main' }, Platform: Platform.IOS },
+      job: { updates: { channel: 'main' }, platform: Platform.IOS },
     } as any;
     await expoUpdates.configureExpoUpdatesIfInstalledAsync(managedCtx);
 

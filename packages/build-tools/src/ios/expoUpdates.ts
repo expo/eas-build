@@ -10,6 +10,7 @@ import { BuildContext } from '../context';
 export enum IosMetadataName {
   UPDATES_CONFIGURATION_REQUEST_HEADERS_KEY = 'EXUpdatesRequestHeaders',
   RELEASE_CHANNEL = 'EXUpdatesReleaseChannel',
+  RUNTIME_VERSION = 'EXUpdatesRuntimeVersion',
 }
 
 export async function iosSetChannelNativelyAsync(ctx: BuildContext<Job>): Promise<void> {
@@ -67,4 +68,19 @@ export async function iosGetNativelyDefinedClassicReleaseChannelAsync(
     return null;
   }
   return parsedPlist[IosMetadataName.RELEASE_CHANNEL] ?? null;
+}
+
+export async function iosGetNativelyDefinedRuntimeVersionAsync(
+  ctx: BuildContext<Job>
+): Promise<string | null> {
+  const expoPlistPath = IOSConfig.Paths.getExpoPlistPath(ctx.reactNativeProjectDirectory);
+  if (!(await fs.pathExists(expoPlistPath))) {
+    return null;
+  }
+  const expoPlistContent = await fs.readFile(expoPlistPath, 'utf8');
+  const parsedPlist = plist.parse(expoPlistContent);
+  if (!parsedPlist) {
+    return null;
+  }
+  return parsedPlist[IosMetadataName.RUNTIME_VERSION] ?? null;
 }
