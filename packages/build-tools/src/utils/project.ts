@@ -15,18 +15,18 @@ export async function setup<TJob extends Job>(ctx: BuildContext<TJob>): Promise<
     await downloadAndUnpackProject(ctx);
   });
 
-  await ctx.runBuildPhase(BuildPhase.READ_APP_CONFIG, async () => {
-    const appConfig = ctx.appConfig;
-    ctx.logger.info('Using app configuration:');
-    ctx.logger.info(JSON.stringify(appConfig, null, 2));
-  });
-
   await ctx.runBuildPhase(BuildPhase.PRE_INSTALL_HOOK, async () => {
     await runHookIfPresent(ctx, Hook.PRE_INSTALL);
   });
 
   await ctx.runBuildPhase(BuildPhase.INSTALL_DEPENDENCIES, async () => {
     await installDependencies(ctx);
+  });
+
+  await ctx.runBuildPhase(BuildPhase.READ_APP_CONFIG, async () => {
+    const appConfig = ctx.appConfig;
+    ctx.logger.info('Using app configuration:');
+    ctx.logger.info(JSON.stringify(appConfig, null, 2));
   });
 }
 
