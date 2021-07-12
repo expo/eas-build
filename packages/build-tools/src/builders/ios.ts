@@ -1,8 +1,7 @@
 import assert from 'assert';
 
-import fs from 'fs-extra';
 import { IOSConfig } from '@expo/config-plugins';
-import { BuildPhase, Ios } from '@expo/eas-build-job';
+import { BuildPhase, Ios, Workflow } from '@expo/eas-build-job';
 
 import { BuildContext } from '../context';
 import { configureExpoUpdatesIfInstalledAsync } from '../utils/expoUpdates';
@@ -16,7 +15,7 @@ import { installPods } from '../ios/pod';
 
 export default async function iosBuilder(ctx: BuildContext<Ios.Job>): Promise<string[]> {
   await setup(ctx);
-  const hasNativeCode = await hasNativeCodeAsync(ctx.reactNativeProjectDirectory);
+  const hasNativeCode = ctx.job.type === Workflow.GENERIC;
 
   const credentialsManager = new CredentialsManager(ctx);
   try {
@@ -117,14 +116,4 @@ function resolveBuildConfiguration(ctx: BuildContext<Ios.Job>): string {
     return 'Debug';
   }
   return 'Release';
-}
-
-// TODO move to config-plugins
-export async function hasNativeCodeAsync(projectRoot: string): Promise<boolean> {
-  try {
-    const pbxprojPath = IOSConfig.Paths.getXcodeProjectPath(projectRoot);
-    return await fs.pathExists(pbxprojPath);
-  } catch {
-    return false;
-  }
 }

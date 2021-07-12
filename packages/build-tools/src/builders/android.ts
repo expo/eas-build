@@ -1,6 +1,5 @@
 import { AndroidConfig } from '@expo/config-plugins';
-import { Android, BuildPhase } from '@expo/eas-build-job';
-import fs from 'fs-extra';
+import { Android, BuildPhase, Workflow } from '@expo/eas-build-job';
 
 import { BuildContext } from '../context';
 import { configureExpoUpdatesIfInstalledAsync } from '../utils/expoUpdates';
@@ -12,7 +11,7 @@ import { restoreCredentials } from '../android/credentials';
 
 export default async function androidBuilder(ctx: BuildContext<Android.Job>): Promise<string[]> {
   await setup(ctx);
-  const hasNativeCode = await hasNativeCodeAsync(ctx.reactNativeProjectDirectory);
+  const hasNativeCode = ctx.job.type === Workflow.GENERIC;
 
   if (hasNativeCode) {
     await ctx.runBuildPhase(BuildPhase.FIX_GRADLEW, async () => {
@@ -89,16 +88,4 @@ function resolveGradleCommand(job: Android.Job): string {
 async function ejectProject(ctx: BuildContext<Android.Job>): Promise<void> {
   await ctx.ejectProvider.runEject(ctx);
   await AndroidConfig.EasBuild.configureEasBuildAsync(ctx.reactNativeProjectDirectory);
-}
-
-// TODO move to config-plugins
-async function hasNativeCodeAsync(reactNativeProjectDirectory: string): Promise<boolean> {
-  try {
-    const androidManifestPath = await AndroidConfig.Paths.getAndroidManifestAsync(
-      reactNativeProjectDirectory
-    );
-    return await fs.pathExists(androidManifestPath);
-  } catch {
-    return false;
-  }
 }
