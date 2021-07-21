@@ -15,6 +15,7 @@ describe('MetadataSchema', () => {
       trackingContext: {},
       workflow: 'generic',
       username: 'notdominik',
+      iosEnterpriseProvisioning: 'adhoc',
     };
     const { value, error } = MetadataSchema.validate(metadata, {
       stripUnknown: true,

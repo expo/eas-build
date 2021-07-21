@@ -98,6 +98,12 @@ export type Metadata = {
    * Username of the initiating user
    */
   username?: string;
+
+  /**
+   * Indicates what type of an enterprise provisioning profile was used to build the app.
+   * It's either adhoc or universal
+   */
+  iosEnterpriseProvisioning?: 'adhoc' | 'universal';
 };
 
 export const MetadataSchema = Joi.object({
@@ -119,4 +125,5 @@ export const MetadataSchema = Joi.object({
   buildProfile: Joi.string(),
   gitCommitHash: Joi.string().length(40).hex(),
   username: Joi.string(),
+  iosEnterpriseProvisioning: Joi.string().valid('adhoc', 'universal'),
 });
