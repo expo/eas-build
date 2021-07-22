@@ -1,5 +1,5 @@
 import { AndroidConfig } from '@expo/config-plugins';
-import { Android, BuildPhase, Workflow } from '@expo/eas-build-job';
+import { Android, BuildPhase, Metadata, Workflow } from '@expo/eas-build-job';
 
 import { BuildContext } from '../context';
 import { configureExpoUpdatesIfInstalledAsync } from '../utils/expoUpdates';
@@ -41,7 +41,7 @@ export default async function androidBuilder(ctx: BuildContext<Android.Job>): Pr
   });
 
   await ctx.runBuildPhase(BuildPhase.RUN_GRADLEW, async () => {
-    const gradleCommand = resolveGradleCommand(ctx.job);
+    const gradleCommand = resolveGradleCommand(ctx.job, ctx.metadata);
     await runGradleCommand(ctx, gradleCommand);
   });
 
@@ -66,12 +66,16 @@ export default async function androidBuilder(ctx: BuildContext<Android.Job>): Pr
   return buildArtifacts;
 }
 
-function resolveGradleCommand(job: Android.Job): string {
+function resolveGradleCommand(job: Android.Job, metadata?: Metadata): string {
   if (job.gradleCommand) {
     return job.gradleCommand;
   }
   if (!job.buildType) {
-    return ':app:bundleRelease';
+    if (metadata?.distribution === 'internal') {
+      return ':app:assembleRelease';
+    } else {
+      return ':app:bundleRelease';
+    }
   }
   switch (job.buildType) {
     case Android.BuildType.APK:
