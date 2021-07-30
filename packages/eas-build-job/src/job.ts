@@ -4,9 +4,9 @@ import { Platform } from './common';
 import * as Android from './android';
 import * as Ios from './ios';
 
-type Job = Android.Job | Ios.Job;
+export type Job = Android.Job | Ios.Job;
 
-const JobSchema = Joi.object<Job>({
+export const JobSchema = Joi.object<Job>({
   platform: Joi.string()
     .valid(...Object.values(Platform))
     .required(),
@@ -14,7 +14,7 @@ const JobSchema = Joi.object<Job>({
   .when(Joi.object({ platform: Platform.ANDROID }).unknown(), { then: Android.JobSchema })
   .when(Joi.object({ platform: Platform.IOS }).unknown(), { then: Ios.JobSchema });
 
-function sanitizeJob(job: object): Job {
+export function sanitizeJob(job: object): Job {
   const { value, error } = JobSchema.validate(job, {
     stripUnknown: true,
     convert: true,
@@ -26,5 +26,3 @@ function sanitizeJob(job: object): Job {
     return value;
   }
 }
-
-export { Job, JobSchema, sanitizeJob };

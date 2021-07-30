@@ -127,3 +127,16 @@ export const MetadataSchema = Joi.object({
   username: Joi.string(),
   iosEnterpriseProvisioning: Joi.string().valid('adhoc', 'universal'),
 });
+
+export function sanitizeMetadata(metadata: object): Metadata {
+  const { value, error } = MetadataSchema.validate(metadata, {
+    stripUnknown: true,
+    convert: true,
+    abortEarly: false,
+  });
+  if (error) {
+    throw error;
+  } else {
+    return value;
+  }
+}
