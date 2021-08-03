@@ -1,13 +1,14 @@
 import path from 'path';
 
 import { BuildPhase, Job, LogMarker, Env, errors, Metadata } from '@expo/eas-build-job';
-import { getConfig, ExpoConfig } from '@expo/config';
+import { ExpoConfig } from '@expo/config';
 import { bunyan } from '@expo/logger';
 
 import { PackageManager, resolvePackageManager } from './utils/packageManager';
 import { detectUserError } from './utils/detectUserError';
 import { EjectProvider } from './managed/EjectProvider';
 import { NpxExpoCliEjectProvider } from './managed/NpxExpoCliEject';
+import { readAppConfig } from './utils/appConfig';
 
 export interface CacheManager {
   saveCache(ctx: BuildContext<Job>): Promise<void>;
@@ -68,19 +69,7 @@ export class BuildContext<TJob extends Job> {
   }
   public get appConfig(): ExpoConfig {
     if (!this._appConfig) {
-      const originalProcessEnv: NodeJS.ProcessEnv = { ...process.env };
-      try {
-        for (const [key, value] of Object.entries(this.env)) {
-          process.env[key] = value;
-        }
-        const { exp } = getConfig(this.reactNativeProjectDirectory, {
-          skipSDKVersionRequirement: true,
-          isPublicConfig: true,
-        });
-        this._appConfig = exp;
-      } finally {
-        process.env = originalProcessEnv;
-      }
+      this._appConfig = readAppConfig(this.reactNativeProjectDirectory, this.env, this.logger).exp;
     }
     return this._appConfig;
   }
