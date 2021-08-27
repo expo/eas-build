@@ -1,5 +1,5 @@
 import { Job, sanitizeJob, ArchiveSourceType } from '@expo/eas-build-job';
-import Joi from '@hapi/joi';
+import Joi from 'joi';
 import chalk from 'chalk';
 import fs from 'fs-extra';
 

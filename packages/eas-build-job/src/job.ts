@@ -1,4 +1,4 @@
-import Joi from '@hapi/joi';
+import Joi from 'joi';
 
 import { Platform } from './common';
 import * as Android from './android';

@@ -1,4 +1,4 @@
-import Joi from '@hapi/joi';
+import Joi from 'joi';
 
 import * as Ios from '../ios';
 import { ArchiveSourceType, Platform, Workflow } from '../common';
