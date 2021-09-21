@@ -62,12 +62,23 @@ export default async function iosBuilder(ctx: BuildContext<Ios.Job>): Promise<st
         buildConfiguration,
       });
     });
-
-    await ctx.runBuildPhase(BuildPhase.PRE_UPLOAD_ARTIFACTS_HOOK, async () => {
-      await runHookIfPresent(ctx, Hook.PRE_UPLOAD_ARTIFACTS);
+  } finally {
+    await ctx.runBuildPhase(BuildPhase.CLEAN_UP_CREDENTIALS, async () => {
+      await credentialsManager.cleanUp();
     });
+  }
 
-    const buildArtifacts = await ctx.runBuildPhase(BuildPhase.PREPARE_ARTIFACTS, async () => {
+  await ctx.runBuildPhase(BuildPhase.PRE_UPLOAD_ARTIFACTS_HOOK, async () => {
+    await runHookIfPresent(ctx, Hook.PRE_UPLOAD_ARTIFACTS);
+  });
+
+  await ctx.runBuildPhase(BuildPhase.SAVE_CACHE, async () => {
+    await ctx.cacheManager?.saveCache(ctx);
+  });
+
+  return await ctx.runBuildPhase(
+    BuildPhase.UPLOAD_ARTIFACTS,
+    async () => {
       const buildArtifacts = await findBuildArtifacts(
         ctx.reactNativeProjectDirectory,
         resolveArtifactPath(ctx),
@@ -75,18 +86,9 @@ export default async function iosBuilder(ctx: BuildContext<Ios.Job>): Promise<st
       );
       ctx.logger.info(`Build artifacts: ${buildArtifacts.join(', ')}`);
       return buildArtifacts;
-    });
-
-    await ctx.runBuildPhase(BuildPhase.SAVE_CACHE, async () => {
-      await ctx.cacheManager?.saveCache(ctx);
-    });
-
-    return buildArtifacts;
-  } finally {
-    await ctx.runBuildPhase(BuildPhase.CLEAN_UP_CREDENTIALS, async () => {
-      await credentialsManager.cleanUp();
-    });
-  }
+    },
+    { doNotMarkEnd: true }
+  );
 }
 
 function resolveScheme(ctx: BuildContext<Ios.Job>): string {

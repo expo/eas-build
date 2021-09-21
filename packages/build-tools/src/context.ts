@@ -74,13 +74,17 @@ export class BuildContext<TJob extends Job> {
     return this._appConfig;
   }
 
-  public async runBuildPhase<T>(buildPhase: BuildPhase, phase: () => Promise<T>): Promise<T> {
+  public async runBuildPhase<T>(
+    buildPhase: BuildPhase,
+    phase: () => Promise<T>,
+    { doNotMarkStart = false, doNotMarkEnd = false } = {}
+  ): Promise<T> {
     try {
-      this.setBuildPhase(buildPhase);
+      this.setBuildPhase(buildPhase, { doNotMarkStart });
       const result = await phase();
-      this.endCurrentBuildPhase({ result: 'success' });
+      this.endCurrentBuildPhase({ result: 'success', doNotMarkEnd });
       return result;
-    } catch (err) {
+    } catch (err: any) {
       let userError: errors.UserError | undefined;
       if (err instanceof errors.UserError) {
         userError = err;
@@ -105,7 +109,7 @@ export class BuildContext<TJob extends Job> {
     }
   }
 
-  private setBuildPhase(buildPhase: BuildPhase): void {
+  private setBuildPhase(buildPhase: BuildPhase, { doNotMarkStart = false } = {}): void {
     if (this.buildPhase) {
       if (this.buildPhase === buildPhase) {
         return;
@@ -119,14 +123,24 @@ export class BuildContext<TJob extends Job> {
     }
     this.buildPhase = buildPhase;
     this.logger = this.defaultLogger.child({ phase: buildPhase });
-    this.logger.info({ marker: LogMarker.START_PHASE }, `Start phase: ${this.buildPhase}`);
+    if (!doNotMarkStart) {
+      this.logger.info({ marker: LogMarker.START_PHASE }, `Start phase: ${this.buildPhase}`);
+    }
   }
 
-  private endCurrentBuildPhase({ result }: { result: 'success' | 'failed' }): void {
+  private endCurrentBuildPhase({
+    result,
+    doNotMarkEnd = false,
+  }: {
+    result: 'success' | 'failed';
+    doNotMarkEnd?: boolean;
+  }): void {
     if (!this.buildPhase) {
       return;
     }
-    this.logger.info({ marker: LogMarker.END_PHASE, result }, `End phase: ${this.buildPhase}`);
+    if (!doNotMarkEnd) {
+      this.logger.info({ marker: LogMarker.END_PHASE, result }, `End phase: ${this.buildPhase}`);
+    }
     this.logger = this.defaultLogger;
     this.buildPhase = undefined;
   }

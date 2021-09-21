@@ -32,10 +32,6 @@ export async function setup<TJob extends Job>(ctx: BuildContext<TJob>): Promise<
 
 async function downloadAndUnpackProject<TJob extends Job>(ctx: BuildContext<TJob>): Promise<void> {
   const projectTarball = path.join(ctx.workingdir, 'project.tar.gz');
-  ctx.logger.info(
-    { ...ctx.job.projectArchive, phase: BuildPhase.PREPARE_PROJECT },
-    'Download project archive'
-  );
   if (ctx.job.projectArchive.type === ArchiveSourceType.S3) {
     throw new Error('ArchiveSourceType.S3 should be resolved earlier to url');
   } else if (ctx.job.projectArchive.type === ArchiveSourceType.PATH) {
@@ -44,7 +40,6 @@ async function downloadAndUnpackProject<TJob extends Job>(ctx: BuildContext<TJob
     await downloadFile(ctx.job.projectArchive.url, projectTarball);
   }
 
-  ctx.logger.info({ phase: BuildPhase.PREPARE_PROJECT }, 'Unpacking project archive');
   await spawn(
     'tar',
     ['--strip-components', '1', '-zxf', 'project.tar.gz', '-C', ctx.buildDirectory],
