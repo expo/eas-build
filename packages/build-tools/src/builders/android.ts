@@ -49,21 +49,23 @@ export default async function androidBuilder(ctx: BuildContext<Android.Job>): Pr
     await runHookIfPresent(ctx, Hook.PRE_UPLOAD_ARTIFACTS);
   });
 
-  const buildArtifacts = await ctx.runBuildPhase(BuildPhase.PREPARE_ARTIFACTS, async () => {
-    const buildArtifacts = await findBuildArtifacts(
-      ctx.reactNativeProjectDirectory,
-      ctx.job.artifactPath ?? 'android/app/build/outputs/**/*.{apk,aab}',
-      ctx.logger
-    );
-    ctx.logger.info(`Build artifacts: ${buildArtifacts.join(', ')}`);
-    return buildArtifacts;
-  });
-
   await ctx.runBuildPhase(BuildPhase.SAVE_CACHE, async () => {
     await ctx.cacheManager?.saveCache(ctx);
   });
 
-  return buildArtifacts;
+  return await ctx.runBuildPhase(
+    BuildPhase.UPLOAD_ARTIFACTS,
+    async () => {
+      const buildArtifacts = await findBuildArtifacts(
+        ctx.reactNativeProjectDirectory,
+        ctx.job.artifactPath ?? 'android/app/build/outputs/**/*.{apk,aab}',
+        ctx.logger
+      );
+      ctx.logger.info(`Build artifacts: ${buildArtifacts.join(', ')}`);
+      return buildArtifacts;
+    },
+    { doNotMarkEnd: true }
+  );
 }
 
 function resolveGradleCommand(job: Android.Job): string {
