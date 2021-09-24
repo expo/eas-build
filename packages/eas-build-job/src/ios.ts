@@ -53,6 +53,7 @@ export const builderBaseImages = [
   'macos-catalina-10.15-xcode-12.1',
   'macos-catalina-10.15-xcode-12.4',
   'macos-big-sur-11.4-xcode-12.5',
+  'macos-big-sur-11.4-xcode-13.0',
 ] as const;
 
 export interface BuilderEnvironment {
