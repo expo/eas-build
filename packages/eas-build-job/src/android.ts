@@ -36,6 +36,7 @@ export const builderBaseImages = [
   'latest',
   'stable',
   'ubuntu-18.04-android-30-ndk-r19c',
+  'ubuntu-20.04-android-30-ndk-r21e',
 ] as const;
 
 export interface BuilderEnvironment {
