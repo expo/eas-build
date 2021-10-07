@@ -74,9 +74,7 @@ export interface BuilderEnvironment {
 }
 
 const BuilderEnvironmentSchema = Joi.object({
-  image: Joi.string()
-    .valid(...builderBaseImages)
-    .default('default'),
+  image: Joi.string().valid(...builderBaseImages),
   node: Joi.string(),
   yarn: Joi.string(),
   expoCli: Joi.string(),
