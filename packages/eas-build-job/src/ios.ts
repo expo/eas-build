@@ -63,7 +63,7 @@ export const sdkVersionToDefaultBuilderImage: Record<string, typeof builderBaseI
 };
 
 export interface BuilderEnvironment {
-  image: typeof builderBaseImages[number];
+  image?: typeof builderBaseImages[number];
   node?: string;
   yarn?: string;
   expoCli?: string;

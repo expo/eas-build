@@ -40,7 +40,7 @@ export const builderBaseImages = [
 ] as const;
 
 export interface BuilderEnvironment {
-  image: typeof builderBaseImages[number];
+  image?: typeof builderBaseImages[number];
   node?: string;
   yarn?: string;
   expoCli?: string;
