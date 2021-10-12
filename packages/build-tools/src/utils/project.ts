@@ -8,11 +8,15 @@ import fs from 'fs-extra';
 import { BuildContext } from '../context';
 
 import { Hook, runHookIfPresent } from './hooks';
+import { createNpmrcIfNotExistsAsync } from './npmrc';
 import { findPackagerRootDir } from './packageManager';
 
 export async function setup<TJob extends Job>(ctx: BuildContext<TJob>): Promise<void> {
   await ctx.runBuildPhase(BuildPhase.PREPARE_PROJECT, async () => {
     await downloadAndUnpackProject(ctx);
+    if (ctx.env.NPM_TOKEN) {
+      await createNpmrcIfNotExistsAsync(ctx);
+    }
   });
 
   await ctx.runBuildPhase(BuildPhase.PRE_INSTALL_HOOK, async () => {
@@ -57,9 +61,7 @@ async function installDependencies<TJob extends Job>(ctx: BuildContext<TJob>): P
       ctx.buildDirectory,
       ctx.reactNativeProjectDirectory
     );
-    ctx.logger.info(
-      `We have detected that '${relativeReactNativeProjectDirectory}' is a workspace`
-    );
+    ctx.logger.info(`We detected that '${relativeReactNativeProjectDirectory}' is a workspace`);
   }
 
   const relativePackagerRunDir = path.relative(ctx.buildDirectory, packagerRunDir);
