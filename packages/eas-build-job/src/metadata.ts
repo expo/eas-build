@@ -95,6 +95,11 @@ export type Metadata = {
   gitCommitHash?: string;
 
   /**
+   * State of the git working tree
+   */
+  gitWorkingTreeDirty?: boolean;
+
+  /**
    * Username of the initiating user
    */
   username?: string;
@@ -124,6 +129,7 @@ export const MetadataSchema = Joi.object({
   appIdentifier: Joi.string(),
   buildProfile: Joi.string(),
   gitCommitHash: Joi.string().length(40).hex(),
+  gitWorkingTreeDirty: Joi.boolean(),
   username: Joi.string(),
   iosEnterpriseProvisioning: Joi.string().valid('adhoc', 'universal'),
 });
