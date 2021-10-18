@@ -33,7 +33,7 @@
     "fast-glob": "^3.2.5",
     "find-yarn-workspace-root": "^2.0.0",
     "fs-extra": "^9.0.0",
-    "node-forge": "^0.9.1",
+    "node-forge": "^0.10.0",
     "nullthrows": "^1.1.1",
     "plist": "^3.0.1"
   },
@@ -41,7 +41,7 @@
     "@types/fs-extra": "^9.0.1",
     "@types/jest": "^26.0.20",
     "@types/node": "^14.14.31",
-    "@types/node-forge": "^0.8.6",
+    "@types/node-forge": "^0.10.8",
     "@types/plist": "^3.0.2",
     "@types/uuid": "^3.4.5",
     "@types/xml2js": "^0.4.5",
