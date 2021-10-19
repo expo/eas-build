@@ -97,7 +97,7 @@ export type Metadata = {
   /**
    * State of the git working tree
    */
-  gitWorkingTreeDirty?: boolean;
+  isGitWorkingTreeDirty?: boolean;
 
   /**
    * Username of the initiating user
@@ -129,7 +129,7 @@ export const MetadataSchema = Joi.object({
   appIdentifier: Joi.string(),
   buildProfile: Joi.string(),
   gitCommitHash: Joi.string().length(40).hex(),
-  gitWorkingTreeDirty: Joi.boolean(),
+  isGitWorkingTreeDirty: Joi.boolean(),
   username: Joi.string(),
   iosEnterpriseProvisioning: Joi.string().valid('adhoc', 'universal'),
 });
