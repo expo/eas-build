@@ -39,11 +39,6 @@ export interface DistributionCertificate {
   password: string;
 }
 
-export enum BuildType {
-  RELEASE = 'release',
-  DEVELOPMENT_CLIENT = 'development-client',
-}
-
 export const builderBaseImages = [
   'default',
   'latest',
@@ -93,19 +88,19 @@ export interface Job {
   updates?: {
     channel?: string;
   };
-  distribution?: DistributionType;
   secrets: {
     buildCredentials?: BuildCredentials;
     environmentSecrets?: Env;
   };
   builderEnvironment?: BuilderEnvironment;
   cache: Cache;
+  developmentClient?: boolean;
+  simulator?: boolean;
 
   scheme?: string;
   buildConfiguration?: string;
   artifactPath?: string;
 
-  buildType?: BuildType;
   username?: string;
 }
 
@@ -120,13 +115,14 @@ export const JobSchema = Joi.object({
   updates: Joi.object({
     channel: Joi.string(),
   }),
-  distribution: Joi.string().valid('store', 'internal', 'simulator'),
   secrets: Joi.object({
     buildCredentials: BuildCredentialsSchema,
     environmentSecrets: EnvSchema,
   }).required(),
   builderEnvironment: BuilderEnvironmentSchema,
   cache: CacheSchema.default(),
+  developmentClient: Joi.boolean(),
+  simulator: Joi.boolean(),
 
   // generic
   scheme: Joi.string(),
@@ -134,6 +130,5 @@ export const JobSchema = Joi.object({
   artifactPath: Joi.string(),
 
   // managed
-  buildType: Joi.string().valid(...Object.values(BuildType)),
   username: Joi.string(),
 }).oxor('releaseChannel', 'updates.channel');
