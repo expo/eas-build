@@ -32,7 +32,7 @@ export default class IosCredentialsManager<TJob extends Ios.Job> {
   constructor(private readonly ctx: BuildContext<TJob>) {}
 
   public async prepare(): Promise<Credentials | null> {
-    if (this.ctx.job.distribution === 'simulator') {
+    if (this.ctx.job.simulator) {
       return null;
     }
 

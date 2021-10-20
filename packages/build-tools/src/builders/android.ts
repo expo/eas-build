@@ -71,19 +71,14 @@ export default async function androidBuilder(ctx: BuildContext<Android.Job>): Pr
 function resolveGradleCommand(job: Android.Job): string {
   if (job.gradleCommand) {
     return job.gradleCommand;
-  }
-  if (!job.buildType) {
+  } else if (job.developmentClient) {
+    return ':app:assembleDebug';
+  } else if (!job.buildType) {
     return ':app:bundleRelease';
-  }
-  switch (job.buildType) {
-    case Android.BuildType.APK:
-      return ':app:assembleRelease';
-    case Android.BuildType.APP_BUNDLE:
-      return ':app:bundleRelease';
-    case Android.BuildType.DEVELOPMENT_CLIENT:
-      return ':app:assembleDebug';
-    default:
-      throw new Error(`unknown artifact type ${job.buildType}`);
+  } else if (job.buildType === Android.BuildType.APK) {
+    return ':app:assembleRelease';
+  } else {
+    return ':app:bundleRelease';
   }
 }
 

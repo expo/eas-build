@@ -103,19 +103,19 @@ function resolveScheme(ctx: BuildContext<Ios.Job>): string {
 function resolveArtifactPath(ctx: BuildContext<Ios.Job>): string {
   if (ctx.job.artifactPath) {
     return ctx.job.artifactPath;
-  }
-  if (ctx.job.distribution === 'simulator') {
+  } else if (ctx.job.simulator) {
     return 'ios/build/Build/Products/*-iphonesimulator/*.app';
+  } else {
+    return 'ios/build/*.ipa';
   }
-  return 'ios/build/*.ipa';
 }
 
 function resolveBuildConfiguration(ctx: BuildContext<Ios.Job>): string {
   if (ctx.job.buildConfiguration) {
     return ctx.job.buildConfiguration;
-  }
-  if (ctx.job.buildType === Ios.BuildType.DEVELOPMENT_CLIENT) {
+  } else if (ctx.job.developmentClient) {
     return 'Debug';
+  } else {
+    return 'Release';
   }
-  return 'Release';
 }

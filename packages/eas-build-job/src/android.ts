@@ -28,7 +28,6 @@ const KeystoreSchema = Joi.object({
 export enum BuildType {
   APK = 'apk',
   APP_BUNDLE = 'app-bundle',
-  DEVELOPMENT_CLIENT = 'development-client',
 }
 
 export const builderBaseImages = [
@@ -76,6 +75,7 @@ export interface Job {
   };
   builderEnvironment?: BuilderEnvironment;
   cache: Cache;
+  developmentClient?: boolean;
 
   // generic
   gradleCommand?: string;
@@ -103,6 +103,7 @@ export const JobSchema = Joi.object({
   }).required(),
   builderEnvironment: BuilderEnvironmentSchema,
   cache: CacheSchema.default(),
+  developmentClient: Joi.boolean(),
 
   gradleCommand: Joi.string(),
   artifactPath: Joi.string(),

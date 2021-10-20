@@ -60,7 +60,7 @@ async function ensureGymfileExists<TJob extends Ios.Job>(
   }
 
   ctx.logger.info('Creating Gymfile');
-  if (ctx.job.distribution === 'simulator') {
+  if (ctx.job.simulator) {
     await createGymfileForSimulatorBuild({
       outputFile: gymfilePath,
       scheme,

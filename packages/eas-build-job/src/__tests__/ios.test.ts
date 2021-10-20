@@ -32,7 +32,6 @@ describe('Ios.JobSchema', () => {
         url: 'http://localhost:3000',
       },
       projectRootDirectory: '.',
-      distribution: 'store',
       scheme: 'testapp',
       buildConfiguration: 'Release',
       artifactPath: 'ios/build/*.ipa',
@@ -66,7 +65,6 @@ describe('Ios.JobSchema', () => {
         url: 'url',
       },
       projectRootDirectory: '.',
-      distribution: 'store',
       uknownField: 'field',
     };
 
@@ -87,8 +85,6 @@ describe('Ios.JobSchema', () => {
         url: 'http://localhost:3000',
       },
       projectRootDirectory: '.',
-      distribution: 'store',
-      buildType: Ios.BuildType.RELEASE,
       username: 'turtle-tutorial',
       releaseChannel: 'default',
       builderEnvironment: {
@@ -120,7 +116,6 @@ describe('Ios.JobSchema', () => {
         url: 'url',
       },
       projectRootDirectory: 312,
-      distribution: 'store',
       uknownField: 'field',
     };
 
@@ -145,7 +140,6 @@ describe('Ios.JobSchema', () => {
         url: 'http://localhost:3000',
       },
       projectRootDirectory: '.',
-      distribution: 'store',
     };
 
     const { value, error } = Ios.JobSchema.validate(managedJob, joiOptions);
@@ -168,7 +162,6 @@ describe('Ios.JobSchema', () => {
         url: 'http://localhost:3000',
       },
       projectRootDirectory: '.',
-      distribution: 'store',
     };
 
     const { error } = Ios.JobSchema.validate(managedJob, joiOptions);
