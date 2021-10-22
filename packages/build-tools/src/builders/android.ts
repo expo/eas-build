@@ -71,7 +71,7 @@ export default async function androidBuilder(ctx: BuildContext<Android.Job>): Pr
 function resolveGradleCommand(job: Android.Job): string {
   if (job.gradleCommand) {
     return job.gradleCommand;
-  } else if (job.developmentClient) {
+  } else if (job.useDevelopmentClient) {
     return ':app:assembleDebug';
   } else if (!job.buildType) {
     return ':app:bundleRelease';

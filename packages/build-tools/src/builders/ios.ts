@@ -113,7 +113,7 @@ function resolveArtifactPath(ctx: BuildContext<Ios.Job>): string {
 function resolveBuildConfiguration(ctx: BuildContext<Ios.Job>): string {
   if (ctx.job.buildConfiguration) {
     return ctx.job.buildConfiguration;
-  } else if (ctx.job.developmentClient) {
+  } else if (ctx.job.useDevelopmentClient) {
     return 'Debug';
   } else {
     return 'Release';

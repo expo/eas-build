@@ -94,7 +94,7 @@ export interface Job {
   };
   builderEnvironment?: BuilderEnvironment;
   cache: Cache;
-  developmentClient?: boolean;
+  useDevelopmentClient?: boolean;
   simulator?: boolean;
 
   scheme?: string;
@@ -121,7 +121,7 @@ export const JobSchema = Joi.object({
   }).required(),
   builderEnvironment: BuilderEnvironmentSchema,
   cache: CacheSchema.default(),
-  developmentClient: Joi.boolean(),
+  useDevelopmentClient: Joi.boolean(),
   simulator: Joi.boolean(),
 
   // generic
