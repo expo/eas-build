@@ -75,7 +75,7 @@ export interface Job {
   };
   builderEnvironment?: BuilderEnvironment;
   cache: Cache;
-  useDevelopmentClient?: boolean;
+  developmentClient?: boolean;
 
   // generic
   gradleCommand?: string;
@@ -103,7 +103,7 @@ export const JobSchema = Joi.object({
   }).required(),
   builderEnvironment: BuilderEnvironmentSchema,
   cache: CacheSchema.default(),
-  useDevelopmentClient: Joi.boolean(),
+  developmentClient: Joi.boolean(),
 
   gradleCommand: Joi.string(),
   artifactPath: Joi.string(),
