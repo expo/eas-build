@@ -2,6 +2,7 @@ import path from 'path';
 
 import { BuildContext } from '@expo/build-tools';
 import { Job } from '@expo/eas-build-job';
+import dateFormat from 'dateformat';
 import fs from 'fs-extra';
 import tar from 'tar';
 
@@ -59,5 +60,5 @@ function getCommonParentDir(path1: string, path2: string): string {
 }
 
 function formatDateForFilename(date: Date): string {
-  return `${date.getDay()}-${date.getMonth()}-${date.getFullYear()}-${date.getHours()}:${date.getMinutes()}`;
+  return dateFormat(date, 'dd-mm-yyyy-HH:MM');
 }
