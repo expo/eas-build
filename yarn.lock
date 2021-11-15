@@ -2114,10 +2114,10 @@
     "@types/node" "*"
     "@types/responselike" "*"
 
-"@types/dateformat@^5.0.0":
-  version "5.0.0"
-  resolved "https://registry.yarnpkg.com/@types/dateformat/-/dateformat-5.0.0.tgz#17ce64b0318f3f36d1c830c58a7a915445f1f93d"
-  integrity sha512-SZg4JdHIWHQGEokbYGZSDvo5wA4TLYPXaqhigs/wH+REDOejcJzgH+qyY+HtEUtWOZxEUkbhbdYPqQDiEgrXeA==
+"@types/dateformat@^3.0.1":
+  version "3.0.1"
+  resolved "https://registry.yarnpkg.com/@types/dateformat/-/dateformat-3.0.1.tgz#98d747a2e5e9a56070c6bf14e27bff56204e34cc"
+  integrity sha512-KlPPdikagvL6ELjWsljbyDIPzNCeliYkqRpI+zea99vBBbCIA5JNshZAwQKTON139c87y9qvTFVgkFd14rtS4g==
 
 "@types/fs-extra@^9.0.1":
   version "9.0.11"
@@ -4737,10 +4737,10 @@ dateformat@3.0.3, dateformat@^3.0.0:
   resolved "https://registry.yarnpkg.com/dateformat/-/dateformat-3.0.3.tgz#a6e37499a4d9a9cf85ef5872044d62901c9889ae"
   integrity sha512-jyCETtSl3VMZMWeRo7iY1FL19ges1t55hMo5yaam4Jrsm5EPL89UQkoQRyiI+Yf4k8r2ZpdngkV8hr1lIdjb3Q==
 
-dateformat@^5.0.2:
-  version "5.0.2"
-  resolved "https://registry.yarnpkg.com/dateformat/-/dateformat-5.0.2.tgz#0f275609b02e3306ff76d6a2067a6ebb98e6114b"
-  integrity sha512-h9vywpuz+ReixnJTwFx5JLtZpS8eLCbRm8shwwKkCKOZA547N6yoMtD3W91Z6+NFZ8wOaZlcaCcK/w+kELhSVg==
+dateformat@^4.6.2:
+  version "4.6.3"
+  resolved "https://registry.yarnpkg.com/dateformat/-/dateformat-4.6.3.tgz#556fa6497e5217fedb78821424f8a1c22fa3f4b5"
+  integrity sha512-2P0p0pFGzHS5EMnhdxQi7aJN+iMheud0UhG4dlE1DLAlvL8JHjJJTX/CSm4JXwV0Ka5nGk3zC5mcb5bUQUxxMA==
 
 debug@2, debug@2.6.9, debug@^2.2.0, debug@^2.3.3, debug@^2.6.0, debug@^2.6.9:
   version "2.6.9"
