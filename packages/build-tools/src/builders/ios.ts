@@ -1,7 +1,9 @@
 import assert from 'assert';
 
+import plist from '@expo/plist';
 import { IOSConfig } from '@expo/config-plugins';
 import { BuildPhase, Ios, Workflow } from '@expo/eas-build-job';
+import fs from 'fs-extra';
 
 import { BuildContext } from '../context';
 import { configureExpoUpdatesIfInstalledAsync } from '../utils/expoUpdates';
@@ -56,10 +58,12 @@ export default async function iosBuilder(ctx: BuildContext<Ios.Job>): Promise<st
     });
 
     await ctx.runBuildPhase(BuildPhase.RUN_FASTLANE, async () => {
+      const entitlements = await readEntitlementsAsync(ctx);
       await runFastlaneGym(ctx, {
         credentials,
         scheme: resolveScheme(ctx),
         buildConfiguration,
+        entitlements,
       });
     });
   } finally {
@@ -98,6 +102,19 @@ function resolveScheme(ctx: BuildContext<Ios.Job>): string {
   const schemes = IOSConfig.BuildScheme.getSchemesFromXcodeproj(ctx.reactNativeProjectDirectory);
   assert(schemes.length === 1, 'Ejected project should have exactly one scheme');
   return schemes[0];
+}
+
+async function readEntitlementsAsync(ctx: BuildContext<Ios.Job>): Promise<object | null> {
+  try {
+    const entitlementsPath = IOSConfig.Entitlements.getEntitlementsPath(
+      ctx.reactNativeProjectDirectory
+    );
+    const entitlementsRaw = await fs.readFile(entitlementsPath, 'utf8');
+    return plist.parse(entitlementsRaw);
+  } catch (err) {
+    ctx.logger.warn({ err }, 'Failed to read entitlements');
+    return null;
+  }
 }
 
 function resolveArtifactPath(ctx: BuildContext<Ios.Job>): string {
