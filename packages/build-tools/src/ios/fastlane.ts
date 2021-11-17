@@ -17,14 +17,22 @@ export async function runFastlaneGym<TJob extends Ios.Job>(
     scheme,
     buildConfiguration,
     credentials,
+    entitlements,
   }: {
     scheme: string;
     buildConfiguration?: string;
     credentials: Credentials | null;
+    entitlements: object | null;
   }
 ): Promise<void> {
   const logsDirectory = path.join(ctx.workingdir, 'logs');
-  await ensureGymfileExists(ctx, { scheme, buildConfiguration, credentials, logsDirectory });
+  await ensureGymfileExists(ctx, {
+    scheme,
+    buildConfiguration,
+    credentials,
+    logsDirectory,
+    entitlements,
+  });
   const buildLogger = new XcodeBuildLogger(ctx.logger, ctx.reactNativeProjectDirectory);
   void buildLogger.watchLogFiles(logsDirectory);
   try {
@@ -45,11 +53,13 @@ async function ensureGymfileExists<TJob extends Ios.Job>(
     buildConfiguration,
     credentials,
     logsDirectory,
+    entitlements,
   }: {
     scheme: string;
     buildConfiguration?: string;
     credentials: Credentials | null;
     logsDirectory: string;
+    entitlements: object | null;
   }
 ): Promise<void> {
   const gymfilePath = path.join(ctx.reactNativeProjectDirectory, 'ios/Gymfile');
@@ -78,6 +88,7 @@ async function ensureGymfileExists<TJob extends Ios.Job>(
       outputDirectory: './build',
       clean: false,
       logsDirectory,
+      entitlements: entitlements ?? undefined,
     });
   }
   ctx.logger.info('Gymfile created');

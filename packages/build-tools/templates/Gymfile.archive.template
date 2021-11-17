@@ -10,7 +10,9 @@ export_options({
   method: "<%- EXPORT_METHOD %>",
   provisioningProfiles: {<% _.forEach(PROFILES, function(profile) { %>
     "<%- profile.BUNDLE_ID %>" => "<%- profile.UUID %>",<% }); %>
-  }
+  }<% if (ICLOUD_CONTAINER_ENVIRONMENT) { %>,
+  iCloudContainerEnvironment: "<%- ICLOUD_CONTAINER_ENVIRONMENT %>"
+<% } %>
 })
 
 export_xcargs "OTHER_CODE_SIGN_FLAGS=\"--keychain <%- KEYCHAIN_PATH %>\""

@@ -19,6 +19,7 @@ interface ArchiveBuildOptions {
   outputDirectory: string;
   clean: boolean;
   logsDirectory: string;
+  entitlements?: object;
 }
 
 interface SimulatorBuildOptions {
@@ -36,6 +37,7 @@ export async function createGymfileForArchiveBuild({
   credentials,
   scheme,
   buildConfiguration,
+  entitlements,
   outputDirectory,
   logsDirectory,
 }: ArchiveBuildOptions): Promise<void> {
@@ -48,6 +50,11 @@ export async function createGymfileForArchiveBuild({
       UUID: profile.uuid,
     });
   }
+
+  const ICLOUD_CONTAINER_ENVIRONMENT = (entitlements as Record<
+    string,
+    string | Record<string, string>
+  >)?.['com.apple.developer.icloud-container-environment'] as string | undefined;
 
   await fs.mkdirp(logsDirectory);
   await createGymfile({
@@ -62,6 +69,7 @@ export async function createGymfileForArchiveBuild({
       CLEAN: String(clean),
       LOGS_DIRECTORY: logsDirectory,
       PROFILES,
+      ICLOUD_CONTAINER_ENVIRONMENT,
     },
   });
 }
