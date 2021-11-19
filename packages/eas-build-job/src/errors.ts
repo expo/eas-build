@@ -110,12 +110,12 @@ export class IncompatiblePodsManagedWorkflowError extends UserError {
 
   constructor(usingDefaultCacheConfig: boolean) {
     super();
-    this.message = `Compatible version of some pods could not be resolved.
+    this.message = `Compatible versions of some pods could not be resolved.
 You are seeing this error because either:
   - Versions in the Podfile.lock cached by EAS do not match required values for some of the libraries, it can be triggered when upgrading Expo SDK or any other library with native code. To fix that ${
     usingDefaultCacheConfig
-      ? 'add "cache.key" field (it can be set to any value) in eas.json to invalidate the cache.'
-      : 'update value of "cache.key" field in the eas.json to invalidate the cache.'
+      ? 'add the "cache.key" field (it can be set to any value) in eas.json to invalidate the cache.'
+      : 'update value of the "cache.key" field in eas.json to invalidate the cache.'
   }
   - Some of your npm packages have native code that depend on different versions of the same pod. Please see logs for more info.
 `;
@@ -127,12 +127,12 @@ export class IncompatiblePodsGenericWorkflowError extends UserError {
 
   constructor(usingDefaultCacheConfig: boolean) {
     super();
-    this.message = `Compatible version of some pods could not be resolved.
+    this.message = `Compatible versions of some pods could not be resolved.
 You are seeing this error because either:
-  - Versions in the Podfile.lock cached by EAS do not match required values in podspecs of some of the libraries. To fix that ${
+  - Versions in the Podfile.lock cached by EAS do not match required values in Podspecs of some of the libraries. To fix that ${
     usingDefaultCacheConfig
-      ? 'add "cache.key" field (it can be set to any value) in eas.json to invalidate the cache.'
-      : 'update value of "cache.key" field in the eas.json to invalidate the cache.'
+      ? 'add the "cache.key" field (it can be set to any value) in eas.json to invalidate the cache.'
+      : 'update value of the "cache.key" field in eas.json to invalidate the cache.'
   }
   - Some of the pods used in your project depend on different versions of the same pod. Please see logs for more info.
 `;
