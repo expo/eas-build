@@ -106,9 +106,10 @@ function resolveScheme(ctx: BuildContext<Ios.Job>): string {
 
 async function readEntitlementsAsync(ctx: BuildContext<Ios.Job>): Promise<object | null> {
   try {
-    const entitlementsPath = IOSConfig.Entitlements.getEntitlementsPath(
-      ctx.reactNativeProjectDirectory
-    );
+    const entitlementsPath = IOSConfig.Paths.getEntitlementsPath(ctx.reactNativeProjectDirectory);
+    if (!entitlementsPath) {
+      return null;
+    }
     const entitlementsRaw = await fs.readFile(entitlementsPath, 'utf8');
     return plist.parse(entitlementsRaw);
   } catch (err) {
