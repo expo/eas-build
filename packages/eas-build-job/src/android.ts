@@ -34,9 +34,18 @@ export const builderBaseImages = [
   'default',
   'latest',
   'stable',
-  'ubuntu-18.04-android-30-ndk-r19c',
-  'ubuntu-20.04-android-30-ndk-r21e',
+  'ubuntu-18.04-android-30-ndk-r19c', // legacy naming (image with java 8)
+  'ubuntu-20.04-android-30-ndk-r21e', // legacy naming (image with java 8)
+  'ubuntu-18.04-jdk-8-ndk-r19c',
+  'ubuntu-18.04-jdk-11-ndk-r19c',
+  'ubuntu-20.04-jdk-8-ndk-r21e',
+  'ubuntu-20.04-jdk-11-ndk-r21e',
 ] as const;
+
+export const reactNativeVersionToDefaultBuilderImage: Record<string, typeof builderBaseImages[number]> = {
+  '>=0.68.0.': 'ubuntu-18.04-jdk-11-ndk-r19c',
+  '<0.68.0': 'ubuntu-18.04-jdk-8-ndk-r19c',
+};
 
 export interface BuilderEnvironment {
   image?: typeof builderBaseImages[number];
