@@ -61,6 +61,11 @@ export type Metadata = {
   releaseChannel?: string;
 
   /**
+   * Version of the react-native package used in the project.
+   */
+  reactNativeVersion?: string;
+
+  /**
    * Channel (for Expo Updates when it is configured for for use with EAS)
    * It's undefined if the expo-updates package is not configured for use with EAS.
    */
