@@ -128,6 +128,7 @@ export const MetadataSchema = Joi.object({
   credentialsSource: Joi.string().valid('local', 'remote'),
   sdkVersion: Joi.string(),
   runtimeVersion: Joi.string(),
+  reactNativeVersion: Joi.string(),
   releaseChannel: Joi.string(),
   channel: Joi.string(),
   appName: Joi.string(),
