@@ -40,7 +40,7 @@ export function sanitizeJob(
 }
 
 function setAndroidBuilderImage(job: Job, reactNativeVersion?: string): void {
-  if (!(!job.builderEnvironment?.image && reactNativeVersion)) {
+  if (job.builderEnvironment?.image || !reactNativeVersion) {
     return;
   }
 
@@ -57,7 +57,7 @@ function setAndroidBuilderImage(job: Job, reactNativeVersion?: string): void {
 }
 
 function setIosBuilderImageForManagedJob(job: Job, sdkVersion?: string): void {
-  if (!(job.type === Workflow.MANAGED && !job.builderEnvironment?.image && sdkVersion)) {
+  if (job.type !== Workflow.MANAGED || job.builderEnvironment?.image || !sdkVersion) {
     return;
   }
 
