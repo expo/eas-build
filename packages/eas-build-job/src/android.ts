@@ -46,7 +46,7 @@ export const reactNativeVersionToDefaultBuilderImage: Record<
   string,
   typeof builderBaseImages[number]
 > = {
-  '>=0.68.0.': 'ubuntu-18.04-jdk-11-ndk-r19c',
+  '>=0.68.0': 'ubuntu-18.04-jdk-11-ndk-r19c',
   '<0.68.0': 'ubuntu-18.04-jdk-8-ndk-r19c',
 };
 
