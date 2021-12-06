@@ -15,7 +15,10 @@ export const JobSchema = Joi.object<Job>({
   .when(Joi.object({ platform: Platform.ANDROID }).unknown(), { then: Android.JobSchema })
   .when(Joi.object({ platform: Platform.IOS }).unknown(), { then: Ios.JobSchema });
 
-export function sanitizeJob(rawJob: object, { sdkVersion }: { sdkVersion?: string } = {}): Job {
+export function sanitizeJob(
+  rawJob: object,
+  { sdkVersion, reactNativeVersion }: { reactNativeVersion?: string; sdkVersion?: string } = {}
+): Job {
   const { value, error } = JobSchema.validate(rawJob, {
     stripUnknown: true,
     convert: true,
@@ -23,7 +26,11 @@ export function sanitizeJob(rawJob: object, { sdkVersion }: { sdkVersion?: strin
   });
 
   const job: Job = value;
-  setIosBuilderImageForManagedJob(job, sdkVersion);
+  if (job.platform === Platform.IOS) {
+    setIosBuilderImageForManagedJob(job, sdkVersion);
+  } else if (job.platform === Platform.ANDROID) {
+    setAndroidBuilderImage(job, reactNativeVersion);
+  }
 
   if (error) {
     throw error;
@@ -32,15 +39,25 @@ export function sanitizeJob(rawJob: object, { sdkVersion }: { sdkVersion?: strin
   }
 }
 
+function setAndroidBuilderImage(job: Job, reactNativeVersion?: string): void {
+  if (job.builderEnvironment?.image || !reactNativeVersion) {
+    return;
+  }
+
+  const ranges = Object.keys(Android.reactNativeVersionToDefaultBuilderImage);
+  const matchingRange = ranges.find((range) => semver.satisfies(reactNativeVersion, range));
+  if (!matchingRange) {
+    return;
+  }
+  const image = Android.reactNativeVersionToDefaultBuilderImage[matchingRange];
+  job.builderEnvironment = {
+    image,
+    ...job.builderEnvironment,
+  };
+}
+
 function setIosBuilderImageForManagedJob(job: Job, sdkVersion?: string): void {
-  if (
-    !(
-      job.platform === Platform.IOS &&
-      job.type === Workflow.MANAGED &&
-      !job.builderEnvironment?.image &&
-      sdkVersion
-    )
-  ) {
+  if (job.type !== Workflow.MANAGED || job.builderEnvironment?.image || !sdkVersion) {
     return;
   }
 
