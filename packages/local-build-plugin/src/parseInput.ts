@@ -60,7 +60,7 @@ function validateParams(params: object): Params {
       chalk.red(
         `Job object has incorrect format, update to latest versions of ${chalk.bold(
           'eas-cli'
-        )} and ${chalk.bold(packageJson.name)} to make sure you are using comaptibile packages.`
+        )} and ${chalk.bold(packageJson.name)} to make sure you are using compatible packages.`
       )
     );
     throw err;
@@ -69,7 +69,7 @@ function validateParams(params: object): Params {
 
 function displayHelp(): void {
   console.log(
-    `This tool is not intedend for standalone use, it will be used internally by ${chalk.bold(
+    `This tool is not intended for standalone use, it will be used internally by ${chalk.bold(
       'eas-cli'
     )} when building with flag ${chalk.bold('--local')}.`
   );

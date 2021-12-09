@@ -5,7 +5,7 @@ import fastlane from '@expo/fastlane';
 import fs from 'fs-extra';
 import nullthrows from 'nullthrows';
 
-import { BuildContext } from '../context';
+import { BuildContext, SkipNativeBuildError } from '../context';
 
 import { createGymfileForArchiveBuild, createGymfileForSimulatorBuild } from './gymfile';
 import { Credentials } from './credentials/manager';
@@ -33,6 +33,9 @@ export async function runFastlaneGym<TJob extends Ios.Job>(
     logsDirectory,
     entitlements,
   });
+  if (ctx.skipNativeBuild) {
+    throw new SkipNativeBuildError('Skipping fastlane build');
+  }
   const buildLogger = new XcodeBuildLogger(ctx.logger, ctx.reactNativeProjectDirectory);
   void buildLogger.watchLogFiles(logsDirectory);
   try {

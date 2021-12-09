@@ -2,6 +2,7 @@ import { Job, Platform, ArchiveSourceType } from '@expo/eas-build-job';
 import pickBy from 'lodash/pickBy';
 import fs from 'fs-extra';
 import chalk from 'chalk';
+import { SkipNativeBuildError } from '@expo/build-tools';
 
 import { buildAndroidAsync } from './android';
 import config from './config';
@@ -28,10 +29,16 @@ export async function buildAsync(job: Job): Promise<void> {
         break;
       }
     }
-    console.log();
-    console.log(chalk.green('Build successful'));
-    console.log(chalk.green(`You can find the build artifacts in ${artifactPath}`));
+    if (!config.skipNativeBuild) {
+      console.log();
+      console.log(chalk.green('Build successful'));
+      console.log(chalk.green(`You can find the build artifacts in ${artifactPath}`));
+    }
   } catch (e) {
+    if (e instanceof SkipNativeBuildError) {
+      console.log(e.message);
+      return;
+    }
     console.error();
     console.error(chalk.red(`Build failed`));
     if (config.logger.level === 'debug') {
@@ -42,9 +49,7 @@ export async function buildAsync(job: Job): Promise<void> {
     if (!config.skipCleanup) {
       await fs.remove(workingdir);
     } else {
-      console.error(
-        chalk.yellow("EAS_LOCAL_BUILD_SKIP_CLEANUP is set, working dir won't be removed.")
-      );
+      console.error(chalk.yellow(`Skipping cleanup, ${workingdir} won't be removed.`));
     }
     if (job.projectArchive.type === ArchiveSourceType.PATH) {
       await fs.remove(job.projectArchive.path);

@@ -27,8 +27,11 @@ export interface BuildContextOptions<TJob extends Job> {
   env: Env;
   cacheManager?: CacheManager;
   ejectProvider?: EjectProvider<TJob>;
+  skipNativeBuild?: boolean;
   metadata?: Metadata;
 }
+
+export class SkipNativeBuildError extends Error {}
 
 export class BuildContext<TJob extends Job> {
   public readonly workingdir: string;
@@ -38,6 +41,7 @@ export class BuildContext<TJob extends Job> {
   public readonly cacheManager?: CacheManager;
   public readonly ejectProvider: EjectProvider<TJob>;
   public readonly metadata?: Metadata;
+  public readonly skipNativeBuild?: boolean;
 
   private readonly defaultLogger: bunyan;
   private buildPhase?: BuildPhase;
@@ -51,6 +55,7 @@ export class BuildContext<TJob extends Job> {
     this.cacheManager = options.cacheManager;
     this.ejectProvider = options.ejectProvider ?? new NpxExpoCliEjectProvider();
     this.metadata = options.metadata;
+    this.skipNativeBuild = options.skipNativeBuild;
     this.env = {
       ...options.env,
       ...job?.builderEnvironment?.env,
