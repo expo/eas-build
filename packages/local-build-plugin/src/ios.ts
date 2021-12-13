@@ -6,6 +6,7 @@ import { LocalExpoCliEjectProvider } from './eject';
 import logger, { logBuffer } from './logger';
 import { BuildParams } from './types';
 import { prepareBuildArtifact } from './buildArtifact';
+import config from './config';
 
 export async function buildIosAsync(
   job: Ios.Job,
@@ -17,6 +18,7 @@ export async function buildIosAsync(
     logBuffer,
     ejectProvider: new LocalExpoCliEjectProvider(),
     env,
+    skipNativeBuild: config.skipNativeBuild,
   });
 
   await ctx.runBuildPhase(BuildPhase.START_BUILD, async () => {

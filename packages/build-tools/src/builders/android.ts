@@ -1,7 +1,7 @@
 import { AndroidConfig } from '@expo/config-plugins';
 import { Android, BuildPhase, Workflow } from '@expo/eas-build-job';
 
-import { BuildContext } from '../context';
+import { BuildContext, SkipNativeBuildError } from '../context';
 import { configureExpoUpdatesIfInstalledAsync } from '../utils/expoUpdates';
 import { runGradleCommand, ensureLFLineEndingsInGradlewScript } from '../android/gradle';
 import { setup } from '../utils/project';
@@ -40,6 +40,9 @@ export default async function androidBuilder(ctx: BuildContext<Android.Job>): Pr
     await configureExpoUpdatesIfInstalledAsync(ctx);
   });
 
+  if (ctx.skipNativeBuild) {
+    throw new SkipNativeBuildError('Skipping Gradle build');
+  }
   await ctx.runBuildPhase(BuildPhase.RUN_GRADLEW, async () => {
     const gradleCommand = resolveGradleCommand(ctx.job);
     await runGradleCommand(ctx, gradleCommand);

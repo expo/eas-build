@@ -8,6 +8,7 @@ const { temp } = envPaths('eas-build-local');
 const envLoggerLevel = process.env.EAS_LOCAL_BUILD_LOGGER_LEVEL;
 const envWorkingdir = process.env.EAS_LOCAL_BUILD_WORKINGDIR;
 const envSkipCleanup = process.env.EAS_LOCAL_BUILD_SKIP_CLEANUP;
+const envSkipNativeBuild = process.env.EAS_LOCAL_BUILD_SKIP_NATIVE_BUILD;
 const envArtifactsDir = process.env.EAS_LOCAL_BUILD_ARTIFACTS_DIR;
 
 if (envLoggerLevel && !['debug', 'info', 'warn', 'error'].includes(envLoggerLevel)) {
@@ -19,6 +20,7 @@ if (envLoggerLevel && !['debug', 'info', 'warn', 'error'].includes(envLoggerLeve
 export default {
   workingdir: envWorkingdir ?? path.join(temp, uuidv4()),
   skipCleanup: envSkipCleanup === '1',
+  skipNativeBuild: envSkipNativeBuild === '1',
   artifactsDir: envArtifactsDir ?? process.cwd(),
   logger: {
     level: (envLoggerLevel ?? 'info') as 'debug' | 'info' | 'warn' | 'error',
