@@ -1,6 +1,7 @@
 import assert from 'assert';
 
 import { Platform, Job } from '@expo/eas-build-job';
+import { getRuntimeVersionNullable } from '@expo/config-plugins/build/utils/Updates';
 
 import {
   androidSetChannelNativelyAsync,
@@ -129,12 +130,10 @@ export const configureExpoUpdatesIfInstalledAsync = async (
     return;
   }
 
-  if (
-    ctx.metadata?.runtimeVersion &&
-    ctx.metadata?.runtimeVersion !== ctx.appConfig.runtimeVersion
-  ) {
+  const appConfigRuntimeVersion = getRuntimeVersionNullable(ctx.appConfig, ctx.job.platform);
+  if (ctx.metadata?.runtimeVersion && ctx.metadata?.runtimeVersion !== appConfigRuntimeVersion) {
     ctx.logger.warn(
-      `Runtime version from the app config evaluated on your local machine (${ctx.metadata.runtimeVersion}) does not match the one resolved here (${ctx.appConfig.runtimeVersion}).`
+      `Runtime version from the app config evaluated on your local machine (${ctx.metadata.runtimeVersion}) does not match the one resolved here (${appConfigRuntimeVersion}).`
     );
     ctx.logger.warn(
       "If you're using conditional app configs, e.g. depending on an environment variable, make sure to set the variable in eas.json or configure it with EAS Secret."
