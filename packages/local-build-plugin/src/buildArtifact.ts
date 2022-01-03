@@ -2,7 +2,6 @@ import path from 'path';
 
 import { BuildContext } from '@expo/build-tools';
 import { Job } from '@expo/eas-build-job';
-import dateFormat from 'dateformat';
 import fs from 'fs-extra';
 import tar from 'tar';
 
@@ -39,8 +38,8 @@ export async function prepareBuildArtifact(
     suffix = '.tar.gz';
     localPath = archivePath;
   }
-  const artifactName = `build-${formatDateForFilename(new Date())}${suffix}`;
-  const destPath = path.join(config.artifactsDir, artifactName);
+  const artifactName = `build-${Date.now()}${suffix}`;
+  const destPath = config.artifactPath ?? path.join(config.artifactsDir, artifactName);
   await fs.copy(localPath, destPath);
   ctx.logger.info({ phase: 'PREPARE_ARTIFACTS' }, `Writing artifacts to ${destPath}`);
   return destPath;
@@ -57,8 +56,4 @@ function getCommonParentDir(path1: string, path2: string): string {
     current = path.dirname(current);
   }
   return '/';
-}
-
-function formatDateForFilename(date: Date): string {
-  return dateFormat(date, 'dd-mm-yyyy-HH:MM');
 }
