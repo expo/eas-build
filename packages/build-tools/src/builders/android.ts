@@ -1,4 +1,3 @@
-import { AndroidConfig } from '@expo/config-plugins';
 import { Android, BuildPhase, Workflow } from '@expo/eas-build-job';
 
 import { BuildContext, SkipNativeBuildError } from '../context';
@@ -8,6 +7,7 @@ import { setup } from '../utils/project';
 import { findBuildArtifacts } from '../utils/buildArtifacts';
 import { Hook, runHookIfPresent } from '../utils/hooks';
 import { restoreCredentials } from '../android/credentials';
+import { configureBuildGradle } from '../android/gradleConfig';
 
 export default async function androidBuilder(ctx: BuildContext<Android.Job>): Promise<string[]> {
   await setup(ctx);
@@ -19,7 +19,7 @@ export default async function androidBuilder(ctx: BuildContext<Android.Job>): Pr
     });
   } else {
     await ctx.runBuildPhase(BuildPhase.PREBUILD, async () => {
-      await ejectProject(ctx);
+      await ctx.ejectProvider.runEject(ctx);
     });
   }
 
@@ -34,6 +34,7 @@ export default async function androidBuilder(ctx: BuildContext<Android.Job>): Pr
   if (ctx.job.secrets.buildCredentials) {
     await ctx.runBuildPhase(BuildPhase.PREPARE_CREDENTIALS, async () => {
       await restoreCredentials(ctx);
+      await configureBuildGradle(ctx);
     });
   }
   await ctx.runBuildPhase(BuildPhase.CONFIGURE_EXPO_UPDATES, async () => {
@@ -83,9 +84,4 @@ function resolveGradleCommand(job: Android.Job): string {
   } else {
     return ':app:bundleRelease';
   }
-}
-
-async function ejectProject(ctx: BuildContext<Android.Job>): Promise<void> {
-  await ctx.ejectProvider.runEject(ctx);
-  await AndroidConfig.EasBuild.configureEasBuildAsync(ctx.reactNativeProjectDirectory);
 }
