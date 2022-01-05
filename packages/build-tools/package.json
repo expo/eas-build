@@ -1,6 +1,6 @@
 {
   "name": "@expo/build-tools",
-  "version": "0.1.103",
+  "version": "0.1.104",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "files": [
