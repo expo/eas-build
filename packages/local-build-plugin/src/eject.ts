@@ -21,19 +21,36 @@ export class LocalExpoCliEjectProvider implements EjectProvider<Job> {
 
     const expoCliBinPath =
       process.env.EXPO_CLI_PATH ?? path.resolve(path.dirname(expoCliPackage), '../bin/expo.js');
-    logger.debug(`${expoCliBinPath} prebuild --non-interactive --platform ${job.platform}`);
-    await spawnAsync(
-      expoCliBinPath,
-      ['prebuild', '--non-interactive', '--platform', job.platform],
-      {
-        ...spawnOptions,
-        cwd: ctx.reactNativeProjectDirectory,
-      }
-    );
+    const prebuildCommand = this.getPrebuildCommand(job);
+    logger.debug(`${expoCliBinPath} ${prebuildCommand}`);
+    await spawnAsync('bash', ['-c', `${expoCliBinPath} ${prebuildCommand}`], {
+      ...spawnOptions,
+      cwd: ctx.reactNativeProjectDirectory,
+    });
 
     await spawnAsync(ctx.packageManager, ['install'], {
       ...spawnOptions,
       cwd: ctx.reactNativeProjectDirectory,
     });
+  }
+
+  private getPrebuildCommand(job: Job): string {
+    let prebuildCommand =
+      job.experimental?.prebuildCommand ?? `prebuild --non-interactive --platform ${job.platform}`;
+    if (!prebuildCommand.match(/--platform/)) {
+      prebuildCommand = `${prebuildCommand} --platform ${job.platform}`;
+    }
+    if (!prebuildCommand.match(/--non-interactive/)) {
+      prebuildCommand = `${prebuildCommand} --non-interactive`;
+    }
+    const expoCommandPrefix = 'expo ';
+    const expoCliCommandPrefix = 'expo-cli ';
+    if (prebuildCommand.startsWith(expoCommandPrefix)) {
+      prebuildCommand = prebuildCommand.substr(expoCommandPrefix.length);
+    }
+    if (prebuildCommand.startsWith(expoCliCommandPrefix)) {
+      prebuildCommand = prebuildCommand.substr(expoCliCommandPrefix.length);
+    }
+    return prebuildCommand;
   }
 }

@@ -94,6 +94,10 @@ export interface Job {
   // managed
   buildType?: BuildType;
   username?: string;
+
+  experimental?: {
+    prebuildCommand?: string;
+  };
 }
 
 export const JobSchema = Joi.object({
@@ -120,4 +124,8 @@ export const JobSchema = Joi.object({
 
   buildType: Joi.string().valid(...Object.values(BuildType)),
   username: Joi.string(),
+
+  experimental: Joi.object({
+    prebuildCommand: Joi.string(),
+  }),
 }).oxor('releaseChannel', 'updates.channel');

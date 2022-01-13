@@ -102,6 +102,10 @@ export interface Job {
   artifactPath?: string;
 
   username?: string;
+
+  experimental?: {
+    prebuildCommand?: string;
+  };
 }
 
 export const JobSchema = Joi.object({
@@ -131,4 +135,8 @@ export const JobSchema = Joi.object({
 
   // managed
   username: Joi.string(),
+
+  experimental: Joi.object({
+    prebuildCommand: Joi.string(),
+  }),
 }).oxor('releaseChannel', 'updates.channel');
