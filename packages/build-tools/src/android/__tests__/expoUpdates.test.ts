@@ -113,7 +113,7 @@ describe(androidSetChannelNativelyAsync, () => {
       AndroidMetadataName.UPDATES_CONFIGURATION_REQUEST_HEADERS_KEY
     );
     expect(newValue).toBeDefined();
-    expect(JSON.parse(newValue!)).toEqual({ 'expo-channel-name': channel });
+    expect(newValue).toEqual(JSON.stringify({ 'expo-channel-name': channel }).replace(/"/g, "'"));
   });
 });
 describe(androidGetNativelyDefinedClassicReleaseChannelAsync, () => {

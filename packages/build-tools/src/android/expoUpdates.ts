@@ -29,13 +29,19 @@ export async function androidSetChannelNativelyAsync(ctx: BuildContext<Job>): Pr
     androidManifest,
     AndroidMetadataName.UPDATES_CONFIGURATION_REQUEST_HEADERS_KEY
   );
+
+  // apkanalyzer unescapes double quotes before parsing. This leads to crashes.
+  // Luckily, we can replace the double quotes with single quotes and it will
+  // still be parsed as a JSON by the expo-updates client
+  const singleQuotedStringifiedUpdatesRequestHeaders = JSON.stringify({
+    ...JSON.parse(stringifiedUpdatesRequestHeaders ?? '{}'),
+    'expo-channel-name': ctx.job.updates.channel,
+  }).replace(/"/g, "'");
+
   AndroidConfig.Manifest.addMetaDataItemToMainApplication(
     mainApp,
     AndroidMetadataName.UPDATES_CONFIGURATION_REQUEST_HEADERS_KEY,
-    JSON.stringify({
-      ...JSON.parse(stringifiedUpdatesRequestHeaders ?? '{}'),
-      'expo-channel-name': ctx.job.updates.channel,
-    }),
+    singleQuotedStringifiedUpdatesRequestHeaders,
     'value'
   );
   await AndroidConfig.Manifest.writeAndroidManifestAsync(manifestPath, androidManifest);
