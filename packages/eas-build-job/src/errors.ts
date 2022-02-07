@@ -14,6 +14,7 @@ export enum ErrorCode {
   YARN_LOCK_CHECKSUM_ERROR = 'EAS_BUILD_YARN_LOCK_CHECKSUM_ERROR',
   UNKNOWN_FASTLANE_ERROR = 'EAS_BUILD_UNKNOWN_FASTLANE_ERROR',
   UNKNOWN_GRADLE_ERROR = 'EAS_BUILD_UNKNOWN_GRADLE_ERROR',
+  BUILD_TIMEOUT_ERROR = 'EAS_BUILD_TIMEOUT_ERROR',
 }
 
 export interface ExternalUserError {
@@ -154,4 +155,15 @@ export class YarnLockChecksumError extends UserError {
 export class UnknownGradleError extends UserError {
   errorCode = ErrorCode.UNKNOWN_GRADLE_ERROR;
   message = 'Gradle build failed with unknown error. Please see logs for the "Run gradlew" phase.';
+}
+
+export class BuildTimeout extends UserError {
+  errorCode = ErrorCode.BUILD_TIMEOUT_ERROR;
+
+  constructor(maxBuildTimeSec: number) {
+    super();
+    this.message = `Your build has exceeded the maximum build time of ${
+      maxBuildTimeSec / 60
+    } minutes.`;
+  }
 }
