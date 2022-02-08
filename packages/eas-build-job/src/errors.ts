@@ -160,10 +160,10 @@ export class UnknownGradleError extends UserError {
 export class BuildTimeout extends UserError {
   errorCode = ErrorCode.BUILD_TIMEOUT_ERROR;
 
-  constructor(maxBuildTimeSec: number) {
+  constructor(maxBuildTimeMs: number) {
     super();
     this.message = `Your build has exceeded the maximum build time of ${
-      maxBuildTimeSec / 60
+      maxBuildTimeMs / (60 * 1000)
     } minutes.`;
   }
 }
