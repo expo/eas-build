@@ -47,7 +47,7 @@ describe(androidSetClassicReleaseChannelNativelyAsync, () => {
   test('sets the release channel', async () => {
     const reactNativeProjectDirectory = fs.mkdtempSync('/expo-project-');
     fs.ensureDirSync(reactNativeProjectDirectory);
-    const releaseChannel = 'default';
+    const releaseChannel = 'blah';
     const ctx = {
       reactNativeProjectDirectory,
       job: { releaseChannel },
@@ -75,7 +75,15 @@ describe(androidSetClassicReleaseChannelNativelyAsync, () => {
         newAndroidManifest,
         AndroidMetadataName.RELEASE_CHANNEL
       )
-    ).toBe(releaseChannel);
+    ).toBe('@string/release_channel');
+
+    const stringResourcePath = await AndroidConfig.Strings.getProjectStringsXMLPathAsync(
+      reactNativeProjectDirectory
+    );
+    const stringResourceObject = await AndroidConfig.Resources.readResourcesXMLAsync({
+      path: stringResourcePath,
+    });
+    expect((stringResourceObject.resources.string as any)[0]['_']).toBe(releaseChannel);
   });
 });
 describe(androidSetChannelNativelyAsync, () => {

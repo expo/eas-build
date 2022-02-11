@@ -1,7 +1,7 @@
 import assert from 'assert';
 
 import fs from 'fs-extra';
-import { AndroidConfig } from '@expo/config-plugins';
+import { AndroidConfig, XML } from '@expo/config-plugins';
 import { Job } from '@expo/eas-build-job';
 
 import { BuildContext } from '../context';
@@ -44,7 +44,9 @@ export async function androidSetChannelNativelyAsync(ctx: BuildContext<Job>): Pr
 export async function androidSetClassicReleaseChannelNativelyAsync(
   ctx: BuildContext<Job>
 ): Promise<void> {
-  assert(ctx.job.releaseChannel, 'releaseChannel must be defined');
+  const { releaseChannel } = ctx.job;
+  assert(releaseChannel, 'releaseChannel must be defined');
+  const escapedReleaseChannel = XML.escapeAndroidString(releaseChannel);
 
   const manifestPath = await AndroidConfig.Paths.getAndroidManifestAsync(
     ctx.reactNativeProjectDirectory
@@ -53,12 +55,30 @@ export async function androidSetClassicReleaseChannelNativelyAsync(
     throw new Error(`Couldn't find Android manifest at ${manifestPath}`);
   }
 
+  // Store the release channel in a string resource to ensure it is interpreted as a string
+  const stringResourcePath = await AndroidConfig.Strings.getProjectStringsXMLPathAsync(
+    ctx.reactNativeProjectDirectory
+  );
+  const stringResourceObject = await AndroidConfig.Resources.readResourcesXMLAsync({
+    path: stringResourcePath,
+  });
+  const resourceName = 'release_channel';
+  const releaseChannelResourceItem = AndroidConfig.Resources.buildResourceItem({
+    name: resourceName,
+    value: escapedReleaseChannel,
+  });
+  const newStringResourceObject = AndroidConfig.Strings.setStringItem(
+    [releaseChannelResourceItem],
+    stringResourceObject
+  );
+  await XML.writeXMLAsync({ path: stringResourcePath, xml: newStringResourceObject });
+
   const androidManifest = await AndroidConfig.Manifest.readAndroidManifestAsync(manifestPath);
   const mainApp = AndroidConfig.Manifest.getMainApplicationOrThrow(androidManifest);
   AndroidConfig.Manifest.addMetaDataItemToMainApplication(
     mainApp,
     AndroidMetadataName.RELEASE_CHANNEL,
-    ctx.job.releaseChannel,
+    `@string/${resourceName}`,
     'value'
   );
   await AndroidConfig.Manifest.writeAndroidManifestAsync(manifestPath, androidManifest);
