@@ -45,9 +45,7 @@ export async function androidSetClassicReleaseChannelNativelyAsync(
   ctx: BuildContext<Job>
 ): Promise<void> {
   const { releaseChannel } = ctx.job;
-  if (!releaseChannel) {
-    throw Error('releaseChannel must be defined');
-  }
+  assert(releaseChannel, 'releaseChannel must be defined');
   const escapedReleaseChannel = XML.escapeAndroidString(releaseChannel);
 
   const manifestPath = await AndroidConfig.Paths.getAndroidManifestAsync(
