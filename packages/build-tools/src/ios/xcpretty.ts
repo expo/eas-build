@@ -60,7 +60,7 @@ export class XcodeBuildLogger {
       await this.logReaderPromise;
 
       this.logger.info(formatter.getBuildSummary());
-    } catch (err) {
+    } catch (err: any) {
       if (!this.flushing) {
         this.loggerError = err;
       }

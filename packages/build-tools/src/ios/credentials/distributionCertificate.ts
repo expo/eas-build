@@ -19,7 +19,7 @@ function getCertData(certificateBase64: string, password: string): any {
     } else {
       p12 = forge.pkcs12.pkcs12FromAsn1(p12Asn1);
     }
-  } catch (_error) {
+  } catch (_error: any) {
     const error: Error = _error;
     if (/Invalid password/.exec(error.message)) {
       throw new Error('Provided password for the distribution certificate is probably invalid');
