@@ -23,14 +23,14 @@ export async function runHookIfPresent<TJob extends Job>(
   hook: Hook
 ): Promise<void> {
   const projectDir = ctx.reactNativeProjectDirectory;
-  let packageJson: PackageJson | undefined;
+  let packageJson: PackageJson;
   try {
     packageJson = await readPackageJson(projectDir);
   } catch (err) {
     ctx.logger.warn(`Failed to parse or read package.json: ${err.message}`);
     return;
   }
-  if (packageJson!.scripts?.[hook]) {
+  if (packageJson.scripts?.[hook]) {
     ctx.logger.info(`Script '${hook}' is present in package.json, running it...`);
     // when using yarn 2, it's not possible to run any scripts before running 'yarn install'
     // use 'npm' in that case
