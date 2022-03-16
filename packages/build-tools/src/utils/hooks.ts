@@ -6,8 +6,7 @@ import fs from 'fs-extra';
 
 import { BuildContext } from '../context';
 
-import { PackageManager, findPackagerRootDir } from './packageManager';
-import { readPackageJson } from './packageManager';
+import { PackageManager, findPackagerRootDir, readPackageJson } from './packageManager';
 
 export enum Hook {
   PRE_INSTALL = 'eas-build-pre-install',
