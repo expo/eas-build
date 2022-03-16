@@ -7,6 +7,7 @@ import fs from 'fs-extra';
 import { BuildContext } from '../context';
 
 import { PackageManager, findPackagerRootDir } from './packageManager';
+import { readPackageJson } from './packageManager';
 
 export enum Hook {
   PRE_INSTALL = 'eas-build-pre-install',
@@ -30,7 +31,7 @@ export async function runHookIfPresent<TJob extends Job>(
     ctx.logger.warn(`Failed to parse or read package.json: ${err.message}`);
     return;
   }
-  if (packageJson.scripts?.[hook]) {
+  if (packageJson!.scripts?.[hook]) {
     ctx.logger.info(`Script '${hook}' is present in package.json, running it...`);
     // when using yarn 2, it's not possible to run any scripts before running 'yarn install'
     // use 'npm' in that case
@@ -44,15 +45,6 @@ export async function runHookIfPresent<TJob extends Job>(
       env: ctx.env,
     });
   }
-}
-
-async function readPackageJson(projectDir: string): Promise<PackageJson> {
-  const packageJsonPath = path.join(projectDir, 'package.json');
-  if (!(await fs.pathExists(packageJsonPath))) {
-    throw new Error(`package.json does not exist in ${projectDir}`);
-  }
-  const contents = await fs.readFile(packageJsonPath, 'utf-8');
-  return JSON.parse(contents);
 }
 
 /**

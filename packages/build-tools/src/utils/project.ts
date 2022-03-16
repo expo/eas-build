@@ -9,13 +9,23 @@ import { BuildContext } from '../context';
 
 import { Hook, runHookIfPresent } from './hooks';
 import { createNpmrcIfNotExistsAsync } from './npmrc';
-import { findPackagerRootDir } from './packageManager';
+import { findPackagerRootDir, readPackageJson } from './packageManager';
 
 export async function setup<TJob extends Job>(ctx: BuildContext<TJob>): Promise<void> {
   await ctx.runBuildPhase(BuildPhase.PREPARE_PROJECT, async () => {
     await downloadAndUnpackProject(ctx);
     if (ctx.env.NPM_TOKEN) {
       await createNpmrcIfNotExistsAsync(ctx);
+    }
+  });
+
+  await ctx.runBuildPhase(BuildPhase.READ_PACKAGE_JSON, async () => {
+    try {
+      const packageJsonContents = await readPackageJson(ctx.reactNativeProjectDirectory);
+      ctx.logger.info('Using package.json:');
+      ctx.logger.info(JSON.stringify(packageJsonContents, null, 2));
+    } catch (err: any) {
+      ctx.logger.warn(`Failed to parse or read package.json: ${err.message}`);
     }
   });
 
