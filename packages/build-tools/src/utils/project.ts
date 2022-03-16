@@ -19,6 +19,14 @@ export async function setup<TJob extends Job>(ctx: BuildContext<TJob>): Promise<
     }
   });
 
+  await ctx.runBuildPhase(BuildPhase.PRE_INSTALL_HOOK, async () => {
+    await runHookIfPresent(ctx, Hook.PRE_INSTALL);
+  });
+
+  await ctx.runBuildPhase(BuildPhase.INSTALL_DEPENDENCIES, async () => {
+    await installDependencies(ctx);
+  });
+
   await ctx.runBuildPhase(BuildPhase.READ_PACKAGE_JSON, async () => {
     try {
       const packageJsonContents = await readPackageJson(ctx.reactNativeProjectDirectory);
@@ -27,14 +35,6 @@ export async function setup<TJob extends Job>(ctx: BuildContext<TJob>): Promise<
     } catch (err: any) {
       ctx.logger.warn(`Failed to parse or read package.json: ${err.message}`);
     }
-  });
-
-  await ctx.runBuildPhase(BuildPhase.PRE_INSTALL_HOOK, async () => {
-    await runHookIfPresent(ctx, Hook.PRE_INSTALL);
-  });
-
-  await ctx.runBuildPhase(BuildPhase.INSTALL_DEPENDENCIES, async () => {
-    await installDependencies(ctx);
   });
 
   await ctx.runBuildPhase(BuildPhase.READ_APP_CONFIG, async () => {
