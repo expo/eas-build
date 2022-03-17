@@ -92,7 +92,7 @@ Profile's certificate fingerprint = ${devCertFingerprint}, distribution certific
           stdio: 'pipe',
         }
       );
-    } catch (err) {
+    } catch (err: any) {
       throw new Error(err.stderr.trim());
     }
     const { output } = result;
@@ -101,7 +101,7 @@ Profile's certificate fingerprint = ${devCertFingerprint}, distribution certific
     let plistData;
     try {
       plistData = plist.parse(plistRaw) as plist.PlistObject;
-    } catch (error) {
+    } catch (error: any) {
       throw new Error(`Error when parsing plist: ${error.message}`);
     }
 

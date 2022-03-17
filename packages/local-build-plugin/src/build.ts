@@ -34,7 +34,7 @@ export async function buildAsync(job: Job): Promise<void> {
       console.log(chalk.green('Build successful'));
       console.log(chalk.green(`You can find the build artifacts in ${artifactPath}`));
     }
-  } catch (e) {
+  } catch (e: any) {
     if (e instanceof SkipNativeBuildError) {
       console.log(e.message);
       return;
