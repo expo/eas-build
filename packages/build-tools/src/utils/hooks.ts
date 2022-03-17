@@ -6,7 +6,7 @@ import fs from 'fs-extra';
 
 import { BuildContext } from '../context';
 
-import { PackageManager, findPackagerRootDir } from './packageManager';
+import { PackageManager, findPackagerRootDir, readPackageJson } from './packageManager';
 
 export enum Hook {
   PRE_INSTALL = 'eas-build-pre-install',
@@ -23,7 +23,7 @@ export async function runHookIfPresent<TJob extends Job>(
   hook: Hook
 ): Promise<void> {
   const projectDir = ctx.reactNativeProjectDirectory;
-  let packageJson: PackageJson | undefined;
+  let packageJson: PackageJson;
   try {
     packageJson = await readPackageJson(projectDir);
   } catch (err: any) {
@@ -44,15 +44,6 @@ export async function runHookIfPresent<TJob extends Job>(
       env: ctx.env,
     });
   }
-}
-
-async function readPackageJson(projectDir: string): Promise<PackageJson> {
-  const packageJsonPath = path.join(projectDir, 'package.json');
-  if (!(await fs.pathExists(packageJsonPath))) {
-    throw new Error(`package.json does not exist in ${projectDir}`);
-  }
-  const contents = await fs.readFile(packageJsonPath, 'utf-8');
-  return JSON.parse(contents);
 }
 
 /**
