@@ -12,7 +12,7 @@ async function main(): Promise<void> {
     const { job } = await parseInputAsync();
     await checkRuntimeAsync(job);
     await buildAsync(job);
-  } catch (err) {
+  } catch (err: any) {
     if (!shouldExit()) {
       console.error(chalk.red(err.message));
       process.exit(1);

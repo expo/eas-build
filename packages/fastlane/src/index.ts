@@ -39,7 +39,7 @@ async function runFastlaneSafely(
   try {
     const { stdout, stderr } = await runFastlane(fastlaneArgs, options);
     return { stdout, stderr };
-  } catch (err) {
+  } catch (err: any) {
     const { stdout, stderr } = err;
     return { stdout, stderr, err };
   }
