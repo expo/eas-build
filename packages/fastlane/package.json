@@ -1,6 +1,6 @@
 {
   "name": "@expo/fastlane",
-  "version": "0.0.26",
+  "version": "0.0.27",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "files": [
@@ -18,8 +18,8 @@
   "bugs": "https://github.com/expo/eas-build/issues",
   "license": "BUSL-1.1",
   "dependencies": {
-    "@expo/logger": "0.0.21",
-    "@expo/turtle-spawn": "0.0.21"
+    "@expo/logger": "0.0.22",
+    "@expo/turtle-spawn": "0.0.22"
   },
   "devDependencies": {
     "@types/jest": "^26.0.20",
