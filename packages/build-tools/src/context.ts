@@ -26,6 +26,7 @@ export interface BuildContextOptions {
   env: Env;
   cacheManager?: CacheManager;
   runExpoCliCommand: (args: string, options: SpawnOptions) => Promise<void>;
+  reportError?: (msg: string, err?: Error) => void;
   skipNativeBuild?: boolean;
   metadata?: Metadata;
 }
@@ -39,6 +40,7 @@ export class BuildContext<TJob extends Job> {
   public readonly env: Env;
   public readonly cacheManager?: CacheManager;
   public readonly runExpoCliCommand: (args: string, options: SpawnOptions) => Promise<void>;
+  public readonly reportError?: (msg: string, err?: Error) => void;
   public readonly metadata?: Metadata;
   public readonly skipNativeBuild?: boolean;
 
@@ -53,6 +55,7 @@ export class BuildContext<TJob extends Job> {
     this.logBuffer = options.logBuffer;
     this.cacheManager = options.cacheManager;
     this.runExpoCliCommand = options.runExpoCliCommand;
+    this.reportError = options.reportError;
     this.metadata = options.metadata;
     this.skipNativeBuild = options.skipNativeBuild;
     this.env = {

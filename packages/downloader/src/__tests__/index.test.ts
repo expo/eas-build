@@ -19,28 +19,34 @@ describe('downloadFile', () => {
   });
 
   it('should download file', async () => {
-    await downloadFile(fileInPublicS3Bucket, tmpPathLocation, 2000);
+    await downloadFile(fileInPublicS3Bucket, tmpPathLocation, { timeout: 2000 });
     const fileExists = await fs.pathExists(tmpPathLocation);
     expect(fileExists).toBe(true);
   });
 
   it('should throw error when 4xx', async () => {
-    await expect(downloadFile(missingFileInS3Bucket, tmpPathLocation, 2000)).rejects.toThrow();
+    await expect(
+      downloadFile(missingFileInS3Bucket, tmpPathLocation, { timeout: 2000 })
+    ).rejects.toThrow();
   });
 
   it('should throw error when host unreachable', async () => {
     await expect(
-      downloadFile('https://amazonawswueytfgweuyfgvuwefvuweyvf.com', tmpPathLocation, 2000)
+      downloadFile('https://amazonawswueytfgweuyfgvuwefvuweyvf.com', tmpPathLocation, {
+        timeout: 2000,
+      })
     ).rejects.toThrow();
   });
 
   it('should throw error when timeout is reached', async () => {
-    await expect(downloadFile(fileInPublicS3Bucket, tmpPathLocation, 1)).rejects.toThrow();
+    await expect(
+      downloadFile(fileInPublicS3Bucket, tmpPathLocation, { timeout: 1 })
+    ).rejects.toThrow();
   });
 
   it('should cleanup file on error', async () => {
     try {
-      await downloadFile(missingFileInS3Bucket, tmpPathLocation, 1);
+      await downloadFile(missingFileInS3Bucket, tmpPathLocation, { timeout: 1 });
     } catch (_) {
       /* empty block statement */
     }

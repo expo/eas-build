@@ -65,7 +65,12 @@ async function downloadAndUnpackProject<TJob extends Job>(ctx: BuildContext<TJob
   } else if (ctx.job.projectArchive.type === ArchiveSourceType.PATH) {
     await fs.copy(ctx.job.projectArchive.path, projectTarball); // used in eas-build-cli
   } else if (ctx.job.projectArchive.type === ArchiveSourceType.URL) {
-    await downloadFile(ctx.job.projectArchive.url, projectTarball);
+    try {
+      await downloadFile(ctx.job.projectArchive.url, projectTarball, { retry: 3 });
+    } catch (err: any) {
+      ctx?.reportError?.('Failed to download project archive', err);
+      throw err;
+    }
   }
 
   await spawn(
