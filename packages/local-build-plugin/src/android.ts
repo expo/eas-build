@@ -2,11 +2,11 @@ import { Android, BuildPhase } from '@expo/eas-build-job';
 import { Builders, BuildContext } from '@expo/build-tools';
 import omit from 'lodash/omit';
 
-import { LocalExpoCliEjectProvider } from './eject';
 import logger, { logBuffer } from './logger';
 import { BuildParams } from './types';
 import { prepareBuildArtifact } from './buildArtifact';
 import config from './config';
+import { runExpoCliCommandAsync } from './expoCli';
 
 export async function buildAndroidAsync(
   job: Android.Job,
@@ -16,7 +16,7 @@ export async function buildAndroidAsync(
     workingdir,
     logger,
     logBuffer,
-    ejectProvider: new LocalExpoCliEjectProvider(),
+    runExpoCliCommand: runExpoCliCommandAsync,
     env,
     skipNativeBuild: config.skipNativeBuild,
   });

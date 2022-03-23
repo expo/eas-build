@@ -3,11 +3,10 @@ import path from 'path';
 import { BuildPhase, Job, LogMarker, Env, errors, Metadata } from '@expo/eas-build-job';
 import { ExpoConfig } from '@expo/config';
 import { bunyan } from '@expo/logger';
+import { SpawnOptions } from '@expo/turtle-spawn';
 
 import { PackageManager, resolvePackageManager } from './utils/packageManager';
 import { detectUserError } from './utils/detectUserError';
-import { EjectProvider } from './managed/EjectProvider';
-import { NpxExpoCliEjectProvider } from './managed/NpxExpoCliEject';
 import { readAppConfig } from './utils/appConfig';
 
 export interface CacheManager {
@@ -20,13 +19,13 @@ export interface LogBuffer {
   getPhaseLogs(buildPhase: string): string[];
 }
 
-export interface BuildContextOptions<TJob extends Job> {
+export interface BuildContextOptions {
   workingdir: string;
   logger: bunyan;
   logBuffer: LogBuffer;
   env: Env;
   cacheManager?: CacheManager;
-  ejectProvider?: EjectProvider<TJob>;
+  runExpoCliCommand: (args: string, options: SpawnOptions) => Promise<void>;
   skipNativeBuild?: boolean;
   metadata?: Metadata;
 }
@@ -39,7 +38,7 @@ export class BuildContext<TJob extends Job> {
   public readonly logBuffer: LogBuffer;
   public readonly env: Env;
   public readonly cacheManager?: CacheManager;
-  public readonly ejectProvider: EjectProvider<TJob>;
+  public readonly runExpoCliCommand: (args: string, options: SpawnOptions) => Promise<void>;
   public readonly metadata?: Metadata;
   public readonly skipNativeBuild?: boolean;
 
@@ -47,13 +46,13 @@ export class BuildContext<TJob extends Job> {
   private buildPhase?: BuildPhase;
   private _appConfig?: ExpoConfig;
 
-  constructor(public readonly job: TJob, options: BuildContextOptions<TJob>) {
+  constructor(public readonly job: TJob, options: BuildContextOptions) {
     this.workingdir = options.workingdir;
     this.defaultLogger = options.logger;
     this.logger = this.defaultLogger;
     this.logBuffer = options.logBuffer;
     this.cacheManager = options.cacheManager;
-    this.ejectProvider = options.ejectProvider ?? new NpxExpoCliEjectProvider();
+    this.runExpoCliCommand = options.runExpoCliCommand;
     this.metadata = options.metadata;
     this.skipNativeBuild = options.skipNativeBuild;
     this.env = {
