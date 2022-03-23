@@ -8,6 +8,7 @@ import { findBuildArtifacts } from '../utils/buildArtifacts';
 import { Hook, runHookIfPresent } from '../utils/hooks';
 import { restoreCredentials } from '../android/credentials';
 import { configureBuildGradle } from '../android/gradleConfig';
+import { prebuildAsync } from '../utils/prebuild';
 
 export default async function androidBuilder(ctx: BuildContext<Android.Job>): Promise<string[]> {
   await setup(ctx);
@@ -19,7 +20,7 @@ export default async function androidBuilder(ctx: BuildContext<Android.Job>): Pr
     });
   } else {
     await ctx.runBuildPhase(BuildPhase.PREBUILD, async () => {
-      await ctx.ejectProvider.runEject(ctx);
+      await prebuildAsync(ctx);
     });
   }
 

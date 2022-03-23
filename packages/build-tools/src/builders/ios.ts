@@ -14,6 +14,7 @@ import { configureXcodeProject } from '../ios/configure';
 import CredentialsManager from '../ios/credentials/manager';
 import { runFastlaneGym } from '../ios/fastlane';
 import { installPods } from '../ios/pod';
+import { prebuildAsync } from '../utils/prebuild';
 
 export default async function iosBuilder(ctx: BuildContext<Ios.Job>): Promise<string[]> {
   await setup(ctx);
@@ -30,7 +31,7 @@ export default async function iosBuilder(ctx: BuildContext<Ios.Job>): Promise<st
         const extraEnvs: Record<string, string> = credentials?.teamId
           ? { APPLE_TEAM_ID: credentials.teamId }
           : {};
-        await ctx.ejectProvider.runEject(ctx, { extraEnvs });
+        await prebuildAsync(ctx, { extraEnvs });
       });
     }
 
