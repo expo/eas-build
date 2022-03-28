@@ -26,7 +26,8 @@ export async function prebuildAsync<TJob extends Job>(
 
 function getPrebuildCommand(job: Job): string {
   let prebuildCommand =
-    job.experimental?.prebuildCommand ?? `prebuild --non-interactive --platform ${job.platform}`;
+    job.experimental?.prebuildCommand ??
+    `prebuild --non-interactive --no-install --platform ${job.platform}`;
   if (!prebuildCommand.match(/(?:--platform| -p)/)) {
     prebuildCommand = `${prebuildCommand} --platform ${job.platform}`;
   }
