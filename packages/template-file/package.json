@@ -18,11 +18,11 @@
   "bugs": "https://github.com/expo/eas-build/issues",
   "license": "BUSL-1.1",
   "dependencies": {
-    "fs-extra": "^9.0.0",
+    "fs-extra": "^10.0.1",
     "lodash": "^4.17.20"
   },
   "devDependencies": {
-    "@types/fs-extra": "^9.0.1",
+    "@types/fs-extra": "^9.0.13",
     "@types/jest": "^26.0.20",
     "@types/lodash": "^4.14.167",
     "@types/lodash.template": "^4.4.6",
