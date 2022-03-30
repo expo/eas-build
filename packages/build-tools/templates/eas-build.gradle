@@ -21,6 +21,10 @@ android {
 }
 
 tasks.whenTaskAdded {
+  // when using com.android.tools.build:gradle:7.0.4 signingConfigs is not defined while task :app:lintAnalyzeDebug is executed
+  if (android.hasProperty('signingConfigs') == null) {
+    return
+  }
   android.signingConfigs.release {
     def credentialsJson = rootProject.file("../credentials.json");
     def credentials = new groovy.json.JsonSlurper().parse(credentialsJson)
