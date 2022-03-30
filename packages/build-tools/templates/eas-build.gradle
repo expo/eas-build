@@ -5,47 +5,32 @@ import java.nio.file.Paths
 android {
   signingConfigs {
     release {
-      // This is necessary to avoid needing the user to define a release signing config manually
-      // If no release config is defined, and this is not present, build for assembleRelease will crash
+      def credentialsJson = rootProject.file("../credentials.json");
+      def credentials = new groovy.json.JsonSlurper().parse(credentialsJson)
+      def keystorePath = Paths.get(credentials.android.keystore.keystorePath);
+      def storeFilePath = keystorePath.isAbsolute()
+        ? keystorePath
+        : rootProject.file("..").toPath().resolve(keystorePath);
+
+      storeFile storeFilePath.toFile()
+      storePassword credentials.android.keystore.keystorePassword
+      keyAlias credentials.android.keystore.keyAlias
+      if (credentials.android.keystore.containsKey("keyPassword")) {
+        keyPassword credentials.android.keystore.keyPassword
+      } else {
+        // key password is required by Gradle, but PKCS keystores don't have one
+        // using the keystore password seems to satisfy the requirement
+        keyPassword credentials.android.keystore.keystorePassword
+      }
     }
   }
 
   buildTypes {
     release {
-      // This is necessary to avoid needing the user to define a release build type manually
+      signingConfig android.signingConfigs.release
     }
     debug {
-      // This is necessary to avoid needing the user to define a debug build type manually
+      signingConfig android.signingConfigs.release
     }
-  }
-}
-
-tasks.whenTaskAdded {
-  android.signingConfigs.release {
-    def credentialsJson = rootProject.file("../credentials.json");
-    def credentials = new groovy.json.JsonSlurper().parse(credentialsJson)
-    def keystorePath = Paths.get(credentials.android.keystore.keystorePath);
-    def storeFilePath = keystorePath.isAbsolute()
-      ? keystorePath
-      : rootProject.file("..").toPath().resolve(keystorePath);
-
-    storeFile storeFilePath.toFile()
-    storePassword credentials.android.keystore.keystorePassword
-    keyAlias credentials.android.keystore.keyAlias
-    if (credentials.android.keystore.containsKey("keyPassword")) {
-      keyPassword credentials.android.keystore.keyPassword
-    } else {
-      // key password is required by Gradle, but PKCS keystores don't have one
-      // using the keystore password seems to satisfy the requirement
-      keyPassword credentials.android.keystore.keystorePassword
-    }
-  }
-
-  android.buildTypes.release {
-    signingConfig android.signingConfigs.release
-  }
-
-  android.buildTypes.debug {
-    signingConfig android.signingConfigs.release
   }
 }
