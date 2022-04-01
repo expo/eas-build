@@ -42,20 +42,6 @@ export async function setup<TJob extends Job>(ctx: BuildContext<TJob>): Promise<
     ctx.logger.info('Using app configuration:');
     ctx.logger.info(JSON.stringify(appConfig, null, 2));
   });
-
-  await ctx.runBuildPhase(BuildPhase.RUN_EXPO_DOCTOR, async () => {
-    const spawnOptions = {
-      cwd: ctx.reactNativeProjectDirectory,
-      logger: ctx.logger,
-      env: ctx.env,
-    };
-    ctx.logger.info('Running "expo doctor"');
-    try {
-      await ctx.runExpoCliCommand('doctor', spawnOptions);
-    } catch (err) {
-      ctx.logger.error({ err }, 'Command "expo doctor" failed.');
-    }
-  });
 }
 
 async function downloadAndUnpackProject<TJob extends Job>(ctx: BuildContext<TJob>): Promise<void> {
