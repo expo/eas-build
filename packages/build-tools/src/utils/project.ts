@@ -11,6 +11,8 @@ import { Hook, runHookIfPresent } from './hooks';
 import { createNpmrcIfNotExistsAsync } from './npmrc';
 import { findPackagerRootDir, readPackageJson } from './packageManager';
 
+const MAX_EXPO_DOCTOR_TIMEOUT_MS = 20 * 1000;
+
 export async function setup<TJob extends Job>(ctx: BuildContext<TJob>): Promise<void> {
   await ctx.runBuildPhase(BuildPhase.PREPARE_PROJECT, async () => {
     await downloadAndUnpackProject(ctx);
@@ -41,6 +43,30 @@ export async function setup<TJob extends Job>(ctx: BuildContext<TJob>): Promise<
     const appConfig = ctx.appConfig;
     ctx.logger.info('Using app configuration:');
     ctx.logger.info(JSON.stringify(appConfig, null, 2));
+  });
+
+  await ctx.runBuildPhase(BuildPhase.RUN_EXPO_DOCTOR, async () => {
+    const spawnOptions = {
+      cwd: ctx.reactNativeProjectDirectory,
+      logger: ctx.logger,
+      env: ctx.env,
+    };
+    ctx.logger.info('Running "expo doctor"');
+    let timeout: NodeJS.Timeout | undefined;
+    try {
+      const promise = ctx.runExpoCliCommand('doctor', spawnOptions);
+      timeout = setTimeout(() => {
+        promise.child.kill();
+        ctx?.reportError?.(`"expo doctor" timed out`);
+      }, MAX_EXPO_DOCTOR_TIMEOUT_MS);
+      await promise;
+    } catch (err) {
+      ctx.logger.error({ err }, 'Command "expo doctor" failed.');
+    } finally {
+      if (timeout) {
+        clearTimeout(timeout);
+      }
+    }
   });
 }
 
