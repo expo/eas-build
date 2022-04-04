@@ -1,15 +1,15 @@
 import path from 'path';
 
-import spawnAsync, { SpawnOptions } from '@expo/turtle-spawn';
+import spawnAsync, { SpawnOptions, SpawnPromise, SpawnResult } from '@expo/turtle-spawn';
 
 const expoCliPackage = require.resolve('expo-cli');
 
-export async function runExpoCliCommandAsync(
+export function runExpoCliCommandAsync(
   command: string,
   options: SpawnOptions
-): Promise<void> {
+): SpawnPromise<SpawnResult> {
   const expoCliBinPath =
     process.env.EXPO_CLI_PATH ?? path.resolve(path.dirname(expoCliPackage), '../bin/expo.js');
   options?.logger?.debug(`${expoCliBinPath} ${command}`);
-  await spawnAsync('bash', ['-c', `${expoCliBinPath} ${command}`], options);
+  return spawnAsync('bash', ['-c', `${expoCliBinPath} ${command}`], options);
 }

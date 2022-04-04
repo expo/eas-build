@@ -1,5 +1,9 @@
 import { pipeSpawnOutput, bunyan } from '@expo/logger';
-import spawnAsync, { SpawnResult, SpawnOptions as SpawnAsyncOptions } from '@expo/spawn-async';
+import spawnAsync, {
+  SpawnResult,
+  SpawnPromise,
+  SpawnOptions as SpawnAsyncOptions,
+} from '@expo/spawn-async';
 
 type SpawnOptions = SpawnAsyncOptions & {
   logger?: bunyan;
@@ -7,14 +11,14 @@ type SpawnOptions = SpawnAsyncOptions & {
   printAsStdoutOnly?: boolean;
 };
 
-async function spawn(
+function spawn(
   command: string,
   args: string[],
   _options: SpawnOptions = {
     stdio: 'inherit',
     cwd: process.cwd(),
   }
-): Promise<SpawnResult> {
+): SpawnPromise<SpawnResult> {
   const options = { ..._options };
   const { logger } = options;
   if (logger) {
@@ -24,8 +28,8 @@ async function spawn(
   if (logger && promise.child) {
     pipeSpawnOutput(logger, promise.child, options);
   }
-  return await promise;
+  return promise;
 }
 
 export default spawn;
-export { SpawnOptions, SpawnResult };
+export { SpawnOptions, SpawnResult, SpawnPromise };

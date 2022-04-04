@@ -3,7 +3,7 @@ import path from 'path';
 import { BuildPhase, Job, LogMarker, Env, errors, Metadata } from '@expo/eas-build-job';
 import { ExpoConfig } from '@expo/config';
 import { bunyan } from '@expo/logger';
-import { SpawnOptions } from '@expo/turtle-spawn';
+import { SpawnPromise, SpawnOptions, SpawnResult } from '@expo/turtle-spawn';
 
 import { PackageManager, resolvePackageManager } from './utils/packageManager';
 import { detectUserError } from './utils/detectUserError';
@@ -25,7 +25,7 @@ export interface BuildContextOptions {
   logBuffer: LogBuffer;
   env: Env;
   cacheManager?: CacheManager;
-  runExpoCliCommand: (args: string, options: SpawnOptions) => Promise<void>;
+  runExpoCliCommand: (args: string, options: SpawnOptions) => SpawnPromise<SpawnResult>;
   reportError?: (msg: string, err?: Error) => void;
   skipNativeBuild?: boolean;
   metadata?: Metadata;
@@ -39,7 +39,10 @@ export class BuildContext<TJob extends Job> {
   public readonly logBuffer: LogBuffer;
   public readonly env: Env;
   public readonly cacheManager?: CacheManager;
-  public readonly runExpoCliCommand: (args: string, options: SpawnOptions) => Promise<void>;
+  public readonly runExpoCliCommand: (
+    args: string,
+    options: SpawnOptions
+  ) => SpawnPromise<SpawnResult>;
   public readonly reportError?: (msg: string, err?: Error) => void;
   public readonly metadata?: Metadata;
   public readonly skipNativeBuild?: boolean;
