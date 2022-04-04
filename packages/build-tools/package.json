@@ -1,6 +1,6 @@
 {
   "name": "@expo/build-tools",
-  "version": "0.1.116",
+  "version": "0.1.117",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "files": [
@@ -23,12 +23,12 @@
     "@expo/config-plugins": "4.0.11",
     "@expo/downloader": "0.0.19",
     "@expo/eas-build-job": "0.2.68",
-    "@expo/fastlane": "0.0.27",
+    "@expo/fastlane": "0.0.28",
     "@expo/logger": "0.0.22",
     "@expo/package-manager": "^0.0.47",
     "@expo/plist": "^0.0.11",
     "@expo/template-file": "0.1.21",
-    "@expo/turtle-spawn": "0.0.22",
+    "@expo/turtle-spawn": "0.0.23",
     "@expo/xcpretty": "^4.1.1",
     "fast-glob": "^3.2.5",
     "find-yarn-workspace-root": "^2.0.0",
