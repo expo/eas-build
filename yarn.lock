@@ -677,28 +677,6 @@
     mv "~2"
     safe-json-stringify "~1"
 
-"@expo/config-plugins@4.0.11":
-  version "4.0.11"
-  resolved "https://registry.yarnpkg.com/@expo/config-plugins/-/config-plugins-4.0.11.tgz#2c11c63ec0d3f7a56d6cb45c8340a1546f3cfc5c"
-  integrity sha512-hoQq+B1NlIqWeSLKbQQ19g2vzqKhXh2glRwRFCGvqKT2/UaweFU5w7jetNPOBlVIV1+TpQmhLNbTYako6Z3vnQ==
-  dependencies:
-    "@expo/config-types" "^43.0.1"
-    "@expo/json-file" "8.2.34"
-    "@expo/plist" "0.0.16"
-    "@expo/sdk-runtime-versions" "^1.0.0"
-    "@react-native/normalize-color" "^2.0.0"
-    chalk "^4.1.2"
-    debug "^4.3.1"
-    find-up "~5.0.0"
-    fs-extra "9.0.0"
-    getenv "^1.0.0"
-    glob "7.1.6"
-    resolve-from "^5.0.0"
-    semver "^7.3.5"
-    slash "^3.0.0"
-    xcode "^3.0.1"
-    xml2js "0.4.23"
-
 "@expo/config-plugins@4.1.0":
   version "4.1.0"
   resolved "https://registry.yarnpkg.com/@expo/config-plugins/-/config-plugins-4.1.0.tgz#0365e2e51e2e3e3b4e7db1fbbada5be661798be6"
@@ -721,32 +699,10 @@
     xcode "^3.0.1"
     xml2js "0.4.23"
 
-"@expo/config-types@^43.0.1":
-  version "43.0.1"
-  resolved "https://registry.yarnpkg.com/@expo/config-types/-/config-types-43.0.1.tgz#3e047dccb371741a540980eaff26fb0c95039c30"
-  integrity sha512-EtllpCGDdB/UdwAIs5YXJwBLpbFQNdlLLrxIvoILA9cXrpQMWkeDCT9lQPJzFRMFcLUaMuGvkzX2tR4tx5EQFQ==
-
 "@expo/config-types@^44.0.0":
   version "44.0.0"
   resolved "https://registry.yarnpkg.com/@expo/config-types/-/config-types-44.0.0.tgz#d3480fe2c99f9e895dae4ebba58b74ed72d03e26"
   integrity sha512-d+gpdKOAhqaD5RmcMzGgKzNtvE1w+GCqpFQNSXLliYlXjj+Tv0eL8EPeAdPtvke0vowpPFwd5McXLA90dgY6Jg==
-
-"@expo/config@6.0.11":
-  version "6.0.11"
-  resolved "https://registry.yarnpkg.com/@expo/config/-/config-6.0.11.tgz#a00815ac29c13dfb069441dff6f0b56da69baa2f"
-  integrity sha512-ohmm/fjpqL3mk1Tj9BqmeoFuGNQxfMm2cQs0JHqBCXTjBUtprrH1j6wHdKR2ctNWQxpOlStPkC6CgPv+bd1+GA==
-  dependencies:
-    "@babel/code-frame" "~7.10.4"
-    "@expo/config-plugins" "4.0.11"
-    "@expo/config-types" "^43.0.1"
-    "@expo/json-file" "8.2.34"
-    getenv "^1.0.0"
-    glob "7.1.6"
-    require-from-string "^2.0.2"
-    resolve-from "^5.0.0"
-    semver "7.3.2"
-    slugify "^1.3.4"
-    sucrase "^3.20.0"
 
 "@expo/config@6.0.19":
   version "6.0.19"
@@ -906,15 +862,6 @@
     rimraf "^3.0.2"
     split "^1.0.1"
     sudo-prompt "9.1.1"
-
-"@expo/plist@0.0.16":
-  version "0.0.16"
-  resolved "https://registry.yarnpkg.com/@expo/plist/-/plist-0.0.16.tgz#c7d294a774196cfa1d8caf89a75ba923f5d1d53c"
-  integrity sha512-yQMt2CTm2VNLiHv2/EqHYrHvfflI2mFJd+DZIQQy569hvpZle0CxMPGH1p2KatbrO8htxJNvwrlR/4TIwhQJ5w==
-  dependencies:
-    "@xmldom/xmldom" "~0.7.0"
-    base64-js "^1.2.3"
-    xmlbuilder "^14.0.0"
 
 "@expo/plist@0.0.17":
   version "0.0.17"
