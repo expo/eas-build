@@ -63,16 +63,6 @@ export async function androidSetClassicReleaseChannelNativelyAsync(
     path: stringResourcePath,
   });
 
-  // TODO move this to expo-cli
-  if (Array.isArray(stringResourceObject?.resources?.string)) {
-    for (const string of stringResourceObject?.resources?.string) {
-      if (string.$.translatable === 'false') {
-        continue;
-      }
-      string._ = unescapeAndroidString(string._);
-    }
-  }
-
   const resourceName = 'release_channel';
   const releaseChannelResourceItem = AndroidConfig.Resources.buildResourceItem({
     name: resourceName,
@@ -127,9 +117,4 @@ export async function androidGetNativelyDefinedRuntimeVersionAsync(
     androidManifest,
     AndroidMetadataName.RUNTIME_VERSION
   );
-}
-
-// TODO move this to expo-cli
-export function unescapeAndroidString(value: string): string {
-  return value.replace(/\\(.)/g, '$1');
 }
