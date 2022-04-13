@@ -1,14 +1,14 @@
 import os from 'os';
 import path from 'path';
 
-import fastlane from '@expo/fastlane';
 import { Ios } from '@expo/eas-build-job';
 import spawn from '@expo/turtle-spawn';
 import { v4 as uuid } from 'uuid';
 
 import { BuildContext } from '../../context';
+import { runFastlane } from '../fastlane';
 
-class Keychain<TJob extends Ios.Job> {
+export default class Keychain<TJob extends Ios.Job> {
   private readonly keychainPath: string;
   private readonly keychainPassword: string;
   private created = false;
@@ -28,7 +28,7 @@ class Keychain<TJob extends Ios.Job> {
 
   public async create(): Promise<void> {
     this.ctx.logger.debug(`Creating keychain - ${this.keychainPath}`);
-    await fastlane([
+    await runFastlane([
       'run',
       'create_keychain',
       `path:${this.keychainPath}`,
@@ -45,7 +45,7 @@ class Keychain<TJob extends Ios.Job> {
     }
 
     this.ctx.logger.debug(`Importing certificate ${certPath} into keychain ${this.keychainPath}`);
-    await fastlane([
+    await runFastlane([
       'run',
       'import_certificate',
       `certificate_path:${certPath}`,
@@ -76,7 +76,7 @@ class Keychain<TJob extends Ios.Job> {
     const keychainToDeletePath = keychainPath ?? this.keychainPath;
     this.ctx.logger.info(`Destroying keychain - ${keychainToDeletePath}`);
     try {
-      await fastlane(['run', 'delete_keychain', `keychain_path:${keychainToDeletePath}`]);
+      await runFastlane(['run', 'delete_keychain', `keychain_path:${keychainToDeletePath}`]);
       this.destroyed = true;
     } catch (err) {
       this.ctx.logger.error({ err }, 'Failed to delete the keychain\n');
@@ -108,5 +108,3 @@ class Keychain<TJob extends Ios.Job> {
     return output.join('');
   }
 }
-
-export default Keychain;

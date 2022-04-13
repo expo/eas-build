@@ -1,7 +1,8 @@
 import path from 'path';
 
 import { Ios } from '@expo/eas-build-job';
-import fastlane from '@expo/fastlane';
+import { bunyan } from '@expo/logger';
+import spawn, { SpawnResult } from '@expo/turtle-spawn';
 import fs from 'fs-extra';
 import nullthrows from 'nullthrows';
 
@@ -39,14 +40,41 @@ export async function runFastlaneGym<TJob extends Ios.Job>(
   const buildLogger = new XcodeBuildLogger(ctx.logger, ctx.reactNativeProjectDirectory);
   void buildLogger.watchLogFiles(logsDirectory);
   try {
-    await fastlane(['gym'], {
+    await runFastlane(['gym'], {
       cwd: path.join(ctx.reactNativeProjectDirectory, 'ios'),
       logger: ctx.logger,
-      envs: ctx.env,
+      env: ctx.env,
     });
   } finally {
     await buildLogger.flush();
   }
+}
+
+export async function runFastlane(
+  fastlaneArgs: string[],
+  {
+    logger,
+    env,
+    cwd,
+  }: {
+    logger?: bunyan;
+    env?: Record<string, string>;
+    cwd?: string;
+  } = {}
+): Promise<SpawnResult> {
+  const fastlaneEnvVars = {
+    FASTLANE_DISABLE_COLORS: '1',
+    FASTLANE_SKIP_UPDATE_CHECK: '1',
+    SKIP_SLOW_FASTLANE_WARNING: 'true',
+    FASTLANE_HIDE_TIMESTAMP: 'true',
+    LC_ALL: 'en_US.UTF-8',
+    ...(env ?? process.env),
+  };
+  return await spawn('fastlane', fastlaneArgs, {
+    env: fastlaneEnvVars,
+    logger,
+    cwd,
+  });
 }
 
 async function ensureGymfileExists<TJob extends Ios.Job>(
