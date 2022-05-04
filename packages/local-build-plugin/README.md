@@ -4,4 +4,4 @@
 
 ## Repository
 
-https://github.com/expo/eas-build/tree/main/src/packages/fastlane
+https://github.com/expo/eas-build/tree/main/packages/local-build-plugin
