@@ -16,7 +16,7 @@ describe(resolvePackageManager, () => {
   });
 
   it('returns npm when no lockfiles exist', async () => {
-    expect(resolvePackageManager(rootDir)).toBe('npm');
+    expect(resolvePackageManager(rootDir)).toBe('yarn');
   });
 
   it('returns npm when only package-json.lock exist', async () => {
@@ -32,7 +32,7 @@ describe(resolvePackageManager, () => {
   it('returns yarn when both lockfiles exists', async () => {
     await fs.writeFile(path.join(rootDir, 'yarn.lock'), 'content');
     await fs.writeFile(path.join(rootDir, 'package-lock.json'), 'content');
-    expect(resolvePackageManager(rootDir)).toBe('yarn');
+    expect(resolvePackageManager(rootDir)).toBe('npm');
   });
 
   it('returns npm within a monorepo', async () => {

@@ -1,7 +1,9 @@
 import { Job } from '@expo/eas-build-job';
-import spawnAsync, { SpawnOptions } from '@expo/turtle-spawn';
+import { SpawnOptions } from '@expo/turtle-spawn';
 
 import { BuildContext } from '../context';
+
+import { installDependencies } from './project';
 
 export interface PrebuildOptions {
   extraEnvs?: Record<string, string>;
@@ -21,7 +23,7 @@ export async function prebuildAsync<TJob extends Job>(
   };
 
   await ctx.runExpoCliCommand(getPrebuildCommand(ctx.job), spawnOptions);
-  await spawnAsync(ctx.packageManager, ['install'], spawnOptions);
+  await installDependencies(ctx);
 }
 
 function getPrebuildCommand(job: Job): string {

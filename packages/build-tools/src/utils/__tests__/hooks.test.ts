@@ -51,7 +51,7 @@ describe(runHookIfPresent, () => {
 
     await runHookIfPresent(ctx, Hook.PRE_INSTALL);
 
-    expect(spawn).toBeCalledWith(PackageManager.NPM, ['run', Hook.PRE_INSTALL], expect.anything());
+    expect(spawn).toBeCalledWith(PackageManager.YARN, ['run', Hook.PRE_INSTALL], expect.anything());
   });
 
   it('runs the hook with yarn if yarn.lock exists', async () => {

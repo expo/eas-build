@@ -791,15 +791,6 @@
     semver "7.3.2"
     tempy "0.3.0"
 
-"@expo/json-file@8.2.33":
-  version "8.2.33"
-  resolved "https://registry.yarnpkg.com/@expo/json-file/-/json-file-8.2.33.tgz#78f56f33a2cfb807b23c81e00237a33159aa1f32"
-  integrity sha512-CDnhjdirUs6OdN5hOSTJ2y3i9EiJMk7Z5iDljC5xyCHCrUex7oyI8vbRsZEojAahxZccgL/PrO+CjakiFFWurg==
-  dependencies:
-    "@babel/code-frame" "~7.10.4"
-    json5 "^1.0.1"
-    write-file-atomic "^2.3.0"
-
 "@expo/json-file@8.2.36":
   version "8.2.36"
   resolved "https://registry.yarnpkg.com/@expo/json-file/-/json-file-8.2.36.tgz#62a505cb7f30a34d097386476794680a3f7385ff"
@@ -846,15 +837,16 @@
     split "^1.0.1"
     sudo-prompt "9.1.1"
 
-"@expo/package-manager@^0.0.47":
-  version "0.0.47"
-  resolved "https://registry.yarnpkg.com/@expo/package-manager/-/package-manager-0.0.47.tgz#987c599361d5d743a4c2d03f9ed7e78c8ed332f1"
-  integrity sha512-guFnGAiNLW/JsienEq3NkZk5khTP+RdT/czk/teJUiYLkBy0hLmMTJsNXurGgFwI33+ScEbDvFmN5IOEBGpUDQ==
+"@expo/package-manager@0.0.53":
+  version "0.0.53"
+  resolved "https://registry.yarnpkg.com/@expo/package-manager/-/package-manager-0.0.53.tgz#4c0b4967e4aedddaa2f3b4f0c617003c1ea2e67c"
+  integrity sha512-Kg4ZWCuNCBqy6aznNGdD8rt3wSlTIHujfx+yfdm0Ewtq7uLhiyzKoMyh3RV331BdLu2YOSZpozNm2YZ/K/B0CQ==
   dependencies:
-    "@expo/json-file" "8.2.33"
+    "@expo/json-file" "8.2.36"
     "@expo/spawn-async" "^1.5.0"
     ansi-regex "^5.0.0"
     chalk "^4.0.0"
+    find-up "^5.0.0"
     find-yarn-workspace-root "~2.0.0"
     npm-package-arg "^7.0.0"
     rimraf "^3.0.2"
@@ -6429,7 +6421,7 @@ find-up@^5.0.0, find-up@~5.0.0:
     locate-path "^6.0.0"
     path-exists "^4.0.0"
 
-find-yarn-workspace-root@^2.0.0, find-yarn-workspace-root@~2.0.0:
+find-yarn-workspace-root@~2.0.0:
   version "2.0.0"
   resolved "https://registry.yarnpkg.com/find-yarn-workspace-root/-/find-yarn-workspace-root-2.0.0.tgz#f47fb8d239c900eb78179aa81b66673eac88f7bd"
   integrity sha512-1IMnbjt4KzsQfnhnzNd8wUEgXZ44IzZaZmnLYx7D5FZlaHt2gW20Cri8Q+E/t5tIj4+epTBub+2Zxu/vNILzqQ==

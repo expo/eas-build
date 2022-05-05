@@ -95,14 +95,18 @@ async function downloadAndUnpackProject<TJob extends Job>(ctx: BuildContext<TJob
   );
 }
 
-async function installDependencies<TJob extends Job>(ctx: BuildContext<TJob>): Promise<void> {
+export async function installDependencies<TJob extends Job>(
+  ctx: BuildContext<TJob>
+): Promise<void> {
   const packagerRunDir = findPackagerRootDir(ctx.reactNativeProjectDirectory);
   if (packagerRunDir !== ctx.reactNativeProjectDirectory) {
     const relativeReactNativeProjectDirectory = path.relative(
       ctx.buildDirectory,
       ctx.reactNativeProjectDirectory
     );
-    ctx.logger.info(`We detected that '${relativeReactNativeProjectDirectory}' is a workspace`);
+    ctx.logger.info(
+      `We detected that '${relativeReactNativeProjectDirectory}' is a ${ctx.packageManager} workspace`
+    );
   }
 
   const relativePackagerRunDir = path.relative(ctx.buildDirectory, packagerRunDir);
@@ -113,9 +117,10 @@ async function installDependencies<TJob extends Job>(ctx: BuildContext<TJob>): P
         : 'the root dir of your repository'
     } `
   );
+  const { CI, EAS_BUILD, ...nonCIEnvs } = ctx.env;
   await spawn(ctx.packageManager, ['install'], {
     cwd: packagerRunDir,
     logger: ctx.logger,
-    env: ctx.env,
+    env: nonCIEnvs,
   });
 }

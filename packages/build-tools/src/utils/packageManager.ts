@@ -1,24 +1,31 @@
 import path from 'path';
 
-import { isUsingYarn } from '@expo/package-manager';
-import findYarnWorkspaceRoot from 'find-yarn-workspace-root';
+import * as PackageManagerUtils from '@expo/package-manager';
 import fs from 'fs-extra';
 
 export enum PackageManager {
   YARN = 'yarn',
   NPM = 'npm',
+  PNPM = 'pnpm',
 }
 
 export function resolvePackageManager(directory: string): PackageManager {
   try {
-    return isUsingYarn(directory) ? PackageManager.YARN : PackageManager.NPM;
+    const manager = PackageManagerUtils.resolvePackageManager(directory);
+    if (manager === 'npm') {
+      return PackageManager.NPM;
+    } else if (manager === 'pnpm') {
+      return PackageManager.PNPM;
+    } else {
+      return PackageManager.YARN;
+    }
   } catch {
     return PackageManager.YARN;
   }
 }
 
 export function findPackagerRootDir(currentDir: string): string {
-  return findYarnWorkspaceRoot(currentDir) ?? currentDir;
+  return PackageManagerUtils.findWorkspaceRoot(currentDir) ?? currentDir;
 }
 
 export async function readPackageJson(projectDir: string): Promise<any> {
