@@ -59,10 +59,11 @@ export default async function iosBuilder(ctx: BuildContext<Ios.Job>): Promise<st
     });
 
     await ctx.runBuildPhase(BuildPhase.RUN_FASTLANE, async () => {
-      const entitlements = await readEntitlementsAsync(ctx);
+      const scheme = resolveScheme(ctx);
+      const entitlements = await readEntitlementsAsync(ctx, { scheme, buildConfiguration });
       await runFastlaneGym(ctx, {
         credentials,
-        scheme: resolveScheme(ctx),
+        scheme,
         buildConfiguration,
         entitlements,
       });
@@ -105,10 +106,21 @@ function resolveScheme(ctx: BuildContext<Ios.Job>): string {
   return schemes[0];
 }
 
-async function readEntitlementsAsync(ctx: BuildContext<Ios.Job>): Promise<object | null> {
+async function readEntitlementsAsync(
+  ctx: BuildContext<Ios.Job>,
+  { scheme, buildConfiguration }: { scheme: string; buildConfiguration: string }
+): Promise<object | null> {
   try {
+    const applicationTargetName = await IOSConfig.BuildScheme.getApplicationTargetNameForSchemeAsync(
+      ctx.reactNativeProjectDirectory,
+      scheme
+    );
     const entitlementsPath = IOSConfig.Entitlements.getEntitlementsPath(
-      ctx.reactNativeProjectDirectory
+      ctx.reactNativeProjectDirectory,
+      {
+        buildConfiguration,
+        targetName: applicationTargetName,
+      }
     );
     if (!entitlementsPath) {
       return null;
