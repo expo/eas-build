@@ -46,26 +46,9 @@ export async function setup<TJob extends Job>(ctx: BuildContext<TJob>): Promise<
   });
 
   await ctx.runBuildPhase(BuildPhase.RUN_EXPO_DOCTOR, async () => {
-    const spawnOptions = {
-      cwd: ctx.reactNativeProjectDirectory,
-      logger: ctx.logger,
-      env: ctx.env,
-    };
-    ctx.logger.info('Running "expo doctor"');
-    let timeout: NodeJS.Timeout | undefined;
-    try {
-      const promise = ctx.runExpoCliCommand('doctor', spawnOptions);
-      timeout = setTimeout(() => {
-        promise.child.kill();
-        ctx?.reportError?.(`"expo doctor" timed out`);
-      }, MAX_EXPO_DOCTOR_TIMEOUT_MS);
-      await promise;
-    } catch (err) {
-      ctx.logger.error({ err }, 'Command "expo doctor" failed.');
-    } finally {
-      if (timeout) {
-        clearTimeout(timeout);
-      }
+    const isProjectValid = await runExpoDoctor(ctx);
+    if (!isProjectValid) {
+      ctx.markBuildPhaseHasWarnings();
     }
   });
 }
@@ -118,4 +101,33 @@ async function installDependencies<TJob extends Job>(ctx: BuildContext<TJob>): P
     logger: ctx.logger,
     env: ctx.env,
   });
+}
+
+async function runExpoDoctor<TJob extends Job>(ctx: BuildContext<TJob>): Promise<boolean> {
+  ctx.logger.info('Running "expo doctor"');
+  let timeout: NodeJS.Timeout | undefined;
+  try {
+    const promise = ctx.runExpoCliCommand('doctor', {
+      cwd: ctx.reactNativeProjectDirectory,
+      logger: ctx.logger,
+      env: ctx.env,
+    });
+    timeout = setTimeout(() => {
+      promise.child.kill();
+      ctx?.reportError?.(`"expo doctor" timed out`);
+    }, MAX_EXPO_DOCTOR_TIMEOUT_MS);
+    const { stdout } = await promise;
+    if (stdout.match(/Didn't find any issues with the project/)) {
+      return true;
+    } else {
+      return false;
+    }
+  } catch (err) {
+    ctx.logger.error({ err }, 'Command "expo doctor" failed.');
+    return false;
+  } finally {
+    if (timeout) {
+      clearTimeout(timeout);
+    }
+  }
 }

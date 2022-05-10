@@ -37,6 +37,13 @@ export enum BuildPhase {
   PRE_UPLOAD_ARTIFACTS_HOOK = 'PRE_UPLOAD_ARTIFACTS_HOOK',
 }
 
+export enum BuildPhaseResult {
+  SUCCESS = 'success',
+  FAIL = 'failed',
+  WARNING = 'warning',
+  UNKNOWN = 'unknown',
+}
+
 export enum LogMarker {
   START_PHASE = 'START_PHASE',
   END_PHASE = 'END_PHASE',
