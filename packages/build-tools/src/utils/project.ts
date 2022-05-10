@@ -2,7 +2,7 @@ import path from 'path';
 
 import downloadFile from '@expo/downloader';
 import { ArchiveSourceType, BuildPhase, Job } from '@expo/eas-build-job';
-import spawn from '@expo/turtle-spawn';
+import spawn, { SpawnResult } from '@expo/turtle-spawn';
 import fs from 'fs-extra';
 
 import { BuildContext } from '../context';
@@ -46,8 +46,13 @@ export async function setup<TJob extends Job>(ctx: BuildContext<TJob>): Promise<
   });
 
   await ctx.runBuildPhase(BuildPhase.RUN_EXPO_DOCTOR, async () => {
-    const isProjectValid = await runExpoDoctor(ctx);
-    if (!isProjectValid) {
+    try {
+      const { stdout } = await runExpoDoctor(ctx);
+      if (!stdout.match(/Didn't find any issues with the project/)) {
+        ctx.markBuildPhaseHasWarnings();
+      }
+    } catch (err) {
+      ctx.logger.error({ err }, 'Command "expo doctor" failed.');
       ctx.markBuildPhaseHasWarnings();
     }
   });
@@ -103,7 +108,7 @@ async function installDependencies<TJob extends Job>(ctx: BuildContext<TJob>): P
   });
 }
 
-async function runExpoDoctor<TJob extends Job>(ctx: BuildContext<TJob>): Promise<boolean> {
+async function runExpoDoctor<TJob extends Job>(ctx: BuildContext<TJob>): Promise<SpawnResult> {
   ctx.logger.info('Running "expo doctor"');
   let timeout: NodeJS.Timeout | undefined;
   try {
@@ -116,15 +121,7 @@ async function runExpoDoctor<TJob extends Job>(ctx: BuildContext<TJob>): Promise
       promise.child.kill();
       ctx?.reportError?.(`"expo doctor" timed out`);
     }, MAX_EXPO_DOCTOR_TIMEOUT_MS);
-    const { stdout } = await promise;
-    if (stdout.match(/Didn't find any issues with the project/)) {
-      return true;
-    } else {
-      return false;
-    }
-  } catch (err) {
-    ctx.logger.error({ err }, 'Command "expo doctor" failed.');
-    return false;
+    return await promise;
   } finally {
     if (timeout) {
       clearTimeout(timeout);
