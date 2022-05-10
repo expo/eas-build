@@ -2,7 +2,7 @@ import path from 'path';
 
 import downloadFile from '@expo/downloader';
 import { ArchiveSourceType, BuildPhase, Job } from '@expo/eas-build-job';
-import spawn from '@expo/turtle-spawn';
+import spawn, { SpawnResult } from '@expo/turtle-spawn';
 import fs from 'fs-extra';
 
 import { BuildContext } from '../context';
@@ -46,26 +46,14 @@ export async function setup<TJob extends Job>(ctx: BuildContext<TJob>): Promise<
   });
 
   await ctx.runBuildPhase(BuildPhase.RUN_EXPO_DOCTOR, async () => {
-    const spawnOptions = {
-      cwd: ctx.reactNativeProjectDirectory,
-      logger: ctx.logger,
-      env: ctx.env,
-    };
-    ctx.logger.info('Running "expo doctor"');
-    let timeout: NodeJS.Timeout | undefined;
     try {
-      const promise = ctx.runExpoCliCommand('doctor', spawnOptions);
-      timeout = setTimeout(() => {
-        promise.child.kill();
-        ctx?.reportError?.(`"expo doctor" timed out`);
-      }, MAX_EXPO_DOCTOR_TIMEOUT_MS);
-      await promise;
+      const { stdout } = await runExpoDoctor(ctx);
+      if (!stdout.match(/Didn't find any issues with the project/)) {
+        ctx.markBuildPhaseHasWarnings();
+      }
     } catch (err) {
       ctx.logger.error({ err }, 'Command "expo doctor" failed.');
-    } finally {
-      if (timeout) {
-        clearTimeout(timeout);
-      }
+      ctx.markBuildPhaseHasWarnings();
     }
   });
 }
@@ -118,4 +106,25 @@ async function installDependencies<TJob extends Job>(ctx: BuildContext<TJob>): P
     logger: ctx.logger,
     env: ctx.env,
   });
+}
+
+async function runExpoDoctor<TJob extends Job>(ctx: BuildContext<TJob>): Promise<SpawnResult> {
+  ctx.logger.info('Running "expo doctor"');
+  let timeout: NodeJS.Timeout | undefined;
+  try {
+    const promise = ctx.runExpoCliCommand('doctor', {
+      cwd: ctx.reactNativeProjectDirectory,
+      logger: ctx.logger,
+      env: ctx.env,
+    });
+    timeout = setTimeout(() => {
+      promise.child.kill();
+      ctx?.reportError?.(`"expo doctor" timed out`);
+    }, MAX_EXPO_DOCTOR_TIMEOUT_MS);
+    return await promise;
+  } finally {
+    if (timeout) {
+      clearTimeout(timeout);
+    }
+  }
 }

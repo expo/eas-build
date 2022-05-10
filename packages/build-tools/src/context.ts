@@ -1,6 +1,14 @@
 import path from 'path';
 
-import { BuildPhase, Job, LogMarker, Env, errors, Metadata } from '@expo/eas-build-job';
+import {
+  BuildPhase,
+  BuildPhaseResult,
+  Job,
+  LogMarker,
+  Env,
+  errors,
+  Metadata,
+} from '@expo/eas-build-job';
 import { ExpoConfig } from '@expo/config';
 import { bunyan } from '@expo/logger';
 import { SpawnPromise, SpawnOptions, SpawnResult } from '@expo/turtle-spawn';
@@ -49,6 +57,7 @@ export class BuildContext<TJob extends Job> {
 
   private readonly defaultLogger: bunyan;
   private buildPhase?: BuildPhase;
+  private buildPhaseHasWarnings = false;
   private _appConfig?: ExpoConfig;
 
   constructor(public readonly job: TJob, options: BuildContextOptions) {
@@ -92,7 +101,10 @@ export class BuildContext<TJob extends Job> {
     try {
       this.setBuildPhase(buildPhase, { doNotMarkStart });
       const result = await phase();
-      this.endCurrentBuildPhase({ result: 'success', doNotMarkEnd });
+      const buildPhaseResult: BuildPhaseResult = this.buildPhaseHasWarnings
+        ? BuildPhaseResult.WARNING
+        : BuildPhaseResult.SUCCESS;
+      this.endCurrentBuildPhase({ result: buildPhaseResult, doNotMarkEnd });
       return result;
     } catch (err: any) {
       let userError: errors.UserError | undefined;
@@ -114,9 +126,13 @@ export class BuildContext<TJob extends Job> {
         // leaving message empty, website will display err.stack which already includes err.message
         this.logger.error({ err }, '');
       }
-      this.endCurrentBuildPhase({ result: 'failed' });
+      this.endCurrentBuildPhase({ result: BuildPhaseResult.FAIL });
       throw userError ?? err;
     }
+  }
+
+  public markBuildPhaseHasWarnings(): void {
+    this.buildPhaseHasWarnings = true;
   }
 
   private setBuildPhase(buildPhase: BuildPhase, { doNotMarkStart = false } = {}): void {
@@ -125,7 +141,7 @@ export class BuildContext<TJob extends Job> {
         return;
       } else {
         this.logger.info(
-          { marker: LogMarker.END_PHASE, result: 'unknown' },
+          { marker: LogMarker.END_PHASE, result: BuildPhaseResult.UNKNOWN },
           `End phase: ${this.buildPhase}`
         );
         this.logger = this.defaultLogger;
@@ -142,7 +158,7 @@ export class BuildContext<TJob extends Job> {
     result,
     doNotMarkEnd = false,
   }: {
-    result: 'success' | 'failed';
+    result: BuildPhaseResult;
     doNotMarkEnd?: boolean;
   }): void {
     if (!this.buildPhase) {
@@ -153,5 +169,6 @@ export class BuildContext<TJob extends Job> {
     }
     this.logger = this.defaultLogger;
     this.buildPhase = undefined;
+    this.buildPhaseHasWarnings = false;
   }
 }
