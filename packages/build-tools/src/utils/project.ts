@@ -29,14 +29,11 @@ export async function setup<TJob extends Job>(ctx: BuildContext<TJob>): Promise<
     await installDependencies(ctx);
   });
 
-  await ctx.runBuildPhase(BuildPhase.READ_PACKAGE_JSON, async () => {
-    try {
-      const packageJsonContents = await readPackageJson(ctx.reactNativeProjectDirectory);
-      ctx.logger.info('Using package.json:');
-      ctx.logger.info(JSON.stringify(packageJsonContents, null, 2));
-    } catch (err: any) {
-      ctx.logger.warn(`Failed to parse or read package.json: ${err.message}`);
-    }
+  const packageJson = await ctx.runBuildPhase(BuildPhase.READ_PACKAGE_JSON, async () => {
+    const packageJsonContents = await readPackageJson(ctx.reactNativeProjectDirectory);
+    ctx.logger.info('Using package.json:');
+    ctx.logger.info(JSON.stringify(packageJsonContents, null, 2));
+    return packageJsonContents;
   });
 
   await ctx.runBuildPhase(BuildPhase.READ_APP_CONFIG, async () => {
@@ -45,17 +42,20 @@ export async function setup<TJob extends Job>(ctx: BuildContext<TJob>): Promise<
     ctx.logger.info(JSON.stringify(appConfig, null, 2));
   });
 
-  await ctx.runBuildPhase(BuildPhase.RUN_EXPO_DOCTOR, async () => {
-    try {
-      const { stdout } = await runExpoDoctor(ctx);
-      if (!stdout.match(/Didn't find any issues with the project/)) {
+  const hasExpoPackage = !!packageJson?.dependencies?.expo;
+  if (hasExpoPackage) {
+    await ctx.runBuildPhase(BuildPhase.RUN_EXPO_DOCTOR, async () => {
+      try {
+        const { stdout } = await runExpoDoctor(ctx);
+        if (!stdout.match(/Didn't find any issues with the project/)) {
+          ctx.markBuildPhaseHasWarnings();
+        }
+      } catch (err) {
+        ctx.logger.error({ err }, 'Command "expo doctor" failed.');
         ctx.markBuildPhaseHasWarnings();
       }
-    } catch (err) {
-      ctx.logger.error({ err }, 'Command "expo doctor" failed.');
-      ctx.markBuildPhaseHasWarnings();
-    }
-  });
+    });
+  }
 }
 
 async function downloadAndUnpackProject<TJob extends Job>(ctx: BuildContext<TJob>): Promise<void> {
