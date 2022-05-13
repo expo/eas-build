@@ -48,6 +48,15 @@ export class ServerError extends UserError {
     'Internal Server Error.\nPlease try again later. If the problem persists, please report the issue.';
 }
 
+export class BuildTimeout extends ServerError {
+  constructor(maxBuildTimeMs: number) {
+    super();
+    this.message = `Your build has exceeded the maximum build time of ${
+      maxBuildTimeMs / (60 * 1000)
+    } minutes.`;
+  }
+}
+
 export class CredentialsDistCertMismatchError extends UserError {
   errorCode = ErrorCode.CREDENTIALS_DIST_CERT_MISMATCH;
   message = "Provisioning profile and distribution certificate don't match.";
@@ -155,15 +164,4 @@ export class YarnLockChecksumError extends UserError {
 export class UnknownGradleError extends UserError {
   errorCode = ErrorCode.UNKNOWN_GRADLE_ERROR;
   message = 'Gradle build failed with unknown error. Please see logs for the "Run gradlew" phase.';
-}
-
-export class BuildTimeout extends UserError {
-  errorCode = ErrorCode.BUILD_TIMEOUT_ERROR;
-
-  constructor(maxBuildTimeMs: number) {
-    super();
-    this.message = `Your build has exceeded the maximum build time of ${
-      maxBuildTimeMs / (60 * 1000)
-    } minutes.`;
-  }
 }
