@@ -1,6 +1,7 @@
 name: Update BSL Change Date
 on:
-  pull_request
+  pull_request:
+    branches: [main]
   schedule:
     - cron: '0 12 * * *'  # Run daily
 
