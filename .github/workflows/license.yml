@@ -35,5 +35,5 @@ jobs:
             git config user.email bot@expo.dev
             git add LICENSE
             git commit -m "[license] Update BSL Change Date to $new_change_date"
-            [ $(git branch --show-current) = main ] && git push
+            [ "$(git branch --show-current)" = main ] && git push
           fi
