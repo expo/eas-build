@@ -1,4 +1,4 @@
-name: Update BSL Change Date
+name: License
 on:
   pull_request:
     branches: [main]
@@ -8,7 +8,7 @@ on:
 jobs:
   test:
     runs-on: ubuntu-latest
-    name: Update license if code has changed
+    name: Update BSL change date
     steps:
       - uses: actions/checkout@v3
         with:
@@ -30,7 +30,7 @@ jobs:
           echo $new_change_date
 
           if [ "$(date --date "$new_change_date" +%s)" -ge "$(date --date "$change_date" +%s)" ]; then
-            sed --in-place "s/$change_date/$new_change_date/" < LICENSE
+            sed --in-place "s/$change_date/$new_change_date/" LICENSE
             git add LICENSE
             git commit -m "[license] Update BSL Change Date to $new_change_date"
             # TODO: push to main using expo-bot
