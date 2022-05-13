@@ -31,8 +31,10 @@ jobs:
 
           if [ "$(date --date "$new_change_date" +%s)" -ge "$(date --date "$change_date" +%s)" ]; then
             sed --in-place "s/$change_date/$new_change_date/" LICENSE
+            git config user.name 'Expo Bot'
+            git config user.email bot@expo.dev
             git add LICENSE
             git commit -m "[license] Update BSL Change Date to $new_change_date"
-            # TODO: push to main using expo-bot
             git show
+            git push --dry-run
           fi
