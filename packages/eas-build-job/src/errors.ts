@@ -88,13 +88,13 @@ export class UnsupportedCocoaPodsVersion extends UserError {
   message = `Your project requires a newer version of CocoaPods, you can update it in the build profile in eas.json by either:
 - changing the current version under key "cocoapods"
 - switching to an image that supports that version under key "image"`;
-  docsUrl = 'https://docs.expo.io/build/eas-json';
+  docsUrl = 'https://docs.expo.dev/build-reference/eas-json/';
 }
 
 export class UnsupportedBundlerVersion extends UserError {
   errorCode = ErrorCode.UNSUPPORTED_BUNDLER_VERSION_ERROR;
-  message = `Your project requires another version of bundler, you can change it in the build profile in eas.json by specifying the version under key "bundler"`;
-  docsUrl = 'https://docs.expo.io/build/eas-json';
+  message = `Your project requires a different version of the Ruby "bundler" program than the version installed in this EAS Build environment. You can specify which version of "bundler" to install by specifying the version under "build"→[buildProfileName]→"ios"→"bundler" in eas.json.`;
+  docsUrl = 'https://docs.expo.dev/build-reference/eas-json/';
 }
 
 export class MissingGoogleServicesJson extends UserError {
