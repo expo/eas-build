@@ -1,7 +1,5 @@
 name: License
 on:
-  pull_request:
-    branches: [main]
   schedule:
     - cron: '0 0 * * *'  # Initially run daily to test, remove this after confirming it works
     # Switch to the below once we know the cron job works
