@@ -26,7 +26,7 @@ jobs:
           
           new_change_date=$(date --date "$commit_date +3 years" --iso-8601)
 
-          if [ "$(date --date "$new_change_date" +%s)" -ge "$(date --date "$change_date" +%s)" ]; then
+          if [ "$(date --date "$new_change_date" +%s)" -gt "$(date --date "$change_date" +%s)" ]; then
             sed --in-place "s/$change_date/$new_change_date/" LICENSE
             git config user.name 'Expo Bot'
             git config user.email bot@expo.dev
