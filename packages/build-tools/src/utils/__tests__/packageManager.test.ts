@@ -15,8 +15,8 @@ describe(resolvePackageManager, () => {
     await fs.mkdirp(rootDir);
   });
 
-  it('returns npm when no lockfiles exist', async () => {
-    expect(resolvePackageManager(rootDir)).toBe('npm');
+  it('returns yarn when no lockfiles exist', async () => {
+    expect(resolvePackageManager(rootDir)).toBe('yarn');
   });
 
   it('returns npm when only package-json.lock exist', async () => {
