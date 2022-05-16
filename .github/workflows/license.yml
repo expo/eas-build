@@ -1,9 +1,7 @@
 name: License
 on:
   schedule:
-    - cron: '0 0 * * *'  # Initially run daily to test, remove this after confirming it works
-    # Switch to the below once we know the cron job works
-    # - cron: '0 0 1 1-12/3 *'  # Run every three months
+    - cron: '0 0 1 1-12/3 *'  # Run every three months
 
 jobs:
   test:
@@ -16,7 +14,7 @@ jobs:
           # The date in the license
           change_date=$(sed --quiet --regexp-extended 's/^Change Date:\s+([0-9]{4}-[0-9]{2}-[0-9]{2})/\1/p' < LICENSE)
           [ -z "$change_date" ] && exit 1
-          
+
           new_change_date=$(date --date "+3 years" --iso-8601)
 
           if [ "$(date --date "$new_change_date" +%s)" -gt "$(date --date "$change_date" +%s)" ]; then
