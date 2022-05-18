@@ -9,7 +9,7 @@ import { BuildContext } from '../context';
 
 import { Hook, runHookIfPresent } from './hooks';
 import { createNpmrcIfNotExistsAsync } from './npmrc';
-import { findPackagerRootDir, readPackageJson } from './packageManager';
+import { findPackagerRootDir, PackageManager, readPackageJson } from './packageManager';
 
 const MAX_EXPO_DOCTOR_TIMEOUT_MS = 20 * 1000;
 
@@ -98,19 +98,36 @@ export async function installDependencies<TJob extends Job>(
   }
 
   const relativePackagerRunDir = path.relative(ctx.buildDirectory, packagerRunDir);
+  let args = ['install'];
+  if (ctx.packageManager === PackageManager.PNPM) {
+    args = ['install', '--no-frozen-lockfile'];
+  } else if (ctx.packageManager === PackageManager.YARN) {
+    const isYarn2 = await isUsingYarn2(ctx.reactNativeProjectDirectory);
+    if (isYarn2) {
+      args = ['install', '--no-immutable'];
+    }
+  }
   ctx.logger.info(
-    `Running ${ctx.packageManager} in ${
+    `Running "${ctx.packageManager} ${args.join(' ')}" in ${
       relativePackagerRunDir
         ? `directory '${relativePackagerRunDir}'`
         : 'the root dir of your repository'
     } `
   );
-  const { CI, EAS_BUILD, ...nonCIEnvs } = ctx.env;
-  await spawn(ctx.packageManager, ['install'], {
+  await spawn(ctx.packageManager, args, {
     cwd: packagerRunDir,
     logger: ctx.logger,
-    env: nonCIEnvs,
+    env: ctx.env,
   });
+}
+
+/**
+ * check if .yarnrc.yml exists in the project dir or in the workspace root dir
+ */
+export async function isUsingYarn2(projectDir: string): Promise<boolean> {
+  const yarnrcPath = path.join(projectDir, '.yarnrc.yml');
+  const yarnrcRootPath = path.join(findPackagerRootDir(projectDir), '.yarnrc.yml');
+  return (await fs.pathExists(yarnrcPath)) || (await fs.pathExists(yarnrcRootPath));
 }
 
 async function runExpoDoctor<TJob extends Job>(ctx: BuildContext<TJob>): Promise<SpawnResult> {

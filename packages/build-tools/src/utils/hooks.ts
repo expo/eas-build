@@ -1,12 +1,10 @@
-import path from 'path';
-
 import { Job } from '@expo/eas-build-job';
 import spawn from '@expo/turtle-spawn';
-import fs from 'fs-extra';
 
 import { BuildContext } from '../context';
 
-import { PackageManager, findPackagerRootDir, readPackageJson } from './packageManager';
+import { PackageManager, readPackageJson } from './packageManager';
+import { isUsingYarn2 } from './project';
 
 export enum Hook {
   PRE_INSTALL = 'eas-build-pre-install',
@@ -44,13 +42,4 @@ export async function runHookIfPresent<TJob extends Job>(
       env: ctx.env,
     });
   }
-}
-
-/**
- * check if .yarnrc.yml exists in the project dir or in the workspace root dir
- */
-async function isUsingYarn2(projectDir: string): Promise<boolean> {
-  const yarnrcPath = path.join(projectDir, '.yarnrc.yml');
-  const yarnrcRootPath = path.join(findPackagerRootDir(projectDir), '.yarnrc.yml');
-  return (await fs.pathExists(yarnrcPath)) || (await fs.pathExists(yarnrcRootPath));
 }
