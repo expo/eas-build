@@ -1,7 +1,7 @@
 import path from 'path';
 
 import spawn from '@expo/turtle-spawn';
-import { Job } from '@expo/eas-build-job';
+import { Android, Job } from '@expo/eas-build-job';
 import fs from 'fs-extra';
 
 import { BuildContext } from '../context';
@@ -17,10 +17,17 @@ export async function ensureLFLineEndingsInGradlewScript<TJob extends Job>(
   }
 }
 
-export async function runGradleCommand<TJob extends Job>(
-  ctx: BuildContext<TJob>,
+export async function runGradleCommand(
+  ctx: BuildContext<Android.Job>,
   gradleCommand: string
 ): Promise<void> {
+  const versionName = ctx.job.version?.versionName;
+  const versionCode = ctx.job.version?.versionCode;
+  const env = {
+    ...ctx.env,
+    ...(versionCode ? { EAS_BUILD_VERSION_CODE: versionCode } : {}),
+    ...(versionName ? { EAS_BUILD_VERSION_NAME: versionName } : {}),
+  };
   const androidDir = path.join(ctx.reactNativeProjectDirectory, 'android');
   ctx.logger.info(`Running './gradlew ${gradleCommand}' in ${androidDir}`);
   await spawn('sh', ['gradlew', gradleCommand], {
@@ -33,6 +40,6 @@ export async function runGradleCommand<TJob extends Job>(
         return line;
       }
     },
-    env: ctx.env,
+    env,
   });
 }

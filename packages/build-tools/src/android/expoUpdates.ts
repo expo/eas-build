@@ -12,6 +12,29 @@ export enum AndroidMetadataName {
   RUNTIME_VERSION = 'expo.modules.updates.EXPO_RUNTIME_VERSION',
 }
 
+export async function androidSetRuntimeVersionNativelyAsync(
+  ctx: BuildContext<Job>,
+  runtimeVersion: string
+): Promise<void> {
+  const manifestPath = await AndroidConfig.Paths.getAndroidManifestAsync(
+    ctx.reactNativeProjectDirectory
+  );
+
+  if (!(await fs.pathExists(manifestPath))) {
+    throw new Error(`Couldn't find Android manifest at ${manifestPath}`);
+  }
+
+  const androidManifest = await AndroidConfig.Manifest.readAndroidManifestAsync(manifestPath);
+  const mainApp = AndroidConfig.Manifest.getMainApplicationOrThrow(androidManifest);
+  AndroidConfig.Manifest.addMetaDataItemToMainApplication(
+    mainApp,
+    AndroidMetadataName.RUNTIME_VERSION,
+    runtimeVersion,
+    'value'
+  );
+  await AndroidConfig.Manifest.writeAndroidManifestAsync(manifestPath, androidManifest);
+}
+
 export async function androidSetChannelNativelyAsync(ctx: BuildContext<Job>): Promise<void> {
   assert(ctx.job.updates?.channel, 'updates.channel must be defined');
 

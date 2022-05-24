@@ -13,6 +13,24 @@ export enum IosMetadataName {
   RUNTIME_VERSION = 'EXUpdatesRuntimeVersion',
 }
 
+export async function iosSetRuntimeVersionNativelyAsync(
+  ctx: BuildContext<Job>,
+  runtimeVersion: string
+): Promise<void> {
+  const expoPlistPath = IOSConfig.Paths.getExpoPlistPath(ctx.reactNativeProjectDirectory);
+
+  if (!(await fs.pathExists(expoPlistPath))) {
+    throw new Error(`${expoPlistPath} does no exist`);
+  }
+
+  const expoPlistContent = await fs.readFile(expoPlistPath, 'utf8');
+  const items = plist.parse(expoPlistContent);
+  items[IosMetadataName.RUNTIME_VERSION] = runtimeVersion;
+  const expoPlist = plist.build(items);
+
+  await fs.writeFile(expoPlistPath, expoPlist);
+}
+
 export async function iosSetChannelNativelyAsync(ctx: BuildContext<Job>): Promise<void> {
   assert(ctx.job.updates?.channel, 'updates.channel must be defined');
 

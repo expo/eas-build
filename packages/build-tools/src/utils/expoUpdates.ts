@@ -4,12 +4,14 @@ import { Platform, Job } from '@expo/eas-build-job';
 import { getRuntimeVersionNullable } from '@expo/config-plugins/build/utils/Updates';
 
 import {
+  androidSetRuntimeVersionNativelyAsync,
   androidSetChannelNativelyAsync,
   androidSetClassicReleaseChannelNativelyAsync,
   androidGetNativelyDefinedClassicReleaseChannelAsync,
   androidGetNativelyDefinedRuntimeVersionAsync,
 } from '../android/expoUpdates';
 import {
+  iosSetRuntimeVersionNativelyAsync,
   iosSetChannelNativelyAsync,
   iosSetClassicReleaseChannelNativelyAsync,
   iosGetNativelyDefinedClassicReleaseChannelAsync,
@@ -19,6 +21,23 @@ import { BuildContext } from '../context';
 
 import isExpoUpdatesInstalledAsync from './isExpoUpdatesInstalled';
 
+export const setRuntimeVersionNativelyAsync = async (
+  ctx: BuildContext<Job>,
+  runtimeVersion: string
+): Promise<void> => {
+  switch (ctx.job.platform) {
+    case Platform.ANDROID: {
+      await androidSetRuntimeVersionNativelyAsync(ctx, runtimeVersion);
+      return;
+    }
+    case Platform.IOS: {
+      await iosSetRuntimeVersionNativelyAsync(ctx, runtimeVersion);
+      return;
+    }
+    default:
+      throw new Error(`Platform is not supported.`);
+  }
+};
 /**
  * Used for when Expo Updates is pointed at an EAS server.
  * @param ctx
@@ -130,7 +149,8 @@ export const configureExpoUpdatesIfInstalledAsync = async (
     return;
   }
 
-  const appConfigRuntimeVersion = getRuntimeVersionNullable(ctx.appConfig, ctx.job.platform);
+  const appConfigRuntimeVersion =
+    ctx.job.version?.runtimeVersion ?? getRuntimeVersionNullable(ctx.appConfig, ctx.job.platform);
   if (ctx.metadata?.runtimeVersion && ctx.metadata?.runtimeVersion !== appConfigRuntimeVersion) {
     ctx.markBuildPhaseHasWarnings();
     ctx.logger.warn(
@@ -145,6 +165,11 @@ export const configureExpoUpdatesIfInstalledAsync = async (
     await configureEASExpoUpdatesAsync(ctx);
   } else {
     await configureClassicExpoUpdatesAsync(ctx);
+  }
+
+  if (ctx.job.version?.runtimeVersion) {
+    ctx.logger.info('Updating runtimeVersion in Expo.plist');
+    await setRuntimeVersionNativelyAsync(ctx, ctx.job.version.runtimeVersion);
   }
 };
 

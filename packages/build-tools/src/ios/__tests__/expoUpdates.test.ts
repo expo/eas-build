@@ -1,8 +1,6 @@
-import path from 'path';
-
 import fs from 'fs-extra';
 import plist from '@expo/plist';
-import { IOSConfig } from '@expo/config-plugins';
+import { vol } from 'memfs';
 
 import {
   iosGetNativelyDefinedClassicReleaseChannelAsync,
@@ -10,10 +8,12 @@ import {
   iosSetChannelNativelyAsync,
   iosSetClassicReleaseChannelNativelyAsync,
   iosGetNativelyDefinedRuntimeVersionAsync,
+  iosSetRuntimeVersionNativelyAsync,
 } from '../../ios/expoUpdates';
 
 jest.mock('fs');
 
+const expoPlistPath = '/app/ios/testapp/Supporting/Expo.plist';
 const noItemsExpoPlist = `
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE plist PUBLIC "-//Apple Computer//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
@@ -21,31 +21,29 @@ const noItemsExpoPlist = `
   <dict>
   </dict>
 </plist>`;
-const channel = 'main';
+const channel = 'easupdatechannel';
+
+afterEach(() => {
+  vol.reset();
+});
 
 describe(iosSetClassicReleaseChannelNativelyAsync, () => {
   test('sets the release channel', async () => {
-    const reactNativeProjectDirectory = fs.mkdtempSync('/expo-project-');
-    fs.ensureDirSync(reactNativeProjectDirectory);
-    const releaseChannel = 'default';
+    const releaseChannel = 'examplechannel';
+    vol.fromJSON(
+      {
+        'ios/testapp/Supporting/Expo.plist': noItemsExpoPlist,
+        'ios/testapp.xcodeproj/project.pbxproj': 'placeholder',
+        'ios/testapp/AppDelegate.m': 'placeholder',
+      },
+      '/app'
+    );
+
     const ctx = {
-      reactNativeProjectDirectory,
+      reactNativeProjectDirectory: '/app',
       job: { releaseChannel },
       logger: { info: () => {} },
     };
-
-    fs.ensureDirSync(path.join(reactNativeProjectDirectory, '/ios/test/'));
-    fs.writeFileSync(
-      path.join(reactNativeProjectDirectory, '/ios/test/AppDelegate.m'),
-      Buffer.from('placeholder')
-    );
-
-    const expoPlistPath = IOSConfig.Paths.getExpoPlistPath(ctx.reactNativeProjectDirectory);
-    const expoPlistDirectory = path.dirname(expoPlistPath);
-
-    fs.ensureDirSync(expoPlistDirectory);
-    fs.writeFileSync(expoPlistPath, noItemsExpoPlist);
-
     await iosSetClassicReleaseChannelNativelyAsync(ctx as any);
 
     const newExpoPlist = await fs.readFile(expoPlistPath, 'utf8');
@@ -55,32 +53,20 @@ describe(iosSetClassicReleaseChannelNativelyAsync, () => {
 
 describe(iosSetChannelNativelyAsync, () => {
   it('sets the channel', async () => {
-    const reactNativeProjectDirectory = fs.mkdtempSync('/expo-project-');
-    fs.ensureDirSync(reactNativeProjectDirectory);
+    vol.fromJSON(
+      {
+        'ios/testapp/Supporting/Expo.plist': noItemsExpoPlist,
+        'ios/testapp.xcodeproj/project.pbxproj': 'placeholder',
+        'ios/testapp/AppDelegate.m': 'placeholder',
+      },
+      '/app'
+    );
+
     const ctx = {
-      reactNativeProjectDirectory,
+      reactNativeProjectDirectory: '/app',
       job: { updates: { channel } },
       logger: { info: () => {} },
     };
-
-    fs.ensureDirSync(path.join(reactNativeProjectDirectory, '/ios/Pods.xcodeproj/'));
-    fs.writeFileSync(
-      path.join(reactNativeProjectDirectory, '/ios/Pods.xcodeproj/project.pbxproj'),
-      Buffer.from('placeholder')
-    );
-
-    fs.ensureDirSync(path.join(reactNativeProjectDirectory, '/ios/test/'));
-    fs.writeFileSync(
-      path.join(reactNativeProjectDirectory, '/ios/test/AppDelegate.m'),
-      Buffer.from('placeholder')
-    );
-
-    const expoPlistPath = IOSConfig.Paths.getExpoPlistPath(ctx.reactNativeProjectDirectory);
-    const expoPlistDirectory = path.dirname(expoPlistPath);
-
-    fs.ensureDirSync(expoPlistDirectory);
-    fs.writeFileSync(expoPlistPath, noItemsExpoPlist);
-
     await iosSetChannelNativelyAsync(ctx as any);
 
     const newExpoPlist = await fs.readFile(expoPlistPath, 'utf8');
@@ -92,92 +78,117 @@ describe(iosSetChannelNativelyAsync, () => {
 
 describe(iosGetNativelyDefinedClassicReleaseChannelAsync, () => {
   it('gets the natively defined release channel', async () => {
-    const reactNativeProjectDirectory = fs.mkdtempSync('/expo-project-');
-    fs.ensureDirSync(reactNativeProjectDirectory);
-    const releaseChannel = 'default';
-    const ctx = {
-      reactNativeProjectDirectory,
-      logger: { info: () => {} },
-    };
-
-    const releaseChannelInPlist = `
+    const expoPlist = `
     <?xml version="1.0" encoding="UTF-8"?>
     <!DOCTYPE plist PUBLIC "-//Apple Computer//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
     <plist version="1.0">
       <dict>
-        <key>${IosMetadataName.RELEASE_CHANNEL}</key>
-        <string>${releaseChannel}</string>
+        <key>EXUpdatesReleaseChannel</key>
+        <string>examplechannel</string>
       </dict>
     </plist>`;
 
-    fs.ensureDirSync(path.join(reactNativeProjectDirectory, '/ios/Pods.xcodeproj/'));
-    fs.writeFileSync(
-      path.join(reactNativeProjectDirectory, '/ios/Pods.xcodeproj/project.pbxproj'),
-      Buffer.from('placeholder')
+    vol.fromJSON(
+      {
+        'ios/testapp/Supporting/Expo.plist': expoPlist,
+        'ios/testapp.xcodeproj/project.pbxproj': 'placeholder',
+        'ios/testapp/AppDelegate.m': 'placeholder',
+      },
+      '/app'
     );
 
-    fs.ensureDirSync(path.join(reactNativeProjectDirectory, '/ios/test/'));
-    fs.writeFileSync(
-      path.join(reactNativeProjectDirectory, '/ios/test/AppDelegate.m'),
-      Buffer.from('placeholder')
-    );
-
-    const expoPlistPath = IOSConfig.Paths.getExpoPlistPath(ctx.reactNativeProjectDirectory);
-    const expoPlistDirectory = path.dirname(expoPlistPath);
-
-    fs.ensureDirSync(expoPlistDirectory);
-    fs.writeFileSync(expoPlistPath, releaseChannelInPlist);
-
+    const ctx = {
+      reactNativeProjectDirectory: '/app',
+      logger: { info: () => {} },
+    };
     const nativelyDefinedReleaseChannel = await iosGetNativelyDefinedClassicReleaseChannelAsync(
       ctx as any
     );
 
-    expect(nativelyDefinedReleaseChannel).toBe(releaseChannel);
+    expect(nativelyDefinedReleaseChannel).toBe('examplechannel');
   });
 });
 
 describe(iosGetNativelyDefinedRuntimeVersionAsync, () => {
   it('gets the natively defined runtime version', async () => {
-    const reactNativeProjectDirectory = fs.mkdtempSync('/expo-project-');
-    fs.ensureDirSync(reactNativeProjectDirectory);
-    const runtimeVersion = '4.5.6';
-    const ctx = {
-      reactNativeProjectDirectory,
-      logger: { info: () => {} },
-    };
-
-    const runtimeVersionInPlist = `
+    const expoPlist = `
     <?xml version="1.0" encoding="UTF-8"?>
     <!DOCTYPE plist PUBLIC "-//Apple Computer//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
     <plist version="1.0">
       <dict>
-        <key>${IosMetadataName.RUNTIME_VERSION}</key>
-        <string>${runtimeVersion}</string>
+        <key>EXUpdatesRuntimeVersion</key>
+        <string>4.5.6</string>
       </dict>
     </plist>`;
 
-    fs.ensureDirSync(path.join(reactNativeProjectDirectory, '/ios/Pods.xcodeproj/'));
-    fs.writeFileSync(
-      path.join(reactNativeProjectDirectory, '/ios/Pods.xcodeproj/project.pbxproj'),
-      Buffer.from('placeholder')
+    vol.fromJSON(
+      {
+        'ios/testapp/Supporting/Expo.plist': expoPlist,
+        'ios/testapp.xcodeproj/project.pbxproj': 'placeholder',
+        'ios/testapp/AppDelegate.m': 'placeholder',
+      },
+      '/app'
     );
 
-    fs.ensureDirSync(path.join(reactNativeProjectDirectory, '/ios/test/'));
-    fs.writeFileSync(
-      path.join(reactNativeProjectDirectory, '/ios/test/AppDelegate.m'),
-      Buffer.from('placeholder')
-    );
-
-    const expoPlistPath = IOSConfig.Paths.getExpoPlistPath(ctx.reactNativeProjectDirectory);
-    const expoPlistDirectory = path.dirname(expoPlistPath);
-
-    fs.ensureDirSync(expoPlistDirectory);
-    fs.writeFileSync(expoPlistPath, runtimeVersionInPlist);
+    const ctx = {
+      reactNativeProjectDirectory: '/app',
+      logger: { info: () => {} },
+    };
 
     const nativelyDefinedRuntimeVersion = await iosGetNativelyDefinedRuntimeVersionAsync(
       ctx as any
     );
+    expect(nativelyDefinedRuntimeVersion).toBe('4.5.6');
+  });
+});
 
-    expect(nativelyDefinedRuntimeVersion).toBe(runtimeVersion);
+describe(iosSetRuntimeVersionNativelyAsync, () => {
+  it("sets runtime version if it's not specified", async () => {
+    vol.fromJSON(
+      {
+        'ios/testapp/Supporting/Expo.plist': noItemsExpoPlist,
+        'ios/testapp.xcodeproj/project.pbxproj': 'placeholder',
+        'ios/testapp/AppDelegate.m': 'placeholder',
+      },
+      '/app'
+    );
+    const ctx = {
+      reactNativeProjectDirectory: '/app',
+      logger: { info: () => {} },
+    };
+
+    await iosSetRuntimeVersionNativelyAsync(ctx as any, '1.2.3');
+
+    const newExpoPlist = await fs.readFile(expoPlistPath, 'utf8');
+    expect(plist.parse(newExpoPlist)[IosMetadataName.RUNTIME_VERSION]).toEqual('1.2.3');
+  });
+  it("updates runtime version if it's already defined", async () => {
+    const expoPlist = `
+    <?xml version="1.0" encoding="UTF-8"?>
+    <!DOCTYPE plist PUBLIC "-//Apple Computer//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+    <plist version="1.0">
+      <dict>
+        <key>RELEASE_CHANNEL</key>
+        <string>examplereleasechannel</string>
+      </dict>
+    </plist>`;
+
+    vol.fromJSON(
+      {
+        'ios/testapp/Supporting/Expo.plist': expoPlist,
+        'ios/testapp.xcodeproj/project.pbxproj': 'placeholder',
+        'ios/testapp/AppDelegate.m': 'placeholder',
+      },
+      '/app'
+    );
+    const ctx = {
+      reactNativeProjectDirectory: '/app',
+      logger: { info: () => {} },
+    };
+
+    await iosSetRuntimeVersionNativelyAsync(ctx as any, '1.2.3');
+
+    const newExpoPlist = await fs.readFile(expoPlistPath, 'utf8');
+    expect(plist.parse(newExpoPlist)[IosMetadataName.RUNTIME_VERSION]).toEqual('1.2.3');
   });
 });
