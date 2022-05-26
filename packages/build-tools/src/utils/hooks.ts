@@ -26,6 +26,7 @@ export async function runHookIfPresent<TJob extends Job>(
     packageJson = await readPackageJson(projectDir);
   } catch (err: any) {
     ctx.logger.warn(`Failed to parse or read package.json: ${err.message}`);
+    ctx.markBuildPhaseHasWarnings();
     return;
   }
   if (packageJson.scripts?.[hook]) {
