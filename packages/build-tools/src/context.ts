@@ -96,7 +96,15 @@ export class BuildContext<TJob extends Job> {
   public async runBuildPhase<T>(
     buildPhase: BuildPhase,
     phase: () => Promise<T>,
-    { doNotMarkStart = false, doNotMarkEnd = false } = {}
+    {
+      doNotMarkStart = false,
+      doNotMarkEnd = false,
+      onError,
+    }: {
+      doNotMarkStart?: boolean;
+      doNotMarkEnd?: boolean;
+      onError?: (err: Error) => void;
+    } = {}
   ): Promise<T> {
     try {
       this.setBuildPhase(buildPhase, { doNotMarkStart });
@@ -125,6 +133,9 @@ export class BuildContext<TJob extends Job> {
       } else {
         // leaving message empty, website will display err.stack which already includes err.message
         this.logger.error({ err }, '');
+      }
+      if (onError) {
+        onError(userError ?? err);
       }
       this.endCurrentBuildPhase({ result: BuildPhaseResult.FAIL });
       throw userError ?? err;
