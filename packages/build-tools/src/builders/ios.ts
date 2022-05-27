@@ -129,6 +129,7 @@ async function readEntitlementsAsync(
     return plist.parse(entitlementsRaw);
   } catch (err) {
     ctx.logger.warn({ err }, 'Failed to read entitlements');
+    ctx.markBuildPhaseHasWarnings();
     return null;
   }
 }

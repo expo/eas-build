@@ -132,6 +132,7 @@ export const configureExpoUpdatesIfInstalledAsync = async (
 
   const appConfigRuntimeVersion = getRuntimeVersionNullable(ctx.appConfig, ctx.job.platform);
   if (ctx.metadata?.runtimeVersion && ctx.metadata?.runtimeVersion !== appConfigRuntimeVersion) {
+    ctx.markBuildPhaseHasWarnings();
     ctx.logger.warn(
       `Runtime version from the app config evaluated on your local machine (${ctx.metadata.runtimeVersion}) does not match the one resolved here (${appConfigRuntimeVersion}).`
     );
