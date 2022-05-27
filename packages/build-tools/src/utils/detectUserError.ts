@@ -112,6 +112,18 @@ const errorHandlers: ErrorHandler[] = [
     },
   },
   {
+    phase: BuildPhase.INSTALL_DEPENDENCIES,
+    // example log:
+    // [stderr] WARN tarball tarball data for @typescript-eslint/typescript-estree@5.26.0 (sha512-cozo/GbwixVR0sgfHItz3t1yXu521yn71Wj6PlYCFA3WPhy51CUPkifFKfBis91bDclGmAY45hhaAXVjdn4new==) seems to be corrupted. Trying again.
+    regexp: /tarball tarball data for ([^ ]*) .* seems to be corrupted. Trying again/,
+    createError: (matchResult: RegExpMatchArray) => {
+      if (matchResult.length >= 2) {
+        return new errors.NpmCorruptedPackageError(matchResult[1]);
+      }
+      return undefined;
+    },
+  },
+  {
     platform: Platform.ANDROID,
     phase: BuildPhase.RUN_GRADLEW,
     regexp: /.*/,

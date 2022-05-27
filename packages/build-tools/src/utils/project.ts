@@ -1,7 +1,7 @@
 import path from 'path';
 
 import downloadFile from '@expo/downloader';
-import { ArchiveSourceType, BuildPhase, Job } from '@expo/eas-build-job';
+import { ArchiveSourceType, BuildPhase, errors, Job } from '@expo/eas-build-job';
 import spawn, { SpawnResult } from '@expo/turtle-spawn';
 import fs from 'fs-extra';
 
@@ -25,9 +25,19 @@ export async function setup<TJob extends Job>(ctx: BuildContext<TJob>): Promise<
     await runHookIfPresent(ctx, Hook.PRE_INSTALL);
   });
 
-  await ctx.runBuildPhase(BuildPhase.INSTALL_DEPENDENCIES, async () => {
-    await installDependencies(ctx);
-  });
+  await ctx.runBuildPhase(
+    BuildPhase.INSTALL_DEPENDENCIES,
+    async () => {
+      await installDependencies(ctx);
+    },
+    {
+      onError: (err: Error) => {
+        if (err instanceof errors.NpmCorruptedPackageError) {
+          ctx.reportError?.('Corrupted npm package', err);
+        }
+      },
+    }
+  );
 
   const packageJson = await ctx.runBuildPhase(BuildPhase.READ_PACKAGE_JSON, async () => {
     const packageJsonContents = await readPackageJson(ctx.reactNativeProjectDirectory);

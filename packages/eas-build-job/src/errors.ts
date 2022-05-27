@@ -12,6 +12,7 @@ export enum ErrorCode {
   INCOMPATIBLE_PODS_MANAGED_WORKFLOW_ERROR = 'EAS_BUILD_INCOMPATIBLE_PODS_MANAGED_WORKFLOW_ERROR',
   INCOMPATIBLE_PODS_GENERIC_WORKFLOW_ERROR = 'EAS_BUILD_INCOMPATIBLE_PODS_GENERIC_WORKFLOW_ERROR',
   YARN_LOCK_CHECKSUM_ERROR = 'EAS_BUILD_YARN_LOCK_CHECKSUM_ERROR',
+  NPM_PACKAGE_CORRUPTED_ERROR = 'NPM_PACKAGE_CORRUPTED_ERROR',
   UNKNOWN_FASTLANE_ERROR = 'EAS_BUILD_UNKNOWN_FASTLANE_ERROR',
   UNKNOWN_GRADLE_ERROR = 'EAS_BUILD_UNKNOWN_GRADLE_ERROR',
   BUILD_TIMEOUT_ERROR = 'EAS_BUILD_TIMEOUT_ERROR',
@@ -124,8 +125,8 @@ export class IncompatiblePodsManagedWorkflowError extends UserError {
 You are seeing this error because either:
   - Versions in the Podfile.lock cached by EAS do not match required values for some of the libraries, it can be triggered when upgrading Expo SDK or any other library with native code. To fix that ${
     usingDefaultCacheConfig
-      ? 'add the "cache.key" field (it can be set to any value) in eas.json to invalidate the cache.'
-      : 'update value of the "cache.key" field in eas.json to invalidate the cache.'
+      ? 'add the "cache.key" field (it can be set to any value) in the build profile in eas.json to invalidate the cache.'
+      : 'update value of the "cache.key" field in the build profile in eas.json to invalidate the cache.'
   }
   - Some of your npm packages have native code that depend on different versions of the same pod. Please see logs for more info.
 `;
@@ -141,8 +142,8 @@ export class IncompatiblePodsGenericWorkflowError extends UserError {
 You are seeing this error because either:
   - Versions in the Podfile.lock cached by EAS do not match required values in Podspecs of some of the libraries. To fix that ${
     usingDefaultCacheConfig
-      ? 'add the "cache.key" field (it can be set to any value) in eas.json to invalidate the cache.'
-      : 'update value of the "cache.key" field in eas.json to invalidate the cache.'
+      ? 'add the "cache.key" field (it can be set to any value) in the build profile in eas.json to invalidate the cache.'
+      : 'update value of the "cache.key" field in the build profile in eas.json to invalidate the cache.'
   }
   - Some of the pods used in your project depend on different versions of the same pod. Please see logs for more info.
 `;
@@ -158,6 +159,15 @@ export class YarnLockChecksumError extends UserError {
 - run "yarn cache clean"
 - remove yarn.lock (or only the section for that package)
 - run "yarn install --force"`;
+  }
+}
+
+export class NpmCorruptedPackageError extends UserError {
+  errorCode = ErrorCode.NPM_PACKAGE_CORRUPTED_ERROR;
+
+  constructor(packageName: string) {
+    super();
+    this.message = `Package ${packageName} is corrupted, try switching to public npm registry by adding ("eas-build-pre-install": "npm config set registry https://registry.npmjs.org/") in the "scripts" section in package.json. If this resolves the issue please report it as a bug.`;
   }
 }
 
