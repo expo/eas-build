@@ -722,7 +722,7 @@
 
 "@expo/dev-server@0.1.113":
   version "0.1.113"
-  resolved "http://10.254.24.9:4873/@expo%2fdev-server/-/dev-server-0.1.113.tgz#db4a52af1817fbfbc9dbe52d8673ddc159d0b92c"
+  resolved "https://registry.yarnpkg.com/@expo/dev-server/-/dev-server-0.1.113.tgz#db4a52af1817fbfbc9dbe52d8673ddc159d0b92c"
   integrity sha512-PT3HT+3h4ZS1bw6Zz8fqjNeryKOWe1FqGdnz4RSASxZGCzib6VHLfLbJeYHkq7t+ashSXRoAw3XW/9yVdbUqLA==
   dependencies:
     "@expo/bunyan" "4.0.0"
@@ -741,7 +741,7 @@
 
 "@expo/dev-tools@0.13.155":
   version "0.13.155"
-  resolved "http://10.254.24.9:4873/@expo%2fdev-tools/-/dev-tools-0.13.155.tgz#71d610d4bde85098a1be0d1460c66dc01fb704bc"
+  resolved "https://registry.yarnpkg.com/@expo/dev-tools/-/dev-tools-0.13.155.tgz#71d610d4bde85098a1be0d1460c66dc01fb704bc"
   integrity sha512-f/IYWIN2fE2MC5kASWArgkWTmdOP8bSAucUdsnOO6pcaTS6BwGm1JNNQkd/Dbr6BEwVzR194phOkdaj958spTw==
   dependencies:
     "@expo/config" "6.0.24"
@@ -802,7 +802,7 @@
 
 "@expo/metro-config@0.3.18":
   version "0.3.18"
-  resolved "http://10.254.24.9:4873/@expo%2fmetro-config/-/metro-config-0.3.18.tgz#72705b3a0a3fb863b1a068f2b5f4cb43828cb26b"
+  resolved "https://registry.yarnpkg.com/@expo/metro-config/-/metro-config-0.3.18.tgz#72705b3a0a3fb863b1a068f2b5f4cb43828cb26b"
   integrity sha512-DWtwV67kD8X2uOKIs5QyHlHD+6L6RAgudZZDBmu433ZvL62HAUYfjEi3+i0jeMiUqN85o1vbXg6xqWnBCpS50g==
   dependencies:
     "@expo/config" "6.0.24"
@@ -858,7 +858,7 @@
 
 "@expo/prebuild-config@4.0.2":
   version "4.0.2"
-  resolved "http://10.254.24.9:4873/@expo%2fprebuild-config/-/prebuild-config-4.0.2.tgz#f6317a7b88cf6eec777c2547e88660c63f153223"
+  resolved "https://registry.yarnpkg.com/@expo/prebuild-config/-/prebuild-config-4.0.2.tgz#f6317a7b88cf6eec777c2547e88660c63f153223"
   integrity sha512-+AQ/EVgcySl3cvYMmZLaEyGkxvQnO+UFU2mshmUoUh5lTIFTNKl1aVo0UmYW2/JehmKu6bxOrr/lL5byHv+fcQ==
   dependencies:
     "@expo/config" "6.0.24"
@@ -5969,7 +5969,7 @@ expect@^27.5.1:
 
 expo-cli@5.4.7:
   version "5.4.7"
-  resolved "http://10.254.24.9:4873/expo-cli/-/expo-cli-5.4.7.tgz#9423880de1e90c7f14f306ea705c03ec3fe73ecc"
+  resolved "https://registry.yarnpkg.com/expo-cli/-/expo-cli-5.4.7.tgz#9423880de1e90c7f14f306ea705c03ec3fe73ecc"
   integrity sha512-1M5t4WqZaXy9ue8Pi56okQGl0wYAUDE22KIMhVWqPvIztXywxbMxEXt2LwO7BpHq8u2KigidVlFYON7btACVlg==
   dependencies:
     "@babel/runtime" "7.9.0"
@@ -6032,7 +6032,7 @@ expo-cli@5.4.7:
 
 expo-modules-autolinking@0.8.1:
   version "0.8.1"
-  resolved "http://10.254.24.9:4873/expo-modules-autolinking/-/expo-modules-autolinking-0.8.1.tgz#533c38192847d2272e9af986f8f4c58aae6dfff3"
+  resolved "https://registry.yarnpkg.com/expo-modules-autolinking/-/expo-modules-autolinking-0.8.1.tgz#533c38192847d2272e9af986f8f4c58aae6dfff3"
   integrity sha512-S8qfaXCv//7tQWV9M+JKx3CF7ypYhDdSUbkUQdaVO/r8D76/aRTArY/aRw1yEfaAOzyK8C8diDToV1itl51DfQ==
   dependencies:
     chalk "^4.1.0"
@@ -14424,7 +14424,7 @@ xcode@^3.0.1:
 
 xdl@59.2.39:
   version "59.2.39"
-  resolved "http://10.254.24.9:4873/xdl/-/xdl-59.2.39.tgz#79c1eee423fe51fc909aef6e0e87b3ad53d6b6cb"
+  resolved "https://registry.yarnpkg.com/xdl/-/xdl-59.2.39.tgz#79c1eee423fe51fc909aef6e0e87b3ad53d6b6cb"
   integrity sha512-qBR6aa65jVsb9934L1eqqSvtHFy3yeU/yJXBYVnF5kg2jFQUGHL4W7WaAHGtvFQ+LVEOEyjM6vQMy9AZGPJUig==
   dependencies:
     "@expo/bunyan" "4.0.0"
