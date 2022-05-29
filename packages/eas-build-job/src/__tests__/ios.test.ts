@@ -1,7 +1,7 @@
 import Joi from 'joi';
 
 import * as Ios from '../ios';
-import { ArchiveSourceType, Platform, Workflow } from '../common';
+import { ArchiveSourceType, IosResourceClass, Platform, Workflow } from '../common';
 
 const joiOptions: Joi.ValidationOptions = {
   stripUnknown: true,
@@ -25,6 +25,7 @@ describe('Ios.JobSchema', () => {
       secrets: {
         buildCredentials,
       },
+      buildResourceClass: IosResourceClass.IOS_DEFAULT,
       type: Workflow.GENERIC,
       platform: Platform.IOS,
       projectArchive: {
@@ -66,6 +67,7 @@ describe('Ios.JobSchema', () => {
       },
       projectRootDirectory: '.',
       uknownField: 'field',
+      buildResourceClass: IosResourceClass.IOS_DEFAULT,
     };
 
     const { value, error } = Ios.JobSchema.validate(genericJob, joiOptions);
@@ -97,6 +99,7 @@ describe('Ios.JobSchema', () => {
           ENV_VAR: '123',
         },
       },
+      buildResourceClass: IosResourceClass.IOS_DEFAULT,
     };
 
     const { value, error } = Ios.JobSchema.validate(managedJob, joiOptions);
@@ -117,6 +120,7 @@ describe('Ios.JobSchema', () => {
       },
       projectRootDirectory: 312,
       uknownField: 'field',
+      buildResourceClass: IosResourceClass.IOS_DEFAULT,
     };
 
     const { value, error } = Ios.JobSchema.validate(managedJob, joiOptions);
@@ -140,6 +144,7 @@ describe('Ios.JobSchema', () => {
         url: 'http://localhost:3000',
       },
       projectRootDirectory: '.',
+      buildResourceClass: IosResourceClass.IOS_DEFAULT,
     };
 
     const { value, error } = Ios.JobSchema.validate(managedJob, joiOptions);
@@ -161,6 +166,7 @@ describe('Ios.JobSchema', () => {
         type: ArchiveSourceType.URL,
         url: 'http://localhost:3000',
       },
+      buildResourceClass: IosResourceClass.IOS_DEFAULT,
       projectRootDirectory: '.',
     };
 

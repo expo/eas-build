@@ -1,7 +1,7 @@
 import Joi from 'joi';
 
 import * as Android from '../android';
-import { ArchiveSourceType, Platform, Workflow } from '../common';
+import { ArchiveSourceType, Platform, Workflow, BuildResourceClass } from '../common';
 
 const joiOptions: Joi.ValidationOptions = {
   stripUnknown: true,
@@ -25,6 +25,7 @@ describe('Android.JobSchema', () => {
     const genericJob = {
       secrets,
       platform: Platform.ANDROID,
+      buildResourceClass: BuildResourceClass.ANDROID_LARGE,
       type: Workflow.GENERIC,
       projectArchive: {
         type: ArchiveSourceType.URL,
@@ -54,6 +55,7 @@ describe('Android.JobSchema', () => {
     const genericJob = {
       secrets,
       platform: Platform.ANDROID,
+      buildResourceClass: BuildResourceClass.ANDROID_LARGE,
       type: Workflow.GENERIC,
       projectArchive: {
         type: ArchiveSourceType.URL,
@@ -77,6 +79,7 @@ describe('Android.JobSchema', () => {
     const managedJob = {
       secrets,
       platform: Platform.ANDROID,
+      buildResourceClass: BuildResourceClass.ANDROID_LARGE,
       type: Workflow.MANAGED,
       buildType: Android.BuildType.APP_BUNDLE,
       username: 'turtle-tutorial',
@@ -106,6 +109,7 @@ describe('Android.JobSchema', () => {
     const managedJob = {
       secrets,
       platform: Platform.ANDROID,
+      buildResourceClass: BuildResourceClass.ANDROID_LARGE,
       type: Workflow.MANAGED,
       buildType: Android.BuildType.APP_BUNDLE,
       username: 3,
@@ -136,6 +140,7 @@ describe('Android.JobSchema', () => {
         url: 'http://localhost:3000',
       },
       projectRootDirectory: '.',
+      buildResourceClass: BuildResourceClass.ANDROID_LARGE,
     };
 
     const { value, error } = Android.JobSchema.validate(managedJob, joiOptions);
@@ -156,6 +161,7 @@ describe('Android.JobSchema', () => {
         url: 'http://localhost:3000',
       },
       projectRootDirectory: '.',
+      buildResourceClass: BuildResourceClass.ANDROID_LARGE,
     };
 
     const { error } = Android.JobSchema.validate(managedJob, joiOptions);

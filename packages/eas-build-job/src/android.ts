@@ -9,6 +9,7 @@ import {
   Workflow,
   Cache,
   CacheSchema,
+  AndroidResourceClass,
 } from './common';
 
 export interface Keystore {
@@ -84,6 +85,7 @@ export interface Job {
     environmentSecrets?: Env;
   };
   builderEnvironment?: BuilderEnvironment;
+  buildResourceClass: AndroidResourceClass;
   cache: Cache;
   developmentClient?: boolean;
 
@@ -116,6 +118,10 @@ export const JobSchema = Joi.object({
     environmentSecrets: EnvSchema,
   }).required(),
   builderEnvironment: BuilderEnvironmentSchema,
+  buildResourceClass: Joi.string()
+    .valid(...Object.values(AndroidResourceClass))
+    .default(AndroidResourceClass.ANDROID_DEFAULT)
+    .required(),
   cache: CacheSchema.default(),
   developmentClient: Joi.boolean(),
 

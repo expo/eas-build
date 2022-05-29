@@ -9,6 +9,7 @@ import {
   Workflow,
   Cache,
   CacheSchema,
+  IosResourceClass,
 } from './common';
 
 export type DistributionType = 'store' | 'internal' | 'simulator';
@@ -80,6 +81,7 @@ const BuilderEnvironmentSchema = Joi.object({
 export interface Job {
   type: Workflow;
   projectArchive: ArchiveSource;
+  buildResourceClass: IosResourceClass;
   platform: Platform.IOS;
   projectRootDirectory: string;
   releaseChannel?: string;
@@ -122,6 +124,10 @@ export const JobSchema = Joi.object({
     environmentSecrets: EnvSchema,
   }).required(),
   builderEnvironment: BuilderEnvironmentSchema,
+  buildResourceClass: Joi.string()
+    .valid(...Object.values(IosResourceClass))
+    .required()
+    .default(IosResourceClass.IOS_DEFAULT),
   cache: CacheSchema.default(),
   developmentClient: Joi.boolean(),
   simulator: Joi.boolean(),

@@ -1,7 +1,13 @@
 import assert from 'assert';
 
 import { createLogger } from '@expo/logger';
-import { Ios, Workflow, ArchiveSourceType, Platform } from '@expo/eas-build-job';
+import {
+  Ios,
+  Workflow,
+  ArchiveSourceType,
+  Platform,
+  BuildResourceClass,
+} from '@expo/eas-build-job';
 
 import { BuildContext } from '../../../context';
 import { distributionCertificate, provisioningProfile } from '../__tests__/fixtures';
@@ -28,6 +34,7 @@ function createTestIosJob({
 } = {}): Ios.Job {
   return {
     platform: Platform.IOS,
+    buildResourceClass: BuildResourceClass.IOS_LARGE,
     type: Workflow.GENERIC,
     projectArchive: {
       type: ArchiveSourceType.URL,

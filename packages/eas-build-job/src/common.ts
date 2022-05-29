@@ -16,6 +16,19 @@ export enum ArchiveSourceType {
   PATH = 'PATH',
 }
 
+export enum AndroidResourceClass {
+  ANDROID_DEFAULT = 'ANDROID_DEFAULT',
+  ANDROID_LARGE = 'ANDROID_LARGE',
+}
+
+export enum IosResourceClass {
+  IOS_DEFAULT = 'IOS_DEFAULT',
+  IOS_LARGE = 'IOS_LARGE',
+  IOS_M1 = 'IOS_M1',
+}
+
+export const BuildResourceClass = { ...AndroidResourceClass, ...IosResourceClass };
+
 export type ArchiveSource =
   | { type: ArchiveSourceType.S3; bucketKey: string }
   | { type: ArchiveSourceType.URL; url: string }
