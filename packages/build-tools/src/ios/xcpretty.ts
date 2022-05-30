@@ -1,6 +1,7 @@
 import assert from 'assert';
 import path from 'path';
 
+import fs from 'fs-extra';
 import { bunyan } from '@expo/logger';
 import { ExpoRunFormatter } from '@expo/xcpretty';
 import spawnAsync, { SpawnPromise, SpawnResult } from '@expo/spawn-async';
@@ -12,6 +13,7 @@ export class XcodeBuildLogger {
   private loggerError?: Error;
   private flushing: boolean = false;
   private logReaderPromise?: SpawnPromise<SpawnResult>;
+  private logsPath?: string;
 
   constructor(private readonly logger: bunyan, private readonly projectRoot: string) {}
 
@@ -19,7 +21,8 @@ export class XcodeBuildLogger {
     while (!this.flushing) {
       const logsFilename = await this.getBuildLogFilename(logsDirectory);
       if (logsFilename) {
-        void this.startBuildLogger(path.join(logsDirectory, logsFilename));
+        this.logsPath = path.join(logsDirectory, logsFilename);
+        void this.startBuildLogger(this.logsPath);
         return;
       }
       await new Promise((res) => setTimeout(res, CHECK_FILE_INTERVAL_MS));
@@ -36,6 +39,9 @@ export class XcodeBuildLogger {
       try {
         await this.logReaderPromise;
       } catch {}
+    }
+    if (this.logsPath) {
+      await this.findBundlerErrors(this.logsPath);
     }
   }
   private async getBuildLogFilename(logsDirectory: string): Promise<string | undefined> {
@@ -64,6 +70,20 @@ export class XcodeBuildLogger {
       if (!this.flushing) {
         this.loggerError = err;
       }
+    }
+  }
+
+  private async findBundlerErrors(logsPath: string): Promise<void> {
+    try {
+      const logFile = await fs.readFile(logsPath, 'utf-8');
+      const match = logFile.match(
+        /Welcome to Metro!\s* Fast - Scalable - Integrated\s*([\s\S]*)Run CLI with --verbose flag for more details.\nCommand PhaseScriptExecution failed with a nonzero exit code/
+      );
+      if (match) {
+        this.logger.info(match[1]);
+      }
+    } catch (err) {
+      this.logger.error({ err }, 'Failed to read Xcode logs');
     }
   }
 }
