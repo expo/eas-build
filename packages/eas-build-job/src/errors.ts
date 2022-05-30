@@ -12,7 +12,8 @@ export enum ErrorCode {
   INCOMPATIBLE_PODS_MANAGED_WORKFLOW_ERROR = 'EAS_BUILD_INCOMPATIBLE_PODS_MANAGED_WORKFLOW_ERROR',
   INCOMPATIBLE_PODS_GENERIC_WORKFLOW_ERROR = 'EAS_BUILD_INCOMPATIBLE_PODS_GENERIC_WORKFLOW_ERROR',
   YARN_LOCK_CHECKSUM_ERROR = 'EAS_BUILD_YARN_LOCK_CHECKSUM_ERROR',
-  NPM_PACKAGE_CORRUPTED_ERROR = 'NPM_PACKAGE_CORRUPTED_ERROR',
+  YARN_MULTIPLE_INSTANCES_ERROR = 'EAS_BUILD_YARN_MULTIPLE_INSTANCES_ERROR',
+  NPM_PACKAGE_CORRUPTED_ERROR = 'EAS_BUILD_NPM_PACKAGE_CORRUPTED_ERROR',
   UNKNOWN_FASTLANE_ERROR = 'EAS_BUILD_UNKNOWN_FASTLANE_ERROR',
   UNKNOWN_GRADLE_ERROR = 'EAS_BUILD_UNKNOWN_GRADLE_ERROR',
   BUILD_TIMEOUT_ERROR = 'EAS_BUILD_TIMEOUT_ERROR',
@@ -147,6 +148,15 @@ You are seeing this error because either:
   }
   - Some of the pods used in your project depend on different versions of the same pod. Please see logs for more info.
 `;
+  }
+}
+
+export class YarnMultipleInstancesError extends UserError {
+  errorCode = ErrorCode.YARN_MULTIPLE_INSTANCES_ERROR;
+
+  constructor() {
+    super();
+    this.message = `One of project dependencies is starting new install process while the main one is still in progress, which might result in corrupted packages. Most likely the reason for error is "prepare" script in git-referenced dependency of your project. Learn more: https://github.com/yarnpkg/yarn/issues/7212#issuecomment-493720324`;
   }
 }
 

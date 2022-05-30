@@ -114,6 +114,23 @@ const errorHandlers: ErrorHandler[] = [
   {
     phase: BuildPhase.INSTALL_DEPENDENCIES,
     // example log:
+    // yarn install v1.22.17
+    // [1/4] Resolving packages...
+    // [2/4] Fetching packages...
+    // [1/4] Resolving packages...
+    // [2/4] Fetching packages...
+    // [stderr] error https://registry.yarnpkg.com/jest-util/-/jest-util-26.6.2.tgz: Extracting tar content of undefined failed, the file appears to be corrupt: "ENOENT: no such file or directory, chmod '/Users/expo/Library/Caches/Yarn/v6/npm-jest-util-26.6.2-907535dbe4d5a6cb4c47ac9b926f6af29576cbc1-integrity/node_modules/jest-util/build/pluralize.d.ts'"
+    regexp: /\[1\/4\] Resolving packages...\s*\[2\/4\] Fetching packages...\s*\[1\/4\] Resolving packages...\s*\[2\/4\] Fetching packages.../,
+    createError: (matchResult: RegExpMatchArray) => {
+      if (matchResult) {
+        return new errors.YarnMultipleInstancesError();
+      }
+      return undefined;
+    },
+  },
+  {
+    phase: BuildPhase.INSTALL_DEPENDENCIES,
+    // example log:
     // [stderr] WARN tarball tarball data for @typescript-eslint/typescript-estree@5.26.0 (sha512-cozo/GbwixVR0sgfHItz3t1yXu521yn71Wj6PlYCFA3WPhy51CUPkifFKfBis91bDclGmAY45hhaAXVjdn4new==) seems to be corrupted. Trying again.
     regexp: /tarball tarball data for ([^ ]*) .* seems to be corrupted. Trying again/,
     createError: (matchResult: RegExpMatchArray) => {
