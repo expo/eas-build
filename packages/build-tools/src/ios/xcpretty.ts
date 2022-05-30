@@ -83,7 +83,7 @@ export class XcodeBuildLogger {
         this.logger.info(match[1]);
       }
     } catch (err) {
-      this.logger.error({ err }, 'Failed to read xcode logs');
+      this.logger.error({ err }, 'Failed to read Xcode logs');
     }
   }
 }
