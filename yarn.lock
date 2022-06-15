@@ -739,10 +739,10 @@
     serialize-error "6.0.0"
     temp-dir "^2.0.0"
 
-"@expo/dev-tools@0.13.155":
-  version "0.13.155"
-  resolved "https://registry.yarnpkg.com/@expo/dev-tools/-/dev-tools-0.13.155.tgz#71d610d4bde85098a1be0d1460c66dc01fb704bc"
-  integrity sha512-f/IYWIN2fE2MC5kASWArgkWTmdOP8bSAucUdsnOO6pcaTS6BwGm1JNNQkd/Dbr6BEwVzR194phOkdaj958spTw==
+"@expo/dev-tools@0.13.156":
+  version "0.13.156"
+  resolved "https://registry.yarnpkg.com/@expo/dev-tools/-/dev-tools-0.13.156.tgz#4e5860c16dcf164e574c513ab5e8d84d9eb1aabd"
+  integrity sha512-4mUxhkxpufigrTCcO8gRrZyHFMixjqVMptZWairSBepGRGRlsy2O1ZCqe1okOeUAFdaBDH62MovzNwcUvibUiA==
   dependencies:
     "@expo/config" "6.0.24"
     base64url "3.0.1"
@@ -5967,10 +5967,10 @@ expect@^27.5.1:
     jest-matcher-utils "^27.5.1"
     jest-message-util "^27.5.1"
 
-expo-cli@5.4.7:
-  version "5.4.7"
-  resolved "https://registry.yarnpkg.com/expo-cli/-/expo-cli-5.4.7.tgz#9423880de1e90c7f14f306ea705c03ec3fe73ecc"
-  integrity sha512-1M5t4WqZaXy9ue8Pi56okQGl0wYAUDE22KIMhVWqPvIztXywxbMxEXt2LwO7BpHq8u2KigidVlFYON7btACVlg==
+expo-cli@5.4.9:
+  version "5.4.9"
+  resolved "https://registry.yarnpkg.com/expo-cli/-/expo-cli-5.4.9.tgz#71408d15005a11efe71f14caae90bd767afe1f70"
+  integrity sha512-21NQaJLL7JQ8ZvFY/2/8xDt9R/5lfMbVoQXtfHt/Qx/sW3DCopUivm1i1M4zhiuNGdVW/wZZOH/f9oTWXHR/EQ==
   dependencies:
     "@babel/runtime" "7.9.0"
     "@expo/apple-utils" "0.0.0-alpha.31"
@@ -5978,7 +5978,7 @@ expo-cli@5.4.7:
     "@expo/config" "6.0.24"
     "@expo/config-plugins" "4.1.5"
     "@expo/dev-server" "0.1.113"
-    "@expo/dev-tools" "0.13.155"
+    "@expo/dev-tools" "0.13.156"
     "@expo/json-file" "8.2.36"
     "@expo/osascript" "2.0.33"
     "@expo/package-manager" "0.0.54"
@@ -6028,7 +6028,7 @@ expo-cli@5.4.7:
     url-join "4.0.0"
     uuid "^8.0.0"
     wrap-ansi "^7.0.0"
-    xdl "59.2.39"
+    xdl "59.2.40"
 
 expo-modules-autolinking@0.8.1:
   version "0.8.1"
@@ -14422,10 +14422,10 @@ xcode@^3.0.1:
     simple-plist "^1.1.0"
     uuid "^7.0.3"
 
-xdl@59.2.39:
-  version "59.2.39"
-  resolved "https://registry.yarnpkg.com/xdl/-/xdl-59.2.39.tgz#79c1eee423fe51fc909aef6e0e87b3ad53d6b6cb"
-  integrity sha512-qBR6aa65jVsb9934L1eqqSvtHFy3yeU/yJXBYVnF5kg2jFQUGHL4W7WaAHGtvFQ+LVEOEyjM6vQMy9AZGPJUig==
+xdl@59.2.40:
+  version "59.2.40"
+  resolved "https://registry.yarnpkg.com/xdl/-/xdl-59.2.40.tgz#56b1929294360ac1b606f4a7b6b419b29d4296ee"
+  integrity sha512-HgqJ0Oa7zfAbRQ0rf5XrVrLaluXOOkvwiIdYGsWPpZEs3+fuRAnC+dYStqTsDMDp8kuZT/nMmlyMJDlWx76B+w==
   dependencies:
     "@expo/bunyan" "4.0.0"
     "@expo/config" "6.0.24"

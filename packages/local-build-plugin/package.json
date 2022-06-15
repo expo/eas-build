@@ -26,7 +26,7 @@
     "@expo/turtle-spawn": "0.0.23",
     "chalk": "^4.1.0",
     "env-paths": "2.2.0",
-    "expo-cli": "5.4.7",
+    "expo-cli": "5.4.9",
     "fs-extra": "^10.0.1",
     "joi": "^17.4.2",
     "lodash": "^4.17.21",
