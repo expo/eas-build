@@ -40,6 +40,8 @@ export const builderBaseImages = [
   'ubuntu-18.04-jdk-11-ndk-r19c',
   'ubuntu-20.04-jdk-8-ndk-r21e',
   'ubuntu-20.04-jdk-11-ndk-r21e',
+  'ubuntu-22.04-jdk-8-ndk-r21e',
+  'ubuntu-22.04-jdk-11-ndk-r21e',
 ] as const;
 
 export const reactNativeVersionToDefaultBuilderImage: Record<
