@@ -90,9 +90,13 @@ export interface Job {
   developmentClient?: boolean;
   version?: {
     versionCode?: string;
-    // support for this field is implemented, but specifying it is disabled on schema level
+    /**
+     * support for this field is implemented, but specifying it is disabled on schema level
+     */
     versionName?: string;
-    // support for this field is implemented, but specifying it is disabled on schema level
+    /**
+     * support for this field is implemented, but specifying it is disabled on schema level
+     */
     runtimeVersion?: string;
   };
 

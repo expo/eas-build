@@ -20,15 +20,15 @@ export async function iosSetRuntimeVersionNativelyAsync(
   const expoPlistPath = IOSConfig.Paths.getExpoPlistPath(ctx.reactNativeProjectDirectory);
 
   if (!(await fs.pathExists(expoPlistPath))) {
-    throw new Error(`${expoPlistPath} does no exist`);
+    throw new Error(`${expoPlistPath} does not exist`);
   }
 
-  const expoPlistContent = await fs.readFile(expoPlistPath, 'utf8');
-  const items = plist.parse(expoPlistContent);
+  const expoPlistContents = await fs.readFile(expoPlistPath, 'utf8');
+  const items = plist.parse(expoPlistContents);
   items[IosMetadataName.RUNTIME_VERSION] = runtimeVersion;
-  const expoPlist = plist.build(items);
+  const updatedExpoPlistContents = plist.build(items);
 
-  await fs.writeFile(expoPlistPath, expoPlist);
+  await fs.writeFile(expoPlistPath, updatedExpoPlistContents);
 }
 
 export async function iosSetChannelNativelyAsync(ctx: BuildContext<Job>): Promise<void> {
@@ -37,11 +37,11 @@ export async function iosSetChannelNativelyAsync(ctx: BuildContext<Job>): Promis
   const expoPlistPath = IOSConfig.Paths.getExpoPlistPath(ctx.reactNativeProjectDirectory);
 
   if (!(await fs.pathExists(expoPlistPath))) {
-    throw new Error(`${expoPlistPath} does no exist`);
+    throw new Error(`${expoPlistPath} does not exist`);
   }
 
-  const expoPlistContent = await fs.readFile(expoPlistPath, 'utf8');
-  const items: Record<string, string | Record<string, string>> = plist.parse(expoPlistContent);
+  const expoPlistContents = await fs.readFile(expoPlistPath, 'utf8');
+  const items: Record<string, string | Record<string, string>> = plist.parse(expoPlistContents);
   items[IosMetadataName.UPDATES_CONFIGURATION_REQUEST_HEADERS_KEY] = {
     ...((items[IosMetadataName.UPDATES_CONFIGURATION_REQUEST_HEADERS_KEY] as Record<
       string,
@@ -49,9 +49,9 @@ export async function iosSetChannelNativelyAsync(ctx: BuildContext<Job>): Promis
     >) ?? {}),
     'expo-channel-name': ctx.job.updates.channel,
   };
-  const expoPlist = plist.build(items);
+  const updatedExpoPlistContents = plist.build(items);
 
-  await fs.writeFile(expoPlistPath, expoPlist);
+  await fs.writeFile(expoPlistPath, updatedExpoPlistContents);
 }
 
 export async function iosSetClassicReleaseChannelNativelyAsync(
@@ -65,12 +65,12 @@ export async function iosSetClassicReleaseChannelNativelyAsync(
     throw new Error(`${expoPlistPath} does not exist`);
   }
 
-  const expoPlistContent = await fs.readFile(expoPlistPath, 'utf8');
-  const items: Record<string, string | Record<string, string>> = plist.parse(expoPlistContent);
+  const expoPlistContents = await fs.readFile(expoPlistPath, 'utf8');
+  const items: Record<string, string | Record<string, string>> = plist.parse(expoPlistContents);
   items[IosMetadataName.RELEASE_CHANNEL] = ctx.job.releaseChannel;
-  const expoPlist = plist.build(items);
+  const updatedExpoPlistContents = plist.build(items);
 
-  await fs.writeFile(expoPlistPath, expoPlist);
+  await fs.writeFile(expoPlistPath, updatedExpoPlistContents);
 }
 
 export async function iosGetNativelyDefinedClassicReleaseChannelAsync(
@@ -80,8 +80,8 @@ export async function iosGetNativelyDefinedClassicReleaseChannelAsync(
   if (!(await fs.pathExists(expoPlistPath))) {
     return null;
   }
-  const expoPlistContent = await fs.readFile(expoPlistPath, 'utf8');
-  const parsedPlist = plist.parse(expoPlistContent);
+  const expoPlistContents = await fs.readFile(expoPlistPath, 'utf8');
+  const parsedPlist = plist.parse(expoPlistContents);
   if (!parsedPlist) {
     return null;
   }
@@ -95,8 +95,8 @@ export async function iosGetNativelyDefinedRuntimeVersionAsync(
   if (!(await fs.pathExists(expoPlistPath))) {
     return null;
   }
-  const expoPlistContent = await fs.readFile(expoPlistPath, 'utf8');
-  const parsedPlist = plist.parse(expoPlistContent);
+  const expoPlistContents = await fs.readFile(expoPlistPath, 'utf8');
+  const parsedPlist = plist.parse(expoPlistContents);
   if (!parsedPlist) {
     return null;
   }

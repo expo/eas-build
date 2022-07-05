@@ -38,10 +38,9 @@ export const setRuntimeVersionNativelyAsync = async (
       throw new Error(`Platform is not supported.`);
   }
 };
+
 /**
  * Used for when Expo Updates is pointed at an EAS server.
- * @param ctx
- * @param platform
  */
 export const setChannelNativelyAsync = async (ctx: BuildContext<Job>): Promise<void> => {
   assert(ctx.job.updates?.channel, 'updates.channel must be defined');
@@ -72,8 +71,6 @@ export const setChannelNativelyAsync = async (ctx: BuildContext<Job>): Promise<v
 
 /**
  * Used for classic Expo Updates
- * @param ctx
- * @param platform
  */
 export const setClassicReleaseChannelNativelyAsync = async (
   ctx: BuildContext<Job>
@@ -99,8 +96,6 @@ export const setClassicReleaseChannelNativelyAsync = async (
 
 /**
  * Used for classic Expo Updates
- * @param ctx
- * @param platform
  */
 export const getNativelyDefinedClassicReleaseChannelAsync = async (
   ctx: BuildContext<Job>

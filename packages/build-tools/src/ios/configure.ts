@@ -25,7 +25,7 @@ async function configureXcodeProject(
     credentials,
     buildConfiguration,
   });
-  const version = ctx.job.version;
+  const { version } = ctx.job;
   if (version?.version || version?.buildNumber) {
     await updateVersionsAsync(ctx, {
       targetNames: Object.keys(credentials.targetProvisioningProfiles),
@@ -75,7 +75,7 @@ async function updateVersionsAsync(
   const project = IOSConfig.XcodeUtils.getPbxproj(ctx.reactNativeProjectDirectory);
   const iosDir = path.join(ctx.reactNativeProjectDirectory, 'ios');
 
-  const infoPlistFiles: string[] = [];
+  const infoPlistPaths: string[] = [];
   for (const targetName of targetNames) {
     const xcBuildConfiguration = IOSConfig.Target.getXCBuildConfigurationFromPbxproj(project, {
       targetName,
@@ -91,10 +91,10 @@ async function updateVersionsAsync(
       const absolutePath = path.isAbsolute(evaluatedInfoPlistPath)
         ? evaluatedInfoPlistPath
         : path.join(iosDir, evaluatedInfoPlistPath);
-      infoPlistFiles.push(path.normalize(absolutePath));
+      infoPlistPaths.push(path.normalize(absolutePath));
     }
   }
-  const uniqueInfoPlistPaths = uniq(infoPlistFiles);
+  const uniqueInfoPlistPaths = uniq(infoPlistPaths);
   for (const infoPlistPath of uniqueInfoPlistPaths) {
     ctx.logger.info(`Updating versions in ${infoPlistPath}`);
     const infoPlistRaw = await fs.readFile(infoPlistPath, 'utf-8');

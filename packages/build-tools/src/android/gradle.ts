@@ -21,13 +21,6 @@ export async function runGradleCommand(
   ctx: BuildContext<Android.Job>,
   gradleCommand: string
 ): Promise<void> {
-  const versionName = ctx.job.version?.versionName;
-  const versionCode = ctx.job.version?.versionCode;
-  const env = {
-    ...ctx.env,
-    ...(versionCode ? { EAS_BUILD_VERSION_CODE: versionCode } : {}),
-    ...(versionName ? { EAS_BUILD_VERSION_NAME: versionName } : {}),
-  };
   const androidDir = path.join(ctx.reactNativeProjectDirectory, 'android');
   ctx.logger.info(`Running './gradlew ${gradleCommand}' in ${androidDir}`);
   await spawn('sh', ['gradlew', gradleCommand], {
@@ -40,6 +33,6 @@ export async function runGradleCommand(
         return line;
       }
     },
-    env,
+    env: ctx.env,
   });
 }
