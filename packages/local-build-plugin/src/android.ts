@@ -16,8 +16,8 @@ export async function buildAndroidAsync(
   const versionCode = job.version?.versionCode;
   const env: Env = {
     ...baseEnv,
-    ...(versionCode ? { EAS_BUILD_ANDROID_VERSION_CODE: versionCode } : {}),
-    ...(versionName ? { EAS_BUILD_ANDROID_VERSION_NAME: versionName } : {}),
+    ...(versionCode && { EAS_BUILD_ANDROID_VERSION_CODE: versionCode }),
+    ...(versionName && { EAS_BUILD_ANDROID_VERSION_NAME: versionName }),
   };
   const ctx = new BuildContext<Android.Job>(job, {
     workingdir,

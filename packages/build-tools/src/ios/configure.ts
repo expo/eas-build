@@ -26,7 +26,7 @@ async function configureXcodeProject(
     buildConfiguration,
   });
   const { version } = ctx.job;
-  if (version?.version || version?.buildNumber) {
+  if (version?.appVersion || version?.buildNumber) {
     await updateVersionsAsync(ctx, {
       targetNames: Object.keys(credentials.targetProvisioningProfiles),
       buildConfiguration,
@@ -102,8 +102,8 @@ async function updateVersionsAsync(
     if (ctx.job.version?.buildNumber) {
       infoPlist.CFBundleShortVersionString = ctx.job.version?.buildNumber;
     }
-    if (ctx.job.version?.version) {
-      infoPlist.CFBundleVersion = ctx.job.version?.version;
+    if (ctx.job.version?.appVersion) {
+      infoPlist.CFBundleVersion = ctx.job.version?.appVersion;
     }
     await fs.writeFile(infoPlistPath, plist.build(infoPlist));
   }

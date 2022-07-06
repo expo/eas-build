@@ -99,7 +99,7 @@ export interface Job {
     /**
      * support for this field is implemented, but specifying it is disabled on schema level
      */
-    version?: string;
+    appVersion?: string;
     /**
      * support for this field is implemented, but specifying it is disabled on schema level
      */

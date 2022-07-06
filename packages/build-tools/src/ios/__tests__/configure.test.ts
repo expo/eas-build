@@ -137,7 +137,7 @@ describe(configureXcodeProject, () => {
       logger: { info: jest.fn() },
       job: {
         version: {
-          version: '1.2.3',
+          appVersion: '1.2.3',
           buildNumber: '1.2.4',
         },
       },
@@ -200,7 +200,7 @@ describe(configureXcodeProject, () => {
       logger: { info: jest.fn() },
       job: {
         version: {
-          version: '1.2.3',
+          appVersion: '1.2.3',
           buildNumber: '1.2.4',
         },
       },
