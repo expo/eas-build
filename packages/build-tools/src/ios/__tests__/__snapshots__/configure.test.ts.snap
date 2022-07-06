@@ -522,7 +522,7 @@ exports[`configureXcodeProject configures credentials and versions for a simple 
     <key>CFBundlePackageType</key>
     <string>$(PRODUCT_BUNDLE_PACKAGE_TYPE)</string>
     <key>CFBundleShortVersionString</key>
-    <string>1.2.4</string>
+    <string>1.2.3</string>
     <key>CFBundleSignature</key>
     <string>????</string>
     <key>CFBundleURLTypes</key>
@@ -535,7 +535,7 @@ exports[`configureXcodeProject configures credentials and versions for a simple 
       </dict>
     </array>
     <key>CFBundleVersion</key>
-    <string>1.2.3</string>
+    <string>1.2.4</string>
     <key>LSRequiresIPhoneOS</key>
     <true/>
     <key>NSAppTransportSecurity</key>
@@ -1263,7 +1263,7 @@ exports[`configureXcodeProject configures credentials and versions for multi tar
     <key>CFBundlePackageType</key>
     <string>$(PRODUCT_BUNDLE_PACKAGE_TYPE)</string>
     <key>CFBundleShortVersionString</key>
-    <string>1.2.4</string>
+    <string>1.2.3</string>
     <key>CFBundleSignature</key>
     <string>????</string>
     <key>CFBundleURLTypes</key>
@@ -1276,7 +1276,7 @@ exports[`configureXcodeProject configures credentials and versions for multi tar
       </dict>
     </array>
     <key>CFBundleVersion</key>
-    <string>1.2.3</string>
+    <string>1.2.4</string>
     <key>LSRequiresIPhoneOS</key>
     <true/>
     <key>NSAppTransportSecurity</key>
@@ -1342,7 +1342,7 @@ exports[`configureXcodeProject configures credentials and versions for multi tar
     <key>CFBundlePackageType</key>
     <string>$(PRODUCT_BUNDLE_PACKAGE_TYPE)</string>
     <key>CFBundleShortVersionString</key>
-    <string>1.2.4</string>
+    <string>1.2.3</string>
     <key>CFBundleSignature</key>
     <string>????</string>
     <key>CFBundleURLTypes</key>
@@ -1355,7 +1355,7 @@ exports[`configureXcodeProject configures credentials and versions for multi tar
       </dict>
     </array>
     <key>CFBundleVersion</key>
-    <string>1.2.3</string>
+    <string>1.2.4</string>
     <key>LSRequiresIPhoneOS</key>
     <true/>
     <key>NSAppTransportSecurity</key>

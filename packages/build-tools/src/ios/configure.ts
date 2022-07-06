@@ -100,10 +100,10 @@ async function updateVersionsAsync(
     const infoPlistRaw = await fs.readFile(infoPlistPath, 'utf-8');
     const infoPlist = plist.parse(infoPlistRaw) as IOSConfig.InfoPlist;
     if (ctx.job.version?.buildNumber) {
-      infoPlist.CFBundleShortVersionString = ctx.job.version?.buildNumber;
+      infoPlist.CFBundleVersion = ctx.job.version?.buildNumber;
     }
     if (ctx.job.version?.appVersion) {
-      infoPlist.CFBundleVersion = ctx.job.version?.appVersion;
+      infoPlist.CFBundleShortVersionString = ctx.job.version?.appVersion;
     }
     await fs.writeFile(infoPlistPath, plist.build(infoPlist));
   }
