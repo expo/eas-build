@@ -8,13 +8,13 @@ on:
 jobs:
   test:
     runs-on: macos-latest
-    name: Test with Node 14 on macOS
+    name: Test with Node 16 on macOS
     steps:
       - uses: actions/checkout@v2
       - name: Setup node
         uses: actions/setup-node@v1
         with:
-          node-version: 14
+          node-version: 16
       - run: yarn install --frozen-lockfile --check-files
       - run: yarn build
       - run: yarn test
