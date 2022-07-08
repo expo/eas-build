@@ -4,12 +4,14 @@ import { Platform, Job } from '@expo/eas-build-job';
 import { getRuntimeVersionNullable } from '@expo/config-plugins/build/utils/Updates';
 
 import {
+  androidSetRuntimeVersionNativelyAsync,
   androidSetChannelNativelyAsync,
   androidSetClassicReleaseChannelNativelyAsync,
   androidGetNativelyDefinedClassicReleaseChannelAsync,
   androidGetNativelyDefinedRuntimeVersionAsync,
 } from '../android/expoUpdates';
 import {
+  iosSetRuntimeVersionNativelyAsync,
   iosSetChannelNativelyAsync,
   iosSetClassicReleaseChannelNativelyAsync,
   iosGetNativelyDefinedClassicReleaseChannelAsync,
@@ -19,12 +21,28 @@ import { BuildContext } from '../context';
 
 import isExpoUpdatesInstalledAsync from './isExpoUpdatesInstalled';
 
+export async function setRuntimeVersionNativelyAsync(
+  ctx: BuildContext<Job>,
+  runtimeVersion: string
+): Promise<void> {
+  switch (ctx.job.platform) {
+    case Platform.ANDROID: {
+      await androidSetRuntimeVersionNativelyAsync(ctx, runtimeVersion);
+      return;
+    }
+    case Platform.IOS: {
+      await iosSetRuntimeVersionNativelyAsync(ctx, runtimeVersion);
+      return;
+    }
+    default:
+      throw new Error(`Platform is not supported.`);
+  }
+}
+
 /**
  * Used for when Expo Updates is pointed at an EAS server.
- * @param ctx
- * @param platform
  */
-export const setChannelNativelyAsync = async (ctx: BuildContext<Job>): Promise<void> => {
+export async function setChannelNativelyAsync(ctx: BuildContext<Job>): Promise<void> {
   assert(ctx.job.updates?.channel, 'updates.channel must be defined');
   const newUpdateRequestHeaders: Record<string, string> = {
     'expo-channel-name': ctx.job.updates.channel,
@@ -49,16 +67,12 @@ export const setChannelNativelyAsync = async (ctx: BuildContext<Job>): Promise<v
     default:
       throw new Error(`Platform is not supported.`);
   }
-};
+}
 
 /**
  * Used for classic Expo Updates
- * @param ctx
- * @param platform
  */
-export const setClassicReleaseChannelNativelyAsync = async (
-  ctx: BuildContext<Job>
-): Promise<void> => {
+export async function setClassicReleaseChannelNativelyAsync(ctx: BuildContext<Job>): Promise<void> {
   assert(ctx.job.releaseChannel, 'releaseChannel must be defined');
 
   const configFile = ctx.job.platform === Platform.ANDROID ? 'AndroidManifest.xml' : 'Expo.plist';
@@ -76,16 +90,14 @@ export const setClassicReleaseChannelNativelyAsync = async (
     default:
       throw new Error(`Platform is not supported.`);
   }
-};
+}
 
 /**
  * Used for classic Expo Updates
- * @param ctx
- * @param platform
  */
-export const getNativelyDefinedClassicReleaseChannelAsync = async (
+export async function getNativelyDefinedClassicReleaseChannelAsync(
   ctx: BuildContext<Job>
-): Promise<string | null> => {
+): Promise<string | null> {
   switch (ctx.job.platform) {
     case Platform.ANDROID: {
       return androidGetNativelyDefinedClassicReleaseChannelAsync(ctx);
@@ -96,9 +108,9 @@ export const getNativelyDefinedClassicReleaseChannelAsync = async (
     default:
       throw new Error(`Platform is not supported.`);
   }
-};
+}
 
-export const configureClassicExpoUpdatesAsync = async (ctx: BuildContext<Job>): Promise<void> => {
+export async function configureClassicExpoUpdatesAsync(ctx: BuildContext<Job>): Promise<void> {
   if (ctx.job.releaseChannel) {
     await setClassicReleaseChannelNativelyAsync(ctx);
   } else {
@@ -117,20 +129,19 @@ export const configureClassicExpoUpdatesAsync = async (ctx: BuildContext<Job>): 
       ctx.logger.info(`Using default release channel for 'expo-updates' (default)`);
     }
   }
-};
+}
 
-export const configureEASExpoUpdatesAsync = async (ctx: BuildContext<Job>): Promise<void> => {
+export async function configureEASExpoUpdatesAsync(ctx: BuildContext<Job>): Promise<void> {
   await setChannelNativelyAsync(ctx);
-};
+}
 
-export const configureExpoUpdatesIfInstalledAsync = async (
-  ctx: BuildContext<Job>
-): Promise<void> => {
+export async function configureExpoUpdatesIfInstalledAsync(ctx: BuildContext<Job>): Promise<void> {
   if (!(await isExpoUpdatesInstalledAsync(ctx.reactNativeProjectDirectory))) {
     return;
   }
 
-  const appConfigRuntimeVersion = getRuntimeVersionNullable(ctx.appConfig, ctx.job.platform);
+  const appConfigRuntimeVersion =
+    ctx.job.version?.runtimeVersion ?? getRuntimeVersionNullable(ctx.appConfig, ctx.job.platform);
   if (ctx.metadata?.runtimeVersion && ctx.metadata?.runtimeVersion !== appConfigRuntimeVersion) {
     ctx.markBuildPhaseHasWarnings();
     ctx.logger.warn(
@@ -146,9 +157,14 @@ export const configureExpoUpdatesIfInstalledAsync = async (
   } else {
     await configureClassicExpoUpdatesAsync(ctx);
   }
-};
 
-export const getRuntimeVersionAsync = async (ctx: BuildContext<Job>): Promise<string | null> => {
+  if (ctx.job.version?.runtimeVersion) {
+    ctx.logger.info('Updating runtimeVersion in Expo.plist');
+    await setRuntimeVersionNativelyAsync(ctx, ctx.job.version.runtimeVersion);
+  }
+}
+
+export async function getRuntimeVersionAsync(ctx: BuildContext<Job>): Promise<string | null> {
   switch (ctx.job.platform) {
     case Platform.ANDROID: {
       return await androidGetNativelyDefinedRuntimeVersionAsync(ctx);
@@ -159,4 +175,4 @@ export const getRuntimeVersionAsync = async (ctx: BuildContext<Job>): Promise<st
     default:
       throw new Error(`Platform is not supported.`);
   }
-};
+}

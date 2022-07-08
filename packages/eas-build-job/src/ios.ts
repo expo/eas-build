@@ -94,6 +94,17 @@ export interface Job {
   cache: Cache;
   developmentClient?: boolean;
   simulator?: boolean;
+  version?: {
+    buildNumber?: string;
+    /**
+     * support for this field is implemented, but specifying it is disabled on schema level
+     */
+    appVersion?: string;
+    /**
+     * support for this field is implemented, but specifying it is disabled on schema level
+     */
+    runtimeVersion?: string;
+  };
 
   scheme?: string;
   buildConfiguration?: string;
@@ -125,6 +136,9 @@ export const JobSchema = Joi.object({
   cache: CacheSchema.default(),
   developmentClient: Joi.boolean(),
   simulator: Joi.boolean(),
+  version: Joi.object({
+    buildNumber: Joi.string(),
+  }),
 
   // generic
   scheme: Joi.string(),

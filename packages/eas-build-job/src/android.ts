@@ -88,6 +88,17 @@ export interface Job {
   builderEnvironment?: BuilderEnvironment;
   cache: Cache;
   developmentClient?: boolean;
+  version?: {
+    versionCode?: string;
+    /**
+     * support for this field is implemented, but specifying it is disabled on schema level
+     */
+    versionName?: string;
+    /**
+     * support for this field is implemented, but specifying it is disabled on schema level
+     */
+    runtimeVersion?: string;
+  };
 
   // generic
   gradleCommand?: string;
@@ -120,6 +131,9 @@ export const JobSchema = Joi.object({
   builderEnvironment: BuilderEnvironmentSchema,
   cache: CacheSchema.default(),
   developmentClient: Joi.boolean(),
+  version: Joi.object({
+    versionCode: Joi.string().regex(/^\d+$/),
+  }),
 
   gradleCommand: Joi.string(),
   artifactPath: Joi.string(),

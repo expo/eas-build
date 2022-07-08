@@ -1,7 +1,7 @@
 import path from 'path';
 
 import spawn from '@expo/turtle-spawn';
-import { Job } from '@expo/eas-build-job';
+import { Android, Job } from '@expo/eas-build-job';
 import fs from 'fs-extra';
 
 import { BuildContext } from '../context';
@@ -17,8 +17,8 @@ export async function ensureLFLineEndingsInGradlewScript<TJob extends Job>(
   }
 }
 
-export async function runGradleCommand<TJob extends Job>(
-  ctx: BuildContext<TJob>,
+export async function runGradleCommand(
+  ctx: BuildContext<Android.Job>,
   gradleCommand: string
 ): Promise<void> {
   const androidDir = path.join(ctx.reactNativeProjectDirectory, 'android');

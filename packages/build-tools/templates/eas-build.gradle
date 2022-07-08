@@ -2,7 +2,28 @@
 
 import java.nio.file.Paths
 
+def versionCodeFromEnv = System.getenv("EAS_BUILD_ANDROID_VERSION_CODE")
+def versionNameFromEnv = System.getenv("EAS_BUILD_ANDROID_VERSION_NAME")
+
 android {
+  defaultConfig {
+    if (versionCodeFromEnv) {
+      versionCode = Integer.parseInt(versionCodeFromEnv)
+    }
+    if (versionNameFromEnv) {
+      versionName = versionNameFromEnv
+    }
+  }
+  applicationVariants.all { variant ->
+    variant.outputs.each { output ->
+      if (versionCodeFromEnv) {
+        output.versionCodeOverride = Integer.parseInt(versionCodeFromEnv)
+      }
+      if (versionNameFromEnv) {
+        output.versionNameOverride = versionNameFromEnv
+      }
+    }
+  }
   signingConfigs {
     release {
       def credentialsJson = rootProject.file("../credentials.json");
