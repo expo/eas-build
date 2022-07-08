@@ -26,14 +26,11 @@ android {
   }
   signingConfigs {
     release {
-      def credentialsJson = rootProject.file("../credentials.json");
+      def credentialsJson = Paths.get(System.getenv("EAS_BUILD_WORKINGDIR")).resolve("credentials.json").toFile();
       def credentials = new groovy.json.JsonSlurper().parse(credentialsJson)
       def keystorePath = Paths.get(credentials.android.keystore.keystorePath);
-      def storeFilePath = keystorePath.isAbsolute()
-        ? keystorePath
-        : rootProject.file("..").toPath().resolve(keystorePath);
 
-      storeFile storeFilePath.toFile()
+      storeFile keystorePath.toFile()
       storePassword credentials.android.keystore.keystorePassword
       keyAlias credentials.android.keystore.keyAlias
       if (credentials.android.keystore.containsKey("keyPassword")) {
