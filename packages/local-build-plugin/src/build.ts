@@ -1,3 +1,5 @@
+import path from 'path';
+
 import { Job, Platform, ArchiveSourceType } from '@expo/eas-build-job';
 import pickBy from 'lodash/pickBy';
 import fs from 'fs-extra';
@@ -17,6 +19,7 @@ export async function buildAsync(job: Job): Promise<void> {
       ...pickBy(process.env, (val?: string): val is string => !!val),
       ...job.builderEnvironment?.env,
       EAS_BUILD: '1',
+      EAS_BUILD_WORKINGDIR: path.join(workingdir, 'build'),
     };
     let artifactPath: string | undefined;
     switch (job.platform) {

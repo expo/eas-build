@@ -13,12 +13,8 @@ async function restoreCredentials(ctx: BuildContext<Android.Job>): Promise<void>
     throw new Error('secrets are missing in the job object');
   }
   ctx.logger.info("Writing secrets to the project's directory");
-  const projectDir = ctx.reactNativeProjectDirectory;
-  const keystorePath = `keystore-${uuidv4()}`;
-  await fs.writeFile(
-    path.join(projectDir, keystorePath),
-    Buffer.from(buildCredentials.keystore.dataBase64, 'base64')
-  );
+  const keystorePath = path.join(ctx.buildDirectory, `keystore-${uuidv4()}`);
+  await fs.writeFile(keystorePath, Buffer.from(buildCredentials.keystore.dataBase64, 'base64'));
   const credentialsJson = {
     android: {
       keystore: {
@@ -29,7 +25,10 @@ async function restoreCredentials(ctx: BuildContext<Android.Job>): Promise<void>
       },
     },
   };
-  await fs.writeFile(path.join(projectDir, 'credentials.json'), JSON.stringify(credentialsJson));
+  await fs.writeFile(
+    path.join(ctx.buildDirectory, 'credentials.json'),
+    JSON.stringify(credentialsJson)
+  );
 }
 
 export { restoreCredentials };
