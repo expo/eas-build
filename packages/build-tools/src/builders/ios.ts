@@ -6,6 +6,7 @@ import { BuildPhase, Ios, Workflow } from '@expo/eas-build-job';
 import fs from 'fs-extra';
 
 import { BuildContext } from '../context';
+import { createNpmErrorHandler } from '../utils/handleNpmError';
 import { configureExpoUpdatesIfInstalledAsync } from '../utils/expoUpdates';
 import { setup } from '../utils/project';
 import { findBuildArtifacts } from '../utils/buildArtifacts';
@@ -27,12 +28,16 @@ export default async function iosBuilder(ctx: BuildContext<Ios.Job>): Promise<st
     });
 
     if (!hasNativeCode) {
-      await ctx.runBuildPhase(BuildPhase.PREBUILD, async () => {
-        const extraEnvs: Record<string, string> = credentials?.teamId
-          ? { APPLE_TEAM_ID: credentials.teamId }
-          : {};
-        await prebuildAsync(ctx, { extraEnvs });
-      });
+      await ctx.runBuildPhase(
+        BuildPhase.PREBUILD,
+        async () => {
+          const extraEnvs: Record<string, string> = credentials?.teamId
+            ? { APPLE_TEAM_ID: credentials.teamId }
+            : {};
+          await prebuildAsync(ctx, { extraEnvs });
+        },
+        { onError: createNpmErrorHandler(ctx) }
+      );
     }
 
     await ctx.runBuildPhase(BuildPhase.RESTORE_CACHE, async () => {

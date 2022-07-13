@@ -172,15 +172,6 @@ export class YarnLockChecksumError extends UserError {
   }
 }
 
-export class NpmCorruptedPackageError extends UserError {
-  errorCode = ErrorCode.NPM_PACKAGE_CORRUPTED_ERROR;
-
-  constructor(packageName: string) {
-    super();
-    this.message = `Package ${packageName} is corrupted, try switching to public npm registry by adding ("eas-build-pre-install": "npm config set registry https://registry.npmjs.org/") in the "scripts" section in package.json. If this resolves the issue please report it as a bug.`;
-  }
-}
-
 export class UnknownGradleError extends UserError {
   errorCode = ErrorCode.UNKNOWN_GRADLE_ERROR;
   message = 'Gradle build failed with unknown error. Please see logs for the "Run gradlew" phase.';
