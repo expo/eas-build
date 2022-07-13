@@ -63,7 +63,7 @@ export default async function androidBuilder(ctx: BuildContext<Android.Job>): Pr
           logLines.some((line) => line.includes(ctx.env.EAS_BUILD_MAVEN_CACHE_URL))
         ) {
           ctx.reportError?.('Maven cache error', err, {
-            extras: { buildId: ctx.env.EAS_BUILD_ID },
+            extras: { buildId: ctx.env.EAS_BUILD_ID, logs: logLines.join('\n') },
           });
         }
       },

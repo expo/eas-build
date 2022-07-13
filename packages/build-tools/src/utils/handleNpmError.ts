@@ -19,7 +19,7 @@ export function createNpmErrorHandler<TJob extends Job>(
     }
     if (matchedTarball) {
       ctx.reportError?.('Corrupted npm package', err, {
-        extras: { buildId: ctx.env.EAS_BUILD_ID },
+        extras: { buildId: ctx.env.EAS_BUILD_ID, logs: logLines.join('\n') },
       });
       return;
     }
@@ -30,7 +30,7 @@ export function createNpmErrorHandler<TJob extends Job>(
       logLines.some((line) => line.includes(ctx.env.EAS_BUILD_NPM_CACHE_URL))
     ) {
       ctx.reportError?.('npm cache error', err, {
-        extras: { buildId: ctx.env.EAS_BUILD_ID },
+        extras: { buildId: ctx.env.EAS_BUILD_ID, logs: logLines.join('\n') },
       });
     }
   };
