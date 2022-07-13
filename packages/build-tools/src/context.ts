@@ -34,7 +34,11 @@ export interface BuildContextOptions {
   env: Env;
   cacheManager?: CacheManager;
   runExpoCliCommand: (args: string, options: SpawnOptions) => SpawnPromise<SpawnResult>;
-  reportError?: (msg: string, err?: Error) => void;
+  reportError?: (
+    msg: string,
+    err?: Error,
+    options?: { tags?: Record<string, string>; extras?: Record<string, string> }
+  ) => void;
   skipNativeBuild?: boolean;
   metadata?: Metadata;
 }
@@ -51,7 +55,11 @@ export class BuildContext<TJob extends Job> {
     args: string,
     options: SpawnOptions
   ) => SpawnPromise<SpawnResult>;
-  public readonly reportError?: (msg: string, err?: Error) => void;
+  public readonly reportError?: (
+    msg: string,
+    err?: Error,
+    options?: { tags?: Record<string, string>; extras?: Record<string, string> }
+  ) => void;
   public readonly metadata?: Metadata;
   public readonly skipNativeBuild?: boolean;
 
@@ -103,7 +111,7 @@ export class BuildContext<TJob extends Job> {
     }: {
       doNotMarkStart?: boolean;
       doNotMarkEnd?: boolean;
-      onError?: (err: Error) => void;
+      onError?: (err: Error, logLines: string[]) => void;
     } = {}
   ): Promise<T> {
     try {
@@ -135,7 +143,7 @@ export class BuildContext<TJob extends Job> {
         this.logger.error({ err }, '');
       }
       if (onError) {
-        onError(userError ?? err);
+        onError(userError ?? err, this.logBuffer.getPhaseLogs(buildPhase));
       }
       this.endCurrentBuildPhase({ result: BuildPhaseResult.FAIL });
       throw userError ?? err;

@@ -1,11 +1,12 @@
 import path from 'path';
 
 import downloadFile from '@expo/downloader';
-import { ArchiveSourceType, BuildPhase, errors, Job } from '@expo/eas-build-job';
+import { ArchiveSourceType, BuildPhase, Job } from '@expo/eas-build-job';
 import spawn, { SpawnResult } from '@expo/turtle-spawn';
 import fs from 'fs-extra';
 
 import { BuildContext } from '../context';
+import { createNpmErrorHandler } from '../utils/handleNpmError';
 
 import { Hook, runHookIfPresent } from './hooks';
 import { createNpmrcIfNotExistsAsync } from './npmrc';
@@ -30,13 +31,7 @@ export async function setup<TJob extends Job>(ctx: BuildContext<TJob>): Promise<
     async () => {
       await installDependencies(ctx);
     },
-    {
-      onError: (err: Error) => {
-        if (err instanceof errors.NpmCorruptedPackageError) {
-          ctx.reportError?.('Corrupted npm package', err);
-        }
-      },
-    }
+    { onError: createNpmErrorHandler(ctx) }
   );
 
   const packageJson = await ctx.runBuildPhase(BuildPhase.READ_PACKAGE_JSON, async () => {
@@ -78,7 +73,9 @@ async function downloadAndUnpackProject<TJob extends Job>(ctx: BuildContext<TJob
     try {
       await downloadFile(ctx.job.projectArchive.url, projectTarball, { retry: 3 });
     } catch (err: any) {
-      ctx?.reportError?.('Failed to download project archive', err);
+      ctx.reportError?.('Failed to download project archive', err, {
+        extras: { buildId: ctx.env.EAS_BUILD_ID },
+      });
       throw err;
     }
   }
@@ -151,7 +148,9 @@ async function runExpoDoctor<TJob extends Job>(ctx: BuildContext<TJob>): Promise
     });
     timeout = setTimeout(() => {
       promise.child.kill();
-      ctx?.reportError?.(`"expo doctor" timed out`);
+      ctx.reportError?.(`"expo doctor" timed out`, undefined, {
+        extras: { buildId: ctx.env.EAS_BUILD_ID },
+      });
     }, MAX_EXPO_DOCTOR_TIMEOUT_MS);
     return await promise;
   } finally {
