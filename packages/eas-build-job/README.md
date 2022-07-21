@@ -4,4 +4,4 @@
 
 ## Repository
 
-https://github.com/expo/eas-build/tree/main/src/packages/eas-build-job
+https://github.com/expo/eas-build/tree/main/packages/eas-build-job

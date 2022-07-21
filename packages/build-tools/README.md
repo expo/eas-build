@@ -4,4 +4,4 @@
 
 ## Repository
 
-https://github.com/expo/eas-build/tree/main/src/packages/build-tools
+https://github.com/expo/eas-build/tree/main/packages/build-tools

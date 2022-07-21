@@ -4,4 +4,4 @@
 
 ## Repository
 
-https://github.com/expo/eas-build/tree/main/src/packages/downloader
+https://github.com/expo/eas-build/tree/main/packages/downloader

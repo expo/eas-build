@@ -4,4 +4,4 @@
 
 ## Repository
 
-https://github.com/expo/eas-build/tree/main/src/packages/turtle-spawn
+https://github.com/expo/eas-build/tree/main/packages/turtle-spawn

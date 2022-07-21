@@ -4,4 +4,4 @@
 
 ## Repository
 
-https://github.com/expo/eas-build/tree/main/src/packages/logger
+https://github.com/expo/eas-build/tree/main/packages/logger
