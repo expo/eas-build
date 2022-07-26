@@ -63,6 +63,25 @@ describe(runExpoCliCommand, () => {
     });
   });
 
+  describe('EXPO_USE_LOCAL_CLI = 0', () => {
+    it('calls ctx.runGlobalExpoCliCommand', () => {
+      const mockExpoConfig = mock<ExpoConfig>();
+      when(mockExpoConfig.sdkVersion).thenReturn('46.0.0');
+      const expoConfig = instance(mockExpoConfig);
+
+      const mockCtx = mock<BuildContext<Android.Job>>();
+      when(mockCtx.env).thenReturn({ EXPO_USE_LOCAL_CLI: '0' });
+      when(mockCtx.packageManager).thenReturn(PackageManager.PNPM);
+      when(mockCtx.appConfig).thenReturn(expoConfig);
+      when(mockCtx.runGlobalExpoCliCommand).thenReturn(jest.fn());
+      const ctx = instance(mockCtx);
+
+      void runExpoCliCommand(ctx, ['doctor'], {});
+      expect(ctx.runGlobalExpoCliCommand).toHaveBeenCalledWith('doctor', expect.any(Object));
+      expect(spawn).not.toHaveBeenCalled();
+    });
+  });
+
   describe('Expo SDK < 46', () => {
     it('calls ctx.runGlobalExpoCliCommand', () => {
       const mockExpoConfig = mock<ExpoConfig>();

@@ -140,7 +140,11 @@ export function runExpoCliCommand<TJob extends Job>(
   args: string[],
   options: SpawnOptions
 ): SpawnPromise<SpawnResult> {
-  if (ctx.appConfig.sdkVersion && semver.satisfies(ctx.appConfig.sdkVersion, '>=46')) {
+  if (
+    ctx.env.EXPO_USE_LOCAL_CLI !== '0' &&
+    ctx.appConfig.sdkVersion &&
+    semver.satisfies(ctx.appConfig.sdkVersion, '>=46')
+  ) {
     const argsWithExpo = ['expo', ...args];
     if (ctx.packageManager === PackageManager.NPM) {
       return spawn('npx', argsWithExpo, options);
