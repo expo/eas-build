@@ -10,7 +10,7 @@ import { createNpmErrorHandler } from '../utils/handleNpmError';
 
 import { Hook, runHookIfPresent } from './hooks';
 import { createNpmrcIfNotExistsAsync } from './npmrc';
-import { findPackagerRootDir, PackageManager, readPackageJson } from './packageManager';
+import { findPackagerRootDir, PackageManager } from './packageManager';
 
 const MAX_EXPO_DOCTOR_TIMEOUT_MS = 20 * 1000;
 
@@ -34,11 +34,9 @@ export async function setup<TJob extends Job>(ctx: BuildContext<TJob>): Promise<
     { onError: createNpmErrorHandler(ctx) }
   );
 
-  const packageJson = await ctx.runBuildPhase(BuildPhase.READ_PACKAGE_JSON, async () => {
-    const packageJsonContents = await readPackageJson(ctx.reactNativeProjectDirectory);
+  await ctx.runBuildPhase(BuildPhase.READ_PACKAGE_JSON, async () => {
     ctx.logger.info('Using package.json:');
-    ctx.logger.info(JSON.stringify(packageJsonContents, null, 2));
-    return packageJsonContents;
+    ctx.logger.info(JSON.stringify(ctx.packageJson, null, 2));
   });
 
   await ctx.runBuildPhase(BuildPhase.READ_APP_CONFIG, async () => {
@@ -47,7 +45,7 @@ export async function setup<TJob extends Job>(ctx: BuildContext<TJob>): Promise<
     ctx.logger.info(JSON.stringify(appConfig, null, 2));
   });
 
-  const hasExpoPackage = !!packageJson?.dependencies?.expo;
+  const hasExpoPackage = !!ctx.packageJson.dependencies?.expo;
   if (hasExpoPackage) {
     await ctx.runBuildPhase(BuildPhase.RUN_EXPO_DOCTOR, async () => {
       try {
@@ -158,4 +156,12 @@ async function runExpoDoctor<TJob extends Job>(ctx: BuildContext<TJob>): Promise
       clearTimeout(timeout);
     }
   }
+}
+
+export function readPackageJson(projectDir: string): any {
+  const packageJsonPath = path.join(projectDir, 'package.json');
+  if (!fs.pathExistsSync(packageJsonPath)) {
+    throw new Error(`package.json does not exist in ${projectDir}`);
+  }
+  return fs.readJSONSync(packageJsonPath);
 }

@@ -3,7 +3,7 @@ import spawn from '@expo/turtle-spawn';
 
 import { BuildContext } from '../context';
 
-import { PackageManager, readPackageJson } from './packageManager';
+import { PackageManager } from './packageManager';
 import { isUsingYarn2 } from './project';
 
 export enum Hook {
@@ -12,24 +12,12 @@ export enum Hook {
   PRE_UPLOAD_ARTIFACTS = 'eas-build-pre-upload-artifacts',
 }
 
-interface PackageJson {
-  scripts?: Record<string, string>;
-}
-
 export async function runHookIfPresent<TJob extends Job>(
   ctx: BuildContext<TJob>,
   hook: Hook
 ): Promise<void> {
   const projectDir = ctx.reactNativeProjectDirectory;
-  let packageJson: PackageJson;
-  try {
-    packageJson = await readPackageJson(projectDir);
-  } catch (err: any) {
-    ctx.logger.warn(`Failed to parse or read package.json: ${err.message}`);
-    ctx.markBuildPhaseHasWarnings();
-    return;
-  }
-  if (packageJson.scripts?.[hook]) {
+  if (ctx.packageJson.scripts?.[hook]) {
     ctx.logger.info(`Script '${hook}' is present in package.json, running it...`);
     // when using yarn 2, it's not possible to run any scripts before running 'yarn install'
     // use 'npm' in that case
