@@ -2,7 +2,7 @@ import { Ios, BuildPhase, Env } from '@expo/eas-build-job';
 import { Builders, BuildContext } from '@expo/build-tools';
 import omit from 'lodash/omit';
 
-import { runExpoCliCommandAsync } from './expoCli';
+import { runGlobalExpoCliCommandAsync } from './expoCli';
 import logger, { logBuffer } from './logger';
 import { BuildParams } from './types';
 import { prepareBuildArtifact } from './buildArtifact';
@@ -23,7 +23,7 @@ export async function buildIosAsync(
     workingdir,
     logger,
     logBuffer,
-    runExpoCliCommand: runExpoCliCommandAsync,
+    runGlobalExpoCliCommand: runGlobalExpoCliCommandAsync,
     env,
     skipNativeBuild: config.skipNativeBuild,
   });

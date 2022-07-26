@@ -22,7 +22,7 @@ describe('ProvisioningProfile class', () => {
         logBuffer: { getLogs: () => [], getPhaseLogs: () => [] },
         logger: mockLogger,
         env: {},
-        runExpoCliCommand: jest.fn(),
+        runGlobalExpoCliCommand: jest.fn(),
       });
       keychain = new Keychain(ctx);
       await keychain.create();

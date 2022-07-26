@@ -141,7 +141,7 @@ async function runExpoDoctor<TJob extends Job>(ctx: BuildContext<TJob>): Promise
   ctx.logger.info('Running "expo doctor"');
   let timeout: NodeJS.Timeout | undefined;
   try {
-    const promise = ctx.runExpoCliCommand('doctor', {
+    const promise = ctx.runGlobalExpoCliCommand('doctor', {
       cwd: ctx.reactNativeProjectDirectory,
       logger: ctx.logger,
       env: ctx.env,
