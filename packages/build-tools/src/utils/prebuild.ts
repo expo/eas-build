@@ -4,7 +4,7 @@ import semver from 'semver';
 
 import { BuildContext } from '../context';
 
-import { installDependencies } from './project';
+import { installDependencies, runExpoCliCommand } from './project';
 
 export interface PrebuildOptions {
   extraEnvs?: Record<string, string>;
@@ -28,12 +28,12 @@ export async function prebuildAsync<TJob extends Job>(
     },
   };
 
-  const prebuildCommand = getPrebuildCommand(ctx.job);
-  await ctx.runGlobalExpoCliCommand(prebuildCommand, spawnOptions);
+  const prebuildCommandArgs = getPrebuildCommandArgs(ctx.job);
+  await runExpoCliCommand(ctx, prebuildCommandArgs, spawnOptions);
   await installDependencies(ctx);
 }
 
-function getPrebuildCommand(job: Job): string {
+function getPrebuildCommandArgs(job: Job): string[] {
   let prebuildCommand =
     job.experimental?.prebuildCommand ??
     `prebuild --non-interactive --no-install --platform ${job.platform}`;
@@ -55,5 +55,5 @@ function getPrebuildCommand(job: Job): string {
   if (prebuildCommand.startsWith(expoCliCommandPrefix)) {
     prebuildCommand = prebuildCommand.substring(expoCliCommandPrefix.length).trim();
   }
-  return prebuildCommand;
+  return prebuildCommand.split(' ');
 }

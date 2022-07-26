@@ -2,8 +2,9 @@ import path from 'path';
 
 import downloadFile from '@expo/downloader';
 import { ArchiveSourceType, BuildPhase, Job } from '@expo/eas-build-job';
-import spawn, { SpawnResult } from '@expo/turtle-spawn';
+import spawn, { SpawnOptions, SpawnPromise, SpawnResult } from '@expo/turtle-spawn';
 import fs from 'fs-extra';
+import semver from 'semver';
 
 import { BuildContext } from '../context';
 import { createNpmErrorHandler } from '../utils/handleNpmError';
@@ -40,9 +41,8 @@ export async function setup<TJob extends Job>(ctx: BuildContext<TJob>): Promise<
   });
 
   await ctx.runBuildPhase(BuildPhase.READ_APP_CONFIG, async () => {
-    const appConfig = ctx.appConfig;
     ctx.logger.info('Using app configuration:');
-    ctx.logger.info(JSON.stringify(appConfig, null, 2));
+    ctx.logger.info(JSON.stringify(ctx.appConfig, null, 2));
   });
 
   const hasExpoPackage = !!ctx.packageJson.dependencies?.expo;
@@ -135,11 +135,32 @@ export async function isUsingYarn2(projectDir: string): Promise<boolean> {
   return (await fs.pathExists(yarnrcPath)) || (await fs.pathExists(yarnrcRootPath));
 }
 
+export function runExpoCliCommand<TJob extends Job>(
+  ctx: BuildContext<TJob>,
+  args: string[],
+  options: SpawnOptions
+): SpawnPromise<SpawnResult> {
+  if (ctx.appConfig.sdkVersion && semver.satisfies(ctx.appConfig.sdkVersion, '>=46')) {
+    const argsWithExpo = ['expo', ...args];
+    if (ctx.packageManager === PackageManager.NPM) {
+      return spawn('npx', argsWithExpo, options);
+    } else if (ctx.packageManager === PackageManager.YARN) {
+      return spawn('yarn', argsWithExpo, options);
+    } else if (ctx.packageManager === PackageManager.PNPM) {
+      return spawn('pnpm', ['dlx', ...argsWithExpo], options);
+    } else {
+      throw new Error(`Unsupported package manager: ${ctx.packageManager}`);
+    }
+  } else {
+    return ctx.runGlobalExpoCliCommand(args.join(' '), options);
+  }
+}
+
 async function runExpoDoctor<TJob extends Job>(ctx: BuildContext<TJob>): Promise<SpawnResult> {
   ctx.logger.info('Running "expo doctor"');
   let timeout: NodeJS.Timeout | undefined;
   try {
-    const promise = ctx.runGlobalExpoCliCommand('doctor', {
+    const promise = runExpoCliCommand(ctx, ['doctor'], {
       cwd: ctx.reactNativeProjectDirectory,
       logger: ctx.logger,
       env: ctx.env,
