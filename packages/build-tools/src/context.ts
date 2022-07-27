@@ -13,7 +13,6 @@ import { ExpoConfig } from '@expo/config';
 import { bunyan } from '@expo/logger';
 import { SpawnPromise, SpawnOptions, SpawnResult } from '@expo/turtle-spawn';
 
-import { readPackageJson } from './utils/project';
 import { PackageManager, resolvePackageManager } from './utils/packageManager';
 import { detectUserError } from './utils/detectUserError';
 import { readAppConfig } from './utils/appConfig';
@@ -74,7 +73,6 @@ export class BuildContext<TJob extends Job> {
   private buildPhase?: BuildPhase;
   private buildPhaseHasWarnings = false;
   private _appConfig?: ExpoConfig;
-  private _packageJson?: any = undefined;
 
   constructor(public readonly job: TJob, options: BuildContextOptions) {
     this.workingdir = options.workingdir;
@@ -107,12 +105,6 @@ export class BuildContext<TJob extends Job> {
       this._appConfig = readAppConfig(this.reactNativeProjectDirectory, this.env, this.logger).exp;
     }
     return this._appConfig;
-  }
-  public get packageJson(): any {
-    if (this._packageJson === undefined) {
-      this._packageJson = readPackageJson(this.reactNativeProjectDirectory);
-    }
-    return this._packageJson;
   }
 
   public async runBuildPhase<T>(

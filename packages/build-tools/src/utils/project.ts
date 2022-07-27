@@ -23,6 +23,15 @@ export async function setup<TJob extends Job>(ctx: BuildContext<TJob>): Promise<
     }
   });
 
+  // this must be the first build phase to make sure package.json exists and is valid
+  const packageJson = await ctx.runBuildPhase(BuildPhase.READ_PACKAGE_JSON, async () => {
+    // this call can throw and should fail the build
+    const packageJson = readPackageJson(ctx.reactNativeProjectDirectory);
+    ctx.logger.info('Using package.json:');
+    ctx.logger.info(JSON.stringify(packageJson, null, 2));
+    return packageJson;
+  });
+
   await ctx.runBuildPhase(BuildPhase.PRE_INSTALL_HOOK, async () => {
     await runHookIfPresent(ctx, Hook.PRE_INSTALL);
   });
@@ -35,17 +44,12 @@ export async function setup<TJob extends Job>(ctx: BuildContext<TJob>): Promise<
     { onError: createNpmErrorHandler(ctx) }
   );
 
-  await ctx.runBuildPhase(BuildPhase.READ_PACKAGE_JSON, async () => {
-    ctx.logger.info('Using package.json:');
-    ctx.logger.info(JSON.stringify(ctx.packageJson, null, 2));
-  });
-
   await ctx.runBuildPhase(BuildPhase.READ_APP_CONFIG, async () => {
     ctx.logger.info('Using app configuration:');
     ctx.logger.info(JSON.stringify(ctx.appConfig, null, 2));
   });
 
-  const hasExpoPackage = !!ctx.packageJson.dependencies?.expo;
+  const hasExpoPackage = !!packageJson.dependencies?.expo;
   if (hasExpoPackage) {
     await ctx.runBuildPhase(BuildPhase.RUN_EXPO_DOCTOR, async () => {
       try {
@@ -142,11 +146,13 @@ export function runExpoCliCommand<TJob extends Job>(
   { forceUseGlobalExpoCli = false } = {}
 ): SpawnPromise<SpawnResult> {
   if (
-    !forceUseGlobalExpoCli &&
-    ctx.env.EXPO_USE_LOCAL_CLI !== '0' &&
-    ctx.appConfig.sdkVersion &&
-    semver.satisfies(ctx.appConfig.sdkVersion, '>=46')
+    forceUseGlobalExpoCli ||
+    ctx.env.EXPO_USE_GLOBAL_CLI === '1' ||
+    !ctx.appConfig.sdkVersion ||
+    semver.satisfies(ctx.appConfig.sdkVersion, '<46')
   ) {
+    return ctx.runGlobalExpoCliCommand(args.join(' '), options);
+  } else {
     const argsWithExpo = ['expo', ...args];
     if (ctx.packageManager === PackageManager.NPM) {
       return spawn('npx', argsWithExpo, options);
@@ -157,8 +163,6 @@ export function runExpoCliCommand<TJob extends Job>(
     } else {
       throw new Error(`Unsupported package manager: ${ctx.packageManager}`);
     }
-  } else {
-    return ctx.runGlobalExpoCliCommand(args.join(' '), options);
   }
 }
 
