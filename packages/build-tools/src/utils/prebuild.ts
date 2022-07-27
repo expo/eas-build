@@ -4,7 +4,7 @@ import semver from 'semver';
 
 import { BuildContext } from '../context';
 
-import { installDependencies } from './project';
+import { installDependencies, runExpoCliCommand } from './project';
 
 export interface PrebuildOptions {
   extraEnvs?: Record<string, string>;
@@ -28,11 +28,12 @@ export async function prebuildAsync<TJob extends Job>(
     },
   };
 
-  await ctx.runExpoCliCommand(getPrebuildCommand(ctx.job), spawnOptions);
+  const prebuildCommandArgs = getPrebuildCommandArgs(ctx.job);
+  await runExpoCliCommand(ctx, prebuildCommandArgs, spawnOptions);
   await installDependencies(ctx);
 }
 
-function getPrebuildCommand(job: Job): string {
+function getPrebuildCommandArgs(job: Job): string[] {
   let prebuildCommand =
     job.experimental?.prebuildCommand ??
     `prebuild --non-interactive --no-install --platform ${job.platform}`;
@@ -46,13 +47,13 @@ function getPrebuildCommand(job: Job): string {
   const expoCommandPrefix = 'expo ';
   const expoCliCommandPrefix = 'expo-cli ';
   if (prebuildCommand.startsWith(npxCommandPrefix)) {
-    prebuildCommand = prebuildCommand.substr(npxCommandPrefix.length).trim();
+    prebuildCommand = prebuildCommand.substring(npxCommandPrefix.length).trim();
   }
   if (prebuildCommand.startsWith(expoCommandPrefix)) {
-    prebuildCommand = prebuildCommand.substr(expoCommandPrefix.length).trim();
+    prebuildCommand = prebuildCommand.substring(expoCommandPrefix.length).trim();
   }
   if (prebuildCommand.startsWith(expoCliCommandPrefix)) {
-    prebuildCommand = prebuildCommand.substr(expoCliCommandPrefix.length).trim();
+    prebuildCommand = prebuildCommand.substring(expoCliCommandPrefix.length).trim();
   }
-  return prebuildCommand;
+  return prebuildCommand.split(' ');
 }

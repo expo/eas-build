@@ -31,7 +31,7 @@ describe(runHookIfPresent, () => {
       logBuffer: { getLogs: () => [], getPhaseLogs: () => [] },
       logger: loggerMock as any,
       env: {},
-      runExpoCliCommand: jest.fn(),
+      runGlobalExpoCliCommand: jest.fn(),
     });
   });
 

@@ -2,24 +2,27 @@ import path from 'path';
 
 import downloadFile from '@expo/downloader';
 import { ArchiveSourceType, BuildPhase, Job } from '@expo/eas-build-job';
-import spawn, { SpawnResult } from '@expo/turtle-spawn';
+import spawn, { SpawnOptions, SpawnPromise, SpawnResult } from '@expo/turtle-spawn';
 import fs from 'fs-extra';
+import semver from 'semver';
 
 import { BuildContext } from '../context';
 import { createNpmErrorHandler } from '../utils/handleNpmError';
 
 import { Hook, runHookIfPresent } from './hooks';
 import { createNpmrcIfNotExistsAsync } from './npmrc';
-import { findPackagerRootDir, PackageManager, readPackageJson } from './packageManager';
+import { findPackagerRootDir, PackageManager } from './packageManager';
 
 const MAX_EXPO_DOCTOR_TIMEOUT_MS = 20 * 1000;
 
 export async function setup<TJob extends Job>(ctx: BuildContext<TJob>): Promise<void> {
-  await ctx.runBuildPhase(BuildPhase.PREPARE_PROJECT, async () => {
+  const packageJson = await ctx.runBuildPhase(BuildPhase.PREPARE_PROJECT, async () => {
     await downloadAndUnpackProject(ctx);
     if (ctx.env.NPM_TOKEN) {
       await createNpmrcIfNotExistsAsync(ctx);
     }
+    // try to read package.json to see if it exists and is valid
+    return readPackageJson(ctx.reactNativeProjectDirectory);
   });
 
   await ctx.runBuildPhase(BuildPhase.PRE_INSTALL_HOOK, async () => {
@@ -34,20 +37,17 @@ export async function setup<TJob extends Job>(ctx: BuildContext<TJob>): Promise<
     { onError: createNpmErrorHandler(ctx) }
   );
 
-  const packageJson = await ctx.runBuildPhase(BuildPhase.READ_PACKAGE_JSON, async () => {
-    const packageJsonContents = await readPackageJson(ctx.reactNativeProjectDirectory);
+  await ctx.runBuildPhase(BuildPhase.READ_PACKAGE_JSON, async () => {
     ctx.logger.info('Using package.json:');
-    ctx.logger.info(JSON.stringify(packageJsonContents, null, 2));
-    return packageJsonContents;
+    ctx.logger.info(JSON.stringify(packageJson, null, 2));
   });
 
   await ctx.runBuildPhase(BuildPhase.READ_APP_CONFIG, async () => {
-    const appConfig = ctx.appConfig;
     ctx.logger.info('Using app configuration:');
-    ctx.logger.info(JSON.stringify(appConfig, null, 2));
+    ctx.logger.info(JSON.stringify(ctx.appConfig, null, 2));
   });
 
-  const hasExpoPackage = !!packageJson?.dependencies?.expo;
+  const hasExpoPackage = !!packageJson.dependencies?.expo;
   if (hasExpoPackage) {
     await ctx.runBuildPhase(BuildPhase.RUN_EXPO_DOCTOR, async () => {
       try {
@@ -137,15 +137,48 @@ export async function isUsingYarn2(projectDir: string): Promise<boolean> {
   return (await fs.pathExists(yarnrcPath)) || (await fs.pathExists(yarnrcRootPath));
 }
 
+export function runExpoCliCommand<TJob extends Job>(
+  ctx: BuildContext<TJob>,
+  args: string[],
+  options: SpawnOptions,
+  { forceUseGlobalExpoCli = false } = {}
+): SpawnPromise<SpawnResult> {
+  if (
+    forceUseGlobalExpoCli ||
+    ctx.env.EXPO_USE_GLOBAL_CLI === '1' ||
+    !ctx.appConfig.sdkVersion ||
+    semver.satisfies(ctx.appConfig.sdkVersion, '<46')
+  ) {
+    return ctx.runGlobalExpoCliCommand(args.join(' '), options);
+  } else {
+    const argsWithExpo = ['expo', ...args];
+    if (ctx.packageManager === PackageManager.NPM) {
+      return spawn('npx', argsWithExpo, options);
+    } else if (ctx.packageManager === PackageManager.YARN) {
+      return spawn('yarn', argsWithExpo, options);
+    } else if (ctx.packageManager === PackageManager.PNPM) {
+      return spawn('pnpm', ['dlx', ...argsWithExpo], options);
+    } else {
+      throw new Error(`Unsupported package manager: ${ctx.packageManager}`);
+    }
+  }
+}
+
 async function runExpoDoctor<TJob extends Job>(ctx: BuildContext<TJob>): Promise<SpawnResult> {
   ctx.logger.info('Running "expo doctor"');
   let timeout: NodeJS.Timeout | undefined;
   try {
-    const promise = ctx.runExpoCliCommand('doctor', {
-      cwd: ctx.reactNativeProjectDirectory,
-      logger: ctx.logger,
-      env: ctx.env,
-    });
+    const promise = runExpoCliCommand(
+      ctx,
+      ['doctor'],
+      {
+        cwd: ctx.reactNativeProjectDirectory,
+        logger: ctx.logger,
+        env: ctx.env,
+      },
+      // local Expo CLI does not have "doctor" for now
+      { forceUseGlobalExpoCli: true }
+    );
     timeout = setTimeout(() => {
       promise.child.kill();
       ctx.reportError?.(`"expo doctor" timed out`, undefined, {
@@ -157,5 +190,17 @@ async function runExpoDoctor<TJob extends Job>(ctx: BuildContext<TJob>): Promise
     if (timeout) {
       clearTimeout(timeout);
     }
+  }
+}
+
+export function readPackageJson(projectDir: string): any {
+  const packageJsonPath = path.join(projectDir, 'package.json');
+  if (!fs.pathExistsSync(packageJsonPath)) {
+    throw new Error(`package.json does not exist in ${projectDir}`);
+  }
+  try {
+    return fs.readJSONSync(packageJsonPath);
+  } catch (err: any) {
+    throw new Error(`Failed to parse or read package.json: ${err.message}`);
   }
 }

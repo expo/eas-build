@@ -6,7 +6,7 @@ import logger, { logBuffer } from './logger';
 import { BuildParams } from './types';
 import { prepareBuildArtifact } from './buildArtifact';
 import config from './config';
-import { runExpoCliCommandAsync } from './expoCli';
+import { runGlobalExpoCliCommandAsync } from './expoCli';
 
 export async function buildAndroidAsync(
   job: Android.Job,
@@ -23,7 +23,7 @@ export async function buildAndroidAsync(
     workingdir,
     logger,
     logBuffer,
-    runExpoCliCommand: runExpoCliCommandAsync,
+    runGlobalExpoCliCommand: runGlobalExpoCliCommandAsync,
     env,
     skipNativeBuild: config.skipNativeBuild,
   });

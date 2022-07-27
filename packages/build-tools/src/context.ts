@@ -33,7 +33,10 @@ export interface BuildContextOptions {
   logBuffer: LogBuffer;
   env: Env;
   cacheManager?: CacheManager;
-  runExpoCliCommand: (args: string, options: SpawnOptions) => SpawnPromise<SpawnResult>;
+  /**
+   * @deprecated
+   */
+  runGlobalExpoCliCommand: (args: string, options: SpawnOptions) => SpawnPromise<SpawnResult>;
   reportError?: (
     msg: string,
     err?: Error,
@@ -51,7 +54,10 @@ export class BuildContext<TJob extends Job> {
   public readonly logBuffer: LogBuffer;
   public readonly env: Env;
   public readonly cacheManager?: CacheManager;
-  public readonly runExpoCliCommand: (
+  /**
+   * @deprecated
+   */
+  public readonly runGlobalExpoCliCommand: (
     args: string,
     options: SpawnOptions
   ) => SpawnPromise<SpawnResult>;
@@ -74,7 +80,7 @@ export class BuildContext<TJob extends Job> {
     this.logger = this.defaultLogger;
     this.logBuffer = options.logBuffer;
     this.cacheManager = options.cacheManager;
-    this.runExpoCliCommand = options.runExpoCliCommand;
+    this.runGlobalExpoCliCommand = options.runGlobalExpoCliCommand;
     this.reportError = options.reportError;
     this.metadata = options.metadata;
     this.skipNativeBuild = options.skipNativeBuild;

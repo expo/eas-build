@@ -4,7 +4,7 @@ import spawnAsync, { SpawnOptions, SpawnPromise, SpawnResult } from '@expo/turtl
 
 const expoCliPackage = require.resolve('expo-cli');
 
-export function runExpoCliCommandAsync(
+export function runGlobalExpoCliCommandAsync(
   command: string,
   options: SpawnOptions
 ): SpawnPromise<SpawnResult> {
