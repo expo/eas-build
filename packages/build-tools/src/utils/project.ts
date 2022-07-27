@@ -145,7 +145,7 @@ export function runExpoCliCommand<TJob extends Job>(
 ): SpawnPromise<SpawnResult> {
   if (
     forceUseGlobalExpoCli ||
-    ctx.env.EXPO_USE_GLOBAL_CLI === '1' ||
+    ctx.env.EXPO_USE_LOCAL_CLI === '0' ||
     !ctx.appConfig.sdkVersion ||
     semver.satisfies(ctx.appConfig.sdkVersion, '<46')
   ) {
