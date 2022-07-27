@@ -16,20 +16,13 @@ import { findPackagerRootDir, PackageManager } from './packageManager';
 const MAX_EXPO_DOCTOR_TIMEOUT_MS = 20 * 1000;
 
 export async function setup<TJob extends Job>(ctx: BuildContext<TJob>): Promise<void> {
-  await ctx.runBuildPhase(BuildPhase.PREPARE_PROJECT, async () => {
+  const packageJson = await ctx.runBuildPhase(BuildPhase.PREPARE_PROJECT, async () => {
     await downloadAndUnpackProject(ctx);
     if (ctx.env.NPM_TOKEN) {
       await createNpmrcIfNotExistsAsync(ctx);
     }
-  });
-
-  // this must be the first build phase to make sure package.json exists and is valid
-  const packageJson = await ctx.runBuildPhase(BuildPhase.READ_PACKAGE_JSON, async () => {
-    // this call can throw and should fail the build
-    const packageJson = readPackageJson(ctx.reactNativeProjectDirectory);
-    ctx.logger.info('Using package.json:');
-    ctx.logger.info(JSON.stringify(packageJson, null, 2));
-    return packageJson;
+    // try to read package.json to see if it exists and is valid
+    return readPackageJson(ctx.reactNativeProjectDirectory);
   });
 
   await ctx.runBuildPhase(BuildPhase.PRE_INSTALL_HOOK, async () => {
@@ -43,6 +36,11 @@ export async function setup<TJob extends Job>(ctx: BuildContext<TJob>): Promise<
     },
     { onError: createNpmErrorHandler(ctx) }
   );
+
+  await ctx.runBuildPhase(BuildPhase.READ_PACKAGE_JSON, async () => {
+    ctx.logger.info('Using package.json:');
+    ctx.logger.info(JSON.stringify(packageJson, null, 2));
+  });
 
   await ctx.runBuildPhase(BuildPhase.READ_APP_CONFIG, async () => {
     ctx.logger.info('Using app configuration:');
@@ -200,5 +198,9 @@ export function readPackageJson(projectDir: string): any {
   if (!fs.pathExistsSync(packageJsonPath)) {
     throw new Error(`package.json does not exist in ${projectDir}`);
   }
-  return fs.readJSONSync(packageJsonPath);
+  try {
+    return fs.readJSONSync(packageJsonPath);
+  } catch (err: any) {
+    throw new Error(`Failed to parse or read package.json: ${err.message}`);
+  }
 }
