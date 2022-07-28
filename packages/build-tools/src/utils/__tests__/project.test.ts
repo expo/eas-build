@@ -46,7 +46,7 @@ describe(runExpoCliCommand, () => {
       expect(spawn).toHaveBeenCalledWith('npx', ['expo', 'doctor'], expect.any(Object));
     });
 
-    it('spawns expo via "pnpm dlx" when package manager is pnpm', () => {
+    it('spawns expo via "pnpm" when package manager is pnpm', () => {
       const mockExpoConfig = mock<ExpoConfig>();
       when(mockExpoConfig.sdkVersion).thenReturn('46.0.0');
       const expoConfig = instance(mockExpoConfig);
@@ -59,7 +59,7 @@ describe(runExpoCliCommand, () => {
 
       void runExpoCliCommand(ctx, ['doctor'], {});
       expect(ctx.runGlobalExpoCliCommand).not.toHaveBeenCalled();
-      expect(spawn).toHaveBeenCalledWith('pnpm', ['dlx', 'expo', 'doctor'], expect.any(Object));
+      expect(spawn).toHaveBeenCalledWith('pnpm', ['expo', 'doctor'], expect.any(Object));
     });
 
     it('calls ctx.runGlobalExpoCliCommand if forceUseGlobalExpoCli = true', () => {
