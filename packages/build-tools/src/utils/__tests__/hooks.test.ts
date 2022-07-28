@@ -32,6 +32,7 @@ describe(runHookIfPresent, () => {
       logger: loggerMock as any,
       env: {},
       runGlobalExpoCliCommand: jest.fn(),
+      deliverBuildArtifacts: jest.fn(),
     });
   });
 

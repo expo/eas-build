@@ -39,6 +39,7 @@ describe('Keychain class', () => {
         logger: mockLogger,
         env: {},
         runGlobalExpoCliCommand: jest.fn(),
+        deliverBuildArtifacts: jest.fn(),
       });
       keychain = new Keychain(ctx);
       await keychain.create();

@@ -9,12 +9,19 @@ import { isUsingYarn2, readPackageJson } from './project';
 export enum Hook {
   PRE_INSTALL = 'eas-build-pre-install',
   POST_INSTALL = 'eas-build-post-install',
+  /**
+   * @deprecated
+   */
   PRE_UPLOAD_ARTIFACTS = 'eas-build-pre-upload-artifacts',
+  ON_BUILD_SUCCESS = 'eas-build-on-success',
+  ON_BUILD_ERROR = 'eas-build-on-error',
+  ON_BUILD_COMPLETED = 'eas-build-on-completed',
 }
 
 export async function runHookIfPresent<TJob extends Job>(
   ctx: BuildContext<TJob>,
-  hook: Hook
+  hook: Hook,
+  { extraEnvs }: { extraEnvs?: Record<string, string> } = {}
 ): Promise<void> {
   const projectDir = ctx.reactNativeProjectDirectory;
   const packageJson = readPackageJson(projectDir);
@@ -29,7 +36,10 @@ export async function runHookIfPresent<TJob extends Job>(
     await spawn(packageManager, ['run', hook], {
       cwd: projectDir,
       logger: ctx.logger,
-      env: ctx.env,
+      env: {
+        ...ctx.env,
+        ...extraEnvs,
+      },
     });
   }
 }

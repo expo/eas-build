@@ -11,7 +11,32 @@ import { restoreCredentials } from '../android/credentials';
 import { configureBuildGradle } from '../android/gradleConfig';
 import { prebuildAsync } from '../utils/prebuild';
 
-export default async function androidBuilder(ctx: BuildContext<Android.Job>): Promise<string[]> {
+export default async function androidBuilder(ctx: BuildContext<Android.Job>): Promise<string> {
+  let isBuildSuccess = true;
+  try {
+    const archiveLocation = await buildAsync(ctx);
+    await ctx.runBuildPhase(BuildPhase.ON_BUILD_SUCCESS_HOOK, async () => {
+      await runHookIfPresent(ctx, Hook.ON_BUILD_SUCCESS);
+    });
+    return archiveLocation;
+  } catch (err: any) {
+    isBuildSuccess = false;
+    await ctx.runBuildPhase(BuildPhase.ON_BUILD_ERROR_HOOK, async () => {
+      await runHookIfPresent(ctx, Hook.ON_BUILD_ERROR);
+    });
+    throw err;
+  } finally {
+    await ctx.runBuildPhase(BuildPhase.ON_BUILD_COMPLETED_HOOK, async () => {
+      await runHookIfPresent(ctx, Hook.ON_BUILD_COMPLETED, {
+        extraEnvs: {
+          EAS_BUILD_STATUS: isBuildSuccess ? 'success' : 'error',
+        },
+      });
+    });
+  }
+}
+
+async function buildAsync(ctx: BuildContext<Android.Job>): Promise<string> {
   await setup(ctx);
   const hasNativeCode = ctx.job.type === Workflow.GENERIC;
 
@@ -78,19 +103,15 @@ export default async function androidBuilder(ctx: BuildContext<Android.Job>): Pr
     await ctx.cacheManager?.saveCache(ctx);
   });
 
-  return await ctx.runBuildPhase(
-    BuildPhase.UPLOAD_ARTIFACTS,
-    async () => {
-      const buildArtifacts = await findBuildArtifacts(
-        ctx.reactNativeProjectDirectory,
-        ctx.job.artifactPath ?? 'android/app/build/outputs/**/*.{apk,aab}',
-        ctx.logger
-      );
-      ctx.logger.info(`Build artifacts: ${buildArtifacts.join(', ')}`);
-      return buildArtifacts;
-    },
-    { doNotMarkEnd: true }
-  );
+  return await ctx.runBuildPhase(BuildPhase.UPLOAD_ARTIFACTS, async () => {
+    const buildArtifacts = await findBuildArtifacts(
+      ctx.reactNativeProjectDirectory,
+      ctx.job.artifactPath ?? 'android/app/build/outputs/**/*.{apk,aab}',
+      ctx.logger
+    );
+    ctx.logger.info(`Build artifacts: ${buildArtifacts.join(', ')}`);
+    return await ctx.deliverBuildArtifacts(ctx, buildArtifacts);
+  });
 }
 
 function resolveGradleCommand(job: Android.Job): string {

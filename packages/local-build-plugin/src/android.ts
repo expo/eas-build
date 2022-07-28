@@ -24,6 +24,7 @@ export async function buildAndroidAsync(
     logger,
     logBuffer,
     runGlobalExpoCliCommand: runGlobalExpoCliCommandAsync,
+    deliverBuildArtifacts: prepareBuildArtifact,
     env,
     skipNativeBuild: config.skipNativeBuild,
   });
@@ -32,7 +33,5 @@ export async function buildAndroidAsync(
     ctx.logger.info({ job: omit(ctx.job, 'secrets') }, 'Starting build');
   });
 
-  const artifactPaths = await Builders.androidBuilder(ctx);
-
-  return await prepareBuildArtifact(ctx, artifactPaths);
+  return await Builders.androidBuilder(ctx);
 }

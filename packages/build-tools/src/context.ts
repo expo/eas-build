@@ -37,6 +37,7 @@ export interface BuildContextOptions {
    * @deprecated
    */
   runGlobalExpoCliCommand: (args: string, options: SpawnOptions) => SpawnPromise<SpawnResult>;
+  deliverBuildArtifacts: (ctx: BuildContext<Job>, archivePaths: string[]) => Promise<string>;
   reportError?: (
     msg: string,
     err?: Error,
@@ -61,6 +62,10 @@ export class BuildContext<TJob extends Job> {
     args: string,
     options: SpawnOptions
   ) => SpawnPromise<SpawnResult>;
+  public readonly deliverBuildArtifacts: (
+    ctx: BuildContext<Job>,
+    archivePaths: string[]
+  ) => Promise<string>;
   public readonly reportError?: (
     msg: string,
     err?: Error,
@@ -81,6 +86,7 @@ export class BuildContext<TJob extends Job> {
     this.logBuffer = options.logBuffer;
     this.cacheManager = options.cacheManager;
     this.runGlobalExpoCliCommand = options.runGlobalExpoCliCommand;
+    this.deliverBuildArtifacts = options.deliverBuildArtifacts;
     this.reportError = options.reportError;
     this.metadata = options.metadata;
     this.skipNativeBuild = options.skipNativeBuild;
