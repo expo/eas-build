@@ -141,19 +141,10 @@ export function runExpoCliCommand<TJob extends Job>(
   ctx: BuildContext<TJob>,
   args: string[],
   options: SpawnOptions,
-  {
-    forceUseGlobalExpoCli = false,
-    extraArgsForGlobalExpoCli = [],
-  }: { forceUseGlobalExpoCli?: boolean; extraArgsForGlobalExpoCli?: string[] } = {}
+  { forceUseGlobalExpoCli = false } = {}
 ): SpawnPromise<SpawnResult> {
-  if (
-    forceUseGlobalExpoCli ||
-    ctx.env.EXPO_USE_LOCAL_CLI === '0' ||
-    !ctx.appConfig.sdkVersion ||
-    semver.satisfies(ctx.appConfig.sdkVersion, '<46')
-  ) {
-    const updatedArgs = [...args, ...extraArgsForGlobalExpoCli];
-    return ctx.runGlobalExpoCliCommand(updatedArgs.join(' '), options);
+  if (shouldUseGlobalExpoCli(ctx, forceUseGlobalExpoCli)) {
+    return ctx.runGlobalExpoCliCommand(args.join(' '), options);
   } else {
     const argsWithExpo = ['expo', ...args];
     if (ctx.packageManager === PackageManager.NPM) {
@@ -166,6 +157,18 @@ export function runExpoCliCommand<TJob extends Job>(
       throw new Error(`Unsupported package manager: ${ctx.packageManager}`);
     }
   }
+}
+
+export function shouldUseGlobalExpoCli<TJob extends Job>(
+  ctx: BuildContext<TJob>,
+  forceUseGlobalExpoCli = false
+): boolean {
+  return (
+    forceUseGlobalExpoCli ||
+    ctx.env.EXPO_USE_LOCAL_CLI === '0' ||
+    !ctx.appConfig.sdkVersion ||
+    semver.satisfies(ctx.appConfig.sdkVersion, '<46')
+  );
 }
 
 async function runExpoDoctor<TJob extends Job>(ctx: BuildContext<TJob>): Promise<SpawnResult> {
