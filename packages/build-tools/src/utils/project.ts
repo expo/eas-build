@@ -141,7 +141,10 @@ export function runExpoCliCommand<TJob extends Job>(
   ctx: BuildContext<TJob>,
   args: string[],
   options: SpawnOptions,
-  { forceUseGlobalExpoCli = false } = {}
+  {
+    forceUseGlobalExpoCli = false,
+    extraArgsForGlobalExpoCli = [],
+  }: { forceUseGlobalExpoCli?: boolean; extraArgsForGlobalExpoCli?: string[] } = {}
 ): SpawnPromise<SpawnResult> {
   if (
     forceUseGlobalExpoCli ||
@@ -149,7 +152,8 @@ export function runExpoCliCommand<TJob extends Job>(
     !ctx.appConfig.sdkVersion ||
     semver.satisfies(ctx.appConfig.sdkVersion, '<46')
   ) {
-    return ctx.runGlobalExpoCliCommand(args.join(' '), options);
+    const updatedArgs = [...args, ...extraArgsForGlobalExpoCli];
+    return ctx.runGlobalExpoCliCommand(updatedArgs.join(' '), options);
   } else {
     const argsWithExpo = ['expo', ...args];
     if (ctx.packageManager === PackageManager.NPM) {

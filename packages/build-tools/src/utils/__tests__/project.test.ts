@@ -77,6 +77,29 @@ describe(runExpoCliCommand, () => {
       expect(ctx.runGlobalExpoCliCommand).toHaveBeenCalledWith('doctor', expect.any(Object));
       expect(spawn).not.toHaveBeenCalled();
     });
+
+    it('does not append extraArgsForGlobalExpoCli to command args for the local Expo CLI call', () => {
+      const mockExpoConfig = mock<ExpoConfig>();
+      when(mockExpoConfig.sdkVersion).thenReturn('46.0.0');
+      const expoConfig = instance(mockExpoConfig);
+
+      const mockCtx = mock<BuildContext<Android.Job>>();
+      when(mockCtx.packageManager).thenReturn(PackageManager.PNPM);
+      when(mockCtx.appConfig).thenReturn(expoConfig);
+      when(mockCtx.runGlobalExpoCliCommand).thenReturn(jest.fn());
+      const ctx = instance(mockCtx);
+
+      void runExpoCliCommand(
+        ctx,
+        ['prebuild'],
+        {},
+        {
+          extraArgsForGlobalExpoCli: ['--non-interactive'],
+        }
+      );
+      expect(ctx.runGlobalExpoCliCommand).not.toHaveBeenCalled();
+      expect(spawn).toHaveBeenCalledWith('pnpm', ['dlx', 'expo', 'prebuild'], expect.any(Object));
+    });
   });
 
   describe('EXPO_USE_LOCAL_CLI = 0', () => {
@@ -112,6 +135,32 @@ describe(runExpoCliCommand, () => {
 
       void runExpoCliCommand(ctx, ['doctor'], {});
       expect(ctx.runGlobalExpoCliCommand).toHaveBeenCalledWith('doctor', expect.any(Object));
+      expect(spawn).not.toHaveBeenCalled();
+    });
+
+    it('appends extraArgsForGlobalExpoCli to command args for the global Expo CLI call', () => {
+      const mockExpoConfig = mock<ExpoConfig>();
+      when(mockExpoConfig.sdkVersion).thenReturn('45.0.0');
+      const expoConfig = instance(mockExpoConfig);
+
+      const mockCtx = mock<BuildContext<Android.Job>>();
+      when(mockCtx.packageManager).thenReturn(PackageManager.PNPM);
+      when(mockCtx.appConfig).thenReturn(expoConfig);
+      when(mockCtx.runGlobalExpoCliCommand).thenReturn(jest.fn());
+      const ctx = instance(mockCtx);
+
+      void runExpoCliCommand(
+        ctx,
+        ['prebuild'],
+        {},
+        {
+          extraArgsForGlobalExpoCli: ['--non-interactive'],
+        }
+      );
+      expect(ctx.runGlobalExpoCliCommand).toHaveBeenCalledWith(
+        'prebuild --non-interactive',
+        expect.any(Object)
+      );
       expect(spawn).not.toHaveBeenCalled();
     });
   });

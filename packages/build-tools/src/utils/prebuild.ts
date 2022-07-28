@@ -29,19 +29,17 @@ export async function prebuildAsync<TJob extends Job>(
   };
 
   const prebuildCommandArgs = getPrebuildCommandArgs(ctx.job);
-  await runExpoCliCommand(ctx, prebuildCommandArgs, spawnOptions);
+  await runExpoCliCommand(ctx, prebuildCommandArgs, spawnOptions, {
+    extraArgsForGlobalExpoCli: ['--non-interactive'],
+  });
   await installDependencies(ctx);
 }
 
 function getPrebuildCommandArgs(job: Job): string[] {
   let prebuildCommand =
-    job.experimental?.prebuildCommand ??
-    `prebuild --non-interactive --no-install --platform ${job.platform}`;
+    job.experimental?.prebuildCommand ?? `prebuild --no-install --platform ${job.platform}`;
   if (!prebuildCommand.match(/(?:--platform| -p)/)) {
     prebuildCommand = `${prebuildCommand} --platform ${job.platform}`;
-  }
-  if (!prebuildCommand.match(/--non-interactive/)) {
-    prebuildCommand = `${prebuildCommand} --non-interactive`;
   }
   const npxCommandPrefix = 'npx ';
   const expoCommandPrefix = 'expo ';
