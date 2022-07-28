@@ -4,7 +4,7 @@ import semver from 'semver';
 
 import { BuildContext } from '../context';
 
-import { installDependencies, runExpoCliCommand } from './project';
+import { installDependencies, runExpoCliCommand, shouldUseGlobalExpoCli } from './project';
 
 export interface PrebuildOptions {
   extraEnvs?: Record<string, string>;
@@ -28,20 +28,17 @@ export async function prebuildAsync<TJob extends Job>(
     },
   };
 
-  const prebuildCommandArgs = getPrebuildCommandArgs(ctx.job);
+  const prebuildCommandArgs = getPrebuildCommandArgs(ctx);
   await runExpoCliCommand(ctx, prebuildCommandArgs, spawnOptions);
   await installDependencies(ctx);
 }
 
-function getPrebuildCommandArgs(job: Job): string[] {
+function getPrebuildCommandArgs<TJob extends Job>(ctx: BuildContext<TJob>): string[] {
   let prebuildCommand =
-    job.experimental?.prebuildCommand ??
-    `prebuild --non-interactive --no-install --platform ${job.platform}`;
+    ctx.job.experimental?.prebuildCommand ??
+    `prebuild --non-interactive --no-install --platform ${ctx.job.platform}`;
   if (!prebuildCommand.match(/(?:--platform| -p)/)) {
-    prebuildCommand = `${prebuildCommand} --platform ${job.platform}`;
-  }
-  if (!prebuildCommand.match(/--non-interactive/)) {
-    prebuildCommand = `${prebuildCommand} --non-interactive`;
+    prebuildCommand = `${prebuildCommand} --platform ${ctx.job.platform}`;
   }
   const npxCommandPrefix = 'npx ';
   const expoCommandPrefix = 'expo ';
@@ -54,6 +51,9 @@ function getPrebuildCommandArgs(job: Job): string[] {
   }
   if (prebuildCommand.startsWith(expoCliCommandPrefix)) {
     prebuildCommand = prebuildCommand.substring(expoCliCommandPrefix.length).trim();
+  }
+  if (!shouldUseGlobalExpoCli(ctx)) {
+    prebuildCommand = prebuildCommand.replace(' --non-interactive', '');
   }
   return prebuildCommand.split(' ');
 }
