@@ -114,6 +114,11 @@ export type Metadata = {
    * It's either adhoc or universal
    */
   iosEnterpriseProvisioning?: 'adhoc' | 'universal';
+
+  /**
+   * Message attached to the build.
+   */
+  message?: string;
 };
 
 export const MetadataSchema = Joi.object({
@@ -138,6 +143,7 @@ export const MetadataSchema = Joi.object({
   isGitWorkingTreeDirty: Joi.boolean(),
   username: Joi.string(),
   iosEnterpriseProvisioning: Joi.string().valid('adhoc', 'universal'),
+  message: Joi.string().max(1024),
 });
 
 export function sanitizeMetadata(metadata: object): Metadata {
