@@ -15,7 +15,7 @@ export enum Hook {
   PRE_UPLOAD_ARTIFACTS = 'eas-build-pre-upload-artifacts',
   ON_BUILD_SUCCESS = 'eas-build-on-success',
   ON_BUILD_ERROR = 'eas-build-on-error',
-  ON_BUILD_COMPLETED = 'eas-build-on-completed',
+  ON_BUILD_COMPLETE = 'eas-build-on-complete',
 }
 
 export async function runHookIfPresent<TJob extends Job>(

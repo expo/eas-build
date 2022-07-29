@@ -24,7 +24,7 @@ export async function buildAndroidAsync(
     logger,
     logBuffer,
     runGlobalExpoCliCommand: runGlobalExpoCliCommandAsync,
-    deliverBuildArtifacts: prepareBuildArtifact,
+    uploadBuildArtifacts: prepareBuildArtifact,
     env,
     skipNativeBuild: config.skipNativeBuild,
   });
