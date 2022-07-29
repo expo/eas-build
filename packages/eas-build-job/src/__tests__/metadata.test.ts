@@ -16,6 +16,7 @@ describe('MetadataSchema', () => {
       workflow: 'generic',
       username: 'notdominik',
       iosEnterpriseProvisioning: 'adhoc',
+      message: 'fix foo, bar, and baz',
     };
     const { value, error } = MetadataSchema.validate(metadata, {
       stripUnknown: true,
@@ -39,6 +40,7 @@ describe('MetadataSchema', () => {
       trackingContext: {},
       workflow: 'generic',
       username: 'notdominik',
+      message: 'a'.repeat(1025),
     };
     const { error } = MetadataSchema.validate(metadata, {
       stripUnknown: true,
@@ -46,7 +48,7 @@ describe('MetadataSchema', () => {
       abortEarly: false,
     });
     expect(error?.message).toEqual(
-      '"credentialsSource" must be one of [local, remote]. "gitCommitHash" length must be 40 characters long. "gitCommitHash" must only contain hexadecimal characters'
+      '"credentialsSource" must be one of [local, remote]. "gitCommitHash" length must be 40 characters long. "gitCommitHash" must only contain hexadecimal characters. "message" length must be less than or equal to 1024 characters long'
     );
   });
 });
