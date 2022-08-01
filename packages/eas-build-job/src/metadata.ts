@@ -100,6 +100,11 @@ export type Metadata = {
   gitCommitHash?: string;
 
   /**
+   * Git commit message
+   */
+  gitCommitMessage?: string;
+
+  /**
    * State of the git working tree
    */
   isGitWorkingTreeDirty?: boolean;
@@ -140,6 +145,7 @@ export const MetadataSchema = Joi.object({
   appIdentifier: Joi.string(),
   buildProfile: Joi.string(),
   gitCommitHash: Joi.string().length(40).hex(),
+  gitCommitMessage: Joi.string().max(4096),
   isGitWorkingTreeDirty: Joi.boolean(),
   username: Joi.string(),
   iosEnterpriseProvisioning: Joi.string().valid('adhoc', 'universal'),
