@@ -24,6 +24,7 @@ export async function buildIosAsync(
     logger,
     logBuffer,
     runGlobalExpoCliCommand: runGlobalExpoCliCommandAsync,
+    uploadBuildArtifacts: prepareBuildArtifact,
     env,
     skipNativeBuild: config.skipNativeBuild,
   });
@@ -32,7 +33,5 @@ export async function buildIosAsync(
     ctx.logger.info({ job: omit(ctx.job, 'secrets') }, 'Starting build');
   });
 
-  const artifactPaths = await Builders.iosBuilder(ctx);
-
-  return await prepareBuildArtifact(ctx, artifactPaths);
+  return await Builders.iosBuilder(ctx);
 }

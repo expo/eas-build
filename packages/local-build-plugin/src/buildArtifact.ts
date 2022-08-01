@@ -10,7 +10,7 @@ import config from './config';
 export async function prepareBuildArtifact(
   ctx: BuildContext<Job>,
   artifactPaths: string[]
-): Promise<string | undefined> {
+): Promise<string> {
   ctx.logger.info({ phase: 'PREPARE_ARTIFACTS' }, 'Archiving artifacts');
   let suffix;
   let localPath;

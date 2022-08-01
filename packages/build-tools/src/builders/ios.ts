@@ -17,7 +17,32 @@ import { runFastlaneGym } from '../ios/fastlane';
 import { installPods } from '../ios/pod';
 import { prebuildAsync } from '../utils/prebuild';
 
-export default async function iosBuilder(ctx: BuildContext<Ios.Job>): Promise<string[]> {
+export default async function iosBuilder(ctx: BuildContext<Ios.Job>): Promise<string> {
+  let buildSuccess = true;
+  try {
+    const archiveLocation = await buildAsync(ctx);
+    await ctx.runBuildPhase(BuildPhase.ON_BUILD_SUCCESS_HOOK, async () => {
+      await runHookIfPresent(ctx, Hook.ON_BUILD_SUCCESS);
+    });
+    return archiveLocation;
+  } catch (err: any) {
+    buildSuccess = false;
+    await ctx.runBuildPhase(BuildPhase.ON_BUILD_ERROR_HOOK, async () => {
+      await runHookIfPresent(ctx, Hook.ON_BUILD_ERROR);
+    });
+    throw err;
+  } finally {
+    await ctx.runBuildPhase(BuildPhase.ON_BUILD_COMPLETE_HOOK, async () => {
+      await runHookIfPresent(ctx, Hook.ON_BUILD_COMPLETE, {
+        extraEnvs: {
+          EAS_BUILD_STATUS: buildSuccess ? 'finished' : 'errored',
+        },
+      });
+    });
+  }
+}
+
+async function buildAsync(ctx: BuildContext<Ios.Job>): Promise<string> {
   await setup(ctx);
   const hasNativeCode = ctx.job.type === Workflow.GENERIC;
 
@@ -87,19 +112,15 @@ export default async function iosBuilder(ctx: BuildContext<Ios.Job>): Promise<st
     await ctx.cacheManager?.saveCache(ctx);
   });
 
-  return await ctx.runBuildPhase(
-    BuildPhase.UPLOAD_ARTIFACTS,
-    async () => {
-      const buildArtifacts = await findBuildArtifacts(
-        ctx.reactNativeProjectDirectory,
-        resolveArtifactPath(ctx),
-        ctx.logger
-      );
-      ctx.logger.info(`Build artifacts: ${buildArtifacts.join(', ')}`);
-      return buildArtifacts;
-    },
-    { doNotMarkEnd: true }
-  );
+  return await ctx.runBuildPhase(BuildPhase.UPLOAD_ARTIFACTS, async () => {
+    const buildArtifacts = await findBuildArtifacts(
+      ctx.reactNativeProjectDirectory,
+      resolveArtifactPath(ctx),
+      ctx.logger
+    );
+    ctx.logger.info(`Build artifacts: ${buildArtifacts.join(', ')}`);
+    return await ctx.uploadBuildArtifacts(ctx, buildArtifacts);
+  });
 }
 
 function resolveScheme(ctx: BuildContext<Ios.Job>): string {
