@@ -16,6 +16,7 @@ import CredentialsManager from '../ios/credentials/manager';
 import { runFastlaneGym } from '../ios/fastlane';
 import { installPods } from '../ios/pod';
 import { prebuildAsync } from '../utils/prebuild';
+import { isTVOS } from '../ios/tvos';
 
 export default async function iosBuilder(ctx: BuildContext<Ios.Job>): Promise<string> {
   let buildSuccess = true;
@@ -164,6 +165,9 @@ function resolveArtifactPath(ctx: BuildContext<Ios.Job>): string {
   if (ctx.job.artifactPath) {
     return ctx.job.artifactPath;
   } else if (ctx.job.simulator) {
+    if (isTVOS(ctx, ctx.job.buildConfiguration)) {
+      return 'ios/build/Build/Products/*-appletvsimulator/*.app';
+    }
     return 'ios/build/Build/Products/*-iphonesimulator/*.app';
   } else {
     return 'ios/build/*.ipa';

@@ -29,6 +29,7 @@ interface SimulatorBuildOptions {
   derivedDataPath: string;
   clean: boolean;
   logsDirectory: string;
+  simulatorDestination: string;
 }
 
 export async function createGymfileForArchiveBuild({
@@ -81,6 +82,7 @@ export async function createGymfileForSimulatorBuild({
   buildConfiguration,
   derivedDataPath,
   logsDirectory,
+  simulatorDestination,
 }: SimulatorBuildOptions): Promise<void> {
   await fs.mkdirp(logsDirectory);
   await createGymfile({
@@ -89,6 +91,7 @@ export async function createGymfileForSimulatorBuild({
     vars: {
       SCHEME: scheme,
       SCHEME_BUILD_CONFIGURATION: buildConfiguration,
+      SCHEME_SIMULATOR_DESTINATION: simulatorDestination,
       DERIVED_DATA_PATH: derivedDataPath,
       CLEAN: String(clean),
       LOGS_DIRECTORY: logsDirectory,
