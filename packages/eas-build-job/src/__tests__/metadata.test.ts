@@ -18,6 +18,8 @@ describe('MetadataSchema', () => {
       username: 'notdominik',
       iosEnterpriseProvisioning: 'adhoc',
       message: 'fix foo, bar, and baz',
+      runFromCI: true,
+      runWithNoWaitFlag: true,
     };
     const { value, error } = MetadataSchema.validate(metadata, {
       stripUnknown: true,
@@ -43,6 +45,8 @@ describe('MetadataSchema', () => {
       workflow: 'generic',
       username: 'notdominik',
       message: 'a'.repeat(1025),
+      runFromCI: true,
+      runWithNoWaitFlag: true,
     };
     const { error } = MetadataSchema.validate(metadata, {
       stripUnknown: true,

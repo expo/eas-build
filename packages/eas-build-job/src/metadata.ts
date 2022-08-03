@@ -124,6 +124,16 @@ export type Metadata = {
    * Message attached to the build.
    */
   message?: string;
+
+  /**
+   * Indicates whether the build was run from CI.
+   */
+  runFromCI?: boolean;
+
+  /**
+   * Indicates whether the build was run with --no-wait flag.
+   */
+  runWithNoWaitFlag?: boolean;
 };
 
 export const MetadataSchema = Joi.object({
@@ -150,6 +160,8 @@ export const MetadataSchema = Joi.object({
   username: Joi.string(),
   iosEnterpriseProvisioning: Joi.string().valid('adhoc', 'universal'),
   message: Joi.string().max(1024),
+  runFromCI: Joi.boolean(),
+  runWithNoWaitFlag: Joi.boolean(),
 });
 
 export function sanitizeMetadata(metadata: object): Metadata {
