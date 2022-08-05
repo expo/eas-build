@@ -16,15 +16,15 @@ export function isTVOS(
   ctx: BuildContext<Ios.Job>,
   buildConfiguration: string
 ): boolean {
-  if (ctx.job.scheme) {
-    const project = IOSConfig.XcodeUtils.getPbxproj(ctx.reactNativeProjectDirectory);
-
-    const xcBuildConfiguration = IOSConfig.Target.getXCBuildConfigurationFromPbxproj(project, {
-      targetName: ctx.job.scheme,
-      buildConfiguration,
-    });
-    return xcBuildConfiguration?.buildSettings?.SDKROOT?.includes('appletv');
-  } else {
+  if (!ctx.job.scheme) {
     return false;
   }
+  
+  const project = IOSConfig.XcodeUtils.getPbxproj(ctx.reactNativeProjectDirectory);
+
+  const xcBuildConfiguration = IOSConfig.Target.getXCBuildConfigurationFromPbxproj(project, {
+    targetName: ctx.job.scheme,
+    buildConfiguration,
+  });
+  return xcBuildConfiguration?.buildSettings?.SDKROOT?.includes('appletv');
 }
