@@ -165,10 +165,7 @@ function resolveArtifactPath(ctx: BuildContext<Ios.Job>): string {
   if (ctx.job.artifactPath) {
     return ctx.job.artifactPath;
   } else if (ctx.job.simulator) {
-    if (isTVOS(ctx, ctx.job.buildConfiguration)) {
-      return 'ios/build/Build/Products/*-appletvsimulator/*.app';
-    }
-    return 'ios/build/Build/Products/*-iphonesimulator/*.app';
+    return 'ios/build/Build/Products/*simulator/*.app';
   } else {
     return 'ios/build/*.ipa';
   }
