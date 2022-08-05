@@ -14,7 +14,7 @@ import { BuildContext } from '../context';
  */
 export function isTVOS(
   ctx: BuildContext<Ios.Job>,
-  buildConfiguration: string | undefined
+  buildConfiguration: string
 ): boolean {
   if (ctx.job.scheme) {
     const project = IOSConfig.XcodeUtils.getPbxproj(ctx.reactNativeProjectDirectory);
