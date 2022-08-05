@@ -9,22 +9,22 @@ import { BuildContext } from '../context';
  * Use XcodeUtils to check if a build configuration is for Apple TV and not iOS
  *
  * @param ctx The build context
- * @param buildConfiguration The build configuration selected (usually "Release")
  * @returns true if this is an Apple TV configuration, false otherwise
  */
-export function isTVOS(
-  ctx: BuildContext<Ios.Job>,
-  buildConfiguration: string
-): boolean {
+export async function isTVOS(ctx: BuildContext<Ios.Job>): Promise<boolean> {
   if (!ctx.job.scheme) {
     return false;
   }
-  
   const project = IOSConfig.XcodeUtils.getPbxproj(ctx.reactNativeProjectDirectory);
 
+  const targetName = await IOSConfig.BuildScheme.getApplicationTargetNameForSchemeAsync(
+    ctx.reactNativeProjectDirectory,
+    ctx.job.scheme || ''
+  );
+
   const xcBuildConfiguration = IOSConfig.Target.getXCBuildConfigurationFromPbxproj(project, {
-    targetName: ctx.job.scheme,
-    buildConfiguration,
+    targetName,
+    buildConfiguration: ctx.job.buildConfiguration,
   });
   return xcBuildConfiguration?.buildSettings?.SDKROOT?.includes('appletv');
 }

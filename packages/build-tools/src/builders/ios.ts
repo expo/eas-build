@@ -16,7 +16,6 @@ import CredentialsManager from '../ios/credentials/manager';
 import { runFastlaneGym } from '../ios/fastlane';
 import { installPods } from '../ios/pod';
 import { prebuildAsync } from '../utils/prebuild';
-import { isTVOS } from '../ios/tvos';
 
 export default async function iosBuilder(ctx: BuildContext<Ios.Job>): Promise<string> {
   let buildSuccess = true;

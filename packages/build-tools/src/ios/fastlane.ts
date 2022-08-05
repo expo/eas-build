@@ -103,9 +103,8 @@ async function ensureGymfileExists<TJob extends Ios.Job>(
 
   ctx.logger.info('Creating Gymfile');
   if (ctx.job.simulator) {
-    const simulatorDestination = isTVOS(ctx, buildConfiguration)
-      ? 'generic/platform=tvOS Simulator'
-      : 'generic/platform=iOS Simulator';
+    const isTV = await isTVOS(ctx);
+    const simulatorDestination = `generic/platform=${isTV ? 'tvOS' : 'iOS'} Simulator`;
 
     await createGymfileForSimulatorBuild({
       outputFile: gymfilePath,
@@ -128,5 +127,6 @@ async function ensureGymfileExists<TJob extends Ios.Job>(
       entitlements: entitlements ?? undefined,
     });
   }
+
   ctx.logger.info('Gymfile created');
 }
