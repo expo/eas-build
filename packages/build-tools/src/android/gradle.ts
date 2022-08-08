@@ -23,7 +23,7 @@ export async function runGradleCommand(
 ): Promise<void> {
   const androidDir = path.join(ctx.reactNativeProjectDirectory, 'android');
   ctx.logger.info(`Running './gradlew ${gradleCommand}' in ${androidDir}`);
-  await spawn('sh', ['gradlew', gradleCommand], {
+  await spawn('bash', ['-c', `./gradlew ${gradleCommand}`], {
     cwd: androidDir,
     logger: ctx.logger,
     lineTransformer: (line?: string) => {
