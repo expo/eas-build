@@ -3,6 +3,8 @@ import { IOSConfig } from '@expo/config-plugins';
 
 import { BuildContext } from '../context';
 
+import { resolveBuildConfiguration, resolveScheme } from './resolve';
+
 // Functions specific to Apple TV support should be added here
 
 /**
@@ -12,19 +14,20 @@ import { BuildContext } from '../context';
  * @returns true if this is an Apple TV configuration, false otherwise
  */
 export async function isTVOS(ctx: BuildContext<Ios.Job>): Promise<boolean> {
-  if (!ctx.job.scheme) {
-    return false;
-  }
+  const scheme = resolveScheme(ctx);
+
   const project = IOSConfig.XcodeUtils.getPbxproj(ctx.reactNativeProjectDirectory);
 
   const targetName = await IOSConfig.BuildScheme.getApplicationTargetNameForSchemeAsync(
     ctx.reactNativeProjectDirectory,
-    ctx.job.scheme || ''
+    scheme
   );
+
+  const buildConfiguration = resolveBuildConfiguration(ctx);
 
   const xcBuildConfiguration = IOSConfig.Target.getXCBuildConfigurationFromPbxproj(project, {
     targetName,
-    buildConfiguration: ctx.job.buildConfiguration,
+    buildConfiguration,
   });
   return xcBuildConfiguration?.buildSettings?.SDKROOT?.includes('appletv');
 }
