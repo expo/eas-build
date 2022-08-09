@@ -1,4 +1,10 @@
-import { Job, sanitizeJob, ArchiveSourceType } from '@expo/eas-build-job';
+import {
+  Job,
+  sanitizeJob,
+  ArchiveSourceType,
+  Metadata,
+  sanitizeMetadata,
+} from '@expo/eas-build-job';
 import Joi from 'joi';
 import chalk from 'chalk';
 import fs from 'fs-extra';
@@ -9,10 +15,12 @@ const packageJson = require('../package.json');
 
 interface Params {
   job: Job;
+  metadata: Metadata;
 }
 
 const ParamsSchema = Joi.object<Params>({
   job: Joi.object().unknown(),
+  metadata: Joi.object().unknown(),
 });
 
 export async function parseInputAsync(): Promise<Params> {
@@ -53,7 +61,8 @@ function validateParams(params: object): Params {
   }
   try {
     const job = sanitizeJob(value.job);
-    return { ...value, job };
+    const metadata = sanitizeMetadata(value.metadata);
+    return { ...value, job, metadata };
   } catch (err) {
     console.log(`Currently using ${packageJson.name}@${packageJson.version}.`);
     console.error(
