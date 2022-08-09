@@ -9,9 +9,9 @@ listenForInterrupts();
 
 async function main(): Promise<void> {
   try {
-    const { job } = await parseInputAsync();
+    const { job, metadata } = await parseInputAsync();
     await checkRuntimeAsync(job);
-    await buildAsync(job);
+    await buildAsync(job, metadata);
   } catch (err: any) {
     if (!shouldExit()) {
       console.error(chalk.red(err.message));
