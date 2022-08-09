@@ -1,5 +1,3 @@
-import assert from 'assert';
-
 import plist from '@expo/plist';
 import { IOSConfig } from '@expo/config-plugins';
 import { BuildPhase, Ios, Workflow } from '@expo/eas-build-job';
@@ -16,6 +14,7 @@ import CredentialsManager from '../ios/credentials/manager';
 import { runFastlaneGym } from '../ios/fastlane';
 import { installPods } from '../ios/pod';
 import { prebuildAsync } from '../utils/prebuild';
+import { resolveArtifactPath, resolveBuildConfiguration, resolveScheme } from '../ios/resolve';
 
 export default async function iosBuilder(ctx: BuildContext<Ios.Job>): Promise<string> {
   let buildSuccess = true;
@@ -123,15 +122,6 @@ async function buildAsync(ctx: BuildContext<Ios.Job>): Promise<string> {
   });
 }
 
-function resolveScheme(ctx: BuildContext<Ios.Job>): string {
-  if (ctx.job.scheme) {
-    return ctx.job.scheme;
-  }
-  const schemes = IOSConfig.BuildScheme.getSchemesFromXcodeproj(ctx.reactNativeProjectDirectory);
-  assert(schemes.length === 1, 'Ejected project should have exactly one scheme');
-  return schemes[0];
-}
-
 async function readEntitlementsAsync(
   ctx: BuildContext<Ios.Job>,
   { scheme, buildConfiguration }: { scheme: string; buildConfiguration: string }
@@ -157,25 +147,5 @@ async function readEntitlementsAsync(
     ctx.logger.warn({ err }, 'Failed to read entitlements');
     ctx.markBuildPhaseHasWarnings();
     return null;
-  }
-}
-
-function resolveArtifactPath(ctx: BuildContext<Ios.Job>): string {
-  if (ctx.job.artifactPath) {
-    return ctx.job.artifactPath;
-  } else if (ctx.job.simulator) {
-    return 'ios/build/Build/Products/*-iphonesimulator/*.app';
-  } else {
-    return 'ios/build/*.ipa';
-  }
-}
-
-function resolveBuildConfiguration(ctx: BuildContext<Ios.Job>): string {
-  if (ctx.job.buildConfiguration) {
-    return ctx.job.buildConfiguration;
-  } else if (ctx.job.developmentClient) {
-    return 'Debug';
-  } else {
-    return 'Release';
   }
 }

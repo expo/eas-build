@@ -11,6 +11,7 @@ import { BuildContext, SkipNativeBuildError } from '../context';
 import { createGymfileForArchiveBuild, createGymfileForSimulatorBuild } from './gymfile';
 import { Credentials } from './credentials/manager';
 import { XcodeBuildLogger } from './xcpretty';
+import { isTVOS } from './tvos';
 
 export async function runFastlaneGym<TJob extends Ios.Job>(
   ctx: BuildContext<TJob>,
@@ -102,6 +103,9 @@ async function ensureGymfileExists<TJob extends Ios.Job>(
 
   ctx.logger.info('Creating Gymfile');
   if (ctx.job.simulator) {
+    const isTV = await isTVOS(ctx);
+    const simulatorDestination = `generic/platform=${isTV ? 'tvOS' : 'iOS'} Simulator`;
+
     await createGymfileForSimulatorBuild({
       outputFile: gymfilePath,
       scheme,
@@ -109,6 +113,7 @@ async function ensureGymfileExists<TJob extends Ios.Job>(
       derivedDataPath: './build',
       clean: false,
       logsDirectory,
+      simulatorDestination,
     });
   } else {
     await createGymfileForArchiveBuild({
@@ -122,5 +127,6 @@ async function ensureGymfileExists<TJob extends Ios.Job>(
       entitlements: entitlements ?? undefined,
     });
   }
+
   ctx.logger.info('Gymfile created');
 }
