@@ -26,7 +26,7 @@ export async function buildAsync(job: Job, metadata: Metadata): Promise<void> {
       ...process.env,
       ...job.builderEnvironment?.env,
       EAS_BUILD: '1',
-      EAS_BUILD_ENVIRONMENT: 'local-build-plugin',
+      EAS_BUILD_RUNNER: 'local-build-plugin',
       EAS_BUILD_PLATFORM: job.platform,
       EAS_BUILD_WORKINGDIR: path.join(workingdir, 'build'),
       EAS_BUILD_PROFILE: metadata.buildProfile,

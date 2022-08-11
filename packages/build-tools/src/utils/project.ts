@@ -22,12 +22,8 @@ export async function setup<TJob extends Job>(ctx: BuildContext<TJob>): Promise<
     if (ctx.env.NPM_TOKEN) {
       await createNpmrcIfNotExistsAsync(ctx);
     }
-    if (ctx.job.platform === Platform.IOS && ctx.env.EAS_BUILD_ENVIRONMENT === 'eas-build') {
-      // .xcode.env.local
-      const deleted = await deleteXcodeEnvLocalIfExistsAsync(ctx as BuildContext<Ios.Job>);
-      if (deleted) {
-        ctx.markBuildPhaseHasWarnings();
-      }
+    if (ctx.job.platform === Platform.IOS && ctx.env.EAS_BUILD_RUNNER === 'eas-build') {
+      await deleteXcodeEnvLocalIfExistsAsync(ctx as BuildContext<Ios.Job>);
     }
     // try to read package.json to see if it exists and is valid
     return readPackageJson(ctx.reactNativeProjectDirectory);
