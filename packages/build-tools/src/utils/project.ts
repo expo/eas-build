@@ -1,12 +1,13 @@
 import path from 'path';
 
 import downloadFile from '@expo/downloader';
-import { ArchiveSourceType, BuildPhase, Job } from '@expo/eas-build-job';
+import { ArchiveSourceType, BuildPhase, Ios, Job, Platform } from '@expo/eas-build-job';
 import spawn, { SpawnOptions, SpawnPromise, SpawnResult } from '@expo/turtle-spawn';
 import fs from 'fs-extra';
 import semver from 'semver';
 
 import { BuildContext } from '../context';
+import { deleteXcodeEnvLocalIfExistsAsync } from '../ios/xcodeEnv';
 import { createNpmErrorHandler } from '../utils/handleNpmError';
 
 import { Hook, runHookIfPresent } from './hooks';
@@ -20,6 +21,9 @@ export async function setup<TJob extends Job>(ctx: BuildContext<TJob>): Promise<
     await downloadAndUnpackProject(ctx);
     if (ctx.env.NPM_TOKEN) {
       await createNpmrcIfNotExistsAsync(ctx);
+    }
+    if (ctx.job.platform === Platform.IOS && ctx.env.EAS_BUILD_RUNNER === 'eas-build') {
+      await deleteXcodeEnvLocalIfExistsAsync(ctx as BuildContext<Ios.Job>);
     }
     // try to read package.json to see if it exists and is valid
     return readPackageJson(ctx.reactNativeProjectDirectory);
