@@ -44,6 +44,7 @@ export enum BuildPhaseResult {
   SUCCESS = 'success',
   FAIL = 'failed',
   WARNING = 'warning',
+  SKIPPED = 'skipped',
   UNKNOWN = 'unknown',
 }
 

@@ -76,6 +76,7 @@ export class BuildContext<TJob extends Job> {
 
   private readonly defaultLogger: bunyan;
   private buildPhase?: BuildPhase;
+  private buildPhaseSkipped = false;
   private buildPhaseHasWarnings = false;
   private _appConfig?: ExpoConfig;
 
@@ -129,7 +130,9 @@ export class BuildContext<TJob extends Job> {
     try {
       this.setBuildPhase(buildPhase, { doNotMarkStart });
       const result = await phase();
-      const buildPhaseResult: BuildPhaseResult = this.buildPhaseHasWarnings
+      const buildPhaseResult: BuildPhaseResult = this.buildPhaseSkipped
+        ? BuildPhaseResult.SKIPPED
+        : this.buildPhaseHasWarnings
         ? BuildPhaseResult.WARNING
         : BuildPhaseResult.SUCCESS;
       this.endCurrentBuildPhase({ result: buildPhaseResult, doNotMarkEnd });
@@ -160,6 +163,10 @@ export class BuildContext<TJob extends Job> {
       this.endCurrentBuildPhase({ result: BuildPhaseResult.FAIL });
       throw userError ?? err;
     }
+  }
+
+  public markBuildPhaseSkipped(): void {
+    this.buildPhaseSkipped = true;
   }
 
   public markBuildPhaseHasWarnings(): void {
@@ -200,6 +207,7 @@ export class BuildContext<TJob extends Job> {
     }
     this.logger = this.defaultLogger;
     this.buildPhase = undefined;
+    this.buildPhaseSkipped = false;
     this.buildPhaseHasWarnings = false;
   }
 }
