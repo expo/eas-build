@@ -51,18 +51,23 @@ async function buildAsync(ctx: BuildContext<Ios.Job>): Promise<string> {
       return await credentialsManager.prepare();
     });
 
-    if (!hasNativeCode) {
-      await ctx.runBuildPhase(
-        BuildPhase.PREBUILD,
-        async () => {
-          const extraEnvs: Record<string, string> = credentials?.teamId
-            ? { APPLE_TEAM_ID: credentials.teamId }
-            : {};
-          await prebuildAsync(ctx, { extraEnvs });
-        },
-        { onError: createNpmErrorHandler(ctx) }
-      );
-    }
+    await ctx.runBuildPhase(
+      BuildPhase.PREBUILD,
+      async () => {
+        if (hasNativeCode) {
+          ctx.markBuildPhaseSkipped();
+          ctx.logger.info(
+            'Skipped running "expo prebuild" because the "ios" directory already exists. Learn more about the build process: https://docs.expo.dev/build-reference/ios-builds/'
+          );
+          return;
+        }
+        const extraEnvs: Record<string, string> = credentials?.teamId
+          ? { APPLE_TEAM_ID: credentials.teamId }
+          : {};
+        await prebuildAsync(ctx, { extraEnvs });
+      },
+      { onError: createNpmErrorHandler(ctx) }
+    );
 
     await ctx.runBuildPhase(BuildPhase.RESTORE_CACHE, async () => {
       await ctx.cacheManager?.restoreCache(ctx);

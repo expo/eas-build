@@ -44,15 +44,22 @@ async function buildAsync(ctx: BuildContext<Android.Job>): Promise<string> {
     await ctx.runBuildPhase(BuildPhase.FIX_GRADLEW, async () => {
       await ensureLFLineEndingsInGradlewScript(ctx);
     });
-  } else {
-    await ctx.runBuildPhase(
-      BuildPhase.PREBUILD,
-      async () => {
-        await prebuildAsync(ctx);
-      },
-      { onError: createNpmErrorHandler(ctx) }
-    );
   }
+
+  await ctx.runBuildPhase(
+    BuildPhase.PREBUILD,
+    async () => {
+      if (hasNativeCode) {
+        ctx.markBuildPhaseSkipped();
+        ctx.logger.info(
+          'Skipped running "expo prebuild" because the "android" directory already exists. Learn more about the build process: https://docs.expo.dev/build-reference/android-builds/'
+        );
+        return;
+      }
+      await prebuildAsync(ctx);
+    },
+    { onError: createNpmErrorHandler(ctx) }
+  );
 
   await ctx.runBuildPhase(BuildPhase.RESTORE_CACHE, async () => {
     await ctx.cacheManager?.restoreCache(ctx);
