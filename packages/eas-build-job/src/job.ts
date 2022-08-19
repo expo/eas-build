@@ -29,7 +29,7 @@ export function sanitizeJob(
   if (job.platform === Platform.IOS) {
     setIosBuilderImageForManagedJob(job, sdkVersion);
   } else if (job.platform === Platform.ANDROID) {
-    setAndroidBuilderImage(job, reactNativeVersion);
+    setAndroidBuilderImage(job, sdkVersion, reactNativeVersion);
   }
 
   if (error) {
@@ -39,24 +39,30 @@ export function sanitizeJob(
   }
 }
 
-function setAndroidBuilderImage(job: Job, reactNativeVersion?: string): void {
-  if (job.builderEnvironment?.image || !reactNativeVersion) {
+export function setAndroidBuilderImage(
+  job: Job,
+  sdkVersion?: string,
+  reactNativeVersion?: string
+): void {
+  if (job.builderEnvironment?.image || !reactNativeVersion || !sdkVersion) {
     return;
   }
 
-  const ranges = Object.keys(Android.reactNativeVersionToDefaultBuilderImage);
-  const matchingRange = ranges.find((range) => semver.satisfies(reactNativeVersion, range));
-  if (!matchingRange) {
-    return;
+  for (const rule of Android.reactNativeImageMatchRules) {
+    if (
+      semver.satisfies(reactNativeVersion, rule.reactNativeSemverRange) &&
+      semver.satisfies(sdkVersion, rule.sdkSemverRange)
+    ) {
+      job.builderEnvironment = {
+        image: rule.image,
+        ...job.builderEnvironment,
+      };
+      return;
+    }
   }
-  const image = Android.reactNativeVersionToDefaultBuilderImage[matchingRange];
-  job.builderEnvironment = {
-    image,
-    ...job.builderEnvironment,
-  };
 }
 
-function setIosBuilderImageForManagedJob(job: Job, sdkVersion?: string): void {
+export function setIosBuilderImageForManagedJob(job: Job, sdkVersion?: string): void {
   if (job.type !== Workflow.MANAGED || job.builderEnvironment?.image || !sdkVersion) {
     return;
   }

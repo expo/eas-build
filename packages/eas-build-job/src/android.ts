@@ -44,13 +44,34 @@ export const builderBaseImages = [
   'ubuntu-22.04-jdk-11-ndk-r21e',
 ] as const;
 
-export const reactNativeVersionToDefaultBuilderImage: Record<
-  string,
-  typeof builderBaseImages[number]
-> = {
-  '>=0.68.0': 'ubuntu-18.04-jdk-11-ndk-r19c',
-  '<0.68.0': 'ubuntu-18.04-jdk-8-ndk-r19c',
-};
+interface ImageMatchRule {
+  image: typeof builderBaseImages[number];
+  reactNativeSemverRange: string;
+  sdkSemverRange: string;
+}
+
+export const reactNativeImageMatchRules: ImageMatchRule[] = [
+  {
+    image: 'ubuntu-18.04-jdk-11-ndk-r19c',
+    reactNativeSemverRange: '>=0.68.0',
+    sdkSemverRange: '<46',
+  },
+  {
+    image: 'ubuntu-18.04-jdk-8-ndk-r19c',
+    reactNativeSemverRange: '<0.68.0',
+    sdkSemverRange: '<46',
+  },
+  {
+    image: 'ubuntu-20.04-jdk-11-ndk-r21e',
+    reactNativeSemverRange: '>=0.68.0',
+    sdkSemverRange: '>=46',
+  },
+  {
+    image: 'ubuntu-20.04-jdk-8-ndk-r21e',
+    reactNativeSemverRange: '<0.68.0',
+    sdkSemverRange: '>=46',
+  },
+];
 
 export interface BuilderEnvironment {
   image?: typeof builderBaseImages[number];
