@@ -41,19 +41,18 @@ export abstract class UserError extends Error {
 
 export class UnknownError extends UserError {
   errorCode = ErrorCode.UKNOWN_ERROR;
-  message = 'Unknown error. Please see logs.';
+  message = 'Unknown error. See logs for more information.';
 }
 
 export class ServerError extends UserError {
   errorCode = ErrorCode.SERVER_ERROR;
-  message =
-    'Internal Server Error.\nPlease try again later. If the problem persists, please report the issue.';
+  message = 'Internal Server Error.\nTry again later. If the problem persists, report the issue.';
 }
 
 export class BuildTimeout extends ServerError {
   constructor(maxBuildTimeMs: number) {
     super();
-    this.message = `Your build has exceeded the maximum build time of ${
+    this.message = `Your build exceeded the maximum build time of ${
       maxBuildTimeMs / (60 * 1000)
     } minutes.`;
   }
@@ -87,7 +86,7 @@ export class InvalidKeystoreAliasError extends UserError {
 
 export class UnsupportedCocoaPodsVersion extends UserError {
   errorCode = ErrorCode.UNSUPPORTED_COCOAPODS_VERSION_ERROR;
-  message = `Your project requires a newer version of CocoaPods, you can update it in the build profile in eas.json by either:
+  message = `Your project requires a newer version of CocoaPods. You can update it in the build profile in eas.json by either:
 - changing the current version under key "cocoapods"
 - switching to an image that supports that version under key "image"`;
   docsUrl = 'https://docs.expo.dev/build-reference/eas-json/';
@@ -113,7 +112,7 @@ export class MissingGoogleServicesPlist extends UserError {
 
 export class UnknownFastlaneError extends UserError {
   errorCode = ErrorCode.UNKNOWN_FASTLANE_ERROR;
-  message = `Fastlane build failed with unknown error. Please refer to the "Run fastlane" and "Xcode Logs" phases.
+  message = `Fastlane build failed with unknown error. Refer to the "Run fastlane" and "Xcode Logs" phases.
 Fastlane errors in most cases are not printed at the end of the output, so you may not find any useful information in the last lines of output when looking for an error message.`;
 }
 
@@ -129,7 +128,7 @@ You are seeing this error because either:
       ? 'add the "cache.key" field (it can be set to any value) in the build profile in eas.json to invalidate the cache.'
       : 'update value of the "cache.key" field in the build profile in eas.json to invalidate the cache.'
   }
-  - Some of your npm packages have native code that depend on different versions of the same pod. Please see logs for more info.
+  - Some of your npm packages have native code that depend on different versions of the same pod. See logs for more information.
 `;
   }
 }
@@ -146,7 +145,7 @@ You are seeing this error because either:
       ? 'add the "cache.key" field (it can be set to any value) in the build profile in eas.json to invalidate the cache.'
       : 'update value of the "cache.key" field in the build profile in eas.json to invalidate the cache.'
   }
-  - Some of the pods used in your project depend on different versions of the same pod. Please see logs for more info.
+  - Some of the pods used in your project depend on different versions of the same pod. See logs for more information.
 `;
   }
 }
@@ -174,5 +173,6 @@ export class YarnLockChecksumError extends UserError {
 
 export class UnknownGradleError extends UserError {
   errorCode = ErrorCode.UNKNOWN_GRADLE_ERROR;
-  message = 'Gradle build failed with unknown error. Please see logs for the "Run gradlew" phase.';
+  message =
+    'Gradle build failed with unknown error. See logs for the "Run gradlew" phase for more information.';
 }
