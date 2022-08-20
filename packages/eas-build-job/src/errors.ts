@@ -112,7 +112,7 @@ export class MissingGoogleServicesPlist extends UserError {
 
 export class UnknownFastlaneError extends UserError {
   errorCode = ErrorCode.UNKNOWN_FASTLANE_ERROR;
-  message = `Fastlane build failed with unknown error. Refer to the "Run fastlane" and "Xcode Logs" phases.
+  message = `Fastlane build failed with unknown error. See logs for the "Run fastlane" and "Xcode Logs" phases for more information.
 Fastlane errors in most cases are not printed at the end of the output, so you may not find any useful information in the last lines of output when looking for an error message.`;
 }
 
