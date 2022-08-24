@@ -10,7 +10,7 @@ import config from './config';
 
 export async function buildIosAsync(
   job: Ios.Job,
-  { workingdir, env: baseEnv }: BuildParams
+  { workingdir, env: baseEnv, metadata }: BuildParams
 ): Promise<string | undefined> {
   const buildNumber = job.version?.buildNumber;
   const appVersion = job.version?.appVersion;
@@ -26,6 +26,7 @@ export async function buildIosAsync(
     runGlobalExpoCliCommand: runGlobalExpoCliCommandAsync,
     uploadBuildArtifacts: prepareBuildArtifact,
     env,
+    metadata,
     skipNativeBuild: config.skipNativeBuild,
   });
 

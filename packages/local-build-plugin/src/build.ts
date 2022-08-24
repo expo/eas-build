@@ -46,11 +46,11 @@ export async function buildAsync(job: Job, metadata: Metadata): Promise<void> {
     let artifactPath: string | undefined;
     switch (job.platform) {
       case Platform.ANDROID: {
-        artifactPath = await buildAndroidAsync(job, { env, workingdir });
+        artifactPath = await buildAndroidAsync(job, { env, workingdir, metadata });
         break;
       }
       case Platform.IOS: {
-        artifactPath = await buildIosAsync(job, { env, workingdir });
+        artifactPath = await buildIosAsync(job, { env, workingdir, metadata });
         break;
       }
     }
