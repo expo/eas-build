@@ -105,10 +105,11 @@ export interface Job {
      */
     runtimeVersion?: string;
   };
+  buildArtifactsPath?: string[];
 
   scheme?: string;
   buildConfiguration?: string;
-  artifactPath?: string;
+  applicationArchivePath?: string;
 
   username?: string;
 
@@ -139,13 +140,12 @@ export const JobSchema = Joi.object({
   version: Joi.object({
     buildNumber: Joi.string(),
   }),
+  buildArtifactsPaths: Joi.array().items(Joi.string()),
 
-  // generic
   scheme: Joi.string(),
   buildConfiguration: Joi.string(),
-  artifactPath: Joi.string(),
+  applicationArchivePath: Joi.string(),
 
-  // managed
   username: Joi.string(),
 
   experimental: Joi.object({

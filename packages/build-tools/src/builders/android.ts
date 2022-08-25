@@ -113,7 +113,7 @@ async function buildAsync(ctx: BuildContext<Android.Job>): Promise<string> {
   return await ctx.runBuildPhase(BuildPhase.UPLOAD_ARTIFACTS, async () => {
     const buildArtifacts = await findBuildArtifacts(
       ctx.reactNativeProjectDirectory,
-      ctx.job.artifactPath ?? 'android/app/build/outputs/**/*.{apk,aab}',
+      ctx.job.applicationArchivePath ?? 'android/app/build/outputs/**/*.{apk,aab}',
       ctx.logger
     );
     ctx.logger.info(`Build artifacts: ${buildArtifacts.join(', ')}`);

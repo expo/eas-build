@@ -120,12 +120,11 @@ export interface Job {
      */
     runtimeVersion?: string;
   };
+  buildArtifactsPaths?: string[];
 
-  // generic
   gradleCommand?: string;
-  artifactPath?: string;
+  applicationArchivePath?: string;
 
-  // managed
   buildType?: BuildType;
   username?: string;
 
@@ -155,9 +154,10 @@ export const JobSchema = Joi.object({
   version: Joi.object({
     versionCode: Joi.string().regex(/^\d+$/),
   }),
+  buildArtifactsPaths: Joi.array().items(Joi.string()),
 
   gradleCommand: Joi.string(),
-  artifactPath: Joi.string(),
+  applicationArchivePath: Joi.string(),
 
   buildType: Joi.string().valid(...Object.values(BuildType)),
   username: Joi.string(),

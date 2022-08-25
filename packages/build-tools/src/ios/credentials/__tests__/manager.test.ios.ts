@@ -35,7 +35,7 @@ function createTestIosJob({
     },
     scheme: 'turtlebareproj',
     buildConfiguration: 'Release',
-    artifactPath: './ios/build/*.ipa',
+    applicationArchivePath: './ios/build/*.ipa',
     projectRootDirectory: '.',
     cache: {
       clear: false,
