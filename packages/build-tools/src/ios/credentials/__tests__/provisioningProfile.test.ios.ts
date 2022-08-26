@@ -23,7 +23,7 @@ describe('ProvisioningProfile class', () => {
         logger: mockLogger,
         env: {},
         runGlobalExpoCliCommand: jest.fn(),
-        uploadBuildArtifacts: jest.fn(),
+        uploadArtifacts: jest.fn(),
       });
       keychain = new Keychain(ctx);
       await keychain.create();

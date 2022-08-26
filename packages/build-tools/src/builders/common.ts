@@ -1,6 +1,7 @@
 import { BuildPhase, Job } from '@expo/eas-build-job';
 
-import { BuildContext } from '../context';
+import { ArtifactType, BuildContext } from '../context';
+import { findArtifacts } from '../utils/artifacts';
 import { Hook, runHookIfPresent } from '../utils/hooks';
 
 export async function runBuilderWithHooksAsync<T extends Job>(
@@ -27,6 +28,24 @@ export async function runBuilderWithHooksAsync<T extends Job>(
           EAS_BUILD_STATUS: buildSuccess ? 'finished' : 'errored',
         },
       });
+    });
+    await ctx.runBuildPhase(BuildPhase.UPLOAD_BUILD_ARTIFACTS, async () => {
+      if (!ctx.job.buildArtifactsPaths) {
+        return;
+      }
+      try {
+        const buildArtifacts = (
+          await Promise.all(
+            ctx.job.buildArtifactsPaths.map((path) =>
+              findArtifacts(ctx.reactNativeProjectDirectory, path, ctx.logger)
+            )
+          )
+        ).flat();
+        ctx.logger.info(`Uploading build artifacts: ${buildArtifacts.join(', ')}`);
+        await ctx.uploadArtifacts(ArtifactType.BUILD_ARTIFACTS, buildArtifacts, ctx.logger);
+      } catch (err: any) {
+        ctx.logger.error({ err }, 'Failed to upload build artifacts');
+      }
     });
   }
 }

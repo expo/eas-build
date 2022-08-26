@@ -27,19 +27,18 @@ export async function runFastlaneGym<TJob extends Ios.Job>(
     entitlements: object | null;
   }
 ): Promise<void> {
-  const logsDirectory = path.join(ctx.workingdir, 'logs');
   await ensureGymfileExists(ctx, {
     scheme,
     buildConfiguration,
     credentials,
-    logsDirectory,
+    logsDirectory: ctx.buildLogsDirectory,
     entitlements,
   });
   if (ctx.skipNativeBuild) {
     throw new SkipNativeBuildError('Skipping fastlane build');
   }
   const buildLogger = new XcodeBuildLogger(ctx.logger, ctx.reactNativeProjectDirectory);
-  void buildLogger.watchLogFiles(logsDirectory);
+  void buildLogger.watchLogFiles(ctx.buildLogsDirectory);
   try {
     await runFastlane(['gym'], {
       cwd: path.join(ctx.reactNativeProjectDirectory, 'ios'),

@@ -2,12 +2,13 @@ import plist from '@expo/plist';
 import { IOSConfig } from '@expo/config-plugins';
 import { BuildPhase, Ios, Workflow } from '@expo/eas-build-job';
 import fs from 'fs-extra';
+import nullthrows from 'nullthrows';
 
-import { BuildContext } from '../context';
+import { ArtifactType, BuildContext } from '../context';
 import { createNpmErrorHandler } from '../utils/handleNpmError';
 import { configureExpoUpdatesIfInstalledAsync } from '../utils/expoUpdates';
 import { setup } from '../utils/project';
-import { findBuildArtifacts } from '../utils/buildArtifacts';
+import { findArtifacts } from '../utils/artifacts';
 import { Hook, runHookIfPresent } from '../utils/hooks';
 import { configureXcodeProject } from '../ios/configure';
 import CredentialsManager from '../ios/credentials/manager';
@@ -15,6 +16,7 @@ import { runFastlaneGym } from '../ios/fastlane';
 import { installPods } from '../ios/pod';
 import { prebuildAsync } from '../utils/prebuild';
 import { resolveArtifactPath, resolveBuildConfiguration, resolveScheme } from '../ios/resolve';
+import { findXcodeBuildLogsPath } from '../ios/xcodeBuildLogs';
 
 import { runBuilderWithHooksAsync } from './common';
 
@@ -97,14 +99,28 @@ async function buildAsync(ctx: BuildContext<Ios.Job>): Promise<string> {
     await ctx.cacheManager?.saveCache(ctx);
   });
 
-  return await ctx.runBuildPhase(BuildPhase.UPLOAD_ARTIFACTS, async () => {
-    const buildArtifacts = await findBuildArtifacts(
+  return await ctx.runBuildPhase(BuildPhase.UPLOAD_APPLICATION_ARCHIVE, async () => {
+    try {
+      const xcodeBuildLogsPath = await findXcodeBuildLogsPath(ctx);
+      if (xcodeBuildLogsPath) {
+        await ctx.uploadArtifacts(ArtifactType.XCODE_BUILD_LOGS, [xcodeBuildLogsPath], ctx.logger);
+      }
+    } catch {
+      // ignore error
+    }
+
+    const applicationArchives = await findArtifacts(
       ctx.reactNativeProjectDirectory,
       resolveArtifactPath(ctx),
       ctx.logger
     );
-    ctx.logger.info(`Build artifacts: ${buildArtifacts.join(', ')}`);
-    return await ctx.uploadBuildArtifacts(ctx, buildArtifacts);
+    ctx.logger.info(`Application archives: ${applicationArchives.join(', ')}`);
+    const url = await ctx.uploadArtifacts(
+      ArtifactType.APPLICATION_ARCHIVE,
+      applicationArchives,
+      ctx.logger
+    );
+    return nullthrows(url, 'Application archive upload must return URL');
   });
 }
 

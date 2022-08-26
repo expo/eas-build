@@ -1,17 +1,14 @@
 import path from 'path';
 
-import { BuildContext } from '@expo/build-tools';
-import { Job } from '@expo/eas-build-job';
+import { bunyan } from '@expo/logger';
 import fs from 'fs-extra';
 import tar from 'tar';
 
 import config from './config';
 
-export async function prepareBuildArtifact(
-  ctx: BuildContext<Job>,
-  artifactPaths: string[]
-): Promise<string> {
-  ctx.logger.info({ phase: 'PREPARE_ARTIFACTS' }, 'Archiving artifacts');
+export async function prepareArtifacts(artifactPaths: string[], logger?: bunyan): Promise<string> {
+  const l = logger?.child({ phase: 'PREPARE_ARTIFACTS' });
+  l?.info('Preparing artifacts');
   let suffix;
   let localPath;
   if (artifactPaths.length === 1 && !(await fs.lstat(artifactPaths[0])).isDirectory()) {
@@ -41,7 +38,7 @@ export async function prepareBuildArtifact(
   const artifactName = `build-${Date.now()}${suffix}`;
   const destPath = config.artifactPath ?? path.join(config.artifactsDir, artifactName);
   await fs.copy(localPath, destPath);
-  ctx.logger.info({ phase: 'PREPARE_ARTIFACTS' }, `Writing artifacts to ${destPath}`);
+  l?.info({ phase: 'PREPARE_ARTIFACTS' }, `Writing artifacts to ${destPath}`);
   return destPath;
 }
 

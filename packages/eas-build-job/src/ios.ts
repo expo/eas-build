@@ -105,7 +105,7 @@ export interface Job {
      */
     runtimeVersion?: string;
   };
-  buildArtifactsPath?: string[];
+  buildArtifactsPaths?: string[];
 
   scheme?: string;
   buildConfiguration?: string;

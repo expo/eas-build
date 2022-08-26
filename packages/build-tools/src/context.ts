@@ -17,6 +17,15 @@ import { PackageManager, resolvePackageManager } from './utils/packageManager';
 import { detectUserError } from './utils/detectUserError';
 import { readAppConfig } from './utils/appConfig';
 
+export enum ArtifactType {
+  APPLICATION_ARCHIVE,
+  BUILD_ARTIFACTS,
+  /**
+   * @deprecated
+   */
+  XCODE_BUILD_LOGS,
+}
+
 export interface CacheManager {
   saveCache(ctx: BuildContext<Job>): Promise<void>;
   restoreCache(ctx: BuildContext<Job>): Promise<void>;
@@ -37,7 +46,7 @@ export interface BuildContextOptions {
    * @deprecated
    */
   runGlobalExpoCliCommand: (args: string, options: SpawnOptions) => SpawnPromise<SpawnResult>;
-  uploadBuildArtifacts: (ctx: BuildContext<Job>, archivePaths: string[]) => Promise<string>;
+  uploadArtifacts: (type: ArtifactType, paths: string[], logger?: bunyan) => Promise<string | null>;
   reportError?: (
     msg: string,
     err?: Error,
@@ -62,10 +71,11 @@ export class BuildContext<TJob extends Job> {
     args: string,
     options: SpawnOptions
   ) => SpawnPromise<SpawnResult>;
-  public readonly uploadBuildArtifacts: (
-    ctx: BuildContext<Job>,
-    archivePaths: string[]
-  ) => Promise<string>;
+  public readonly uploadArtifacts: (
+    type: ArtifactType,
+    paths: string[],
+    logger?: bunyan
+  ) => Promise<string | null>;
   public readonly reportError?: (
     msg: string,
     err?: Error,
@@ -87,7 +97,7 @@ export class BuildContext<TJob extends Job> {
     this.logBuffer = options.logBuffer;
     this.cacheManager = options.cacheManager;
     this.runGlobalExpoCliCommand = options.runGlobalExpoCliCommand;
-    this.uploadBuildArtifacts = options.uploadBuildArtifacts;
+    this.uploadArtifacts = options.uploadArtifacts;
     this.reportError = options.reportError;
     this.metadata = options.metadata;
     this.skipNativeBuild = options.skipNativeBuild;
@@ -100,6 +110,9 @@ export class BuildContext<TJob extends Job> {
 
   public get buildDirectory(): string {
     return path.join(this.workingdir, 'build');
+  }
+  public get buildLogsDirectory(): string {
+    return path.join(this.workingdir, 'logs');
   }
   public get reactNativeProjectDirectory(): string {
     return path.join(this.buildDirectory, this.job.projectRootDirectory);
