@@ -11,29 +11,10 @@ import { restoreCredentials } from '../android/credentials';
 import { configureBuildGradle } from '../android/gradleConfig';
 import { prebuildAsync } from '../utils/prebuild';
 
-export default async function androidBuilder(ctx: BuildContext<Android.Job>): Promise<string> {
-  let buildSuccess = true;
-  try {
-    const archiveLocation = await buildAsync(ctx);
-    await ctx.runBuildPhase(BuildPhase.ON_BUILD_SUCCESS_HOOK, async () => {
-      await runHookIfPresent(ctx, Hook.ON_BUILD_SUCCESS);
-    });
-    return archiveLocation;
-  } catch (err: any) {
-    buildSuccess = false;
-    await ctx.runBuildPhase(BuildPhase.ON_BUILD_ERROR_HOOK, async () => {
-      await runHookIfPresent(ctx, Hook.ON_BUILD_ERROR);
-    });
-    throw err;
-  } finally {
-    await ctx.runBuildPhase(BuildPhase.ON_BUILD_COMPLETE_HOOK, async () => {
-      await runHookIfPresent(ctx, Hook.ON_BUILD_COMPLETE, {
-        extraEnvs: {
-          EAS_BUILD_STATUS: buildSuccess ? 'finished' : 'errored',
-        },
-      });
-    });
-  }
+import { runBuilderWithHooksAsync } from './common';
+
+export default async function iosBuilder(ctx: BuildContext<Android.Job>): Promise<string> {
+  return await runBuilderWithHooksAsync(ctx, buildAsync);
 }
 
 async function buildAsync(ctx: BuildContext<Android.Job>): Promise<string> {
