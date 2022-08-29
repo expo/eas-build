@@ -16,7 +16,6 @@ import { runFastlaneGym } from '../ios/fastlane';
 import { installPods } from '../ios/pod';
 import { prebuildAsync } from '../utils/prebuild';
 import { resolveArtifactPath, resolveBuildConfiguration, resolveScheme } from '../ios/resolve';
-import { findXcodeBuildLogsPath } from '../ios/xcodeBuildLogs';
 
 import { runBuilderWithHooksAsync } from './common';
 
@@ -100,15 +99,6 @@ async function buildAsync(ctx: BuildContext<Ios.Job>): Promise<string> {
   });
 
   return await ctx.runBuildPhase(BuildPhase.UPLOAD_APPLICATION_ARCHIVE, async () => {
-    try {
-      const xcodeBuildLogsPath = await findXcodeBuildLogsPath(ctx);
-      if (xcodeBuildLogsPath) {
-        await ctx.uploadArtifacts(ArtifactType.XCODE_BUILD_LOGS, [xcodeBuildLogsPath], ctx.logger);
-      }
-    } catch {
-      // ignore error
-    }
-
     const applicationArchives = await findArtifacts(
       ctx.reactNativeProjectDirectory,
       resolveArtifactPath(ctx),

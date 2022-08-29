@@ -1,6 +1,7 @@
-import { BuildPhase, Job } from '@expo/eas-build-job';
+import { BuildPhase, Ios, Job, Platform } from '@expo/eas-build-job';
 
 import { ArtifactType, BuildContext } from '../context';
+import { findAndUploadXcodeBuildLogsAsync } from '../ios/xcodeBuildLogs';
 import { findArtifacts } from '../utils/artifacts';
 import { Hook, runHookIfPresent } from '../utils/hooks';
 
@@ -29,8 +30,13 @@ export async function runBuilderWithHooksAsync<T extends Job>(
         },
       });
     });
+
+    if (ctx.job.platform === Platform.IOS) {
+      await findAndUploadXcodeBuildLogsAsync(ctx as BuildContext<Ios.Job>);
+    }
+
     await ctx.runBuildPhase(BuildPhase.UPLOAD_BUILD_ARTIFACTS, async () => {
-      if (!ctx.job.buildArtifactsPaths) {
+      if (!ctx.job.buildArtifactsPaths || ctx.job.buildArtifactsPaths.length === 0) {
         return;
       }
       try {
