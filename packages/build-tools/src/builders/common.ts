@@ -1,21 +1,20 @@
 import { BuildPhase, Ios, Job, Platform } from '@expo/eas-build-job';
 
-import { ArtifactType, BuildContext } from '../context';
+import { Artifacts, ArtifactType, BuildContext } from '../context';
 import { findAndUploadXcodeBuildLogsAsync } from '../ios/xcodeBuildLogs';
 import { findArtifacts } from '../utils/artifacts';
 import { Hook, runHookIfPresent } from '../utils/hooks';
 
 export async function runBuilderWithHooksAsync<T extends Job>(
   ctx: BuildContext<T>,
-  builder: (ctx: BuildContext<T>) => Promise<string>
-): Promise<string> {
+  builderAsync: (ctx: BuildContext<T>) => Promise<void>
+): Promise<Artifacts> {
   let buildSuccess = true;
   try {
-    const archiveLocation = await builder(ctx);
+    await builderAsync(ctx);
     await ctx.runBuildPhase(BuildPhase.ON_BUILD_SUCCESS_HOOK, async () => {
       await runHookIfPresent(ctx, Hook.ON_BUILD_SUCCESS);
     });
-    return archiveLocation;
   } catch (err: any) {
     buildSuccess = false;
     await ctx.runBuildPhase(BuildPhase.ON_BUILD_ERROR_HOOK, async () => {
@@ -54,4 +53,10 @@ export async function runBuilderWithHooksAsync<T extends Job>(
       }
     });
   }
+
+  if (!ctx.artifacts.APPLICATION_ARCHIVE) {
+    throw new Error('Builder must upload application archive');
+  }
+
+  return ctx.artifacts;
 }

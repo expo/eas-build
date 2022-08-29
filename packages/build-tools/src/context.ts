@@ -26,6 +26,8 @@ export enum ArtifactType {
   XCODE_BUILD_LOGS = 'XCODE_BUILD_LOGS',
 }
 
+export type Artifacts = Partial<Record<ArtifactType, string>>;
+
 export interface CacheManager {
   saveCache(ctx: BuildContext<Job>): Promise<void>;
   restoreCache(ctx: BuildContext<Job>): Promise<void>;
@@ -71,11 +73,6 @@ export class BuildContext<TJob extends Job> {
     args: string,
     options: SpawnOptions
   ) => SpawnPromise<SpawnResult>;
-  public readonly uploadArtifacts: (
-    type: ArtifactType,
-    paths: string[],
-    logger?: bunyan
-  ) => Promise<string | null>;
   public readonly reportError?: (
     msg: string,
     err?: Error,
@@ -83,8 +80,14 @@ export class BuildContext<TJob extends Job> {
   ) => void;
   public readonly metadata?: Metadata;
   public readonly skipNativeBuild?: boolean;
+  public artifacts: Artifacts = {};
 
   private readonly defaultLogger: bunyan;
+  private readonly _uploadArtifacts: (
+    type: ArtifactType,
+    paths: string[],
+    logger?: bunyan
+  ) => Promise<string | null>;
   private buildPhase?: BuildPhase;
   private buildPhaseSkipped = false;
   private buildPhaseHasWarnings = false;
@@ -97,7 +100,7 @@ export class BuildContext<TJob extends Job> {
     this.logBuffer = options.logBuffer;
     this.cacheManager = options.cacheManager;
     this.runGlobalExpoCliCommand = options.runGlobalExpoCliCommand;
-    this.uploadArtifacts = options.uploadArtifacts;
+    this._uploadArtifacts = options.uploadArtifacts;
     this.reportError = options.reportError;
     this.metadata = options.metadata;
     this.skipNativeBuild = options.skipNativeBuild;
@@ -184,6 +187,17 @@ export class BuildContext<TJob extends Job> {
 
   public markBuildPhaseHasWarnings(): void {
     this.buildPhaseHasWarnings = true;
+  }
+
+  public async uploadArtifacts(
+    type: ArtifactType,
+    paths: string[],
+    logger?: bunyan
+  ): Promise<void> {
+    const url = await this._uploadArtifacts(type, paths, logger);
+    if (url) {
+      this.artifacts[type] = url;
+    }
   }
 
   private setBuildPhase(buildPhase: BuildPhase, { doNotMarkStart = false } = {}): void {

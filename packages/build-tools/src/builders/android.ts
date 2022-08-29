@@ -1,7 +1,6 @@
 import { Android, BuildPhase, Workflow } from '@expo/eas-build-job';
-import nullthrows from 'nullthrows';
 
-import { ArtifactType, BuildContext, SkipNativeBuildError } from '../context';
+import { Artifacts, ArtifactType, BuildContext, SkipNativeBuildError } from '../context';
 import { createNpmErrorHandler } from '../utils/handleNpmError';
 import { configureExpoUpdatesIfInstalledAsync } from '../utils/expoUpdates';
 import { runGradleCommand, ensureLFLineEndingsInGradlewScript } from '../android/gradle';
@@ -14,11 +13,11 @@ import { prebuildAsync } from '../utils/prebuild';
 
 import { runBuilderWithHooksAsync } from './common';
 
-export default async function androidBuilder(ctx: BuildContext<Android.Job>): Promise<string> {
+export default async function androidBuilder(ctx: BuildContext<Android.Job>): Promise<Artifacts> {
   return await runBuilderWithHooksAsync(ctx, buildAsync);
 }
 
-async function buildAsync(ctx: BuildContext<Android.Job>): Promise<string> {
+async function buildAsync(ctx: BuildContext<Android.Job>): Promise<void> {
   await setup(ctx);
   const hasNativeCode = ctx.job.type === Workflow.GENERIC;
 
@@ -92,19 +91,14 @@ async function buildAsync(ctx: BuildContext<Android.Job>): Promise<string> {
     await ctx.cacheManager?.saveCache(ctx);
   });
 
-  return await ctx.runBuildPhase(BuildPhase.UPLOAD_APPLICATION_ARCHIVE, async () => {
+  await ctx.runBuildPhase(BuildPhase.UPLOAD_APPLICATION_ARCHIVE, async () => {
     const applicationArchives = await findArtifacts(
       ctx.reactNativeProjectDirectory,
       ctx.job.applicationArchivePath ?? 'android/app/build/outputs/**/*.{apk,aab}',
       ctx.logger
     );
     ctx.logger.info(`Application archives: ${applicationArchives.join(', ')}`);
-    const url = await ctx.uploadArtifacts(
-      ArtifactType.APPLICATION_ARCHIVE,
-      applicationArchives,
-      ctx.logger
-    );
-    return nullthrows(url, 'Application archive upload must return URL');
+    await ctx.uploadArtifacts(ArtifactType.APPLICATION_ARCHIVE, applicationArchives, ctx.logger);
   });
 }
 

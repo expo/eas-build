@@ -2,9 +2,8 @@ import plist from '@expo/plist';
 import { IOSConfig } from '@expo/config-plugins';
 import { BuildPhase, Ios, Workflow } from '@expo/eas-build-job';
 import fs from 'fs-extra';
-import nullthrows from 'nullthrows';
 
-import { ArtifactType, BuildContext } from '../context';
+import { Artifacts, ArtifactType, BuildContext } from '../context';
 import { createNpmErrorHandler } from '../utils/handleNpmError';
 import { configureExpoUpdatesIfInstalledAsync } from '../utils/expoUpdates';
 import { setup } from '../utils/project';
@@ -19,11 +18,11 @@ import { resolveArtifactPath, resolveBuildConfiguration, resolveScheme } from '.
 
 import { runBuilderWithHooksAsync } from './common';
 
-export default async function iosBuilder(ctx: BuildContext<Ios.Job>): Promise<string> {
+export default async function iosBuilder(ctx: BuildContext<Ios.Job>): Promise<Artifacts> {
   return await runBuilderWithHooksAsync(ctx, buildAsync);
 }
 
-async function buildAsync(ctx: BuildContext<Ios.Job>): Promise<string> {
+async function buildAsync(ctx: BuildContext<Ios.Job>): Promise<void> {
   await setup(ctx);
   const hasNativeCode = ctx.job.type === Workflow.GENERIC;
 
@@ -98,19 +97,14 @@ async function buildAsync(ctx: BuildContext<Ios.Job>): Promise<string> {
     await ctx.cacheManager?.saveCache(ctx);
   });
 
-  return await ctx.runBuildPhase(BuildPhase.UPLOAD_APPLICATION_ARCHIVE, async () => {
+  await ctx.runBuildPhase(BuildPhase.UPLOAD_APPLICATION_ARCHIVE, async () => {
     const applicationArchives = await findArtifacts(
       ctx.reactNativeProjectDirectory,
       resolveArtifactPath(ctx),
       ctx.logger
     );
     ctx.logger.info(`Application archives: ${applicationArchives.join(', ')}`);
-    const url = await ctx.uploadArtifacts(
-      ArtifactType.APPLICATION_ARCHIVE,
-      applicationArchives,
-      ctx.logger
-    );
-    return nullthrows(url, 'Application archive upload must return URL');
+    await ctx.uploadArtifacts(ArtifactType.APPLICATION_ARCHIVE, applicationArchives, ctx.logger);
   });
 }
 
