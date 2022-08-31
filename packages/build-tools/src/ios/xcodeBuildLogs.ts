@@ -12,8 +12,8 @@ export async function findAndUploadXcodeBuildLogsAsync(ctx: BuildContext<Ios.Job
     if (xcodeBuildLogsPath) {
       await ctx.uploadArtifacts(ArtifactType.XCODE_BUILD_LOGS, [xcodeBuildLogsPath], ctx.logger);
     }
-  } catch {
-    // ignore upload error
+  } catch (err: any) {
+    ctx.logger.debug({ err }, 'Failed to upload Xcode build logs');
   }
 }
 
