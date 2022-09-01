@@ -15,8 +15,8 @@ export function resolveScheme(ctx: BuildContext<Ios.Job>): string {
 }
 
 export function resolveArtifactPath(ctx: BuildContext<Ios.Job>): string {
-  if (ctx.job.artifactPath) {
-    return ctx.job.artifactPath;
+  if (ctx.job.applicationArchivePath) {
+    return ctx.job.applicationArchivePath;
   } else if (ctx.job.simulator) {
     return 'ios/build/Build/Products/*simulator/*.app';
   } else {

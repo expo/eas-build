@@ -1,17 +1,18 @@
 import { Ios, BuildPhase, Env } from '@expo/eas-build-job';
-import { Builders, BuildContext } from '@expo/build-tools';
+import { Builders, BuildContext, ArtifactType, Artifacts } from '@expo/build-tools';
+import { bunyan } from '@expo/logger';
 import omit from 'lodash/omit';
 
 import { runGlobalExpoCliCommandAsync } from './expoCli';
 import logger, { logBuffer } from './logger';
 import { BuildParams } from './types';
-import { prepareBuildArtifact } from './buildArtifact';
+import { prepareArtifacts } from './artifacts';
 import config from './config';
 
 export async function buildIosAsync(
   job: Ios.Job,
   { workingdir, env: baseEnv, metadata }: BuildParams
-): Promise<string | undefined> {
+): Promise<Artifacts> {
   const buildNumber = job.version?.buildNumber;
   const appVersion = job.version?.appVersion;
   const env: Env = {
@@ -24,7 +25,13 @@ export async function buildIosAsync(
     logger,
     logBuffer,
     runGlobalExpoCliCommand: runGlobalExpoCliCommandAsync,
-    uploadBuildArtifacts: prepareBuildArtifact,
+    uploadArtifacts: async (type: ArtifactType, paths: string[], logger?: bunyan) => {
+      if (type !== ArtifactType.APPLICATION_ARCHIVE) {
+        return null;
+      } else {
+        return await prepareArtifacts(paths, logger);
+      }
+    },
     env,
     metadata,
     skipNativeBuild: config.skipNativeBuild,

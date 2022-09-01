@@ -4,7 +4,7 @@ import fs from 'fs-extra';
 import fg from 'fast-glob';
 import { bunyan } from '@expo/logger';
 
-export async function findBuildArtifacts(
+export async function findArtifacts(
   rootDir: string,
   patternOrPath: string,
   buildLogger: bunyan
@@ -12,7 +12,7 @@ export async function findBuildArtifacts(
   const files = await fg(patternOrPath, { cwd: rootDir, onlyFiles: false });
   if (files.length === 0) {
     if (fg.isDynamicPattern(patternOrPath)) {
-      throw new Error(`There are no files matching pattern: ${patternOrPath}`);
+      throw new Error(`There are no files matching pattern "${patternOrPath}"`);
     } else {
       await logMissingFileError(path.join(rootDir, patternOrPath), buildLogger);
       throw new Error(`No such file or directory ${patternOrPath}`);

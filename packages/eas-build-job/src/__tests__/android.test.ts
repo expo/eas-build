@@ -31,7 +31,7 @@ describe('Android.JobSchema', () => {
         url: 'http://localhost:3000',
       },
       gradleCommand: ':app:bundleRelease',
-      artifactPath: 'android/app/build/outputs/bundle/release/app-release.aab',
+      applicationArchivePath: 'android/app/build/outputs/bundle/release/app-release.aab',
       projectRootDirectory: '.',
       releaseChannel: 'default',
       builderEnvironment: {

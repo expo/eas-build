@@ -35,7 +35,7 @@ function createTestIosJob({
     },
     scheme: 'turtlebareproj',
     buildConfiguration: 'Release',
-    artifactPath: './ios/build/*.ipa',
+    applicationArchivePath: './ios/build/*.ipa',
     projectRootDirectory: '.',
     cache: {
       clear: false,
@@ -67,7 +67,7 @@ describe(IosCredentialsManager, () => {
         logger: mockLogger,
         env: {},
         runGlobalExpoCliCommand: jest.fn(),
-        uploadBuildArtifacts: jest.fn(),
+        uploadArtifacts: jest.fn(),
       });
       const manager = new IosCredentialsManager(ctx);
       const credentials = await manager.prepare();

@@ -1,42 +1,23 @@
 import { Android, BuildPhase, Workflow } from '@expo/eas-build-job';
 
-import { BuildContext, SkipNativeBuildError } from '../context';
+import { Artifacts, ArtifactType, BuildContext, SkipNativeBuildError } from '../context';
 import { createNpmErrorHandler } from '../utils/handleNpmError';
 import { configureExpoUpdatesIfInstalledAsync } from '../utils/expoUpdates';
 import { runGradleCommand, ensureLFLineEndingsInGradlewScript } from '../android/gradle';
 import { setup } from '../utils/project';
-import { findBuildArtifacts } from '../utils/buildArtifacts';
+import { findArtifacts } from '../utils/artifacts';
 import { Hook, runHookIfPresent } from '../utils/hooks';
 import { restoreCredentials } from '../android/credentials';
 import { configureBuildGradle } from '../android/gradleConfig';
 import { prebuildAsync } from '../utils/prebuild';
 
-export default async function androidBuilder(ctx: BuildContext<Android.Job>): Promise<string> {
-  let buildSuccess = true;
-  try {
-    const archiveLocation = await buildAsync(ctx);
-    await ctx.runBuildPhase(BuildPhase.ON_BUILD_SUCCESS_HOOK, async () => {
-      await runHookIfPresent(ctx, Hook.ON_BUILD_SUCCESS);
-    });
-    return archiveLocation;
-  } catch (err: any) {
-    buildSuccess = false;
-    await ctx.runBuildPhase(BuildPhase.ON_BUILD_ERROR_HOOK, async () => {
-      await runHookIfPresent(ctx, Hook.ON_BUILD_ERROR);
-    });
-    throw err;
-  } finally {
-    await ctx.runBuildPhase(BuildPhase.ON_BUILD_COMPLETE_HOOK, async () => {
-      await runHookIfPresent(ctx, Hook.ON_BUILD_COMPLETE, {
-        extraEnvs: {
-          EAS_BUILD_STATUS: buildSuccess ? 'finished' : 'errored',
-        },
-      });
-    });
-  }
+import { runBuilderWithHooksAsync } from './common';
+
+export default async function androidBuilder(ctx: BuildContext<Android.Job>): Promise<Artifacts> {
+  return await runBuilderWithHooksAsync(ctx, buildAsync);
 }
 
-async function buildAsync(ctx: BuildContext<Android.Job>): Promise<string> {
+async function buildAsync(ctx: BuildContext<Android.Job>): Promise<void> {
   await setup(ctx);
   const hasNativeCode = ctx.job.type === Workflow.GENERIC;
 
@@ -110,14 +91,14 @@ async function buildAsync(ctx: BuildContext<Android.Job>): Promise<string> {
     await ctx.cacheManager?.saveCache(ctx);
   });
 
-  return await ctx.runBuildPhase(BuildPhase.UPLOAD_ARTIFACTS, async () => {
-    const buildArtifacts = await findBuildArtifacts(
+  await ctx.runBuildPhase(BuildPhase.UPLOAD_APPLICATION_ARCHIVE, async () => {
+    const applicationArchives = await findArtifacts(
       ctx.reactNativeProjectDirectory,
-      ctx.job.artifactPath ?? 'android/app/build/outputs/**/*.{apk,aab}',
+      ctx.job.applicationArchivePath ?? 'android/app/build/outputs/**/*.{apk,aab}',
       ctx.logger
     );
-    ctx.logger.info(`Build artifacts: ${buildArtifacts.join(', ')}`);
-    return await ctx.uploadBuildArtifacts(ctx, buildArtifacts);
+    ctx.logger.info(`Application archives: ${applicationArchives.join(', ')}`);
+    await ctx.uploadArtifacts(ArtifactType.APPLICATION_ARCHIVE, applicationArchives, ctx.logger);
   });
 }
 

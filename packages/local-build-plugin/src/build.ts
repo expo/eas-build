@@ -4,7 +4,8 @@ import { Job, Platform, ArchiveSourceType, Metadata, Workflow } from '@expo/eas-
 import pickBy from 'lodash/pickBy';
 import fs from 'fs-extra';
 import chalk from 'chalk';
-import { SkipNativeBuildError } from '@expo/build-tools';
+import { Artifacts, SkipNativeBuildError } from '@expo/build-tools';
+import nullthrows from 'nullthrows';
 
 import { buildAndroidAsync } from './android';
 import config from './config';
@@ -43,21 +44,25 @@ export async function buildAsync(job: Job, metadata: Metadata): Promise<void> {
     };
     const env = pickBy(unfilteredEnv, (val?: string): val is string => !!val);
 
-    let artifactPath: string | undefined;
+    let artifacts: Artifacts | undefined;
     switch (job.platform) {
       case Platform.ANDROID: {
-        artifactPath = await buildAndroidAsync(job, { env, workingdir, metadata });
+        artifacts = await buildAndroidAsync(job, { env, workingdir, metadata });
         break;
       }
       case Platform.IOS: {
-        artifactPath = await buildIosAsync(job, { env, workingdir, metadata });
+        artifacts = await buildIosAsync(job, { env, workingdir, metadata });
         break;
       }
     }
     if (!config.skipNativeBuild) {
       console.log();
       console.log(chalk.green('Build successful'));
-      console.log(chalk.green(`You can find the build artifacts in ${artifactPath}`));
+      console.log(
+        chalk.green(
+          `You can find the build artifacts in ${nullthrows(artifacts.APPLICATION_ARCHIVE)}`
+        )
+      );
     }
   } catch (e: any) {
     if (e instanceof SkipNativeBuildError) {

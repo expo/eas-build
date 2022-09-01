@@ -34,7 +34,7 @@ describe('Ios.JobSchema', () => {
       projectRootDirectory: '.',
       scheme: 'testapp',
       buildConfiguration: 'Release',
-      artifactPath: 'ios/build/*.ipa',
+      applicationArchivePath: 'ios/build/*.ipa',
       releaseChannel: 'default',
       builderEnvironment: {
         image: 'default',

@@ -17,6 +17,17 @@ import { PackageManager, resolvePackageManager } from './utils/packageManager';
 import { detectUserError } from './utils/detectUserError';
 import { readAppConfig } from './utils/appConfig';
 
+export enum ArtifactType {
+  APPLICATION_ARCHIVE = 'APPLICATION_ARCHIVE',
+  BUILD_ARTIFACTS = 'BUILD_ARTIFACTS',
+  /**
+   * @deprecated
+   */
+  XCODE_BUILD_LOGS = 'XCODE_BUILD_LOGS',
+}
+
+export type Artifacts = Partial<Record<ArtifactType, string>>;
+
 export interface CacheManager {
   saveCache(ctx: BuildContext<Job>): Promise<void>;
   restoreCache(ctx: BuildContext<Job>): Promise<void>;
@@ -37,7 +48,7 @@ export interface BuildContextOptions {
    * @deprecated
    */
   runGlobalExpoCliCommand: (args: string, options: SpawnOptions) => SpawnPromise<SpawnResult>;
-  uploadBuildArtifacts: (ctx: BuildContext<Job>, archivePaths: string[]) => Promise<string>;
+  uploadArtifacts: (type: ArtifactType, paths: string[], logger?: bunyan) => Promise<string | null>;
   reportError?: (
     msg: string,
     err?: Error,
@@ -62,10 +73,6 @@ export class BuildContext<TJob extends Job> {
     args: string,
     options: SpawnOptions
   ) => SpawnPromise<SpawnResult>;
-  public readonly uploadBuildArtifacts: (
-    ctx: BuildContext<Job>,
-    archivePaths: string[]
-  ) => Promise<string>;
   public readonly reportError?: (
     msg: string,
     err?: Error,
@@ -73,8 +80,14 @@ export class BuildContext<TJob extends Job> {
   ) => void;
   public readonly metadata?: Metadata;
   public readonly skipNativeBuild?: boolean;
+  public artifacts: Artifacts = {};
 
   private readonly defaultLogger: bunyan;
+  private readonly _uploadArtifacts: (
+    type: ArtifactType,
+    paths: string[],
+    logger?: bunyan
+  ) => Promise<string | null>;
   private buildPhase?: BuildPhase;
   private buildPhaseSkipped = false;
   private buildPhaseHasWarnings = false;
@@ -87,7 +100,7 @@ export class BuildContext<TJob extends Job> {
     this.logBuffer = options.logBuffer;
     this.cacheManager = options.cacheManager;
     this.runGlobalExpoCliCommand = options.runGlobalExpoCliCommand;
-    this.uploadBuildArtifacts = options.uploadBuildArtifacts;
+    this._uploadArtifacts = options.uploadArtifacts;
     this.reportError = options.reportError;
     this.metadata = options.metadata;
     this.skipNativeBuild = options.skipNativeBuild;
@@ -100,6 +113,9 @@ export class BuildContext<TJob extends Job> {
 
   public get buildDirectory(): string {
     return path.join(this.workingdir, 'build');
+  }
+  public get buildLogsDirectory(): string {
+    return path.join(this.workingdir, 'logs');
   }
   public get reactNativeProjectDirectory(): string {
     return path.join(this.buildDirectory, this.job.projectRootDirectory);
@@ -171,6 +187,17 @@ export class BuildContext<TJob extends Job> {
 
   public markBuildPhaseHasWarnings(): void {
     this.buildPhaseHasWarnings = true;
+  }
+
+  public async uploadArtifacts(
+    type: ArtifactType,
+    paths: string[],
+    logger?: bunyan
+  ): Promise<void> {
+    const url = await this._uploadArtifacts(type, paths, logger);
+    if (url) {
+      this.artifacts[type] = url;
+    }
   }
 
   private setBuildPhase(buildPhase: BuildPhase, { doNotMarkStart = false } = {}): void {
