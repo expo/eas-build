@@ -120,7 +120,7 @@ export interface Job {
      */
     runtimeVersion?: string;
   };
-  buildArtifactsPaths?: string[];
+  buildArtifactPaths?: string[];
 
   gradleCommand?: string;
   applicationArchivePath?: string;
@@ -154,7 +154,7 @@ export const JobSchema = Joi.object({
   version: Joi.object({
     versionCode: Joi.string().regex(/^\d+$/),
   }),
-  buildArtifactsPaths: Joi.array().items(Joi.string()),
+  buildArtifactPaths: Joi.array().items(Joi.string()),
 
   gradleCommand: Joi.string(),
   applicationArchivePath: Joi.string(),

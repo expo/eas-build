@@ -105,7 +105,7 @@ export interface Job {
      */
     runtimeVersion?: string;
   };
-  buildArtifactsPaths?: string[];
+  buildArtifactPaths?: string[];
 
   scheme?: string;
   buildConfiguration?: string;
@@ -140,7 +140,7 @@ export const JobSchema = Joi.object({
   version: Joi.object({
     buildNumber: Joi.string(),
   }),
-  buildArtifactsPaths: Joi.array().items(Joi.string()),
+  buildArtifactPaths: Joi.array().items(Joi.string()),
 
   scheme: Joi.string(),
   buildConfiguration: Joi.string(),

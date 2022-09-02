@@ -36,13 +36,13 @@ export async function runBuilderWithHooksAsync<T extends Job>(
       }
 
       await ctx.runBuildPhase(BuildPhase.UPLOAD_BUILD_ARTIFACTS, async () => {
-        if (!ctx.job.buildArtifactsPaths || ctx.job.buildArtifactsPaths.length === 0) {
+        if (!ctx.job.buildArtifactPaths || ctx.job.buildArtifactPaths.length === 0) {
           return;
         }
         try {
           const buildArtifacts = (
             await Promise.all(
-              ctx.job.buildArtifactsPaths.map((path) =>
+              ctx.job.buildArtifactPaths.map((path) =>
                 findArtifacts(ctx.reactNativeProjectDirectory, path, ctx.logger)
               )
             )
