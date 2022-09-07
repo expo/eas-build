@@ -36,5 +36,15 @@ export async function installPods<TJob extends Ios.Job>(ctx: BuildContext<TJob>)
     cwd: iosDir,
     logger: ctx.logger,
     env: { ...ctx.env, LANG: 'en_US.UTF-8' },
+    lineTransformer: (line?: string) => {
+      if (
+        !line ||
+        /\[!\] '[a-zA-Z1-9-]+' uses the unencrypted 'http' protocol to transfer the Pod./.exec(line)
+      ) {
+        return null;
+      } else {
+        return line;
+      }
+    },
   });
 }
