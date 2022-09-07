@@ -11,31 +11,27 @@ export async function installPods<TJob extends Ios.Job>(ctx: BuildContext<TJob>)
 
   if (ctx.env.EAS_BUILD_COCOAPODS_CACHE_URL) {
     ctx.logger.info('Running using experimental CocoaPods cache proxy...');
-    const podFilePath = path.join(iosDir, 'Podfile');
-    const originalPodFileContentBuffer = await fs.readFile(podFilePath);
-    const originalPodFileContent = originalPodFileContentBuffer.toString('utf-8');
+    const podfilePath = path.join(iosDir, 'Podfile');
+    const originalPodfileContents = await fs.readFile(podfilePath, 'utf-8');
 
-    if (
-      originalPodFileContent.search(/source( )+('|")https:\/\/cdn.cocoapods.org(\/)*('|")/) !== -1
-    ) {
-      ctx.logger.info('Replacing CocoaPods CDN source with proxy...');
+    const cocoaPodsCdnSourceRegex = /source( )+('|")https:\/\/cdn.cocoapods.org(\/)*('|")/;
+
+    if (originalPodfileContents.search(cocoaPodsCdnSourceRegex) !== -1) {
       await fs.writeFile(
-        podFilePath,
-        originalPodFileContent.replace(
-          /source( )+('|")https:\/\/cdn.cocoapods.org(\/)*('|")/,
+        podfilePath,
+        originalPodfileContents.replace(
+          cocoaPodsCdnSourceRegex,
           `source "${ctx.env.EAS_BUILD_COCOAPODS_CACHE_URL}"`
         )
       );
     } else {
-      ctx.logger.info('Adding proxy as a source...');
       await fs.writeFile(
-        podFilePath,
-        `source "${ctx.env.EAS_BUILD_COCOAPODS_CACHE_URL}"\n${originalPodFileContent}`
+        podfilePath,
+        `source "${ctx.env.EAS_BUILD_COCOAPODS_CACHE_URL}"\n${originalPodfileContents}`
       );
     }
   }
 
-  ctx.logger.info('Installing pods');
   await spawn('pod', ['install'], {
     cwd: iosDir,
     logger: ctx.logger,
