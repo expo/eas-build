@@ -54,9 +54,24 @@ async function buildAsync(ctx: BuildContext<Ios.Job>): Promise<void> {
       await ctx.cacheManager?.restoreCache(ctx);
     });
 
-    await ctx.runBuildPhase(BuildPhase.INSTALL_PODS, async () => {
-      await installPods(ctx);
-    });
+    await ctx.runBuildPhase(
+      BuildPhase.INSTALL_PODS,
+      async () => {
+        await installPods(ctx);
+      },
+      {
+        onError: (err, logLines) => {
+          if (
+            ctx.env.EAS_BUILD_COCOAPODS_CACHE_URL &&
+            logLines.some((line) => line.includes(ctx.env.EAS_BUILD_COCOAPODS_CACHE_URL))
+          ) {
+            ctx.reportError?.('Cocoapods cache error', err, {
+              extras: { buildId: ctx.env.EAS_BUILD_ID, logs: logLines.join('\n') },
+            });
+          }
+        },
+      }
+    );
 
     await ctx.runBuildPhase(BuildPhase.POST_INSTALL_HOOK, async () => {
       await runHookIfPresent(ctx, Hook.POST_INSTALL);
