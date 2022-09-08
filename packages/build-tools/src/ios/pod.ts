@@ -10,11 +10,10 @@ export async function installPods<TJob extends Ios.Job>(ctx: BuildContext<TJob>)
   const iosDir = path.join(ctx.reactNativeProjectDirectory, 'ios');
 
   if (ctx.env.EAS_BUILD_COCOAPODS_CACHE_URL) {
-    ctx.logger.info('Running using experimental CocoaPods cache proxy...');
     const podfilePath = path.join(iosDir, 'Podfile');
     const originalPodfileContents = await fs.readFile(podfilePath, 'utf-8');
 
-    const cocoaPodsCdnSourceRegex = /source( )+('|")https:\/\/cdn.cocoapods.org(\/)*('|")/;
+    const cocoaPodsCdnSourceRegex = /\bsource\s*\(?['"]https:\/\/cdn\.cocoapods\.org\/?['"]\)?/g;
 
     if (originalPodfileContents.search(cocoaPodsCdnSourceRegex) !== -1) {
       await fs.writeFile(
@@ -39,7 +38,7 @@ export async function installPods<TJob extends Ios.Job>(ctx: BuildContext<TJob>)
     lineTransformer: (line?: string) => {
       if (
         !line ||
-        /\[!\] '[a-zA-Z1-9-]+' uses the unencrypted 'http' protocol to transfer the Pod./.exec(line)
+        /\[!\] '[\w-]+' uses the unencrypted 'http' protocol to transfer the Pod\./.exec(line)
       ) {
         return null;
       } else {
