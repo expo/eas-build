@@ -46,8 +46,26 @@ export const ArchiveSourceSchema = Joi.object<ArchiveSource>({
   });
 
 export type Env = Record<string, string>;
-
 export const EnvSchema = Joi.object().pattern(Joi.string(), Joi.string());
+
+export type EnvironmentSecret = {
+  name: string;
+  type: EnvironmentSecretType;
+  value: string;
+};
+export enum EnvironmentSecretType {
+  STRING = 'string',
+  FILE = 'file',
+}
+export const EnvironmentSecretsSchema = Joi.array().items(
+  Joi.object({
+    name: Joi.string().required(),
+    value: Joi.string().required(),
+    type: Joi.string()
+      .valid(...Object.values(EnvironmentSecretType))
+      .required(),
+  })
+);
 
 export interface Cache {
   disabled: boolean;
