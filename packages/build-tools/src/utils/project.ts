@@ -8,7 +8,6 @@ import semver from 'semver';
 
 import { BuildContext } from '../context';
 import { deleteXcodeEnvLocalIfExistsAsync } from '../ios/xcodeEnv';
-import { createNpmErrorHandler } from '../utils/handleNpmError';
 
 import { Hook, runHookIfPresent } from './hooks';
 import { createNpmrcIfNotExistsAsync } from './npmrc';
@@ -33,13 +32,9 @@ export async function setup<TJob extends Job>(ctx: BuildContext<TJob>): Promise<
     await runHookIfPresent(ctx, Hook.PRE_INSTALL);
   });
 
-  await ctx.runBuildPhase(
-    BuildPhase.INSTALL_DEPENDENCIES,
-    async () => {
-      await installDependencies(ctx);
-    },
-    { onError: createNpmErrorHandler(ctx) }
-  );
+  await ctx.runBuildPhase(BuildPhase.INSTALL_DEPENDENCIES, async () => {
+    await installDependencies(ctx);
+  });
 
   await ctx.runBuildPhase(BuildPhase.READ_PACKAGE_JSON, async () => {
     ctx.logger.info('Using package.json:');

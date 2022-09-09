@@ -4,7 +4,6 @@ import { BuildPhase, Ios, Workflow } from '@expo/eas-build-job';
 import fs from 'fs-extra';
 
 import { Artifacts, ArtifactType, BuildContext } from '../context';
-import { createNpmErrorHandler } from '../utils/handleNpmError';
 import { configureExpoUpdatesIfInstalledAsync } from '../utils/expoUpdates';
 import { setup } from '../utils/project';
 import { findArtifacts } from '../utils/artifacts';
@@ -32,46 +31,27 @@ async function buildAsync(ctx: BuildContext<Ios.Job>): Promise<void> {
       return await credentialsManager.prepare();
     });
 
-    await ctx.runBuildPhase(
-      BuildPhase.PREBUILD,
-      async () => {
-        if (hasNativeCode) {
-          ctx.markBuildPhaseSkipped();
-          ctx.logger.info(
-            'Skipped running "expo prebuild" because the "ios" directory already exists. Learn more about the build process: https://docs.expo.dev/build-reference/ios-builds/'
-          );
-          return;
-        }
-        const extraEnvs: Record<string, string> = credentials?.teamId
-          ? { APPLE_TEAM_ID: credentials.teamId }
-          : {};
-        await prebuildAsync(ctx, { extraEnvs });
-      },
-      { onError: createNpmErrorHandler(ctx) }
-    );
+    await ctx.runBuildPhase(BuildPhase.PREBUILD, async () => {
+      if (hasNativeCode) {
+        ctx.markBuildPhaseSkipped();
+        ctx.logger.info(
+          'Skipped running "expo prebuild" because the "ios" directory already exists. Learn more about the build process: https://docs.expo.dev/build-reference/ios-builds/'
+        );
+        return;
+      }
+      const extraEnvs: Record<string, string> = credentials?.teamId
+        ? { APPLE_TEAM_ID: credentials.teamId }
+        : {};
+      await prebuildAsync(ctx, { extraEnvs });
+    });
 
     await ctx.runBuildPhase(BuildPhase.RESTORE_CACHE, async () => {
       await ctx.cacheManager?.restoreCache(ctx);
     });
 
-    await ctx.runBuildPhase(
-      BuildPhase.INSTALL_PODS,
-      async () => {
-        await installPods(ctx);
-      },
-      {
-        onError: (err, logLines) => {
-          if (
-            ctx.env.EAS_BUILD_COCOAPODS_CACHE_URL &&
-            logLines.some((line) => line.includes(ctx.env.EAS_BUILD_COCOAPODS_CACHE_URL))
-          ) {
-            ctx.reportError?.('Cocoapods cache error', err, {
-              extras: { buildId: ctx.env.EAS_BUILD_ID, logs: logLines.join('\n') },
-            });
-          }
-        },
-      }
-    );
+    await ctx.runBuildPhase(BuildPhase.INSTALL_PODS, async () => {
+      await installPods(ctx);
+    });
 
     await ctx.runBuildPhase(BuildPhase.POST_INSTALL_HOOK, async () => {
       await runHookIfPresent(ctx, Hook.POST_INSTALL);
