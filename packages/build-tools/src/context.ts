@@ -106,19 +106,8 @@ export class BuildContext<TJob extends Job> {
     this.reportError = options.reportError;
     this.metadata = options.metadata;
     this.skipNativeBuild = options.skipNativeBuild;
-    const environmentSecrets: Record<string, string> = {};
-    if (Array.isArray(job?.secrets?.environmentSecrets)) {
-      for (const { name, type, value } of job.secrets.environmentSecrets) {
-        if (type === EnvironmentSecretType.STRING) {
-          environmentSecrets[name] = value;
-        } else {
-          environmentSecrets[name] = createTemporaryEnvironmentSecretFile(
-            this.environmentSecrectsDirectory,
-            value
-          );
-        }
-      }
-    }
+
+    const environmentSecrets = this.getEnvironmentSecrets(job);
     this.env = {
       ...options.env,
       ...job?.builderEnvironment?.env,
@@ -246,5 +235,26 @@ export class BuildContext<TJob extends Job> {
     this.buildPhase = undefined;
     this.buildPhaseSkipped = false;
     this.buildPhaseHasWarnings = false;
+  }
+
+  private getEnvironmentSecrets(job: TJob): Record<string, string> {
+    if (Array.isArray(job?.secrets?.environmentSecrets)) {
+      const environmentSecrets: Record<string, string> = {};
+      for (const { name, type, value } of job.secrets.environmentSecrets) {
+        if (type === EnvironmentSecretType.STRING) {
+          environmentSecrets[name] = value;
+        } else {
+          environmentSecrets[name] = createTemporaryEnvironmentSecretFile(
+            this.environmentSecrectsDirectory,
+            value
+          );
+        }
+      }
+      return environmentSecrets;
+    } else if (job?.secrets?.environmentSecrets) {
+      return { ...job.secrets.environmentSecrets };
+    } else {
+      return {};
+    }
   }
 }
