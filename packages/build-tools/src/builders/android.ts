@@ -1,7 +1,6 @@
 import { Android, BuildPhase, Workflow } from '@expo/eas-build-job';
 
 import { Artifacts, ArtifactType, BuildContext, SkipNativeBuildError } from '../context';
-import { createNpmErrorHandler } from '../utils/handleNpmError';
 import { configureExpoUpdatesIfInstalledAsync } from '../utils/expoUpdates';
 import { runGradleCommand, ensureLFLineEndingsInGradlewScript } from '../android/gradle';
 import { setup } from '../utils/project';
@@ -27,20 +26,16 @@ async function buildAsync(ctx: BuildContext<Android.Job>): Promise<void> {
     });
   }
 
-  await ctx.runBuildPhase(
-    BuildPhase.PREBUILD,
-    async () => {
-      if (hasNativeCode) {
-        ctx.markBuildPhaseSkipped();
-        ctx.logger.info(
-          'Skipped running "expo prebuild" because the "android" directory already exists. Learn more about the build process: https://docs.expo.dev/build-reference/android-builds/'
-        );
-        return;
-      }
-      await prebuildAsync(ctx);
-    },
-    { onError: createNpmErrorHandler(ctx) }
-  );
+  await ctx.runBuildPhase(BuildPhase.PREBUILD, async () => {
+    if (hasNativeCode) {
+      ctx.markBuildPhaseSkipped();
+      ctx.logger.info(
+        'Skipped running "expo prebuild" because the "android" directory already exists. Learn more about the build process: https://docs.expo.dev/build-reference/android-builds/'
+      );
+      return;
+    }
+    await prebuildAsync(ctx);
+  });
 
   await ctx.runBuildPhase(BuildPhase.RESTORE_CACHE, async () => {
     await ctx.cacheManager?.restoreCache(ctx);
@@ -63,25 +58,10 @@ async function buildAsync(ctx: BuildContext<Android.Job>): Promise<void> {
   if (ctx.skipNativeBuild) {
     throw new SkipNativeBuildError('Skipping Gradle build');
   }
-  await ctx.runBuildPhase(
-    BuildPhase.RUN_GRADLEW,
-    async () => {
-      const gradleCommand = resolveGradleCommand(ctx.job);
-      await runGradleCommand(ctx, gradleCommand);
-    },
-    {
-      onError: (err, logLines) => {
-        if (
-          ctx.env.EAS_BUILD_MAVEN_CACHE_URL &&
-          logLines.some((line) => line.includes(ctx.env.EAS_BUILD_MAVEN_CACHE_URL))
-        ) {
-          ctx.reportError?.('Maven cache error', err, {
-            extras: { buildId: ctx.env.EAS_BUILD_ID, logs: logLines.join('\n') },
-          });
-        }
-      },
-    }
-  );
+  await ctx.runBuildPhase(BuildPhase.RUN_GRADLEW, async () => {
+    const gradleCommand = resolveGradleCommand(ctx.job);
+    await runGradleCommand(ctx, gradleCommand);
+  });
 
   await ctx.runBuildPhase(BuildPhase.PRE_UPLOAD_ARTIFACTS_HOOK, async () => {
     await runHookIfPresent(ctx, Hook.PRE_UPLOAD_ARTIFACTS);

@@ -14,7 +14,7 @@ import { bunyan } from '@expo/logger';
 import { SpawnPromise, SpawnOptions, SpawnResult } from '@expo/turtle-spawn';
 
 import { PackageManager, resolvePackageManager } from './utils/packageManager';
-import { detectUserError } from './utils/detectUserError';
+import { resolveBuildPhaseError } from './buildErrors/detectError';
 import { readAppConfig } from './utils/appConfig';
 
 export enum ArtifactType {
@@ -136,11 +136,9 @@ export class BuildContext<TJob extends Job> {
     {
       doNotMarkStart = false,
       doNotMarkEnd = false,
-      onError,
     }: {
       doNotMarkStart?: boolean;
       doNotMarkEnd?: boolean;
-      onError?: (err: Error, logLines: string[]) => void;
     } = {}
   ): Promise<T> {
     try {
@@ -154,30 +152,9 @@ export class BuildContext<TJob extends Job> {
       this.endCurrentBuildPhase({ result: buildPhaseResult, doNotMarkEnd });
       return result;
     } catch (err: any) {
-      let userError: errors.UserError | undefined;
-      if (err instanceof errors.UserError) {
-        userError = err;
-      } else {
-        const detectedError = detectUserError(this.logBuffer.getPhaseLogs(buildPhase), {
-          job: this.job,
-          phase: buildPhase,
-        });
-        if (detectedError) {
-          detectedError.innerError = err;
-          userError = detectedError;
-        }
-      }
-      if (userError) {
-        this.logger.error(`Error: ${userError.message}`);
-      } else {
-        // leaving message empty, website will display err.stack which already includes err.message
-        this.logger.error({ err }, '');
-      }
-      if (onError) {
-        onError(userError ?? err, this.logBuffer.getPhaseLogs(buildPhase));
-      }
+      const resolvedError = this.handleBuildPhaseError(err, buildPhase);
       this.endCurrentBuildPhase({ result: BuildPhaseResult.FAIL });
-      throw userError ?? err;
+      throw resolvedError;
     }
   }
 
@@ -198,6 +175,21 @@ export class BuildContext<TJob extends Job> {
     if (url) {
       this.artifacts[type] = url;
     }
+  }
+
+  private handleBuildPhaseError(err: any, buildPhase: BuildPhase): errors.BuildError {
+    const buildError = resolveBuildPhaseError(err, this.logBuffer.getPhaseLogs(buildPhase), {
+      job: this.job,
+      phase: buildPhase,
+      env: this.env,
+    });
+    if (buildError.errorCode === errors.ErrorCode.UNKNOWN_ERROR) {
+      // leaving message empty, website will display err.stack which already includes err.message
+      this.logger.error({ err }, '');
+    } else {
+      this.logger.error(`Error: ${buildError.userFacingMessage}`);
+    }
+    return buildError;
   }
 
   private setBuildPhase(buildPhase: BuildPhase, { doNotMarkStart = false } = {}): void {
