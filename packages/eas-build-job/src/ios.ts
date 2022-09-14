@@ -9,6 +9,8 @@ import {
   Workflow,
   Cache,
   CacheSchema,
+  EnvironmentSecretsSchema,
+  EnvironmentSecret,
 } from './common';
 
 export type DistributionType = 'store' | 'internal' | 'simulator';
@@ -88,7 +90,7 @@ export interface Job {
   };
   secrets: {
     buildCredentials?: BuildCredentials;
-    environmentSecrets?: Env;
+    environmentSecrets?: EnvironmentSecret[] | Env;
   };
   builderEnvironment?: BuilderEnvironment;
   cache: Cache;
@@ -131,7 +133,7 @@ export const JobSchema = Joi.object({
   }),
   secrets: Joi.object({
     buildCredentials: BuildCredentialsSchema,
-    environmentSecrets: EnvSchema,
+    environmentSecrets: Joi.alternatives().try(EnvironmentSecretsSchema, EnvSchema),
   }).required(),
   builderEnvironment: BuilderEnvironmentSchema,
   cache: CacheSchema.default(),

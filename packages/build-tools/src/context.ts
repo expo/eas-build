@@ -8,6 +8,7 @@ import {
   Env,
   errors,
   Metadata,
+  EnvironmentSecretType,
 } from '@expo/eas-build-job';
 import { ExpoConfig } from '@expo/config';
 import { bunyan } from '@expo/logger';
@@ -16,6 +17,7 @@ import { SpawnPromise, SpawnOptions, SpawnResult } from '@expo/turtle-spawn';
 import { PackageManager, resolvePackageManager } from './utils/packageManager';
 import { resolveBuildPhaseError } from './buildErrors/detectError';
 import { readAppConfig } from './utils/appConfig';
+import { createTemporaryEnvironmentSecretFile } from './utils/environmentSecrets';
 
 export enum ArtifactType {
   APPLICATION_ARCHIVE = 'APPLICATION_ARCHIVE',
@@ -104,10 +106,12 @@ export class BuildContext<TJob extends Job> {
     this.reportError = options.reportError;
     this.metadata = options.metadata;
     this.skipNativeBuild = options.skipNativeBuild;
+
+    const environmentSecrets = this.getEnvironmentSecrets(job);
     this.env = {
       ...options.env,
       ...job?.builderEnvironment?.env,
-      ...job?.secrets?.environmentSecrets,
+      ...environmentSecrets,
     };
   }
 
@@ -116,6 +120,9 @@ export class BuildContext<TJob extends Job> {
   }
   public get buildLogsDirectory(): string {
     return path.join(this.workingdir, 'logs');
+  }
+  public get environmentSecrectsDirectory(): string {
+    return path.join(this.workingdir, 'environment-secrets');
   }
   public get reactNativeProjectDirectory(): string {
     return path.join(this.buildDirectory, this.job.projectRootDirectory);
@@ -228,5 +235,26 @@ export class BuildContext<TJob extends Job> {
     this.buildPhase = undefined;
     this.buildPhaseSkipped = false;
     this.buildPhaseHasWarnings = false;
+  }
+
+  private getEnvironmentSecrets(job: TJob): Record<string, string> {
+    if (Array.isArray(job?.secrets?.environmentSecrets)) {
+      const environmentSecrets: Record<string, string> = {};
+      for (const { name, type, value } of job.secrets.environmentSecrets) {
+        if (type === EnvironmentSecretType.STRING) {
+          environmentSecrets[name] = value;
+        } else {
+          environmentSecrets[name] = createTemporaryEnvironmentSecretFile(
+            this.environmentSecrectsDirectory,
+            value
+          );
+        }
+      }
+      return environmentSecrets;
+    } else if (job?.secrets?.environmentSecrets) {
+      return { ...job.secrets.environmentSecrets };
+    } else {
+      return {};
+    }
   }
 }
