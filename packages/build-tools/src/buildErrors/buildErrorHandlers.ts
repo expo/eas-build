@@ -39,7 +39,7 @@ export const buildErrorHandlers: ErrorHandler<TrackedBuildError>[] = [
     // error An unexpected error occurred: "https://registry.yarnpkg.com/@react-native/normalize-color/-/normalize-color-2.0.0.tgz: Request failed \"500 Internal Server Error\"".
     // or
     // error An unexpected error occurred: "https://registry.yarnpkg.com/request/-/request-2.88.2.tgz: Request failed \"503 Service Unavailable\"".
-    regexp: /An unexpected error occurred: "https:\/\/registry.yarnpkg.com\/.*Request failed \\"50/,
+    regexp: /An unexpected error occurred: "https:\/\/registry.yarnpkg.com\/.*Request failed \\"5/,
     createError: () => new TrackedBuildError('YARN_REGISTRY_5XX_RESPONSE', 'yarn: 5xx response.'),
   },
   {
@@ -219,7 +219,7 @@ export const buildErrorHandlers: ErrorHandler<TrackedBuildError>[] = [
     createError: () =>
       new TrackedBuildError(
         'GRADLE_MALFORMED_GOOGLE_SERVICES_JSON',
-        'gradle: Malformed google-services.json'
+        'gradle: Malformed google-services.json.'
       ),
   },
   {
@@ -242,7 +242,7 @@ export const buildErrorHandlers: ErrorHandler<TrackedBuildError>[] = [
     createError: () =>
       new TrackedBuildError(
         'MISSING_ICLOUD_CONTAINER_ENVIRONMENT',
-        'fastlane: Missing iCloudContainerEnvironment in exportOptionsPlist'
+        'fastlane: Missing iCloudContainerEnvironment in exportOptionsPlist.'
       ),
   },
   {
