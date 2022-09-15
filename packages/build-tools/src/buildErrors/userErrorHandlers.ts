@@ -73,6 +73,19 @@ export const userErrorHandlers: ErrorHandler<UserFacingError>[] = [
       ),
   },
   {
+    platform: Platform.ANDROID,
+    phase: BuildPhase.RUN_GRADLEW,
+    // Execution failed for task ':app:processReleaseGoogleServices'.
+    // > File google-services.json is missing. The Google Services Plugin cannot function without it.
+    //    Searched Location:
+    regexp: /File google-services\.json is missing\. The Google Services Plugin cannot function without it/,
+    createError: () =>
+      new UserFacingError(
+        'EAS_BUILD_MISSING_GOOGLE_SERVICES_JSON_ERROR',
+        '"google-services.json" is missing, make sure that file exists. Remember that EAS Build only uploads the files tracked by git.'
+      ),
+  },
+  {
     platform: Platform.IOS,
     phase: BuildPhase.PREBUILD,
     // example log:
