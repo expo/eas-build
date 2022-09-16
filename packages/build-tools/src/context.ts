@@ -238,23 +238,21 @@ export class BuildContext<TJob extends Job> {
   }
 
   private getEnvironmentSecrets(job: TJob): Record<string, string> {
-    if (Array.isArray(job?.secrets?.environmentSecrets)) {
-      const environmentSecrets: Record<string, string> = {};
-      for (const { name, type, value } of job.secrets.environmentSecrets) {
-        if (type === EnvironmentSecretType.STRING) {
-          environmentSecrets[name] = value;
-        } else {
-          environmentSecrets[name] = createTemporaryEnvironmentSecretFile(
-            this.environmentSecrectsDirectory,
-            value
-          );
-        }
-      }
-      return environmentSecrets;
-    } else if (job?.secrets?.environmentSecrets) {
-      return { ...job.secrets.environmentSecrets };
-    } else {
+    if (!job?.secrets?.environmentSecrets) {
       return {};
     }
+
+    const environmentSecrets: Record<string, string> = {};
+    for (const { name, type, value } of job.secrets.environmentSecrets) {
+      if (type === EnvironmentSecretType.STRING) {
+        environmentSecrets[name] = value;
+      } else {
+        environmentSecrets[name] = createTemporaryEnvironmentSecretFile(
+          this.environmentSecrectsDirectory,
+          value
+        );
+      }
+    }
+    return environmentSecrets;
   }
 }

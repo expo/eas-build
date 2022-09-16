@@ -106,7 +106,7 @@ export interface Job {
     buildCredentials?: {
       keystore: Keystore;
     };
-    environmentSecrets?: EnvironmentSecret[] | Env;
+    environmentSecrets?: EnvironmentSecret[];
   };
   builderEnvironment?: BuilderEnvironment;
   cache: Cache;
@@ -148,7 +148,7 @@ export const JobSchema = Joi.object({
   }),
   secrets: Joi.object({
     buildCredentials: Joi.object({ keystore: KeystoreSchema.required() }),
-    environmentSecrets: Joi.alternatives().try(EnvironmentSecretsSchema, EnvSchema),
+    environmentSecrets: EnvironmentSecretsSchema,
   }).required(),
   builderEnvironment: BuilderEnvironmentSchema,
   cache: CacheSchema.default(),
