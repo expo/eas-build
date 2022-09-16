@@ -20,12 +20,38 @@ export const buildErrorHandlers: ErrorHandler<TrackedBuildError>[] = [
       new TrackedBuildError('COCOAPODS_TO_MANY_REQUEST', 'cocoapods: too many requests'),
   },
   {
+    phase: BuildPhase.INSTALL_DEPENDENCIES,
+    // Host key verification failed.
+    // fatal: Could not read from remote repository.
+    regexp: /Host key verification failed\.\nfatal: Could not read from remote repository/,
+    createError: () => new TrackedBuildError('NPM_INSTALL_SSH_AUTHENTICATION', 'Missing ssh key.'),
+  },
+  {
+    phase: BuildPhase.INSTALL_DEPENDENCIES,
+    // error functions@1.0.0: The engine "node" is incompatible with this module. Expected version "14". Got "16.13.2"
+    // error Found incompatible module.
+    regexp: /The engine "node" is incompatible with this module\. Expected version/,
+    createError: () =>
+      new TrackedBuildError('NODE_ENGINE_INCOMPATIBLE', 'node: Incompatible engine field.'),
+  },
+  {
+    phase: BuildPhase.INSTALL_DEPENDENCIES,
+    // error An unexpected error occurred: "https://registry.yarnpkg.com/@react-native/normalize-color/-/normalize-color-2.0.0.tgz: Request failed \"500 Internal Server Error\"".
+    // or
+    // error An unexpected error occurred: "https://registry.yarnpkg.com/request/-/request-2.88.2.tgz: Request failed \"503 Service Unavailable\"".
+    regexp: /An unexpected error occurred: "https:\/\/registry.yarnpkg.com\/.*Request failed \\"5/,
+    createError: () => new TrackedBuildError('YARN_REGISTRY_5XX_RESPONSE', 'yarn: 5xx response.'),
+  },
+  {
     phase: BuildPhase.PREBUILD,
-    regexp: /Input is required, but Expo CLI is in non-interactive mode/,
+    // Input is required, but Expo CLI is in non-interactive mode
+    // or
+    // CommandError: Input is required, but 'npx expo' is in non-interactive mode.
+    regexp: /Input is required, but .* is in non-interactive mode/,
     createError: () =>
       new TrackedBuildError(
         'EXPO_CLI_INPUT_REQUIRED_ERROR',
-        `expo-cli: input required in non-interactive mode`
+        `expo-cli: Input required in non-interactive mode.`
       ),
   },
   {
@@ -36,7 +62,7 @@ export const buildErrorHandlers: ErrorHandler<TrackedBuildError>[] = [
     createError: () =>
       new TrackedBuildError(
         'EXPO_CLI_EMPTY_GOOGLE_SERVICES_PLIST_ERROR',
-        `expo-cli: empty GoogleService-Info.plist`
+        `expo-cli: Empty GoogleService-Info.plist.`
       ),
   },
   {
@@ -47,7 +73,52 @@ export const buildErrorHandlers: ErrorHandler<TrackedBuildError>[] = [
     createError: () =>
       new TrackedBuildError(
         'EXPO_CLI_NOT_DEFINED_GOOGLE_SERVICES_PLIST_ERROR',
-        `expo-cli: path to GoogleService-Info.plist not defined`
+        `expo-cli: Path to GoogleService-Info.plist is not defined.`
+      ),
+  },
+  {
+    phase: BuildPhase.PREBUILD,
+    // Error: [android.dangerous]: withAndroidDangerousBaseMod: ENOENT: no such file or directory, open './assets/adaptive-icon.png'
+    //     at Object.openSync (node:fs:585:3)
+    //     at readFileSync (node:fs:453:35)
+    //     at calculateHash (/home/expo/workingdir/build/node_modules/@expo/image-utils/build/Cache.js:14:91)
+    //     at createCacheKey (/home/expo/workingdir/build/node_modules/@expo/image-utils/build/Cache.js:19:18)
+    //     at Object.createCacheKeyWithDirectoryAsync (/home/expo/workingdir/build/node_modules/@expo/image-utils/build/Cache.js:24:33)
+    //     at generateImageAsync (/home/expo/workingdir/build/node_modules/@expo/image-utils/build/Image.js:151:34)
+    //     at async generateIconAsync (/home/expo/workingdir/build/node_modules/@expo/prebuild-config/build/plugins/icons/withAndroidIcons.js:369:11)
+    //     at async /home/expo/workingdir/build/node_modules/@expo/prebuild-config/build/plugins/icons/withAndroidIcons.js:310:21
+    //     at async Promise.all (index 0)
+    //     at async generateMultiLayerImageAsync (/home/expo/workingdir/build/node_modules/@expo/prebuild-config/build/plugins/icons/withAndroidIcons.js:306:3)
+    //     or
+    // Error: [ios.dangerous]: withIosDangerousBaseMod: ENOENT: no such file or directory, open './assets/images/app_icon_staging.png'
+    //     at Object.openSync (fs.js:497:3)
+    //     at readFileSync (fs.js:393:35)
+    //     at calculateHash (/Users/expo/workingdir/build/node_modules/@expo/image-utils/build/Cache.js:14:91)
+    //     at createCacheKey (/Users/expo/workingdir/build/node_modules/@expo/image-utils/build/Cache.js:19:18)
+    //     at Object.createCacheKeyWithDirectoryAsync (/Users/expo/workingdir/build/node_modules/@expo/image-utils/build/Cache.js:24:33)
+    //     at generateImageAsync (/Users/expo/workingdir/build/node_modules/@expo/image-utils/build/Image.js:151:34)
+    //     at async setIconsAsync (/Users/expo/workingdir/build/node_modules/@expo/prebuild-config/build/plugins/icons/withIosIcons.js:169:15)
+    //     at async /Users/expo/workingdir/build/node_modules/@expo/prebuild-config/build/plugins/icons/withIosIcons.js:71:5
+    //     at async action (/Users/expo/workingdir/build/node_modules/@expo/config-plugins/build/plugins/withMod.js:235:23)
+    //     at async interceptingMod (/Users/expo/workingdir/build/node_modules/@expo/config-plugins/build/plugins/withMod.js:126:21)
+    regexp: /ENOENT: no such file or directory[\s\S]*prebuild-config\/build\/plugins\/icons\/with(Android|Ios)Icons\.js/,
+    createError: () => new TrackedBuildError('EXPO_CLI_MISSING_ICON', 'expo-cli: Missing icon.'),
+  },
+  {
+    phase: BuildPhase.PREBUILD,
+    // Cannot determine which native SDK version your project uses because the module `expo` is not installed. Please install it with `yarn add expo` and try again.
+    regexp: /Cannot determine which native SDK version your project uses because the module `expo` is not installed/,
+    createError: () =>
+      new TrackedBuildError('EXPO_CLI_EXPO_PACKAGE_MISSING', 'expo-cli: "expo" package missing.'),
+  },
+  {
+    phase: BuildPhase.INSTALL_PODS,
+    // The Swift pod `FirebaseCoreInternal` depends upon `GoogleUtilities`, which does not define modules. To opt into those targets generating module maps (which is necessary to import them from Swift when building as static
+    regexp: /The Swift pod .* depends upon .* which does not define modules/,
+    createError: () =>
+      new TrackedBuildError(
+        'SWIFT_POD_INCOMPATIBLE_DEPENDENCY',
+        'pod: Swift pod depends on a pod that does not define modules.'
       ),
   },
   {
@@ -60,8 +131,16 @@ export const buildErrorHandlers: ErrorHandler<TrackedBuildError>[] = [
     createError: (match: RegExpMatchArray) =>
       new TrackedBuildError(
         'COCOAPODS_CACHE_INCOMPATIBLE_REPO_ERROR',
-        `cocoapods: missing podspec ${match[1]}`
+        `cocoapods: Missing podspec ${match[1]}.`
       ),
+  },
+  {
+    platform: Platform.IOS,
+    phase: BuildPhase.INSTALL_PODS,
+    // [!] Invalid `Podfile` file: 783: unexpected token at 'info Run CLI with --verbose flag for more details.
+    regexp: /\[!\] Invalid `Podfile` file: .* unexpected token at 'info Run CLI with --verbose flag for more details./,
+    createError: () =>
+      new TrackedBuildError('NODE_ENV_PRODUCTION_DEFINED', 'npm: NODE_ENV=production was defined.'),
   },
   ...[BuildPhase.INSTALL_DEPENDENCIES, BuildPhase.PREBUILD].map((phase) => ({
     phase,
@@ -96,5 +175,98 @@ export const buildErrorHandlers: ErrorHandler<TrackedBuildError>[] = [
         ? new RegExp(escapeRegExp(env.EAS_BUILD_COCOAPODS_CACHE_URL))
         : undefined,
     createError: () => new TrackedBuildError('COCOAPODS_CACHE_ERROR', `cocoapods: cache error`),
+  },
+  {
+    phase: BuildPhase.INSTALL_PODS,
+    // [!] Invalid `Podfile` file: uninitialized constant Pod::Podfile::FlipperConfiguration.
+    regexp: /\[!\] Invalid `Podfile` file/,
+    createError: () => new TrackedBuildError('INVALID_PODFILE', 'pod: Invalid Podfile file.'),
+  },
+  {
+    phase: BuildPhase.INSTALL_DEPENDENCIES,
+    // info There appears to be trouble with your network connection. Retrying...
+    regexp: /info There appears to be trouble with your network connection. Retrying/,
+    createError: () =>
+      new TrackedBuildError(
+        'YARN_INSTALL_TROUBLE_WITH_NETWORK_CONNECTION',
+        'yarn: There appears to be trouble with your network connection'
+      ),
+  },
+  {
+    phase: BuildPhase.RUN_GRADLEW,
+    platform: Platform.ANDROID,
+    // Android Gradle plugin requires Java 11 to run. You are currently using Java 1.8
+    regexp: /Android Gradle plugin requires Java .* to run. You are currently using Java/,
+    createError: () =>
+      new TrackedBuildError('INCOMPATIBLE_JAVA_VERSION', 'gradle: Incompatible java version.'),
+  },
+  {
+    phase: BuildPhase.RUN_GRADLEW,
+    platform: Platform.ANDROID,
+    // > A failure occurred while executing com.android.build.gradle.internal.res.Aapt2CompileRunnable
+    //   > Android resource compilation failed
+    //     ERROR:/home/expo/workingdir/build/android/app/src/main/res/mipmap-mdpi/ic_launcher.png: AAPT: error: failed to read PNG signature: file does not start with PNG signature.
+    regexp: /AAPT: error: failed to read PNG signature: file does not start with PNG signature/,
+    createError: () =>
+      new TrackedBuildError('INVALID_PNG_SIGNATURE', 'gradle: Invalid PNG signature.'),
+  },
+  {
+    phase: BuildPhase.RUN_GRADLEW,
+    platform: Platform.ANDROID,
+    // Execution failed for task ':app:processReleaseGoogleServices'.
+    // > Malformed root json
+    regexp: /Execution failed for task ':app:processReleaseGoogleServices'.*\s.*Malformed root json/,
+    createError: () =>
+      new TrackedBuildError(
+        'GRADLE_MALFORMED_GOOGLE_SERVICES_JSON',
+        'gradle: Malformed google-services.json.'
+      ),
+  },
+  {
+    phase: BuildPhase.RUN_GRADLEW,
+    platform: Platform.ANDROID,
+    // Execution failed for task ':app:bundleReleaseJsAndAssets'.
+    // > Process 'command 'node'' finished with non-zero exit value 1
+    regexp: /Execution failed for task ':app:bundleReleaseJsAndAssets'.*\s.*Process 'command 'node'' finished with non-zero exit value/,
+    createError: () =>
+      new TrackedBuildError(
+        'GRADLE_BUILD_BUNDLER_ERROR',
+        "gradle: ':app:bundleReleaseJsAndAssets' failed."
+      ),
+  },
+  {
+    phase: BuildPhase.RUN_FASTLANE,
+    platform: Platform.IOS,
+    // error: exportArchive: exportOptionsPlist error for key "iCloudContainerEnvironment": expected one of {Development, Production}, but no value was provided
+    regexp: /exportArchive: exportOptionsPlist error for key "iCloudContainerEnvironment"/,
+    createError: () =>
+      new TrackedBuildError(
+        'MISSING_ICLOUD_CONTAINER_ENVIRONMENT',
+        'fastlane: Missing iCloudContainerEnvironment in exportOptionsPlist.'
+      ),
+  },
+  {
+    phase: BuildPhase.RUN_FASTLANE,
+    platform: Platform.IOS,
+    // The following build commands failed:
+    //	PhaseScriptExecution [CP-User]\ Generate\ app.manifest\ for\ expo-updates /Users/expo/Library/Developer/Xcode/DerivedData/Kenkohub-eqseedlxbgrzjqagscbclhbtstwh/Build/Intermediates.noindex/ArchiveIntermediates/Kenkohub/IntermediateBuildFilesPath/Pods.build/Release-iphoneos/EXUpdates.build/Script-BB6B5FD28815C045A20B2E5E3FEEBD6E.sh (in target 'EXUpdates' from project 'Pods')
+    regexp: /The following build commands failed.*\s.*\[CP-User\]\\ Generate\\ app\.manifest\\ for\\ expo-updates/,
+    createError: () =>
+      new TrackedBuildError(
+        'XCODE_BUILD_UPDATES_PHASE_SCRIPT',
+        'fastlane: Generating app.manifest for expo-updates failed.'
+      ),
+  },
+  {
+    phase: BuildPhase.RUN_FASTLANE,
+    platform: Platform.IOS,
+    // The following build commands failed:
+    //	PhaseScriptExecution Bundle\ React\ Native\ code\ and\ images /Users/expo/Library/Developer/Xcode/DerivedData/cnaxwpahkhcjluhigkcwrturapmm/Build/Intermediates.noindex/ArchiveIntermediates/Test/IntermediateBuildFilesPath/Test.build/Release-iphoneos/Test.build/Script-00DD1BFF151E006B06BC.sh (in target 'Test' from project 'Test')
+    regexp: /The following build commands failed.*\s.*PhaseScriptExecution Bundle\\ React\\ Native\\ code\\ and\\ images \/Users\/expo/,
+    createError: () =>
+      new TrackedBuildError(
+        'XCODE_BUILD_BUNDLER_ERROR',
+        'fastlane: Bundle React Native code and images failed.'
+      ),
   },
 ];
