@@ -50,6 +50,7 @@ export const builderBaseImages = [
   'macos-monterey-12.1-xcode-13.2',
   'macos-monterey-12.3-xcode-13.3',
   'macos-monterey-12.4-xcode-13.4',
+  'macos-monterey-12.6-xcode-14.0',
 ] as const;
 
 export const sdkVersionToDefaultBuilderImage: Record<string, typeof builderBaseImages[number]> = {
