@@ -4,7 +4,7 @@ CDN_URL = "https://cdn.cocoapods.org"
 
 POD_BLACKLIST = ["libwebp", "Braintree"]
 
-COCOAPODS_CACHE_URL = ENV['EAS_BUILD_COCOAPODS_CACHE_URL']
+COCOAPODS_CACHE_URL = ENV['COCOAPODS_CACHE_URL']
 
 module Pod
   class Installer
