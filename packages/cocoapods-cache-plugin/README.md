@@ -11,13 +11,17 @@ Sample issue: https://issues.sonatype.org/browse/NEXUS-28026.
 
 Once Sonatype fix this issue on their end, we should be able to get rid of this plugin.
 
-## Installation
+# Usage
+
+Install the plugin and that's it!
+
+## Local installation (for testing)
 
 ```bash
 sudo gem build cocoapods-cache-plugin.gemspec --output=cocoapods-cache-plugin.gem
 sudo gem install cocoapods-cache-plugin.gem
 ```
 
-# Usage
+# Publishing
 
-Install the plugin and that's it!
+Run `build_and_publish`. Don't forget to bump plugin version in turtle repo!
