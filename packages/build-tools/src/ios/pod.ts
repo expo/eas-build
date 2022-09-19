@@ -11,7 +11,13 @@ export async function installPods<TJob extends Ios.Job>(ctx: BuildContext<TJob>)
   await spawn('pod', ['install'], {
     cwd: iosDir,
     logger: ctx.logger,
-    env: { ...ctx.env, LANG: 'en_US.UTF-8' },
+    env: {
+      ...ctx.env,
+      LANG: 'en_US.UTF-8',
+      ...(ctx.env.EAS_BUILD_COCOAPODS_CACHE_URL
+        ? { COCCOAPODS_CACHE_URL: ctx.env.EAS_BUILD_COCOAPODS_CACHE_URL }
+        : {}),
+    },
     lineTransformer: (line?: string) => {
       if (
         !line ||
