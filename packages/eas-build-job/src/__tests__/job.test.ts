@@ -21,9 +21,10 @@ describe(setAndroidBuilderImage, () => {
 describe(setIosBuilderImageForManagedJob, () => {
   test.each([
     ['44.0.0', Workflow.MANAGED, 'macos-big-sur-11.4-xcode-13.0'],
-    ['45.0.0', Workflow.MANAGED, 'macos-monterey-12.3-xcode-13.3'],
-    ['46.0.0', Workflow.MANAGED, 'macos-monterey-12.3-xcode-13.3'],
+    ['45.0.0', Workflow.MANAGED, 'macos-monterey-12.4-xcode-13.4'],
+    ['46.0.0', Workflow.MANAGED, 'macos-monterey-12.4-xcode-13.4'],
     ['46.0.0', Workflow.GENERIC, undefined],
+    ['47.0.0', Workflow.MANAGED, 'macos-monterey-12.6-xcode-14.0'],
     [undefined, Workflow.MANAGED, undefined],
   ])(
     'selecting image for sdkVersion %s and React Native %s',
