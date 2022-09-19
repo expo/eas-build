@@ -37,9 +37,13 @@ export async function buildAndroidAsync(
     skipNativeBuild: config.skipNativeBuild,
   });
 
-  await ctx.runBuildPhase(BuildPhase.START_BUILD, async () => {
-    ctx.logger.info({ job: omit(ctx.job, 'secrets') }, 'Starting build');
-  });
+  await ctx.runBuildPhase(
+    BuildPhase.START_BUILD,
+    async () => {
+      ctx.logger.info({ job: omit(ctx.job, 'secrets') }, 'Starting build');
+    },
+    ctx
+  );
 
   return await Builders.androidBuilder(ctx);
 }

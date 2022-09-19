@@ -16,49 +16,73 @@ import { findPackagerRootDir, PackageManager } from './packageManager';
 const MAX_EXPO_DOCTOR_TIMEOUT_MS = 20 * 1000;
 
 export async function setup<TJob extends Job>(ctx: BuildContext<TJob>): Promise<void> {
-  const packageJson = await ctx.runBuildPhase(BuildPhase.PREPARE_PROJECT, async () => {
-    await downloadAndUnpackProject(ctx);
-    if (ctx.env.NPM_TOKEN) {
-      await createNpmrcIfNotExistsAsync(ctx);
-    }
-    if (ctx.job.platform === Platform.IOS && ctx.env.EAS_BUILD_RUNNER === 'eas-build') {
-      await deleteXcodeEnvLocalIfExistsAsync(ctx as BuildContext<Ios.Job>);
-    }
-    // try to read package.json to see if it exists and is valid
-    return readPackageJson(ctx.reactNativeProjectDirectory);
-  });
+  const packageJson = await ctx.runBuildPhase(
+    BuildPhase.PREPARE_PROJECT,
+    async () => {
+      await downloadAndUnpackProject(ctx);
+      if (ctx.env.NPM_TOKEN) {
+        await createNpmrcIfNotExistsAsync(ctx);
+      }
+      if (ctx.job.platform === Platform.IOS && ctx.env.EAS_BUILD_RUNNER === 'eas-build') {
+        await deleteXcodeEnvLocalIfExistsAsync(ctx as BuildContext<Ios.Job>);
+      }
+      // try to read package.json to see if it exists and is valid
+      return readPackageJson(ctx.reactNativeProjectDirectory);
+    },
+    ctx
+  );
 
-  await ctx.runBuildPhase(BuildPhase.PRE_INSTALL_HOOK, async () => {
-    await runHookIfPresent(ctx, Hook.PRE_INSTALL);
-  });
+  await ctx.runBuildPhase(
+    BuildPhase.PRE_INSTALL_HOOK,
+    async () => {
+      await runHookIfPresent(ctx, Hook.PRE_INSTALL);
+    },
+    ctx
+  );
 
-  await ctx.runBuildPhase(BuildPhase.INSTALL_DEPENDENCIES, async () => {
-    await installDependencies(ctx);
-  });
+  await ctx.runBuildPhase(
+    BuildPhase.INSTALL_DEPENDENCIES,
+    async () => {
+      await installDependencies(ctx);
+    },
+    ctx
+  );
 
-  await ctx.runBuildPhase(BuildPhase.READ_PACKAGE_JSON, async () => {
-    ctx.logger.info('Using package.json:');
-    ctx.logger.info(JSON.stringify(packageJson, null, 2));
-  });
+  await ctx.runBuildPhase(
+    BuildPhase.READ_PACKAGE_JSON,
+    async () => {
+      ctx.logger.info('Using package.json:');
+      ctx.logger.info(JSON.stringify(packageJson, null, 2));
+    },
+    ctx
+  );
 
-  await ctx.runBuildPhase(BuildPhase.READ_APP_CONFIG, async () => {
-    ctx.logger.info('Using app configuration:');
-    ctx.logger.info(JSON.stringify(ctx.appConfig, null, 2));
-  });
+  await ctx.runBuildPhase(
+    BuildPhase.READ_APP_CONFIG,
+    async () => {
+      ctx.logger.info('Using app configuration:');
+      ctx.logger.info(JSON.stringify(ctx.appConfig, null, 2));
+    },
+    ctx
+  );
 
   const hasExpoPackage = !!packageJson.dependencies?.expo;
   if (hasExpoPackage) {
-    await ctx.runBuildPhase(BuildPhase.RUN_EXPO_DOCTOR, async () => {
-      try {
-        const { stdout } = await runExpoDoctor(ctx);
-        if (!stdout.match(/Didn't find any issues with the project/)) {
+    await ctx.runBuildPhase(
+      BuildPhase.RUN_EXPO_DOCTOR,
+      async () => {
+        try {
+          const { stdout } = await runExpoDoctor(ctx);
+          if (!stdout.match(/Didn't find any issues with the project/)) {
+            ctx.markBuildPhaseHasWarnings();
+          }
+        } catch (err) {
+          ctx.logger.error({ err }, 'Command "expo doctor" failed.');
           ctx.markBuildPhaseHasWarnings();
         }
-      } catch (err) {
-        ctx.logger.error({ err }, 'Command "expo doctor" failed.');
-        ctx.markBuildPhaseHasWarnings();
-      }
-    });
+      },
+      ctx
+    );
   }
 }
 

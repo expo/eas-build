@@ -1,6 +1,6 @@
 import { BuildPhase, errors, Platform, Workflow } from '@expo/eas-build-job';
 
-import { ErrorHandler } from './errors.types';
+import { ErrorHandler, XCODE_BUILD_PHASE } from './errors.types';
 
 import UserFacingError = errors.UserFacingError;
 
@@ -178,6 +178,36 @@ You are seeing this error because either:
       }
       return undefined;
     },
+  },
+  {
+    platform: Platform.IOS,
+    phase: XCODE_BUILD_PHASE,
+    // Prepare packages
+    // Computing target dependency graph and provisioning inputs
+    // Create build description
+    // Build description signature: 33a5c28977280822abe5e7bd7fe02529
+    // Build description path: /Users/expo/Library/Developer/Xcode/DerivedData/testapp-fazozgerxcvvfifkipojsjftgyih/Build/Intermediates.noindex/ArchiveIntermediates/testapp/IntermediateBuildFilesPath/XCBuildData/33a5c28977280822abe5e7bd7fe02529-desc.xcbuild
+    // note: Building targets in dependency order
+    // /Users/expo/workingdir/build/managed/ios/Pods/Pods.xcodeproj: error: Signing for "EXConstants-EXConstants" requires a development team. Select a development team in the Signing & Capabilities editor. (in target 'EXConstants-EXConstants' from project 'Pods')
+    // /Users/expo/workingdir/build/managed/ios/Pods/Pods.xcodeproj: error: Signing for "React-Core-AccessibilityResources" requires a development team. Select a development team in the Signing & Capabilities editor. (in target 'React-Core-AccessibilityResources' from project 'Pods')
+    // warning: Run script build phase '[CP-User] Generate app.manifest for expo-updates' will be run during every build because it does not specify any outputs. To address this warning, either add output dependencies to the script phase, or configure it to run in every build by unchecking "Based on dependency analysis" in the script phase. (in target 'EXUpdates' from project 'Pods')
+    // warning: Run script build phase 'Start Packager' will be run during every build because it does not specify any outputs. To address this warning, either add output dependencies to the script phase, or configure it to run in every build by unchecking "Based on dependency analysis" in the script phase. (in target 'testapp' from project 'testapp')
+    // warning: Run script build phase 'Bundle React Native code and images' will be run during every build because it does not specify any outputs. To address this warning, either add output dependencies to the script phase, or configure it to run in every build by unchecking "Based on dependency analysis" in the script phase. (in target 'testapp' from project 'testapp')
+    // warning: Run script build phase '[CP-User] Generate app.config for prebuilt Constants.manifest' will be run during every build because it does not specify any outputs. To address this warning, either add output dependencies to the script phase, or configure it to run in every build by unchecking "Based on dependency analysis" in the script phase. (in target 'EXConstants' from project 'Pods')
+    // /Users/expo/workingdir/build/managed/ios/Pods/Pods.xcodeproj: error: Signing for "EXUpdates-EXUpdates" requires a development team. Select a development team in the Signing & Capabilities editor. (in target 'EXUpdates-EXUpdates' from project 'Pods')
+    regexp: /error: Signing for "[a-zA-Z-0-9_]+" requires a development team/,
+    createError: (_, { job }) =>
+      job.type === Workflow.MANAGED
+        ? new UserFacingError(
+            'XCODE_14_CODE_SIGNING_ERROR',
+            `XCode 14 signs resource bundles by default, but this requires setting the development team for each resource bundle target.
+SDKs in versions lower 46 doesn't support it in prebuild phase. Please upgrade to SDK 46 or higher to fix this issue.`
+          )
+        : new UserFacingError(
+            'XCODE_14_CODE_SIGNING_ERROR',
+            `XCode 14 signs resource bundles by default, but this requires setting the development team for each resource bundle target.
+Turn off signing for resource bundles in your Podfile to fix this issue. Example solution: https://github.com/expo/expo/pull/19095`
+          ),
   },
   {
     platform: Platform.ANDROID,

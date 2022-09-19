@@ -13,46 +13,62 @@ export async function runBuilderWithHooksAsync<T extends Job>(
     let buildSuccess = true;
     try {
       await builderAsync(ctx);
-      await ctx.runBuildPhase(BuildPhase.ON_BUILD_SUCCESS_HOOK, async () => {
-        await runHookIfPresent(ctx, Hook.ON_BUILD_SUCCESS);
-      });
+      await ctx.runBuildPhase(
+        BuildPhase.ON_BUILD_SUCCESS_HOOK,
+        async () => {
+          await runHookIfPresent(ctx, Hook.ON_BUILD_SUCCESS);
+        },
+        ctx
+      );
     } catch (err: any) {
       buildSuccess = false;
-      await ctx.runBuildPhase(BuildPhase.ON_BUILD_ERROR_HOOK, async () => {
-        await runHookIfPresent(ctx, Hook.ON_BUILD_ERROR);
-      });
+      await ctx.runBuildPhase(
+        BuildPhase.ON_BUILD_ERROR_HOOK,
+        async () => {
+          await runHookIfPresent(ctx, Hook.ON_BUILD_ERROR);
+        },
+        ctx
+      );
       throw err;
     } finally {
-      await ctx.runBuildPhase(BuildPhase.ON_BUILD_COMPLETE_HOOK, async () => {
-        await runHookIfPresent(ctx, Hook.ON_BUILD_COMPLETE, {
-          extraEnvs: {
-            EAS_BUILD_STATUS: buildSuccess ? 'finished' : 'errored',
-          },
-        });
-      });
+      await ctx.runBuildPhase(
+        BuildPhase.ON_BUILD_COMPLETE_HOOK,
+        async () => {
+          await runHookIfPresent(ctx, Hook.ON_BUILD_COMPLETE, {
+            extraEnvs: {
+              EAS_BUILD_STATUS: buildSuccess ? 'finished' : 'errored',
+            },
+          });
+        },
+        ctx
+      );
 
       if (ctx.job.platform === Platform.IOS) {
         await findAndUploadXcodeBuildLogsAsync(ctx as BuildContext<Ios.Job>);
       }
 
-      await ctx.runBuildPhase(BuildPhase.UPLOAD_BUILD_ARTIFACTS, async () => {
-        if (!ctx.job.buildArtifactPaths || ctx.job.buildArtifactPaths.length === 0) {
-          return;
-        }
-        try {
-          const buildArtifacts = (
-            await Promise.all(
-              ctx.job.buildArtifactPaths.map((path) =>
-                findArtifacts(ctx.reactNativeProjectDirectory, path, ctx.logger)
+      await ctx.runBuildPhase(
+        BuildPhase.UPLOAD_BUILD_ARTIFACTS,
+        async () => {
+          if (!ctx.job.buildArtifactPaths || ctx.job.buildArtifactPaths.length === 0) {
+            return;
+          }
+          try {
+            const buildArtifacts = (
+              await Promise.all(
+                ctx.job.buildArtifactPaths.map((path) =>
+                  findArtifacts(ctx.reactNativeProjectDirectory, path, ctx.logger)
+                )
               )
-            )
-          ).flat();
-          ctx.logger.info(`Uploading build artifacts: ${buildArtifacts.join(', ')}`);
-          await ctx.uploadArtifacts(ArtifactType.BUILD_ARTIFACTS, buildArtifacts, ctx.logger);
-        } catch (err: any) {
-          ctx.logger.error({ err }, 'Failed to upload build artifacts');
-        }
-      });
+            ).flat();
+            ctx.logger.info(`Uploading build artifacts: ${buildArtifacts.join(', ')}`);
+            await ctx.uploadArtifacts(ArtifactType.BUILD_ARTIFACTS, buildArtifacts, ctx.logger);
+          } catch (err: any) {
+            ctx.logger.error({ err }, 'Failed to upload build artifacts');
+          }
+        },
+        ctx
+      );
     }
   } catch (err: any) {
     err.artifacts = ctx.artifacts;

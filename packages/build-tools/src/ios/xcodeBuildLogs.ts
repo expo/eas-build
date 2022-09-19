@@ -17,7 +17,7 @@ export async function findAndUploadXcodeBuildLogsAsync(ctx: BuildContext<Ios.Job
   }
 }
 
-async function findXcodeBuildLogsPathAsync(
+export async function findXcodeBuildLogsPathAsync(
   ctx: BuildContext<Ios.Job>
 ): Promise<string | undefined> {
   const customLogPaths = (await fg('*.log', { cwd: ctx.buildLogsDirectory })).map((filename) =>
