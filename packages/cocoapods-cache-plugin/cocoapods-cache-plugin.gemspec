@@ -1,16 +1,16 @@
 # coding: utf-8
 lib = File.expand_path('../lib', __FILE__)
 $LOAD_PATH.unshift(lib) unless $LOAD_PATH.include?(lib)
-require 'cocoapods-proxy-plugin/gem_version.rb'
+require 'cocoapods-cache-plugin/gem_version.rb'
 
 Gem::Specification.new do |spec|
   spec.name          = 'cocoapods-cache-plugin'
-  spec.version       = CocoapodsProxyPlugin::VERSION
+  spec.version       = CocoapodsCachePlugin::VERSION
   spec.authors       = ['Expo']
   spec.email         = ['support@expo.dev']
   spec.description   = "CocoaPods plugin, which handles fetching the pods which are not supported by Nexus3 cocoapods-proxy repository."
   spec.summary       = "CocoaPods plugin, which handles fetching the pods which are not supported by Nexus3 cocoapods-proxy repository."
-  spec.homepage      = 'https://github.com/expo/eas-build/packages/cocoapods-proxy-plugin'
+  spec.homepage      = 'https://github.com/expo/eas-build/packages/cocoapods-cache-plugin'
   spec.license       = 'BUSL-1.1'
 
   spec.files         = Dir['lib/**/*']
