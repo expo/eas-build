@@ -111,7 +111,7 @@ describe(resolveBuildPhaseErrorAsync, () => {
       },
       path.resolve('./src/buildErrors/__tests__/fixtures')
     );
-    expect(err.errorCode).toBe('XCODE_14_CODE_SIGNING_ERROR');
-    expect(err.userFacingErrorCode).toBe('XCODE_14_CODE_SIGNING_ERROR');
+    expect(err.errorCode).toBe('XCODE_CODE_SIGNING_ERROR');
+    expect(err.userFacingErrorCode).toBe('XCODE_CODE_SIGNING_ERROR');
   });
 });
