@@ -10,22 +10,17 @@ import { buildErrorHandlers } from './buildErrorHandlers';
 async function maybeReadXcodeBuildLogs<TError extends Error>(
   handlers: ErrorHandler<TError>[],
   job: Job,
-  buildLogsDirectory: string
+  xcodeBuildLogsPath?: string
 ): Promise<string | undefined> {
   if (
     job.platform !== Platform.IOS ||
-    !handlers.map((handler) => handler.phase).includes(XCODE_BUILD_PHASE)
+    !handlers.map((handler) => handler.phase).includes(XCODE_BUILD_PHASE) ||
+    !xcodeBuildLogsPath
   ) {
     return;
   }
 
   try {
-    const xcodeBuildLogsPath = await findXcodeBuildLogsPathAsync(buildLogsDirectory);
-
-    if (!xcodeBuildLogsPath) {
-      return;
-    }
-
     return await fs.readFile(xcodeBuildLogsPath, 'utf-8');
   } catch (err: any) {
     return undefined;
@@ -49,7 +44,9 @@ async function resolveErrorAsync<TError extends Error>(
         handler.phase === phase ||
         !handler.phase
     );
-  const xcodeBuildLogs = await maybeReadXcodeBuildLogs(handlers, job, buildLogsDirectory);
+
+  const xcodeBuildLogsPath = await findXcodeBuildLogsPathAsync(buildLogsDirectory);
+  const xcodeBuildLogs = await maybeReadXcodeBuildLogs(handlers, job, xcodeBuildLogsPath);
 
   for (const handler of handlers) {
     const regexp =
