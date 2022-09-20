@@ -137,10 +137,9 @@ export class BuildContext<TJob extends Job> {
     return this._appConfig;
   }
 
-  public async runBuildPhase<T, TJob extends Job>(
+  public async runBuildPhase<T>(
     buildPhase: BuildPhase,
     phase: () => Promise<T>,
-    ctx: BuildContext<TJob>,
     {
       doNotMarkStart = false,
       doNotMarkEnd = false,
@@ -160,7 +159,7 @@ export class BuildContext<TJob extends Job> {
       this.endCurrentBuildPhase({ result: buildPhaseResult, doNotMarkEnd });
       return result;
     } catch (err: any) {
-      const resolvedError = await this.handleBuildPhaseErrorAsync(err, buildPhase, ctx);
+      const resolvedError = await this.handleBuildPhaseErrorAsync(err, buildPhase);
       this.endCurrentBuildPhase({ result: BuildPhaseResult.FAIL });
       throw resolvedError;
     }
@@ -185,10 +184,9 @@ export class BuildContext<TJob extends Job> {
     }
   }
 
-  private async handleBuildPhaseErrorAsync<TJob extends Job>(
+  private async handleBuildPhaseErrorAsync(
     err: any,
-    buildPhase: BuildPhase,
-    ctx: BuildContext<TJob>
+    buildPhase: BuildPhase
   ): Promise<errors.BuildError> {
     const buildError = await resolveBuildPhaseErrorAsync(
       err,
@@ -198,7 +196,7 @@ export class BuildContext<TJob extends Job> {
         phase: buildPhase,
         env: this.env,
       },
-      ctx
+      this.buildLogsDirectory
     );
     if (buildError.errorCode === errors.ErrorCode.UNKNOWN_ERROR) {
       // leaving message empty, website will display err.stack which already includes err.message

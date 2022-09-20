@@ -21,105 +21,65 @@ async function buildAsync(ctx: BuildContext<Android.Job>): Promise<void> {
   const hasNativeCode = ctx.job.type === Workflow.GENERIC;
 
   if (hasNativeCode) {
-    await ctx.runBuildPhase(
-      BuildPhase.FIX_GRADLEW,
-      async () => {
-        await ensureLFLineEndingsInGradlewScript(ctx);
-      },
-      ctx
-    );
+    await ctx.runBuildPhase(BuildPhase.FIX_GRADLEW, async () => {
+      await ensureLFLineEndingsInGradlewScript(ctx);
+    });
   }
 
-  await ctx.runBuildPhase(
-    BuildPhase.PREBUILD,
-    async () => {
-      if (hasNativeCode) {
-        ctx.markBuildPhaseSkipped();
-        ctx.logger.info(
-          'Skipped running "expo prebuild" because the "android" directory already exists. Learn more about the build process: https://docs.expo.dev/build-reference/android-builds/'
-        );
-        return;
-      }
-      await prebuildAsync(ctx);
-    },
-    ctx
-  );
+  await ctx.runBuildPhase(BuildPhase.PREBUILD, async () => {
+    if (hasNativeCode) {
+      ctx.markBuildPhaseSkipped();
+      ctx.logger.info(
+        'Skipped running "expo prebuild" because the "android" directory already exists. Learn more about the build process: https://docs.expo.dev/build-reference/android-builds/'
+      );
+      return;
+    }
+    await prebuildAsync(ctx);
+  });
 
-  await ctx.runBuildPhase(
-    BuildPhase.RESTORE_CACHE,
-    async () => {
-      await ctx.cacheManager?.restoreCache(ctx);
-    },
-    ctx
-  );
+  await ctx.runBuildPhase(BuildPhase.RESTORE_CACHE, async () => {
+    await ctx.cacheManager?.restoreCache(ctx);
+  });
 
-  await ctx.runBuildPhase(
-    BuildPhase.POST_INSTALL_HOOK,
-    async () => {
-      await runHookIfPresent(ctx, Hook.POST_INSTALL);
-    },
-    ctx
-  );
+  await ctx.runBuildPhase(BuildPhase.POST_INSTALL_HOOK, async () => {
+    await runHookIfPresent(ctx, Hook.POST_INSTALL);
+  });
 
   if (ctx.job.secrets.buildCredentials) {
-    await ctx.runBuildPhase(
-      BuildPhase.PREPARE_CREDENTIALS,
-      async () => {
-        await restoreCredentials(ctx);
-        await configureBuildGradle(ctx);
-      },
-      ctx
-    );
+    await ctx.runBuildPhase(BuildPhase.PREPARE_CREDENTIALS, async () => {
+      await restoreCredentials(ctx);
+      await configureBuildGradle(ctx);
+    });
   }
-  await ctx.runBuildPhase(
-    BuildPhase.CONFIGURE_EXPO_UPDATES,
-    async () => {
-      await configureExpoUpdatesIfInstalledAsync(ctx);
-    },
-    ctx
-  );
+  await ctx.runBuildPhase(BuildPhase.CONFIGURE_EXPO_UPDATES, async () => {
+    await configureExpoUpdatesIfInstalledAsync(ctx);
+  });
 
   if (ctx.skipNativeBuild) {
     throw new SkipNativeBuildError('Skipping Gradle build');
   }
-  await ctx.runBuildPhase(
-    BuildPhase.RUN_GRADLEW,
-    async () => {
-      const gradleCommand = resolveGradleCommand(ctx.job);
-      await runGradleCommand(ctx, gradleCommand);
-    },
-    ctx
-  );
+  await ctx.runBuildPhase(BuildPhase.RUN_GRADLEW, async () => {
+    const gradleCommand = resolveGradleCommand(ctx.job);
+    await runGradleCommand(ctx, gradleCommand);
+  });
 
-  await ctx.runBuildPhase(
-    BuildPhase.PRE_UPLOAD_ARTIFACTS_HOOK,
-    async () => {
-      await runHookIfPresent(ctx, Hook.PRE_UPLOAD_ARTIFACTS);
-    },
-    ctx
-  );
+  await ctx.runBuildPhase(BuildPhase.PRE_UPLOAD_ARTIFACTS_HOOK, async () => {
+    await runHookIfPresent(ctx, Hook.PRE_UPLOAD_ARTIFACTS);
+  });
 
-  await ctx.runBuildPhase(
-    BuildPhase.SAVE_CACHE,
-    async () => {
-      await ctx.cacheManager?.saveCache(ctx);
-    },
-    ctx
-  );
+  await ctx.runBuildPhase(BuildPhase.SAVE_CACHE, async () => {
+    await ctx.cacheManager?.saveCache(ctx);
+  });
 
-  await ctx.runBuildPhase(
-    BuildPhase.UPLOAD_APPLICATION_ARCHIVE,
-    async () => {
-      const applicationArchives = await findArtifacts(
-        ctx.reactNativeProjectDirectory,
-        ctx.job.applicationArchivePath ?? 'android/app/build/outputs/**/*.{apk,aab}',
-        ctx.logger
-      );
-      ctx.logger.info(`Application archives: ${applicationArchives.join(', ')}`);
-      await ctx.uploadArtifacts(ArtifactType.APPLICATION_ARCHIVE, applicationArchives, ctx.logger);
-    },
-    ctx
-  );
+  await ctx.runBuildPhase(BuildPhase.UPLOAD_APPLICATION_ARCHIVE, async () => {
+    const applicationArchives = await findArtifacts(
+      ctx.reactNativeProjectDirectory,
+      ctx.job.applicationArchivePath ?? 'android/app/build/outputs/**/*.{apk,aab}',
+      ctx.logger
+    );
+    ctx.logger.info(`Application archives: ${applicationArchives.join(', ')}`);
+    await ctx.uploadArtifacts(ArtifactType.APPLICATION_ARCHIVE, applicationArchives, ctx.logger);
+  });
 }
 
 function resolveGradleCommand(job: Android.Job): string {

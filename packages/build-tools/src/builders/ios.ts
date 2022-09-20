@@ -27,128 +27,80 @@ async function buildAsync(ctx: BuildContext<Ios.Job>): Promise<void> {
 
   const credentialsManager = new CredentialsManager(ctx);
   try {
-    const credentials = await ctx.runBuildPhase(
-      BuildPhase.PREPARE_CREDENTIALS,
-      async () => {
-        return await credentialsManager.prepare();
-      },
-      ctx
-    );
+    const credentials = await ctx.runBuildPhase(BuildPhase.PREPARE_CREDENTIALS, async () => {
+      return await credentialsManager.prepare();
+    });
 
-    await ctx.runBuildPhase(
-      BuildPhase.PREBUILD,
-      async () => {
-        if (hasNativeCode) {
-          ctx.markBuildPhaseSkipped();
-          ctx.logger.info(
-            'Skipped running "expo prebuild" because the "ios" directory already exists. Learn more about the build process: https://docs.expo.dev/build-reference/ios-builds/'
-          );
-          return;
-        }
-        const extraEnvs: Record<string, string> = credentials?.teamId
-          ? { APPLE_TEAM_ID: credentials.teamId }
-          : {};
-        await prebuildAsync(ctx, { extraEnvs });
-      },
-      ctx
-    );
+    await ctx.runBuildPhase(BuildPhase.PREBUILD, async () => {
+      if (hasNativeCode) {
+        ctx.markBuildPhaseSkipped();
+        ctx.logger.info(
+          'Skipped running "expo prebuild" because the "ios" directory already exists. Learn more about the build process: https://docs.expo.dev/build-reference/ios-builds/'
+        );
+        return;
+      }
+      const extraEnvs: Record<string, string> = credentials?.teamId
+        ? { APPLE_TEAM_ID: credentials.teamId }
+        : {};
+      await prebuildAsync(ctx, { extraEnvs });
+    });
 
-    await ctx.runBuildPhase(
-      BuildPhase.RESTORE_CACHE,
-      async () => {
-        await ctx.cacheManager?.restoreCache(ctx);
-      },
-      ctx
-    );
+    await ctx.runBuildPhase(BuildPhase.RESTORE_CACHE, async () => {
+      await ctx.cacheManager?.restoreCache(ctx);
+    });
 
-    await ctx.runBuildPhase(
-      BuildPhase.INSTALL_PODS,
-      async () => {
-        await installPods(ctx);
-      },
-      ctx
-    );
+    await ctx.runBuildPhase(BuildPhase.INSTALL_PODS, async () => {
+      await installPods(ctx);
+    });
 
-    await ctx.runBuildPhase(
-      BuildPhase.POST_INSTALL_HOOK,
-      async () => {
-        await runHookIfPresent(ctx, Hook.POST_INSTALL);
-      },
-      ctx
-    );
+    await ctx.runBuildPhase(BuildPhase.POST_INSTALL_HOOK, async () => {
+      await runHookIfPresent(ctx, Hook.POST_INSTALL);
+    });
 
     const buildConfiguration = resolveBuildConfiguration(ctx);
     if (credentials) {
-      await ctx.runBuildPhase(
-        BuildPhase.CONFIGURE_XCODE_PROJECT,
-        async () => {
-          await configureXcodeProject(ctx, { credentials, buildConfiguration });
-        },
-        ctx
-      );
+      await ctx.runBuildPhase(BuildPhase.CONFIGURE_XCODE_PROJECT, async () => {
+        await configureXcodeProject(ctx, { credentials, buildConfiguration });
+      });
     }
 
-    await ctx.runBuildPhase(
-      BuildPhase.CONFIGURE_EXPO_UPDATES,
-      async () => {
-        await configureExpoUpdatesIfInstalledAsync(ctx);
-      },
-      ctx
-    );
+    await ctx.runBuildPhase(BuildPhase.CONFIGURE_EXPO_UPDATES, async () => {
+      await configureExpoUpdatesIfInstalledAsync(ctx);
+    });
 
-    await ctx.runBuildPhase(
-      BuildPhase.RUN_FASTLANE,
-      async () => {
-        const scheme = resolveScheme(ctx);
-        const entitlements = await readEntitlementsAsync(ctx, { scheme, buildConfiguration });
-        await runFastlaneGym(ctx, {
-          credentials,
-          scheme,
-          buildConfiguration,
-          entitlements,
-        });
-      },
-      ctx
-    );
+    await ctx.runBuildPhase(BuildPhase.RUN_FASTLANE, async () => {
+      const scheme = resolveScheme(ctx);
+      const entitlements = await readEntitlementsAsync(ctx, { scheme, buildConfiguration });
+      await runFastlaneGym(ctx, {
+        credentials,
+        scheme,
+        buildConfiguration,
+        entitlements,
+      });
+    });
   } finally {
-    await ctx.runBuildPhase(
-      BuildPhase.CLEAN_UP_CREDENTIALS,
-      async () => {
-        await credentialsManager.cleanUp();
-      },
-      ctx
-    );
+    await ctx.runBuildPhase(BuildPhase.CLEAN_UP_CREDENTIALS, async () => {
+      await credentialsManager.cleanUp();
+    });
   }
 
-  await ctx.runBuildPhase(
-    BuildPhase.PRE_UPLOAD_ARTIFACTS_HOOK,
-    async () => {
-      await runHookIfPresent(ctx, Hook.PRE_UPLOAD_ARTIFACTS);
-    },
-    ctx
-  );
+  await ctx.runBuildPhase(BuildPhase.PRE_UPLOAD_ARTIFACTS_HOOK, async () => {
+    await runHookIfPresent(ctx, Hook.PRE_UPLOAD_ARTIFACTS);
+  });
 
-  await ctx.runBuildPhase(
-    BuildPhase.SAVE_CACHE,
-    async () => {
-      await ctx.cacheManager?.saveCache(ctx);
-    },
-    ctx
-  );
+  await ctx.runBuildPhase(BuildPhase.SAVE_CACHE, async () => {
+    await ctx.cacheManager?.saveCache(ctx);
+  });
 
-  await ctx.runBuildPhase(
-    BuildPhase.UPLOAD_APPLICATION_ARCHIVE,
-    async () => {
-      const applicationArchives = await findArtifacts(
-        ctx.reactNativeProjectDirectory,
-        resolveArtifactPath(ctx),
-        ctx.logger
-      );
-      ctx.logger.info(`Application archives: ${applicationArchives.join(', ')}`);
-      await ctx.uploadArtifacts(ArtifactType.APPLICATION_ARCHIVE, applicationArchives, ctx.logger);
-    },
-    ctx
-  );
+  await ctx.runBuildPhase(BuildPhase.UPLOAD_APPLICATION_ARCHIVE, async () => {
+    const applicationArchives = await findArtifacts(
+      ctx.reactNativeProjectDirectory,
+      resolveArtifactPath(ctx),
+      ctx.logger
+    );
+    ctx.logger.info(`Application archives: ${applicationArchives.join(', ')}`);
+    await ctx.uploadArtifacts(ArtifactType.APPLICATION_ARCHIVE, applicationArchives, ctx.logger);
+  });
 }
 
 async function readEntitlementsAsync(

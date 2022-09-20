@@ -17,7 +17,7 @@ describe(resolveBuildPhaseErrorAsync, () => {
         phase: BuildPhase.INSTALL_DEPENDENCIES,
         env: {},
       },
-      { job: { platform: Platform.ANDROID } } as any
+      '/fake/path'
     );
     expect(err.errorCode).toBe('NPM_CORRUPTED_PACKAGE');
     expect(err.userFacingErrorCode).toBe(errors.ErrorCode.UNKNOWN_ERROR);
@@ -35,7 +35,7 @@ describe(resolveBuildPhaseErrorAsync, () => {
         phase: BuildPhase.RUN_FASTLANE,
         env: {},
       },
-      { job: { platform: Platform.IOS } } as any
+      '/fake/path'
     );
     expect(err.errorCode).toBe('EAS_BUILD_UNSUPPORTED_BUNDLER_VERSION_ERROR');
     expect(err.userFacingErrorCode).toBe('EAS_BUILD_UNSUPPORTED_BUNDLER_VERSION_ERROR');
@@ -53,7 +53,7 @@ describe(resolveBuildPhaseErrorAsync, () => {
         phase: BuildPhase.INSTALL_DEPENDENCIES, // it should be in RUN_FASTLANE
         env: {},
       },
-      { job: { platform: Platform.IOS } } as any
+      '/fake/path'
     );
     expect(err.errorCode).toBe(errors.ErrorCode.UNKNOWN_ERROR);
     expect(err.userFacingErrorCode).toBe(errors.ErrorCode.UNKNOWN_ERROR);
@@ -73,7 +73,7 @@ describe(resolveBuildPhaseErrorAsync, () => {
         phase: BuildPhase.INSTALL_DEPENDENCIES,
         env: mockEnv,
       },
-      { job: { platform: Platform.ANDROID } } as any
+      '/fake/path'
     );
     expect(err.errorCode).toBe('NPM_CACHE_ERROR');
     expect(err.userFacingErrorCode).toBe(errors.ErrorCode.UNKNOWN_ERROR);
@@ -93,7 +93,7 @@ describe(resolveBuildPhaseErrorAsync, () => {
         phase: BuildPhase.INSTALL_DEPENDENCIES,
         env: {},
       },
-      { job: { platform: Platform.ANDROID } } as any
+      '/fake/path'
     );
     expect(err.errorCode).toBe(errors.ErrorCode.UNKNOWN_ERROR);
     expect(err.userFacingErrorCode).toBe(errors.ErrorCode.UNKNOWN_ERROR);
@@ -109,10 +109,7 @@ describe(resolveBuildPhaseErrorAsync, () => {
         phase: BuildPhase.RUN_FASTLANE,
         env: {},
       },
-      {
-        job: { platform: Platform.IOS },
-        buildLogsDirectory: path.resolve('./src/buildErrors/__tests__/fixtures'),
-      } as any
+      path.resolve('./src/buildErrors/__tests__/fixtures')
     );
     expect(err.errorCode).toBe('XCODE_14_CODE_SIGNING_ERROR');
     expect(err.userFacingErrorCode).toBe('XCODE_14_CODE_SIGNING_ERROR');

@@ -1,44 +1,42 @@
-import { BuildPhase, errors, Ios, Job, Platform } from '@expo/eas-build-job';
+import { BuildPhase, errors, Job, Platform } from '@expo/eas-build-job';
 import fs from 'fs-extra';
 
 import { findXcodeBuildLogsPathAsync } from '../ios/xcodeBuildLogs';
-import { BuildContext } from '../context';
 
 import { ErrorContext, ErrorHandler, XCODE_BUILD_PHASE } from './errors.types';
 import { userErrorHandlers } from './userErrorHandlers';
 import { buildErrorHandlers } from './buildErrorHandlers';
 
-async function maybeFetchXcodeBuildLogs<TError extends Error, TJob extends Job>(
+async function maybeReadXcodeBuildLogs<TError extends Error>(
   handlers: ErrorHandler<TError>[],
-  ctx: BuildContext<TJob>
+  job: Job,
+  buildLogsDirectory: string
 ): Promise<string | undefined> {
   if (
-    ctx.job.platform !== Platform.IOS ||
+    job.platform !== Platform.IOS ||
     !handlers.map((handler) => handler.phase).includes(XCODE_BUILD_PHASE)
   ) {
     return;
   }
 
   try {
-    const xcodeBuildLogsPath = await findXcodeBuildLogsPathAsync(ctx as BuildContext<Ios.Job>);
+    const xcodeBuildLogsPath = await findXcodeBuildLogsPathAsync(buildLogsDirectory);
 
     if (!xcodeBuildLogsPath) {
       return;
     }
 
-    const xcodeBuildLogs = await fs.readFile(xcodeBuildLogsPath, 'utf-8');
-
-    return xcodeBuildLogs;
+    return await fs.readFile(xcodeBuildLogsPath, 'utf-8');
   } catch (err: any) {
     return undefined;
   }
 }
 
-async function resolveErrorAsync<TError extends Error, TJob extends Job>(
+async function resolveErrorAsync<TError extends Error>(
   errorHandlers: ErrorHandler<TError>[],
   logLines: string[],
   errorContext: ErrorContext,
-  ctx: BuildContext<TJob>
+  buildLogsDirectory: string
 ): Promise<TError | undefined> {
   const { job, phase } = errorContext;
   const { platform } = job;
@@ -51,7 +49,7 @@ async function resolveErrorAsync<TError extends Error, TJob extends Job>(
         handler.phase === phase ||
         !handler.phase
     );
-  const xcodeBuildLogs = await maybeFetchXcodeBuildLogs(handlers, ctx);
+  const xcodeBuildLogs = await maybeReadXcodeBuildLogs(handlers, job, buildLogsDirectory);
 
   for (const handler of handlers) {
     const regexp =
@@ -69,11 +67,11 @@ async function resolveErrorAsync<TError extends Error, TJob extends Job>(
   return undefined;
 }
 
-export async function resolveBuildPhaseErrorAsync<TJob extends Job>(
+export async function resolveBuildPhaseErrorAsync(
   error: any,
   logLines: string[],
   errorContext: ErrorContext,
-  ctx: BuildContext<TJob>
+  buildLogsDirectory: string
 ): Promise<errors.BuildError> {
   const { phase } = errorContext;
   if (error instanceof errors.BuildError) {
@@ -82,9 +80,14 @@ export async function resolveBuildPhaseErrorAsync<TJob extends Job>(
   const userFacingError =
     error instanceof errors.UserFacingError
       ? error
-      : (await resolveErrorAsync(userErrorHandlers, logLines, errorContext, ctx)) ??
+      : (await resolveErrorAsync(userErrorHandlers, logLines, errorContext, buildLogsDirectory)) ??
         new errors.UnknownError();
-  const buildError = await resolveErrorAsync(buildErrorHandlers, logLines, errorContext, ctx);
+  const buildError = await resolveErrorAsync(
+    buildErrorHandlers,
+    logLines,
+    errorContext,
+    buildLogsDirectory
+  );
 
   const isUnknownUserError =
     !userFacingError ||
