@@ -9,13 +9,18 @@ COCOAPODS_CACHE_URL = ENV['COCOAPODS_CACHE_URL']
 module Pod
   class Installer
     class Analyzer
+      @@_was_using_cocoapods_cache_printed = false
 
       alias_method :orig_sources, :sources
 
       # add our own source to the list of sources
       def sources
         if COCOAPODS_CACHE_URL
-          puts "Using CocoaPods cache: #{COCOAPODS_CACHE_URL}"
+          if not @@_was_using_cocoapods_cache_printed
+            puts "Using CocoaPods cache: #{COCOAPODS_CACHE_URL}"
+            @@_was_using_cocoapods_cache_printed = true
+          end
+
           sources = podfile.sources
 
           # create folder for our source
@@ -42,6 +47,8 @@ end
 
 module Pod
   class CDNSource
+    @@_detected_unsupported_pods = []
+
     # Override method which downloads podspec to use CDN if pod is not supported by Nexus3 cache instance
     # https://github.com/CocoaPods/Core/blob/master/lib/cocoapods-core/cdn_source.rb
     _original_download_and_save_with_retries_async = instance_method(:download_and_save_with_retries_async)
@@ -56,7 +63,10 @@ module Pod
         end
 
         if detected_unsupported_pod
-          puts "detected #{detected_unsupported_pod}, using CocoaPods CDN to fetch its podspec..."
+          if not @@_detected_unsupported_pods.include?(detected_unsupported_pod)
+            puts "detected #{detected_unsupported_pod}, using CocoaPods CDN to fetch its podspec..."
+            @@_detected_unsupported_pods.push(detected_unsupported_pod)
+          end
           _original_download_and_save_with_retries_async.bind(self).(partial_url, "#{CDN_URL}/#{partial_url}", etag, retries)
         else
           _original_download_and_save_with_retries_async.bind(self).(partial_url, file_remote_url, etag, retries)
