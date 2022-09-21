@@ -8,7 +8,7 @@ import { ArtifactType, BuildContext } from '../context';
 
 export async function findAndUploadXcodeBuildLogsAsync(ctx: BuildContext<Ios.Job>): Promise<void> {
   try {
-    const xcodeBuildLogsPath = await findXcodeBuildLogsPathAsync(ctx);
+    const xcodeBuildLogsPath = await findXcodeBuildLogsPathAsync(ctx.buildLogsDirectory);
     if (xcodeBuildLogsPath) {
       await ctx.uploadArtifacts(ArtifactType.XCODE_BUILD_LOGS, [xcodeBuildLogsPath], ctx.logger);
     }
@@ -17,11 +17,11 @@ export async function findAndUploadXcodeBuildLogsAsync(ctx: BuildContext<Ios.Job
   }
 }
 
-async function findXcodeBuildLogsPathAsync(
-  ctx: BuildContext<Ios.Job>
+export async function findXcodeBuildLogsPathAsync(
+  buildLogsDirectory: string
 ): Promise<string | undefined> {
-  const customLogPaths = (await fg('*.log', { cwd: ctx.buildLogsDirectory })).map((filename) =>
-    path.join(ctx.buildLogsDirectory, filename)
+  const customLogPaths = (await fg('*.log', { cwd: buildLogsDirectory })).map((filename) =>
+    path.join(buildLogsDirectory, filename)
   );
   if (customLogPaths[0]) {
     return customLogPaths[0];

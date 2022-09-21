@@ -1,27 +1,60 @@
-import { errors } from '@expo/eas-build-job';
+import { BuildPhase, errors } from '@expo/eas-build-job';
+import fs from 'fs-extra';
 
-import { ErrorContext, ErrorHandler } from './errors.types';
+import { findXcodeBuildLogsPathAsync } from '../ios/xcodeBuildLogs';
+
+import { ErrorContext, ErrorHandler, XCODE_BUILD_PHASE } from './errors.types';
 import { userErrorHandlers } from './userErrorHandlers';
 import { buildErrorHandlers } from './buildErrorHandlers';
 
-function resolveError<T extends Error>(
-  errorHandlers: ErrorHandler<T>[],
+async function maybeReadXcodeBuildLogs(
+  phase: BuildPhase,
+  buildLogsDirectory: string
+): Promise<string | undefined> {
+  if (phase !== BuildPhase.RUN_FASTLANE) {
+    return;
+  }
+
+  try {
+    const xcodeBuildLogsPath = await findXcodeBuildLogsPathAsync(buildLogsDirectory);
+
+    if (!xcodeBuildLogsPath) {
+      return;
+    }
+
+    return await fs.readFile(xcodeBuildLogsPath, 'utf-8');
+  } catch (err: any) {
+    return undefined;
+  }
+}
+
+function resolveError<TError extends Error>(
+  errorHandlers: ErrorHandler<TError>[],
   logLines: string[],
-  errorContext: ErrorContext
-): T | undefined {
+  errorContext: ErrorContext,
+  xcodeBuildLogs?: string
+): TError | undefined {
   const { job, phase } = errorContext;
   const { platform } = job;
   const logs = logLines.join('\n');
   const handlers = errorHandlers
     .filter((handler) => handler.platform === platform || !handler.platform)
-    .filter((handler) => handler.phase === phase || !handler.phase);
+    .filter(
+      (handler) =>
+        (handler.phase === XCODE_BUILD_PHASE && phase === BuildPhase.RUN_FASTLANE) ||
+        handler.phase === phase ||
+        !handler.phase
+    );
+
   for (const handler of handlers) {
     const regexp =
       typeof handler.regexp === 'function' ? handler.regexp(errorContext) : handler.regexp;
     if (!regexp) {
       continue;
     }
-    const match = logs.match(regexp);
+    const match =
+      handler.phase === XCODE_BUILD_PHASE ? xcodeBuildLogs?.match(regexp) : logs.match(regexp);
+
     if (match) {
       return handler.createError(match, errorContext);
     }
@@ -29,20 +62,23 @@ function resolveError<T extends Error>(
   return undefined;
 }
 
-export function resolveBuildPhaseError(
+export async function resolveBuildPhaseErrorAsync(
   error: any,
   logLines: string[],
-  errorContext: ErrorContext
-): errors.BuildError {
+  errorContext: ErrorContext,
+  buildLogsDirectory: string
+): Promise<errors.BuildError> {
   const { phase } = errorContext;
   if (error instanceof errors.BuildError) {
     return error;
   }
+  const xcodeBuildLogs = await maybeReadXcodeBuildLogs(phase, buildLogsDirectory);
   const userFacingError =
     error instanceof errors.UserFacingError
       ? error
-      : resolveError(userErrorHandlers, logLines, errorContext) ?? new errors.UnknownError();
-  const buildError = resolveError(buildErrorHandlers, logLines, errorContext);
+      : resolveError(userErrorHandlers, logLines, errorContext, xcodeBuildLogs) ??
+        new errors.UnknownError();
+  const buildError = resolveError(buildErrorHandlers, logLines, errorContext, xcodeBuildLogs);
 
   const isUnknownUserError =
     !userFacingError ||

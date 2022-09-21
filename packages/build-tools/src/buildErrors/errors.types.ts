@@ -6,9 +6,11 @@ export interface ErrorContext {
   env: Env;
 }
 
+export const XCODE_BUILD_PHASE = 'XCODE_BUILD';
+
 export interface ErrorHandler<T extends Error> {
   regexp: RegExp | ((ctx: ErrorContext) => RegExp | undefined);
   platform?: Platform;
-  phase?: BuildPhase;
+  phase?: BuildPhase | typeof XCODE_BUILD_PHASE;
   createError: (matchResult: RegExpMatchArray, errCtx: ErrorContext) => T | undefined;
 }

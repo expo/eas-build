@@ -15,7 +15,7 @@ import { bunyan } from '@expo/logger';
 import { SpawnPromise, SpawnOptions, SpawnResult } from '@expo/turtle-spawn';
 
 import { PackageManager, resolvePackageManager } from './utils/packageManager';
-import { resolveBuildPhaseError } from './buildErrors/detectError';
+import { resolveBuildPhaseErrorAsync } from './buildErrors/detectError';
 import { readAppConfig } from './utils/appConfig';
 import { createTemporaryEnvironmentSecretFile } from './utils/environmentSecrets';
 
@@ -159,7 +159,7 @@ export class BuildContext<TJob extends Job> {
       this.endCurrentBuildPhase({ result: buildPhaseResult, doNotMarkEnd });
       return result;
     } catch (err: any) {
-      const resolvedError = this.handleBuildPhaseError(err, buildPhase);
+      const resolvedError = await this.handleBuildPhaseErrorAsync(err, buildPhase);
       this.endCurrentBuildPhase({ result: BuildPhaseResult.FAIL });
       throw resolvedError;
     }
@@ -184,12 +184,20 @@ export class BuildContext<TJob extends Job> {
     }
   }
 
-  private handleBuildPhaseError(err: any, buildPhase: BuildPhase): errors.BuildError {
-    const buildError = resolveBuildPhaseError(err, this.logBuffer.getPhaseLogs(buildPhase), {
-      job: this.job,
-      phase: buildPhase,
-      env: this.env,
-    });
+  private async handleBuildPhaseErrorAsync(
+    err: any,
+    buildPhase: BuildPhase
+  ): Promise<errors.BuildError> {
+    const buildError = await resolveBuildPhaseErrorAsync(
+      err,
+      this.logBuffer.getPhaseLogs(buildPhase),
+      {
+        job: this.job,
+        phase: buildPhase,
+        env: this.env,
+      },
+      this.buildLogsDirectory
+    );
     if (buildError.errorCode === errors.ErrorCode.UNKNOWN_ERROR) {
       // leaving message empty, website will display err.stack which already includes err.message
       this.logger.error({ err }, '');
