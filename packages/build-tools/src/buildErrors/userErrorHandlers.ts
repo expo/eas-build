@@ -201,13 +201,13 @@ You are seeing this error because either:
         ? new UserFacingError(
             'XCODE_CODE_SIGNING_ERROR',
             `Starting from Xcode 14, resource bundles are signed by default, which requires setting the development team for each resource bundle target.
-To resolve this issue downgrade to the older Xcode version using an "image" field in eas.json, or upgrade to SDK 46 or higher.`,
+To resolve this issue, downgrade to an older Xcode version using the "image" field in eas.json, or upgrade to SDK 46 or higher.`,
             'https://docs.expo.dev/build-reference/infrastructure/#ios-build-server-configurations'
           )
         : new UserFacingError(
             'XCODE_CODE_SIGNING_ERROR',
             `Starting from Xcode 14, resource bundles are signed by default, which requires setting the development team for each resource bundle target.
-To resolve this issue downgrade to the older Xcode version using an "image" field in eas.json, or turn off signing resource bundles in your Podfile, as in this example https://github.com/expo/expo/pull/19095.`,
+To resolve this issue, downgrade to an older Xcode version using the "image" field in eas.json, or turn off signing resource bundles in your Podfile: https://expo.fyi/r/disable-bundle-resource-signing`,
             'https://docs.expo.dev/build-reference/infrastructure/#ios-build-server-configurations'
           ),
   },

@@ -1,4 +1,4 @@
-import { BuildPhase, errors, Job, Platform } from '@expo/eas-build-job';
+import { BuildPhase, errors } from '@expo/eas-build-job';
 import fs from 'fs-extra';
 
 import { findXcodeBuildLogsPathAsync } from '../ios/xcodeBuildLogs';
@@ -7,32 +7,33 @@ import { ErrorContext, ErrorHandler, XCODE_BUILD_PHASE } from './errors.types';
 import { userErrorHandlers } from './userErrorHandlers';
 import { buildErrorHandlers } from './buildErrorHandlers';
 
-async function maybeReadXcodeBuildLogs<TError extends Error>(
-  handlers: ErrorHandler<TError>[],
-  job: Job,
-  xcodeBuildLogsPath?: string
+async function maybeReadXcodeBuildLogs(
+  phase: BuildPhase,
+  buildLogsDirectory: string
 ): Promise<string | undefined> {
-  if (
-    job.platform !== Platform.IOS ||
-    !handlers.map((handler) => handler.phase).includes(XCODE_BUILD_PHASE) ||
-    !xcodeBuildLogsPath
-  ) {
+  if (phase !== BuildPhase.RUN_FASTLANE) {
     return;
   }
 
   try {
+    const xcodeBuildLogsPath = await findXcodeBuildLogsPathAsync(buildLogsDirectory);
+
+    if (!xcodeBuildLogsPath) {
+      return;
+    }
+
     return await fs.readFile(xcodeBuildLogsPath, 'utf-8');
   } catch (err: any) {
     return undefined;
   }
 }
 
-async function resolveErrorAsync<TError extends Error>(
+function resolveError<TError extends Error>(
   errorHandlers: ErrorHandler<TError>[],
   logLines: string[],
   errorContext: ErrorContext,
-  buildLogsDirectory: string
-): Promise<TError | undefined> {
+  xcodeBuildLogs?: string
+): TError | undefined {
   const { job, phase } = errorContext;
   const { platform } = job;
   const logs = logLines.join('\n');
@@ -44,9 +45,6 @@ async function resolveErrorAsync<TError extends Error>(
         handler.phase === phase ||
         !handler.phase
     );
-
-  const xcodeBuildLogsPath = await findXcodeBuildLogsPathAsync(buildLogsDirectory);
-  const xcodeBuildLogs = await maybeReadXcodeBuildLogs(handlers, job, xcodeBuildLogsPath);
 
   for (const handler of handlers) {
     const regexp =
@@ -74,17 +72,13 @@ export async function resolveBuildPhaseErrorAsync(
   if (error instanceof errors.BuildError) {
     return error;
   }
+  const xcodeBuildLogs = await maybeReadXcodeBuildLogs(phase, buildLogsDirectory);
   const userFacingError =
     error instanceof errors.UserFacingError
       ? error
-      : (await resolveErrorAsync(userErrorHandlers, logLines, errorContext, buildLogsDirectory)) ??
+      : resolveError(userErrorHandlers, logLines, errorContext, xcodeBuildLogs) ??
         new errors.UnknownError();
-  const buildError = await resolveErrorAsync(
-    buildErrorHandlers,
-    logLines,
-    errorContext,
-    buildLogsDirectory
-  );
+  const buildError = resolveError(buildErrorHandlers, logLines, errorContext, xcodeBuildLogs);
 
   const isUnknownUserError =
     !userFacingError ||
