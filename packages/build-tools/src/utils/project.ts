@@ -64,8 +64,8 @@ export async function setup<TJob extends Job>(ctx: BuildContext<TJob>): Promise<
 
 async function downloadAndUnpackProject<TJob extends Job>(ctx: BuildContext<TJob>): Promise<void> {
   const projectTarball = path.join(ctx.workingdir, 'project.tar.gz');
-  if (ctx.job.projectArchive.type === ArchiveSourceType.S3) {
-    throw new Error('ArchiveSourceType.S3 should be resolved earlier to url');
+  if ([ArchiveSourceType.S3, ArchiveSourceType.GCS].includes(ctx.job.projectArchive.type)) {
+    throw new Error('GCS and S3 project sources should be resolved earlier to url');
   } else if (ctx.job.projectArchive.type === ArchiveSourceType.PATH) {
     await fs.copy(ctx.job.projectArchive.path, projectTarball); // used in eas-build-cli
   } else if (ctx.job.projectArchive.type === ArchiveSourceType.URL) {

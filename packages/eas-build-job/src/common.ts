@@ -14,10 +14,12 @@ export enum ArchiveSourceType {
   S3 = 'S3',
   URL = 'URL',
   PATH = 'PATH',
+  GCS = 'GCS',
 }
 
 export type ArchiveSource =
   | { type: ArchiveSourceType.S3; bucketKey: string }
+  | { type: ArchiveSourceType.GCS; bucketKey: string }
   | { type: ArchiveSourceType.URL; url: string }
   | { type: ArchiveSourceType.PATH; path: string };
 
@@ -26,6 +28,12 @@ export const ArchiveSourceSchema = Joi.object<ArchiveSource>({
     .valid(...Object.values(ArchiveSourceType))
     .required(),
 })
+  .when(Joi.object({ type: ArchiveSourceType.GCS }).unknown(), {
+    then: Joi.object({
+      type: Joi.string().valid(ArchiveSourceType.GCS).required(),
+      bucketKey: Joi.string().required(),
+    }),
+  })
   .when(Joi.object({ type: ArchiveSourceType.S3 }).unknown(), {
     then: Joi.object({
       type: Joi.string().valid(ArchiveSourceType.S3).required(),
