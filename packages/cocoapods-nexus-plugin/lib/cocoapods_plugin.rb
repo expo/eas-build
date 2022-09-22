@@ -1,4 +1,5 @@
 require 'cocoapods-nexus-plugin/command'
+require 'fileutils'
 
 CDN_URL = "https://cdn.cocoapods.org"
 
@@ -23,7 +24,7 @@ module Pod
 
           # create folder for our source
           repo_path = "#{Pod::Config.instance.home_dir}/repos/cocoapods-cache"
-          Dir.mkdir(repo_path) unless Dir.exist?(repo_path)
+          FileUtils.mkdir_p(repo_path) unless Dir.exist?(repo_path)
 
           # create .url file in this folder which is used by CocoaPods to determine the source URL
           File.write("#{repo_path}/.url", NEXUS_COCOAPODS_REPO_URL)
