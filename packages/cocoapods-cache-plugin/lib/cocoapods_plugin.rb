@@ -53,7 +53,7 @@ module Pod
     # https://github.com/CocoaPods/Core/blob/master/lib/cocoapods-core/cdn_source.rb
     _original_download_and_save_with_retries_async = instance_method(:download_and_save_with_retries_async)
     define_method(:download_and_save_with_retries_async) do |partial_url, file_remote_url, etag, retries = MAX_NUMBER_OF_RETRIES|
-      if COCOAPODS_CACHE_URL and file_remote_url.include?(self.url())
+      if COCOAPODS_CACHE_URL and file_remote_url.include?(self.url()) and self.url() == COCOAPODS_CACHE_URL
         detected_unsupported_pod = nil
         POD_BLACKLIST.each do |item|
           if file_remote_url.include?(item)
