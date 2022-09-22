@@ -1,10 +1,10 @@
-require 'cocoapods-cache-plugin/command'
+require 'cocoapods-nexus-plugin/command'
 
 CDN_URL = "https://cdn.cocoapods.org"
 
 POD_BLACKLIST = ["libwebp", "Braintree"]
 
-COCOAPODS_CACHE_URL = ENV['COCOAPODS_CACHE_URL']
+NEXUS_COCOAPODS_REPO_URL = ENV['NEXUS_COCOAPODS_REPO_URL']
 
 module Pod
   class Installer
@@ -15,11 +15,9 @@ module Pod
 
       # add our own source to the list of sources
       def sources
-        if COCOAPODS_CACHE_URL
-          if not @@_was_using_cocoapods_cache_printed
-            puts "Using CocoaPods cache: #{COCOAPODS_CACHE_URL}"
-            @@_was_using_cocoapods_cache_printed = true
-          end
+        if NEXUS_COCOAPODS_REPO_URL
+          puts "Using CocoaPods cache: #{NEXUS_COCOAPODS_REPO_URL}" unless @@_was_using_cocoapods_cache_printed
+          @@_was_using_cocoapods_cache_printed = true
 
           sources = podfile.sources
 
@@ -28,7 +26,7 @@ module Pod
           Dir.mkdir(repo_path) unless Dir.exist?(repo_path)
 
           # create .url file in this folder which is used by CocoaPods to determine the source URL
-          File.write("#{repo_path}/.url", COCOAPODS_CACHE_URL)
+          File.write("#{repo_path}/.url", NEXUS_COCOAPODS_REPO_URL)
 
           if sources.include?(CDN_URL)
             sources[sources.index(CDN_URL)] = Pod::CDNSource.new(repo_path)
@@ -53,7 +51,7 @@ module Pod
     # https://github.com/CocoaPods/Core/blob/master/lib/cocoapods-core/cdn_source.rb
     _original_download_and_save_with_retries_async = instance_method(:download_and_save_with_retries_async)
     define_method(:download_and_save_with_retries_async) do |partial_url, file_remote_url, etag, retries = MAX_NUMBER_OF_RETRIES|
-      if COCOAPODS_CACHE_URL and file_remote_url.include?(self.url()) and self.url() == COCOAPODS_CACHE_URL
+      if NEXUS_COCOAPODS_REPO_URL and file_remote_url.include?(self.url()) and self.url() == NEXUS_COCOAPODS_REPO_URL
         detected_unsupported_pod = nil
         POD_BLACKLIST.each do |item|
           if file_remote_url.include?(item)

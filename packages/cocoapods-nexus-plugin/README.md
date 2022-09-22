@@ -1,7 +1,7 @@
-# cocoapods-cache-plugin
+# cocoapods-nexus-plugin
 
 This plugin takes care about adding our Nexus3 Cocoapods cache instance as a source, depending on
-`COCOAPODS_CACHE_URL` value. If this environment variable is set, once you run `pod install` command
+`NEXUS_COCOAPODS_REPO_URL` value. If this environment variable is set, once you run `pod install` command
 this whole process will happen automatically. It doesn't require any changes to `Podfile` of the project.
 
 It also makes sure that pods from `POD_BLACKLIST` list are downloaded through official CocoaPods CDN and not through our cache instance.

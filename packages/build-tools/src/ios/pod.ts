@@ -15,7 +15,7 @@ export async function installPods<TJob extends Ios.Job>(ctx: BuildContext<TJob>)
       ...ctx.env,
       LANG: 'en_US.UTF-8',
       ...(ctx.env.EAS_BUILD_COCOAPODS_CACHE_URL
-        ? { COCOAPODS_CACHE_URL: ctx.env.EAS_BUILD_COCOAPODS_CACHE_URL }
+        ? { NEXUS_COCOAPODS_REPO_URL: ctx.env.EAS_BUILD_COCOAPODS_CACHE_URL }
         : {}),
     },
     lineTransformer: (line?: string) => {
