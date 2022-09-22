@@ -112,33 +112,15 @@ export const userErrorHandlers: ErrorHandler<UserFacingError>[] = [
     //  * changed the constraints of dependency `Firebase/Core` inside your development pod `EXFirebaseCore`.
     //    You should run `pod update Firebase/Core` to apply changes you've made.
     regexp: /CocoaPods could not find compatible versions for pod /,
-    createError: (_, { job }) => {
-      const usingDefaultCacheConfig = job.cache.key === '' || !job.cache.key;
-      return job.type === Workflow.MANAGED
-        ? new UserFacingError(
-            'EAS_BUILD_INCOMPATIBLE_PODS_MANAGED_WORKFLOW_ERROR',
-            `Compatible versions of some pods could not be resolved.
+    createError: () => {
+      return new UserFacingError(
+        'EAS_BUILD_INCOMPATIBLE_PODS_ERROR',
+        `Compatible versions of some pods could not be resolved.
 You are seeing this error because either:
-  - Versions in the Podfile.lock cached by EAS do not match required values in Podspecs of some of the libraries. To fix that ${
-    usingDefaultCacheConfig
-      ? 'add the "cache.key" field (it can be set to any value) in the build profile in eas.json to invalidate the cache.'
-      : 'update value of the "cache.key" field in the build profile in eas.json to invalidate the cache.'
-  }
+  - Versions in the Podfile.lock cached by EAS do not match required values in Podspecs of some of the libraries. To fix that you can re-run build command with "--clear-cache" option, or select "Clear cache and retry build" on the build page.
   - Some of the pods used in your project depend on different versions of the same pod. See logs for more information.
 `
-          )
-        : new UserFacingError(
-            'EAS_BUILD_INCOMPATIBLE_PODS_GENERIC_WORKFLOW_ERROR',
-            `Compatible versions of some pods could not be resolved.
-You are seeing this error because either:
-  - Versions in the Podfile.lock cached by EAS do not match required values in Podspecs of some of the libraries. To fix that ${
-    usingDefaultCacheConfig
-      ? 'add the "cache.key" field (it can be set to any value) in the build profile in eas.json to invalidate the cache.'
-      : 'update value of the "cache.key" field in the build profile in eas.json to invalidate the cache.'
-  }
-  - Some of the pods used in your project depend on different versions of the same pod. See logs for more information.
-`
-          );
+      );
     },
   },
   {
