@@ -3,7 +3,7 @@ require 'fileutils'
 
 CDN_URL = "https://cdn.cocoapods.org"
 
-POD_BLACKLIST = ["libwebp", "Braintree", "razorpay-pod", "TrezorCrypto", "MapboxCommon"]
+POD_BLACKLIST = ["libwebp", "Braintree", "razorpay-pod", "TrezorCrypto", "MapboxCommon", "MapboxCoreMaps"]
 
 NEXUS_COCOAPODS_REPO_URL = ENV['NEXUS_COCOAPODS_REPO_URL']
 
