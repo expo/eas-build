@@ -117,7 +117,7 @@ export const userErrorHandlers: ErrorHandler<UserFacingError>[] = [
         'EAS_BUILD_INCOMPATIBLE_PODS_ERROR',
         `Compatible versions of some pods could not be resolved.
 You are seeing this error because either:
-  - Versions in the Podfile.lock cached by EAS do not match required values in Podspecs of some installed libraries. To fix this, you can re-run build command with "--clear-cache" option, or select "Clear cache and retry build" on the build page.
+  - Versions in the cached Podfile.lock do not match required values in Podspecs of some installed libraries. To fix this, you can re-run build command with "--clear-cache" option, or select "Clear cache and retry build" on the build page.
   - Some of the pods used in your project depend on different versions of the same pod. See logs for more information.
 `
       );
