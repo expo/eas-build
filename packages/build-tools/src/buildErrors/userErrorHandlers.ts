@@ -181,13 +181,13 @@ You are seeing this error because either:
     createError: (_, { job }) =>
       job.type === Workflow.MANAGED
         ? new UserFacingError(
-            'XCODE_CODE_SIGNING_ERROR',
+            'XCODE_RESOURCE_BUNDLE_CODE_SIGNING_ERROR',
             `Starting from Xcode 14, resource bundles are signed by default, which requires setting the development team for each resource bundle target.
 To resolve this issue, downgrade to an older Xcode version using the "image" field in eas.json, or upgrade to SDK 46 or higher.`,
             'https://docs.expo.dev/build-reference/infrastructure/#ios-build-server-configurations'
           )
         : new UserFacingError(
-            'XCODE_CODE_SIGNING_ERROR',
+            'XCODE_RESOURCE_BUNDLE_CODE_SIGNING_ERROR',
             `Starting from Xcode 14, resource bundles are signed by default, which requires setting the development team for each resource bundle target.
 To resolve this issue, downgrade to an older Xcode version using the "image" field in eas.json, or turn off signing resource bundles in your Podfile: https://expo.fyi/r/disable-bundle-resource-signing`,
             'https://docs.expo.dev/build-reference/infrastructure/#ios-build-server-configurations'

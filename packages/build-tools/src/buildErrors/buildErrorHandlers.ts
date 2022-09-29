@@ -159,15 +159,6 @@ export const buildErrorHandlers: ErrorHandler<TrackedBuildError>[] = [
     createError: () => new TrackedBuildError('NPM_CACHE_ERROR', `npm: cache error`),
   })),
   {
-    platform: Platform.ANDROID,
-    phase: BuildPhase.RUN_GRADLEW,
-    regexp: ({ env }: ErrorContext) =>
-      env.EAS_BUILD_MAVEN_CACHE_URL
-        ? new RegExp(escapeRegExp(env.EAS_BUILD_MAVEN_CACHE_URL))
-        : undefined,
-    createError: () => new TrackedBuildError('MAVEN_CACHE_ERROR', `maven: cache error`),
-  },
-  {
     platform: Platform.IOS,
     phase: BuildPhase.INSTALL_PODS,
     regexp: ({ env }: ErrorContext) =>
@@ -203,6 +194,18 @@ export const buildErrorHandlers: ErrorHandler<TrackedBuildError>[] = [
   {
     phase: BuildPhase.RUN_GRADLEW,
     platform: Platform.ANDROID,
+    // /home/expo/workingdir/build/android/app/src/main/AndroidManifest.xml:27:9-33:20 Error:
+    //  	android:exported needs to be explicitly specified for element <activity#androidx.test.core.app.InstrumentationActivityInvoker$EmptyActivity>. Apps targeting Android 12 and higher are required to specify an explicit value for `android:exported` when the corresponding component has an intent filter defined. See https://developer.android.com/guide/topics/manifest/activity-element#exported for details.
+    regexp: /Apps targeting Android 12 and higher are required to specify an explicit value for `android:exported`/,
+    createError: () =>
+      new TrackedBuildError(
+        'REQUIRE_EXPLICIT_EXPORTED_ANDROID_12',
+        'Apps targeting Android 12 and higher are required to specify an explicit value for `android:exported`.'
+      ),
+  },
+  {
+    phase: BuildPhase.RUN_GRADLEW,
+    platform: Platform.ANDROID,
     // > A failure occurred while executing com.android.build.gradle.internal.res.Aapt2CompileRunnable
     //   > Android resource compilation failed
     //     ERROR:/home/expo/workingdir/build/android/app/src/main/res/mipmap-mdpi/ic_launcher.png: AAPT: error: failed to read PNG signature: file does not start with PNG signature.
@@ -215,11 +218,23 @@ export const buildErrorHandlers: ErrorHandler<TrackedBuildError>[] = [
     platform: Platform.ANDROID,
     // Execution failed for task ':app:processReleaseGoogleServices'.
     // > Malformed root json
-    regexp: /Execution failed for task ':app:processReleaseGoogleServices'.*\s.*Malformed root json/,
+    regexp: /Execution failed for task ':app:process.*GoogleServices'.*\s.*Malformed root json/,
     createError: () =>
       new TrackedBuildError(
         'GRADLE_MALFORMED_GOOGLE_SERVICES_JSON',
         'gradle: Malformed google-services.json.'
+      ),
+  },
+  {
+    phase: BuildPhase.RUN_GRADLEW,
+    platform: Platform.ANDROID,
+    // Execution failed for task ':app:processDebugGoogleServices'.
+    // > Missing project_info object
+    regexp: /Execution failed for task ':app:process.*GoogleServices'.*\s.*Missing project_info object/,
+    createError: () =>
+      new TrackedBuildError(
+        'GRADLE_MALFORMED_GOOGLE_SERVICES_JSON',
+        'gradle: Missing project_info object.'
       ),
   },
   {
@@ -233,6 +248,29 @@ export const buildErrorHandlers: ErrorHandler<TrackedBuildError>[] = [
         'GRADLE_BUILD_BUNDLER_ERROR',
         "gradle: ':app:bundleReleaseJsAndAssets' failed."
       ),
+  },
+  {
+    platform: Platform.ANDROID,
+    phase: BuildPhase.RUN_GRADLEW,
+    //    > Could not resolve org.jetbrains.kotlin:kotlin-annotation-processing-gradle:1.5.10.
+    //      Required by:
+    //          project :expo-updates
+    //       > Could not resolve org.jetbrains.kotlin:kotlin-annotation-processing-gradle:1.5.10.
+    //          > Could not get resource 'https://lsdkfjsdlkjf.com/android/releases/org/jetbrains/kotlin/kotlin-annotation-processing-gradle/1.5.10/kotlin-annotation-processing-gradle-1.5.10.pom'.
+    //             > Could not HEAD 'https://slkdfjldskjfl.com/android/releases/org/jetbrains/kotlin/kotlin-annotation-processing-gradle/1.5.10/kotlin-annotation-processing-gradle-1.5.10.pom'.
+    //                > Connect to sdlkfjsdlkf.com:443 [slkdfjdslk.com/38.178.101.5] failed: connect timed out
+    regexp: /Could not get resource.*\n.*Could not HEAD 'https/,
+    createError: () =>
+      new TrackedBuildError('MAVEN_REGISTRY_CONNECTION_ERROR', `maven: registry connection error`),
+  },
+  {
+    platform: Platform.ANDROID,
+    phase: BuildPhase.RUN_GRADLEW,
+    regexp: ({ env }: ErrorContext) =>
+      env.EAS_BUILD_MAVEN_CACHE_URL
+        ? new RegExp(escapeRegExp(env.EAS_BUILD_MAVEN_CACHE_URL))
+        : undefined,
+    createError: () => new TrackedBuildError('MAVEN_CACHE_ERROR', `maven: cache error`),
   },
   {
     phase: BuildPhase.RUN_FASTLANE,
@@ -255,6 +293,18 @@ export const buildErrorHandlers: ErrorHandler<TrackedBuildError>[] = [
       new TrackedBuildError(
         'XCODE_BUILD_UPDATES_PHASE_SCRIPT',
         'fastlane: Generating app.manifest for expo-updates failed.'
+      ),
+  },
+  {
+    phase: BuildPhase.RUN_FASTLANE,
+    platform: Platform.IOS,
+    // The following build commands failed:
+    // 	CompileC /Users/expo/Library/Developer/Xcode/DerivedData/Docent-amxxhphjfdtkpxecgidgzvwvnvtc/Build/Intermediates.noindex/ArchiveIntermediates/Docent/IntermediateBuildFilesPath/Pods.build/Release-iphoneos/Flipper-Folly.build/Objects-normal/arm64/SSLErrors.o /Users/expo/workingdir/build/ios/Pods/Flipper-Folly/folly/io/async/ssl/SSLErrors.cpp normal arm64 c++ com.apple.compilers.llvm.clang.1_0.compiler (in target 'Flipper-Folly' from project 'Pods')
+    regexp: /in target 'Flipper-Folly' from project 'Pods'/,
+    createError: () =>
+      new TrackedBuildError(
+        'FLIPPER_FOLLY_COMPILE_ERROR',
+        'fastlane: Flipper-Folly compile error.'
       ),
   },
   {
