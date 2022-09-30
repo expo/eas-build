@@ -114,19 +114,12 @@ export async function configureClassicExpoUpdatesAsync(ctx: BuildContext<Job>): 
   if (ctx.job.releaseChannel) {
     await setClassicReleaseChannelNativelyAsync(ctx);
   } else {
-    /**
-     * If releaseChannel is not defined:
-     *  1. Try to infer it from the native value.
-     *  2. If it is not set, fallback to 'default'.
-     */
     const releaseChannel = await getNativelyDefinedClassicReleaseChannelAsync(ctx);
     if (releaseChannel) {
       ctx.logger.info(
         `Using the release channel pre-configured in native project (${releaseChannel})`
       );
       ctx.logger.warn('Please add the "releaseChannel" field to your build profile (eas.json)');
-    } else {
-      ctx.logger.info(`Using default release channel for 'expo-updates' (default)`);
     }
   }
 }
