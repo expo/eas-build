@@ -1,8 +1,6 @@
 require 'cocoapods-nexus-plugin/command'
 require 'fileutils'
 
-CDN_URL = "https://cdn.cocoapods.org"
-
 POD_BLACKLIST = [
   "libwebp",
   "Braintree",
@@ -31,20 +29,33 @@ module Pod
 
           sources = podfile.sources
 
-          # create folder for our source
-          repo_path = "#{Pod::Config.instance.home_dir}/repos/cocoapods-cache"
-          FileUtils.mkdir_p(repo_path) unless Dir.exist?(repo_path)
-
-          # create .url file in this folder which is used by CocoaPods to determine the source URL
-          File.write("#{repo_path}/.url", NEXUS_COCOAPODS_REPO_URL)
-
-          if sources.include?(CDN_URL)
-            sources[sources.index(CDN_URL)] = Pod::CDNSource.new(repo_path)
+          if sources.include?(Pod::TrunkSource::TRUNK_REPO_URL)
+            sources[sources.index(Pod::TrunkSource::TRUNK_REPO_URL)] = NEXUS_COCOAPODS_REPO_URL
           else
-            sources = [Pod::CDNSource.new(repo_path)].concat(sources)
+            sources = [NEXUS_COCOAPODS_REPO_URL].concat(sources)
           end
 
-          @sources = sources
+          # Fragment below comes from the original sources method located https://github.com/CocoaPods/CocoaPods/blob/master/lib/cocoapods/installer/analyzer.rb
+
+          #################################################################
+          plugin_sources = @plugin_sources || []
+
+          # Add any sources specified using the :source flag on individual dependencies.
+          dependency_sources = podfile_dependencies.map(&:podspec_repo).compact
+
+          sources += dependency_sources
+
+          result = sources.uniq.map do |source_url|
+            sources_manager.find_or_create_source_with_url(source_url)
+          end
+          unless plugin_sources.empty?
+            result.insert(0, *plugin_sources)
+            plugin_sources.each do |source|
+              sources_manager.add_source(source)
+            end
+          end
+          result
+          #################################################################
         else
           orig_sources
         end
@@ -75,7 +86,7 @@ module Pod
             puts "detected #{detected_unsupported_pod}, using CocoaPods CDN to fetch its podspec..."
             @@_detected_unsupported_pods.push(detected_unsupported_pod)
           end
-          _original_download_and_save_with_retries_async.bind(self).(partial_url, "#{CDN_URL}/#{partial_url}", etag, retries)
+          _original_download_and_save_with_retries_async.bind(self).(partial_url, "#{Pod::TrunkSource::TRUNK_REPO_URL}/#{partial_url}", etag, retries)
         else
           _original_download_and_save_with_retries_async.bind(self).(partial_url, file_remote_url, etag, retries)
         end
