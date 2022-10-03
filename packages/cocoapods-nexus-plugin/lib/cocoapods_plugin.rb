@@ -9,7 +9,8 @@ POD_BLACKLIST = [
   "MapboxCommon",
   "MapboxCoreMaps",
   "CFSDK",
-  "MapboxMobileEvents"
+  "MapboxMobileEvents",
+  "Mapbox-iOS-SDK"
 ]
 
 NEXUS_COCOAPODS_REPO_URL = ENV['NEXUS_COCOAPODS_REPO_URL']
