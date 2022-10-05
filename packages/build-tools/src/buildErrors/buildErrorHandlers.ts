@@ -162,6 +162,28 @@ export const buildErrorHandlers: ErrorHandler<TrackedBuildError>[] = [
     platform: Platform.IOS,
     phase: BuildPhase.INSTALL_PODS,
     regexp: ({ env }: ErrorContext) =>
+      env.EAS_BUILD_COCOAPODS_CACHE_URL ? /Error installing/ : undefined,
+    createError: () =>
+      new TrackedBuildError(
+        'COCOAPODS_CACHE_INSTALLING_POD_ERROR',
+        `cocoapods: error installing a pod using internal cache instance`
+      ),
+  },
+  {
+    platform: Platform.IOS,
+    phase: BuildPhase.INSTALL_PODS,
+    regexp: ({ env }: ErrorContext) =>
+      env.EAS_BUILD_COCOAPODS_CACHE_URL ? /No podspec exists at path/ : undefined,
+    createError: () =>
+      new TrackedBuildError(
+        'COCOAPODS_CACHE_NO_PODSPEC_EXISTS_AT_PATH_ERROR',
+        `cocoapods: error fetching a podspec through internal cache instance`
+      ),
+  },
+  {
+    platform: Platform.IOS,
+    phase: BuildPhase.INSTALL_PODS,
+    regexp: ({ env }: ErrorContext) =>
       env.EAS_BUILD_COCOAPODS_CACHE_URL
         ? new RegExp(escapeRegExp(env.EAS_BUILD_COCOAPODS_CACHE_URL))
         : undefined,
