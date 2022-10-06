@@ -54,19 +54,18 @@ const validators: Validator[] = [
   {
     async checkAsync(job: Job) {
       const versionFromJob = job.builderEnvironment?.yarn;
-      if (versionFromJob) {
-        try {
-          const version = (
-            await spawnAsync('yarn', ['--version'], { stdio: 'pipe' })
-          ).stdout.trim();
-          if (versionFromJob !== version) {
-            warn(
-              'Yarn version in your eas.json does not match the yarn currently installed in your system'
-            );
-          }
-        } catch (err) {
-          warn("Yarn is not available, make sure it's installed and in your PATH");
+      if (!versionFromJob) {
+        return;
+      }
+      try {
+        const version = (await spawnAsync('yarn', ['--version'], { stdio: 'pipe' })).stdout.trim();
+        if (versionFromJob !== version) {
+          warn(
+            'Yarn version in your eas.json does not match the yarn currently installed in your system'
+          );
         }
+      } catch (err) {
+        warn("Yarn is not available, make sure it's installed and in your PATH");
       }
     },
   },
