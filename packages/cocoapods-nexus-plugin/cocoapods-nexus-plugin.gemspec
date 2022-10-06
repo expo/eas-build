@@ -10,7 +10,7 @@ Gem::Specification.new do |spec|
   spec.email         = ['support@expo.dev']
   spec.description   = "CocoaPods Nexus plugin overrides the official CDN with the address of the proxy instance. Pods not supported by Nexus will be fetched from the upstream repository."
   spec.summary       = "CocoaPods Nexus plugin overrides the official CDN with the address of the proxy instance. Pods not supported by Nexus will be fetched from the upstream repository."
-  spec.homepage      = 'https://github.com/expo/eas-build/packages/cocoapods-nexus-plugin'
+  spec.homepage      = 'https://github.com/expo/eas-build/tree/main/packages/cocoapods-nexus-plugin'
   spec.license       = 'BUSL-1.1'
 
   spec.files         = Dir['lib/**/*']
