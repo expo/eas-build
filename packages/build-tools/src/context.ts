@@ -3,6 +3,7 @@ import path from 'path';
 import {
   BuildPhase,
   BuildPhaseResult,
+  BuildPhaseStats,
   Job,
   LogMarker,
   Env,
@@ -56,10 +57,7 @@ export interface BuildContextOptions {
     err?: Error,
     options?: { tags?: Record<string, string>; extras?: Record<string, string> }
   ) => void;
-  reportBuildPhaseStats?: (
-    buildPhase: BuildPhase,
-    stats: { result: BuildPhaseResult; durationMs: number }
-  ) => void;
+  reportBuildPhaseStats?: (stats: BuildPhaseStats) => void;
   skipNativeBuild?: boolean;
   metadata?: Metadata;
 }
@@ -98,10 +96,7 @@ export class BuildContext<TJob extends Job> {
   private buildPhaseSkipped = false;
   private buildPhaseHasWarnings = false;
   private _appConfig?: ExpoConfig;
-  private readonly reportBuildPhaseStats?: (
-    buildPhase: BuildPhase,
-    stats: { result: BuildPhaseResult; durationMs: number }
-  ) => void;
+  private readonly reportBuildPhaseStats?: (stats: BuildPhaseStats) => void;
 
   constructor(public readonly job: TJob, options: BuildContextOptions) {
     this.workingdir = options.workingdir;
@@ -252,7 +247,7 @@ export class BuildContext<TJob extends Job> {
       return;
     }
 
-    this.reportBuildPhaseStats?.(this.buildPhase, { result, durationMs });
+    this.reportBuildPhaseStats?.({ buildPhase: this.buildPhase, result, durationMs });
 
     if (!doNotMarkEnd) {
       this.logger.info(
