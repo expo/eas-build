@@ -3,6 +3,7 @@ import path from 'path';
 import {
   BuildPhase,
   BuildPhaseResult,
+  BuildPhaseStats,
   Job,
   LogMarker,
   Env,
@@ -56,6 +57,7 @@ export interface BuildContextOptions {
     err?: Error,
     options?: { tags?: Record<string, string>; extras?: Record<string, string> }
   ) => void;
+  reportBuildPhaseStats?: (stats: BuildPhaseStats) => void;
   skipNativeBuild?: boolean;
   metadata?: Metadata;
 }
@@ -94,6 +96,7 @@ export class BuildContext<TJob extends Job> {
   private buildPhaseSkipped = false;
   private buildPhaseHasWarnings = false;
   private _appConfig?: ExpoConfig;
+  private readonly reportBuildPhaseStats?: (stats: BuildPhaseStats) => void;
 
   constructor(public readonly job: TJob, options: BuildContextOptions) {
     this.workingdir = options.workingdir;
@@ -106,6 +109,7 @@ export class BuildContext<TJob extends Job> {
     this.reportError = options.reportError;
     this.metadata = options.metadata;
     this.skipNativeBuild = options.skipNativeBuild;
+    this.reportBuildPhaseStats = options.reportBuildPhaseStats;
 
     const environmentSecrets = this.getEnvironmentSecrets(job);
     this.env = {
@@ -148,19 +152,23 @@ export class BuildContext<TJob extends Job> {
       doNotMarkEnd?: boolean;
     } = {}
   ): Promise<T> {
+    let startTimestamp = Date.now();
     try {
       this.setBuildPhase(buildPhase, { doNotMarkStart });
+      startTimestamp = Date.now();
       const result = await phase();
+      const durationMs = Date.now() - startTimestamp;
       const buildPhaseResult: BuildPhaseResult = this.buildPhaseSkipped
         ? BuildPhaseResult.SKIPPED
         : this.buildPhaseHasWarnings
         ? BuildPhaseResult.WARNING
         : BuildPhaseResult.SUCCESS;
-      this.endCurrentBuildPhase({ result: buildPhaseResult, doNotMarkEnd });
+      this.endCurrentBuildPhase({ result: buildPhaseResult, doNotMarkEnd, durationMs });
       return result;
     } catch (err: any) {
+      const durationMs = Date.now() - startTimestamp;
       const resolvedError = await this.handleBuildPhaseErrorAsync(err, buildPhase);
-      this.endCurrentBuildPhase({ result: BuildPhaseResult.FAIL });
+      this.endCurrentBuildPhase({ result: BuildPhaseResult.FAIL, durationMs });
       throw resolvedError;
     }
   }
@@ -229,15 +237,23 @@ export class BuildContext<TJob extends Job> {
   private endCurrentBuildPhase({
     result,
     doNotMarkEnd = false,
+    durationMs,
   }: {
     result: BuildPhaseResult;
     doNotMarkEnd?: boolean;
+    durationMs: number;
   }): void {
     if (!this.buildPhase) {
       return;
     }
+
+    this.reportBuildPhaseStats?.({ buildPhase: this.buildPhase, result, durationMs });
+
     if (!doNotMarkEnd) {
-      this.logger.info({ marker: LogMarker.END_PHASE, result }, `End phase: ${this.buildPhase}`);
+      this.logger.info(
+        { marker: LogMarker.END_PHASE, result, durationMs },
+        `End phase: ${this.buildPhase}`
+      );
     }
     this.logger = this.defaultLogger;
     this.buildPhase = undefined;

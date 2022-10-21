@@ -1,5 +1,7 @@
 import Joi from 'joi';
 
+import { BuildPhase, BuildPhaseResult } from './logs';
+
 export enum Workflow {
   GENERIC = 'generic',
   MANAGED = 'managed',
@@ -90,3 +92,9 @@ export const CacheSchema = Joi.object({
   cacheDefaultPaths: Joi.boolean().default(true),
   customPaths: Joi.array().items(Joi.string()).default([]),
 });
+
+export interface BuildPhaseStats {
+  buildPhase: BuildPhase;
+  result: BuildPhaseResult;
+  durationMs: number;
+}
