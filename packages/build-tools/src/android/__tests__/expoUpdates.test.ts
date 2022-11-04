@@ -78,7 +78,7 @@ describe(androidSetChannelNativelyAsync, () => {
       logger: { info: () => {} },
     };
 
-    await androidSetChannelNativelyAsync(ctx as any);
+    await androidSetChannelNativelyAsync(ctx as any, channel);
 
     const newAndroidManifest = await AndroidConfig.Manifest.readAndroidManifestAsync(manifestPath);
     const newValue = AndroidConfig.Manifest.getMainApplicationMetaDataValue(

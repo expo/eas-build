@@ -67,7 +67,7 @@ describe(iosSetChannelNativelyAsync, () => {
       job: { updates: { channel } },
       logger: { info: () => {} },
     };
-    await iosSetChannelNativelyAsync(ctx as any);
+    await iosSetChannelNativelyAsync(ctx as any, channel);
 
     const newExpoPlist = await fs.readFile(expoPlistPath, 'utf8');
     expect(
