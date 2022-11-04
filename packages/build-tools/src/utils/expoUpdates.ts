@@ -42,10 +42,12 @@ export async function setRuntimeVersionNativelyAsync(
 /**
  * Used for when Expo Updates is pointed at an EAS server.
  */
-export async function setChannelNativelyAsync(ctx: BuildContext<Job>): Promise<void> {
-  assert(ctx.job.updates?.channel, 'updates.channel must be defined');
+export async function setChannelNativelyAsync(
+  ctx: BuildContext<Job>,
+  channel: string
+): Promise<void> {
   const newUpdateRequestHeaders: Record<string, string> = {
-    'expo-channel-name': ctx.job.updates.channel,
+    'expo-channel-name': channel,
   };
 
   const configFile = ctx.job.platform === Platform.ANDROID ? 'AndroidManifest.xml' : 'Expo.plist';
@@ -57,11 +59,11 @@ export async function setChannelNativelyAsync(ctx: BuildContext<Job>): Promise<v
 
   switch (ctx.job.platform) {
     case Platform.ANDROID: {
-      await androidSetChannelNativelyAsync(ctx);
+      await androidSetChannelNativelyAsync(ctx, channel);
       return;
     }
     case Platform.IOS: {
-      await iosSetChannelNativelyAsync(ctx);
+      await iosSetChannelNativelyAsync(ctx, channel);
       return;
     }
     default:
@@ -131,8 +133,11 @@ export async function configureClassicExpoUpdatesAsync(ctx: BuildContext<Job>): 
   }
 }
 
-export async function configureEASExpoUpdatesAsync(ctx: BuildContext<Job>): Promise<void> {
-  await setChannelNativelyAsync(ctx);
+export async function configureEASExpoUpdatesAsync(
+  ctx: BuildContext<Job>,
+  channel: string
+): Promise<void> {
+  await setChannelNativelyAsync(ctx, channel);
 }
 
 export async function configureExpoUpdatesIfInstalledAsync(ctx: BuildContext<Job>): Promise<void> {
@@ -152,8 +157,9 @@ export async function configureExpoUpdatesIfInstalledAsync(ctx: BuildContext<Job
     );
   }
 
-  if (ctx.job.updates?.channel) {
-    await configureEASExpoUpdatesAsync(ctx);
+  const channel = ctx.job.updates?.channel ?? ctx.metadata?.buildProfile;
+  if (ctx.appConfig.updates?.url && channel) {
+    await configureEASExpoUpdatesAsync(ctx, channel);
   } else {
     await configureClassicExpoUpdatesAsync(ctx);
   }

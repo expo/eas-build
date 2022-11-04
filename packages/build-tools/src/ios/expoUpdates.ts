@@ -31,9 +31,10 @@ export async function iosSetRuntimeVersionNativelyAsync(
   await fs.writeFile(expoPlistPath, updatedExpoPlistContents);
 }
 
-export async function iosSetChannelNativelyAsync(ctx: BuildContext<Job>): Promise<void> {
-  assert(ctx.job.updates?.channel, 'updates.channel must be defined');
-
+export async function iosSetChannelNativelyAsync(
+  ctx: BuildContext<Job>,
+  channel: string
+): Promise<void> {
   const expoPlistPath = IOSConfig.Paths.getExpoPlistPath(ctx.reactNativeProjectDirectory);
 
   if (!(await fs.pathExists(expoPlistPath))) {
@@ -47,7 +48,7 @@ export async function iosSetChannelNativelyAsync(ctx: BuildContext<Job>): Promis
       string,
       string
     >) ?? {}),
-    'expo-channel-name': ctx.job.updates.channel,
+    'expo-channel-name': channel,
   };
   const updatedExpoPlistContents = plist.build(items);
 

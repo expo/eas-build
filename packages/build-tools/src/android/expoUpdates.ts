@@ -35,9 +35,10 @@ export async function androidSetRuntimeVersionNativelyAsync(
   await AndroidConfig.Manifest.writeAndroidManifestAsync(manifestPath, androidManifest);
 }
 
-export async function androidSetChannelNativelyAsync(ctx: BuildContext<Job>): Promise<void> {
-  assert(ctx.job.updates?.channel, 'updates.channel must be defined');
-
+export async function androidSetChannelNativelyAsync(
+  ctx: BuildContext<Job>,
+  channel: string
+): Promise<void> {
   const manifestPath = await AndroidConfig.Paths.getAndroidManifestAsync(
     ctx.reactNativeProjectDirectory
   );
@@ -57,7 +58,7 @@ export async function androidSetChannelNativelyAsync(ctx: BuildContext<Job>): Pr
     AndroidMetadataName.UPDATES_CONFIGURATION_REQUEST_HEADERS_KEY,
     JSON.stringify({
       ...JSON.parse(stringifiedUpdatesRequestHeaders ?? '{}'),
-      'expo-channel-name': ctx.job.updates.channel,
+      'expo-channel-name': channel,
     }),
     'value'
   );
