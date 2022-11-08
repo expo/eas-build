@@ -104,6 +104,29 @@ export const userErrorHandlers: ErrorHandler<UserFacingError>[] = [
     platform: Platform.IOS,
     phase: BuildPhase.INSTALL_PODS,
     // example log:
+    // [!] CocoaPods could not find compatible versions for pod "react-native-google-maps"
+    // In Podfile:
+    // react-native-google-maps (from `/Users/expo/workingdir/build/node_modules/react-native-maps`)
+    // Specs satisfying the `react-native-google-maps (from `/Users/expo/workingdir/build/node_modules/react-native-maps`)` dependency were found, but they required a higher minimum deployment target.
+    // Error: Compatible versions of some pods could not be resolved.
+    regexp: /Specs satisfying the `(.*)` dependency were found, but they required a higher minimum deployment target/,
+    createError: (_, { job }) => {
+      return new UserFacingError(
+        'EAS_BUILD_HIGHER_MINIMUM_DEPLOYMENT_TARGET_ERROR',
+        `Some pods require a higher minimum deployment target.
+${
+  job.type === Workflow.MANAGED
+    ? 'You can use expo-build-properties config plugin (https://docs.expo.dev/versions/latest/sdk/build-properties/) to override the default native build properties and set different minimum deployment target.'
+    : 'You need to manually update the minimum deployment target in your project to resolve this issue.'
+}
+`
+      );
+    },
+  },
+  {
+    platform: Platform.IOS,
+    phase: BuildPhase.INSTALL_PODS,
+    // example log:
     // [!] CocoaPods could not find compatible versions for pod "Firebase/Core":
     //   In snapshot (Podfile.lock):
     //     Firebase/Core (= 6.14.0)
