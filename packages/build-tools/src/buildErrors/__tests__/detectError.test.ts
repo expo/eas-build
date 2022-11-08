@@ -114,4 +114,22 @@ describe(resolveBuildPhaseErrorAsync, () => {
     expect(err.errorCode).toBe('XCODE_RESOURCE_BUNDLE_CODE_SIGNING_ERROR');
     expect(err.userFacingErrorCode).toBe('XCODE_RESOURCE_BUNDLE_CODE_SIGNING_ERROR');
   });
+
+  it('detects minimum deployment target error correctly', async () => {
+    const fakeError = new Error();
+    const err = await resolveBuildPhaseErrorAsync(
+      fakeError,
+      [
+        'CocoaPods could not find compatible versions for pod "react-native-google-maps":16  In Podfile:17    react-native-google-maps (from `/Users/expo/workingdir/build/node_modules/react-native-maps`)18Specs satisfying the `react-native-google-maps (from `/Users/expo/workingdir/build/node_modules/react-native-maps`)` dependency were found, but they required a higher minimum deployment target.19Error: Compatible versions of some pods could not be resolved.',
+      ],
+      {
+        job: { platform: Platform.IOS } as Job,
+        phase: BuildPhase.INSTALL_PODS,
+        env: {},
+      },
+      '/fake/path'
+    );
+    expect(err.errorCode).toBe('EAS_BUILD_HIGHER_MINIMUM_DEPLOYMENT_TARGET_ERROR');
+    expect(err.userFacingErrorCode).toBe('EAS_BUILD_HIGHER_MINIMUM_DEPLOYMENT_TARGET_ERROR');
+  });
 });
