@@ -116,7 +116,7 @@ export const userErrorHandlers: ErrorHandler<UserFacingError>[] = [
         `Some pods require a higher minimum deployment target.
 ${
   job.type === Workflow.MANAGED
-    ? 'You can use expo-build-properties config plugin (https://docs.expo.dev/versions/latest/sdk/build-properties/) to override the default native build properties and set different minimum deployment target.'
+    ? 'You can use the expo-build-properties config plugin (https://docs.expo.dev/versions/latest/sdk/build-properties/) to override the default native build properties and set a different minimum deployment target.'
     : 'You need to manually update the minimum deployment target in your project to resolve this issue.'
 }
 `
