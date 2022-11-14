@@ -1,11 +1,17 @@
 import Joi from 'joi';
 import semver from 'semver';
 
-import { Platform, Workflow } from './common';
+import { ImageMatchRule, Platform, Workflow } from './common';
 import * as Android from './android';
 import * as Ios from './ios';
 
 export type Job = Android.Job | Ios.Job;
+
+interface ImageMatchArgs {
+  sdkVersion?: string;
+  reactNativeVersion?: string;
+  workflow: Workflow;
+}
 
 export const JobSchema = Joi.object<Job>({
   platform: Joi.string()
@@ -26,10 +32,17 @@ export function sanitizeJob(
   });
 
   const job: Job = value;
-  if (job.platform === Platform.IOS) {
-    setIosBuilderImageForManagedJob(job, sdkVersion);
-  } else if (job.platform === Platform.ANDROID) {
-    setAndroidBuilderImage(job, sdkVersion, reactNativeVersion);
+  if (!job?.builderEnvironment?.image) {
+    const resolveArgs: ImageMatchArgs = {
+      sdkVersion,
+      reactNativeVersion,
+      workflow: job.type,
+    };
+    if (job.platform === Platform.IOS) {
+      setIosBuilderImage(job, resolveArgs);
+    } else if (job.platform === Platform.ANDROID) {
+      setAndroidBuilderImage(job, resolveArgs);
+    }
   }
 
   if (error) {
@@ -39,42 +52,48 @@ export function sanitizeJob(
   }
 }
 
-export function setAndroidBuilderImage(
-  job: Job,
-  sdkVersion?: string,
-  reactNativeVersion?: string
-): void {
-  if (job.builderEnvironment?.image || !reactNativeVersion || !sdkVersion) {
-    return;
+function doesImageRuleMatch<T extends string>(
+  rule: ImageMatchRule<T>,
+  { sdkVersion, reactNativeVersion, workflow }: ImageMatchArgs
+): boolean {
+  if (rule.reactNativeSemverRange) {
+    if (!reactNativeVersion || !semver.satisfies(reactNativeVersion, rule.reactNativeSemverRange)) {
+      return false;
+    }
   }
+  if (rule.sdkSemverRange) {
+    if (!sdkVersion || !semver.satisfies(sdkVersion, rule.sdkSemverRange)) {
+      return false;
+    }
+  }
+  if (rule.workflows) {
+    if (!workflow || !rule.workflows.includes(workflow)) {
+      return false;
+    }
+  }
+  return true;
+}
 
-  for (const rule of Android.reactNativeImageMatchRules) {
-    if (
-      semver.satisfies(reactNativeVersion, rule.reactNativeSemverRange) &&
-      semver.satisfies(sdkVersion, rule.sdkSemverRange)
-    ) {
+export function setAndroidBuilderImage(job: Job, args: ImageMatchArgs): void {
+  for (const rule of Android.imageMatchRules) {
+    if (doesImageRuleMatch(rule, args)) {
       job.builderEnvironment = {
-        image: rule.image,
         ...job.builderEnvironment,
+        image: rule.image,
       };
       return;
     }
   }
 }
 
-export function setIosBuilderImageForManagedJob(job: Job, sdkVersion?: string): void {
-  if (job.type !== Workflow.MANAGED || job.builderEnvironment?.image || !sdkVersion) {
-    return;
+export function setIosBuilderImage(job: Job, args: ImageMatchArgs): void {
+  for (const rule of Ios.imageMatchRules) {
+    if (doesImageRuleMatch(rule, args)) {
+      job.builderEnvironment = {
+        ...job.builderEnvironment,
+        image: rule.image,
+      };
+      return;
+    }
   }
-
-  const ranges = Object.keys(Ios.sdkVersionToDefaultBuilderImage);
-  const matchingRange = ranges.find((range) => semver.satisfies(sdkVersion, range));
-  if (!matchingRange) {
-    return;
-  }
-  const image = Ios.sdkVersionToDefaultBuilderImage[matchingRange];
-  job.builderEnvironment = {
-    image,
-    ...job.builderEnvironment,
-  };
 }

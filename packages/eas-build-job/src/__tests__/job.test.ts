@@ -1,5 +1,5 @@
 import { Workflow } from '../common';
-import { setAndroidBuilderImage, setIosBuilderImageForManagedJob } from '../job';
+import { setAndroidBuilderImage, setIosBuilderImage } from '../job';
 
 describe(setAndroidBuilderImage, () => {
   test.each([
@@ -12,25 +12,32 @@ describe(setAndroidBuilderImage, () => {
     'selecting image for sdkVersion %s and React Native %s',
     (sdkVersion?: string, reactNativeVersion?: string, expectedImage?: string) => {
       const job: any = { builderEnvironment: {} };
-      setAndroidBuilderImage(job, sdkVersion, reactNativeVersion);
+      setAndroidBuilderImage(job, { sdkVersion, reactNativeVersion, workflow: Workflow.MANAGED });
       expect(job?.builderEnvironment?.image).toBe(expectedImage);
     }
   );
 });
 
-describe(setIosBuilderImageForManagedJob, () => {
+describe(setIosBuilderImage, () => {
   test.each([
-    ['44.0.0', Workflow.MANAGED, 'macos-big-sur-11.4-xcode-13.0'],
-    ['45.0.0', Workflow.MANAGED, 'macos-monterey-12.4-xcode-13.4'],
-    ['46.0.0', Workflow.MANAGED, 'macos-monterey-12.4-xcode-13.4'],
-    ['46.0.0', Workflow.GENERIC, undefined],
-    ['47.0.0', Workflow.MANAGED, 'macos-monterey-12.6-xcode-14.0'],
-    [undefined, Workflow.MANAGED, undefined],
+    ['44.0.0', undefined, Workflow.MANAGED, 'macos-big-sur-11.4-xcode-13.0'],
+    ['45.0.0', undefined, Workflow.MANAGED, 'macos-monterey-12.4-xcode-13.4'],
+    ['46.0.0', undefined, Workflow.MANAGED, 'macos-monterey-12.4-xcode-13.4'],
+    ['46.0.0', undefined, Workflow.GENERIC, undefined],
+    ['47.0.0', undefined, Workflow.MANAGED, 'macos-monterey-12.6-xcode-14.0'],
+    [undefined, undefined, Workflow.MANAGED, undefined],
+    ['47.0.0', undefined, Workflow.MANAGED, 'macos-monterey-12.6-xcode-14.0'],
+    [undefined, '0.70.0', Workflow.GENERIC, 'macos-monterey-12.6-xcode-14.0'],
   ])(
     'selecting image for sdkVersion %s and React Native %s',
-    (sdkVersion: string | undefined, workflow: Workflow, expectedImage: string | undefined) => {
+    (
+      sdkVersion: string | undefined,
+      reactNativeVersion: string | undefined,
+      workflow: Workflow,
+      expectedImage: string | undefined
+    ) => {
       const job: any = { builderEnvironment: {}, type: workflow };
-      setIosBuilderImageForManagedJob(job, sdkVersion);
+      setIosBuilderImage(job, { sdkVersion, reactNativeVersion, workflow });
       expect(job?.builderEnvironment?.image).toBe(expectedImage);
     }
   );
