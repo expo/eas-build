@@ -11,6 +11,7 @@ import {
   CacheSchema,
   EnvironmentSecretsSchema,
   EnvironmentSecret,
+  ImageMatchRule,
 } from './common';
 
 export type DistributionType = 'store' | 'internal' | 'simulator';
@@ -54,11 +55,26 @@ export const builderBaseImages = [
   'macos-monterey-12.6-xcode-14.1',
 ] as const;
 
-export const sdkVersionToDefaultBuilderImage: Record<string, typeof builderBaseImages[number]> = {
-  '<=44': 'macos-big-sur-11.4-xcode-13.0',
-  '>=45 <47': 'macos-monterey-12.4-xcode-13.4',
-  '>=47': 'macos-monterey-12.6-xcode-14.0',
-};
+export const imageMatchRules: ImageMatchRule<typeof builderBaseImages[number]>[] = [
+  {
+    image: 'macos-big-sur-11.4-xcode-13.0',
+    sdkSemverRange: '<=44',
+    workflows: [Workflow.MANAGED],
+  },
+  {
+    image: 'macos-monterey-12.4-xcode-13.4',
+    sdkSemverRange: '>=45 <47',
+    workflows: [Workflow.MANAGED],
+  },
+  {
+    image: 'macos-monterey-12.6-xcode-14.0',
+    sdkSemverRange: '>=47',
+  },
+  {
+    image: 'macos-monterey-12.6-xcode-14.0',
+    reactNativeSemverRange: '>=0.70.0',
+  },
+];
 
 export interface BuilderEnvironment {
   image?: typeof builderBaseImages[number];

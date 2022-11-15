@@ -11,6 +11,7 @@ import {
   CacheSchema,
   EnvironmentSecretsSchema,
   EnvironmentSecret,
+  ImageMatchRule,
 } from './common';
 
 export interface Keystore {
@@ -46,13 +47,7 @@ export const builderBaseImages = [
   'ubuntu-22.04-jdk-11-ndk-r21e',
 ] as const;
 
-interface ImageMatchRule {
-  image: typeof builderBaseImages[number];
-  reactNativeSemverRange: string;
-  sdkSemverRange: string;
-}
-
-export const reactNativeImageMatchRules: ImageMatchRule[] = [
+export const imageMatchRules: ImageMatchRule<typeof builderBaseImages[number]>[] = [
   {
     image: 'ubuntu-18.04-jdk-11-ndk-r19c',
     reactNativeSemverRange: '>=0.68.0',
