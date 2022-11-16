@@ -1,8 +1,9 @@
 import path from 'path';
 
-import spawn from '@expo/turtle-spawn';
+import spawn, { SpawnPromise, SpawnResult } from '@expo/turtle-spawn';
 import { Android, Job } from '@expo/eas-build-job';
 import fs from 'fs-extra';
+import { bunyan } from '@expo/logger';
 
 import { BuildContext } from '../context';
 
@@ -23,7 +24,7 @@ export async function runGradleCommand(
 ): Promise<void> {
   const androidDir = path.join(ctx.reactNativeProjectDirectory, 'android');
   ctx.logger.info(`Running 'gradlew ${gradleCommand}' in ${androidDir}`);
-  await spawn('bash', ['-c', `sh gradlew ${gradleCommand}`], {
+  const spawnPromise = spawn('bash', ['-c', `sh gradlew ${gradleCommand}`], {
     cwd: androidDir,
     logger: ctx.logger,
     lineTransformer: (line?: string) => {
@@ -35,4 +36,54 @@ export async function runGradleCommand(
     },
     env: ctx.env,
   });
+  if (ctx.isCloudBuild && process.platform === 'linux') {
+    adjustOOMScore(spawnPromise, ctx.logger);
+  }
+
+  await spawnPromise;
+}
+
+/**
+ * OOM Killer sometimes kills worker server while build is exceeding memory limits.
+ * `oom_score_adj` is a value between -1000 and 1000 that defines which process
+ * is more likely to get killed(higher value more likely).
+ *
+ * This function sets oom_score_adj for gradle process and all it's child processes.
+ */
+function adjustOOMScore(spawnPromise: SpawnPromise<SpawnResult>, logger: bunyan): void {
+  setTimeout(
+    async () => {
+      logger.info(spawnPromise.child.pid);
+      try {
+        const children: number[] = [spawnPromise.child.pid!];
+        let shouldRetry = true;
+        while (shouldRetry) {
+          const result = await spawn('pgrep', ['-P', children.join(',')], {
+            stdio: 'pipe',
+          });
+          const pids = result.stdout
+            .toString()
+            .split('\n')
+            .map((i) => Number(i.trim()))
+            .filter((i) => i);
+          shouldRetry = false;
+          for (const pid of pids) {
+            if (!children.includes(pid)) {
+              shouldRetry = true;
+              children.push(pid);
+            }
+          }
+        }
+        await Promise.all(
+          children.map(async (pid: number) => {
+            await fs.writeFile(`/proc/${pid}/oom_score_adj`, '800\n');
+          })
+        );
+      } catch (err: any) {
+        logger.debug({ err, stderr: err?.stderr }, 'Failed to override oom_score_adj');
+      }
+    },
+    // Wait 20 seconds to make sure all child processes are started
+    20000
+  );
 }
