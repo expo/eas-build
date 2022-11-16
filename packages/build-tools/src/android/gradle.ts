@@ -1,4 +1,5 @@
 import path from 'path';
+import assert from 'assert';
 
 import spawn, { SpawnPromise, SpawnResult } from '@expo/turtle-spawn';
 import { Android, Job } from '@expo/eas-build-job';
@@ -53,9 +54,9 @@ export async function runGradleCommand(
 function adjustOOMScore(spawnPromise: SpawnPromise<SpawnResult>, logger: bunyan): void {
   setTimeout(
     async () => {
-      logger.info(spawnPromise.child.pid);
       try {
-        const children: number[] = [spawnPromise.child.pid!];
+        assert(spawnPromise.child.pid);
+        const children: number[] = [spawnPromise.child.pid];
         let shouldRetry = true;
         while (shouldRetry) {
           const result = await spawn('pgrep', ['-P', children.join(',')], {
