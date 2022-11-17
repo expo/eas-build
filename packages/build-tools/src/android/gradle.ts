@@ -46,8 +46,8 @@ export async function runGradleCommand(
 
 /**
  * OOM Killer sometimes kills worker server while build is exceeding memory limits.
- * `oom_score_adj` is a value between -1000 and 1000 that defines which process
- * is more likely to get killed (higher value more likely).
+ * `oom_score_adj` is a value between -1000 and 1000 and it defaults to 0.
+ * It defines which process is more likely to get killed (higher value more likely).
  *
  * This function sets oom_score_adj for Gradle process and all its child processes.
  */
@@ -77,6 +77,9 @@ function adjustOOMScore(spawnPromise: SpawnPromise<SpawnResult>, logger: bunyan)
         }
         await Promise.all(
           children.map(async (pid: number) => {
+            // Value 800 is just a guess here. It's probably higher than most other
+            // process. I didn't want to set it any higher, because I'm not sure if OOM Killer
+            // can start killing processes when there is still enough memory left.
             await fs.writeFile(`/proc/${pid}/oom_score_adj`, '800\n');
           })
         );
