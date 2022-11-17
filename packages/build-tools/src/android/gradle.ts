@@ -47,9 +47,9 @@ export async function runGradleCommand(
 /**
  * OOM Killer sometimes kills worker server while build is exceeding memory limits.
  * `oom_score_adj` is a value between -1000 and 1000 that defines which process
- * is more likely to get killed(higher value more likely).
+ * is more likely to get killed (higher value more likely).
  *
- * This function sets oom_score_adj for gradle process and all it's child processes.
+ * This function sets oom_score_adj for Gradle process and all its child processes.
  */
 function adjustOOMScore(spawnPromise: SpawnPromise<SpawnResult>, logger: bunyan): void {
   setTimeout(
