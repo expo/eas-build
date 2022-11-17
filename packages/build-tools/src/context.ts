@@ -60,7 +60,6 @@ export interface BuildContextOptions {
   reportBuildPhaseStats?: (stats: BuildPhaseStats) => void;
   skipNativeBuild?: boolean;
   metadata?: Metadata;
-  isCloudBuild?: boolean;
 }
 
 export class SkipNativeBuildError extends Error {}
@@ -86,7 +85,6 @@ export class BuildContext<TJob extends Job> {
   public readonly metadata?: Metadata;
   public readonly skipNativeBuild?: boolean;
   public artifacts: Artifacts = {};
-  public readonly isCloudBuild: boolean;
 
   private readonly defaultLogger: bunyan;
   private readonly _uploadArtifacts: (
@@ -112,7 +110,6 @@ export class BuildContext<TJob extends Job> {
     this.metadata = options.metadata;
     this.skipNativeBuild = options.skipNativeBuild;
     this.reportBuildPhaseStats = options.reportBuildPhaseStats;
-    this.isCloudBuild = options.isCloudBuild ?? false;
 
     const environmentSecrets = this.getEnvironmentSecrets(job);
     this.env = {

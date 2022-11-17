@@ -37,7 +37,7 @@ export async function runGradleCommand(
     },
     env: ctx.env,
   });
-  if (ctx.isCloudBuild && process.platform === 'linux') {
+  if (ctx.env.EAS_BUILD_RUNNER === 'eas-build' && process.platform === 'linux') {
     adjustOOMScore(spawnPromise, ctx.logger);
   }
 
