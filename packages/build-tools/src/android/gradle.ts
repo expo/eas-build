@@ -80,7 +80,8 @@ function adjustOOMScore(spawnPromise: SpawnPromise<SpawnResult>, logger: bunyan)
             // Value 800 is just a guess here. It's probably higher than most other
             // process. I didn't want to set it any higher, because I'm not sure if OOM Killer
             // can start killing processes when there is still enough memory left.
-            await fs.writeFile(`/proc/${pid}/oom_score_adj`, '800\n');
+            const oomScoreOverride = 800;
+            await fs.writeFile(`/proc/${pid}/oom_score_adj`, `${oomScoreOverride}\n`);
           })
         );
       } catch (err: any) {
