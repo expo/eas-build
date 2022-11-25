@@ -5,6 +5,8 @@ import fs from 'fs-extra';
 
 import { BuildContext } from '../context';
 
+import { findPackagerRootDir } from './packageManager';
+
 const NPMRC_TEMPLATE_PATH = path.join(__dirname, '../../templates/npmrc');
 
 export async function createNpmrcIfNotExistsAsync(ctx: BuildContext<Job>): Promise<void> {
@@ -21,8 +23,11 @@ export async function createNpmrcIfNotExistsAsync(ctx: BuildContext<Job>): Promi
 }
 
 export async function logIfNpmrcExistsAsync(ctx: BuildContext<Job>): Promise<void> {
-  const projectNpmrcPath = path.join(ctx.buildDirectory, '.npmrc');
+  const projectNpmrcPath = path.join(
+    findPackagerRootDir(ctx.reactNativeProjectDirectory),
+    '.npmrc'
+  );
   if (await fs.pathExists(projectNpmrcPath)) {
-    ctx.logger.info('.npmrc is present in your project directory');
+    ctx.logger.info(`.npmrc found at ${path.relative(ctx.buildDirectory, projectNpmrcPath)}`);
   }
 }
