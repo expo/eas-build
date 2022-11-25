@@ -19,3 +19,10 @@ export async function createNpmrcIfNotExistsAsync(ctx: BuildContext<Job>): Promi
     await fs.copy(NPMRC_TEMPLATE_PATH, projectNpmrcPath);
   }
 }
+
+export async function logIfNpmrcExistsAsync(ctx: BuildContext<Job>): Promise<void> {
+  const projectNpmrcPath = path.join(ctx.buildDirectory, '.npmrc');
+  if (await fs.pathExists(projectNpmrcPath)) {
+    ctx.logger.info('.npmrc is present in your project directory');
+  }
+}
