@@ -10,7 +10,7 @@ import { BuildContext } from '../context';
 import { deleteXcodeEnvLocalIfExistsAsync } from '../ios/xcodeEnv';
 
 import { Hook, runHookIfPresent } from './hooks';
-import { createNpmrcIfNotExistsAsync } from './npmrc';
+import { createNpmrcIfNotExistsAsync, logIfNpmrcExistsAsync } from './npmrc';
 import { findPackagerRootDir, PackageManager } from './packageManager';
 
 const MAX_EXPO_DOCTOR_TIMEOUT_MS = 20 * 1000;
@@ -20,6 +20,8 @@ export async function setup<TJob extends Job>(ctx: BuildContext<TJob>): Promise<
     await downloadAndUnpackProject(ctx);
     if (ctx.env.NPM_TOKEN) {
       await createNpmrcIfNotExistsAsync(ctx);
+    } else {
+      await logIfNpmrcExistsAsync(ctx);
     }
     if (ctx.job.platform === Platform.IOS && ctx.env.EAS_BUILD_RUNNER === 'eas-build') {
       await deleteXcodeEnvLocalIfExistsAsync(ctx as BuildContext<Ios.Job>);
