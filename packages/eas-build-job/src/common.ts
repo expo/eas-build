@@ -5,6 +5,7 @@ import { BuildPhase, BuildPhaseResult } from './logs';
 export enum Workflow {
   GENERIC = 'generic',
   MANAGED = 'managed',
+  CI = 'ci',
 }
 
 export enum Platform {
@@ -17,13 +18,15 @@ export enum ArchiveSourceType {
   URL = 'URL',
   PATH = 'PATH',
   GCS = 'GCS',
+  GIT = 'GIT',
 }
 
 export type ArchiveSource =
   | { type: ArchiveSourceType.S3; bucketKey: string }
   | { type: ArchiveSourceType.GCS; bucketKey: string }
   | { type: ArchiveSourceType.URL; url: string }
-  | { type: ArchiveSourceType.PATH; path: string };
+  | { type: ArchiveSourceType.PATH; path: string }
+  | { type: ArchiveSourceType.GIT; gitRepository: string };
 
 export const ArchiveSourceSchema = Joi.object<ArchiveSource>({
   type: Joi.string()
@@ -46,6 +49,12 @@ export const ArchiveSourceSchema = Joi.object<ArchiveSource>({
     then: Joi.object({
       type: Joi.string().valid(ArchiveSourceType.URL).required(),
       url: Joi.string().uri().required(),
+    }),
+  })
+  .when(Joi.object({ type: ArchiveSourceType.GIT }).unknown(), {
+    then: Joi.object({
+      type: Joi.string().valid(ArchiveSourceType.GIT).required(),
+      gitRepository: Joi.string().required(),
     }),
   })
   .when(Joi.object({ type: ArchiveSourceType.PATH }).unknown(), {
