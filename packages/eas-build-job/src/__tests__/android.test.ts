@@ -163,4 +163,26 @@ describe('Android.JobSchema', () => {
       '"value" contains a conflict between optional exclusive peers [releaseChannel, updates.channel]'
     );
   });
+
+  test('build from git without buildProfile defined', () => {
+    const managedJob = {
+      secrets,
+      platform: Platform.ANDROID,
+      type: Workflow.MANAGED,
+      buildType: Android.BuildType.APP_BUNDLE,
+      username: 'turtle-tutorial',
+      projectArchive: {
+        type: ArchiveSourceType.GIT,
+        repositoryUrl: 'http://localhost:3000',
+      },
+      projectRootDirectory: '.',
+      releaseChannel: 'default',
+      builderEnvironment: {
+        image: 'default',
+      },
+    };
+
+    const { error } = Android.JobSchema.validate(managedJob, joiOptions);
+    expect(error?.message).toBe('"buildProfile" is required');
+  });
 });

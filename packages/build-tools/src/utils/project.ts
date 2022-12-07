@@ -1,6 +1,6 @@
 import path from 'path';
 
-import { Job,  } from '@expo/eas-build-job';
+import { Job } from '@expo/eas-build-job';
 import spawn, { SpawnOptions, SpawnPromise, SpawnResult } from '@expo/turtle-spawn';
 import fs from 'fs-extra';
 import semver from 'semver';

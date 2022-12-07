@@ -9,6 +9,7 @@ import { readPackageJson, runExpoCliCommand } from '../utils/project';
 
 import { prepareProjectSourcesAsync } from './projectSources';
 import { installDependenciesAsync } from './installDependencies';
+import { configureEnvFromBuildProfileAsync, runEasBuildInternalAsync } from './easBuildInternal';
 
 const MAX_EXPO_DOCTOR_TIMEOUT_MS = 20 * 1000;
 
@@ -22,6 +23,11 @@ export async function setupAsync<TJob extends Job>(ctx: BuildContext<TJob>): Pro
     }
     if (ctx.job.platform === Platform.IOS && ctx.env.EAS_BUILD_RUNNER === 'eas-build') {
       await deleteXcodeEnvLocalIfExistsAsync(ctx as BuildContext<Ios.Job>);
+    }
+    if (ctx.isCIBuild) {
+      // We need to setup envs from eas.json before
+      // eas-build-pre-install hook is called.
+      await configureEnvFromBuildProfileAsync(ctx);
     }
     // try to read package.json to see if it exists and is valid
     return readPackageJson(ctx.reactNativeProjectDirectory);
@@ -39,6 +45,12 @@ export async function setupAsync<TJob extends Job>(ctx: BuildContext<TJob>): Pro
   await ctx.runBuildPhase(BuildPhase.INSTALL_DEPENDENCIES, async () => {
     await installDependenciesAsync(ctx);
   });
+
+  if (ctx.isCIBuild) {
+    await ctx.runBuildPhase(BuildPhase.EAS_BUILD_INTERNAL, async () => {
+      await runEasBuildInternalAsync(ctx);
+    });
+  }
 
   await ctx.runBuildPhase(BuildPhase.READ_APP_CONFIG, async () => {
     ctx.logger.info('Using app configuration:');

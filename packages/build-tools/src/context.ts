@@ -10,6 +10,7 @@ import {
   errors,
   Metadata,
   EnvironmentSecretType,
+  Workflow,
 } from '@expo/eas-build-job';
 import { ExpoConfig } from '@expo/config';
 import { bunyan } from '@expo/logger';
@@ -68,7 +69,7 @@ export class BuildContext<TJob extends Job> {
   public readonly workingdir: string;
   public logger: bunyan;
   public readonly logBuffer: LogBuffer;
-  public readonly env: Env;
+  private _env: Env;
   public readonly cacheManager?: CacheManager;
   /**
    * @deprecated
@@ -82,7 +83,8 @@ export class BuildContext<TJob extends Job> {
     err?: Error,
     options?: { tags?: Record<string, string>; extras?: Record<string, string> }
   ) => void;
-  public readonly metadata?: Metadata;
+  private _job: TJob;
+  private _metadata?: Metadata;
   public readonly skipNativeBuild?: boolean;
   public artifacts: Artifacts = {};
 
@@ -97,8 +99,14 @@ export class BuildContext<TJob extends Job> {
   private buildPhaseHasWarnings = false;
   private _appConfig?: ExpoConfig;
   private readonly reportBuildPhaseStats?: (stats: BuildPhaseStats) => void;
+  /**
+   * If true, that means build was triggered as a CI build, and
+   * "eas build:internal" needs to be run to resolve a job object
+   * and metadata.
+   */
+  public readonly isCIBuild: boolean;
 
-  constructor(public readonly job: TJob, options: BuildContextOptions) {
+  constructor(job: TJob, options: BuildContextOptions) {
     this.workingdir = options.workingdir;
     this.defaultLogger = options.logger;
     this.logger = this.defaultLogger;
@@ -107,18 +115,29 @@ export class BuildContext<TJob extends Job> {
     this.runGlobalExpoCliCommand = options.runGlobalExpoCliCommand;
     this._uploadArtifacts = options.uploadArtifacts;
     this.reportError = options.reportError;
-    this.metadata = options.metadata;
+    this._job = job;
+    this._metadata = options.metadata;
     this.skipNativeBuild = options.skipNativeBuild;
     this.reportBuildPhaseStats = options.reportBuildPhaseStats;
+    this.isCIBuild = job.type === Workflow.CI;
 
     const environmentSecrets = this.getEnvironmentSecrets(job);
-    this.env = {
+    this._env = {
       ...options.env,
       ...job?.builderEnvironment?.env,
       ...environmentSecrets,
     };
   }
 
+  public get job(): TJob {
+    return this._job;
+  }
+  public get metadata(): Metadata | undefined {
+    return this._metadata;
+  }
+  public get env(): Env {
+    return this._env;
+  }
   public get buildDirectory(): string {
     return path.join(this.workingdir, 'build');
   }
@@ -190,6 +209,24 @@ export class BuildContext<TJob extends Job> {
     if (url) {
       this.artifacts[type] = url;
     }
+  }
+
+  public updateEnv(env: Env): void {
+    if (!this.isCIBuild) {
+      throw new Error('Updating environment variables is only allowed in CI builds.');
+    }
+    this._env = {
+      ...env,
+      ...this._env,
+    };
+  }
+
+  public updateJobInformation(job: TJob, metadata: Metadata): void {
+    if (!this.isCIBuild) {
+      throw new Error('Updating job information is only allowed in CI builds.');
+    }
+    this._job = job;
+    this._metadata = metadata;
   }
 
   private async handleBuildPhaseErrorAsync(

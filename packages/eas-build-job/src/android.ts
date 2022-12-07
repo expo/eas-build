@@ -12,6 +12,7 @@ import {
   EnvironmentSecretsSchema,
   EnvironmentSecret,
   ImageMatchRule,
+  ArchiveSourceType,
 } from './common';
 
 export interface Keystore {
@@ -93,6 +94,7 @@ export interface Job {
   projectArchive: ArchiveSource;
   platform: Platform.ANDROID;
   projectRootDirectory: string;
+  buildProfile?: string;
   releaseChannel?: string;
   updates?: {
     channel?: string;
@@ -102,6 +104,7 @@ export interface Job {
       keystore: Keystore;
     };
     environmentSecrets?: EnvironmentSecret[];
+    robotAccessToken?: string;
   };
   builderEnvironment?: BuilderEnvironment;
   cache: Cache;
@@ -137,6 +140,13 @@ export const JobSchema = Joi.object({
   projectArchive: ArchiveSourceSchema.required(),
   platform: Joi.string().valid(Platform.ANDROID).required(),
   projectRootDirectory: Joi.string().required(),
+  buildProfile: Joi.when('projectArchive', {
+    is: Joi.object({
+      type: ArchiveSourceType.GIT,
+    }),
+    then: Joi.string().required(),
+    otherwise: Joi.string(),
+  }),
   releaseChannel: Joi.string(),
   updates: Joi.object({
     channel: Joi.string(),
@@ -144,6 +154,7 @@ export const JobSchema = Joi.object({
   secrets: Joi.object({
     buildCredentials: Joi.object({ keystore: KeystoreSchema.required() }),
     environmentSecrets: EnvironmentSecretsSchema,
+    robotAccessToken: Joi.string(),
   }).required(),
   builderEnvironment: BuilderEnvironmentSchema,
   cache: CacheSchema.default(),

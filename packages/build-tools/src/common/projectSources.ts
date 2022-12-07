@@ -18,7 +18,7 @@ export async function prepareProjectSourcesAsync<TJob extends Job>(
   } else if (ctx.job.projectArchive.type === ArchiveSourceType.URL) {
     await downloadAndUnpackProjectFromTarGzAsync(ctx, ctx.job.projectArchive.url);
   } else if (ctx.job.projectArchive.type === ArchiveSourceType.GIT) {
-    await shalowCloneRepositoryAsync(ctx, ctx.job.projectArchive.gitRepository);
+    await shalowCloneRepositoryAsync(ctx, ctx.job.projectArchive.repositoryUrl);
   }
 }
 
@@ -73,7 +73,7 @@ async function unpackTarGzAsync({
   logger: bunyan;
   source: string;
   destination: string;
-}) {
+}): Promise<void> {
   await spawn('tar', ['-C', destination, '--strip-components', '1', '-zxf', source], {
     logger,
   });

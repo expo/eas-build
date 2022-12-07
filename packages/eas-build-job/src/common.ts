@@ -26,7 +26,7 @@ export type ArchiveSource =
   | { type: ArchiveSourceType.GCS; bucketKey: string }
   | { type: ArchiveSourceType.URL; url: string }
   | { type: ArchiveSourceType.PATH; path: string }
-  | { type: ArchiveSourceType.GIT; gitRepository: string };
+  | { type: ArchiveSourceType.GIT; repositoryUrl: string };
 
 export const ArchiveSourceSchema = Joi.object<ArchiveSource>({
   type: Joi.string()
@@ -54,7 +54,7 @@ export const ArchiveSourceSchema = Joi.object<ArchiveSource>({
   .when(Joi.object({ type: ArchiveSourceType.GIT }).unknown(), {
     then: Joi.object({
       type: Joi.string().valid(ArchiveSourceType.GIT).required(),
-      gitRepository: Joi.string().required(),
+      repositoryUrl: Joi.string().required(),
     }),
   })
   .when(Joi.object({ type: ArchiveSourceType.PATH }).unknown(), {
