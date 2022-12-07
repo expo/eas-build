@@ -18,16 +18,29 @@ export async function prepareProjectSourcesAsync<TJob extends Job>(
   } else if (ctx.job.projectArchive.type === ArchiveSourceType.URL) {
     await downloadAndUnpackProjectFromTarGzAsync(ctx, ctx.job.projectArchive.url);
   } else if (ctx.job.projectArchive.type === ArchiveSourceType.GIT) {
-    await shalowCloneRepositoryAsync(ctx, ctx.job.projectArchive.repositoryUrl);
+    await shalowCloneRepositoryAsync(
+      ctx,
+      ctx.job.projectArchive.repositoryUrl,
+      ctx.job.projectArchive.ref
+    );
   }
 }
 
 async function shalowCloneRepositoryAsync<TJob extends Job>(
   ctx: BuildContext<TJob>,
-  projectArchiveUrl: string
+  projectArchiveUrl: string,
+  gitRef: string
 ): Promise<void> {
-  await fs.remove(ctx.buildDirectory);
-  await spawn('git', ['clone', projectArchiveUrl, ctx.buildDirectory]);
+  try {
+    await spawn('git', ['init'], { cwd: ctx.buildDirectory });
+    await spawn('git', ['remote', 'add', 'origin', projectArchiveUrl], { cwd: ctx.buildDirectory });
+    await spawn('git', ['fetch', 'origin', '--depth', '1', gitRef], { cwd: ctx.buildDirectory });
+    await spawn('git', ['checkout', gitRef], { cwd: ctx.buildDirectory });
+  } catch (err: any) {
+    ctx.logger.error('Failed to clone git repository.');
+    ctx.logger.error(err.stderr);
+    throw err;
+  }
 }
 
 async function downloadAndUnpackProjectFromTarGzAsync<TJob extends Job>(
