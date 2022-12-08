@@ -23,6 +23,7 @@ describe(expoUpdates.configureExpoUpdatesIfInstalledAsync, () => {
   beforeAll(() => {
     jest.restoreAllMocks();
   });
+
   it('aborts if expo-updates is not installed', async () => {
     (isExpoUpdatesInstalledAsync as jest.Mock).mockReturnValue(false);
 
@@ -37,11 +38,44 @@ describe(expoUpdates.configureExpoUpdatesIfInstalledAsync, () => {
     expect(isExpoUpdatesInstalledAsync).toBeCalledTimes(1);
   });
 
-  it('configures for EAS if the updates.channel field is set', async () => {
+  it('aborts if updates.url (app config) is set but updates.channel (eas.json) is not', async () => {
     (isExpoUpdatesInstalledAsync as jest.Mock).mockReturnValue(true);
 
     const managedCtx: BuildContext<Job> = {
-      job: { updates: { channel: 'main' }, platform: Platform.IOS },
+      appConfig: {
+        updates: {
+          url: 'https://u.expo.dev/blahblah',
+        },
+      },
+      job: {
+        platform: Platform.IOS,
+      },
+      logger: { info: () => {} },
+    } as any;
+    await expoUpdates.configureExpoUpdatesIfInstalledAsync(managedCtx);
+
+    expect(androidSetChannelNativelyAsync).not.toBeCalled();
+    expect(androidSetClassicReleaseChannelNativelyAsync).not.toBeCalled();
+    expect(iosSetChannelNativelyAsync).not.toBeCalled();
+    expect(iosSetClassicReleaseChannelNativelyAsync).not.toBeCalled();
+    expect(isExpoUpdatesInstalledAsync).toBeCalledTimes(1);
+  });
+
+  it('configures for EAS if updates.channel (eas.json) and updates.url (app config) are set', async () => {
+    (isExpoUpdatesInstalledAsync as jest.Mock).mockReturnValue(true);
+
+    const managedCtx: BuildContext<Job> = {
+      appConfig: {
+        updates: {
+          url: 'https://u.expo.dev/blahblah',
+        },
+      },
+      job: {
+        updates: {
+          channel: 'main',
+        },
+        platform: Platform.IOS,
+      },
       logger: { info: () => {} },
     } as any;
     await expoUpdates.configureExpoUpdatesIfInstalledAsync(managedCtx);
@@ -57,6 +91,11 @@ describe(expoUpdates.configureExpoUpdatesIfInstalledAsync, () => {
     (isExpoUpdatesInstalledAsync as jest.Mock).mockReturnValue(true);
 
     const managedCtx: BuildContext<Job> = {
+      appConfig: {
+        updates: {
+          url: 'https://u.expo.dev/blahblah',
+        },
+      },
       job: { updates: { channel: 'main' }, releaseChannel: 'default', platform: Platform.IOS },
       logger: { info: () => {} },
     } as any;
@@ -69,10 +108,11 @@ describe(expoUpdates.configureExpoUpdatesIfInstalledAsync, () => {
     expect(isExpoUpdatesInstalledAsync).toBeCalledTimes(1);
   });
 
-  it('configures for classic updates if the updates.channel and releaseChannel fields are not set', async () => {
+  it('configures for classic updates if the updates.channel and releaseChannel fields (eas.json) are not set, and updates.url (app config) is not set', async () => {
     (isExpoUpdatesInstalledAsync as jest.Mock).mockReturnValue(true);
 
     const managedCtx: BuildContext<Job> = {
+      appConfig: { updates: {} },
       job: { platform: Platform.IOS },
       logger: { info: () => {} },
     } as any;
@@ -90,6 +130,7 @@ describe(expoUpdates.configureExpoUpdatesIfInstalledAsync, () => {
     (isExpoUpdatesInstalledAsync as jest.Mock).mockReturnValue(true);
 
     const managedCtx: BuildContext<Job> = {
+      appConfig: {},
       job: { releaseChannel: 'default', platform: Platform.IOS },
       logger: { info: () => {} },
     } as any;
@@ -106,6 +147,7 @@ describe(expoUpdates.configureExpoUpdatesIfInstalledAsync, () => {
 
     const infoLogger = jest.fn();
     const managedCtx: BuildContext<Job> = {
+      appConfig: {},
       job: { platform: Platform.IOS },
       logger: { info: infoLogger, warn: () => {} },
     } as any;

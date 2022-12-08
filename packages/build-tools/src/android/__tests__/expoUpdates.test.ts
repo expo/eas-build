@@ -7,6 +7,7 @@ import {
   AndroidMetadataName,
   androidGetNativelyDefinedClassicReleaseChannelAsync,
   androidSetChannelNativelyAsync,
+  androidGetNativelyDefinedChannelAsync,
   androidSetClassicReleaseChannelNativelyAsync,
   androidGetNativelyDefinedRuntimeVersionAsync,
   androidSetRuntimeVersionNativelyAsync,
@@ -87,6 +88,26 @@ describe(androidSetChannelNativelyAsync, () => {
     );
     expect(newValue).toBeDefined();
     expect(JSON.parse(newValue!)).toEqual({ 'expo-channel-name': channel });
+  });
+});
+
+describe(androidGetNativelyDefinedChannelAsync, () => {
+  it('gets the channel', async () => {
+    vol.fromJSON(
+      {
+        'android/app/src/main/AndroidManifest.xml': originalFs.readFileSync(
+          path.join(__dirname, 'fixtures/AndroidManifestWithChannel.xml'),
+          'utf-8'
+        ),
+      },
+      '/app'
+    );
+    const ctx = {
+      reactNativeProjectDirectory: '/app',
+      logger: { info: () => {} },
+    };
+
+    await expect(androidGetNativelyDefinedChannelAsync(ctx as any)).resolves.toBe('staging-123');
   });
 });
 
