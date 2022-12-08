@@ -1,5 +1,6 @@
 import { SpawnResult } from '@expo/turtle-spawn';
 import { BuildPhase, Ios, Job, Platform } from '@expo/eas-build-job';
+import { BuildTrigger } from '@expo/eas-build-job/dist/common';
 
 import { BuildContext } from '../context';
 import { deleteXcodeEnvLocalIfExistsAsync } from '../ios/xcodeEnv';
@@ -24,7 +25,7 @@ export async function setupAsync<TJob extends Job>(ctx: BuildContext<TJob>): Pro
     if (ctx.job.platform === Platform.IOS && ctx.env.EAS_BUILD_RUNNER === 'eas-build') {
       await deleteXcodeEnvLocalIfExistsAsync(ctx as BuildContext<Ios.Job>);
     }
-    if (ctx.isCIBuild) {
+    if (ctx.job.triggeredBy === BuildTrigger.GIT_BASED_INTEGRATION) {
       // We need to setup envs from eas.json before
       // eas-build-pre-install hook is called.
       await configureEnvFromBuildProfileAsync(ctx);
@@ -46,7 +47,7 @@ export async function setupAsync<TJob extends Job>(ctx: BuildContext<TJob>): Pro
     await installDependenciesAsync(ctx);
   });
 
-  if (ctx.isCIBuild) {
+  if (ctx.job.triggeredBy === BuildTrigger.GIT_BASED_INTEGRATION) {
     await ctx.runBuildPhase(BuildPhase.EAS_BUILD_INTERNAL, async () => {
       await runEasBuildInternalAsync(ctx);
     });

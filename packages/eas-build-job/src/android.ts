@@ -12,7 +12,7 @@ import {
   EnvironmentSecretsSchema,
   EnvironmentSecret,
   ImageMatchRule,
-  ArchiveSourceType,
+  BuildTrigger,
 } from './common';
 
 export interface Keystore {
@@ -91,6 +91,7 @@ const BuilderEnvironmentSchema = Joi.object({
 
 export interface Job {
   type: Workflow;
+  triggeredBy?: BuildTrigger;
   projectArchive: ArchiveSource;
   platform: Platform.ANDROID;
   projectRootDirectory: string;
@@ -137,13 +138,12 @@ export const JobSchema = Joi.object({
   type: Joi.string()
     .valid(...Object.values(Workflow))
     .required(),
+  triggeredBy: Joi.string().valid(...Object.values(BuildTrigger)),
   projectArchive: ArchiveSourceSchema.required(),
   platform: Joi.string().valid(Platform.ANDROID).required(),
   projectRootDirectory: Joi.string().required(),
-  buildProfile: Joi.when('projectArchive', {
-    is: Joi.object({
-      type: ArchiveSourceType.GIT,
-    }),
+  buildProfile: Joi.when('triggeredBy', {
+    is: BuildTrigger.GIT_BASED_INTEGRATION,
     then: Joi.string().required(),
     otherwise: Joi.string(),
   }),

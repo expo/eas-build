@@ -1,7 +1,7 @@
 import Joi from 'joi';
 
 import * as Android from '../android';
-import { ArchiveSourceType, Platform, Workflow } from '../common';
+import { ArchiveSourceType, BuildTrigger, Platform, Workflow } from '../common';
 
 const joiOptions: Joi.ValidationOptions = {
   stripUnknown: true,
@@ -167,6 +167,7 @@ describe('Android.JobSchema', () => {
   test('build from git without buildProfile defined', () => {
     const managedJob = {
       secrets,
+      triggeredBy: BuildTrigger.GIT_BASED_INTEGRATION,
       platform: Platform.ANDROID,
       type: Workflow.MANAGED,
       buildType: Android.BuildType.APP_BUNDLE,
@@ -174,6 +175,7 @@ describe('Android.JobSchema', () => {
       projectArchive: {
         type: ArchiveSourceType.GIT,
         repositoryUrl: 'http://localhost:3000',
+        gitRef: 'master',
       },
       projectRootDirectory: '.',
       releaseChannel: 'default',

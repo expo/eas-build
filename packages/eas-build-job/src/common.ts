@@ -5,7 +5,7 @@ import { BuildPhase, BuildPhaseResult } from './logs';
 export enum Workflow {
   GENERIC = 'generic',
   MANAGED = 'managed',
-  CI = 'ci',
+  UNKNOWN = 'unknown',
 }
 
 export enum Platform {
@@ -21,12 +21,28 @@ export enum ArchiveSourceType {
   GIT = 'GIT',
 }
 
+export enum BuildTrigger {
+  EAS_CLI = 'EAS_CLI',
+  GIT_BASED_INTEGRATION = 'GIT_BASED_INTEGRATION',
+}
+
 export type ArchiveSource =
   | { type: ArchiveSourceType.S3; bucketKey: string }
   | { type: ArchiveSourceType.GCS; bucketKey: string }
   | { type: ArchiveSourceType.URL; url: string }
   | { type: ArchiveSourceType.PATH; path: string }
-  | { type: ArchiveSourceType.GIT; repositoryUrl: string; ref: string };
+  | {
+      type: ArchiveSourceType.GIT;
+      /**
+       * Url that can be used to clone repository.
+       * It should contain embedded credentials for private registries.
+       */
+      repositoryUrl: string;
+      /**
+       * commit hash, branch, or tag
+       */
+      gitRef: string;
+    };
 
 export const ArchiveSourceSchema = Joi.object<ArchiveSource>({
   type: Joi.string()
@@ -55,7 +71,7 @@ export const ArchiveSourceSchema = Joi.object<ArchiveSource>({
     then: Joi.object({
       type: Joi.string().valid(ArchiveSourceType.GIT).required(),
       repositoryUrl: Joi.string().required(),
-      ref: Joi.string().required(),
+      gitRef: Joi.string().required(),
     }),
   })
   .when(Joi.object({ type: ArchiveSourceType.PATH }).unknown(), {

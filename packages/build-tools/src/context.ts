@@ -10,11 +10,11 @@ import {
   errors,
   Metadata,
   EnvironmentSecretType,
-  Workflow,
 } from '@expo/eas-build-job';
 import { ExpoConfig } from '@expo/config';
 import { bunyan } from '@expo/logger';
 import { SpawnPromise, SpawnOptions, SpawnResult } from '@expo/turtle-spawn';
+import { BuildTrigger } from '@expo/eas-build-job/dist/common';
 
 import { PackageManager, resolvePackageManager } from './utils/packageManager';
 import { resolveBuildPhaseErrorAsync } from './buildErrors/detectError';
@@ -99,12 +99,6 @@ export class BuildContext<TJob extends Job> {
   private buildPhaseHasWarnings = false;
   private _appConfig?: ExpoConfig;
   private readonly reportBuildPhaseStats?: (stats: BuildPhaseStats) => void;
-  /**
-   * If true, that means build was triggered as a CI build, and
-   * "eas build:internal" needs to be run to resolve a job object
-   * and metadata.
-   */
-  public readonly isCIBuild: boolean;
 
   constructor(job: TJob, options: BuildContextOptions) {
     this.workingdir = options.workingdir;
@@ -119,7 +113,6 @@ export class BuildContext<TJob extends Job> {
     this._metadata = options.metadata;
     this.skipNativeBuild = options.skipNativeBuild;
     this.reportBuildPhaseStats = options.reportBuildPhaseStats;
-    this.isCIBuild = job.type === Workflow.CI;
 
     const environmentSecrets = this.getEnvironmentSecrets(job);
     this._env = {
@@ -212,8 +205,10 @@ export class BuildContext<TJob extends Job> {
   }
 
   public updateEnv(env: Env): void {
-    if (!this.isCIBuild) {
-      throw new Error('Updating environment variables is only allowed in CI builds.');
+    if (this._job.triggeredBy === BuildTrigger.GIT_BASED_INTEGRATION) {
+      throw new Error(
+        'Updating environment variables is only allowed when build was triggered by a git-based integration.'
+      );
     }
     this._env = {
       ...env,
@@ -222,10 +217,12 @@ export class BuildContext<TJob extends Job> {
   }
 
   public updateJobInformation(job: TJob, metadata: Metadata): void {
-    if (!this.isCIBuild) {
-      throw new Error('Updating job information is only allowed in CI builds.');
+    if (this._job.triggeredBy === BuildTrigger.GIT_BASED_INTEGRATION) {
+      throw new Error(
+        'Updating job information is only allowed when build was triggered by a git-based integration.'
+      );
     }
-    this._job = job;
+    this._job = { ...job, triggeredBy: this._job.triggeredBy };
     this._metadata = metadata;
   }
 

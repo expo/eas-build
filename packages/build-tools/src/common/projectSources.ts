@@ -18,15 +18,15 @@ export async function prepareProjectSourcesAsync<TJob extends Job>(
   } else if (ctx.job.projectArchive.type === ArchiveSourceType.URL) {
     await downloadAndUnpackProjectFromTarGzAsync(ctx, ctx.job.projectArchive.url);
   } else if (ctx.job.projectArchive.type === ArchiveSourceType.GIT) {
-    await shalowCloneRepositoryAsync(
+    await shallowCloneRepositoryAsync(
       ctx,
       ctx.job.projectArchive.repositoryUrl,
-      ctx.job.projectArchive.ref
+      ctx.job.projectArchive.gitRef
     );
   }
 }
 
-async function shalowCloneRepositoryAsync<TJob extends Job>(
+async function shallowCloneRepositoryAsync<TJob extends Job>(
   ctx: BuildContext<TJob>,
   projectArchiveUrl: string,
   gitRef: string

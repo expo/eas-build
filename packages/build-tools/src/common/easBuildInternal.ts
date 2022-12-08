@@ -16,7 +16,7 @@ export async function runEasBuildInternalAsync<TJob extends Job>(
   ctx: BuildContext<TJob>
 ): Promise<void> {
   const { cmd, args } = resolveEasCommandPrefix();
-  const buildProfile = ctx.job.buildProfile;
+  const { buildProfile } = ctx.job;
   assert(buildProfile, 'build profile is missing in a build from git.');
   const result = await spawn(
     cmd,
@@ -28,22 +28,18 @@ export async function runEasBuildInternalAsync<TJob extends Job>(
       mode: PipeMode.STDERR_ONLY_AS_STDOUT,
     }
   );
-  try {
-    const stdout = result.stdout.toString();
-    const parsed = JSON.parse(stdout);
-    const { job, metadata } = validateEasBuildInternalResult(ctx, parsed);
-    ctx.updateJobInformation(job, metadata);
-  } catch (err) {
-    throw err;
-  }
+  const stdout = result.stdout.toString();
+  const parsed = JSON.parse(stdout);
+  const { job, metadata } = validateEasBuildInternalResult(ctx, parsed);
+  ctx.updateJobInformation(job, metadata);
 }
 
 export async function configureEnvFromBuildProfileAsync<TJob extends Job>(
   ctx: BuildContext<TJob>
 ): Promise<void> {
   const { cmd, args } = resolveEasCommandPrefix();
-  const buildProfileName = ctx.job.buildProfile;
-  assert(buildProfileName, 'build profile is missing in a build from git.');
+  const { buildProfile } = ctx.job;
+  assert(buildProfile, 'build profile is missing in a build from git.');
   let spawnResult;
   try {
     spawnResult = await spawn(
@@ -54,7 +50,7 @@ export async function configureEnvFromBuildProfileAsync<TJob extends Job>(
         '--platform',
         ctx.job.platform,
         '--profile',
-        buildProfileName,
+        buildProfile,
         '--non-interactive',
         '--json',
         '--eas-json-only',
@@ -65,19 +61,14 @@ export async function configureEnvFromBuildProfileAsync<TJob extends Job>(
       }
     );
   } catch (err: any) {
-    ctx.logger.error(`Failed to read build profile ${buildProfileName} from eas.json.`);
+    ctx.logger.error(`Failed to the read build profile ${buildProfile} from eas.json.`);
     ctx.logger.error(err.stderr?.toString());
-    throw Error(`Failed to read build profile ${buildProfileName} from eas.json.`);
+    throw Error(`Failed to read the build profile ${buildProfile} from eas.json.`);
   }
-  try {
-    assert(spawnResult);
-    const stdout = spawnResult.stdout.toString();
-    const parsed = JSON.parse(stdout);
-    const env = validateEnvs(parsed);
-    ctx.updateEnv(env);
-  } catch (err) {
-    throw err;
-  }
+  const stdout = spawnResult.stdout.toString();
+  const parsed = JSON.parse(stdout);
+  const env = validateEnvs(parsed);
+  ctx.updateEnv(env);
 }
 
 function resolveEasCommandPrefix(): { cmd: string; args: string[] } {
@@ -102,14 +93,10 @@ function validateEasBuildInternalResult<TJob extends Job>(
   if (error) {
     throw error;
   }
-  try {
-    const job = sanitizeJob(value.job) as TJob;
-    assert(job.platform === ctx.job.platform, 'eas-cli returned a job for a wrong platform');
-    const metadata = sanitizeMetadata(value.metadata);
-    return { job, metadata };
-  } catch (err) {
-    throw err;
-  }
+  const job = sanitizeJob(value.job) as TJob;
+  assert(job.platform === ctx.job.platform, 'eas-cli returned a job for a wrong platform');
+  const metadata = sanitizeMetadata(value.metadata);
+  return { job, metadata };
 }
 
 function validateEnvs(result: any): Env {

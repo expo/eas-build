@@ -28,6 +28,10 @@ export enum PipeMode {
    * Pipe both stdout and stderr to logger, but tag stderr as stdout
    */
   COMBINED_AS_STDOUT,
+  /**
+   * Pipe stderr to logger, but tag it as stdout. Do not pipe stdout
+   * at all.
+   */
   STDERR_ONLY_AS_STDOUT,
 }
 
