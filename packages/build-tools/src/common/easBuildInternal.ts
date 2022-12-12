@@ -7,6 +7,9 @@ import Joi from 'joi';
 
 import { BuildContext } from '../context';
 
+const EAS_CLI_STAGING_NPM_TAG = 'latest-eas-build-staging';
+const EAS_CLI_PRODUCTION_NPM_TAG = 'latest-eas-build';
+
 const EasBuildInternalResultSchema = Joi.object<{ job: object; metadata: object }>({
   job: Joi.object().unknown(),
   metadata: Joi.object().unknown(),
@@ -17,7 +20,7 @@ export async function runEasBuildInternalAsync<TJob extends Job>(
 ): Promise<void> {
   const { cmd, args } = resolveEasCommandPrefix();
   const { buildProfile } = ctx.job;
-  assert(buildProfile, 'build profile is missing in a build from git.');
+  assert(buildProfile, 'build profile is missing in a build from git-based integration.');
   const result = await spawn(
     cmd,
     [...args, 'build:internal', '--platform', ctx.job.platform, '--profile', buildProfile],
@@ -39,7 +42,7 @@ export async function configureEnvFromBuildProfileAsync<TJob extends Job>(
 ): Promise<void> {
   const { cmd, args } = resolveEasCommandPrefix();
   const { buildProfile } = ctx.job;
-  assert(buildProfile, 'build profile is missing in a build from git.');
+  assert(buildProfile, 'build profile is missing in a build from git-based integration.');
   let spawnResult;
   try {
     spawnResult = await spawn(
@@ -75,9 +78,9 @@ function resolveEasCommandPrefix(): { cmd: string; args: string[] } {
   if (process.env.ENVIRONMENT === 'development') {
     return { cmd: process.env.EAS_BUILD_INTERNAL_EXECUTABLE ?? `eas`, args: [] };
   } else if (process.env.ENVIRONMENT === 'staging') {
-    return { cmd: 'npx', args: ['--yes', 'eas-cli@latest-eas-build-staging'] };
+    return { cmd: 'npx', args: ['--yes', `eas-cli@${EAS_CLI_STAGING_NPM_TAG}`] };
   } else {
-    return { cmd: 'npx', args: ['--yes', 'eas-cli@latest-eas-build'] };
+    return { cmd: 'npx', args: ['--yes', `eas-cli@${EAS_CLI_PRODUCTION_NPM_TAG}`] };
   }
 }
 

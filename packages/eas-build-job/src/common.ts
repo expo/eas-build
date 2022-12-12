@@ -39,7 +39,7 @@ export type ArchiveSource =
        */
       repositoryUrl: string;
       /**
-       * commit hash, branch, or tag
+       * Git commit hash, branch, or tag
        */
       gitRef: string;
     };

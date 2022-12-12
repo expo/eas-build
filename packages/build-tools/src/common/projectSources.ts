@@ -28,18 +28,35 @@ export async function prepareProjectSourcesAsync<TJob extends Job>(
 
 async function shallowCloneRepositoryAsync<TJob extends Job>(
   ctx: BuildContext<TJob>,
-  projectArchiveUrl: string,
+  projectRepoUrl: string,
   gitRef: string
 ): Promise<void> {
   try {
     await spawn('git', ['init'], { cwd: ctx.buildDirectory });
-    await spawn('git', ['remote', 'add', 'origin', projectArchiveUrl], { cwd: ctx.buildDirectory });
+    await spawn('git', ['remote', 'add', 'origin', projectRepoUrl], { cwd: ctx.buildDirectory });
     await spawn('git', ['fetch', 'origin', '--depth', '1', gitRef], { cwd: ctx.buildDirectory });
     await spawn('git', ['checkout', gitRef], { cwd: ctx.buildDirectory });
   } catch (err: any) {
-    ctx.logger.error('Failed to clone git repository.');
+    const sanitizedUrl = getSanitizedGitUrl(projectRepoUrl);
+    if (sanitizedUrl) {
+      ctx.logger.error('Failed to clone git repository.');
+    } else {
+      ctx.logger.error(`Failed to clone git repository: ${sanitizedUrl}.`);
+    }
     ctx.logger.error(err.stderr);
     throw err;
+  }
+}
+
+function getSanitizedGitUrl(maybeGitUrl: string): string | null {
+  try {
+    const url = new URL(maybeGitUrl);
+    if (url.password) {
+      url.password = '*******';
+    }
+    return url.toString();
+  } catch {
+    return null;
   }
 }
 

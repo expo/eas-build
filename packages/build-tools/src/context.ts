@@ -69,7 +69,6 @@ export class BuildContext<TJob extends Job> {
   public readonly workingdir: string;
   public logger: bunyan;
   public readonly logBuffer: LogBuffer;
-  private _env: Env;
   public readonly cacheManager?: CacheManager;
   /**
    * @deprecated
@@ -83,11 +82,12 @@ export class BuildContext<TJob extends Job> {
     err?: Error,
     options?: { tags?: Record<string, string>; extras?: Record<string, string> }
   ) => void;
-  private _job: TJob;
-  private _metadata?: Metadata;
   public readonly skipNativeBuild?: boolean;
   public artifacts: Artifacts = {};
 
+  private _env: Env;
+  private _job: TJob;
+  private _metadata?: Metadata;
   private readonly defaultLogger: bunyan;
   private readonly _uploadArtifacts: (
     type: ArtifactType,

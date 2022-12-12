@@ -101,7 +101,7 @@ const BuilderEnvironmentSchema = Joi.object({
 
 export interface Job {
   type: Workflow;
-  triggeredBy?: BuildTrigger;
+  triggeredBy: BuildTrigger;
   projectArchive: ArchiveSource;
   platform: Platform.IOS;
   projectRootDirectory: string;
@@ -147,7 +147,9 @@ export const JobSchema = Joi.object({
   type: Joi.string()
     .valid(...Object.values(Workflow))
     .required(),
-  triggeredBy: Joi.string().valid(...Object.values(BuildTrigger)),
+  triggeredBy: Joi.string()
+    .valid(...Object.values(BuildTrigger))
+    .default(BuildTrigger.EAS_CLI),
   projectArchive: ArchiveSourceSchema.required(),
   platform: Joi.string().valid(Platform.IOS).required(),
   projectRootDirectory: Joi.string().required(),
