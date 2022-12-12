@@ -39,9 +39,9 @@ async function shallowCloneRepositoryAsync<TJob extends Job>(
   } catch (err: any) {
     const sanitizedUrl = getSanitizedGitUrl(projectRepoUrl);
     if (sanitizedUrl) {
-      ctx.logger.error('Failed to clone git repository.');
-    } else {
       ctx.logger.error(`Failed to clone git repository: ${sanitizedUrl}.`);
+    } else {
+      ctx.logger.error('Failed to clone git repository.');
     }
     ctx.logger.error(err.stderr);
     throw err;
