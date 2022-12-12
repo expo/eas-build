@@ -2,6 +2,7 @@ import assert from 'assert';
 
 import { createLogger } from '@expo/logger';
 import { Ios, Workflow, ArchiveSourceType, Platform } from '@expo/eas-build-job';
+import { BuildTrigger } from '@expo/eas-build-job/dist/common';
 
 import { BuildContext } from '../../../context';
 import { distributionCertificate, provisioningProfile } from '../__tests__/fixtures';
@@ -28,6 +29,7 @@ function createTestIosJob({
 } = {}): Ios.Job {
   return {
     platform: Platform.IOS,
+    triggeredBy: BuildTrigger.EAS_CLI,
     type: Workflow.GENERIC,
     projectArchive: {
       type: ArchiveSourceType.URL,

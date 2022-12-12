@@ -3,12 +3,12 @@ import { Android, BuildPhase, Workflow } from '@expo/eas-build-job';
 import { Artifacts, ArtifactType, BuildContext, SkipNativeBuildError } from '../context';
 import { configureExpoUpdatesIfInstalledAsync } from '../utils/expoUpdates';
 import { runGradleCommand, ensureLFLineEndingsInGradlewScript } from '../android/gradle';
-import { setup } from '../utils/project';
 import { findArtifacts } from '../utils/artifacts';
 import { Hook, runHookIfPresent } from '../utils/hooks';
 import { restoreCredentials } from '../android/credentials';
 import { configureBuildGradle } from '../android/gradleConfig';
-import { prebuildAsync } from '../utils/prebuild';
+import { setupAsync } from '../common/setup';
+import { prebuildAsync } from '../common/prebuild';
 
 import { runBuilderWithHooksAsync } from './common';
 
@@ -17,7 +17,7 @@ export default async function androidBuilder(ctx: BuildContext<Android.Job>): Pr
 }
 
 async function buildAsync(ctx: BuildContext<Android.Job>): Promise<void> {
-  await setup(ctx);
+  await setupAsync(ctx);
   const hasNativeCode = ctx.job.type === Workflow.GENERIC;
 
   if (hasNativeCode) {

@@ -1,4 +1,4 @@
-import { pipeSpawnOutput, bunyan } from '@expo/logger';
+import { pipeSpawnOutput, bunyan, PipeMode } from '@expo/logger';
 import spawnAsync, {
   SpawnResult,
   SpawnPromise,
@@ -8,7 +8,7 @@ import spawnAsync, {
 type SpawnOptions = SpawnAsyncOptions & {
   logger?: bunyan;
   lineTransformer?: (line: string) => string | null;
-  printAsStdoutOnly?: boolean;
+  mode?: PipeMode;
 };
 
 function spawn(
@@ -19,8 +19,7 @@ function spawn(
     cwd: process.cwd(),
   }
 ): SpawnPromise<SpawnResult> {
-  const options = { ..._options };
-  const { logger } = options;
+  const { logger, ...options } = _options;
   if (logger) {
     options.stdio = 'pipe';
   }

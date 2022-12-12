@@ -12,6 +12,7 @@ import {
   EnvironmentSecretsSchema,
   EnvironmentSecret,
   ImageMatchRule,
+  BuildTrigger,
 } from './common';
 
 export type DistributionType = 'store' | 'internal' | 'simulator';
@@ -100,9 +101,11 @@ const BuilderEnvironmentSchema = Joi.object({
 
 export interface Job {
   type: Workflow;
+  triggeredBy: BuildTrigger;
   projectArchive: ArchiveSource;
   platform: Platform.IOS;
   projectRootDirectory: string;
+  buildProfile?: string;
   releaseChannel?: string;
   updates?: {
     channel?: string;
@@ -110,6 +113,7 @@ export interface Job {
   secrets: {
     buildCredentials?: BuildCredentials;
     environmentSecrets?: EnvironmentSecret[];
+    robotAccessToken?: string;
   };
   builderEnvironment?: BuilderEnvironment;
   cache: Cache;
@@ -143,9 +147,17 @@ export const JobSchema = Joi.object({
   type: Joi.string()
     .valid(...Object.values(Workflow))
     .required(),
+  triggeredBy: Joi.string()
+    .valid(...Object.values(BuildTrigger))
+    .default(BuildTrigger.EAS_CLI),
   projectArchive: ArchiveSourceSchema.required(),
   platform: Joi.string().valid(Platform.IOS).required(),
   projectRootDirectory: Joi.string().required(),
+  buildProfile: Joi.when('projectArchive', {
+    is: Joi.string().valid(BuildTrigger.GIT_BASED_INTEGRATION),
+    then: Joi.string().required(),
+    otherwise: Joi.string(),
+  }),
   releaseChannel: Joi.string(),
   updates: Joi.object({
     channel: Joi.string(),
@@ -153,6 +165,7 @@ export const JobSchema = Joi.object({
   secrets: Joi.object({
     buildCredentials: BuildCredentialsSchema,
     environmentSecrets: EnvironmentSecretsSchema,
+    robotAccessToken: Joi.string(),
   }).required(),
   builderEnvironment: BuilderEnvironmentSchema,
   cache: CacheSchema.default(),

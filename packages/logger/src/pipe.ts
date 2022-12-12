@@ -10,7 +10,7 @@ interface SpawnOutput {
 }
 
 interface PipeOptions {
-  printAsStdoutOnly?: boolean;
+  mode?: PipeMode;
   lineTransformer?: LineTransformer;
 }
 
@@ -19,12 +19,28 @@ function pipe(stream: Readable, loggerFn: LineLogger, lineTransformer?: LineTran
   stream.on('data', multilineLogger);
 }
 
+export enum PipeMode {
+  /**
+   * Pipe both stdout and stderr to logger
+   */
+  COMBINED,
+  /**
+   * Pipe both stdout and stderr to logger, but tag stderr as stdout
+   */
+  COMBINED_AS_STDOUT,
+  /**
+   * Pipe stderr to logger, but tag it as stdout. Do not pipe stdout
+   * at all.
+   */
+  STDERR_ONLY_AS_STDOUT,
+}
+
 function pipeSpawnOutput(
   logger: bunyan,
   { stdout, stderr }: SpawnOutput = {},
-  { printAsStdoutOnly = false, lineTransformer }: PipeOptions = {}
+  { mode = PipeMode.COMBINED, lineTransformer }: PipeOptions = {}
 ): void {
-  if (stdout) {
+  if (stdout && [PipeMode.COMBINED, PipeMode.COMBINED_AS_STDOUT].includes(mode)) {
     const stdoutLogger = logger.child({ source: 'stdout' });
     pipe(
       stdout,
@@ -35,7 +51,11 @@ function pipeSpawnOutput(
     );
   }
   if (stderr) {
-    const stderrLogger = logger.child({ source: printAsStdoutOnly ? 'stdout' : 'stderr' });
+    const stderrLogger = logger.child({
+      source: [PipeMode.STDERR_ONLY_AS_STDOUT, PipeMode.COMBINED_AS_STDOUT].includes(mode)
+        ? 'stdout'
+        : 'stderr',
+    });
     pipe(
       stderr,
       (line) => {

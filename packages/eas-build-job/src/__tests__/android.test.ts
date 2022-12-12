@@ -1,7 +1,7 @@
 import Joi from 'joi';
 
 import * as Android from '../android';
-import { ArchiveSourceType, Platform, Workflow } from '../common';
+import { ArchiveSourceType, BuildTrigger, Platform, Workflow } from '../common';
 
 const joiOptions: Joi.ValidationOptions = {
   stripUnknown: true,
@@ -162,5 +162,29 @@ describe('Android.JobSchema', () => {
     expect(error?.message).toBe(
       '"value" contains a conflict between optional exclusive peers [releaseChannel, updates.channel]'
     );
+  });
+
+  test('build from git without buildProfile defined', () => {
+    const managedJob = {
+      secrets,
+      triggeredBy: BuildTrigger.GIT_BASED_INTEGRATION,
+      platform: Platform.ANDROID,
+      type: Workflow.MANAGED,
+      buildType: Android.BuildType.APP_BUNDLE,
+      username: 'turtle-tutorial',
+      projectArchive: {
+        type: ArchiveSourceType.GIT,
+        repositoryUrl: 'http://localhost:3000',
+        gitRef: 'master',
+      },
+      projectRootDirectory: '.',
+      releaseChannel: 'default',
+      builderEnvironment: {
+        image: 'default',
+      },
+    };
+
+    const { error } = Android.JobSchema.validate(managedJob, joiOptions);
+    expect(error?.message).toBe('"buildProfile" is required');
   });
 });

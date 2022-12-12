@@ -3,8 +3,9 @@ import { SpawnOptions } from '@expo/turtle-spawn';
 import semver from 'semver';
 
 import { BuildContext } from '../context';
+import { runExpoCliCommand, shouldUseGlobalExpoCli } from '../utils/project';
 
-import { installDependencies, runExpoCliCommand, shouldUseGlobalExpoCli } from './project';
+import { installDependenciesAsync } from './installDependencies';
 
 export interface PrebuildOptions {
   extraEnvs?: Record<string, string>;
@@ -30,7 +31,7 @@ export async function prebuildAsync<TJob extends Job>(
 
   const prebuildCommandArgs = getPrebuildCommandArgs(ctx);
   await runExpoCliCommand(ctx, prebuildCommandArgs, spawnOptions);
-  await installDependencies(ctx);
+  await installDependenciesAsync(ctx);
 }
 
 function getPrebuildCommandArgs<TJob extends Job>(ctx: BuildContext<TJob>): string[] {

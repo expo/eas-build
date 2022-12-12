@@ -14,6 +14,7 @@ import {
 import { ExpoConfig } from '@expo/config';
 import { bunyan } from '@expo/logger';
 import { SpawnPromise, SpawnOptions, SpawnResult } from '@expo/turtle-spawn';
+import { BuildTrigger } from '@expo/eas-build-job/dist/common';
 
 import { PackageManager, resolvePackageManager } from './utils/packageManager';
 import { resolveBuildPhaseErrorAsync } from './buildErrors/detectError';
@@ -68,7 +69,6 @@ export class BuildContext<TJob extends Job> {
   public readonly workingdir: string;
   public logger: bunyan;
   public readonly logBuffer: LogBuffer;
-  public readonly env: Env;
   public readonly cacheManager?: CacheManager;
   /**
    * @deprecated
@@ -82,10 +82,12 @@ export class BuildContext<TJob extends Job> {
     err?: Error,
     options?: { tags?: Record<string, string>; extras?: Record<string, string> }
   ) => void;
-  public readonly metadata?: Metadata;
   public readonly skipNativeBuild?: boolean;
   public artifacts: Artifacts = {};
 
+  private _env: Env;
+  private _job: TJob;
+  private _metadata?: Metadata;
   private readonly defaultLogger: bunyan;
   private readonly _uploadArtifacts: (
     type: ArtifactType,
@@ -98,7 +100,7 @@ export class BuildContext<TJob extends Job> {
   private _appConfig?: ExpoConfig;
   private readonly reportBuildPhaseStats?: (stats: BuildPhaseStats) => void;
 
-  constructor(public readonly job: TJob, options: BuildContextOptions) {
+  constructor(job: TJob, options: BuildContextOptions) {
     this.workingdir = options.workingdir;
     this.defaultLogger = options.logger;
     this.logger = this.defaultLogger;
@@ -107,18 +109,28 @@ export class BuildContext<TJob extends Job> {
     this.runGlobalExpoCliCommand = options.runGlobalExpoCliCommand;
     this._uploadArtifacts = options.uploadArtifacts;
     this.reportError = options.reportError;
-    this.metadata = options.metadata;
+    this._job = job;
+    this._metadata = options.metadata;
     this.skipNativeBuild = options.skipNativeBuild;
     this.reportBuildPhaseStats = options.reportBuildPhaseStats;
 
     const environmentSecrets = this.getEnvironmentSecrets(job);
-    this.env = {
+    this._env = {
       ...options.env,
       ...job?.builderEnvironment?.env,
       ...environmentSecrets,
     };
   }
 
+  public get job(): TJob {
+    return this._job;
+  }
+  public get metadata(): Metadata | undefined {
+    return this._metadata;
+  }
+  public get env(): Env {
+    return this._env;
+  }
   public get buildDirectory(): string {
     return path.join(this.workingdir, 'build');
   }
@@ -190,6 +202,28 @@ export class BuildContext<TJob extends Job> {
     if (url) {
       this.artifacts[type] = url;
     }
+  }
+
+  public updateEnv(env: Env): void {
+    if (this._job.triggeredBy === BuildTrigger.GIT_BASED_INTEGRATION) {
+      throw new Error(
+        'Updating environment variables is only allowed when build was triggered by a git-based integration.'
+      );
+    }
+    this._env = {
+      ...env,
+      ...this._env,
+    };
+  }
+
+  public updateJobInformation(job: TJob, metadata: Metadata): void {
+    if (this._job.triggeredBy === BuildTrigger.GIT_BASED_INTEGRATION) {
+      throw new Error(
+        'Updating job information is only allowed when build was triggered by a git-based integration.'
+      );
+    }
+    this._job = { ...job, triggeredBy: this._job.triggeredBy };
+    this._metadata = metadata;
   }
 
   private async handleBuildPhaseErrorAsync(

@@ -5,15 +5,15 @@ import fs from 'fs-extra';
 
 import { Artifacts, ArtifactType, BuildContext } from '../context';
 import { configureExpoUpdatesIfInstalledAsync } from '../utils/expoUpdates';
-import { setup } from '../utils/project';
 import { findArtifacts } from '../utils/artifacts';
 import { Hook, runHookIfPresent } from '../utils/hooks';
 import { configureXcodeProject } from '../ios/configure';
 import CredentialsManager from '../ios/credentials/manager';
 import { runFastlaneGym } from '../ios/fastlane';
 import { installPods } from '../ios/pod';
-import { prebuildAsync } from '../utils/prebuild';
 import { resolveArtifactPath, resolveBuildConfiguration, resolveScheme } from '../ios/resolve';
+import { setupAsync } from '../common/setup';
+import { prebuildAsync } from '../common/prebuild';
 
 import { runBuilderWithHooksAsync } from './common';
 
@@ -22,7 +22,7 @@ export default async function iosBuilder(ctx: BuildContext<Ios.Job>): Promise<Ar
 }
 
 async function buildAsync(ctx: BuildContext<Ios.Job>): Promise<void> {
-  await setup(ctx);
+  await setupAsync(ctx);
   const hasNativeCode = ctx.job.type === Workflow.GENERIC;
 
   const credentialsManager = new CredentialsManager(ctx);
