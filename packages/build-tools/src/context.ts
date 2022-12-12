@@ -141,7 +141,7 @@ export class BuildContext<TJob extends Job> {
     return path.join(this.workingdir, 'environment-secrets');
   }
   public get reactNativeProjectDirectory(): string {
-    return path.join(this.buildDirectory, this.job.projectRootDirectory);
+    return path.join(this.buildDirectory, this.job.projectRootDirectory ?? '.');
   }
   public get packageManager(): PackageManager {
     return resolvePackageManager(this.reactNativeProjectDirectory);

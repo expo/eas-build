@@ -1,7 +1,7 @@
 import Joi from 'joi';
 
 import * as Ios from '../ios';
-import { ArchiveSourceType, Platform, Workflow } from '../common';
+import { ArchiveSourceType, BuildMode, Platform, Workflow } from '../common';
 
 const joiOptions: Joi.ValidationOptions = {
   stripUnknown: true,
@@ -44,6 +44,30 @@ describe('Ios.JobSchema', () => {
         cocoapods: '4.5.6',
         env: {
           ENV_VAR: '123',
+        },
+      },
+    };
+
+    const { value, error } = Ios.JobSchema.validate(genericJob, joiOptions);
+    expect(value).toMatchObject(genericJob);
+    expect(error).toBeFalsy();
+  });
+
+  test('valid resign job', () => {
+    const genericJob = {
+      mode: BuildMode.RESIGN,
+      secrets: {
+        buildCredentials,
+      },
+      type: Workflow.UNKNOWN,
+      platform: Platform.IOS,
+      projectArchive: {
+        type: ArchiveSourceType.NOOP,
+      },
+      resign: {
+        applicationArchiveSource: {
+          type: ArchiveSourceType.URL,
+          url: 'http://localhost:3000/a.ipa',
         },
       },
     };
