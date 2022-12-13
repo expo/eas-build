@@ -1,9 +1,11 @@
-import { getFingerprint } from '../distributionCertificate';
+import fs from 'fs-extra';
+
+import { getFingerprint, getCommonName } from '../distributionCertificate';
 
 import { distributionCertificate } from './fixtures';
 
 describe('distributionCertificate module', () => {
-  describe('getFingerprint function', () => {
+  describe(getFingerprint, () => {
     it('calculates the certificate fingerprint', () => {
       const fingerprint = getFingerprint({
         dataBase64: distributionCertificate.dataBase64,
@@ -19,6 +21,16 @@ describe('distributionCertificate module', () => {
           password: 'incorrect',
         });
       }).toThrowError(/password.*invalid/);
+    });
+  });
+  describe(getCommonName, () => {
+    it('returns cert common name', async () => {
+      const commonName = getCommonName({
+        dataBase64: distributionCertificate.dataBase64,
+        password: distributionCertificate.password,
+      });
+      await fs.writeFile('/tmp/a', commonName, 'utf-8');
+      expect(commonName).toBe(distributionCertificate.commonName);
     });
   });
 });

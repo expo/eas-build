@@ -4,6 +4,7 @@ import path from 'path';
 
 import { Ios } from '@expo/eas-build-job';
 import fs from 'fs-extra';
+import { orderBy } from 'lodash';
 import { v4 as uuid } from 'uuid';
 
 import { BuildContext } from '../../context';
@@ -16,13 +17,14 @@ import ProvisioningProfile, {
 } from './provisioningProfile';
 
 export interface Credentials {
+  applicationTargetProvisioningProfile: ProvisioningProfile<Ios.Job>;
   keychainPath: string;
   targetProvisioningProfiles: TargetProvisioningProfiles;
   distributionType: DistributionType;
   teamId: string;
 }
 
-type TargetProvisioningProfiles = Record<string, ProvisioningProfileData>;
+export type TargetProvisioningProfiles = Record<string, ProvisioningProfileData>;
 
 export default class IosCredentialsManager<TJob extends Ios.Job> {
   private keychain?: Keychain<TJob>;
@@ -58,10 +60,13 @@ export default class IosCredentialsManager<TJob extends Ios.Job> {
       targetProvisioningProfiles[target] = provisioningProfile.data;
     }
 
+    const applicationTargetProvisioningProfile = this.getApplicationTargetProvisioningProfile();
+
     // TODO: ensure that all dist types and team ids in the array are the same
-    const { distributionType, teamId } = this.provisioningProfiles[0].data;
+    const { distributionType, teamId } = applicationTargetProvisioningProfile.data;
 
     return {
+      applicationTargetProvisioningProfile,
       keychainPath: this.keychain.data.path,
       targetProvisioningProfiles,
       distributionType,
@@ -95,9 +100,15 @@ export default class IosCredentialsManager<TJob extends Ios.Job> {
       this.ctx.logger.info(`Preparing credentials for target '${target}'`);
       const distCertPath = path.join(os.tmpdir(), `${uuid()}.p12`);
 
-      this.ctx.logger.info('Getting distribution certificate fingerprint');
+      this.ctx.logger.info('Getting distribution certificate fingerprint and common name');
       const certificateFingerprint = distributionCertificateUtils.getFingerprint(
         targetCredentials.distributionCertificate
+      );
+      const certificateCommonName = distributionCertificateUtils.getCommonName(
+        targetCredentials.distributionCertificate
+      );
+      this.ctx.logger.info(
+        `Fingerprint = "${certificateFingerprint}", common name = ${certificateCommonName}`
       );
 
       this.ctx.logger.info(`Writing distribution certificate to ${distCertPath}`);
@@ -116,7 +127,9 @@ export default class IosCredentialsManager<TJob extends Ios.Job> {
       const provisioningProfile = new ProvisioningProfile(
         this.ctx,
         Buffer.from(targetCredentials.provisioningProfileBase64, 'base64'),
-        this.keychain.data.path
+        this.keychain.data.path,
+        target,
+        certificateCommonName
       );
       await provisioningProfile.init();
 
@@ -138,5 +151,11 @@ export default class IosCredentialsManager<TJob extends Ios.Job> {
       await this.cleanUp();
       throw err;
     }
+  }
+
+  private getApplicationTargetProvisioningProfile(): ProvisioningProfile<TJob> {
+    // sorting works because bundle ids share common prefix
+    const sorted = orderBy(this.provisioningProfiles, 'data.bundleIdentifier', 'asc');
+    return sorted[0];
   }
 }

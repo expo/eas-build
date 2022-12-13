@@ -3,7 +3,9 @@ export * as Ios from './ios';
 export {
   ArchiveSourceType,
   ArchiveSource,
+  BuildMode,
   BuildPhaseStats,
+  BuildTrigger,
   Env,
   EnvironmentSecret,
   EnvironmentSecretType,

@@ -13,6 +13,7 @@ import {
   EnvironmentSecret,
   ImageMatchRule,
   BuildTrigger,
+  BuildMode,
 } from './common';
 
 export type DistributionType = 'store' | 'internal' | 'simulator';
@@ -100,11 +101,15 @@ const BuilderEnvironmentSchema = Joi.object({
 });
 
 export interface Job {
+  mode: BuildMode;
   type: Workflow;
   triggeredBy: BuildTrigger;
   projectArchive: ArchiveSource;
+  resign?: {
+    applicationArchiveSource: ArchiveSource;
+  };
   platform: Platform.IOS;
-  projectRootDirectory: string;
+  projectRootDirectory?: string;
   buildProfile?: string;
   releaseChannel?: string;
   updates?: {
@@ -144,18 +149,40 @@ export interface Job {
 }
 
 export const JobSchema = Joi.object({
-  type: Joi.string()
-    .valid(...Object.values(Workflow))
-    .required(),
+  mode: Joi.string()
+    .valid(...Object.values(BuildMode))
+    .default(BuildMode.BUILD),
+  type: Joi.when('mode', {
+    is: Joi.string().valid(BuildMode.BUILD),
+    then: Joi.string()
+      .valid(...Object.values(Workflow))
+      .required(),
+    otherwise: Joi.string().valid(Workflow.UNKNOWN).default(Workflow.UNKNOWN),
+  }),
   triggeredBy: Joi.string()
     .valid(...Object.values(BuildTrigger))
     .default(BuildTrigger.EAS_CLI),
   projectArchive: ArchiveSourceSchema.required(),
+  resign: Joi.when('mode', {
+    is: Joi.string().valid(BuildMode.BUILD),
+    then: Joi.any().strip(),
+    otherwise: Joi.object({
+      applicationArchiveSource: ArchiveSourceSchema.required(),
+    }).required(),
+  }),
   platform: Joi.string().valid(Platform.IOS).required(),
-  projectRootDirectory: Joi.string().required(),
-  buildProfile: Joi.when('projectArchive', {
-    is: Joi.string().valid(BuildTrigger.GIT_BASED_INTEGRATION),
+  projectRootDirectory: Joi.when('mode', {
+    is: Joi.string().valid(BuildMode.BUILD),
     then: Joi.string().required(),
+    otherwise: Joi.any().strip(),
+  }),
+  buildProfile: Joi.when('mode', {
+    is: Joi.string().valid(BuildMode.BUILD),
+    then: Joi.when('triggeredBy', {
+      is: Joi.string().valid(BuildTrigger.GIT_BASED_INTEGRATION),
+      then: Joi.string().required(),
+      otherwise: Joi.string(),
+    }),
     otherwise: Joi.string(),
   }),
   releaseChannel: Joi.string(),

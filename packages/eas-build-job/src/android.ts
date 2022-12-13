@@ -13,6 +13,7 @@ import {
   EnvironmentSecret,
   ImageMatchRule,
   BuildTrigger,
+  BuildMode,
 } from './common';
 
 export interface Keystore {
@@ -90,6 +91,7 @@ const BuilderEnvironmentSchema = Joi.object({
 });
 
 export interface Job {
+  mode: BuildMode;
   type: Workflow;
   triggeredBy: BuildTrigger;
   projectArchive: ArchiveSource;
@@ -135,6 +137,7 @@ export interface Job {
 }
 
 export const JobSchema = Joi.object({
+  mode: Joi.string().valid(BuildMode.BUILD).default(BuildMode.BUILD),
   type: Joi.string()
     .valid(...Object.values(Workflow))
     .required(),

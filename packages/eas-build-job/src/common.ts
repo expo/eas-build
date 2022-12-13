@@ -2,6 +2,11 @@ import Joi from 'joi';
 
 import { BuildPhase, BuildPhaseResult } from './logs';
 
+export enum BuildMode {
+  BUILD = 'build',
+  RESIGN = 'resign',
+}
+
 export enum Workflow {
   GENERIC = 'generic',
   MANAGED = 'managed',
@@ -14,6 +19,7 @@ export enum Platform {
 }
 
 export enum ArchiveSourceType {
+  NOOP = 'NOOP',
   S3 = 'S3',
   URL = 'URL',
   PATH = 'PATH',
@@ -27,6 +33,7 @@ export enum BuildTrigger {
 }
 
 export type ArchiveSource =
+  | { type: ArchiveSourceType.NOOP }
   | { type: ArchiveSourceType.S3; bucketKey: string }
   | { type: ArchiveSourceType.GCS; bucketKey: string }
   | { type: ArchiveSourceType.URL; url: string }
