@@ -178,7 +178,7 @@ export const JobSchema = Joi.object({
   }),
   buildProfile: Joi.when('mode', {
     is: Joi.string().valid(BuildMode.BUILD),
-    then: Joi.when('projectArchive', {
+    then: Joi.when('triggeredBy', {
       is: Joi.string().valid(BuildTrigger.GIT_BASED_INTEGRATION),
       then: Joi.string().required(),
       otherwise: Joi.string(),
