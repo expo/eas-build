@@ -11,11 +11,14 @@ import { v4 as uuid } from 'uuid';
 import { BuildContext } from '../../context';
 
 export interface ProvisioningProfileData {
+  path: string;
+  target: string;
   bundleIdentifier: string;
   teamId: string;
   uuid: string;
   name: string;
   developerCertificate: Buffer;
+  certificateCommonName: string;
   distributionType: DistributionType;
 }
 
@@ -45,7 +48,9 @@ export default class ProvisioningProfile<TJob extends Ios.Job> {
   constructor(
     private readonly ctx: BuildContext<TJob>,
     private readonly profile: Buffer,
-    private readonly keychainPath: string
+    private readonly keychainPath: string,
+    private readonly target: string,
+    private readonly certificateCommonName: string
   ) {
     this.profilePath = path.join(PROVISIONING_PROFILES_DIRECTORY, `${uuid()}.mobileprovision`);
   }
@@ -111,11 +116,14 @@ Profile's certificate fingerprint = ${devCertFingerprint}, distribution certific
     const bundleIdentifier = applicationIdentifier.replace(/^.+?\./, '');
 
     this.profileData = {
+      path: this.keychainPath,
+      target: this.target,
       bundleIdentifier,
       teamId: (plistData.TeamIdentifier as string[])[0],
       uuid: plistData.UUID as string,
       name: plistData.Name as string,
       developerCertificate: Buffer.from((plistData.DeveloperCertificates as string[])[0], 'base64'),
+      certificateCommonName: this.certificateCommonName,
       distributionType: this.resolveDistributionType(plistData),
     };
   }

@@ -12,6 +12,7 @@ import { createGymfileForArchiveBuild, createGymfileForSimulatorBuild } from './
 import { Credentials } from './credentials/manager';
 import { XcodeBuildLogger } from './xcpretty';
 import { isTVOS } from './tvos';
+import { createFastfileForResigningBuild } from './fastfile';
 
 export async function runFastlaneGym<TJob extends Ios.Job>(
   ctx: BuildContext<TJob>,
@@ -48,6 +49,28 @@ export async function runFastlaneGym<TJob extends Ios.Job>(
   } finally {
     await buildLogger.flush();
   }
+}
+
+export async function runFastlaneResign<TJob extends Ios.Job>(
+  ctx: BuildContext<TJob>,
+  { credentials, ipaPath }: { credentials: Credentials; ipaPath: string }
+): Promise<void> {
+  const { certificateCommonName } = credentials.applicationTargetProvisioningProfile.data;
+
+  const fastfilePath = path.join(ctx.buildDirectory, 'Fastfile');
+  await createFastfileForResigningBuild({
+    outputFile: fastfilePath,
+    ipaPath,
+    keychainPath: credentials.keychainPath,
+    signingIdentity: certificateCommonName,
+    targetProvisioningProfiles: credentials.targetProvisioningProfiles,
+  });
+
+  await runFastlane(['resign'], {
+    cwd: ctx.buildDirectory,
+    logger: ctx.logger,
+    env: ctx.env,
+  });
 }
 
 export async function runFastlane(

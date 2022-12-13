@@ -1,12 +1,21 @@
 import { Ios } from '@expo/eas-build-job';
 import forge from 'node-forge';
 
-function getFingerprint({ dataBase64, password }: Ios.DistributionCertificate): string {
+export function getFingerprint({ dataBase64, password }: Ios.DistributionCertificate): string {
   const certData = getCertData(dataBase64, password);
   const certAsn1 = forge.pki.certificateToAsn1(certData);
   const certDer = forge.asn1.toDer(certAsn1).getBytes();
   const fingerprint = forge.md.sha1.create().update(certDer).digest().toHex().toUpperCase();
   return fingerprint;
+}
+
+export function getCommonName({ dataBase64, password }: Ios.DistributionCertificate): string {
+  const certData = getCertData(dataBase64, password);
+  const { attributes } = certData.subject;
+  const commonNameAttribute = attributes.find(
+    ({ name }: { name?: string }) => name === 'commonName'
+  );
+  return commonNameAttribute.value;
 }
 
 function getCertData(certificateBase64: string, password: string): any {
@@ -35,5 +44,3 @@ function getCertData(certificateBase64: string, password: string): any {
   }
   return certData;
 }
-
-export { getFingerprint };

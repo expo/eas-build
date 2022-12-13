@@ -1,9 +1,10 @@
 import path from 'path';
 
+import { Ios } from '@expo/eas-build-job';
 import { vol } from 'memfs';
 
 import { configureXcodeProject } from '../configure';
-import { DistributionType } from '../credentials/provisioningProfile';
+import ProvisioningProfile, { DistributionType } from '../credentials/provisioningProfile';
 
 jest.mock('fs');
 const originalFs = jest.requireActual('fs');
@@ -29,16 +30,20 @@ describe(configureXcodeProject, () => {
         keychainPath: 'fake/path',
         targetProvisioningProfiles: {
           testapp: {
+            path: 'fake/path.mobileprovision',
+            target: 'testapp',
             bundleIdentifier: 'abc',
             teamId: 'ABCDEFGH',
             uuid: 'abc',
             name: 'profile name',
             developerCertificate: Buffer.from('test'),
+            certificateCommonName: 'Abc 123',
             distributionType: DistributionType.APP_STORE,
           },
         },
         distributionType: DistributionType.APP_STORE,
         teamId: 'ABCDEFGH',
+        applicationTargetProvisioningProfile: {} as ProvisioningProfile<Ios.Job>,
       },
       buildConfiguration: 'Release',
     };
@@ -68,24 +73,31 @@ describe(configureXcodeProject, () => {
         keychainPath: 'fake/path',
         targetProvisioningProfiles: {
           shareextension: {
+            path: 'fake/path1.mobileprovision',
+            target: 'shareextension',
             bundleIdentifier: 'abc.extension',
             teamId: 'ABCDEFGH',
             uuid: 'abc',
             name: 'extension profile',
             developerCertificate: Buffer.from('test'),
+            certificateCommonName: 'Abc 123',
             distributionType: DistributionType.APP_STORE,
           },
           multitarget: {
+            path: 'fake/path2.mobileprovision',
+            target: 'multitarget',
             bundleIdentifier: 'abc',
             teamId: 'ABCDEFGH',
             uuid: 'abc',
             name: 'multitarget profile',
             developerCertificate: Buffer.from('test'),
+            certificateCommonName: 'Abc 123',
             distributionType: DistributionType.APP_STORE,
           },
         },
         distributionType: DistributionType.APP_STORE,
         teamId: 'ABCDEFGH',
+        applicationTargetProvisioningProfile: {} as ProvisioningProfile<Ios.Job>,
       },
       buildConfiguration: 'Release',
     };
@@ -119,16 +131,20 @@ describe(configureXcodeProject, () => {
         keychainPath: 'fake/path',
         targetProvisioningProfiles: {
           testapp: {
+            path: 'fake/path.mobileprovision',
+            target: 'testapp',
             bundleIdentifier: 'abc',
             teamId: 'ABCDEFGH',
             uuid: 'abc',
             name: 'profile name',
             developerCertificate: Buffer.from('test'),
+            certificateCommonName: 'Abc 123',
             distributionType: DistributionType.APP_STORE,
           },
         },
         distributionType: DistributionType.APP_STORE,
         teamId: 'ABCDEFGH',
+        applicationTargetProvisioningProfile: {} as ProvisioningProfile<Ios.Job>,
       },
       buildConfiguration: 'Release',
     };
@@ -174,24 +190,31 @@ describe(configureXcodeProject, () => {
         keychainPath: 'fake/path',
         targetProvisioningProfiles: {
           shareextension: {
+            path: 'fake/path1.mobileprovision',
+            target: 'shareextension',
             bundleIdentifier: 'abc.extension',
             teamId: 'ABCDEFGH',
             uuid: 'abc',
             name: 'extension profile',
             developerCertificate: Buffer.from('test'),
+            certificateCommonName: 'Abc 123',
             distributionType: DistributionType.APP_STORE,
           },
           multitarget: {
+            path: 'fake/path2.mobileprovision',
+            target: 'multitarget',
             bundleIdentifier: 'abc',
             teamId: 'ABCDEFGH',
             uuid: 'abc',
             name: 'multitarget profile',
             developerCertificate: Buffer.from('test'),
+            certificateCommonName: 'Abc 123',
             distributionType: DistributionType.APP_STORE,
           },
         },
         distributionType: DistributionType.APP_STORE,
         teamId: 'ABCDEFGH',
+        applicationTargetProvisioningProfile: {} as ProvisioningProfile<Ios.Job>,
       },
       buildConfiguration: 'Release',
     };

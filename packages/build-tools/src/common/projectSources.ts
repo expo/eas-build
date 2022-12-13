@@ -60,7 +60,7 @@ function getSanitizedGitUrl(maybeGitUrl: string): string | null {
   }
 }
 
-async function downloadAndUnpackProjectFromTarGzAsync<TJob extends Job>(
+export async function downloadAndUnpackProjectFromTarGzAsync<TJob extends Job>(
   ctx: BuildContext<TJob>,
   projectArchiveUrl: string
 ): Promise<void> {

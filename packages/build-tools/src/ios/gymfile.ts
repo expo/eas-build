@@ -42,7 +42,7 @@ export async function createGymfileForArchiveBuild({
   outputDirectory,
   logsDirectory,
 }: ArchiveBuildOptions): Promise<void> {
-  const PROFILES = [];
+  const PROFILES: { BUNDLE_ID: string; UUID: string }[] = [];
   const targets = Object.keys(credentials.targetProvisioningProfiles);
   for (const target of targets) {
     const profile = credentials.targetProvisioningProfiles[target];

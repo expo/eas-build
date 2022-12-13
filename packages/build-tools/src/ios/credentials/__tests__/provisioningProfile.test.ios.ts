@@ -37,7 +37,9 @@ describe('ProvisioningProfile class', () => {
       const pp = new ProvisioningProfile(
         ctx,
         Buffer.from(provisioningProfile.dataBase64, 'base64'),
-        keychain.data.path
+        keychain.data.path,
+        'testapp',
+        'Abc 123'
       );
       try {
         await pp.init();
@@ -53,7 +55,9 @@ describe('ProvisioningProfile class', () => {
       const pp = new ProvisioningProfile(
         ctx,
         Buffer.from(provisioningProfile.dataBase64, 'base64'),
-        keychain.data.path
+        keychain.data.path,
+        'testapp',
+        'Abc 123'
       );
 
       try {
