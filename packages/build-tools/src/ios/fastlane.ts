@@ -57,7 +57,9 @@ export async function runFastlaneResign<TJob extends Ios.Job>(
 ): Promise<void> {
   const { certificateCommonName } = credentials.applicationTargetProvisioningProfile.data;
 
-  const fastfilePath = path.join(ctx.buildDirectory, 'Fastfile');
+  const fastlaneDirPath = path.join(ctx.buildDirectory, 'fastlane');
+  await fs.ensureDir(fastlaneDirPath);
+  const fastfilePath = path.join(fastlaneDirPath, 'Fastfile');
   await createFastfileForResigningBuild({
     outputFile: fastfilePath,
     ipaPath,
@@ -66,7 +68,7 @@ export async function runFastlaneResign<TJob extends Ios.Job>(
     targetProvisioningProfiles: credentials.targetProvisioningProfiles,
   });
 
-  await runFastlane(['resign'], {
+  await runFastlane(['do_resign'], {
     cwd: ctx.buildDirectory,
     logger: ctx.logger,
     env: ctx.env,

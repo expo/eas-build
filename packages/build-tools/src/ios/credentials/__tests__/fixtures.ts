@@ -73,7 +73,7 @@ GgUABBRjUf5i17qdTqM0ehCmFy23BvGeLwQIF+s7XPPZnqoCAggA`,
   serialNumber: '78874DA5949778D6DF6E4F07A7964747',
   fingerprint: '0DACC0F7DFA33B1ECFCE1D3D780C76F16A3F0C20',
   teamId: 'QL76XYH73P',
-  commonName: 'iPhone Distribution: Alicja WarchaÅ (QL76XYH73P)',
+  commonName: 'iPhone Distribution: Alicja Warchał (QL76XYH73P)',
 };
 
 // this provisioning profile is invalidated

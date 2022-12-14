@@ -15,7 +15,7 @@ export function getCommonName({ dataBase64, password }: Ios.DistributionCertific
   const commonNameAttribute = attributes.find(
     ({ name }: { name?: string }) => name === 'commonName'
   );
-  return commonNameAttribute.value;
+  return Buffer.from(commonNameAttribute.value, 'ascii').toString();
 }
 
 function getCertData(certificateBase64: string, password: string): any {
