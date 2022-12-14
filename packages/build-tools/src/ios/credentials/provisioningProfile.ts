@@ -116,7 +116,7 @@ Profile's certificate fingerprint = ${devCertFingerprint}, distribution certific
     const bundleIdentifier = applicationIdentifier.replace(/^.+?\./, '');
 
     this.profileData = {
-      path: this.keychainPath,
+      path: this.profilePath,
       target: this.target,
       bundleIdentifier,
       teamId: (plistData.TeamIdentifier as string[])[0],
