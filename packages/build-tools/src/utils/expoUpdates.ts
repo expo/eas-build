@@ -173,6 +173,7 @@ export async function configureExpoUpdatesIfInstalledAsync(ctx: BuildContext<Job
             `This build is configured to query EAS Update for updates, however no channel is set in eas.json.`
           );
         }
+        ctx.markBuildPhaseHasWarnings();
       }
     }
   } else {
