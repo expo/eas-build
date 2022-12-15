@@ -19,7 +19,7 @@ export enum Platform {
 }
 
 export enum ArchiveSourceType {
-  NOOP = 'NOOP',
+  NONE = 'NONE',
   S3 = 'S3',
   URL = 'URL',
   PATH = 'PATH',
@@ -33,7 +33,7 @@ export enum BuildTrigger {
 }
 
 export type ArchiveSource =
-  | { type: ArchiveSourceType.NOOP }
+  | { type: ArchiveSourceType.NONE }
   | { type: ArchiveSourceType.S3; bucketKey: string }
   | { type: ArchiveSourceType.GCS; bucketKey: string }
   | { type: ArchiveSourceType.URL; url: string }

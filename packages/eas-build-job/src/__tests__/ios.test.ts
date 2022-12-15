@@ -62,7 +62,7 @@ describe('Ios.JobSchema', () => {
       type: Workflow.UNKNOWN,
       platform: Platform.IOS,
       projectArchive: {
-        type: ArchiveSourceType.NOOP,
+        type: ArchiveSourceType.NONE,
       },
       resign: {
         applicationArchiveSource: {
