@@ -54,6 +54,29 @@ export async function iosSetChannelNativelyAsync(ctx: BuildContext<Job>): Promis
   await fs.writeFile(expoPlistPath, updatedExpoPlistContents);
 }
 
+export async function iosGetNativelyDefinedChannelAsync(
+  ctx: BuildContext<Job>
+): Promise<string | null> {
+  const expoPlistPath = IOSConfig.Paths.getExpoPlistPath(ctx.reactNativeProjectDirectory);
+
+  if (!(await fs.pathExists(expoPlistPath))) {
+    return null;
+  }
+
+  const expoPlistContents = await fs.readFile(expoPlistPath, 'utf8');
+  try {
+    const items: Record<string, string | Record<string, string>> = plist.parse(expoPlistContents);
+    const updatesRequestHeaders = (items[
+      IosMetadataName.UPDATES_CONFIGURATION_REQUEST_HEADERS_KEY
+    ] ?? {}) as Record<string, string>;
+    return updatesRequestHeaders['expo-channel-name'] ?? null;
+  } catch (err: any) {
+    throw new Error(
+      `Failed to parse ${IosMetadataName.UPDATES_CONFIGURATION_REQUEST_HEADERS_KEY} from Expo.plist: ${err.message}`
+    );
+  }
+}
+
 export async function iosSetClassicReleaseChannelNativelyAsync(
   ctx: BuildContext<Job>
 ): Promise<void> {

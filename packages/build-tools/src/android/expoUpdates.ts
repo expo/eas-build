@@ -64,6 +64,32 @@ export async function androidSetChannelNativelyAsync(ctx: BuildContext<Job>): Pr
   await AndroidConfig.Manifest.writeAndroidManifestAsync(manifestPath, androidManifest);
 }
 
+export async function androidGetNativelyDefinedChannelAsync(
+  ctx: BuildContext<Job>
+): Promise<string | null> {
+  const manifestPath = await AndroidConfig.Paths.getAndroidManifestAsync(
+    ctx.reactNativeProjectDirectory
+  );
+
+  if (!(await fs.pathExists(manifestPath))) {
+    return null;
+  }
+
+  const androidManifest = await AndroidConfig.Manifest.readAndroidManifestAsync(manifestPath);
+  const stringifiedUpdatesRequestHeaders = AndroidConfig.Manifest.getMainApplicationMetaDataValue(
+    androidManifest,
+    AndroidMetadataName.UPDATES_CONFIGURATION_REQUEST_HEADERS_KEY
+  );
+  try {
+    const updatesRequestHeaders = JSON.parse(stringifiedUpdatesRequestHeaders ?? '{}');
+    return updatesRequestHeaders['expo-channel-name'] ?? null;
+  } catch (err: any) {
+    throw new Error(
+      `Failed to parse ${AndroidMetadataName.UPDATES_CONFIGURATION_REQUEST_HEADERS_KEY} from AndroidManifest.xml: ${err.message}`
+    );
+  }
+}
+
 export async function androidSetClassicReleaseChannelNativelyAsync(
   ctx: BuildContext<Job>
 ): Promise<void> {

@@ -9,6 +9,7 @@ import {
   androidSetClassicReleaseChannelNativelyAsync,
   androidGetNativelyDefinedClassicReleaseChannelAsync,
   androidGetNativelyDefinedRuntimeVersionAsync,
+  androidGetNativelyDefinedChannelAsync,
 } from '../android/expoUpdates';
 import {
   iosSetRuntimeVersionNativelyAsync,
@@ -16,6 +17,7 @@ import {
   iosSetClassicReleaseChannelNativelyAsync,
   iosGetNativelyDefinedClassicReleaseChannelAsync,
   iosGetNativelyDefinedRuntimeVersionAsync,
+  iosGetNativelyDefinedChannelAsync,
 } from '../ios/expoUpdates';
 import { BuildContext } from '../context';
 
@@ -50,7 +52,7 @@ export async function setChannelNativelyAsync(ctx: BuildContext<Job>): Promise<v
 
   const configFile = ctx.job.platform === Platform.ANDROID ? 'AndroidManifest.xml' : 'Expo.plist';
   ctx.logger.info(
-    `Setting the update response headers in '${configFile}' to '${JSON.stringify(
+    `Setting the update request headers in '${configFile}' to '${JSON.stringify(
       newUpdateRequestHeaders
     )}'`
   );
@@ -152,8 +154,28 @@ export async function configureExpoUpdatesIfInstalledAsync(ctx: BuildContext<Job
     );
   }
 
-  if (ctx.job.updates?.channel) {
-    await configureEASExpoUpdatesAsync(ctx);
+  if (isEASUpdateConfigured(ctx)) {
+    if (ctx.job.updates?.channel !== undefined) {
+      await configureEASExpoUpdatesAsync(ctx);
+    } else {
+      const channel = await getChannelAsync(ctx);
+      if (channel !== null) {
+        const configFile =
+          ctx.job.platform === Platform.ANDROID ? 'AndroidManifest.xml' : 'Expo.plist';
+        ctx.logger.info(`The channel name for EAS Update in ${configFile} is set to "${channel}"`);
+      } else {
+        if (ctx.job.releaseChannel !== undefined) {
+          ctx.logger.warn(
+            `This build is configured with EAS Update however has a Classic Updates releaseChannel set instead of having an EAS Update channel.`
+          );
+        } else {
+          ctx.logger.warn(
+            `This build is configured to query EAS Update for updates, however no channel is set in eas.json.`
+          );
+        }
+        ctx.markBuildPhaseHasWarnings();
+      }
+    }
   } else {
     await configureClassicExpoUpdatesAsync(ctx);
   }
@@ -161,6 +183,19 @@ export async function configureExpoUpdatesIfInstalledAsync(ctx: BuildContext<Job
   if (ctx.job.version?.runtimeVersion) {
     ctx.logger.info('Updating runtimeVersion in Expo.plist');
     await setRuntimeVersionNativelyAsync(ctx, ctx.job.version.runtimeVersion);
+  }
+}
+
+export async function getChannelAsync(ctx: BuildContext<Job>): Promise<string | null> {
+  switch (ctx.job.platform) {
+    case Platform.ANDROID: {
+      return await androidGetNativelyDefinedChannelAsync(ctx);
+    }
+    case Platform.IOS: {
+      return await iosGetNativelyDefinedChannelAsync(ctx);
+    }
+    default:
+      throw new Error(`Platform is not supported.`);
   }
 }
 
@@ -174,5 +209,20 @@ export async function getRuntimeVersionAsync(ctx: BuildContext<Job>): Promise<st
     }
     default:
       throw new Error(`Platform is not supported.`);
+  }
+}
+
+export function isEASUpdateConfigured(ctx: BuildContext<Job>): boolean {
+  const rawUrl = ctx.appConfig.updates?.url;
+  if (!rawUrl) {
+    return false;
+  }
+  try {
+    const url = new URL(rawUrl);
+    return ['u.expo.dev', 'staging-u.expo.dev'].includes(url.hostname);
+  } catch (err) {
+    ctx.logger.error({ err }, `Cannot parse expo.updates.url = ${rawUrl} as URL`);
+    ctx.logger.error(`Assuming EAS Update is not configured`);
+    return false;
   }
 }

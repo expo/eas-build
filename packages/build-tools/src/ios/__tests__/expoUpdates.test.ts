@@ -6,6 +6,7 @@ import {
   iosGetNativelyDefinedClassicReleaseChannelAsync,
   IosMetadataName,
   iosSetChannelNativelyAsync,
+  iosGetNativelyDefinedChannelAsync,
   iosSetClassicReleaseChannelNativelyAsync,
   iosGetNativelyDefinedRuntimeVersionAsync,
   iosSetRuntimeVersionNativelyAsync,
@@ -73,6 +74,39 @@ describe(iosSetChannelNativelyAsync, () => {
     expect(
       plist.parse(newExpoPlist)[IosMetadataName.UPDATES_CONFIGURATION_REQUEST_HEADERS_KEY]
     ).toEqual({ 'expo-channel-name': channel });
+  });
+});
+
+describe(iosGetNativelyDefinedChannelAsync, () => {
+  it('gets the channel', async () => {
+    const expoPlist = `
+      <?xml version="1.0" encoding="UTF-8"?>
+      <!DOCTYPE plist PUBLIC "-//Apple Computer//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+      <plist version="1.0">
+        <dict>
+          <key>EXUpdatesRequestHeaders</key>
+          <dict>
+            <key>expo-channel-name</key>
+            <string>staging-123</string>
+          </dict>
+        </dict>
+      </plist>
+    `;
+
+    vol.fromJSON(
+      {
+        'ios/testapp/Supporting/Expo.plist': expoPlist,
+        'ios/testapp.xcodeproj/project.pbxproj': 'placeholder',
+        'ios/testapp/AppDelegate.m': 'placeholder',
+      },
+      '/app'
+    );
+
+    const ctx = {
+      reactNativeProjectDirectory: '/app',
+      logger: { info: () => {} },
+    };
+    await expect(iosGetNativelyDefinedChannelAsync(ctx as any)).resolves.toBe('staging-123');
   });
 });
 
