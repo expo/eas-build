@@ -205,7 +205,7 @@ export class BuildContext<TJob extends Job> {
   }
 
   public updateEnv(env: Env): void {
-    if (this._job.triggeredBy === BuildTrigger.GIT_BASED_INTEGRATION) {
+    if (this._job.triggeredBy !== BuildTrigger.GIT_BASED_INTEGRATION) {
       throw new Error(
         'Updating environment variables is only allowed when build was triggered by a git-based integration.'
       );
@@ -217,7 +217,7 @@ export class BuildContext<TJob extends Job> {
   }
 
   public updateJobInformation(job: TJob, metadata: Metadata): void {
-    if (this._job.triggeredBy === BuildTrigger.GIT_BASED_INTEGRATION) {
+    if (this._job.triggeredBy !== BuildTrigger.GIT_BASED_INTEGRATION) {
       throw new Error(
         'Updating job information is only allowed when build was triggered by a git-based integration.'
       );
