@@ -20,6 +20,7 @@ describe('MetadataSchema', () => {
       message: 'fix foo, bar, and baz',
       runFromCI: true,
       runWithNoWaitFlag: true,
+      buildMode: 'build',
     };
     const { value, error } = MetadataSchema.validate(metadata, {
       stripUnknown: true,
@@ -47,6 +48,7 @@ describe('MetadataSchema', () => {
       message: 'a'.repeat(1025),
       runFromCI: true,
       runWithNoWaitFlag: true,
+      buildMode: 'resign',
     };
     const { error } = MetadataSchema.validate(metadata, {
       stripUnknown: true,

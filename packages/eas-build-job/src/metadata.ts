@@ -134,6 +134,11 @@ export type Metadata = {
    * Indicates whether the build was run with --no-wait flag.
    */
   runWithNoWaitFlag?: boolean;
+
+  /**
+   * Build mode
+   */
+  buildMode?: 'build' | 'resign';
 };
 
 export const MetadataSchema = Joi.object({
@@ -162,6 +167,7 @@ export const MetadataSchema = Joi.object({
   message: Joi.string().max(1024),
   runFromCI: Joi.boolean(),
   runWithNoWaitFlag: Joi.boolean(),
+  buildMode: Joi.string().valid('build', 'resign'),
 });
 
 export function sanitizeMetadata(metadata: object): Metadata {
