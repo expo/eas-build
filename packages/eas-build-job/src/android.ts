@@ -11,7 +11,6 @@ import {
   CacheSchema,
   EnvironmentSecretsSchema,
   EnvironmentSecret,
-  ImageMatchRule,
   BuildTrigger,
   BuildMode,
 } from './common';
@@ -35,45 +34,8 @@ export enum BuildType {
   APP_BUNDLE = 'app-bundle',
 }
 
-export const builderBaseImages = [
-  'default',
-  'latest',
-  'stable',
-  'ubuntu-18.04-android-30-ndk-r19c', // legacy naming (image with java 8)
-  'ubuntu-20.04-android-30-ndk-r21e', // legacy naming (image with java 8)
-  'ubuntu-18.04-jdk-8-ndk-r19c',
-  'ubuntu-18.04-jdk-11-ndk-r19c',
-  'ubuntu-20.04-jdk-8-ndk-r21e',
-  'ubuntu-20.04-jdk-11-ndk-r21e',
-  'ubuntu-22.04-jdk-8-ndk-r21e',
-  'ubuntu-22.04-jdk-11-ndk-r21e',
-] as const;
-
-export const imageMatchRules: ImageMatchRule<typeof builderBaseImages[number]>[] = [
-  {
-    image: 'ubuntu-18.04-jdk-11-ndk-r19c',
-    reactNativeSemverRange: '>=0.68.0',
-    sdkSemverRange: '<46',
-  },
-  {
-    image: 'ubuntu-18.04-jdk-8-ndk-r19c',
-    reactNativeSemverRange: '<0.68.0',
-    sdkSemverRange: '<46',
-  },
-  {
-    image: 'ubuntu-20.04-jdk-11-ndk-r21e',
-    reactNativeSemverRange: '>=0.68.0',
-    sdkSemverRange: '>=46',
-  },
-  {
-    image: 'ubuntu-20.04-jdk-8-ndk-r21e',
-    reactNativeSemverRange: '<0.68.0',
-    sdkSemverRange: '>=46',
-  },
-];
-
 export interface BuilderEnvironment {
-  image?: typeof builderBaseImages[number];
+  image?: string;
   node?: string;
   yarn?: string;
   expoCli?: string;
@@ -82,7 +44,7 @@ export interface BuilderEnvironment {
 }
 
 const BuilderEnvironmentSchema = Joi.object({
-  image: Joi.string().valid(...builderBaseImages),
+  image: Joi.string(),
   node: Joi.string(),
   yarn: Joi.string(),
   expoCli: Joi.string(),

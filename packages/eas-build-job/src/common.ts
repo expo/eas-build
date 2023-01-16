@@ -131,10 +131,3 @@ export interface BuildPhaseStats {
   result: BuildPhaseResult;
   durationMs: number;
 }
-
-export interface ImageMatchRule<Image extends string> {
-  image: Image;
-  reactNativeSemverRange?: string;
-  sdkSemverRange?: string;
-  workflows?: Workflow[];
-}
