@@ -11,7 +11,6 @@ import {
   CacheSchema,
   EnvironmentSecretsSchema,
   EnvironmentSecret,
-  ImageMatchRule,
   BuildTrigger,
   BuildMode,
 } from './common';
@@ -43,43 +42,8 @@ export interface DistributionCertificate {
   dataBase64: string;
   password: string;
 }
-
-export const builderBaseImages = [
-  'default',
-  'latest',
-  'stable',
-  'macos-big-sur-11.4-xcode-12.5',
-  'macos-big-sur-11.4-xcode-13.0',
-  'macos-monterey-12.1-xcode-13.2',
-  'macos-monterey-12.3-xcode-13.3',
-  'macos-monterey-12.4-xcode-13.4',
-  'macos-monterey-12.6-xcode-14.0',
-  'macos-monterey-12.6-xcode-14.1',
-] as const;
-
-export const imageMatchRules: ImageMatchRule<typeof builderBaseImages[number]>[] = [
-  {
-    image: 'macos-big-sur-11.4-xcode-13.0',
-    sdkSemverRange: '<=44',
-    workflows: [Workflow.MANAGED],
-  },
-  {
-    image: 'macos-monterey-12.4-xcode-13.4',
-    sdkSemverRange: '>=45 <47',
-    workflows: [Workflow.MANAGED],
-  },
-  {
-    image: 'macos-monterey-12.6-xcode-14.0',
-    sdkSemverRange: '>=47',
-  },
-  {
-    image: 'macos-monterey-12.6-xcode-14.0',
-    reactNativeSemverRange: '>=0.70.0',
-  },
-];
-
 export interface BuilderEnvironment {
-  image?: typeof builderBaseImages[number];
+  image?: string;
   node?: string;
   yarn?: string;
   expoCli?: string;
@@ -90,7 +54,7 @@ export interface BuilderEnvironment {
 }
 
 const BuilderEnvironmentSchema = Joi.object({
-  image: Joi.string().valid(...builderBaseImages),
+  image: Joi.string(),
   node: Joi.string(),
   yarn: Joi.string(),
   expoCli: Joi.string(),
