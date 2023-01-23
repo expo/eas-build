@@ -18,15 +18,16 @@ const EasBuildInternalResultSchema = Joi.object<{ job: object; metadata: object 
 export async function runEasBuildInternalAsync<TJob extends Job>(
   ctx: BuildContext<TJob>
 ): Promise<void> {
-  const { cmd, args } = resolveEasCommandPrefix();
+  const { cmd, args, extraEnv } = resolveEasCommandPrefixAndEnv();
   const { buildProfile } = ctx.job;
   assert(buildProfile, 'build profile is missing in a build from git-based integration.');
+  ctx.logger.info(ctx.job.secrets);
   const result = await spawn(
     cmd,
     [...args, 'build:internal', '--platform', ctx.job.platform, '--profile', buildProfile],
     {
       cwd: ctx.reactNativeProjectDirectory,
-      env: { ...ctx.env, EXPO_TOKEN: ctx.job.secrets.robotAccessToken },
+      env: { ...ctx.env, EXPO_TOKEN: ctx.job.secrets.robotAccessToken, ...extraEnv },
       logger: ctx.logger,
       mode: PipeMode.STDERR_ONLY_AS_STDOUT,
     }
@@ -40,7 +41,7 @@ export async function runEasBuildInternalAsync<TJob extends Job>(
 export async function configureEnvFromBuildProfileAsync<TJob extends Job>(
   ctx: BuildContext<TJob>
 ): Promise<void> {
-  const { cmd, args } = resolveEasCommandPrefix();
+  const { cmd, args, extraEnv } = resolveEasCommandPrefixAndEnv();
   const { buildProfile } = ctx.job;
   assert(buildProfile, 'build profile is missing in a build from git-based integration.');
   let spawnResult;
@@ -60,7 +61,7 @@ export async function configureEnvFromBuildProfileAsync<TJob extends Job>(
       ],
       {
         cwd: ctx.reactNativeProjectDirectory,
-        env: ctx.env,
+        env: { ...ctx.env, ...extraEnv },
       }
     );
   } catch (err: any) {
@@ -74,13 +75,21 @@ export async function configureEnvFromBuildProfileAsync<TJob extends Job>(
   ctx.updateEnv(env);
 }
 
-function resolveEasCommandPrefix(): { cmd: string; args: string[] } {
+function resolveEasCommandPrefixAndEnv(): { cmd: string; args: string[]; extraEnv: Env } {
   if (process.env.ENVIRONMENT === 'development') {
-    return { cmd: process.env.EAS_BUILD_INTERNAL_EXECUTABLE ?? `eas`, args: [] };
+    return {
+      cmd: process.env.EAS_BUILD_INTERNAL_EXECUTABLE ?? `eas`,
+      args: [],
+      extraEnv: { EXPO_LOCAL: '1' },
+    };
   } else if (process.env.ENVIRONMENT === 'staging') {
-    return { cmd: 'npx', args: ['--yes', `eas-cli@${EAS_CLI_STAGING_NPM_TAG}`] };
+    return {
+      cmd: 'npx',
+      args: ['--yes', `eas-cli@${EAS_CLI_STAGING_NPM_TAG}`],
+      extraEnv: { EXPO_STAGING: '1' },
+    };
   } else {
-    return { cmd: 'npx', args: ['--yes', `eas-cli@${EAS_CLI_PRODUCTION_NPM_TAG}`] };
+    return { cmd: 'npx', args: ['--yes', `eas-cli@${EAS_CLI_PRODUCTION_NPM_TAG}`], extraEnv: {} };
   }
 }
 
