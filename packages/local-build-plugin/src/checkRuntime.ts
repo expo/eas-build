@@ -64,7 +64,7 @@ const validators: Validator[] = [
             'Yarn version in your eas.json does not match the yarn currently installed in your system'
           );
         }
-      } catch (err) {
+      } catch {
         warn("Yarn is not available, make sure it's installed and in your PATH");
       }
     },

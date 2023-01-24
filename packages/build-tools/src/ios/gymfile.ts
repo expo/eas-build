@@ -52,10 +52,9 @@ export async function createGymfileForArchiveBuild({
     });
   }
 
-  const ICLOUD_CONTAINER_ENVIRONMENT = (entitlements as Record<
-    string,
-    string | Record<string, string>
-  >)?.['com.apple.developer.icloud-container-environment'] as string | undefined;
+  const ICLOUD_CONTAINER_ENVIRONMENT = (
+    entitlements as Record<string, string | Record<string, string>>
+  )?.['com.apple.developer.icloud-container-environment'] as string | undefined;
 
   await fs.mkdirp(logsDirectory);
   await createGymfile({

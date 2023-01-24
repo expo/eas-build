@@ -26,9 +26,9 @@ export async function findXcodeBuildLogsPathAsync(
   if (customLogPaths[0]) {
     return customLogPaths[0];
   }
-  const fallbackLogPaths = (
-    await fg('Library/Logs/gym/*.log', { cwd: os.homedir() })
-  ).map((relativePath) => path.join(os.homedir(), relativePath));
+  const fallbackLogPaths = (await fg('Library/Logs/gym/*.log', { cwd: os.homedir() })).map(
+    (relativePath) => path.join(os.homedir(), relativePath)
+  );
 
   return customLogPaths[0] ?? fallbackLogPaths[0] ?? undefined;
 }

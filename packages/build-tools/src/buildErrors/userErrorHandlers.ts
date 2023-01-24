@@ -79,7 +79,8 @@ export const userErrorHandlers: ErrorHandler<UserFacingError>[] = [
     // Execution failed for task ':app:processReleaseGoogleServices'.
     // > File google-services.json is missing. The Google Services Plugin cannot function without it.
     //    Searched Location:
-    regexp: /File google-services\.json is missing\. The Google Services Plugin cannot function without it/,
+    regexp:
+      /File google-services\.json is missing\. The Google Services Plugin cannot function without it/,
     createError: () =>
       new UserFacingError(
         'EAS_BUILD_MISSING_GOOGLE_SERVICES_JSON_ERROR',
@@ -109,7 +110,8 @@ export const userErrorHandlers: ErrorHandler<UserFacingError>[] = [
     // react-native-google-maps (from `/Users/expo/workingdir/build/node_modules/react-native-maps`)
     // Specs satisfying the `react-native-google-maps (from `/Users/expo/workingdir/build/node_modules/react-native-maps`)` dependency were found, but they required a higher minimum deployment target.
     // Error: Compatible versions of some pods could not be resolved.
-    regexp: /Specs satisfying the `(.*)` dependency were found, but they required a higher minimum deployment target/,
+    regexp:
+      /Specs satisfying the `(.*)` dependency were found, but they required a higher minimum deployment target/,
     createError: (_, { job }) => {
       return new UserFacingError(
         'EAS_BUILD_HIGHER_MINIMUM_DEPLOYMENT_TARGET_ERROR',
@@ -155,7 +157,8 @@ You are seeing this error because either:
     // [stderr] npm ERR! Fix the upstream dependency conflict, or retry
     // [stderr] npm ERR! this command with --force, or --legacy-peer-deps
     // [stderr] npm ERR! to accept an incorrect (and potentially broken) dependency resolution.
-    regexp: /Fix the upstream dependency conflict, or retry.*\s.*this command with --force, or --legacy-peer-deps/,
+    regexp:
+      /Fix the upstream dependency conflict, or retry.*\s.*this command with --force, or --legacy-peer-deps/,
     createError: (matchResult: RegExpMatchArray) => {
       if (matchResult.length >= 2) {
         return new UserFacingError(
@@ -196,7 +199,8 @@ You are seeing this error because either:
     // [1/4] Resolving packages...
     // [2/4] Fetching packages...
     // [stderr] error https://registry.yarnpkg.com/jest-util/-/jest-util-26.6.2.tgz: Extracting tar content of undefined failed, the file appears to be corrupt: "ENOENT: no such file or directory, chmod '/Users/expo/Library/Caches/Yarn/v6/npm-jest-util-26.6.2-907535dbe4d5a6cb4c47ac9b926f6af29576cbc1-integrity/node_modules/jest-util/build/pluralize.d.ts'"
-    regexp: /\[1\/4\] Resolving packages...\s*\[2\/4\] Fetching packages...\s*\[1\/4\] Resolving packages...\s*\[2\/4\] Fetching packages.../,
+    regexp:
+      /\[1\/4\] Resolving packages...\s*\[2\/4\] Fetching packages...\s*\[1\/4\] Resolving packages...\s*\[2\/4\] Fetching packages.../,
     createError: (matchResult: RegExpMatchArray) => {
       if (matchResult) {
         return new UserFacingError(

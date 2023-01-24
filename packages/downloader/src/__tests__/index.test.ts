@@ -47,7 +47,7 @@ describe('downloadFile', () => {
   it('should cleanup file on error', async () => {
     try {
       await downloadFile(missingFileInS3Bucket, tmpPathLocation, { timeout: 1 });
-    } catch (_) {
+    } catch {
       /* empty block statement */
     }
     const fileExists = await fs.pathExists(tmpPathLocation);

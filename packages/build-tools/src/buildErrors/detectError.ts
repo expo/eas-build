@@ -23,7 +23,7 @@ async function maybeReadXcodeBuildLogs(
     }
 
     return await fs.readFile(xcodeBuildLogsPath, 'utf-8');
-  } catch (err: any) {
+  } catch {
     return undefined;
   }
 }
@@ -82,11 +82,13 @@ export async function resolveBuildPhaseErrorAsync(
 
   const isUnknownUserError =
     !userFacingError ||
-    ([
-      errors.ErrorCode.UNKNOWN_ERROR,
-      errors.ErrorCode.UNKNOWN_GRADLE_ERROR,
-      errors.ErrorCode.UNKNOWN_FASTLANE_ERROR,
-    ] as string[]).includes(userFacingError.errorCode);
+    (
+      [
+        errors.ErrorCode.UNKNOWN_ERROR,
+        errors.ErrorCode.UNKNOWN_GRADLE_ERROR,
+        errors.ErrorCode.UNKNOWN_FASTLANE_ERROR,
+      ] as string[]
+    ).includes(userFacingError.errorCode);
   const message =
     (isUnknownUserError ? buildError?.message : userFacingError.message) ?? userFacingError.message;
   const errorCode =
