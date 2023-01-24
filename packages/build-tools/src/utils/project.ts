@@ -21,10 +21,13 @@ export function runExpoCliCommand<TJob extends Job>(
   ctx: BuildContext<TJob>,
   args: string[],
   options: SpawnOptions,
-  { forceUseGlobalExpoCli = false } = {}
+  {
+    forceUseGlobalExpoCli = false,
+    npmVersionAtLeast7,
+  }: { forceUseGlobalExpoCli?: boolean; npmVersionAtLeast7: boolean }
 ): SpawnPromise<SpawnResult> {
   if (shouldUseGlobalExpoCli(ctx, forceUseGlobalExpoCli)) {
-    return ctx.runGlobalExpoCliCommand(args.join(' '), options);
+    return ctx.runGlobalExpoCliCommand(args, options, npmVersionAtLeast7);
   } else {
     const argsWithExpo = ['expo', ...args];
     if (ctx.packageManager === PackageManager.NPM) {

@@ -3,6 +3,7 @@ import { SpawnOptions } from '@expo/turtle-spawn';
 import semver from 'semver';
 
 import { BuildContext } from '../context';
+import { isAtLeastNpm7Async } from '../utils/packageManager';
 import { runExpoCliCommand, shouldUseGlobalExpoCli } from '../utils/project';
 
 import { installDependenciesAsync } from './installDependencies';
@@ -30,7 +31,9 @@ export async function prebuildAsync<TJob extends Job>(
   };
 
   const prebuildCommandArgs = getPrebuildCommandArgs(ctx);
-  await runExpoCliCommand(ctx, prebuildCommandArgs, spawnOptions);
+  await runExpoCliCommand(ctx, prebuildCommandArgs, spawnOptions, {
+    npmVersionAtLeast7: await isAtLeastNpm7Async(),
+  });
   await installDependenciesAsync(ctx);
 }
 

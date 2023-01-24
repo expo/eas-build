@@ -51,7 +51,11 @@ export interface BuildContextOptions {
   /**
    * @deprecated
    */
-  runGlobalExpoCliCommand: (args: string, options: SpawnOptions) => SpawnPromise<SpawnResult>;
+  runGlobalExpoCliCommand: (
+    args: string[],
+    options: SpawnOptions,
+    npmVersionAtLeast7: boolean
+  ) => SpawnPromise<SpawnResult>;
   uploadArtifacts: (type: ArtifactType, paths: string[], logger?: bunyan) => Promise<string | null>;
   reportError?: (
     msg: string,
@@ -74,8 +78,9 @@ export class BuildContext<TJob extends Job> {
    * @deprecated
    */
   public readonly runGlobalExpoCliCommand: (
-    args: string,
-    options: SpawnOptions
+    args: string[],
+    options: SpawnOptions,
+    npmVersionAtLeast7: boolean
   ) => SpawnPromise<SpawnResult>;
   public readonly reportError?: (
     msg: string,
