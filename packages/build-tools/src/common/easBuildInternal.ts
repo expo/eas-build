@@ -21,7 +21,6 @@ export async function runEasBuildInternalAsync<TJob extends Job>(
   const { cmd, args, extraEnv } = resolveEasCommandPrefixAndEnv();
   const { buildProfile } = ctx.job;
   assert(buildProfile, 'build profile is missing in a build from git-based integration.');
-  ctx.logger.info(ctx.job.secrets);
   const result = await spawn(
     cmd,
     [...args, 'build:internal', '--platform', ctx.job.platform, '--profile', buildProfile],
