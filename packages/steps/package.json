@@ -37,5 +37,10 @@
   },
   "engines": {
     "node": ">=14.0.0"
+  },
+  "dependencies": {
+    "@expo/logger": "^0.0.26",
+    "@expo/turtle-spawn": "^0.0.27",
+    "uuid": "^9.0.0"
   }
 }
