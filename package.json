@@ -14,7 +14,7 @@
   "devDependencies": {
     "@babel/core": "^7.17.7",
     "@babel/eslint-parser": "^7.17.0",
-    "@types/node": "^16.11.26",
+    "@types/node": "^18.11.18",
     "eslint": "^8.11.0",
     "eslint-config-universe": "^10.0.0",
     "eslint-plugin-import": "^2.25.4",

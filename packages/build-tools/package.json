@@ -42,7 +42,7 @@
     "@types/fs-extra": "^9.0.13",
     "@types/jest": "^26.0.20",
     "@types/lodash": "^4.14.191",
-    "@types/node": "^16.11.26",
+    "@types/node": "^18.11.18",
     "@types/node-forge": "^1.0.1",
     "@types/plist": "^3.0.2",
     "@types/semver": "^7.3.9",
