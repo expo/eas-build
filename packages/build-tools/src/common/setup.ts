@@ -6,6 +6,7 @@ import { BuildContext } from '../context';
 import { deleteXcodeEnvLocalIfExistsAsync } from '../ios/xcodeEnv';
 import { Hook, runHookIfPresent } from '../utils/hooks';
 import { createNpmrcIfNotExistsAsync, logIfNpmrcExistsAsync } from '../utils/npmrc';
+import { isAtLeastNpm7Async } from '../utils/packageManager';
 import { readPackageJson, runExpoCliCommand } from '../utils/project';
 
 import { prepareProjectSourcesAsync } from './projectSources';
@@ -87,7 +88,7 @@ async function runExpoDoctor<TJob extends Job>(ctx: BuildContext<TJob>): Promise
         env: ctx.env,
       },
       // local Expo CLI does not have "doctor" for now
-      { forceUseGlobalExpoCli: true }
+      { forceUseGlobalExpoCli: true, npmVersionAtLeast7: await isAtLeastNpm7Async() }
     );
     timeout = setTimeout(() => {
       promise.child.kill();

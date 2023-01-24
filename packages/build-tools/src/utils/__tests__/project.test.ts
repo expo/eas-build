@@ -25,7 +25,7 @@ describe(runExpoCliCommand, () => {
       when(mockCtx.runGlobalExpoCliCommand).thenReturn(jest.fn());
       const ctx = instance(mockCtx);
 
-      void runExpoCliCommand(ctx, ['doctor'], {});
+      void runExpoCliCommand(ctx, ['doctor'], {}, { npmVersionAtLeast7: true });
       expect(ctx.runGlobalExpoCliCommand).not.toHaveBeenCalled();
       expect(spawn).toHaveBeenCalledWith('npx', ['expo', 'doctor'], expect.any(Object));
     });
@@ -41,7 +41,7 @@ describe(runExpoCliCommand, () => {
       when(mockCtx.runGlobalExpoCliCommand).thenReturn(jest.fn());
       const ctx = instance(mockCtx);
 
-      void runExpoCliCommand(ctx, ['doctor'], {});
+      void runExpoCliCommand(ctx, ['doctor'], {}, { npmVersionAtLeast7: true });
       expect(ctx.runGlobalExpoCliCommand).not.toHaveBeenCalled();
       expect(spawn).toHaveBeenCalledWith('npx', ['expo', 'doctor'], expect.any(Object));
     });
@@ -57,7 +57,7 @@ describe(runExpoCliCommand, () => {
       when(mockCtx.runGlobalExpoCliCommand).thenReturn(jest.fn());
       const ctx = instance(mockCtx);
 
-      void runExpoCliCommand(ctx, ['doctor'], {});
+      void runExpoCliCommand(ctx, ['doctor'], {}, { npmVersionAtLeast7: true });
       expect(ctx.runGlobalExpoCliCommand).not.toHaveBeenCalled();
       expect(spawn).toHaveBeenCalledWith('pnpm', ['expo', 'doctor'], expect.any(Object));
     });
@@ -73,8 +73,17 @@ describe(runExpoCliCommand, () => {
       when(mockCtx.runGlobalExpoCliCommand).thenReturn(jest.fn());
       const ctx = instance(mockCtx);
 
-      void runExpoCliCommand(ctx, ['doctor'], {}, { forceUseGlobalExpoCli: true });
-      expect(ctx.runGlobalExpoCliCommand).toHaveBeenCalledWith('doctor', expect.any(Object));
+      void runExpoCliCommand(
+        ctx,
+        ['doctor'],
+        {},
+        { npmVersionAtLeast7: true, forceUseGlobalExpoCli: true }
+      );
+      expect(ctx.runGlobalExpoCliCommand).toHaveBeenCalledWith(
+        ['doctor'],
+        expect.any(Object),
+        true
+      );
       expect(spawn).not.toHaveBeenCalled();
     });
   });
@@ -92,8 +101,12 @@ describe(runExpoCliCommand, () => {
       when(mockCtx.runGlobalExpoCliCommand).thenReturn(jest.fn());
       const ctx = instance(mockCtx);
 
-      void runExpoCliCommand(ctx, ['doctor'], {});
-      expect(ctx.runGlobalExpoCliCommand).toHaveBeenCalledWith('doctor', expect.any(Object));
+      void runExpoCliCommand(ctx, ['doctor'], {}, { npmVersionAtLeast7: true });
+      expect(ctx.runGlobalExpoCliCommand).toHaveBeenCalledWith(
+        ['doctor'],
+        expect.any(Object),
+        true
+      );
       expect(spawn).not.toHaveBeenCalled();
     });
   });
@@ -110,8 +123,12 @@ describe(runExpoCliCommand, () => {
       when(mockCtx.runGlobalExpoCliCommand).thenReturn(jest.fn());
       const ctx = instance(mockCtx);
 
-      void runExpoCliCommand(ctx, ['doctor'], {});
-      expect(ctx.runGlobalExpoCliCommand).toHaveBeenCalledWith('doctor', expect.any(Object));
+      void runExpoCliCommand(ctx, ['doctor'], {}, { npmVersionAtLeast7: true });
+      expect(ctx.runGlobalExpoCliCommand).toHaveBeenCalledWith(
+        ['doctor'],
+        expect.any(Object),
+        true
+      );
       expect(spawn).not.toHaveBeenCalled();
     });
   });

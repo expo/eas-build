@@ -1,4 +1,6 @@
+import spawnAsync from '@expo/turtle-spawn';
 import * as PackageManagerUtils from '@expo/package-manager';
+import semver from 'semver';
 
 export enum PackageManager {
   YARN = 'yarn',
@@ -23,4 +25,9 @@ export function resolvePackageManager(directory: string): PackageManager {
 
 export function findPackagerRootDir(currentDir: string): string {
   return PackageManagerUtils.findWorkspaceRoot(currentDir) ?? currentDir;
+}
+
+export async function isAtLeastNpm7Async(): Promise<boolean> {
+  const version = (await spawnAsync('npm', ['--version'])).stdout.trim();
+  return semver.gte(version, '7.0.0');
 }
