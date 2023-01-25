@@ -28,6 +28,6 @@ export function findPackagerRootDir(currentDir: string): string {
 }
 
 export async function isAtLeastNpm7Async(): Promise<boolean> {
-  const version = (await spawnAsync('npm', ['--version'])).stdout.trim();
+  const version = (await spawnAsync('npm', ['--version'], { stdio: 'pipe' })).stdout.trim();
   return semver.gte(version, '7.0.0');
 }
