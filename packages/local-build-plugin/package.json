@@ -1,6 +1,6 @@
 {
   "name": "eas-cli-local-build-plugin",
-  "version": "0.0.128",
+  "version": "0.0.129",
   "description": "Tool for running EAS compatible builds on a local machine.",
   "main": "dist/main.js",
   "bin": {
@@ -20,11 +20,11 @@
   "bugs": "https://github.com/expo/eas-build/issues",
   "license": "BUSL-1.1",
   "dependencies": {
-    "@expo/build-tools": "0.1.171",
+    "@expo/build-tools": "0.1.172",
     "@expo/bunyan": "^4.0.0",
-    "@expo/eas-build-job": "0.2.103",
+    "@expo/eas-build-job": "0.2.104",
     "@expo/spawn-async": "^1.7.0",
-    "@expo/turtle-spawn": "0.0.26",
+    "@expo/turtle-spawn": "0.0.27",
     "chalk": "^5.2.0",
     "env-paths": "^3.0.0",
     "fs-extra": "^11.1.0",

@@ -1,6 +1,6 @@
 {
   "name": "@expo/build-tools",
-  "version": "0.1.171",
+  "version": "0.1.172",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "files": [
@@ -22,13 +22,13 @@
   "dependencies": {
     "@expo/config": "^7.0.3",
     "@expo/config-plugins": "^5.0.4",
-    "@expo/downloader": "0.0.21",
-    "@expo/eas-build-job": "0.2.103",
-    "@expo/logger": "0.0.25",
+    "@expo/downloader": "0.0.22",
+    "@expo/eas-build-job": "0.2.104",
+    "@expo/logger": "0.0.26",
     "@expo/package-manager": "^0.0.57",
     "@expo/plist": "^0.0.20",
-    "@expo/template-file": "0.1.23",
-    "@expo/turtle-spawn": "0.0.26",
+    "@expo/template-file": "0.1.24",
+    "@expo/turtle-spawn": "0.0.27",
     "@expo/xcpretty": "^4.2.2",
     "fast-glob": "^3.2.12",
     "fs-extra": "^11.1.0",
