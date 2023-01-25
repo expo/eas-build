@@ -21,11 +21,10 @@ export function sanitizeJob(rawJob: object): Job {
     abortEarly: false,
   });
 
-  const job: Job = value;
-
   if (error) {
     throw error;
   } else {
+    const job: Job = value;
     return job;
   }
 }

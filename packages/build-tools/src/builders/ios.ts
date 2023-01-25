@@ -114,10 +114,11 @@ async function readEntitlementsAsync(
   { scheme, buildConfiguration }: { scheme: string; buildConfiguration: string }
 ): Promise<object | null> {
   try {
-    const applicationTargetName = await IOSConfig.BuildScheme.getApplicationTargetNameForSchemeAsync(
-      ctx.reactNativeProjectDirectory,
-      scheme
-    );
+    const applicationTargetName =
+      await IOSConfig.BuildScheme.getApplicationTargetNameForSchemeAsync(
+        ctx.reactNativeProjectDirectory,
+        scheme
+      );
     const entitlementsPath = IOSConfig.Entitlements.getEntitlementsPath(
       ctx.reactNativeProjectDirectory,
       {

@@ -101,13 +101,15 @@ export const buildErrorHandlers: ErrorHandler<TrackedBuildError>[] = [
     //     at async /Users/expo/workingdir/build/node_modules/@expo/prebuild-config/build/plugins/icons/withIosIcons.js:71:5
     //     at async action (/Users/expo/workingdir/build/node_modules/@expo/config-plugins/build/plugins/withMod.js:235:23)
     //     at async interceptingMod (/Users/expo/workingdir/build/node_modules/@expo/config-plugins/build/plugins/withMod.js:126:21)
-    regexp: /ENOENT: no such file or directory[\s\S]*prebuild-config\/build\/plugins\/icons\/with(Android|Ios)Icons\.js/,
+    regexp:
+      /ENOENT: no such file or directory[\s\S]*prebuild-config\/build\/plugins\/icons\/with(Android|Ios)Icons\.js/,
     createError: () => new TrackedBuildError('EXPO_CLI_MISSING_ICON', 'expo-cli: Missing icon.'),
   },
   {
     phase: BuildPhase.PREBUILD,
     // Cannot determine which native SDK version your project uses because the module `expo` is not installed. Please install it with `yarn add expo` and try again.
-    regexp: /Cannot determine which native SDK version your project uses because the module `expo` is not installed/,
+    regexp:
+      /Cannot determine which native SDK version your project uses because the module `expo` is not installed/,
     createError: () =>
       new TrackedBuildError('EXPO_CLI_EXPO_PACKAGE_MISSING', 'expo-cli: "expo" package missing.'),
   },
@@ -138,7 +140,8 @@ export const buildErrorHandlers: ErrorHandler<TrackedBuildError>[] = [
     platform: Platform.IOS,
     phase: BuildPhase.INSTALL_PODS,
     // [!] Invalid `Podfile` file: 783: unexpected token at 'info Run CLI with --verbose flag for more details.
-    regexp: /\[!\] Invalid `Podfile` file: .* unexpected token at 'info Run CLI with --verbose flag for more details./,
+    regexp:
+      /\[!\] Invalid `Podfile` file: .* unexpected token at 'info Run CLI with --verbose flag for more details./,
     createError: () =>
       new TrackedBuildError('NODE_ENV_PRODUCTION_DEFINED', 'npm: NODE_ENV=production was defined.'),
   },
@@ -218,7 +221,8 @@ export const buildErrorHandlers: ErrorHandler<TrackedBuildError>[] = [
     platform: Platform.ANDROID,
     // /home/expo/workingdir/build/android/app/src/main/AndroidManifest.xml:27:9-33:20 Error:
     //  	android:exported needs to be explicitly specified for element <activity#androidx.test.core.app.InstrumentationActivityInvoker$EmptyActivity>. Apps targeting Android 12 and higher are required to specify an explicit value for `android:exported` when the corresponding component has an intent filter defined. See https://developer.android.com/guide/topics/manifest/activity-element#exported for details.
-    regexp: /Apps targeting Android 12 and higher are required to specify an explicit value for `android:exported`/,
+    regexp:
+      /Apps targeting Android 12 and higher are required to specify an explicit value for `android:exported`/,
     createError: () =>
       new TrackedBuildError(
         'REQUIRE_EXPLICIT_EXPORTED_ANDROID_12',
@@ -252,7 +256,8 @@ export const buildErrorHandlers: ErrorHandler<TrackedBuildError>[] = [
     platform: Platform.ANDROID,
     // Execution failed for task ':app:processDebugGoogleServices'.
     // > Missing project_info object
-    regexp: /Execution failed for task ':app:process.*GoogleServices'.*\s.*Missing project_info object/,
+    regexp:
+      /Execution failed for task ':app:process.*GoogleServices'.*\s.*Missing project_info object/,
     createError: () =>
       new TrackedBuildError(
         'GRADLE_MALFORMED_GOOGLE_SERVICES_JSON',
@@ -264,7 +269,8 @@ export const buildErrorHandlers: ErrorHandler<TrackedBuildError>[] = [
     platform: Platform.ANDROID,
     // Execution failed for task ':app:bundleReleaseJsAndAssets'.
     // > Process 'command 'node'' finished with non-zero exit value 1
-    regexp: /Execution failed for task ':app:bundleReleaseJsAndAssets'.*\s.*Process 'command 'node'' finished with non-zero exit value/,
+    regexp:
+      /Execution failed for task ':app:bundleReleaseJsAndAssets'.*\s.*Process 'command 'node'' finished with non-zero exit value/,
     createError: () =>
       new TrackedBuildError(
         'GRADLE_BUILD_BUNDLER_ERROR',
@@ -310,7 +316,8 @@ export const buildErrorHandlers: ErrorHandler<TrackedBuildError>[] = [
     platform: Platform.IOS,
     // The following build commands failed:
     //	PhaseScriptExecution [CP-User]\ Generate\ app.manifest\ for\ expo-updates /Users/expo/Library/Developer/Xcode/DerivedData/Kenkohub-eqseedlxbgrzjqagscbclhbtstwh/Build/Intermediates.noindex/ArchiveIntermediates/Kenkohub/IntermediateBuildFilesPath/Pods.build/Release-iphoneos/EXUpdates.build/Script-BB6B5FD28815C045A20B2E5E3FEEBD6E.sh (in target 'EXUpdates' from project 'Pods')
-    regexp: /The following build commands failed.*\s.*\[CP-User\]\\ Generate\\ app\.manifest\\ for\\ expo-updates/,
+    regexp:
+      /The following build commands failed.*\s.*\[CP-User\]\\ Generate\\ app\.manifest\\ for\\ expo-updates/,
     createError: () =>
       new TrackedBuildError(
         'XCODE_BUILD_UPDATES_PHASE_SCRIPT',
@@ -334,7 +341,8 @@ export const buildErrorHandlers: ErrorHandler<TrackedBuildError>[] = [
     platform: Platform.IOS,
     // The following build commands failed:
     //	PhaseScriptExecution Bundle\ React\ Native\ code\ and\ images /Users/expo/Library/Developer/Xcode/DerivedData/cnaxwpahkhcjluhigkcwrturapmm/Build/Intermediates.noindex/ArchiveIntermediates/Test/IntermediateBuildFilesPath/Test.build/Release-iphoneos/Test.build/Script-00DD1BFF151E006B06BC.sh (in target 'Test' from project 'Test')
-    regexp: /The following build commands failed.*\s.*PhaseScriptExecution Bundle\\ React\\ Native\\ code\\ and\\ images \/Users\/expo/,
+    regexp:
+      /The following build commands failed.*\s.*PhaseScriptExecution Bundle\\ React\\ Native\\ code\\ and\\ images \/Users\/expo/,
     createError: () =>
       new TrackedBuildError(
         'XCODE_BUILD_BUNDLER_ERROR',
