@@ -12,7 +12,8 @@
     "build": "tsc",
     "prepack": "rm -rf dist && tsc -p tsconfig.build.json",
     "test": "jest --config jest.config.js --passWithNoTests",
-    "test:watch": "jest --config jest.config.js --watch"
+    "test:watch": "jest --config jest.config.js --watch",
+    "clean": "rm -rf node_modules dist coverage"
   },
   "author": "Expo <support@expo.io>",
   "bugs": "https://github.com/expo/eas-build/issues",

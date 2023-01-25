@@ -10,7 +10,8 @@
     "start": "yarn watch",
     "watch": "tsc --watch --preserveWatchOutput",
     "build": "tsc",
-    "prepack": "rm -rf dist && tsc -p tsconfig.build.json"
+    "prepack": "rm -rf dist && tsc -p tsconfig.build.json",
+    "clean": "rm -rf node_modules dist coverage"
   },
   "engines": {
     "node": ">=12.9.0"
