@@ -7,8 +7,7 @@
     "build": "lerna bootstrap && lerna run build",
     "lint": "eslint 'packages/*/src/**/*.ts'",
     "test": "lerna run test",
-    "clean": "lerna run clean && rm -rf node_modules",
-    "release": "./scripts/release.js"
+    "clean": "lerna run clean && rm -rf node_modules"
   },
   "engines": {
     "node": ">=10"
