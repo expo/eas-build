@@ -10,7 +10,7 @@
     "clean": "lerna run clean && rm -rf node_modules"
   },
   "engines": {
-    "node": ">=10"
+    "node": ">=14.0.0"
   },
   "devDependencies": {
     "@types/node": "^18.11.18",

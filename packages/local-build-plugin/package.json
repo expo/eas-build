@@ -14,7 +14,7 @@
     "clean": "rm -rf node_modules dist coverage"
   },
   "engines": {
-    "node": ">=12.9.0"
+    "node": ">=14.0.0"
   },
   "author": "Expo <support@expo.io>",
   "bugs": "https://github.com/expo/eas-build/issues",
