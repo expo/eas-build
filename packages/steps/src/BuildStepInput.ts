@@ -3,9 +3,9 @@ import { BuildStepInputError } from './errors/BuildStepInputError.js';
 export class BuildStepInput {
   public readonly id: string;
 
-  readonly #defaultValue?: string;
-  readonly #required: boolean;
-  #value?: string;
+  private readonly defaultValue?: string;
+  private readonly required: boolean;
+  private _value?: string;
 
   constructor({
     id,
@@ -17,23 +17,23 @@ export class BuildStepInput {
     required?: boolean;
   }) {
     this.id = id;
-    this.#defaultValue = defaultValue;
-    this.#required = required;
+    this.defaultValue = defaultValue;
+    this.required = required;
   }
 
   get value(): string | undefined {
-    const value = this.#value ?? this.#defaultValue;
-    if (this.#required && value === undefined) {
+    const value = this._value ?? this.defaultValue;
+    if (this.required && value === undefined) {
       throw new BuildStepInputError(`Input parameter "${this.id}" is required but it was not set.`);
     }
     return value;
   }
 
   set(value: string | undefined): BuildStepInput {
-    if (this.#required && value === undefined) {
+    if (this.required && value === undefined) {
       throw new BuildStepInputError(`Input parameter "${this.id}" is required.`);
     }
-    this.#value = value;
+    this._value = value;
     return this;
   }
 }

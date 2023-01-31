@@ -3,28 +3,28 @@ import { BuildStepOutputError } from './errors/BuildStepOutputError.js';
 export class BuildStepOutput {
   public readonly id: string;
 
-  readonly #required: boolean;
-  #value?: string;
+  private readonly required: boolean;
+  private _value?: string;
 
   constructor({ id, required = true }: { id: string; required?: boolean }) {
     this.id = id;
-    this.#required = required;
+    this.required = required;
   }
 
   get value(): string | undefined {
-    if (this.#required && this.#value === undefined) {
+    if (this.required && this._value === undefined) {
       throw new BuildStepOutputError(
         `Output parameter "${this.id}" is required but it was not set.`
       );
     }
-    return this.#value;
+    return this._value;
   }
 
   set(value: string | undefined): BuildStepOutput {
-    if (this.#required && value === undefined) {
+    if (this.required && value === undefined) {
       throw new BuildStepOutputError(`Output parameter "${this.id}" is required.`);
     }
-    this.#value = value;
+    this._value = value;
     return this;
   }
 }

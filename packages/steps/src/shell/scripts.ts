@@ -1,4 +1,3 @@
-import os from 'os';
 import path from 'path';
 import fs from 'fs';
 
@@ -26,7 +25,7 @@ export async function cleanUpTemporaryDirAsync(ctx: BuildStepContext): Promise<v
 }
 
 function getTemporaryScriptsDirPath(ctx: BuildStepContext, pathPrefix?: string): string {
-  const paths: string[] = [os.tmpdir(), 'eas-build-steps', ctx.buildId];
+  const paths: string[] = [ctx.baseWorkingDirectory, 'scripts'];
   if (pathPrefix) {
     paths.push(pathPrefix);
   }

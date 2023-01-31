@@ -1,5 +1,4 @@
 import { bunyan } from '@expo/logger';
-import spawnAsync from '@expo/turtle-spawn';
 import { v4 as uuidv4 } from 'uuid';
 
 import { BuildStepContext } from './BuildStepContext.js';
@@ -7,6 +6,7 @@ import { BuildStepInput } from './BuildStepInput.js';
 import { BuildStepOutput } from './BuildStepOutput.js';
 import { getDefaultShell, getShellCommandAndArgs } from './shell/command.js';
 import { saveScriptToTemporaryFileAsync } from './shell/scripts.js';
+import { spawnAsync } from './shell/spawn.js';
 
 export class BuildStep {
   public id: string;

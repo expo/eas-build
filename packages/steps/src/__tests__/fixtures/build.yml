@@ -1,0 +1,12 @@
+build:
+  name: Foobar
+  steps:
+    - run: echo "Hi!"
+    - run:
+        name: Say HELLO
+        command: |
+          echo "H"
+          echo "E"
+          echo "L"
+          echo "L"
+          echo "O"
