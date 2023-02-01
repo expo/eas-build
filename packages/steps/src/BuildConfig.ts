@@ -12,8 +12,9 @@ export const BuildConfigSchema = Joi.object<BuildConfig>({
               id: Joi.string(),
               name: Joi.string(),
               workingDirectory: Joi.string(),
+              shell: Joi.string(),
               command: Joi.string().required(),
-            })
+            }).rename('working_directory', 'workingDirectory')
           ),
         })
       )
@@ -37,6 +38,7 @@ export type BuildStepConfig =
             id?: string;
             name?: string;
             workingDirectory?: string;
+            shell?: string;
             command: string;
           };
     };

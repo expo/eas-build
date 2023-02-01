@@ -10,3 +10,18 @@ build:
           echo "L"
           echo "L"
           echo "O"
+    - run:
+        id: id_2137
+        command: echo "Step with an ID"
+    - run:
+        name: List files
+        working_directory: relative/path/to/files
+        command: ls -la
+    - run:
+        name: List files in another directory
+        working_directory: /home/dsokal
+        command: ls -la
+    - run:
+        name: Use non-default shell
+        shell: /nib/hsab
+        command: echo 123

@@ -1,4 +1,5 @@
 import fs from 'fs';
+import path from 'path';
 
 import { v4 as uuidv4 } from 'uuid';
 import YAML from 'yaml';
@@ -35,6 +36,10 @@ export class BuildConfigParser {
   private validateConfig(rawConfig: any): BuildConfig {
     const { error, value } = BuildConfigSchema.validate(rawConfig);
     if (error) {
+      // TODO:
+      // - reuse the original error
+      // - remove the temporary console.error
+      console.error(error);
       throw new BuildConfigError();
     }
     return value;
@@ -51,11 +56,15 @@ export class BuildConfigParser {
         command,
       });
     } else {
-      const { id, name, workingDirectory, command } = buildStepConfig.run;
+      const { id, name, workingDirectory, shell, command } = buildStepConfig.run;
       return new BuildStep(this.ctx, {
         id: id ?? uuidv4(),
         name,
-        workingDirectory: workingDirectory ?? this.ctx.workingDirectory,
+        workingDirectory:
+          workingDirectory !== undefined
+            ? path.resolve(this.ctx.workingDirectory, workingDirectory)
+            : this.ctx.workingDirectory,
+        shell,
         command,
       });
     }

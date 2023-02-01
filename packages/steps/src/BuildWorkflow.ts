@@ -1,7 +1,7 @@
 import { BuildStep } from './BuildStep.js';
 
 export class BuildWorkflow {
-  private readonly buildSteps: BuildStep[];
+  public readonly buildSteps: BuildStep[];
 
   constructor({ buildSteps }: { buildSteps: BuildStep[] }) {
     this.buildSteps = buildSteps;
