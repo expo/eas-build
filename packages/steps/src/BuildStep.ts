@@ -2,8 +2,6 @@ import { bunyan } from '@expo/logger';
 import { v4 as uuidv4 } from 'uuid';
 
 import { BuildStepContext } from './BuildStepContext.js';
-import { BuildStepInput } from './BuildStepInput.js';
-import { BuildStepOutput } from './BuildStepOutput.js';
 import { getDefaultShell, getShellCommandAndArgs } from './shell/command.js';
 import { saveScriptToTemporaryFileAsync } from './shell/scripts.js';
 import { spawnAsync } from './shell/spawn.js';
@@ -11,8 +9,6 @@ import { spawnAsync } from './shell/spawn.js';
 export class BuildStep {
   public id: string;
   public name?: string;
-  public inputs?: BuildStepInput[];
-  public outputs?: BuildStepOutput[];
   public command: string;
   public workingDirectory: string;
   public shell: string;
@@ -25,16 +21,12 @@ export class BuildStep {
     {
       id,
       name,
-      inputs,
-      outputs,
       command,
       workingDirectory,
       shell,
     }: {
       id: string;
       name?: string;
-      inputs?: BuildStepInput[];
-      outputs?: BuildStepOutput[];
       command: string;
       workingDirectory: string;
       shell?: string;
@@ -42,8 +34,6 @@ export class BuildStep {
   ) {
     this.id = id;
     this.name = name;
-    this.inputs = inputs;
-    this.outputs = outputs;
     this.command = command;
     this.workingDirectory = workingDirectory;
     this.shell = shell ?? getDefaultShell();
