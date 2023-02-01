@@ -1,26 +1,6 @@
 import Joi from 'joi';
 
-export const BuildConfigSchema = Joi.object<BuildConfig>({
-  build: Joi.object({
-    name: Joi.string(),
-    steps: Joi.array()
-      .items(
-        Joi.object({
-          run: Joi.alternatives(
-            Joi.string(),
-            Joi.object({
-              id: Joi.string(),
-              name: Joi.string(),
-              workingDirectory: Joi.string(),
-              shell: Joi.string(),
-              command: Joi.string().required(),
-            }).rename('working_directory', 'workingDirectory')
-          ),
-        })
-      )
-      .required(),
-  }).required(),
-}).required();
+import { BuildConfigError } from './errors/BuildConfigError';
 
 export interface BuildConfig {
   build: {
@@ -42,3 +22,41 @@ export type BuildStepConfig =
             command: string;
           };
     };
+
+export const BuildConfigSchema = Joi.object<BuildConfig>({
+  build: Joi.object({
+    name: Joi.string(),
+    steps: Joi.array()
+      .items(
+        Joi.object({
+          run: Joi.alternatives().conditional('run', {
+            is: Joi.string(),
+            then: Joi.string().required(),
+            otherwise: Joi.object({
+              id: Joi.string(),
+              name: Joi.string(),
+              workingDirectory: Joi.string(),
+              shell: Joi.string(),
+              command: Joi.string().required(),
+            })
+              .rename('working_directory', 'workingDirectory')
+              .required(),
+          }),
+        })
+      )
+      .required(),
+  }).required(),
+}).required();
+
+export function validateBuildConfig(rawConfig: object): BuildConfig {
+  const { error, value } = BuildConfigSchema.validate(rawConfig, {
+    stripUnknown: true,
+    abortEarly: false,
+  });
+  if (error) {
+    const errorMessage = error.details.map(({ message }) => message).join(', ');
+    throw new BuildConfigError(errorMessage, { cause: error });
+  } else {
+    return value;
+  }
+}

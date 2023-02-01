@@ -4,11 +4,10 @@ import path from 'path';
 import { v4 as uuidv4 } from 'uuid';
 import YAML from 'yaml';
 
-import { BuildConfig, BuildStepConfig, BuildConfigSchema } from './BuildConfig.js';
+import { BuildStepConfig, validateBuildConfig } from './BuildConfig.js';
 import { BuildStep } from './BuildStep.js';
 import { BuildStepContext } from './BuildStepContext.js';
 import { BuildWorkflow } from './BuildWorkflow.js';
-import { BuildConfigError } from './errors/BuildConfigError.js';
 
 export class BuildConfigParser {
   private readonly configPath: string;
@@ -19,7 +18,7 @@ export class BuildConfigParser {
 
   public async parseAsync(): Promise<BuildWorkflow> {
     const rawConfig = await this.readRawConfigAsync();
-    const config = this.validateConfig(rawConfig);
+    const config = validateBuildConfig(rawConfig);
     const steps: BuildStep[] = [];
     for (const stepConfig of config.build.steps) {
       const step = this.createBuildStepFromConfig(stepConfig);
@@ -31,18 +30,6 @@ export class BuildConfigParser {
   private async readRawConfigAsync(): Promise<any> {
     const contents = await fs.promises.readFile(this.configPath, 'utf-8');
     return YAML.parse(contents);
-  }
-
-  private validateConfig(rawConfig: any): BuildConfig {
-    const { error, value } = BuildConfigSchema.validate(rawConfig);
-    if (error) {
-      // TODO:
-      // - reuse the original error
-      // - remove the temporary console.error
-      console.error(error);
-      throw new BuildConfigError();
-    }
-    return value;
   }
 
   private createBuildStepFromConfig(buildStepConfig: BuildStepConfig): BuildStep {
