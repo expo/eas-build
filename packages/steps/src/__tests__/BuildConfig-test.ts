@@ -1,5 +1,5 @@
-import { validateBuildConfig } from '../BuildConfig';
-import { BuildConfigError } from '../errors/BuildConfigError';
+import { validateBuildConfig } from '../BuildConfig.js';
+import { BuildConfigError } from '../errors/BuildConfigError.js';
 
 describe(validateBuildConfig, () => {
   test('can throw BuildConfigError', () => {

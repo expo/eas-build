@@ -4,6 +4,7 @@
     "async-protect"
   ],
   "rules": {
-    "async-protect/async-suffix": "error"
+    "async-protect/async-suffix": "error",
+    "import/extensions": ["error", "always"]
   }
 }

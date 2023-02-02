@@ -1,6 +1,6 @@
 import Joi from 'joi';
 
-import { BuildConfigError } from './errors/BuildConfigError';
+import { BuildConfigError } from './errors/BuildConfigError.js';
 
 export interface BuildConfig {
   build: {
