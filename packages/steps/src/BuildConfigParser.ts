@@ -19,11 +19,9 @@ export class BuildConfigParser {
   public async parseAsync(): Promise<BuildWorkflow> {
     const rawConfig = await this.readRawConfigAsync();
     const config = validateBuildConfig(rawConfig);
-    const steps: BuildStep[] = [];
-    for (const stepConfig of config.build.steps) {
-      const step = this.createBuildStepFromConfig(stepConfig);
-      steps.push(step);
-    }
+    const steps = config.build.steps.map((stepConfig) =>
+      this.createBuildStepFromConfig(stepConfig)
+    );
     return new BuildWorkflow({ buildSteps: steps });
   }
 

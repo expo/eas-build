@@ -7,13 +7,13 @@ import { BuildStepContext } from '../BuildStepContext.js';
 
 export async function saveScriptToTemporaryFileAsync(
   ctx: BuildStepContext,
-  pathPrefix: string,
-  script: string
+  subdirectory: string,
+  scriptContents: string
 ): Promise<string> {
-  const scriptsDir = getTemporaryScriptsDirPath(ctx, pathPrefix);
+  const scriptsDir = getTemporaryScriptsDirPath(ctx, subdirectory);
   await fs.promises.mkdir(scriptsDir, { recursive: true });
   const temporaryScriptPath = path.join(scriptsDir, `${uuidv4()}.sh`);
-  await fs.promises.writeFile(temporaryScriptPath, script);
+  await fs.promises.writeFile(temporaryScriptPath, scriptContents);
   return temporaryScriptPath;
 }
 
@@ -24,10 +24,10 @@ export async function cleanUpTemporaryDirAsync(ctx: BuildStepContext): Promise<v
   ctx.logger.debug(`Removed temporary directory "${scriptsDir}"`);
 }
 
-function getTemporaryScriptsDirPath(ctx: BuildStepContext, pathPrefix?: string): string {
+function getTemporaryScriptsDirPath(ctx: BuildStepContext, subdirectory?: string): string {
   const paths: string[] = [ctx.baseWorkingDirectory, 'scripts'];
-  if (pathPrefix) {
-    paths.push(pathPrefix);
+  if (subdirectory) {
+    paths.push(subdirectory);
   }
   return path.join(...paths);
 }
