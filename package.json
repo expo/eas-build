@@ -2,8 +2,8 @@
   "name": "eas-build",
   "private": "true",
   "scripts": {
-    "start": "lerna bootstrap && lerna run start --parallel",
-    "watch": "lerna bootstrap && lerna run watch --parallel",
+    "start": "lerna bootstrap && lerna run start --stream --parallel",
+    "watch": "lerna bootstrap && lerna run watch --stream --parallel",
     "build": "lerna bootstrap && lerna run build",
     "lint": "eslint 'packages/*/src/**/*.ts'",
     "test": "lerna run test",
