@@ -1,1 +1,3 @@
-export class BuildStepOutputError extends Error {}
+import { UserError } from './UserError.js';
+
+export class BuildStepOutputError extends UserError {}

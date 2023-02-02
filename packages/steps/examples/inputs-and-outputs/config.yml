@@ -1,0 +1,20 @@
+build:
+  name: Inputs and outputs
+  steps:
+    - run:
+        name: Say HI
+        inputs:
+          name: Dominik Sokal
+        command: echo "Hi, ${ inputs.name }!"
+    - run:
+        name: Produce output
+        id: id123
+        outputs: [foo]
+        command: |
+          echo "Producing output for another step"
+          set-output foo bar
+    - run:
+        name: Use output from another step
+        inputs:
+          foo: ${ steps.id123.foo }
+        command: echo "value = ${ inputs.foo }"

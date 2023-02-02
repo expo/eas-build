@@ -47,6 +47,7 @@
     "@expo/logger": "^0.0.26",
     "@expo/spawn-async": "^1.7.0",
     "joi": "^17.7.0",
+    "this-file": "^2.0.3",
     "uuid": "^9.0.0",
     "yaml": "^2.2.1"
   }

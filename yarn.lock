@@ -8155,6 +8155,11 @@ thenify-all@^1.0.0:
   dependencies:
     any-promise "^1.0.0"
 
+this-file@^2.0.3:
+  version "2.0.3"
+  resolved "https://registry.yarnpkg.com/this-file/-/this-file-2.0.3.tgz#13bd2bcfbab2ce86a37a15689df1d14861032b1b"
+  integrity sha512-IdMH1bUkVJdJjM7o8v83Mv4QvVPdkAofur20STl2Bbw9uMuuS/bT/PZURkEdZsy9XC/1ZXWgZ1wIL9nvouGaEg==
+
 through2@^2.0.0:
   version "2.0.5"
   resolved "https://registry.yarnpkg.com/through2/-/through2-2.0.5.tgz#01c1e39eb31d07cb7d03a96a70823260b23132cd"

@@ -1,9 +1,12 @@
 import { BuildStepInputError } from '../errors/BuildStepInputError.js';
 import { BuildStepInput } from '../BuildStepInput.js';
 
+import { createMockContext } from './utils/context.js';
+
 describe(BuildStepInput, () => {
   test('basic case', () => {
-    const i = new BuildStepInput({
+    const ctx = createMockContext();
+    const i = new BuildStepInput(ctx, {
       id: 'foo',
     });
     i.set('bar');
@@ -11,7 +14,8 @@ describe(BuildStepInput, () => {
   });
 
   test('default value', () => {
-    const i = new BuildStepInput({
+    const ctx = createMockContext();
+    const i = new BuildStepInput(ctx, {
       id: 'foo',
       defaultValue: 'baz',
     });
@@ -19,7 +23,8 @@ describe(BuildStepInput, () => {
   });
 
   test('enforces required policy when reading value', () => {
-    const i = new BuildStepInput({ id: 'foo', required: true });
+    const ctx = createMockContext();
+    const i = new BuildStepInput(ctx, { id: 'foo', required: true });
     expect(() => {
       // eslint-disable-next-line
       i.value;
@@ -29,7 +34,8 @@ describe(BuildStepInput, () => {
   });
 
   test('enforces required policy when setting value', () => {
-    const i = new BuildStepInput({ id: 'foo', required: true });
+    const ctx = createMockContext();
+    const i = new BuildStepInput(ctx, { id: 'foo', required: true });
     expect(() => {
       i.set(undefined);
     }).toThrowError(new BuildStepInputError('Input parameter "foo" is required.'));

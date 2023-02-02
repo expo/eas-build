@@ -1,9 +1,12 @@
 import { BuildStepOutput } from '../BuildStepOutput.js';
 import { BuildStepOutputError } from '../errors/BuildStepOutputError.js';
 
+import { createMockContext } from './utils/context.js';
+
 describe(BuildStepOutput, () => {
   test('basic case', () => {
-    const i = new BuildStepOutput({
+    const ctx = createMockContext();
+    const i = new BuildStepOutput(ctx, {
       id: 'foo',
     });
     i.set('bar');
@@ -11,7 +14,8 @@ describe(BuildStepOutput, () => {
   });
 
   test('enforces required policy when reading value', () => {
-    const i = new BuildStepOutput({ id: 'foo', required: true });
+    const ctx = createMockContext();
+    const i = new BuildStepOutput(ctx, { id: 'foo', required: true });
     expect(() => {
       // eslint-disable-next-line
       i.value;
@@ -21,7 +25,8 @@ describe(BuildStepOutput, () => {
   });
 
   test('enforces required policy when setting value', () => {
-    const i = new BuildStepOutput({ id: 'foo', required: true });
+    const ctx = createMockContext();
+    const i = new BuildStepOutput(ctx, { id: 'foo', required: true });
     expect(() => {
       i.set(undefined);
     }).toThrowError(new BuildStepOutputError('Output parameter "foo" is required.'));

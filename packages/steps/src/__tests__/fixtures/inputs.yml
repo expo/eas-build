@@ -1,0 +1,9 @@
+build:
+  name: Inputs
+  steps:
+    - run:
+        name: Say HI
+        inputs:
+          name: Dominik Sokal
+          country: Poland
+        command: echo "Hi, ${ inputs.name }!"
