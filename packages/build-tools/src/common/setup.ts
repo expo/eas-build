@@ -15,6 +15,8 @@ import { configureEnvFromBuildProfileAsync, runEasBuildInternalAsync } from './e
 
 const MAX_EXPO_DOCTOR_TIMEOUT_MS = 20 * 1000;
 
+class DoctorTimeoutError extends Error {}
+
 export async function setupAsync<TJob extends Job>(ctx: BuildContext<TJob>): Promise<void> {
   const packageJson = await ctx.runBuildPhase(BuildPhase.PREPARE_PROJECT, async () => {
     await prepareProjectSourcesAsync(ctx);
@@ -68,7 +70,11 @@ export async function setupAsync<TJob extends Job>(ctx: BuildContext<TJob>): Pro
           ctx.markBuildPhaseHasWarnings();
         }
       } catch (err) {
-        ctx.logger.error({ err }, 'Command "expo doctor" failed.');
+        if (err instanceof DoctorTimeoutError) {
+          ctx.logger.error(err.message);
+        } else {
+          ctx.logger.error({ err }, 'Command "expo doctor" failed.');
+        }
         ctx.markBuildPhaseHasWarnings();
       }
     });
@@ -78,6 +84,7 @@ export async function setupAsync<TJob extends Job>(ctx: BuildContext<TJob>): Pro
 async function runExpoDoctor<TJob extends Job>(ctx: BuildContext<TJob>): Promise<SpawnResult> {
   ctx.logger.info('Running "expo doctor"');
   let timeout: NodeJS.Timeout | undefined;
+  let timedOut = false;
   try {
     const promise = runExpoCliCommand(
       ctx,
@@ -91,12 +98,18 @@ async function runExpoDoctor<TJob extends Job>(ctx: BuildContext<TJob>): Promise
       { forceUseGlobalExpoCli: true, npmVersionAtLeast7: await isAtLeastNpm7Async() }
     );
     timeout = setTimeout(() => {
+      timedOut = true;
       promise.child.kill();
       ctx.reportError?.(`"expo doctor" timed out`, undefined, {
         extras: { buildId: ctx.env.EAS_BUILD_ID },
       });
     }, MAX_EXPO_DOCTOR_TIMEOUT_MS);
     return await promise;
+  } catch (err: any) {
+    if (timedOut) {
+      throw new DoctorTimeoutError('"expo doctor" timed out, skipping...');
+    }
+    throw err;
   } finally {
     if (timeout) {
       clearTimeout(timeout);
