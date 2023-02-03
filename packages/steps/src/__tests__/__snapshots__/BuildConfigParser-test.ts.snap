@@ -1,0 +1,10 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`BuildConfigParser parseAsync parses steps from the build workflow 1`] = `
+"echo "H"
+echo "E"
+echo "L"
+echo "L"
+echo "O"
+"
+`;
