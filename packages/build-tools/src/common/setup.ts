@@ -84,7 +84,7 @@ export async function setupAsync<TJob extends Job>(ctx: BuildContext<TJob>): Pro
 async function runExpoDoctor<TJob extends Job>(ctx: BuildContext<TJob>): Promise<SpawnResult> {
   ctx.logger.info('Running "expo doctor"');
   let timeout: NodeJS.Timeout | undefined;
-  let didTimedout = false;
+  let timedOut = false;
   try {
     const promise = runExpoCliCommand(
       ctx,
@@ -98,7 +98,7 @@ async function runExpoDoctor<TJob extends Job>(ctx: BuildContext<TJob>): Promise
       { forceUseGlobalExpoCli: true, npmVersionAtLeast7: await isAtLeastNpm7Async() }
     );
     timeout = setTimeout(() => {
-      didTimedout = true;
+      timedOut = true;
       promise.child.kill();
       ctx.reportError?.(`"expo doctor" timed out`, undefined, {
         extras: { buildId: ctx.env.EAS_BUILD_ID },
@@ -106,8 +106,8 @@ async function runExpoDoctor<TJob extends Job>(ctx: BuildContext<TJob>): Promise
     }, MAX_EXPO_DOCTOR_TIMEOUT_MS);
     return await promise;
   } catch (err: any) {
-    if (didTimedout) {
-      throw new DoctorTimeoutError('"expo doctor" check took too long, skipping the step.');
+    if (timedOut) {
+      throw new DoctorTimeoutError('"expo doctor" timed out, skipping...');
     }
     throw err;
   } finally {
