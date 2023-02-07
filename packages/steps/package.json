@@ -2,17 +2,19 @@
   "name": "@expo/steps",
   "type": "module",
   "version": "0.0.1",
-  "main": "./dist/commonjs/index.cjs",
-  "types": "./dist/esm/index.d.ts",
+  "main": "./dist_commonjs/index.cjs",
+  "types": "./dist_esm/index.d.ts",
   "exports": {
     ".": {
-      "types": "./dist/esm/index.d.ts",
-      "import": "./dist/esm/index.js",
-      "require": "./dist/commonjs/index.cjs"
+      "types": "./dist_esm/index.d.ts",
+      "import": "./dist_esm/index.js",
+      "require": "./dist_commonjs/index.cjs"
     }
   },
   "files": [
-    "dist",
+    "bin",
+    "dist_commonjs",
+    "dist_esm",
     "README.md"
   ],
   "scripts": {
@@ -21,7 +23,7 @@
     "watch": "chokidar --initial \"src/**/*.ts\" -c \"./build.sh\"",
     "test": "node --experimental-vm-modules --no-warnings node_modules/.bin/jest -c=jest.config.cjs --no-cache",
     "test:watch": "yarn test --watch",
-    "clean": "rm -rf node_modules dist coverage"
+    "clean": "rm -rf node_modules dist_* coverage"
   },
   "author": "Expo <support@expo.io>",
   "bugs": "https://github.com/expo/eas-build/issues",

@@ -10,5 +10,6 @@ yarn-error.log
 .DS_Store
 
 dist
+dist_*
 
 coverage
