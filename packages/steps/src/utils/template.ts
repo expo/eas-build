@@ -42,6 +42,15 @@ interface BuildOutputPath {
   outputId: string;
 }
 
+export function findOutputPaths(templateString: string): BuildOutputPath[] {
+  const result: BuildOutputPath[] = [];
+  const matches = templateString.matchAll(new RegExp(BUILD_STEP_OUTPUT_EXPRESSION_REGEXP, 'g'));
+  for (const match of matches) {
+    result.push(parseOutputPath(match[1]));
+  }
+  return result;
+}
+
 export function parseOutputPath(outputPath: string): BuildOutputPath {
   const splits = outputPath.split('.');
   if (splits.length !== 2) {

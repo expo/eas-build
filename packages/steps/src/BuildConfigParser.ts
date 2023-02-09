@@ -15,6 +15,7 @@ import { BuildStepContext } from './BuildStepContext.js';
 import { BuildStepInput } from './BuildStepInput.js';
 import { BuildStepOutput } from './BuildStepOutput.js';
 import { BuildWorkflow } from './BuildWorkflow.js';
+import { BuildWorkflowValidator } from './BuildWorkflowValidator.js';
 
 export class BuildConfigParser {
   private readonly configPath: string;
@@ -29,7 +30,9 @@ export class BuildConfigParser {
     const steps = config.build.steps.map((stepConfig) =>
       this.createBuildStepFromConfig(stepConfig)
     );
-    return new BuildWorkflow({ buildSteps: steps });
+    const workflow = new BuildWorkflow({ buildSteps: steps });
+    new BuildWorkflowValidator(workflow).validate();
+    return workflow;
   }
 
   private async readRawConfigAsync(): Promise<any> {
