@@ -17,7 +17,6 @@ import {
 import { spawnAsync } from './utils/shell/spawn.js';
 import { interpolateWithInputs } from './utils/template.js';
 import { BuildStepRuntimeError } from './errors/BuildStepRuntimeError.js';
-import { BuildConfigError } from './errors/BuildConfigError.js';
 
 export enum BuildStepStatus {
   NEW = 'new',
@@ -134,7 +133,7 @@ export class BuildStep {
       );
     }
     if (!this.hasOutputParameter(name)) {
-      throw new BuildConfigError(`Step "${this.id}" does not have output "${name}"`);
+      throw new BuildStepRuntimeError(`Step "${this.id}" does not have output "${name}"`);
     }
     return this.outputById[name].value;
   }

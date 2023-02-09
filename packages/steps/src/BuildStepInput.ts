@@ -1,9 +1,10 @@
 import { BuildStepContext } from './BuildStepContext.js';
-import { BuildStepInputError } from './errors/BuildStepInputError.js';
+import { BuildStepRuntimeError } from './errors/BuildStepRuntimeError.js';
 import { interpolateWithOutputs } from './utils/template.js';
 
 export class BuildStepInput {
   public readonly id: string;
+  public readonly stepId: string;
   public readonly defaultValue?: string;
   public readonly required: boolean;
 
@@ -13,15 +14,18 @@ export class BuildStepInput {
     private readonly ctx: BuildStepContext,
     {
       id,
+      stepId,
       defaultValue,
       required = false,
     }: {
       id: string;
+      stepId: string;
       defaultValue?: string;
       required?: boolean;
     }
   ) {
     this.id = id;
+    this.stepId = stepId;
     this.defaultValue = defaultValue;
     this.required = required;
   }
@@ -29,7 +33,9 @@ export class BuildStepInput {
   get value(): string | undefined {
     const rawValue = this._value ?? this.defaultValue;
     if (this.required && rawValue === undefined) {
-      throw new BuildStepInputError(`Input parameter "${this.id}" is required but it was not set.`);
+      throw new BuildStepRuntimeError(
+        `Input parameter "${this.id}" for step "${this.stepId}" is required but it was not set.`
+      );
     }
 
     if (rawValue === undefined) {
@@ -41,7 +47,9 @@ export class BuildStepInput {
 
   set(value: string | undefined): BuildStepInput {
     if (this.required && value === undefined) {
-      throw new BuildStepInputError(`Input parameter "${this.id}" is required.`);
+      throw new BuildStepRuntimeError(
+        `Input parameter "${this.id}" for step "${this.stepId}" is required.`
+      );
     }
     this._value = value;
     return this;

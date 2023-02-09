@@ -8,7 +8,6 @@ import { BuildStep, BuildStepStatus } from '../BuildStep.js';
 import { BuildStepContext } from '../BuildStepContext.js';
 import { BuildStepInput } from '../BuildStepInput.js';
 import { BuildStepOutput } from '../BuildStepOutput.js';
-import { BuildConfigError } from '../errors/BuildConfigError.js';
 import { BuildStepRuntimeError } from '../errors/BuildStepRuntimeError.js';
 import { nullthrows } from '../utils/nullthrows.js';
 
@@ -81,8 +80,12 @@ describe(BuildStep, () => {
     it('interpolates the input parameters in command template', async () => {
       const step = new BuildStep(baseStepCtx, {
         id: 'test1',
-        inputs: [new BuildStepInput(baseStepCtx, { id: 'foo1', defaultValue: 'bar' })],
-        outputs: [new BuildStepOutput(baseStepCtx, { id: 'foo2', required: true })],
+        inputs: [
+          new BuildStepInput(baseStepCtx, { id: 'foo1', stepId: 'test1', defaultValue: 'bar' }),
+        ],
+        outputs: [
+          new BuildStepOutput(baseStepCtx, { id: 'foo2', stepId: 'test1', required: true }),
+        ],
         command: 'set-output foo2 ${ inputs.foo1 }',
         workingDirectory: baseStepCtx.workingDirectory,
       });
@@ -93,7 +96,7 @@ describe(BuildStep, () => {
     it('collects the output parameters after calling the script', async () => {
       const step = new BuildStep(baseStepCtx, {
         id: 'test1',
-        outputs: [new BuildStepOutput(baseStepCtx, { id: 'abc' })],
+        outputs: [new BuildStepOutput(baseStepCtx, { id: 'abc', stepId: 'test1' })],
         command: 'set-output abc 123',
         workingDirectory: baseStepCtx.workingDirectory,
       });
@@ -123,7 +126,7 @@ describe(BuildStep, () => {
     it('throws an error if some required output parameters have not been set with set-output in script', async () => {
       const step = new BuildStep(baseStepCtx, {
         id: 'test1',
-        outputs: [new BuildStepOutput(baseStepCtx, { id: 'abc', required: true })],
+        outputs: [new BuildStepOutput(baseStepCtx, { id: 'abc', stepId: 'test1', required: true })],
         command: 'echo 123',
         workingDirectory: baseStepCtx.workingDirectory,
       });
@@ -167,7 +170,7 @@ describe(BuildStep, () => {
     it('throws an error when the step has not been executed yet', async () => {
       const step = new BuildStep(baseStepCtx, {
         id: 'test1',
-        outputs: [new BuildStepOutput(baseStepCtx, { id: 'abc', required: true })],
+        outputs: [new BuildStepOutput(baseStepCtx, { id: 'abc', stepId: 'test1', required: true })],
         command: 'set-output abc 123',
         workingDirectory: baseStepCtx.workingDirectory,
       });
@@ -181,22 +184,22 @@ describe(BuildStep, () => {
     it('throws an error when trying to access a non-existent output', async () => {
       const step = new BuildStep(baseStepCtx, {
         id: 'test1',
-        outputs: [new BuildStepOutput(baseStepCtx, { id: 'abc', required: true })],
+        outputs: [new BuildStepOutput(baseStepCtx, { id: 'abc', stepId: 'test1', required: true })],
         command: 'set-output abc 123',
         workingDirectory: baseStepCtx.workingDirectory,
       });
       await step.executeAsync();
-      const error = getError<BuildConfigError>(() => {
+      const error = getError<BuildStepRuntimeError>(() => {
         step.getOutputValueByName('def');
       });
-      expect(error).toBeInstanceOf(BuildConfigError);
+      expect(error).toBeInstanceOf(BuildStepRuntimeError);
       expect(error.message).toMatch(/Step "test1" does not have output "def"/);
     });
 
     it('returns the output value', async () => {
       const step = new BuildStep(baseStepCtx, {
         id: 'test1',
-        outputs: [new BuildStepOutput(baseStepCtx, { id: 'abc', required: true })],
+        outputs: [new BuildStepOutput(baseStepCtx, { id: 'abc', stepId: 'test1', required: true })],
         command: 'set-output abc 123',
         workingDirectory: baseStepCtx.workingDirectory,
       });

@@ -6,8 +6,8 @@ import YAML from 'yaml';
 
 import {
   BuildStepConfig,
-  BuildStepInputs,
-  BuildStepOutputs,
+  BuildStepInputsConfig,
+  BuildStepOutputsConfig,
   validateBuildConfig,
 } from './BuildConfig.js';
 import { BuildStep } from './BuildStep.js';
@@ -61,10 +61,11 @@ export class BuildConfigParser {
         shell,
         command,
       } = buildStepConfig.run;
-      const inputs = inputsConfig && this.createBuildStepInputsFromConfig(inputsConfig);
-      const outputs = outputsConfig && this.createBuildStepOutputsFromConfig(outputsConfig);
+      const stepId = id ?? uuidv4();
+      const inputs = inputsConfig && this.createBuildStepInputsFromConfig(inputsConfig, stepId);
+      const outputs = outputsConfig && this.createBuildStepOutputsFromConfig(outputsConfig, stepId);
       return new BuildStep(this.ctx, {
-        id: id ?? uuidv4(),
+        id: stepId,
         inputs,
         outputs,
         name,
@@ -79,25 +80,36 @@ export class BuildConfigParser {
   }
 
   private createBuildStepInputsFromConfig(
-    buildStepInputsConfig: BuildStepInputs
+    buildStepInputsConfig: BuildStepInputsConfig,
+    stepId: string
   ): BuildStepInput[] {
     const inputs: BuildStepInput[] = [];
     for (const [key, value] of Object.entries(buildStepInputsConfig)) {
-      const input = new BuildStepInput(this.ctx, { id: key, defaultValue: value, required: true });
+      const input = new BuildStepInput(this.ctx, {
+        id: key,
+        stepId,
+        defaultValue: value,
+        required: true,
+      });
       inputs.push(input);
     }
     return inputs;
   }
 
   private createBuildStepOutputsFromConfig(
-    buildStepOutputsConfig: BuildStepOutputs
+    buildStepOutputsConfig: BuildStepOutputsConfig,
+    stepId: string
   ): BuildStepOutput[] {
     const outputs: BuildStepOutput[] = [];
     for (const entry of buildStepOutputsConfig) {
       const output =
         typeof entry === 'string'
-          ? new BuildStepOutput(this.ctx, { id: entry, required: true })
-          : new BuildStepOutput(this.ctx, { id: entry.name, required: entry.required ?? true });
+          ? new BuildStepOutput(this.ctx, { id: entry, stepId, required: true })
+          : new BuildStepOutput(this.ctx, {
+              id: entry.name,
+              stepId,
+              required: entry.required ?? true,
+            });
       outputs.push(output);
     }
     return outputs;

@@ -1,5 +1,5 @@
 import { BuildStepOutput } from '../BuildStepOutput.js';
-import { BuildStepOutputError } from '../errors/BuildStepOutputError.js';
+import { BuildStepRuntimeError } from '../errors/BuildStepRuntimeError.js';
 
 import { createMockContext } from './utils/context.js';
 
@@ -8,6 +8,7 @@ describe(BuildStepOutput, () => {
     const ctx = createMockContext();
     const i = new BuildStepOutput(ctx, {
       id: 'foo',
+      stepId: 'test1',
     });
     i.set('bar');
     expect(i.value).toBe('bar');
@@ -15,20 +16,24 @@ describe(BuildStepOutput, () => {
 
   test('enforces required policy when reading value', () => {
     const ctx = createMockContext();
-    const i = new BuildStepOutput(ctx, { id: 'foo', required: true });
+    const i = new BuildStepOutput(ctx, { id: 'foo', stepId: 'test1', required: true });
     expect(() => {
       // eslint-disable-next-line
       i.value;
     }).toThrowError(
-      new BuildStepOutputError('Output parameter "foo" is required but it was not set.')
+      new BuildStepRuntimeError(
+        'Output parameter "foo" for step "test1" is required but it was not set.'
+      )
     );
   });
 
   test('enforces required policy when setting value', () => {
     const ctx = createMockContext();
-    const i = new BuildStepOutput(ctx, { id: 'foo', required: true });
+    const i = new BuildStepOutput(ctx, { id: 'foo', stepId: 'test1', required: true });
     expect(() => {
       i.set(undefined);
-    }).toThrowError(new BuildStepOutputError('Output parameter "foo" is required.'));
+    }).toThrowError(
+      new BuildStepRuntimeError('Output parameter "foo" for step "test1" is required.')
+    );
   });
 });

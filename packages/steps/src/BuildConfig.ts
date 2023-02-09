@@ -9,9 +9,9 @@ export interface BuildConfig {
   };
 }
 
-export type BuildStepInputs = Record<string, string>;
+export type BuildStepInputsConfig = Record<string, string>;
 
-export type BuildStepOutputs = (
+export type BuildStepOutputsConfig = (
   | string
   | {
       name: string;
@@ -26,8 +26,8 @@ export type BuildStepConfig =
         | string
         | {
             id?: string;
-            inputs?: BuildStepInputs;
-            outputs?: BuildStepOutputs;
+            inputs?: BuildStepInputsConfig;
+            outputs?: BuildStepOutputsConfig;
             name?: string;
             workingDirectory?: string;
             shell?: string;

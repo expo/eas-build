@@ -63,6 +63,7 @@ describe(BuildWorkflowValidator, () => {
           inputs: [
             new BuildStepInput(ctx, {
               id: 'input1',
+              stepId: 'test1',
               required: true,
               defaultValue: '${ steps.test2.output1 }',
             }),
@@ -72,7 +73,7 @@ describe(BuildWorkflowValidator, () => {
         }),
         new BuildStep(ctx, {
           id: 'test2',
-          outputs: [new BuildStepOutput(ctx, { id: 'output1', required: true })],
+          outputs: [new BuildStepOutput(ctx, { id: 'output1', stepId: 'test2', required: true })],
           command: 'echo ${ inputs.input1 }',
           workingDirectory: ctx.workingDirectory,
         }),
@@ -100,6 +101,7 @@ describe(BuildWorkflowValidator, () => {
           inputs: [
             new BuildStepInput(ctx, {
               id: 'input1',
+              stepId: 'test2',
               required: true,
               defaultValue: '${ steps.test1.output1 }',
             }),
@@ -128,7 +130,7 @@ describe(BuildWorkflowValidator, () => {
       buildSteps: [
         new BuildStep(ctx, {
           id: 'test1',
-          outputs: [new BuildStepOutput(ctx, { id: 'output1', required: true })],
+          outputs: [new BuildStepOutput(ctx, { id: 'output1', stepId: 'test1', required: true })],
           command: 'set-output output1 123',
           workingDirectory: ctx.workingDirectory,
         }),
@@ -137,6 +139,7 @@ describe(BuildWorkflowValidator, () => {
           inputs: [
             new BuildStepInput(ctx, {
               id: 'input1',
+              stepId: 'test2',
               required: true,
               defaultValue: '${ steps.test1.output1 }',
             }),
@@ -149,6 +152,7 @@ describe(BuildWorkflowValidator, () => {
           inputs: [
             new BuildStepInput(ctx, {
               id: 'input2',
+              stepId: 'test3',
               required: true,
               defaultValue: '${ steps.test2.output2 }',
             }),
@@ -177,7 +181,7 @@ describe(BuildWorkflowValidator, () => {
       buildSteps: [
         new BuildStep(ctx, {
           id: 'test1',
-          outputs: [new BuildStepOutput(ctx, { id: 'output1', required: true })],
+          outputs: [new BuildStepOutput(ctx, { id: 'output1', stepId: 'test1', required: true })],
           command: 'set-output output1 123',
           workingDirectory: ctx.workingDirectory,
         }),
@@ -186,6 +190,7 @@ describe(BuildWorkflowValidator, () => {
           inputs: [
             new BuildStepInput(ctx, {
               id: 'input1',
+              stepId: 'test2',
               required: true,
               defaultValue: '${ steps.test4.output1 }',
             }),
@@ -198,6 +203,7 @@ describe(BuildWorkflowValidator, () => {
           inputs: [
             new BuildStepInput(ctx, {
               id: 'input2',
+              stepId: 'test3',
               required: true,
               defaultValue: '${ steps.test2.output2 }',
             }),
