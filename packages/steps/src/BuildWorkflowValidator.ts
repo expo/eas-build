@@ -46,28 +46,29 @@ export class BuildWorkflowValidator {
     const stepByStepId: Record<string, BuildStep> = {};
     for (const step of this.workflow.buildSteps) {
       for (const input of step.inputs ?? []) {
-        if (input.defaultValue !== undefined) {
-          const paths = findOutputPaths(input.defaultValue);
-          for (const { stepId, outputId } of paths) {
-            if (!(stepId in stepByStepId)) {
-              if (allStepIds.has(stepId)) {
-                const error = new BuildConfigError(
-                  `Input parameter "${input.id}" for step "${step.id}" uses an expression that references an output parameter from the future step "${stepId}".`
-                );
-                errors.push(error);
-              } else {
-                const error = new BuildConfigError(
-                  `Input parameter "${input.id}" for step "${step.id}" uses an expression that references an output parameter from a non-existent step "${stepId}".`
-                );
-                errors.push(error);
-              }
+        if (input.defaultValue === undefined) {
+          continue;
+        }
+        const paths = findOutputPaths(input.defaultValue);
+        for (const { stepId, outputId } of paths) {
+          if (!(stepId in stepByStepId)) {
+            if (allStepIds.has(stepId)) {
+              const error = new BuildConfigError(
+                `Input parameter "${input.id}" for step "${step.id}" uses an expression that references an output parameter from the future step "${stepId}".`
+              );
+              errors.push(error);
             } else {
-              if (!stepByStepId[stepId].hasOutputParameter(outputId)) {
-                const error = new BuildConfigError(
-                  `Input parameter "${input.id}" for step "${step.id}" uses an expression that references an undefined output parameter "${outputId}" from step "${stepId}".`
-                );
-                errors.push(error);
-              }
+              const error = new BuildConfigError(
+                `Input parameter "${input.id}" for step "${step.id}" uses an expression that references an output parameter from a non-existent step "${stepId}".`
+              );
+              errors.push(error);
+            }
+          } else {
+            if (!stepByStepId[stepId].hasOutputParameter(outputId)) {
+              const error = new BuildConfigError(
+                `Input parameter "${input.id}" for step "${step.id}" uses an expression that references an undefined output parameter "${outputId}" from step "${stepId}".`
+              );
+              errors.push(error);
             }
           }
         }

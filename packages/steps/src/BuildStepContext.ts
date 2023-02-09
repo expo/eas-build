@@ -4,8 +4,8 @@ import path from 'path';
 import { bunyan } from '@expo/logger';
 
 import { BuildStep } from './BuildStep.js';
-import { BuildConfigError } from './errors/BuildConfigError.js';
 import { parseOutputPath } from './utils/template.js';
+import { BuildStepRuntimeError } from './errors/BuildStepRuntimeError.js';
 
 export class BuildStepContext {
   public readonly baseWorkingDirectory: string;
@@ -30,7 +30,7 @@ export class BuildStepContext {
   public getStepOutputValue(path: string): string | undefined {
     const { stepId, outputId } = parseOutputPath(path);
     if (!(stepId in this.stepById)) {
-      throw new BuildConfigError(`Step "${stepId}" does not exist.`);
+      throw new BuildStepRuntimeError(`Step "${stepId}" does not exist.`);
     }
     return this.stepById[stepId].getOutputValueByName(outputId);
   }

@@ -6,7 +6,7 @@ import { v4 as uuidv4 } from 'uuid';
 
 import { BuildStep } from '../BuildStep.js';
 import { BuildStepContext } from '../BuildStepContext.js';
-import { BuildConfigError } from '../errors/BuildConfigError.js';
+import { BuildStepRuntimeError } from '../errors/BuildStepRuntimeError.js';
 
 import { createMockContext } from './utils/context.js';
 import { getError } from './utils/error.js';
@@ -42,20 +42,12 @@ describe(BuildStepContext, () => {
     });
   });
   describe(BuildStepContext.prototype.getStepOutputValue, () => {
-    it('throws an error if the step output path does not consist of two components', () => {
-      const ctx = createMockContext();
-      const error = getError<BuildConfigError>(() => {
-        ctx.getStepOutputValue('abc');
-      });
-      expect(error).toBeInstanceOf(BuildConfigError);
-      expect(error.message).toMatch(/Step output path must consist of two components/);
-    });
     it('throws an error if the step output references a non-existent step', () => {
       const ctx = createMockContext();
-      const error = getError<BuildConfigError>(() => {
+      const error = getError<BuildStepRuntimeError>(() => {
         ctx.getStepOutputValue('abc.def');
       });
-      expect(error).toBeInstanceOf(BuildConfigError);
+      expect(error).toBeInstanceOf(BuildStepRuntimeError);
       expect(error.message).toMatch(/Step "abc" does not exist/);
     });
     it('calls getOutputValueByName on the step to get the output value', () => {
