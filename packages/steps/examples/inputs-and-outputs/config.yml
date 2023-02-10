@@ -14,7 +14,22 @@ build:
           echo "Producing output for another step"
           set-output foo bar
     - run:
+        name: Produce another output
+        id: id456
+        outputs:
+          - required_param
+          - name: optional_param
+            required: false
+        command: |
+          echo "Producing more output"
+          set-output required_param abc123
+    - run:
         name: Use output from another step
         inputs:
           foo: ${ steps.id123.foo }
-        command: echo "value = ${ inputs.foo }"
+          bar: ${ steps.id456.required_param }
+          baz: ${ steps.id456.optional_param }
+        command: |
+          echo "foo = \"${ inputs.foo }\""
+          echo "bar = \"${ inputs.bar }\""
+          echo "baz = \"${ inputs.baz }\""
