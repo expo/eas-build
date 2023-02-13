@@ -256,7 +256,7 @@ To resolve this issue, downgrade to an older Xcode version using the "image" fie
     createError: () =>
       new UserFacingError(
         errors.ErrorCode.UNKNOWN_FASTLANE_ERROR,
-        `Fastlane build failed with unknown error. See logs for the "Run fastlane" and "Xcode Logs" phases for more information.
+        `Fastlane build failed with unknown error. See logs for the "Run fastlane" (it contains filtered build logs) and "Xcode Logs" (it contains full build logs) phases for more information.
 Fastlane errors in most cases are not printed at the end of the output, so you may not find any useful information in the last lines of output when looking for an error message.`
       ),
   },
