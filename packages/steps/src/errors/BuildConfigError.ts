@@ -1,16 +1,3 @@
-export class BuildConfigError extends Error {
-  public readonly cause?: Error;
-  public readonly metadata: object;
+import { UserError } from './UserError.js';
 
-  constructor(
-    public override readonly message: string,
-    extra?: {
-      metadata?: object;
-      cause?: Error;
-    }
-  ) {
-    super(message);
-    this.metadata = extra?.cause ?? {};
-    this.cause = extra?.cause;
-  }
-}
+export class BuildConfigError extends UserError {}

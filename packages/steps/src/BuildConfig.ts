@@ -9,6 +9,16 @@ export interface BuildConfig {
   };
 }
 
+export type BuildStepInputsConfig = Record<string, string>;
+
+export type BuildStepOutputsConfig = (
+  | string
+  | {
+      name: string;
+      required?: boolean;
+    }
+)[];
+
 export type BuildStepConfig =
   | string
   | {
@@ -16,6 +26,8 @@ export type BuildStepConfig =
         | string
         | {
             id?: string;
+            inputs?: BuildStepInputsConfig;
+            outputs?: BuildStepOutputsConfig;
             name?: string;
             workingDirectory?: string;
             shell?: string;
@@ -34,6 +46,16 @@ export const BuildConfigSchema = Joi.object<BuildConfig>({
             then: Joi.string().required(),
             otherwise: Joi.object({
               id: Joi.string(),
+              inputs: Joi.object().pattern(Joi.string(), Joi.string()),
+              outputs: Joi.array().items(
+                Joi.alternatives().try(
+                  Joi.string().required(),
+                  Joi.object({
+                    name: Joi.string().required(),
+                    required: Joi.boolean(),
+                  }).required()
+                )
+              ),
               name: Joi.string(),
               workingDirectory: Joi.string(),
               shell: Joi.string(),
@@ -50,7 +72,7 @@ export const BuildConfigSchema = Joi.object<BuildConfig>({
 
 export function validateBuildConfig(rawConfig: object): BuildConfig {
   const { error, value } = BuildConfigSchema.validate(rawConfig, {
-    stripUnknown: true,
+    allowUnknown: false,
     abortEarly: false,
   });
   if (error) {

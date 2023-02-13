@@ -13,3 +13,18 @@ build:
     - run:
         name: List files
         command: ls -la
+    - run:
+        name: List files in another directory
+        working_directory: foo
+        command: ls -la
+    - run:
+        name: Steps use bash by default
+        command: |
+          echo "Steps use bash by default"
+          ps -p $$
+    - run:
+        name: Steps can use another shell
+        shell: /bin/zsh
+        command: |
+          echo "Steps can use another shell"
+          ps -p $$

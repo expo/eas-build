@@ -2,7 +2,7 @@
   "extends": "./tsconfig.json",
   "compilerOptions": {
     "module": "commonjs",
-    "outDir": "dist/commonjs"
+    "outDir": "dist_commonjs"
   },
   "exclude": ["**/__mocks__/", "**/__tests__/"]
 }

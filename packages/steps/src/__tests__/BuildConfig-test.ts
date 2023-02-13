@@ -26,5 +26,23 @@ describe(validateBuildConfig, () => {
         validateBuildConfig(buildConfig);
       }).toThrowError(/".*\.command" is required/);
     });
+    test('non-existent fields', () => {
+      const buildConfig = {
+        build: {
+          steps: [
+            {
+              run: {
+                command: 'echo 123',
+                blah: '123',
+              },
+            },
+          ],
+        },
+      };
+
+      expect(() => {
+        validateBuildConfig(buildConfig);
+      }).toThrowError(/".*\.blah" is not allowed/);
+    });
   });
 });
