@@ -22,7 +22,7 @@ build:
             required: false
         command: |
           echo "Producing more output"
-          set-output required_param abc123
+          set-output required_param "abc 123 456"
     - run:
         name: Use output from another step
         inputs:

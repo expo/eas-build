@@ -83,35 +83,29 @@ export class BuildConfigParser {
     buildStepInputsConfig: BuildStepInputsConfig,
     stepId: string
   ): BuildStepInput[] {
-    const inputs: BuildStepInput[] = [];
-    for (const [key, value] of Object.entries(buildStepInputsConfig)) {
-      const input = new BuildStepInput(this.ctx, {
-        id: key,
-        stepId,
-        defaultValue: value,
-        required: true,
-      });
-      inputs.push(input);
-    }
-    return inputs;
+    return Object.entries(buildStepInputsConfig).map(
+      ([key, value]) =>
+        new BuildStepInput(this.ctx, {
+          id: key,
+          stepId,
+          defaultValue: value,
+          required: true,
+        })
+    );
   }
 
   private createBuildStepOutputsFromConfig(
     buildStepOutputsConfig: BuildStepOutputsConfig,
     stepId: string
   ): BuildStepOutput[] {
-    const outputs: BuildStepOutput[] = [];
-    for (const entry of buildStepOutputsConfig) {
-      const output =
-        typeof entry === 'string'
-          ? new BuildStepOutput(this.ctx, { id: entry, stepId, required: true })
-          : new BuildStepOutput(this.ctx, {
-              id: entry.name,
-              stepId,
-              required: entry.required ?? true,
-            });
-      outputs.push(output);
-    }
-    return outputs;
+    return buildStepOutputsConfig.map((entry) =>
+      typeof entry === 'string'
+        ? new BuildStepOutput(this.ctx, { id: entry, stepId, required: true })
+        : new BuildStepOutput(this.ctx, {
+            id: entry.name,
+            stepId,
+            required: entry.required ?? true,
+          })
+    );
   }
 }

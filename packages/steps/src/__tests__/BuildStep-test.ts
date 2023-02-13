@@ -105,6 +105,18 @@ describe(BuildStep, () => {
       expect(abc?.value).toBe('123');
     });
 
+    it('works with strings with whitespaces passed as a value for an output parameter', async () => {
+      const step = new BuildStep(baseStepCtx, {
+        id: 'test1',
+        outputs: [new BuildStepOutput(baseStepCtx, { id: 'abc', stepId: 'test1' })],
+        command: 'set-output abc "d o m i n i k"',
+        workingDirectory: baseStepCtx.workingDirectory,
+      });
+      await step.executeAsync();
+      const abc = nullthrows(step.outputs).find((output) => output.id === 'abc');
+      expect(abc?.value).toBe('d o m i n i k');
+    });
+
     it('prints a warning if some of the output parameters set with set-output are not defined in step config', async () => {
       const logger = createMockLogger();
       const warnLines: string[] = [];

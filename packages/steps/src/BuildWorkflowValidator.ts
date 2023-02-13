@@ -2,7 +2,6 @@ import { BuildStep } from './BuildStep.js';
 import { BuildWorkflow } from './BuildWorkflow.js';
 import { BuildConfigError } from './errors/BuildConfigError.js';
 import { BuildWorkflowError } from './errors/BuildWorkflowError.js';
-import { uniq } from './utils/expodash/uniq.js';
 import { findOutputPaths } from './utils/template.js';
 
 export class BuildWorkflowValidator {
@@ -19,24 +18,24 @@ export class BuildWorkflowValidator {
 
   private validateUniqueStepIds(): BuildConfigError[] {
     const stepIds = this.workflow.buildSteps.map(({ id }) => id);
-    const uniqueStepIds = uniq(stepIds);
-    if (stepIds.length === uniqueStepIds.length) {
-      return [];
-    }
-    const notUsedUniqueStepIdsSet = new Set(uniqueStepIds);
+    const visitedStepIdsSet = new Set<string>();
     const duplicatedStepIdsSet = new Set<string>();
     for (const stepId of stepIds) {
-      if (notUsedUniqueStepIdsSet.has(stepId)) {
-        notUsedUniqueStepIdsSet.delete(stepId);
-      } else {
+      if (visitedStepIdsSet.has(stepId)) {
         duplicatedStepIdsSet.add(stepId);
+      } else {
+        visitedStepIdsSet.add(stepId);
       }
     }
     const duplicatedStepIds = [...duplicatedStepIdsSet];
-    const error = new BuildConfigError(
-      `Duplicated step IDs: ${duplicatedStepIds.map((i) => `"${i}"`).join(', ')}`
-    );
-    return [error];
+    if (duplicatedStepIds.length === 0) {
+      return [];
+    } else {
+      const error = new BuildConfigError(
+        `Duplicated step IDs: ${duplicatedStepIds.map((i) => `"${i}"`).join(', ')}`
+      );
+      return [error];
+    }
   }
 
   private validateInputs(): BuildConfigError[] {
