@@ -1,6 +1,6 @@
 {
   "name": "@expo/turtle-spawn",
-  "version": "0.0.27",
+  "version": "0.0.28",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "files": [
@@ -19,7 +19,7 @@
   "bugs": "https://github.com/expo/eas-build/issues",
   "license": "BUSL-1.1",
   "dependencies": {
-    "@expo/logger": "0.0.26",
+    "@expo/logger": "0.0.27",
     "@expo/spawn-async": "^1.7.0"
   },
   "devDependencies": {

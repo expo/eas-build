@@ -44,7 +44,7 @@
     "node": ">=14.0.0"
   },
   "dependencies": {
-    "@expo/logger": "^0.0.26",
+    "@expo/logger": "0.0.27",
     "@expo/spawn-async": "^1.7.0",
     "joi": "^17.7.0",
     "this-file": "^2.0.3",
