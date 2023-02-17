@@ -1,5 +1,10 @@
 #!/usr/bin/env bash
 
+SED_INPLACE_OPT=(-i '')
+if [[ "$OSTYPE" == "linux-gnu"* ]]; then
+  SED_INPLACE_OPT=(-i)
+fi
+
 set -eo pipefail
 
 echo 'Removing "dist" folder...'
@@ -15,6 +20,6 @@ echo 'Renaming CommonJS file extensions to .cjs...'
 find dist_commonjs -type f -name '*.js' -exec bash -c 'mv "$0" "${0%.*}.cjs"' {} \;
 
 echo 'Rewriting module specifiers to .cjs...'
-find dist_commonjs -type f -name '*.cjs' -exec sed -i '' 's/require("\(\.[^"]*\)\.js")/require("\1.cjs")/g' {} \;
+find dist_commonjs -type f -name '*.cjs' -exec sed "${SED_INPLACE_OPT[@]}" 's/require("\(\.[^"]*\)\.js")/require("\1.cjs")/g' {} \;
 
 echo 'Finished compiling'
