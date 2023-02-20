@@ -64,6 +64,12 @@ const BuilderEnvironmentSchema = Joi.object({
   env: EnvSchema,
 });
 
+export interface BuildSecrets {
+  buildCredentials?: BuildCredentials;
+  environmentSecrets?: EnvironmentSecret[];
+  robotAccessToken?: string;
+}
+
 export interface Job {
   mode: BuildMode;
   type: Workflow;
@@ -79,11 +85,7 @@ export interface Job {
   updates?: {
     channel?: string;
   };
-  secrets: {
-    buildCredentials?: BuildCredentials;
-    environmentSecrets?: EnvironmentSecret[];
-    robotAccessToken?: string;
-  };
+  secrets?: BuildSecrets;
   builderEnvironment?: BuilderEnvironment;
   cache: Cache;
   developmentClient?: boolean;
@@ -107,38 +109,48 @@ export interface Job {
 
   username?: string;
 
+  customBuildConfig?: {
+    path: string;
+  };
+
   experimental?: {
     prebuildCommand?: string;
   };
 }
+
+const SecretsSchema = Joi.object({
+  buildCredentials: BuildCredentialsSchema,
+  environmentSecrets: EnvironmentSecretsSchema,
+  robotAccessToken: Joi.string(),
+});
 
 export const JobSchema = Joi.object({
   mode: Joi.string()
     .valid(...Object.values(BuildMode))
     .default(BuildMode.BUILD),
   type: Joi.when('mode', {
-    is: Joi.string().valid(BuildMode.BUILD),
-    then: Joi.string()
+    is: Joi.string().valid(BuildMode.RESIGN),
+    then: Joi.string().valid(Workflow.UNKNOWN).default(Workflow.UNKNOWN),
+    otherwise: Joi.string()
       .valid(...Object.values(Workflow))
       .required(),
-    otherwise: Joi.string().valid(Workflow.UNKNOWN).default(Workflow.UNKNOWN),
   }),
   triggeredBy: Joi.string()
     .valid(...Object.values(BuildTrigger))
     .default(BuildTrigger.EAS_CLI),
   projectArchive: ArchiveSourceSchema.required(),
   resign: Joi.when('mode', {
-    is: Joi.string().valid(BuildMode.BUILD),
-    then: Joi.any().strip(),
-    otherwise: Joi.object({
+    is: Joi.string().valid(BuildMode.RESIGN),
+    then: Joi.object({
       applicationArchiveSource: ArchiveSourceSchema.required(),
     }).required(),
+    otherwise: Joi.any().strip(),
   }),
   platform: Joi.string().valid(Platform.IOS).required(),
   projectRootDirectory: Joi.when('mode', {
-    is: Joi.string().valid(BuildMode.BUILD),
-    then: Joi.string().required(),
-    otherwise: Joi.any().strip(),
+    is: Joi.string().valid(BuildMode.RESIGN),
+    then: Joi.any().strip(),
+    otherwise: Joi.string().required(),
   }),
   buildProfile: Joi.when('mode', {
     is: Joi.string().valid(BuildMode.BUILD),
@@ -153,11 +165,11 @@ export const JobSchema = Joi.object({
   updates: Joi.object({
     channel: Joi.string(),
   }),
-  secrets: Joi.object({
-    buildCredentials: BuildCredentialsSchema,
-    environmentSecrets: EnvironmentSecretsSchema,
-    robotAccessToken: Joi.string(),
-  }).required(),
+  secrets: Joi.when('mode', {
+    is: Joi.string().valid(BuildMode.CUSTOM),
+    then: SecretsSchema,
+    otherwise: SecretsSchema.required(),
+  }),
   builderEnvironment: BuilderEnvironmentSchema,
   cache: CacheSchema.default(),
   developmentClient: Joi.boolean(),
@@ -172,6 +184,14 @@ export const JobSchema = Joi.object({
   applicationArchivePath: Joi.string(),
 
   username: Joi.string(),
+
+  customBuildConfig: Joi.when('mode', {
+    is: Joi.string().valid(BuildMode.CUSTOM),
+    then: Joi.object({
+      path: Joi.string(),
+    }).required(),
+    otherwise: Joi.any().strip(),
+  }),
 
   experimental: Joi.object({
     prebuildCommand: Joi.string(),

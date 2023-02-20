@@ -52,6 +52,14 @@ const BuilderEnvironmentSchema = Joi.object({
   env: EnvSchema,
 });
 
+export interface BuildSecrets {
+  buildCredentials?: {
+    keystore: Keystore;
+  };
+  environmentSecrets?: EnvironmentSecret[];
+  robotAccessToken?: string;
+}
+
 export interface Job {
   mode: BuildMode;
   type: Workflow;
@@ -64,13 +72,7 @@ export interface Job {
   updates?: {
     channel?: string;
   };
-  secrets: {
-    buildCredentials?: {
-      keystore: Keystore;
-    };
-    environmentSecrets?: EnvironmentSecret[];
-    robotAccessToken?: string;
-  };
+  secrets?: BuildSecrets;
   builderEnvironment?: BuilderEnvironment;
   cache: Cache;
   developmentClient?: boolean;
@@ -93,13 +95,23 @@ export interface Job {
   buildType?: BuildType;
   username?: string;
 
+  customBuildConfig?: {
+    path: string;
+  };
+
   experimental?: {
     prebuildCommand?: string;
   };
 }
 
+const SecretsSchema = Joi.object({
+  buildCredentials: Joi.object({ keystore: KeystoreSchema.required() }),
+  environmentSecrets: EnvironmentSecretsSchema,
+  robotAccessToken: Joi.string(),
+});
+
 export const JobSchema = Joi.object({
-  mode: Joi.string().valid(BuildMode.BUILD).default(BuildMode.BUILD),
+  mode: Joi.string().valid(BuildMode.BUILD, BuildMode.CUSTOM).default(BuildMode.BUILD),
   type: Joi.string()
     .valid(...Object.values(Workflow))
     .required(),
@@ -118,11 +130,11 @@ export const JobSchema = Joi.object({
   updates: Joi.object({
     channel: Joi.string(),
   }),
-  secrets: Joi.object({
-    buildCredentials: Joi.object({ keystore: KeystoreSchema.required() }),
-    environmentSecrets: EnvironmentSecretsSchema,
-    robotAccessToken: Joi.string(),
-  }).required(),
+  secrets: Joi.when('mode', {
+    is: Joi.string().valid(BuildMode.CUSTOM),
+    then: SecretsSchema,
+    otherwise: SecretsSchema.required(),
+  }),
   builderEnvironment: BuilderEnvironmentSchema,
   cache: CacheSchema.default(),
   developmentClient: Joi.boolean(),
@@ -136,6 +148,14 @@ export const JobSchema = Joi.object({
 
   buildType: Joi.string().valid(...Object.values(BuildType)),
   username: Joi.string(),
+
+  customBuildConfig: Joi.when('mode', {
+    is: Joi.string().valid(BuildMode.CUSTOM),
+    then: Joi.object({
+      path: Joi.string(),
+    }).required(),
+    otherwise: Joi.any().strip(),
+  }),
 
   experimental: Joi.object({
     prebuildCommand: Joi.string(),

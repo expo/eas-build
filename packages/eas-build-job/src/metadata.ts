@@ -138,7 +138,7 @@ export type Metadata = {
   /**
    * Build mode
    */
-  buildMode?: 'build' | 'resign';
+  buildMode?: 'build' | 'resign' | 'custom';
 };
 
 export const MetadataSchema = Joi.object({
@@ -167,7 +167,7 @@ export const MetadataSchema = Joi.object({
   message: Joi.string().max(1024),
   runFromCI: Joi.boolean(),
   runWithNoWaitFlag: Joi.boolean(),
-  buildMode: Joi.string().valid('build', 'resign'),
+  buildMode: Joi.string().valid('build', 'resign', 'custom'),
 });
 
 export function sanitizeMetadata(metadata: object): Metadata {

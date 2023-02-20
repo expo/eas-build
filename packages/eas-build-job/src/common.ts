@@ -5,6 +5,7 @@ import { BuildPhase, BuildPhaseResult } from './logs';
 export enum BuildMode {
   BUILD = 'build',
   RESIGN = 'resign',
+  CUSTOM = 'custom',
 }
 
 export enum Workflow {
