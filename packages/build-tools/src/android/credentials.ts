@@ -2,12 +2,16 @@ import path from 'path';
 
 import { Android } from '@expo/eas-build-job';
 import fs from 'fs-extra';
+import nullthrows from 'nullthrows';
 import { v4 as uuidv4 } from 'uuid';
 
 import { BuildContext } from '../context';
 
 async function restoreCredentials(ctx: BuildContext<Android.Job>): Promise<void> {
-  const { buildCredentials } = ctx.job.secrets;
+  const { buildCredentials } = nullthrows(
+    ctx.job.secrets,
+    'Secrets must be defined for non-custom builds'
+  );
   if (!buildCredentials) {
     // TODO: sentry (should be detected earlier)
     throw new Error('secrets are missing in the job object');
