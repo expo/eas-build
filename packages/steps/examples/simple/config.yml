@@ -28,3 +28,9 @@ build:
         command: |
           echo "Steps can use another shell"
           ps -p $$
+    - run:
+        name: Steps can use comments in commands
+        shell: /bin/zsh
+        command: |
+          # Print something
+          echo "Hello!"

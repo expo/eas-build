@@ -40,6 +40,39 @@ describe(BuildStep, () => {
     });
   });
 
+  describe('displayName', () => {
+    it('defaults to the step name', () => {
+      const ctx = createMockContext();
+      const step = new BuildStep(ctx, {
+        id: 'test1',
+        name: 'List files',
+        command: 'ls -la',
+        workingDirectory: ctx.workingDirectory,
+      });
+      expect(step.displayName).toBe('List files');
+    });
+
+    it('uses the first line of the command', async () => {
+      const ctx = createMockContext();
+      const step = new BuildStep(ctx, {
+        id: 'test1',
+        command: 'ls -la\necho 123',
+        workingDirectory: ctx.workingDirectory,
+      });
+      expect(step.displayName).toBe('ls -la');
+    });
+
+    it('uses the first non-comment line of the command', async () => {
+      const ctx = createMockContext();
+      const step = new BuildStep(ctx, {
+        id: 'test1',
+        command: '# list files\nls -la\necho 123',
+        workingDirectory: ctx.workingDirectory,
+      });
+      expect(step.displayName).toBe('ls -la');
+    });
+  });
+
   describe(BuildStep.prototype.executeAsync, () => {
     let baseStepCtx: BuildStepContext;
 
@@ -54,8 +87,12 @@ describe(BuildStep, () => {
     it('executes the command passed to the step', async () => {
       const logger = createMockLogger();
       const lines: string[] = [];
-      jest.mocked(logger.info as any).mockImplementation((line: string) => {
-        lines.push(line);
+      jest.mocked(logger.info as any).mockImplementation((obj: object | string, line?: string) => {
+        if (typeof obj === 'string') {
+          lines.push(obj);
+        } else if (line) {
+          lines.push(line);
+        }
       });
       const ctx = cloneContextWithOverrides(baseStepCtx, { logger });
 
@@ -147,24 +184,24 @@ describe(BuildStep, () => {
       expect(error.message).toMatch(/Some required output parameters have not been set: "abc"/);
     });
 
-    it('sets status to FAILED when command fails', async () => {
+    it('sets status to FAIL when command fails', async () => {
       const step = new BuildStep(baseStepCtx, {
         id: 'test1',
         command: 'false',
         workingDirectory: baseStepCtx.workingDirectory,
       });
       await expect(step.executeAsync()).rejects.toThrow();
-      expect(step.status).toBe(BuildStepStatus.FAILED);
+      expect(step.status).toBe(BuildStepStatus.FAIL);
     });
 
-    it('sets status to SUCCEEDED when command succeeds', async () => {
+    it('sets status to SUCCESS when command succeeds', async () => {
       const step = new BuildStep(baseStepCtx, {
         id: 'test1',
         command: 'true',
         workingDirectory: baseStepCtx.workingDirectory,
       });
       await step.executeAsync();
-      expect(step.status).toBe(BuildStepStatus.SUCCEEDED);
+      expect(step.status).toBe(BuildStepStatus.SUCCESS);
     });
   });
 

@@ -1,7 +1,7 @@
 import Joi from 'joi';
 
 import * as Android from '../android';
-import { ArchiveSourceType, BuildTrigger, Platform, Workflow } from '../common';
+import { ArchiveSourceType, BuildMode, BuildTrigger, Platform, Workflow } from '../common';
 
 const joiOptions: Joi.ValidationOptions = {
   stripUnknown: true,
@@ -21,7 +21,7 @@ const secrets = {
 };
 
 describe('Android.JobSchema', () => {
-  test('valid job', () => {
+  test('valid generic job', () => {
     const genericJob = {
       secrets,
       platform: Platform.ANDROID,
@@ -50,7 +50,7 @@ describe('Android.JobSchema', () => {
     expect(error).toBeFalsy();
   });
 
-  test('invalid job', () => {
+  test('invalid generic job', () => {
     const genericJob = {
       secrets,
       platform: Platform.ANDROID,
@@ -70,10 +70,8 @@ describe('Android.JobSchema', () => {
     );
     expect(value).not.toMatchObject(genericJob);
   });
-});
 
-describe('Android.JobSchema', () => {
-  test('valid job', () => {
+  test('valid managed job', () => {
     const managedJob = {
       secrets,
       platform: Platform.ANDROID,
@@ -102,7 +100,7 @@ describe('Android.JobSchema', () => {
     expect(error).toBeFalsy();
   });
 
-  test('invalid job', () => {
+  test('invalid managed job', () => {
     const managedJob = {
       secrets,
       platform: Platform.ANDROID,
@@ -123,6 +121,7 @@ describe('Android.JobSchema', () => {
     );
     expect(value).not.toMatchObject(managedJob);
   });
+
   test('validates channel', () => {
     const managedJob = {
       secrets,
@@ -142,6 +141,7 @@ describe('Android.JobSchema', () => {
     expect(value).toMatchObject(managedJob);
     expect(error).toBeFalsy();
   });
+
   test('fails when both releaseChannel and updates.channel are defined', () => {
     const managedJob = {
       secrets,
@@ -186,5 +186,25 @@ describe('Android.JobSchema', () => {
 
     const { error } = Android.JobSchema.validate(managedJob, joiOptions);
     expect(error?.message).toBe('"buildProfile" is required');
+  });
+
+  test('valid custom build job', () => {
+    const customBuildJob = {
+      mode: BuildMode.CUSTOM,
+      type: Workflow.UNKNOWN,
+      platform: Platform.ANDROID,
+      projectArchive: {
+        type: ArchiveSourceType.URL,
+        url: 'https://expo.dev/builds/123',
+      },
+      projectRootDirectory: '.',
+      customBuildConfig: {
+        path: 'production.android.yml',
+      },
+    };
+
+    const { value, error } = Android.JobSchema.validate(customBuildJob, joiOptions);
+    expect(value).toMatchObject(customBuildJob);
+    expect(error).toBeFalsy();
   });
 });

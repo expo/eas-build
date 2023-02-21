@@ -18,12 +18,17 @@ import { setupAsync } from '../common/setup';
 import { prebuildAsync } from '../common/prebuild';
 
 import { runBuilderWithHooksAsync } from './common';
+import { runCustomBuildAsync } from './custom';
 
 export default async function iosBuilder(ctx: BuildContext<Ios.Job>): Promise<Artifacts> {
   if (ctx.job.mode === BuildMode.BUILD) {
     return await runBuilderWithHooksAsync(ctx, buildAsync);
-  } else {
+  } else if (ctx.job.mode === BuildMode.RESIGN) {
     return await resignAsync(ctx);
+  } else if (ctx.job.mode === BuildMode.CUSTOM) {
+    return await runCustomBuildAsync(ctx);
+  } else {
+    throw new Error('Not implemented');
   }
 }
 

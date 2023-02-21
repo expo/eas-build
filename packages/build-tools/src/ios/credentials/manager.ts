@@ -5,6 +5,7 @@ import path from 'path';
 import { Ios } from '@expo/eas-build-job';
 import fs from 'fs-extra';
 import { orderBy } from 'lodash';
+import nullthrows from 'nullthrows';
 import { v4 as uuid } from 'uuid';
 
 import { BuildContext } from '../../context';
@@ -38,7 +39,10 @@ export default class IosCredentialsManager<TJob extends Ios.Job> {
       return null;
     }
 
-    const { buildCredentials } = this.ctx.job.secrets;
+    const { buildCredentials } = nullthrows(
+      this.ctx.job.secrets,
+      'Secrets must be defined for non-custom builds'
+    );
     if (!buildCredentials) {
       throw new Error('credentials are required for an iOS build');
     }

@@ -1,4 +1,5 @@
-import { Android, BuildPhase, Workflow } from '@expo/eas-build-job';
+import { Android, BuildMode, BuildPhase, Workflow } from '@expo/eas-build-job';
+import nullthrows from 'nullthrows';
 
 import { Artifacts, ArtifactType, BuildContext, SkipNativeBuildError } from '../context';
 import { configureExpoUpdatesIfInstalledAsync } from '../utils/expoUpdates';
@@ -11,9 +12,18 @@ import { setupAsync } from '../common/setup';
 import { prebuildAsync } from '../common/prebuild';
 
 import { runBuilderWithHooksAsync } from './common';
+import { runCustomBuildAsync } from './custom';
 
 export default async function androidBuilder(ctx: BuildContext<Android.Job>): Promise<Artifacts> {
-  return await runBuilderWithHooksAsync(ctx, buildAsync);
+  if (ctx.job.mode === BuildMode.BUILD) {
+    return await runBuilderWithHooksAsync(ctx, buildAsync);
+  } else if (ctx.job.mode === BuildMode.RESIGN) {
+    throw new Error('Not implemented');
+  } else if (ctx.job.mode === BuildMode.CUSTOM) {
+    return await runCustomBuildAsync(ctx);
+  } else {
+    throw new Error('Not implemented');
+  }
 }
 
 async function buildAsync(ctx: BuildContext<Android.Job>): Promise<void> {
@@ -45,7 +55,9 @@ async function buildAsync(ctx: BuildContext<Android.Job>): Promise<void> {
     await runHookIfPresent(ctx, Hook.POST_INSTALL);
   });
 
-  if (ctx.job.secrets.buildCredentials) {
+  if (
+    nullthrows(ctx.job.secrets, 'Secrets must be defined for non-custom builds').buildCredentials
+  ) {
     await ctx.runBuildPhase(BuildPhase.PREPARE_CREDENTIALS, async () => {
       await restoreCredentials(ctx);
       await configureBuildGradle(ctx);

@@ -47,6 +47,9 @@ export enum BuildPhase {
 
   // RESIGN
   DOWNLOAD_APPLICATION_ARCHIVE = 'DOWNLOAD_APPLICATION_ARCHIVE',
+
+  // CUSTOM BUILDS
+  CUSTOM = 'CUSTOM',
 }
 
 export enum BuildPhaseResult {
