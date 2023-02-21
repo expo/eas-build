@@ -1,6 +1,6 @@
 {
   "name": "@expo/eas-build-job",
-  "version": "0.2.105",
+  "version": "0.2.106",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "files": [
