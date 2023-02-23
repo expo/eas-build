@@ -24,7 +24,7 @@ export async function runCustomBuildAsync<T extends Job>(ctx: BuildContext<T>): 
   );
   const parser = new BuildConfigParser(buildStepContext, { configPath });
   const workflow = await parser.parseAsync();
-  await workflow.executeAsync();
+  await workflow.executeAsync(ctx.env);
 
   // TOOD: return application archive and build artifacts
   return {};
