@@ -17,6 +17,7 @@ import {
 import { spawnAsync } from './utils/shell/spawn.js';
 import { interpolateWithInputs } from './utils/template.js';
 import { BuildStepRuntimeError } from './errors/BuildStepRuntimeError.js';
+import { BuildStepEnv } from './BuildStepEnv.js';
 
 export enum BuildStepStatus {
   NEW = 'new',
@@ -95,7 +96,7 @@ export class BuildStep {
     ctx.registerStep(this);
   }
 
-  public async executeAsync(): Promise<void> {
+  public async executeAsync(env: BuildStepEnv = process.env): Promise<void> {
     try {
       this.logger.info(
         { marker: BuildStepLogMarker.START_STEP },
@@ -119,7 +120,7 @@ export class BuildStep {
       await spawnAsync(shellCommand, args ?? [], {
         cwd: this.workingDirectory,
         logger: this.logger,
-        env: this.getScriptEnv(outputsDir),
+        env: this.getScriptEnv(env, outputsDir),
       });
       this.logger.debug(`Script completed successfully`);
 
@@ -211,11 +212,13 @@ export class BuildStep {
     }
   }
 
-  private getScriptEnv(outputsDir: string): Record<string, string> {
+  private getScriptEnv(env: BuildStepEnv, outputsDir: string): Record<string, string> {
+    const currentPath = env.PATH ?? process.env.PATH;
+    const newPath = currentPath ? `${BIN_PATH}:${currentPath}` : BIN_PATH;
     return {
-      ...process.env,
+      ...env,
       __EXPO_STEPS_OUTPUTS_DIR: outputsDir,
-      PATH: `${BIN_PATH}:${process.env.PATH}`,
+      PATH: newPath,
     };
   }
 

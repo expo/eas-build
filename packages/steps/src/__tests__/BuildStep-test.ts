@@ -255,5 +255,25 @@ describe(BuildStep, () => {
       await step.executeAsync();
       expect(step.getOutputValueByName('abc')).toBe('123');
     });
+
+    it('propagates environment variables to the script', async () => {
+      const logger = createMockLogger();
+      const lines: string[] = [];
+      jest.mocked(logger.info as any).mockImplementation((obj: object | string, line?: string) => {
+        if (typeof obj === 'string') {
+          lines.push(obj);
+        } else if (line) {
+          lines.push(line);
+        }
+      });
+      const ctx = cloneContextWithOverrides(baseStepCtx, { logger });
+      const step = new BuildStep(ctx, {
+        id: 'test1',
+        command: 'echo $TEST_ABC',
+        workingDirectory: ctx.workingDirectory,
+      });
+      await step.executeAsync({ TEST_ABC: 'lorem ipsum' });
+      expect(lines.find((line) => line.match('lorem ipsum'))).toBeTruthy();
+    });
   });
 });
