@@ -10,10 +10,10 @@ import { BuildStepOutput } from './BuildStepOutput.js';
 import { BIN_PATH } from './utils/shell/bin.js';
 import { getDefaultShell, getShellCommandAndArgs } from './utils/shell/command.js';
 import {
-  cleanUpTemporaryDirectoriesAsync,
+  cleanUpStepTemporaryDirectoriesAsync,
   createTemporaryOutputsDirectoryAsync,
   saveScriptToTemporaryFileAsync,
-} from './utils/shell/temporaryFiles.js';
+} from './BuildTemporaryFiles.js';
 import { spawnAsync } from './utils/shell/spawn.js';
 import { interpolateWithInputs } from './utils/template.js';
 import { BuildStepRuntimeError } from './errors/BuildStepRuntimeError.js';
@@ -142,7 +142,7 @@ export class BuildStep {
       throw err;
     } finally {
       this.executed = true;
-      await cleanUpTemporaryDirectoriesAsync(this.ctx, this.id);
+      await cleanUpStepTemporaryDirectoriesAsync(this.ctx, this.id);
     }
   }
 

@@ -3,7 +3,7 @@ import fs from 'fs';
 
 import { v4 as uuidv4 } from 'uuid';
 
-import { BuildStepContext } from '../../BuildStepContext.js';
+import { BuildStepContext } from './BuildStepContext.js';
 
 export async function saveScriptToTemporaryFileAsync(
   ctx: BuildStepContext,
@@ -26,7 +26,7 @@ export async function createTemporaryOutputsDirectoryAsync(
   return directory;
 }
 
-export async function cleanUpTemporaryDirectoriesAsync(
+export async function cleanUpStepTemporaryDirectoriesAsync(
   ctx: BuildStepContext,
   stepId: string
 ): Promise<void> {

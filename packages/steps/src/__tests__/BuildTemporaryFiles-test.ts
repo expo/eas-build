@@ -1,12 +1,13 @@
 import fs from 'fs';
 import os from 'os';
 
-import { createMockContext } from '../../../__tests__/utils/context.js';
 import {
-  cleanUpTemporaryDirectoriesAsync,
+  cleanUpStepTemporaryDirectoriesAsync,
   createTemporaryOutputsDirectoryAsync,
   saveScriptToTemporaryFileAsync,
-} from '../temporaryFiles.js';
+} from '../BuildTemporaryFiles.js';
+
+import { createMockContext } from './utils/context.js';
 
 describe(saveScriptToTemporaryFileAsync, () => {
   it('saves the script in a directory inside os.tmpdir()', async () => {
@@ -35,14 +36,14 @@ describe(createTemporaryOutputsDirectoryAsync, () => {
   });
 });
 
-describe(cleanUpTemporaryDirectoriesAsync, () => {
-  it('removes the temporary directories', async () => {
+describe(cleanUpStepTemporaryDirectoriesAsync, () => {
+  it('removes the step temporary directories', async () => {
     const ctx = createMockContext();
     const scriptPath = await saveScriptToTemporaryFileAsync(ctx, 'foo', 'echo 123');
     const outputsPath = await createTemporaryOutputsDirectoryAsync(ctx, 'foo');
     await expect(fs.promises.stat(scriptPath)).resolves.toBeTruthy();
     await expect(fs.promises.stat(outputsPath)).resolves.toBeTruthy();
-    await cleanUpTemporaryDirectoriesAsync(ctx, 'foo');
+    await cleanUpStepTemporaryDirectoriesAsync(ctx, 'foo');
     await expect(fs.promises.stat(scriptPath)).rejects.toThrow(/no such file or directory/);
     await expect(fs.promises.stat(outputsPath)).rejects.toThrow(/no such file or directory/);
   });
