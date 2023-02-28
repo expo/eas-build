@@ -275,5 +275,32 @@ describe(BuildStep, () => {
       await step.executeAsync({ TEST_ABC: 'lorem ipsum' });
       expect(lines.find((line) => line.match('lorem ipsum'))).toBeTruthy();
     });
+
+    it('executes the command with internal environment variables', async () => {
+      const logger = createMockLogger();
+      const lines: string[] = [];
+      jest.mocked(logger.info as any).mockImplementation((obj: object | string, line?: string) => {
+        if (typeof obj === 'string') {
+          lines.push(obj);
+        } else if (line) {
+          lines.push(line);
+        }
+      });
+      const ctx = cloneContextWithOverrides(baseStepCtx, { logger });
+      const step = new BuildStep(ctx, {
+        id: 'test1',
+        command:
+          'echo $__EXPO_STEPS_BUILD_ID\necho $__EXPO_STEPS_OUTPUTS_DIR\necho $__EXPO_STEPS_WORKING_DIRECTORY',
+        workingDirectory: ctx.workingDirectory,
+      });
+      await step.executeAsync();
+      expect(lines.find((line) => line.match(ctx.buildId))).toBeTruthy();
+      expect(
+        lines.find((line) =>
+          line.startsWith(path.join(ctx.baseWorkingDirectory, 'steps/test1/outputs'))
+        )
+      ).toBeTruthy();
+      expect(lines.find((line) => line.match(ctx.workingDirectory))).toBeTruthy();
+    });
   });
 });

@@ -30,7 +30,7 @@ export class BuildConfigParser {
     const steps = config.build.steps.map((stepConfig) =>
       this.createBuildStepFromConfig(stepConfig)
     );
-    const workflow = new BuildWorkflow({ buildSteps: steps });
+    const workflow = new BuildWorkflow(this.ctx, { buildSteps: steps });
     new BuildWorkflowValidator(workflow).validate();
     return workflow;
   }

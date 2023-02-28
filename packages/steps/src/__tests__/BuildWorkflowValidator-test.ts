@@ -14,7 +14,7 @@ import { getError } from './utils/error.js';
 describe(BuildWorkflowValidator, () => {
   test('non unique step ids', async () => {
     const ctx = createMockContext();
-    const workflow = new BuildWorkflow({
+    const workflow = new BuildWorkflow(ctx, {
       buildSteps: [
         new BuildStep(ctx, {
           id: 'test1',
@@ -56,7 +56,7 @@ describe(BuildWorkflowValidator, () => {
   });
   test('output from future step', async () => {
     const ctx = createMockContext();
-    const workflow = new BuildWorkflow({
+    const workflow = new BuildWorkflow(ctx, {
       buildSteps: [
         new BuildStep(ctx, {
           id: 'test1',
@@ -94,7 +94,7 @@ describe(BuildWorkflowValidator, () => {
   });
   test('output from non-existent step', async () => {
     const ctx = createMockContext();
-    const workflow = new BuildWorkflow({
+    const workflow = new BuildWorkflow(ctx, {
       buildSteps: [
         new BuildStep(ctx, {
           id: 'test2',
@@ -126,7 +126,7 @@ describe(BuildWorkflowValidator, () => {
   });
   test('undefined output', async () => {
     const ctx = createMockContext();
-    const workflow = new BuildWorkflow({
+    const workflow = new BuildWorkflow(ctx, {
       buildSteps: [
         new BuildStep(ctx, {
           id: 'test1',
@@ -177,7 +177,7 @@ describe(BuildWorkflowValidator, () => {
   });
   test('multiple config errors', () => {
     const ctx = createMockContext();
-    const workflow = new BuildWorkflow({
+    const workflow = new BuildWorkflow(ctx, {
       buildSteps: [
         new BuildStep(ctx, {
           id: 'test1',

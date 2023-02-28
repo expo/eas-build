@@ -1,16 +1,35 @@
+import { BuildArtifacts, BuildArtifactType } from './BuildArtifacts.js';
 import { BuildStep } from './BuildStep.js';
+import { BuildStepContext } from './BuildStepContext.js';
 import { BuildStepEnv } from './BuildStepEnv.js';
+import { findArtifactsByTypeAsync } from './BuildTemporaryFiles.js';
 
 export class BuildWorkflow {
   public readonly buildSteps: BuildStep[];
 
-  constructor({ buildSteps }: { buildSteps: BuildStep[] }) {
+  constructor(private readonly ctx: BuildStepContext, { buildSteps }: { buildSteps: BuildStep[] }) {
     this.buildSteps = buildSteps;
   }
 
-  public async executeAsync(env: BuildStepEnv = process.env): Promise<void> {
+  public async executeAsync(env: BuildStepEnv = process.env): Promise<BuildArtifacts> {
     for (const step of this.buildSteps) {
       await step.executeAsync(env);
     }
+    return await this.collectArtifactsAsync();
+  }
+
+  private async collectArtifactsAsync(): Promise<BuildArtifacts> {
+    const applicationArchives = await findArtifactsByTypeAsync(
+      this.ctx,
+      BuildArtifactType.APPLICATION_ARCHIVE
+    );
+    const buildArtifacts = await findArtifactsByTypeAsync(
+      this.ctx,
+      BuildArtifactType.BUILD_ARTIFACT
+    );
+    return {
+      [BuildArtifactType.APPLICATION_ARCHIVE]: applicationArchives,
+      [BuildArtifactType.BUILD_ARTIFACT]: buildArtifacts,
+    };
   }
 }

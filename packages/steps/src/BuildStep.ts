@@ -217,7 +217,9 @@ export class BuildStep {
     const newPath = currentPath ? `${BIN_PATH}:${currentPath}` : BIN_PATH;
     return {
       ...env,
+      __EXPO_STEPS_BUILD_ID: this.ctx.buildId,
       __EXPO_STEPS_OUTPUTS_DIR: outputsDir,
+      __EXPO_STEPS_WORKING_DIRECTORY: this.ctx.workingDirectory,
       PATH: newPath,
     };
   }

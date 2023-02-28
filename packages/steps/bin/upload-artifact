@@ -1,0 +1,12 @@
+#!/usr/bin/env bash
+
+set -eo pipefail
+
+if [[ -z "$__EXPO_STEPS_BUILD_ID" || -z "$__EXPO_STEPS_WORKING_DIRECTORY" ]]; then
+  echo "Set __EXPO_STEPS_BUILD_ID and __EXPO_STEPS_WORKING_DIRECTORY"
+  exit 1
+fi
+
+STEPS_ROOT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )"/.. && pwd )"
+
+node $STEPS_ROOT_DIR/dist_commonjs/bin/uploadArtifact.cjs $@
