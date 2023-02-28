@@ -25,7 +25,7 @@
     "@expo/eas-build-job": "0.2.106",
     "@expo/spawn-async": "^1.7.0",
     "@expo/turtle-spawn": "0.0.28",
-    "chalk": "^5.2.0",
+    "chalk": "^4.1.2",
     "env-paths": "^3.0.0",
     "fs-extra": "^11.1.0",
     "joi": "^17.7.0",
