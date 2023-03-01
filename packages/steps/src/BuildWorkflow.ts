@@ -2,7 +2,10 @@ import { BuildArtifacts, BuildArtifactType } from './BuildArtifacts.js';
 import { BuildStep } from './BuildStep.js';
 import { BuildStepContext } from './BuildStepContext.js';
 import { BuildStepEnv } from './BuildStepEnv.js';
-import { findArtifactsByTypeAsync } from './BuildTemporaryFiles.js';
+import {
+  cleanUpWorkflowTemporaryDirectoriesAsync,
+  findArtifactsByTypeAsync,
+} from './BuildTemporaryFiles.js';
 
 export class BuildWorkflow {
   public readonly buildSteps: BuildStep[];
@@ -11,14 +14,13 @@ export class BuildWorkflow {
     this.buildSteps = buildSteps;
   }
 
-  public async executeAsync(env: BuildStepEnv = process.env): Promise<BuildArtifacts> {
+  public async executeAsync(env: BuildStepEnv = process.env): Promise<void> {
     for (const step of this.buildSteps) {
       await step.executeAsync(env);
     }
-    return await this.collectArtifactsAsync();
   }
 
-  private async collectArtifactsAsync(): Promise<BuildArtifacts> {
+  public async collectArtifactsAsync(): Promise<BuildArtifacts> {
     const applicationArchives = await findArtifactsByTypeAsync(
       this.ctx,
       BuildArtifactType.APPLICATION_ARCHIVE
@@ -31,5 +33,9 @@ export class BuildWorkflow {
       [BuildArtifactType.APPLICATION_ARCHIVE]: applicationArchives,
       [BuildArtifactType.BUILD_ARTIFACT]: buildArtifacts,
     };
+  }
+
+  public async cleanUpAsync(): Promise<void> {
+    await cleanUpWorkflowTemporaryDirectoriesAsync(this.ctx);
   }
 }

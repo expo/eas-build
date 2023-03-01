@@ -77,7 +77,6 @@ export async function findArtifactsByTypeAsync(
   }
 }
 
-// TODO: use it in build-tools
 export async function cleanUpStepTemporaryDirectoriesAsync(
   ctx: BuildStepContext,
   stepId: string

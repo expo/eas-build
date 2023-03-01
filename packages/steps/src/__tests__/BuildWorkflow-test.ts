@@ -79,7 +79,8 @@ describe(BuildWorkflow, () => {
       verify(mockBuildStep2.executeAsync(mockEnv));
       verify(mockBuildStep3.executeAsync(mockEnv));
     });
-
+  });
+  describe(BuildWorkflow.prototype.collectArtifactsAsync, () => {
     it('returns build artifacts', async () => {
       const ctx = createMockContext();
       const originalApplicationArchivePath = path.join(os.tmpdir(), 'app.ipa');
@@ -111,7 +112,9 @@ describe(BuildWorkflow, () => {
         ];
 
         const workflow = new BuildWorkflow(ctx, { buildSteps });
-        const artifacts = await workflow.executeAsync();
+        await workflow.executeAsync();
+
+        const artifacts = await workflow.collectArtifactsAsync();
         expect(artifacts['application-archive']?.length).toBe(1);
         expect(artifacts['build-artifact']?.length).toBe(2);
         expect(artifacts['application-archive']?.[0].endsWith('app.ipa')).toBeTruthy();
