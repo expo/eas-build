@@ -1,10 +1,10 @@
 import path from 'path';
 
 import { BuildPhase, Job } from '@expo/eas-build-job';
-import { BuildConfigParser, BuildStepContext } from '@expo/steps';
+import { BuildArtifactType, BuildConfigParser, BuildStepContext } from '@expo/steps';
 import nullthrows from 'nullthrows';
 
-import { Artifacts, BuildContext } from '../context';
+import { Artifacts, ArtifactType, BuildContext } from '../context';
 import { prepareProjectSourcesAsync } from '../common/projectSources';
 
 export async function runCustomBuildAsync<T extends Job>(ctx: BuildContext<T>): Promise<Artifacts> {
@@ -24,8 +24,34 @@ export async function runCustomBuildAsync<T extends Job>(ctx: BuildContext<T>): 
   );
   const parser = new BuildConfigParser(buildStepContext, { configPath });
   const workflow = await parser.parseAsync();
-  await workflow.executeAsync(ctx.env);
+  try {
+    try {
+      await workflow.executeAsync(ctx.env);
+    } finally {
+      await ctx.runBuildPhase(BuildPhase.UPLOAD_BUILD_ARTIFACTS, async () => {
+        try {
+          const artifacts = await workflow.collectArtifactsAsync();
+          for (const buildArtifactType of Object.keys(artifacts)) {
+            const type: ArtifactType =
+              buildArtifactType === BuildArtifactType.APPLICATION_ARCHIVE
+                ? ArtifactType.APPLICATION_ARCHIVE
+                : ArtifactType.BUILD_ARTIFACTS;
+            const filePaths = artifacts[buildArtifactType as BuildArtifactType] ?? [];
+            if (filePaths.length > 0) {
+              await ctx.uploadArtifacts(type, filePaths);
+            }
+          }
+        } catch (err: any) {
+          ctx.logger.error({ err }, 'Failed to upload artifacts');
+        }
+      });
 
-  // TOOD: return application archive and build artifacts
-  return {};
+      await workflow.cleanUpAsync();
+    }
+  } catch (err: any) {
+    err.artifacts = ctx.artifacts;
+    throw err;
+  }
+
+  return ctx.artifacts;
 }
