@@ -1,4 +1,4 @@
-import fs from 'fs';
+import fs from 'fs/promises';
 import path from 'path';
 
 import { v4 as uuidv4 } from 'uuid';
@@ -36,7 +36,7 @@ export class BuildConfigParser {
   }
 
   private async readRawConfigAsync(): Promise<any> {
-    const contents = await fs.promises.readFile(this.configPath, 'utf-8');
+    const contents = await fs.readFile(this.configPath, 'utf-8');
     return YAML.parse(contents);
   }
 

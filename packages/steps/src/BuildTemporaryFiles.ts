@@ -1,5 +1,5 @@
 import path from 'path';
-import fs from 'fs';
+import fs from 'fs/promises';
 
 import { v4 as uuidv4 } from 'uuid';
 
@@ -13,9 +13,9 @@ export async function saveScriptToTemporaryFileAsync(
   scriptContents: string
 ): Promise<string> {
   const scriptsDir = getTemporaryScriptsDirPath(ctx, stepId);
-  await fs.promises.mkdir(scriptsDir, { recursive: true });
+  await fs.mkdir(scriptsDir, { recursive: true });
   const temporaryScriptPath = path.join(scriptsDir, `${uuidv4()}.sh`);
-  await fs.promises.writeFile(temporaryScriptPath, scriptContents);
+  await fs.writeFile(temporaryScriptPath, scriptContents);
   return temporaryScriptPath;
 }
 
@@ -39,8 +39,8 @@ export async function saveArtifactToTemporaryDirectoryAsync(
     throw new BuildInternalError(`Uploading artifacts of type "${type}" is not implemented.`);
   }
 
-  await fs.promises.mkdir(path.dirname(targetArtifactPath), { recursive: true });
-  await fs.promises.copyFile(artifactPath, targetArtifactPath);
+  await fs.mkdir(path.dirname(targetArtifactPath), { recursive: true });
+  await fs.copyFile(artifactPath, targetArtifactPath);
   return targetArtifactPath;
 }
 
@@ -49,7 +49,7 @@ export async function createTemporaryOutputsDirectoryAsync(
   stepId: string
 ): Promise<string> {
   const directory = getTemporaryOutputsDirPath(ctx, stepId);
-  await fs.promises.mkdir(directory, { recursive: true });
+  await fs.mkdir(directory, { recursive: true });
   return directory;
 }
 
@@ -66,7 +66,7 @@ export async function findArtifactsByTypeAsync(
     throw new BuildInternalError(`Finding artifacts of type "${type}" is not implemented.`);
   }
   try {
-    const filenames = await fs.promises.readdir(artifactsDirPath);
+    const filenames = await fs.readdir(artifactsDirPath);
     return filenames.map((filename) => path.join(artifactsDirPath, filename));
   } catch (err) {
     ctx.logger.debug(
@@ -85,7 +85,7 @@ export async function cleanUpStepTemporaryDirectoriesAsync(
     return;
   }
   const stepTemporaryDirectory = getTemporaryStepDirPath(ctx, stepId);
-  await fs.promises.rm(stepTemporaryDirectory, { recursive: true });
+  await fs.rm(stepTemporaryDirectory, { recursive: true });
   ctx.logger.debug({ stepTemporaryDirectory }, 'Removed step temporary directory');
 }
 
@@ -97,7 +97,7 @@ export async function cleanUpWorkflowTemporaryDirectoriesAsync(
   }
 
   const temporaryDirectories: string[] = [getTemporaryArtifactsDirPath(ctx)];
-  const rmPromises = temporaryDirectories.map((dir) => fs.promises.rm(dir, { recursive: true }));
+  const rmPromises = temporaryDirectories.map((dir) => fs.rm(dir, { recursive: true }));
   await Promise.all(rmPromises);
   ctx.logger.debug({ temporaryDirectories }, 'Removed temporary directories');
 }

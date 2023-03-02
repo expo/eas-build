@@ -1,4 +1,4 @@
-import fs from 'fs';
+import fs from 'fs/promises';
 import os from 'os';
 import path from 'path';
 
@@ -88,10 +88,10 @@ describe(BuildWorkflow, () => {
       const originalBuildArtifactPath2 = path.join(os.tmpdir(), 'screenshot2.png');
 
       try {
-        await fs.promises.mkdir(ctx.workingDirectory, { recursive: true });
-        await fs.promises.writeFile(originalApplicationArchivePath, 'abc123');
-        await fs.promises.writeFile(originalBuildArtifactPath1, 'def456');
-        await fs.promises.writeFile(originalBuildArtifactPath2, 'ghi789');
+        await fs.mkdir(ctx.workingDirectory, { recursive: true });
+        await fs.writeFile(originalApplicationArchivePath, 'abc123');
+        await fs.writeFile(originalBuildArtifactPath1, 'def456');
+        await fs.writeFile(originalBuildArtifactPath2, 'ghi789');
 
         const buildSteps: BuildStep[] = [
           new BuildStep(ctx, {
@@ -122,10 +122,10 @@ describe(BuildWorkflow, () => {
         expect(artifacts['build-artifact']?.[1].endsWith('screenshot2.png')).toBeTruthy();
       } finally {
         await Promise.all([
-          fs.promises.rm(ctx.baseWorkingDirectory, { recursive: true }),
-          fs.promises.rm(originalApplicationArchivePath),
-          fs.promises.rm(originalBuildArtifactPath1),
-          fs.promises.rm(originalBuildArtifactPath2),
+          fs.rm(ctx.baseWorkingDirectory, { recursive: true }),
+          fs.rm(originalApplicationArchivePath),
+          fs.rm(originalBuildArtifactPath1),
+          fs.rm(originalBuildArtifactPath2),
         ]);
       }
     });

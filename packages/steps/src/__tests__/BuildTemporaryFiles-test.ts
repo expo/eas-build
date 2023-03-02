@@ -1,4 +1,4 @@
-import fs from 'fs';
+import fs from 'fs/promises';
 import os from 'os';
 import path from 'path';
 
@@ -26,7 +26,7 @@ describe(saveScriptToTemporaryFileAsync, () => {
     const ctx = createMockContext();
     const contents = 'echo 123\necho 456';
     const scriptPath = await saveScriptToTemporaryFileAsync(ctx, 'foo', contents);
-    await expect(fs.promises.readFile(scriptPath, 'utf-8')).resolves.toBe(contents);
+    await expect(fs.readFile(scriptPath, 'utf-8')).resolves.toBe(contents);
   });
 });
 
@@ -34,10 +34,10 @@ describe(saveArtifactToTemporaryDirectoryAsync, () => {
   const originalArtifactPath = path.join(os.tmpdir(), 'app.ipa');
 
   beforeEach(async () => {
-    await fs.promises.writeFile(originalArtifactPath, 'abc123');
+    await fs.writeFile(originalArtifactPath, 'abc123');
   });
   afterEach(async () => {
-    await fs.promises.rm(originalArtifactPath);
+    await fs.rm(originalArtifactPath);
   });
 
   it('can upload the application archive', async () => {
@@ -48,7 +48,7 @@ describe(saveArtifactToTemporaryDirectoryAsync, () => {
       originalArtifactPath
     );
     expect(artifactPath).not.toBe(originalArtifactPath);
-    await expect(fs.promises.readFile(artifactPath, 'utf-8')).resolves.toBe('abc123');
+    await expect(fs.readFile(artifactPath, 'utf-8')).resolves.toBe('abc123');
     expect(artifactPath.startsWith(os.tmpdir())).toBe(true);
   });
   it('can upload a build artifact', async () => {
@@ -59,7 +59,7 @@ describe(saveArtifactToTemporaryDirectoryAsync, () => {
       originalArtifactPath
     );
     expect(artifactPath).not.toBe(originalArtifactPath);
-    await expect(fs.promises.readFile(artifactPath, 'utf-8')).resolves.toBe('abc123');
+    await expect(fs.readFile(artifactPath, 'utf-8')).resolves.toBe('abc123');
     expect(artifactPath.startsWith(os.tmpdir())).toBe(true);
   });
   it('throws when trying to upload unsupported artifact type', async () => {
@@ -80,7 +80,7 @@ describe(createTemporaryOutputsDirectoryAsync, () => {
   it('creates a temporary directory for output values', async () => {
     const ctx = createMockContext();
     const outputsPath = await createTemporaryOutputsDirectoryAsync(ctx, 'foo');
-    await expect(fs.promises.stat(outputsPath)).resolves.not.toThrow();
+    await expect(fs.stat(outputsPath)).resolves.not.toThrow();
   });
   it('creates a temporary directory inside os.tmpdir()', async () => {
     const ctx = createMockContext();
@@ -94,12 +94,12 @@ describe(findArtifactsByTypeAsync, () => {
   const originalArtifactPath2 = path.join(os.tmpdir(), 'app2.ipa');
 
   beforeEach(async () => {
-    await fs.promises.writeFile(originalArtifactPath1, 'abc123');
-    await fs.promises.writeFile(originalArtifactPath2, 'def456');
+    await fs.writeFile(originalArtifactPath1, 'abc123');
+    await fs.writeFile(originalArtifactPath2, 'def456');
   });
   afterEach(async () => {
-    await fs.promises.rm(originalArtifactPath1);
-    await fs.promises.rm(originalArtifactPath2);
+    await fs.rm(originalArtifactPath1);
+    await fs.rm(originalArtifactPath2);
   });
 
   it('can find artifacts of type "application-archive"', async () => {
@@ -148,11 +148,11 @@ describe(cleanUpStepTemporaryDirectoriesAsync, () => {
     const ctx = createMockContext();
     const scriptPath = await saveScriptToTemporaryFileAsync(ctx, 'foo', 'echo 123');
     const outputsPath = await createTemporaryOutputsDirectoryAsync(ctx, 'foo');
-    await expect(fs.promises.stat(scriptPath)).resolves.toBeTruthy();
-    await expect(fs.promises.stat(outputsPath)).resolves.toBeTruthy();
+    await expect(fs.stat(scriptPath)).resolves.toBeTruthy();
+    await expect(fs.stat(outputsPath)).resolves.toBeTruthy();
     await cleanUpStepTemporaryDirectoriesAsync(ctx, 'foo');
-    await expect(fs.promises.stat(scriptPath)).rejects.toThrow(/no such file or directory/);
-    await expect(fs.promises.stat(outputsPath)).rejects.toThrow(/no such file or directory/);
+    await expect(fs.stat(scriptPath)).rejects.toThrow(/no such file or directory/);
+    await expect(fs.stat(outputsPath)).rejects.toThrow(/no such file or directory/);
   });
 });
 
@@ -160,10 +160,10 @@ describe(cleanUpWorkflowTemporaryDirectoriesAsync, () => {
   const originalArtifactPath = path.join(os.tmpdir(), 'app.ipa');
 
   beforeEach(async () => {
-    await fs.promises.writeFile(originalArtifactPath, 'abc123');
+    await fs.writeFile(originalArtifactPath, 'abc123');
   });
   afterEach(async () => {
-    await fs.promises.rm(originalArtifactPath);
+    await fs.rm(originalArtifactPath);
   });
 
   it('removes the workflow temporary directories', async () => {
@@ -173,8 +173,8 @@ describe(cleanUpWorkflowTemporaryDirectoriesAsync, () => {
       BuildArtifactType.APPLICATION_ARCHIVE,
       originalArtifactPath
     );
-    await expect(fs.promises.stat(artifactPath)).resolves.toBeTruthy();
+    await expect(fs.stat(artifactPath)).resolves.toBeTruthy();
     await cleanUpWorkflowTemporaryDirectoriesAsync(ctx);
-    await expect(fs.promises.stat(artifactPath)).rejects.toThrow(/no such file or directory/);
+    await expect(fs.stat(artifactPath)).rejects.toThrow(/no such file or directory/);
   });
 });

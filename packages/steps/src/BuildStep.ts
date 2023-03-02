@@ -1,4 +1,4 @@
-import fs from 'fs';
+import fs from 'fs/promises';
 import path from 'path';
 
 import { bunyan } from '@expo/logger';
@@ -174,7 +174,7 @@ export class BuildStep {
   }
 
   private async collectAndValidateOutputsAsync(outputsDir: string): Promise<void> {
-    const files = await fs.promises.readdir(outputsDir);
+    const files = await fs.readdir(outputsDir);
 
     const nonDefinedOutputIds: string[] = [];
     for (const outputId of files) {
@@ -182,7 +182,7 @@ export class BuildStep {
         nonDefinedOutputIds.push(outputId);
       } else {
         const file = path.join(outputsDir, outputId);
-        const rawContents = await fs.promises.readFile(file, 'utf-8');
+        const rawContents = await fs.readFile(file, 'utf-8');
         const value = rawContents.trim();
         this.outputById[outputId].set(value);
       }

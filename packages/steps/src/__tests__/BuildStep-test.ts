@@ -1,4 +1,4 @@
-import fs from 'fs';
+import fs from 'fs/promises';
 import path from 'path';
 
 import { jest } from '@jest/globals';
@@ -78,10 +78,10 @@ describe(BuildStep, () => {
 
     beforeEach(async () => {
       baseStepCtx = createMockContext();
-      await fs.promises.mkdir(baseStepCtx.workingDirectory, { recursive: true });
+      await fs.mkdir(baseStepCtx.workingDirectory, { recursive: true });
     });
     afterEach(async () => {
-      await fs.promises.rm(baseStepCtx.baseWorkingDirectory, { recursive: true });
+      await fs.rm(baseStepCtx.baseWorkingDirectory, { recursive: true });
     });
 
     it('executes the command passed to the step', async () => {
@@ -97,9 +97,9 @@ describe(BuildStep, () => {
       const ctx = cloneContextWithOverrides(baseStepCtx, { logger });
 
       await Promise.all([
-        fs.promises.writeFile(path.join(ctx.workingDirectory, 'expo-abc123'), 'lorem ipsum'),
-        fs.promises.writeFile(path.join(ctx.workingDirectory, 'expo-def456'), 'lorem ipsum'),
-        fs.promises.writeFile(path.join(ctx.workingDirectory, 'expo-ghi789'), 'lorem ipsum'),
+        fs.writeFile(path.join(ctx.workingDirectory, 'expo-abc123'), 'lorem ipsum'),
+        fs.writeFile(path.join(ctx.workingDirectory, 'expo-def456'), 'lorem ipsum'),
+        fs.writeFile(path.join(ctx.workingDirectory, 'expo-ghi789'), 'lorem ipsum'),
       ]);
 
       const step = new BuildStep(ctx, {
@@ -210,10 +210,10 @@ describe(BuildStep, () => {
 
     beforeEach(async () => {
       baseStepCtx = createMockContext();
-      await fs.promises.mkdir(baseStepCtx.workingDirectory, { recursive: true });
+      await fs.mkdir(baseStepCtx.workingDirectory, { recursive: true });
     });
     afterEach(async () => {
-      await fs.promises.rm(baseStepCtx.baseWorkingDirectory, { recursive: true });
+      await fs.rm(baseStepCtx.baseWorkingDirectory, { recursive: true });
     });
 
     it('throws an error when the step has not been executed yet', async () => {
