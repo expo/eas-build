@@ -1,4 +1,4 @@
-import fs from 'fs';
+import fs from 'fs/promises';
 import path from 'path';
 
 import { bunyan } from '@expo/logger';
@@ -10,10 +10,10 @@ import { BuildStepOutput } from './BuildStepOutput.js';
 import { BIN_PATH } from './utils/shell/bin.js';
 import { getDefaultShell, getShellCommandAndArgs } from './utils/shell/command.js';
 import {
-  cleanUpTemporaryDirectoriesAsync,
+  cleanUpStepTemporaryDirectoriesAsync,
   createTemporaryOutputsDirectoryAsync,
   saveScriptToTemporaryFileAsync,
-} from './utils/shell/temporaryFiles.js';
+} from './BuildTemporaryFiles.js';
 import { spawnAsync } from './utils/shell/spawn.js';
 import { interpolateWithInputs } from './utils/template.js';
 import { BuildStepRuntimeError } from './errors/BuildStepRuntimeError.js';
@@ -142,7 +142,7 @@ export class BuildStep {
       throw err;
     } finally {
       this.executed = true;
-      await cleanUpTemporaryDirectoriesAsync(this.ctx, this.id);
+      await cleanUpStepTemporaryDirectoriesAsync(this.ctx, this.id);
     }
   }
 
@@ -174,7 +174,7 @@ export class BuildStep {
   }
 
   private async collectAndValidateOutputsAsync(outputsDir: string): Promise<void> {
-    const files = await fs.promises.readdir(outputsDir);
+    const files = await fs.readdir(outputsDir);
 
     const nonDefinedOutputIds: string[] = [];
     for (const outputId of files) {
@@ -182,7 +182,7 @@ export class BuildStep {
         nonDefinedOutputIds.push(outputId);
       } else {
         const file = path.join(outputsDir, outputId);
-        const rawContents = await fs.promises.readFile(file, 'utf-8');
+        const rawContents = await fs.readFile(file, 'utf-8');
         const value = rawContents.trim();
         this.outputById[outputId].set(value);
       }
@@ -217,7 +217,9 @@ export class BuildStep {
     const newPath = currentPath ? `${BIN_PATH}:${currentPath}` : BIN_PATH;
     return {
       ...env,
+      __EXPO_STEPS_BUILD_ID: this.ctx.buildId,
       __EXPO_STEPS_OUTPUTS_DIR: outputsDir,
+      __EXPO_STEPS_WORKING_DIRECTORY: this.ctx.workingDirectory,
       PATH: newPath,
     };
   }

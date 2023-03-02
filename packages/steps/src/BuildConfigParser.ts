@@ -1,4 +1,4 @@
-import fs from 'fs';
+import fs from 'fs/promises';
 import path from 'path';
 
 import { v4 as uuidv4 } from 'uuid';
@@ -30,13 +30,13 @@ export class BuildConfigParser {
     const steps = config.build.steps.map((stepConfig) =>
       this.createBuildStepFromConfig(stepConfig)
     );
-    const workflow = new BuildWorkflow({ buildSteps: steps });
+    const workflow = new BuildWorkflow(this.ctx, { buildSteps: steps });
     new BuildWorkflowValidator(workflow).validate();
     return workflow;
   }
 
   private async readRawConfigAsync(): Promise<any> {
-    const contents = await fs.promises.readFile(this.configPath, 'utf-8');
+    const contents = await fs.readFile(this.configPath, 'utf-8');
     return YAML.parse(contents);
   }
 

@@ -1,8 +1,14 @@
+import fs from 'fs/promises';
+import os from 'os';
+import path from 'path';
+
 import { anything, instance, mock, verify } from 'ts-mockito';
 
 import { BuildStep } from '../BuildStep.js';
 import { BuildStepEnv } from '../BuildStepEnv.js';
 import { BuildWorkflow } from '../BuildWorkflow.js';
+
+import { createMockContext } from './utils/context.js';
 
 describe(BuildWorkflow, () => {
   describe(BuildWorkflow.prototype.executeAsync, () => {
@@ -18,8 +24,10 @@ describe(BuildWorkflow, () => {
         instance(mockBuildStep3),
       ];
 
-      const workflow = new BuildWorkflow({ buildSteps });
+      const ctx = createMockContext();
+      const workflow = new BuildWorkflow(ctx, { buildSteps });
       await workflow.executeAsync();
+
       verify(mockBuildStep1.executeAsync(anything())).once();
       verify(mockBuildStep2.executeAsync(anything())).once();
       verify(mockBuildStep3.executeAsync(anything())).once();
@@ -37,8 +45,10 @@ describe(BuildWorkflow, () => {
         instance(mockBuildStep2),
       ];
 
-      const workflow = new BuildWorkflow({ buildSteps });
+      const ctx = createMockContext();
+      const workflow = new BuildWorkflow(ctx, { buildSteps });
       await workflow.executeAsync();
+
       verify(mockBuildStep1.executeAsync(anything())).calledBefore(
         mockBuildStep3.executeAsync(anything())
       );
@@ -61,11 +71,63 @@ describe(BuildWorkflow, () => {
 
       const mockEnv: BuildStepEnv = { ABC: '123' };
 
-      const workflow = new BuildWorkflow({ buildSteps });
+      const ctx = createMockContext();
+      const workflow = new BuildWorkflow(ctx, { buildSteps });
       await workflow.executeAsync(mockEnv);
+
       verify(mockBuildStep1.executeAsync(mockEnv));
       verify(mockBuildStep2.executeAsync(mockEnv));
       verify(mockBuildStep3.executeAsync(mockEnv));
+    });
+  });
+  describe(BuildWorkflow.prototype.collectArtifactsAsync, () => {
+    it('returns build artifacts', async () => {
+      const ctx = createMockContext();
+      const originalApplicationArchivePath = path.join(os.tmpdir(), 'app.ipa');
+      const originalBuildArtifactPath1 = path.join(os.tmpdir(), 'screenshot1.png');
+      const originalBuildArtifactPath2 = path.join(os.tmpdir(), 'screenshot2.png');
+
+      try {
+        await fs.mkdir(ctx.workingDirectory, { recursive: true });
+        await fs.writeFile(originalApplicationArchivePath, 'abc123');
+        await fs.writeFile(originalBuildArtifactPath1, 'def456');
+        await fs.writeFile(originalBuildArtifactPath2, 'ghi789');
+
+        const buildSteps: BuildStep[] = [
+          new BuildStep(ctx, {
+            id: 'test1',
+            command: `upload-artifact --type application-archive ${originalApplicationArchivePath}`,
+            workingDirectory: ctx.workingDirectory,
+          }),
+          new BuildStep(ctx, {
+            id: 'test2',
+            command: `upload-artifact --type build-artifact ${originalBuildArtifactPath1}`,
+            workingDirectory: ctx.workingDirectory,
+          }),
+          new BuildStep(ctx, {
+            id: 'test3',
+            command: `upload-artifact --type build-artifact ${originalBuildArtifactPath2}`,
+            workingDirectory: ctx.workingDirectory,
+          }),
+        ];
+
+        const workflow = new BuildWorkflow(ctx, { buildSteps });
+        await workflow.executeAsync();
+
+        const artifacts = await workflow.collectArtifactsAsync();
+        expect(artifacts['application-archive']?.length).toBe(1);
+        expect(artifacts['build-artifact']?.length).toBe(2);
+        expect(artifacts['application-archive']?.[0].endsWith('app.ipa')).toBeTruthy();
+        expect(artifacts['build-artifact']?.[0].endsWith('screenshot1.png')).toBeTruthy();
+        expect(artifacts['build-artifact']?.[1].endsWith('screenshot2.png')).toBeTruthy();
+      } finally {
+        await Promise.all([
+          fs.rm(ctx.baseWorkingDirectory, { recursive: true }),
+          fs.rm(originalApplicationArchivePath),
+          fs.rm(originalBuildArtifactPath1),
+          fs.rm(originalBuildArtifactPath2),
+        ]);
+      }
     });
   });
 });
