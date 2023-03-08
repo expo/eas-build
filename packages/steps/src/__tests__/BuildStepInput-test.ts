@@ -14,6 +14,16 @@ describe(BuildStepInput, () => {
     expect(i.value).toBe('bar');
   });
 
+  test('stepId is optional (to use with reusable functions)', () => {
+    const ctx = createMockContext();
+    expect(() => {
+      // eslint-disable-next-line no-new
+      new BuildStepInput(ctx, {
+        id: 'foo',
+      });
+    }).not.toThrow();
+  });
+
   test('default value', () => {
     const ctx = createMockContext();
     const i = new BuildStepInput(ctx, {
@@ -45,5 +55,34 @@ describe(BuildStepInput, () => {
     }).toThrowError(
       new BuildStepRuntimeError('Input parameter "foo" for step "test1" is required.')
     );
+  });
+
+  test('.value and .set(value) throw if stepId is not provided', () => {
+    const ctx = createMockContext();
+    const i = new BuildStepInput(ctx, {
+      id: 'foo',
+    });
+    expect(() => {
+      // eslint-disable-next-line
+      i.value;
+    }).toThrowError(/\.value can't be used when not in step context/);
+    expect(() => {
+      i.set('123');
+    }).toThrowError(/\.set\('123'\) can't be used when not in step context/);
+  });
+
+  test('cloning', () => {
+    const ctx = createMockContext();
+    const input = new BuildStepInput(ctx, {
+      id: 'foo',
+      defaultValue: 'abc123',
+      required: false,
+    });
+    const clonedInput = input.clone('test1');
+    expect(clonedInput.id).toBe('foo');
+    expect(clonedInput.stepId).toBe('test1');
+    expect(clonedInput.defaultValue).toBe('abc123');
+    expect(clonedInput.required).toBe(false);
+    expect(clonedInput.value).toBe('abc123');
   });
 });

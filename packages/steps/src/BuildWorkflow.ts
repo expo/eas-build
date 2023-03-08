@@ -1,4 +1,5 @@
 import { BuildArtifacts, BuildArtifactType } from './BuildArtifacts.js';
+import { BuildFunctionById } from './BuildFunction.js';
 import { BuildStep } from './BuildStep.js';
 import { BuildStepContext } from './BuildStepContext.js';
 import { BuildStepEnv } from './BuildStepEnv.js';
@@ -9,9 +10,14 @@ import {
 
 export class BuildWorkflow {
   public readonly buildSteps: BuildStep[];
+  public readonly buildFunctions: BuildFunctionById;
 
-  constructor(private readonly ctx: BuildStepContext, { buildSteps }: { buildSteps: BuildStep[] }) {
+  constructor(
+    private readonly ctx: BuildStepContext,
+    { buildSteps, buildFunctions }: { buildSteps: BuildStep[]; buildFunctions: BuildFunctionById }
+  ) {
     this.buildSteps = buildSteps;
+    this.buildFunctions = buildFunctions;
   }
 
   public async executeAsync(env: BuildStepEnv = process.env): Promise<void> {

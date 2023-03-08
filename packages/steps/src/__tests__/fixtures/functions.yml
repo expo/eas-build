@@ -1,0 +1,32 @@
+build:
+  name: Functions
+  steps:
+    - say_hi:
+        inputs:
+          name: Dominik
+    - say_hi:
+        inputs:
+          name: Szymon
+    - say_hi_wojtek
+    - random:
+        id: random_number
+    - print:
+        inputs:
+          value: ${ steps.random_number.value }
+
+functions:
+  say_hi:
+    name: Hi!
+    inputs:
+      - name
+    command: echo "Hi, ${ inputs.name }!"
+  say_hi_wojtek:
+    name: Hi, Wojtek!
+    command: echo "Hi, Wojtek!"
+  random:
+    name: Generate random number
+    outputs: [value]
+    command: set-output value 6
+  print:
+    inputs: [value]
+    command: echo "${ inputs.value }"

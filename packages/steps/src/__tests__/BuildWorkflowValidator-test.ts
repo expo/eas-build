@@ -42,6 +42,7 @@ describe(BuildWorkflowValidator, () => {
           workingDirectory: ctx.workingDirectory,
         }),
       ],
+      buildFunctions: {},
     });
 
     const validator = new BuildWorkflowValidator(workflow);
@@ -78,6 +79,7 @@ describe(BuildWorkflowValidator, () => {
           workingDirectory: ctx.workingDirectory,
         }),
       ],
+      buildFunctions: {},
     });
 
     const validator = new BuildWorkflowValidator(workflow);
@@ -110,6 +112,7 @@ describe(BuildWorkflowValidator, () => {
           workingDirectory: ctx.workingDirectory,
         }),
       ],
+      buildFunctions: {},
     });
 
     const validator = new BuildWorkflowValidator(workflow);
@@ -161,6 +164,7 @@ describe(BuildWorkflowValidator, () => {
           workingDirectory: ctx.workingDirectory,
         }),
       ],
+      buildFunctions: {},
     });
 
     const validator = new BuildWorkflowValidator(workflow);
@@ -212,6 +216,7 @@ describe(BuildWorkflowValidator, () => {
           workingDirectory: ctx.workingDirectory,
         }),
       ],
+      buildFunctions: {},
     });
 
     const validator = new BuildWorkflowValidator(workflow);

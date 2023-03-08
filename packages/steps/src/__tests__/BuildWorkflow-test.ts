@@ -25,7 +25,7 @@ describe(BuildWorkflow, () => {
       ];
 
       const ctx = createMockContext();
-      const workflow = new BuildWorkflow(ctx, { buildSteps });
+      const workflow = new BuildWorkflow(ctx, { buildSteps, buildFunctions: {} });
       await workflow.executeAsync();
 
       verify(mockBuildStep1.executeAsync(anything())).once();
@@ -46,7 +46,7 @@ describe(BuildWorkflow, () => {
       ];
 
       const ctx = createMockContext();
-      const workflow = new BuildWorkflow(ctx, { buildSteps });
+      const workflow = new BuildWorkflow(ctx, { buildSteps, buildFunctions: {} });
       await workflow.executeAsync();
 
       verify(mockBuildStep1.executeAsync(anything())).calledBefore(
@@ -72,7 +72,7 @@ describe(BuildWorkflow, () => {
       const mockEnv: BuildStepEnv = { ABC: '123' };
 
       const ctx = createMockContext();
-      const workflow = new BuildWorkflow(ctx, { buildSteps });
+      const workflow = new BuildWorkflow(ctx, { buildSteps, buildFunctions: {} });
       await workflow.executeAsync(mockEnv);
 
       verify(mockBuildStep1.executeAsync(mockEnv));
@@ -111,7 +111,7 @@ describe(BuildWorkflow, () => {
           }),
         ];
 
-        const workflow = new BuildWorkflow(ctx, { buildSteps });
+        const workflow = new BuildWorkflow(ctx, { buildSteps, buildFunctions: {} });
         await workflow.executeAsync();
 
         const artifacts = await workflow.collectArtifactsAsync();
@@ -133,7 +133,7 @@ describe(BuildWorkflow, () => {
     it('returns empty object if no artifacts have been uploaded', async () => {
       const ctx = createMockContext();
 
-      const workflow = new BuildWorkflow(ctx, { buildSteps: [] });
+      const workflow = new BuildWorkflow(ctx, { buildSteps: [], buildFunctions: {} });
       await workflow.executeAsync();
 
       const artifacts = await workflow.collectArtifactsAsync();
