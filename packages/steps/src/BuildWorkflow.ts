@@ -30,8 +30,10 @@ export class BuildWorkflow {
       BuildArtifactType.BUILD_ARTIFACT
     );
     return {
-      [BuildArtifactType.APPLICATION_ARCHIVE]: applicationArchives,
-      [BuildArtifactType.BUILD_ARTIFACT]: buildArtifacts,
+      ...(applicationArchives.length > 0 && {
+        [BuildArtifactType.APPLICATION_ARCHIVE]: applicationArchives,
+      }),
+      ...(buildArtifacts.length > 0 && { [BuildArtifactType.BUILD_ARTIFACT]: buildArtifacts }),
     };
   }
 

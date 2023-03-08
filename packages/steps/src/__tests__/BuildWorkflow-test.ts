@@ -129,5 +129,15 @@ describe(BuildWorkflow, () => {
         ]);
       }
     });
+
+    it('returns empty object if no artifacts have been uploaded', async () => {
+      const ctx = createMockContext();
+
+      const workflow = new BuildWorkflow(ctx, { buildSteps: [] });
+      await workflow.executeAsync();
+
+      const artifacts = await workflow.collectArtifactsAsync();
+      expect(Object.keys(artifacts).length).toBe(0);
+    });
   });
 });
