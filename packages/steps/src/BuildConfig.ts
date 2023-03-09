@@ -13,45 +13,49 @@ export interface BuildConfig {
   functions?: Record<string, BuildFunctionConfig>;
 }
 
+export type BuildStepConfig =
+  | BuildStepCommandRun
+  | BuildStepBareCommandRun
+  | BuildStepFunctionCall
+  | BuildStepBareFunctionCall;
+
+export type BuildStepCommandRun = {
+  run: BuildFunctionCallConfig & {
+    outputs?: BuildStepOutputs;
+    command: string;
+  };
+};
+export type BuildStepBareCommandRun = { run: string };
+export type BuildStepFunctionCall = {
+  [functionId: string]: BuildFunctionCallConfig;
+};
+export type BuildStepBareFunctionCall = string;
+
 export type BuildFunctionCallConfig = {
   id?: string;
-  inputs?: BuildStepInputsConfig;
+  inputs?: BuildStepInputs;
   name?: string;
   workingDirectory?: string;
   shell?: string;
 };
 
-export type BuildStepConfig =
-  | string
-  | {
-      run:
-        | string
-        | (BuildFunctionCallConfig & {
-            outputs?: BuildStepOutputsConfig;
-            command: string;
-          });
-    }
-  | {
-      [functionId: string]: BuildFunctionCallConfig;
-    };
-
-export type BuildStepInputsConfig = Record<string, string>;
-export type BuildStepOutputsConfig = BuildInputOutputParametersConfig;
+export type BuildStepInputs = Record<string, string>;
+export type BuildStepOutputs = BuildInputOutputParameters;
 
 export interface BuildFunctionConfig {
   id?: string;
-  inputs?: BuildFunctionInputsConfig;
-  outputs?: BuildFunctionOutputsConfig;
+  inputs?: BuildFunctionInputs;
+  outputs?: BuildFunctionOutputs;
   name?: string;
   platforms?: BuildPlatform[];
   shell?: string;
   command: string;
 }
 
-export type BuildFunctionInputsConfig = BuildInputOutputParametersConfig;
-export type BuildFunctionOutputsConfig = BuildInputOutputParametersConfig;
+export type BuildFunctionInputs = BuildInputOutputParameters;
+export type BuildFunctionOutputs = BuildInputOutputParameters;
 
-export type BuildInputOutputParametersConfig = (
+export type BuildInputOutputParameters = (
   | string
   | {
       name: string;
@@ -59,7 +63,7 @@ export type BuildInputOutputParametersConfig = (
     }
 )[];
 
-const BuildInputOutputParametersConfigSchema = Joi.array().items(
+const BuildInputOutputParametersSchema = Joi.array().items(
   Joi.alternatives().try(
     Joi.string().required(),
     Joi.object({
@@ -69,63 +73,83 @@ const BuildInputOutputParametersConfigSchema = Joi.array().items(
   )
 );
 
+const BuildFunctionCallSchema = Joi.object({
+  id: Joi.string(),
+  inputs: Joi.object().pattern(Joi.string(), Joi.string()),
+  name: Joi.string(),
+  workingDirectory: Joi.string(),
+  shell: Joi.string(),
+}).rename('working_directory', 'workingDirectory');
+
+const BuildStepConfigSchema = Joi.any<BuildStepConfig>()
+  .when(
+    Joi.object().pattern(
+      Joi.string().disallow('run').required(),
+      Joi.object().unknown().required()
+    ),
+    {
+      then: Joi.object().pattern(
+        Joi.string().disallow('run').min(1).required(),
+        BuildFunctionCallSchema.required(),
+        { matches: Joi.array().length(1) }
+      ),
+    }
+  )
+  .when(Joi.object({ run: Joi.object().unknown().required() }), {
+    then: Joi.object({
+      run: BuildFunctionCallSchema.keys({
+        outputs: BuildInputOutputParametersSchema,
+        command: Joi.string().required(),
+      }),
+    }),
+  })
+  .when(Joi.object({ run: Joi.string().required() }), {
+    then: Joi.object({
+      run: Joi.string().min(1).required(),
+    }),
+  })
+  .when(Joi.string(), {
+    then: Joi.string().min(1),
+  });
+
+const BuildFunctionSchema = Joi.object({
+  id: Joi.string(),
+  name: Joi.string(),
+  platforms: Joi.string().allow(...Object.values(BuildPlatform)),
+  inputs: BuildInputOutputParametersSchema,
+  outputs: BuildInputOutputParametersSchema,
+  command: Joi.string().required(),
+  shell: Joi.string(),
+});
+
 export const BuildConfigSchema = Joi.object<BuildConfig>({
   build: Joi.object({
     name: Joi.string(),
-    steps: Joi.array()
-      .items(
-        Joi.alternatives().conditional(Joi.object({ run: Joi.any().required() }).unknown(), {
-          then: Joi.object({
-            run: Joi.alternatives()
-              .conditional(Joi.string(), {
-                then: Joi.string().min(1).required(),
-                otherwise: Joi.object({
-                  id: Joi.string(),
-                  inputs: Joi.object().pattern(Joi.string(), Joi.string()),
-                  outputs: BuildInputOutputParametersConfigSchema,
-                  name: Joi.string(),
-                  workingDirectory: Joi.string(),
-                  shell: Joi.string(),
-                  command: Joi.string().required(),
-                })
-                  .rename('working_directory', 'workingDirectory')
-                  .required(),
-              })
-              .required(),
-          }),
-          otherwise: Joi.alternatives().conditional(Joi.string(), {
-            then: Joi.string().min(1).required(),
-            otherwise: Joi.object()
-              .pattern(
-                Joi.string().min(1).required(),
-                Joi.object({
-                  id: Joi.string(),
-                  inputs: Joi.object().pattern(Joi.string(), Joi.string()),
-                  name: Joi.string(),
-                  workingDirectory: Joi.string(),
-                  shell: Joi.string(),
-                }).required(),
-                { matches: Joi.array().length(1) }
-              )
-              .required(),
-          }),
-        })
-      )
-      .required(),
+    steps: Joi.array().items(BuildStepConfigSchema.required()).required(),
   }).required(),
   functions: Joi.object().pattern(
-    Joi.string().min(1).required(),
-    Joi.object({
-      id: Joi.string(),
-      name: Joi.string(),
-      platforms: Joi.string().allow(...Object.values(BuildPlatform)),
-      inputs: BuildInputOutputParametersConfigSchema,
-      outputs: BuildInputOutputParametersConfigSchema,
-      command: Joi.string().required(),
-      shell: Joi.string(),
-    }).required()
+    Joi.string().min(1).required().disallow('run'),
+    BuildFunctionSchema.required()
   ),
 }).required();
+
+export function isBuildStepCommandRun(step: BuildStepConfig): step is BuildStepCommandRun {
+  return typeof step === 'object' && typeof step.run === 'object';
+}
+
+export function isBuildStepBareCommandRun(step: BuildStepConfig): step is BuildStepBareCommandRun {
+  return typeof step === 'object' && typeof step.run === 'string';
+}
+
+export function isBuildStepFunctionCall(step: BuildStepConfig): step is BuildStepFunctionCall {
+  return typeof step === 'object' && !('run' in step);
+}
+
+export function isBuildStepBareFunctionCall(
+  step: BuildStepConfig
+): step is BuildStepBareFunctionCall {
+  return typeof step === 'string';
+}
 
 export function validateBuildConfig(rawConfig: object): BuildConfig {
   const { error, value: buildConfig } = BuildConfigSchema.validate(rawConfig, {

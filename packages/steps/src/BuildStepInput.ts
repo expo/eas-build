@@ -1,12 +1,12 @@
-import assert from 'assert';
-
 import { BuildStepContext } from './BuildStepContext.js';
 import { BuildStepRuntimeError } from './errors/BuildStepRuntimeError.js';
 import { interpolateWithOutputs } from './utils/template.js';
 
+export type BuildStepInputCreator = (stepId: string) => BuildStepInput;
+
 export class BuildStepInput {
   public readonly id: string;
-  public readonly stepId?: string;
+  public readonly stepId: string;
   public readonly defaultValue?: string;
   public readonly required: boolean;
 
@@ -21,7 +21,7 @@ export class BuildStepInput {
       required = true,
     }: {
       id: string;
-      stepId?: string;
+      stepId: string;
       defaultValue?: string;
       required?: boolean;
     }
@@ -33,13 +33,10 @@ export class BuildStepInput {
   }
 
   get value(): string | undefined {
-    const { stepId } = this;
-    assert(stepId, `.value can't be used when not in step context`);
-
     const rawValue = this._value ?? this.defaultValue;
     if (this.required && rawValue === undefined) {
       throw new BuildStepRuntimeError(
-        `Input parameter "${this.id}" for step "${stepId}" is required but it was not set.`
+        `Input parameter "${this.id}" for step "${this.stepId}" is required but it was not set.`
       );
     }
 
@@ -51,27 +48,12 @@ export class BuildStepInput {
   }
 
   set(value: string | undefined): BuildStepInput {
-    const { stepId } = this;
-    assert(
-      stepId,
-      `.set(${value === undefined ? '' : `'${value}'`}) can't be used when not in step context`
-    );
-
     if (this.required && value === undefined) {
       throw new BuildStepRuntimeError(
-        `Input parameter "${this.id}" for step "${stepId}" is required.`
+        `Input parameter "${this.id}" for step "${this.stepId}" is required.`
       );
     }
     this._value = value;
     return this;
-  }
-
-  clone(stepId: string): BuildStepInput {
-    return new BuildStepInput(this.ctx, {
-      id: this.id,
-      stepId,
-      defaultValue: this.defaultValue,
-      required: this.required,
-    });
   }
 }

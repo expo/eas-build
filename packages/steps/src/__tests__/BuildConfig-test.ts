@@ -1,4 +1,14 @@
-import { validateBuildConfig } from '../BuildConfig.js';
+import {
+  BuildStepBareCommandRun,
+  BuildStepBareFunctionCall,
+  BuildStepCommandRun,
+  BuildStepFunctionCall,
+  isBuildStepBareCommandRun,
+  isBuildStepBareFunctionCall,
+  isBuildStepCommandRun,
+  isBuildStepFunctionCall,
+  validateBuildConfig,
+} from '../BuildConfig.js';
 import { BuildConfigError } from '../errors/BuildConfigError.js';
 
 describe(validateBuildConfig, () => {
@@ -226,5 +236,87 @@ describe(validateBuildConfig, () => {
         validateBuildConfig(buildConfig);
       }).toThrowError(/".*\.say_hi\.command" is required/);
     });
+    test('"run" is not allowed for function name', () => {
+      const buildConfig = {
+        build: {
+          steps: [],
+        },
+        functions: {
+          run: {},
+        },
+      };
+
+      expect(() => {
+        validateBuildConfig(buildConfig);
+      }).toThrowError(/"functions.run" is not allowed/);
+    });
+  });
+});
+
+const buildStepCommandRun: BuildStepCommandRun = {
+  run: {
+    command: 'echo 123',
+  },
+};
+
+const buildStepBareCommandRun: BuildStepBareCommandRun = {
+  run: 'echo 123',
+};
+
+const buildStepFunctionCall: BuildStepFunctionCall = {
+  say_hi: {
+    inputs: {
+      name: 'Dominik',
+    },
+  },
+};
+
+const buildStepBareFunctionCall: BuildStepBareFunctionCall = 'say_hi';
+
+describe(isBuildStepCommandRun, () => {
+  it.each([buildStepBareCommandRun, buildStepFunctionCall, buildStepBareFunctionCall])(
+    'returns false',
+    (i) => {
+      expect(isBuildStepCommandRun(i)).toBe(false);
+    }
+  );
+  it('returns true', () => {
+    expect(isBuildStepCommandRun(buildStepCommandRun)).toBe(true);
+  });
+});
+
+describe(isBuildStepBareCommandRun, () => {
+  it.each([buildStepCommandRun, buildStepFunctionCall, buildStepBareFunctionCall])(
+    'returns false',
+    (i) => {
+      expect(isBuildStepBareCommandRun(i)).toBe(false);
+    }
+  );
+  it('returns true', () => {
+    expect(isBuildStepBareCommandRun(buildStepBareCommandRun)).toBe(true);
+  });
+});
+
+describe(isBuildStepFunctionCall, () => {
+  it.each([buildStepCommandRun, buildStepBareCommandRun, buildStepBareFunctionCall])(
+    'returns false',
+    (i) => {
+      expect(isBuildStepFunctionCall(i)).toBe(false);
+    }
+  );
+  it('returns true', () => {
+    expect(isBuildStepFunctionCall(buildStepFunctionCall)).toBe(true);
+  });
+});
+
+describe(isBuildStepBareFunctionCall, () => {
+  it.each([buildStepCommandRun, buildStepBareCommandRun, buildStepFunctionCall])(
+    'returns false',
+    (i) => {
+      expect(isBuildStepBareFunctionCall(i)).toBe(false);
+    }
+  );
+  it('returns true', () => {
+    expect(isBuildStepBareFunctionCall(buildStepBareFunctionCall)).toBe(true);
   });
 });
