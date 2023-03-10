@@ -1,6 +1,8 @@
 import { BuildStepContext } from './BuildStepContext.js';
 import { BuildStepRuntimeError } from './errors/BuildStepRuntimeError.js';
 
+export type BuildStepOutputCreator = (stepId: string) => BuildStepOutput;
+
 export class BuildStepOutput {
   public readonly id: string;
   public readonly stepId: string;

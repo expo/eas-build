@@ -2,6 +2,8 @@ import { BuildStepContext } from './BuildStepContext.js';
 import { BuildStepRuntimeError } from './errors/BuildStepRuntimeError.js';
 import { interpolateWithOutputs } from './utils/template.js';
 
+export type BuildStepInputCreator = (stepId: string) => BuildStepInput;
+
 export class BuildStepInput {
   public readonly id: string;
   public readonly stepId: string;
@@ -16,7 +18,7 @@ export class BuildStepInput {
       id,
       stepId,
       defaultValue,
-      required = false,
+      required = true,
     }: {
       id: string;
       stepId: string;
