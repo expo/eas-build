@@ -46,7 +46,11 @@ export async function runCustomBuildAsync<T extends Job>(ctx: BuildContext<T>): 
         }
       });
 
-      await workflow.cleanUpAsync();
+      try {
+        await workflow.cleanUpAsync();
+      } catch (err: any) {
+        ctx.logger.error({ err }, 'Failed to clean up custom build temporary files');
+      }
     }
   } catch (err: any) {
     err.artifacts = ctx.artifacts;

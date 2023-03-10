@@ -85,7 +85,7 @@ export async function cleanUpStepTemporaryDirectoriesAsync(
     return;
   }
   const stepTemporaryDirectory = getTemporaryStepDirPath(ctx, stepId);
-  await fs.rm(stepTemporaryDirectory, { recursive: true });
+  await fs.rm(stepTemporaryDirectory, { recursive: true, force: true });
   ctx.logger.debug({ stepTemporaryDirectory }, 'Removed step temporary directory');
 }
 
@@ -97,7 +97,9 @@ export async function cleanUpWorkflowTemporaryDirectoriesAsync(
   }
 
   const temporaryDirectories: string[] = [getTemporaryArtifactsDirPath(ctx)];
-  const rmPromises = temporaryDirectories.map((dir) => fs.rm(dir, { recursive: true }));
+  const rmPromises = temporaryDirectories.map((dir) =>
+    fs.rm(dir, { recursive: true, force: true })
+  );
   await Promise.all(rmPromises);
   ctx.logger.debug({ temporaryDirectories }, 'Removed temporary directories');
 }

@@ -154,6 +154,11 @@ describe(cleanUpStepTemporaryDirectoriesAsync, () => {
     await expect(fs.stat(scriptPath)).rejects.toThrow(/no such file or directory/);
     await expect(fs.stat(outputsPath)).rejects.toThrow(/no such file or directory/);
   });
+
+  it(`doesn't fail if temporary directories don't exist`, async () => {
+    const ctx = createMockContext();
+    await expect(cleanUpStepTemporaryDirectoriesAsync(ctx, 'foo')).resolves.not.toThrow();
+  });
 });
 
 describe(cleanUpWorkflowTemporaryDirectoriesAsync, () => {
@@ -176,5 +181,10 @@ describe(cleanUpWorkflowTemporaryDirectoriesAsync, () => {
     await expect(fs.stat(artifactPath)).resolves.toBeTruthy();
     await cleanUpWorkflowTemporaryDirectoriesAsync(ctx);
     await expect(fs.stat(artifactPath)).rejects.toThrow(/no such file or directory/);
+  });
+
+  it(`doesn't fail if temporary directories don't exist`, async () => {
+    const ctx = createMockContext();
+    await expect(cleanUpWorkflowTemporaryDirectoriesAsync(ctx)).resolves.not.toThrow();
   });
 });
