@@ -9,4 +9,8 @@ fi
 
 STEPS_ROOT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )"/.. && pwd )"
 
-node $STEPS_ROOT_DIR/dist_commonjs/bin/uploadArtifact.cjs $@
+if [[ "$NODE_ENV" == "test" ]]; then
+  ts-node-esm $STEPS_ROOT_DIR/src/bin/uploadArtifact.ts $@
+else
+  node $STEPS_ROOT_DIR/dist_commonjs/bin/uploadArtifact.cjs $@
+fi
