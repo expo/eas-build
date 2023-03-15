@@ -81,58 +81,63 @@ describe(BuildWorkflow, () => {
     });
   });
   describe(BuildWorkflow.prototype.collectArtifactsAsync, () => {
-    it('returns build artifacts', async () => {
-      const ctx = createMockContext();
-      const originalFilesDirectoryPath = path.join(os.tmpdir(), 'eas-steps-test-fixtures');
-      const originalApplicationArchivePath = path.join(originalFilesDirectoryPath, 'app.ipa');
-      const originalBuildArtifactPath1 = path.join(originalFilesDirectoryPath, 'screenshot1.png');
-      const originalBuildArtifactPath2 = path.join(originalFilesDirectoryPath, 'screenshot2.png');
+    it(
+      'returns build artifacts',
+      async () => {
+        const ctx = createMockContext();
+        const originalFilesDirectoryPath = path.join(os.tmpdir(), 'eas-steps-test-fixtures');
+        const originalApplicationArchivePath = path.join(originalFilesDirectoryPath, 'app.ipa');
+        const originalBuildArtifactPath1 = path.join(originalFilesDirectoryPath, 'screenshot1.png');
+        const originalBuildArtifactPath2 = path.join(originalFilesDirectoryPath, 'screenshot2.png');
 
-      try {
-        await Promise.all([
-          fs.mkdir(ctx.workingDirectory, { recursive: true }),
-          fs.mkdir(originalFilesDirectoryPath, { recursive: true }),
-        ]);
-        await Promise.all([
-          fs.writeFile(originalApplicationArchivePath, 'abc123'),
-          fs.writeFile(originalBuildArtifactPath1, 'def456'),
-          fs.writeFile(originalBuildArtifactPath2, 'ghi789'),
-        ]);
+        try {
+          await Promise.all([
+            fs.mkdir(ctx.workingDirectory, { recursive: true }),
+            fs.mkdir(originalFilesDirectoryPath, { recursive: true }),
+          ]);
+          await Promise.all([
+            fs.writeFile(originalApplicationArchivePath, 'abc123'),
+            fs.writeFile(originalBuildArtifactPath1, 'def456'),
+            fs.writeFile(originalBuildArtifactPath2, 'ghi789'),
+          ]);
 
-        const buildSteps: BuildStep[] = [
-          new BuildStep(ctx, {
-            id: 'test1',
-            command: `upload-artifact --type application-archive ${originalApplicationArchivePath}`,
-            workingDirectory: ctx.workingDirectory,
-          }),
-          new BuildStep(ctx, {
-            id: 'test2',
-            command: `upload-artifact --type build-artifact ${originalBuildArtifactPath1}`,
-            workingDirectory: ctx.workingDirectory,
-          }),
-          new BuildStep(ctx, {
-            id: 'test3',
-            command: `upload-artifact --type build-artifact ${originalBuildArtifactPath2}`,
-            workingDirectory: ctx.workingDirectory,
-          }),
-        ];
+          const buildSteps: BuildStep[] = [
+            new BuildStep(ctx, {
+              id: 'test1',
+              command: `upload-artifact --type application-archive ${originalApplicationArchivePath}`,
+              workingDirectory: ctx.workingDirectory,
+            }),
+            new BuildStep(ctx, {
+              id: 'test2',
+              command: `upload-artifact --type build-artifact ${originalBuildArtifactPath1}`,
+              workingDirectory: ctx.workingDirectory,
+            }),
+            new BuildStep(ctx, {
+              id: 'test3',
+              command: `upload-artifact --type build-artifact ${originalBuildArtifactPath2}`,
+              workingDirectory: ctx.workingDirectory,
+            }),
+          ];
 
-        const workflow = new BuildWorkflow(ctx, { buildSteps, buildFunctions: {} });
-        await workflow.executeAsync();
+          const workflow = new BuildWorkflow(ctx, { buildSteps, buildFunctions: {} });
+          await workflow.executeAsync();
 
-        const artifacts = await workflow.collectArtifactsAsync();
-        expect(artifacts['application-archive']?.length).toBe(1);
-        expect(artifacts['build-artifact']?.length).toBe(2);
-        expect(artifacts['application-archive']?.[0].endsWith('app.ipa')).toBeTruthy();
-        expect(artifacts['build-artifact']?.[0].endsWith('screenshot1.png')).toBeTruthy();
-        expect(artifacts['build-artifact']?.[1].endsWith('screenshot2.png')).toBeTruthy();
-      } finally {
-        await Promise.all([
-          fs.rm(ctx.baseWorkingDirectory, { recursive: true, force: true }),
-          fs.rm(originalFilesDirectoryPath, { recursive: true, force: true }),
-        ]);
-      }
-    });
+          const artifacts = await workflow.collectArtifactsAsync();
+          expect(artifacts['application-archive']?.length).toBe(1);
+          expect(artifacts['build-artifact']?.length).toBe(2);
+          expect(artifacts['application-archive']?.[0].endsWith('app.ipa')).toBeTruthy();
+          expect(artifacts['build-artifact']?.[0].endsWith('screenshot1.png')).toBeTruthy();
+          expect(artifacts['build-artifact']?.[1].endsWith('screenshot2.png')).toBeTruthy();
+        } finally {
+          await Promise.all([
+            fs.rm(ctx.baseWorkingDirectory, { recursive: true, force: true }),
+            fs.rm(originalFilesDirectoryPath, { recursive: true, force: true }),
+          ]);
+        }
+      },
+      // use longer timeout because this test spawns ts-node
+      20 * 1000
+    );
 
     it('returns empty object if no artifacts have been uploaded', async () => {
       const ctx = createMockContext();
