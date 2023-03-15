@@ -2,7 +2,7 @@ import { BuildStepContext } from './BuildStepContext.js';
 import { BuildStepRuntimeError } from './errors/BuildStepRuntimeError.js';
 import { interpolateWithOutputs } from './utils/template.js';
 
-export type BuildStepInputProvider = (stepId: string) => BuildStepInput;
+export type BuildStepInputProvider = (ctx: BuildStepContext, stepId: string) => BuildStepInput;
 
 export class BuildStepInput {
   public readonly id: string;
@@ -11,6 +11,14 @@ export class BuildStepInput {
   public readonly required: boolean;
 
   private _value?: string;
+
+  public static createProvider(params: {
+    id: string;
+    defaultValue?: string;
+    required?: boolean;
+  }): BuildStepInputProvider {
+    return (ctx, stepId) => new BuildStepInput(ctx, { ...params, stepId });
+  }
 
   constructor(
     private readonly ctx: BuildStepContext,

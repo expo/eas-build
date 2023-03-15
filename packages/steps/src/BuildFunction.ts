@@ -61,13 +61,13 @@ export class BuildFunction {
     const buildStepId = id ?? this.id ?? uuidv4();
 
     const inputs = this.inputProviders?.map((inputProvider) => {
-      const input = inputProvider(buildStepId);
+      const input = inputProvider(ctx, buildStepId);
       if (input.id in callInputs) {
         input.set(callInputs[input.id]);
       }
       return input;
     });
-    const outputs = this.outputProviders?.map((outputProvider) => outputProvider(buildStepId));
+    const outputs = this.outputProviders?.map((outputProvider) => outputProvider(ctx, buildStepId));
 
     return new BuildStep(ctx, {
       id: buildStepId,

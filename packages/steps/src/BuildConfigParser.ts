@@ -157,16 +157,9 @@ export class BuildConfigParser {
     buildFunctionInputs: BuildFunctionInputs
   ): BuildStepInputProvider[] {
     return buildFunctionInputs.map((entry) => {
-      if (typeof entry === 'string') {
-        return (stepId: string) => new BuildStepInput(this.ctx, { id: entry, stepId });
-      } else {
-        return (stepId: string) =>
-          new BuildStepInput(this.ctx, {
-            id: entry.name,
-            required: entry.required ?? true,
-            stepId,
-          });
-      }
+      return typeof entry === 'string'
+        ? BuildStepInput.createProvider({ id: entry })
+        : BuildStepInput.createProvider({ id: entry.name, required: entry.required ?? true });
     });
   }
 
@@ -190,13 +183,8 @@ export class BuildConfigParser {
   ): BuildStepOutputProvider[] {
     return buildFunctionOutputs.map((entry) =>
       typeof entry === 'string'
-        ? (stepId: string) => new BuildStepOutput(this.ctx, { id: entry, stepId, required: true })
-        : (stepId: string) =>
-            new BuildStepOutput(this.ctx, {
-              id: entry.name,
-              stepId,
-              required: entry.required ?? true,
-            })
+        ? BuildStepOutput.createProvider({ id: entry, required: true })
+        : BuildStepOutput.createProvider({ id: entry.name, required: entry.required ?? true })
     );
   }
 

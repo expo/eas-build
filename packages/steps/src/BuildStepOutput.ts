@@ -1,7 +1,7 @@
 import { BuildStepContext } from './BuildStepContext.js';
 import { BuildStepRuntimeError } from './errors/BuildStepRuntimeError.js';
 
-export type BuildStepOutputProvider = (stepId: string) => BuildStepOutput;
+export type BuildStepOutputProvider = (ctx: BuildStepContext, stepId: string) => BuildStepOutput;
 
 export class BuildStepOutput {
   public readonly id: string;
@@ -9,6 +9,13 @@ export class BuildStepOutput {
   public readonly required: boolean;
 
   private _value?: string;
+
+  public static createProvider(params: {
+    id: string;
+    required?: boolean;
+  }): BuildStepOutputProvider {
+    return (ctx, stepId) => new BuildStepOutput(ctx, { ...params, stepId });
+  }
 
   constructor(
     // @ts-expect-error ctx is not used in this class but let's keep it here for consistency

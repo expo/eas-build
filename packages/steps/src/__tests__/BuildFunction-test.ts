@@ -43,12 +43,12 @@ describe(BuildFunction, () => {
     it('creates function input and output parameters', () => {
       const ctx = createMockContext();
       const inputProviders: BuildStepInputProvider[] = [
-        (stepId: string) => new BuildStepInput(ctx, { id: 'input1', stepId }),
-        (stepId: string) => new BuildStepInput(ctx, { id: 'input2', stepId }),
+        BuildStepInput.createProvider({ id: 'input1' }),
+        BuildStepInput.createProvider({ id: 'input2' }),
       ];
       const outputProviders: BuildStepOutputProvider[] = [
-        (stepId: string) => new BuildStepOutput(ctx, { id: 'output1', stepId }),
-        (stepId: string) => new BuildStepOutput(ctx, { id: 'output2', stepId }),
+        BuildStepOutput.createProvider({ id: 'output1' }),
+        BuildStepOutput.createProvider({ id: 'output2' }),
       ];
       const func = new BuildFunction({
         id: 'test1',
@@ -77,8 +77,8 @@ describe(BuildFunction, () => {
     it('passes values to build inputs', () => {
       const ctx = createMockContext();
       const inputProviders: BuildStepInputProvider[] = [
-        (stepId: string) => new BuildStepInput(ctx, { id: 'input1', defaultValue: 'xyz1', stepId }),
-        (stepId: string) => new BuildStepInput(ctx, { id: 'input2', defaultValue: 'xyz2', stepId }),
+        BuildStepInput.createProvider({ id: 'input1', defaultValue: 'xyz1' }),
+        BuildStepInput.createProvider({ id: 'input2', defaultValue: 'xyz2' }),
       ];
       const func = new BuildFunction({
         id: 'test1',
