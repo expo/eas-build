@@ -89,7 +89,7 @@ export class BuildConfigParser {
     } else if (isBuildStepBareFunctionCall(buildStepConfig)) {
       const functionId = buildStepConfig;
       const buildFunction = buildFunctions[functionId];
-      return buildFunction.createBuildStepFromFunctionCall({
+      return buildFunction.createBuildStepFromFunctionCall(this.ctx, {
         workingDirectory: this.getStepWorkingDirectory(),
       });
     } else {
@@ -101,7 +101,7 @@ export class BuildConfigParser {
       const functionId = keys[0];
       const buildFunctionCallConfig = buildStepConfig[functionId];
       const buildFunction = buildFunctions[functionId];
-      return buildFunction.createBuildStepFromFunctionCall({
+      return buildFunction.createBuildStepFromFunctionCall(this.ctx, {
         id: buildFunctionCallConfig.id,
         callInputs: buildFunctionCallConfig.inputs,
         workingDirectory: this.getStepWorkingDirectory(buildFunctionCallConfig.workingDirectory),
@@ -135,7 +135,7 @@ export class BuildConfigParser {
       inputsConfig && this.createBuildStepInputCreatorsFromBuildFunctionInputs(inputsConfig);
     const outputCreators =
       outputsConfig && this.createBuildStepOutputCreatorsFromBuildFunctionOutputs(outputsConfig);
-    return new BuildFunction(this.ctx, { id, name, inputCreators, outputCreators, shell, command });
+    return new BuildFunction({ id, name, inputCreators, outputCreators, shell, command });
   }
 
   private createBuildStepInputsFromBuildStepInputsDefinition(

@@ -9,12 +9,14 @@ describe(BuildFunction, () => {
   describe(BuildFunction.prototype.createBuildStepFromFunctionCall, () => {
     it('returns a BuildStep object', () => {
       const ctx = createMockContext();
-      const func = new BuildFunction(ctx, {
+      const func = new BuildFunction({
         id: 'test1',
         name: 'Test function',
         command: 'echo 123',
       });
-      const step = func.createBuildStepFromFunctionCall({ workingDirectory: ctx.workingDirectory });
+      const step = func.createBuildStepFromFunctionCall(ctx, {
+        workingDirectory: ctx.workingDirectory,
+      });
       expect(step).toBeInstanceOf(BuildStep);
       expect(step.id).toBe('test1');
       expect(step.name).toBe('Test function');
@@ -22,13 +24,13 @@ describe(BuildFunction, () => {
     });
     it('can override id and shell from function definition', () => {
       const ctx = createMockContext();
-      const func = new BuildFunction(ctx, {
+      const func = new BuildFunction({
         id: 'test1',
         name: 'Test function',
         command: 'echo 123',
         shell: '/bin/bash',
       });
-      const step = func.createBuildStepFromFunctionCall({
+      const step = func.createBuildStepFromFunctionCall(ctx, {
         id: 'test2',
         shell: '/bin/zsh',
         workingDirectory: ctx.workingDirectory,
@@ -48,7 +50,7 @@ describe(BuildFunction, () => {
         (stepId: string) => new BuildStepOutput(ctx, { id: 'output1', stepId }),
         (stepId: string) => new BuildStepOutput(ctx, { id: 'output2', stepId }),
       ];
-      const func = new BuildFunction(ctx, {
+      const func = new BuildFunction({
         id: 'test1',
         name: 'Test function',
         command:
@@ -56,7 +58,7 @@ describe(BuildFunction, () => {
         inputCreators,
         outputCreators,
       });
-      const step = func.createBuildStepFromFunctionCall({
+      const step = func.createBuildStepFromFunctionCall(ctx, {
         callInputs: {
           input1: 'abc',
           input2: 'def',
@@ -78,13 +80,13 @@ describe(BuildFunction, () => {
         (stepId: string) => new BuildStepInput(ctx, { id: 'input1', defaultValue: 'xyz1', stepId }),
         (stepId: string) => new BuildStepInput(ctx, { id: 'input2', defaultValue: 'xyz2', stepId }),
       ];
-      const func = new BuildFunction(ctx, {
+      const func = new BuildFunction({
         id: 'test1',
         name: 'Test function',
         command: 'echo ${ inputs.input1 } ${ inputs.input2 }',
         inputCreators,
       });
-      const step = func.createBuildStepFromFunctionCall({
+      const step = func.createBuildStepFromFunctionCall(ctx, {
         id: 'buildStep1',
         callInputs: {
           input1: 'abc',

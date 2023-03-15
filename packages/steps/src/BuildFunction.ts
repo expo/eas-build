@@ -18,26 +18,23 @@ export class BuildFunction {
   public readonly command: string;
   public readonly shell?: string;
 
-  constructor(
-    private readonly ctx: BuildStepContext,
-    {
-      id,
-      name,
-      platforms,
-      inputCreators,
-      outputCreators,
-      command,
-      shell,
-    }: {
-      id?: string;
-      name?: string;
-      platforms?: BuildPlatform[];
-      inputCreators?: BuildStepInputCreator[];
-      outputCreators?: BuildStepOutputCreator[];
-      command: string;
-      shell?: string;
-    }
-  ) {
+  constructor({
+    id,
+    name,
+    platforms,
+    inputCreators,
+    outputCreators,
+    command,
+    shell,
+  }: {
+    id?: string;
+    name?: string;
+    platforms?: BuildPlatform[];
+    inputCreators?: BuildStepInputCreator[];
+    outputCreators?: BuildStepOutputCreator[];
+    command: string;
+    shell?: string;
+  }) {
     this.id = id;
     this.name = name;
     this.platforms = platforms;
@@ -47,17 +44,20 @@ export class BuildFunction {
     this.shell = shell;
   }
 
-  public createBuildStepFromFunctionCall({
-    id,
-    callInputs = {},
-    workingDirectory,
-    shell,
-  }: {
-    id?: string;
-    callInputs?: BuildFunctionCallInputs;
-    workingDirectory: string;
-    shell?: string;
-  }): BuildStep {
+  public createBuildStepFromFunctionCall(
+    ctx: BuildStepContext,
+    {
+      id,
+      callInputs = {},
+      workingDirectory,
+      shell,
+    }: {
+      id?: string;
+      callInputs?: BuildFunctionCallInputs;
+      workingDirectory: string;
+      shell?: string;
+    }
+  ): BuildStep {
     const buildStepId = id ?? this.id ?? uuidv4();
 
     const inputs = this.inputCreators?.map((inputCreator) => {
@@ -69,7 +69,7 @@ export class BuildFunction {
     });
     const outputs = this.outputCreators?.map((outputCreator) => outputCreator(buildStepId));
 
-    return new BuildStep(this.ctx, {
+    return new BuildStep(ctx, {
       id: buildStepId,
       name: this.name,
       command: this.command,
