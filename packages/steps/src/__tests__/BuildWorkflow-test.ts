@@ -83,15 +83,21 @@ describe(BuildWorkflow, () => {
   describe(BuildWorkflow.prototype.collectArtifactsAsync, () => {
     it('returns build artifacts', async () => {
       const ctx = createMockContext();
-      const originalApplicationArchivePath = path.join(os.tmpdir(), 'app.ipa');
-      const originalBuildArtifactPath1 = path.join(os.tmpdir(), 'screenshot1.png');
-      const originalBuildArtifactPath2 = path.join(os.tmpdir(), 'screenshot2.png');
+      const originalFilesDirectoryPath = path.join(os.tmpdir(), 'eas-steps-test-fixtures');
+      const originalApplicationArchivePath = path.join(originalFilesDirectoryPath, 'app.ipa');
+      const originalBuildArtifactPath1 = path.join(originalFilesDirectoryPath, 'screenshot1.png');
+      const originalBuildArtifactPath2 = path.join(originalFilesDirectoryPath, 'screenshot2.png');
 
       try {
-        await fs.mkdir(ctx.workingDirectory, { recursive: true });
-        await fs.writeFile(originalApplicationArchivePath, 'abc123');
-        await fs.writeFile(originalBuildArtifactPath1, 'def456');
-        await fs.writeFile(originalBuildArtifactPath2, 'ghi789');
+        await Promise.all([
+          fs.mkdir(ctx.workingDirectory, { recursive: true }),
+          fs.mkdir(originalFilesDirectoryPath, { recursive: true }),
+        ]);
+        await Promise.all([
+          fs.writeFile(originalApplicationArchivePath, 'abc123'),
+          fs.writeFile(originalBuildArtifactPath1, 'def456'),
+          fs.writeFile(originalBuildArtifactPath2, 'ghi789'),
+        ]);
 
         const buildSteps: BuildStep[] = [
           new BuildStep(ctx, {
@@ -122,10 +128,8 @@ describe(BuildWorkflow, () => {
         expect(artifacts['build-artifact']?.[1].endsWith('screenshot2.png')).toBeTruthy();
       } finally {
         await Promise.all([
-          fs.rm(ctx.baseWorkingDirectory, { recursive: true }),
-          fs.rm(originalApplicationArchivePath),
-          fs.rm(originalBuildArtifactPath1),
-          fs.rm(originalBuildArtifactPath2),
+          fs.rm(ctx.baseWorkingDirectory, { recursive: true, force: true }),
+          fs.rm(originalFilesDirectoryPath, { recursive: true, force: true }),
         ]);
       }
     });
