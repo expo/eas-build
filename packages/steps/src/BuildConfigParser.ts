@@ -21,8 +21,8 @@ import {
 import { BuildFunction, BuildFunctionById } from './BuildFunction.js';
 import { BuildStep } from './BuildStep.js';
 import { BuildStepContext } from './BuildStepContext.js';
-import { BuildStepInput, BuildStepInputCreator } from './BuildStepInput.js';
-import { BuildStepOutput, BuildStepOutputCreator } from './BuildStepOutput.js';
+import { BuildStepInput, BuildStepInputProvider } from './BuildStepInput.js';
+import { BuildStepOutput, BuildStepOutputProvider } from './BuildStepOutput.js';
 import { BuildWorkflow } from './BuildWorkflow.js';
 import { BuildWorkflowValidator } from './BuildWorkflowValidator.js';
 
@@ -131,11 +131,11 @@ export class BuildConfigParser {
     shell,
     command,
   }: BuildFunctionConfig): BuildFunction {
-    const inputCreators =
-      inputsConfig && this.createBuildStepInputCreatorsFromBuildFunctionInputs(inputsConfig);
-    const outputCreators =
-      outputsConfig && this.createBuildStepOutputCreatorsFromBuildFunctionOutputs(outputsConfig);
-    return new BuildFunction({ id, name, inputCreators, outputCreators, shell, command });
+    const inputProviders =
+      inputsConfig && this.createBuildStepInputProvidersFromBuildFunctionInputs(inputsConfig);
+    const outputProviders =
+      outputsConfig && this.createBuildStepOutputProvidersFromBuildFunctionOutputs(outputsConfig);
+    return new BuildFunction({ id, name, inputProviders, outputProviders, shell, command });
   }
 
   private createBuildStepInputsFromBuildStepInputsDefinition(
@@ -153,9 +153,9 @@ export class BuildConfigParser {
     );
   }
 
-  private createBuildStepInputCreatorsFromBuildFunctionInputs(
+  private createBuildStepInputProvidersFromBuildFunctionInputs(
     buildFunctionInputs: BuildFunctionInputs
-  ): BuildStepInputCreator[] {
+  ): BuildStepInputProvider[] {
     return buildFunctionInputs.map((entry) => {
       if (typeof entry === 'string') {
         return (stepId: string) => new BuildStepInput(this.ctx, { id: entry, stepId });
@@ -185,9 +185,9 @@ export class BuildConfigParser {
     );
   }
 
-  private createBuildStepOutputCreatorsFromBuildFunctionOutputs(
+  private createBuildStepOutputProvidersFromBuildFunctionOutputs(
     buildFunctionOutputs: BuildFunctionOutputs
-  ): BuildStepOutputCreator[] {
+  ): BuildStepOutputProvider[] {
     return buildFunctionOutputs.map((entry) =>
       typeof entry === 'string'
         ? (stepId: string) => new BuildStepOutput(this.ctx, { id: entry, stepId, required: true })

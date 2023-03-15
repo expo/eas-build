@@ -2,7 +2,7 @@ import { BuildStepContext } from './BuildStepContext.js';
 import { BuildStepRuntimeError } from './errors/BuildStepRuntimeError.js';
 import { interpolateWithOutputs } from './utils/template.js';
 
-export type BuildStepInputCreator = (stepId: string) => BuildStepInput;
+export type BuildStepInputProvider = (stepId: string) => BuildStepInput;
 
 export class BuildStepInput {
   public readonly id: string;

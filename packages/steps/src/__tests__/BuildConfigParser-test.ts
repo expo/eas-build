@@ -261,9 +261,9 @@ describe(BuildConfigParser, () => {
       const function1 = buildFunctions.say_hi;
       expect(function1.id).toBe(undefined);
       expect(function1.name).toBe('Hi!');
-      expect(function1.inputCreators?.[0]('unknown-step').id).toBe('name');
-      expect(function1.inputCreators?.[0]('unknown-step').defaultValue).toBe(undefined);
-      expect(function1.inputCreators?.[0]('unknown-step').required).toBe(true);
+      expect(function1.inputProviders?.[0]('unknown-step').id).toBe('name');
+      expect(function1.inputProviders?.[0]('unknown-step').defaultValue).toBe(undefined);
+      expect(function1.inputProviders?.[0]('unknown-step').required).toBe(true);
       expect(function1.command).toBe('echo "Hi, ${ inputs.name }!"');
 
       // say_hi_wojtek:
@@ -282,8 +282,8 @@ describe(BuildConfigParser, () => {
       const function3 = buildFunctions.random;
       expect(function3.id).toBe(undefined);
       expect(function3.name).toBe('Generate random number');
-      expect(function3.outputCreators?.[0]('unknown-step').id).toBe('value');
-      expect(function3.outputCreators?.[0]('unknown-step').required).toBe(true);
+      expect(function3.outputProviders?.[0]('unknown-step').id).toBe('value');
+      expect(function3.outputProviders?.[0]('unknown-step').required).toBe(true);
       expect(function3.command).toBe('set-output value 6');
 
       // print:
@@ -292,8 +292,8 @@ describe(BuildConfigParser, () => {
       const function4 = buildFunctions.print;
       expect(function4.id).toBe(undefined);
       expect(function4.name).toBe(undefined);
-      expect(function4.inputCreators?.[0]('unknown-step').id).toBe('value');
-      expect(function4.inputCreators?.[0]('unknown-step').required).toBe(true);
+      expect(function4.inputProviders?.[0]('unknown-step').id).toBe('value');
+      expect(function4.inputProviders?.[0]('unknown-step').required).toBe(true);
       expect(function4.command).toBe('echo "${ inputs.value }"');
     });
   });
