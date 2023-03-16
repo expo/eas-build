@@ -96,7 +96,7 @@ export class BuildConfigParser {
       const keys = Object.keys(buildStepConfig);
       assert(
         keys.length === 1,
-        'There must be at most one function call in the step (enforced by joi)'
+        'There must be at most one function call in the step (enforced by joi).'
       );
       const functionId = keys[0];
       const buildFunctionCallConfig = buildStepConfig[functionId];

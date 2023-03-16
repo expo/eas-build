@@ -173,7 +173,7 @@ function validateAllFunctionsExist(config: BuildConfig): void {
       const keys = Object.keys(step);
       assert(
         keys.length === 1,
-        'There must be at most one function call in the step (enforced by joi)'
+        'There must be at most one function call in the step (enforced by joi).'
       );
       calledFunctionsSet.add(keys[0]);
     }

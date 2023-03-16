@@ -1,11 +1,33 @@
 import { BuildFunction } from '../BuildFunction.js';
-import { BuildStep } from '../BuildStep.js';
+import { BuildStep, BuildStepFunction } from '../BuildStep.js';
 import { BuildStepInput, BuildStepInputProvider } from '../BuildStepInput.js';
 import { BuildStepOutput, BuildStepOutputProvider } from '../BuildStepOutput.js';
 
 import { createMockContext } from './utils/context.js';
 
 describe(BuildFunction, () => {
+  describe('constructor', () => {
+    it('throws when neither command nor fn is set', () => {
+      expect(() => {
+        // eslint-disable-next-line no-new
+        new BuildFunction({
+          id: 'test1',
+        });
+      }).toThrowError(/Either command or fn must be defined/);
+    });
+
+    it('throws when neither command nor fn is set', () => {
+      expect(() => {
+        // eslint-disable-next-line no-new
+        new BuildFunction({
+          id: 'test1',
+          command: 'echo 123',
+          fn: () => {},
+        });
+      }).toThrowError(/Command and fn cannot be both set/);
+    });
+  });
+
   describe(BuildFunction.prototype.createBuildStepFromFunctionCall, () => {
     it('returns a BuildStep object', () => {
       const ctx = createMockContext();
@@ -21,6 +43,22 @@ describe(BuildFunction, () => {
       expect(step.id).toBe('test1');
       expect(step.name).toBe('Test function');
       expect(step.command).toBe('echo 123');
+    });
+    it('works with build step function', () => {
+      const ctx = createMockContext();
+      const fn: BuildStepFunction = () => {};
+      const buildFunction = new BuildFunction({
+        id: 'test1',
+        name: 'Test function',
+        fn,
+      });
+      const step = buildFunction.createBuildStepFromFunctionCall(ctx, {
+        workingDirectory: ctx.workingDirectory,
+      });
+      expect(step).toBeInstanceOf(BuildStep);
+      expect(step.id).toBe('test1');
+      expect(step.name).toBe('Test function');
+      expect(step.fn).toBe(fn);
     });
     it('can override id and shell from function definition', () => {
       const ctx = createMockContext();

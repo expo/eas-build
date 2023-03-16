@@ -1,3 +1,4 @@
+import assert from 'assert';
 import fs from 'fs/promises';
 import path from 'path';
 
@@ -5,8 +6,12 @@ import { bunyan } from '@expo/logger';
 import { v4 as uuidv4 } from 'uuid';
 
 import { BuildStepContext } from './BuildStepContext.js';
-import { BuildStepInput } from './BuildStepInput.js';
-import { BuildStepOutput } from './BuildStepOutput.js';
+import { BuildStepInput, BuildStepInputById, makeBuildStepInputByIdMap } from './BuildStepInput.js';
+import {
+  BuildStepOutput,
+  BuildStepOutputById,
+  makeBuildStepOutputByIdMap,
+} from './BuildStepOutput.js';
 import { BIN_PATH } from './utils/shell/bin.js';
 import { getDefaultShell, getShellCommandAndArgs } from './utils/shell/command.js';
 import {
@@ -33,20 +38,31 @@ export enum BuildStepLogMarker {
   END_STEP = 'end-step',
 }
 
+export type BuildStepFunction = (
+  ctx: BuildStepContext,
+  {
+    inputs,
+    outputs,
+    env,
+  }: { inputs: BuildStepInputById; outputs: BuildStepOutputById; env: BuildStepEnv }
+) => unknown;
+
 export class BuildStep {
   public readonly id: string;
   public readonly name?: string;
   public readonly displayName?: string;
   public readonly inputs?: BuildStepInput[];
   public readonly outputs?: BuildStepOutput[];
-  public readonly command: string;
+  public readonly command?: string;
+  public readonly fn?: BuildStepFunction;
   public readonly workingDirectory: string;
   public readonly shell: string;
   public status: BuildStepStatus;
 
   private readonly internalId: string;
   private readonly logger: bunyan;
-  private readonly outputById: Record<string, BuildStepOutput>;
+  private readonly inputById: BuildStepInputById;
+  private readonly outputById: BuildStepOutputById;
   private executed = false;
 
   constructor(
@@ -57,6 +73,7 @@ export class BuildStep {
       inputs,
       outputs,
       command,
+      fn,
       workingDirectory,
       shell,
     }: {
@@ -64,23 +81,23 @@ export class BuildStep {
       name?: string;
       inputs?: BuildStepInput[];
       outputs?: BuildStepOutput[];
-      command: string;
+      command?: string;
+      fn?: BuildStepFunction;
       workingDirectory: string;
       shell?: string;
     }
   ) {
+    assert(command !== undefined || fn !== undefined, 'Either command or fn must be defined.');
+    assert(!(command !== undefined && fn !== undefined), 'Command and fn cannot be both set.');
+
     this.id = id;
     this.name = name;
     this.displayName = this.getStepDisplayName(name, command);
     this.inputs = inputs;
     this.outputs = outputs;
-    this.outputById =
-      outputs === undefined
-        ? {}
-        : outputs.reduce((acc, output) => {
-            acc[output.id] = output;
-            return acc;
-          }, {} as Record<string, BuildStepOutput>);
+    this.inputById = makeBuildStepInputByIdMap(inputs);
+    this.outputById = makeBuildStepOutputByIdMap(outputs);
+    this.fn = fn;
     this.command = command;
     this.workingDirectory = workingDirectory;
     this.shell = shell ?? getDefaultShell();
@@ -104,6 +121,50 @@ export class BuildStep {
       );
       this.status = BuildStepStatus.IN_PROGRESS;
 
+      if (this.command !== undefined) {
+        await this.executeCommandAsync(env);
+      } else {
+        await this.exectuteFnAsync(env);
+      }
+
+      this.logger.info(
+        { marker: BuildStepLogMarker.END_STEP, result: BuildStepStatus.SUCCESS },
+        `Finished build step "${this.id}" successfully`
+      );
+      this.status = BuildStepStatus.SUCCESS;
+    } catch (err) {
+      this.logger.error({ err });
+      this.logger.error(
+        { marker: BuildStepLogMarker.END_STEP, result: BuildStepStatus.FAIL },
+        `Build step "${this.id}" failed`
+      );
+      this.status = BuildStepStatus.FAIL;
+      throw err;
+    } finally {
+      this.executed = true;
+    }
+  }
+
+  public hasOutputParameter(name: string): boolean {
+    return name in this.outputById;
+  }
+
+  public getOutputValueByName(name: string): string | undefined {
+    if (!this.executed) {
+      throw new BuildStepRuntimeError(
+        `Failed getting output "${name}" from step "${this.id}". The step has not been executed yet.`
+      );
+    }
+    if (!this.hasOutputParameter(name)) {
+      throw new BuildStepRuntimeError(`Step "${this.id}" does not have output "${name}"`);
+    }
+    return this.outputById[name].value;
+  }
+
+  private async executeCommandAsync(env: BuildStepEnv): Promise<void> {
+    assert(this.command, 'Command must be defined.');
+
+    try {
       const command = this.interpolateInputsInCommand(this.command, this.inputs);
       this.logger.debug(`Interpolated inputs in the command template`);
 
@@ -126,40 +187,15 @@ export class BuildStep {
 
       await this.collectAndValidateOutputsAsync(outputsDir);
       this.logger.debug('Finished collecting output paramters');
-
-      this.logger.info(
-        { marker: BuildStepLogMarker.END_STEP, result: BuildStepStatus.SUCCESS },
-        `Finished build step "${this.id}" successfully`
-      );
-      this.status = BuildStepStatus.SUCCESS;
-    } catch (err) {
-      this.logger.error({ err });
-      this.logger.error(
-        { marker: BuildStepLogMarker.END_STEP, result: BuildStepStatus.FAIL },
-        `Build step "${this.id}" failed`
-      );
-      this.status = BuildStepStatus.FAIL;
-      throw err;
     } finally {
-      this.executed = true;
       await cleanUpStepTemporaryDirectoriesAsync(this.ctx, this.id);
     }
   }
 
-  public hasOutputParameter(name: string): boolean {
-    return name in this.outputById;
-  }
+  private async exectuteFnAsync(env: BuildStepEnv): Promise<void> {
+    assert(this.fn, 'Function (fn) must be defined');
 
-  public getOutputValueByName(name: string): string | undefined {
-    if (!this.executed) {
-      throw new BuildStepRuntimeError(
-        `Failed getting output "${name}" from step "${this.id}". The step has not been executed yet.`
-      );
-    }
-    if (!this.hasOutputParameter(name)) {
-      throw new BuildStepRuntimeError(`Step "${this.id}" does not have output "${name}"`);
-    }
-    return this.outputById[name].value;
+    await this.fn(this.ctx, { inputs: this.inputById, outputs: this.outputById, env });
   }
 
   private interpolateInputsInCommand(command: string, inputs?: BuildStepInput[]): string {
@@ -224,11 +260,11 @@ export class BuildStep {
     };
   }
 
-  private getStepDisplayName(name: string | undefined, command: string): string | undefined {
+  private getStepDisplayName(name: string | undefined, command?: string): string | undefined {
     if (name) {
       return name;
     }
-    if (command !== '') {
+    if (command !== undefined && command !== '') {
       const splits = command.trim().split('\n');
       for (const split of splits) {
         const trimmed = split.trim();

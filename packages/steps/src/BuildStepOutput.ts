@@ -1,6 +1,7 @@
 import { BuildStepContext } from './BuildStepContext.js';
 import { BuildStepRuntimeError } from './errors/BuildStepRuntimeError.js';
 
+export type BuildStepOutputById = Record<string, BuildStepOutput>;
 export type BuildStepOutputProvider = (ctx: BuildStepContext, stepId: string) => BuildStepOutput;
 
 export class BuildStepOutput {
@@ -45,4 +46,14 @@ export class BuildStepOutput {
     this._value = value;
     return this;
   }
+}
+
+export function makeBuildStepOutputByIdMap(outputs?: BuildStepOutput[]): BuildStepOutputById {
+  if (outputs === undefined) {
+    return {};
+  }
+  return outputs.reduce((acc, output) => {
+    acc[output.id] = output;
+    return acc;
+  }, {} as BuildStepOutputById);
 }

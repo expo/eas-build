@@ -1,7 +1,9 @@
+import assert from 'assert';
+
 import { v4 as uuidv4 } from 'uuid';
 
 import { BuildPlatform } from './BuildPlatform.js';
-import { BuildStep } from './BuildStep.js';
+import { BuildStep, BuildStepFunction } from './BuildStep.js';
 import { BuildStepContext } from './BuildStepContext.js';
 import { BuildStepInputProvider } from './BuildStepInput.js';
 import { BuildStepOutputProvider } from './BuildStepOutput.js';
@@ -15,7 +17,8 @@ export class BuildFunction {
   public readonly platforms?: BuildPlatform[];
   public readonly inputProviders?: BuildStepInputProvider[];
   public readonly outputProviders?: BuildStepOutputProvider[];
-  public readonly command: string;
+  public readonly command?: string;
+  public readonly fn?: BuildStepFunction;
   public readonly shell?: string;
 
   constructor({
@@ -25,6 +28,7 @@ export class BuildFunction {
     inputProviders,
     outputProviders,
     command,
+    fn,
     shell,
   }: {
     id?: string;
@@ -32,15 +36,20 @@ export class BuildFunction {
     platforms?: BuildPlatform[];
     inputProviders?: BuildStepInputProvider[];
     outputProviders?: BuildStepOutputProvider[];
-    command: string;
+    command?: string;
+    fn?: BuildStepFunction;
     shell?: string;
   }) {
+    assert(command !== undefined || fn !== undefined, 'Either command or fn must be defined.');
+    assert(!(command !== undefined && fn !== undefined), 'Command and fn cannot be both set.');
+
     this.id = id;
     this.name = name;
     this.platforms = platforms;
     this.inputProviders = inputProviders;
     this.outputProviders = outputProviders;
     this.command = command;
+    this.fn = fn;
     this.shell = shell;
   }
 
@@ -73,6 +82,7 @@ export class BuildFunction {
       id: buildStepId,
       name: this.name,
       command: this.command,
+      fn: this.fn,
       workingDirectory,
       inputs,
       outputs,
