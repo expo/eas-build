@@ -149,7 +149,7 @@ export function isBuildStepBareFunctionCall(
   return typeof step === 'string';
 }
 
-export function validateBuildConfig(rawConfig: object): BuildConfig {
+export function validateBuildConfig(rawConfig: object, externalFunctionIds: string[]): BuildConfig {
   const { error, value: buildConfig } = BuildConfigSchema.validate(rawConfig, {
     allowUnknown: false,
     abortEarly: false,
@@ -158,11 +158,11 @@ export function validateBuildConfig(rawConfig: object): BuildConfig {
     const errorMessage = error.details.map(({ message }) => message).join(', ');
     throw new BuildConfigError(errorMessage, { cause: error });
   }
-  validateAllFunctionsExist(buildConfig);
+  validateAllFunctionsExist(buildConfig, externalFunctionIds);
   return buildConfig;
 }
 
-function validateAllFunctionsExist(config: BuildConfig): void {
+function validateAllFunctionsExist(config: BuildConfig, externalFunctionIds: string[]): void {
   const calledFunctionsSet = new Set<string>();
   for (const step of config.build.steps) {
     if (typeof step === 'string') {
@@ -177,12 +177,15 @@ function validateAllFunctionsExist(config: BuildConfig): void {
     }
   }
   const calledFunctions = Array.from(calledFunctionsSet);
+  const externalFunctionIdsSet = new Set(externalFunctionIds);
   const nonExistentFunctions = calledFunctions.filter((calledFunction) => {
-    return !(calledFunction in (config.functions ?? {}));
+    return (
+      !(calledFunction in (config.functions ?? {})) && !externalFunctionIdsSet.has(calledFunction)
+    );
   });
   if (nonExistentFunctions.length > 0) {
     throw new BuildConfigError(
-      `Calling non-existent functions: ${nonExistentFunctions.join(', ')}`
+      `Calling non-existent functions: ${nonExistentFunctions.map((f) => `"${f}"`).join(', ')}.`
     );
   }
 }

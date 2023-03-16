@@ -25,18 +25,32 @@ import { BuildStepInput, BuildStepInputProvider } from './BuildStepInput.js';
 import { BuildStepOutput, BuildStepOutputProvider } from './BuildStepOutput.js';
 import { BuildWorkflow } from './BuildWorkflow.js';
 import { BuildWorkflowValidator } from './BuildWorkflowValidator.js';
+import { BuildStepRuntimeError } from './errors/BuildStepRuntimeError.js';
+import { duplicates } from './utils/expodash/duplicates.js';
+import { uniq } from './utils/expodash/uniq.js';
 
 export class BuildConfigParser {
   private readonly configPath: string;
+  private readonly externalFunctions?: BuildFunction[];
 
-  constructor(private readonly ctx: BuildStepContext, { configPath }: { configPath: string }) {
+  constructor(
+    private readonly ctx: BuildStepContext,
+    { configPath, externalFunctions }: { configPath: string; externalFunctions?: BuildFunction[] }
+  ) {
+    this.validateExternalFunctions(externalFunctions);
+
     this.configPath = configPath;
+    this.externalFunctions = externalFunctions;
   }
 
   public async parseAsync(): Promise<BuildWorkflow> {
     const rawConfig = await this.readRawConfigAsync();
-    const config = validateBuildConfig(rawConfig);
-    const buildFunctions = this.createBuildFunctionsFromConfig(config.functions);
+    const config = validateBuildConfig(rawConfig, this.getUniqueExternalFunctionIds());
+    const configBuildFunctions = this.createBuildFunctionsFromConfig(config.functions);
+    const buildFunctions = this.mergeBuildFunctionsWithExternal(
+      configBuildFunctions,
+      this.externalFunctions
+    );
     const buildSteps = config.build.steps.map((stepConfig) =>
       this.createBuildStepFromConfig(stepConfig, buildFunctions)
     );
@@ -196,5 +210,47 @@ export class BuildConfigParser {
     return workingDirectory !== undefined
       ? path.resolve(this.ctx.workingDirectory, workingDirectory)
       : this.ctx.workingDirectory;
+  }
+
+  private mergeBuildFunctionsWithExternal(
+    configFunctions: BuildFunctionById,
+    externalFunctions?: BuildFunction[]
+  ): BuildFunctionById {
+    const result: BuildFunctionById = { ...configFunctions };
+    if (externalFunctions === undefined) {
+      return result;
+    }
+    for (const buildFunction of externalFunctions) {
+      // functions defined in config shadow the external ones
+      const fullId = buildFunction.getFullId();
+      if (!(fullId in result)) {
+        result[fullId] = buildFunction;
+      }
+    }
+    return result;
+  }
+
+  private validateExternalFunctions(externalFunctions?: BuildFunction[]): void {
+    if (externalFunctions === undefined) {
+      return;
+    }
+    const externalFunctionIds = externalFunctions.map((f) => f.getFullId());
+    const duplicatedExternalFunctionIds = duplicates(externalFunctionIds);
+    if (duplicatedExternalFunctionIds.length === 0) {
+      return;
+    }
+    throw new BuildStepRuntimeError(
+      `Provided external functions with duplicated IDs: ${duplicatedExternalFunctionIds
+        .map((id) => `"${id}"`)
+        .join(', ')}`
+    );
+  }
+
+  private getUniqueExternalFunctionIds(): string[] {
+    if (this.externalFunctions === undefined) {
+      return [];
+    }
+    const ids = this.externalFunctions.map((f) => f.getFullId());
+    return uniq(ids);
   }
 }

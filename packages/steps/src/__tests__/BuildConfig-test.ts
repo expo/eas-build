@@ -16,7 +16,7 @@ describe(validateBuildConfig, () => {
     const buildConfig = {};
 
     expect(() => {
-      validateBuildConfig(buildConfig);
+      validateBuildConfig(buildConfig, []);
     }).toThrowError(BuildConfigError);
   });
 
@@ -33,7 +33,7 @@ describe(validateBuildConfig, () => {
       };
 
       expect(() => {
-        validateBuildConfig(buildConfig);
+        validateBuildConfig(buildConfig, []);
       }).not.toThrowError();
     });
 
@@ -50,7 +50,7 @@ describe(validateBuildConfig, () => {
         };
 
         expect(() => {
-          validateBuildConfig(buildConfig);
+          validateBuildConfig(buildConfig, []);
         }).toThrowError(/".*\.command" is required/);
       });
       test('non-existent fields', () => {
@@ -68,7 +68,7 @@ describe(validateBuildConfig, () => {
         };
 
         expect(() => {
-          validateBuildConfig(buildConfig);
+          validateBuildConfig(buildConfig, []);
         }).toThrowError(/".*\.blah" is not allowed/);
       });
       test('valid command', () => {
@@ -85,7 +85,7 @@ describe(validateBuildConfig, () => {
         };
 
         expect(() => {
-          validateBuildConfig(buildConfig);
+          validateBuildConfig(buildConfig, []);
         }).not.toThrowError();
       });
     });
@@ -104,7 +104,7 @@ describe(validateBuildConfig, () => {
         };
 
         expect(() => {
-          validateBuildConfig(buildConfig);
+          validateBuildConfig(buildConfig, []);
         }).not.toThrowError();
       });
       test('non-existent fields', () => {
@@ -126,7 +126,7 @@ describe(validateBuildConfig, () => {
         };
 
         expect(() => {
-          validateBuildConfig(buildConfig);
+          validateBuildConfig(buildConfig, []);
         }).toThrowError(/".*\.blah" is not allowed/);
       });
       test('command is not allowed', () => {
@@ -148,7 +148,7 @@ describe(validateBuildConfig, () => {
         };
 
         expect(() => {
-          validateBuildConfig(buildConfig);
+          validateBuildConfig(buildConfig, []);
         }).toThrowError(/".*\.command" is not allowed/);
       });
       test('call with inputs', () => {
@@ -172,7 +172,7 @@ describe(validateBuildConfig, () => {
         };
 
         expect(() => {
-          validateBuildConfig(buildConfig);
+          validateBuildConfig(buildConfig, []);
         }).not.toThrowError();
       });
       test('at most one function call per step', () => {
@@ -204,7 +204,7 @@ describe(validateBuildConfig, () => {
         };
 
         expect(() => {
-          validateBuildConfig(buildConfig);
+          validateBuildConfig(buildConfig, []);
         }).toThrowError();
       });
       test('non-existent functions', () => {
@@ -215,8 +215,19 @@ describe(validateBuildConfig, () => {
         };
 
         expect(() => {
-          validateBuildConfig(buildConfig);
-        }).toThrowError(/Calling non-existent functions: say_hi, say_hello/);
+          validateBuildConfig(buildConfig, []);
+        }).toThrowError(/Calling non-existent functions: "say_hi", "say_hello"/);
+      });
+      test('works with external functions', () => {
+        const buildConfig = {
+          build: {
+            steps: ['say_hi', 'say_hello'],
+          },
+        };
+
+        expect(() => {
+          validateBuildConfig(buildConfig, ['say_hi', 'say_hello']);
+        }).not.toThrowError();
       });
     });
   });
@@ -233,7 +244,7 @@ describe(validateBuildConfig, () => {
       };
 
       expect(() => {
-        validateBuildConfig(buildConfig);
+        validateBuildConfig(buildConfig, []);
       }).toThrowError(/".*\.say_hi\.command" is required/);
     });
     test('"run" is not allowed for function name', () => {
@@ -247,7 +258,7 @@ describe(validateBuildConfig, () => {
       };
 
       expect(() => {
-        validateBuildConfig(buildConfig);
+        validateBuildConfig(buildConfig, []);
       }).toThrowError(/"functions.run" is not allowed/);
     });
   });

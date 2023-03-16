@@ -2,6 +2,7 @@ import { BuildStep } from './BuildStep.js';
 import { BuildWorkflow } from './BuildWorkflow.js';
 import { BuildConfigError } from './errors/BuildConfigError.js';
 import { BuildWorkflowError } from './errors/BuildWorkflowError.js';
+import { duplicates } from './utils/expodash/duplicates.js';
 import { findOutputPaths } from './utils/template.js';
 
 export class BuildWorkflowValidator {
@@ -18,16 +19,7 @@ export class BuildWorkflowValidator {
 
   private validateUniqueStepIds(): BuildConfigError[] {
     const stepIds = this.workflow.buildSteps.map(({ id }) => id);
-    const visitedStepIdsSet = new Set<string>();
-    const duplicatedStepIdsSet = new Set<string>();
-    for (const stepId of stepIds) {
-      if (visitedStepIdsSet.has(stepId)) {
-        duplicatedStepIdsSet.add(stepId);
-      } else {
-        visitedStepIdsSet.add(stepId);
-      }
-    }
-    const duplicatedStepIds = [...duplicatedStepIdsSet];
+    const duplicatedStepIds = duplicates(stepIds);
     if (duplicatedStepIds.length === 0) {
       return [];
     } else {

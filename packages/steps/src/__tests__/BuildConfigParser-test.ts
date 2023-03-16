@@ -2,15 +2,52 @@ import path from 'path';
 import url from 'url';
 
 import { BuildConfigParser } from '../BuildConfigParser.js';
+import { BuildFunction } from '../BuildFunction.js';
+import { BuildStepFunction } from '../BuildStep.js';
 import { BuildWorkflow } from '../BuildWorkflow.js';
+import { BuildConfigError } from '../errors/BuildConfigError.js';
+import { BuildStepRuntimeError } from '../errors/BuildStepRuntimeError.js';
 import { getDefaultShell } from '../utils/shell/command.js';
 
 import { createMockContext } from './utils/context.js';
+import { getError, getErrorAsync } from './utils/error.js';
 import { UUID_REGEX } from './utils/uuid.js';
 
 const __dirname = url.fileURLToPath(new URL('.', import.meta.url));
 
 describe(BuildConfigParser, () => {
+  describe('constructor', () => {
+    it('throws if provided external functions with duplicated IDs', () => {
+      const ctx = createMockContext();
+      const error = getError<BuildStepRuntimeError>(() => {
+        // eslint-disable-next-line no-new
+        new BuildConfigParser(ctx, {
+          configPath: './fake.yml',
+          externalFunctions: [
+            new BuildFunction({ id: 'abc', command: 'echo 123' }),
+            new BuildFunction({ id: 'abc', command: 'echo 456' }),
+          ],
+        });
+      });
+      expect(error).toBeInstanceOf(BuildStepRuntimeError);
+      expect(error.message).toMatch(/Provided external functions with duplicated IDs/);
+    });
+
+    it(`doesn't throw if provided external functions don't have duplicated IDs`, () => {
+      const ctx = createMockContext();
+      expect(() => {
+        // eslint-disable-next-line no-new
+        new BuildConfigParser(ctx, {
+          configPath: './fake.yml',
+          externalFunctions: [
+            new BuildFunction({ namespace: 'a', id: 'abc', command: 'echo 123' }),
+            new BuildFunction({ namespace: 'b', id: 'abc', command: 'echo 456' }),
+          ],
+        });
+      }).not.toThrow();
+    });
+  });
+
   describe(BuildConfigParser.prototype.parseAsync, () => {
     it('returns a BuildWorkflow object', async () => {
       const ctx = createMockContext();
@@ -293,6 +330,61 @@ describe(BuildConfigParser, () => {
       expect(function4.inputProviders?.[0](ctx, 'unknown-step').id).toBe('value');
       expect(function4.inputProviders?.[0](ctx, 'unknown-step').required).toBe(true);
       expect(function4.command).toBe('echo "${ inputs.value }"');
+    });
+
+    it('throws if calling non-existent external functions', async () => {
+      const ctx = createMockContext();
+      const parser = new BuildConfigParser(ctx, {
+        configPath: path.join(__dirname, './fixtures/external-functions.yml'),
+      });
+      const error = await getErrorAsync<BuildConfigError>(async () => {
+        await parser.parseAsync();
+      });
+      expect(error).toBeInstanceOf(BuildConfigError);
+      expect(error.message).toBe(
+        'Calling non-existent functions: "eas/download_project", "eas/build_project".'
+      );
+    });
+
+    it('works with external functions', async () => {
+      const ctx = createMockContext();
+
+      const downloadProjectFn: BuildStepFunction = (ctx) => {
+        ctx.logger.info('Downloading project...');
+      };
+
+      const buildProjectFn: BuildStepFunction = (ctx) => {
+        ctx.logger.info('Building project...');
+      };
+
+      const parser = new BuildConfigParser(ctx, {
+        configPath: path.join(__dirname, './fixtures/external-functions.yml'),
+        externalFunctions: [
+          new BuildFunction({
+            namespace: 'eas',
+            id: 'download_project',
+            fn: downloadProjectFn,
+          }),
+          new BuildFunction({
+            namespace: 'eas',
+            id: 'build_project',
+            fn: buildProjectFn,
+          }),
+        ],
+      });
+
+      const workflow = await parser.parseAsync();
+      expect(workflow.buildSteps.length).toBe(2);
+
+      // - eas/download_project
+      const step1 = workflow.buildSteps[0];
+      expect(step1.id).toMatch(UUID_REGEX);
+      expect(step1.fn).toBe(downloadProjectFn);
+
+      // - eas/build_project
+      const step2 = workflow.buildSteps[1];
+      expect(step2.id).toMatch(UUID_REGEX);
+      expect(step2.fn).toBe(buildProjectFn);
     });
   });
 });
