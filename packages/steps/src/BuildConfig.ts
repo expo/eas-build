@@ -43,7 +43,6 @@ export type BuildStepInputs = Record<string, string>;
 export type BuildStepOutputs = BuildInputOutputParameters;
 
 export interface BuildFunctionConfig {
-  id?: string;
   inputs?: BuildFunctionInputs;
   outputs?: BuildFunctionOutputs;
   name?: string;
@@ -112,8 +111,7 @@ const BuildStepConfigSchema = Joi.any<BuildStepConfig>()
     then: Joi.string().min(1),
   });
 
-const BuildFunctionSchema = Joi.object({
-  id: Joi.string(),
+const BuildFunctionConfigSchema = Joi.object({
   name: Joi.string(),
   platforms: Joi.string().allow(...Object.values(BuildPlatform)),
   inputs: BuildInputOutputParametersSchema,
@@ -129,7 +127,7 @@ export const BuildConfigSchema = Joi.object<BuildConfig>({
   }).required(),
   functions: Joi.object().pattern(
     Joi.string().min(1).required().disallow('run'),
-    BuildFunctionSchema.required()
+    BuildFunctionConfigSchema.required()
   ),
 }).required();
 

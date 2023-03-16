@@ -12,7 +12,7 @@ export type BuildFunctionById = Record<string, BuildFunction>;
 export type BuildFunctionCallInputs = Record<string, string>;
 
 export class BuildFunction {
-  public readonly id?: string;
+  public readonly id: string;
   public readonly name?: string;
   public readonly platforms?: BuildPlatform[];
   public readonly inputProviders?: BuildStepInputProvider[];
@@ -31,7 +31,7 @@ export class BuildFunction {
     fn,
     shell,
   }: {
-    id?: string;
+    id: string;
     name?: string;
     platforms?: BuildPlatform[];
     inputProviders?: BuildStepInputProvider[];
@@ -67,7 +67,7 @@ export class BuildFunction {
       shell?: string;
     }
   ): BuildStep {
-    const buildStepId = id ?? this.id ?? uuidv4();
+    const buildStepId = id ?? uuidv4();
 
     const inputs = this.inputProviders?.map((inputProvider) => {
       const input = inputProvider(ctx, buildStepId);

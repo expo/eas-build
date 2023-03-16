@@ -6,9 +6,7 @@ import { BuildWorkflow } from '../BuildWorkflow.js';
 import { getDefaultShell } from '../utils/shell/command.js';
 
 import { createMockContext } from './utils/context.js';
-
-const UUID_REGEX =
-  /^[0-9a-fA-F]{8}\b-[0-9a-fA-F]{4}\b-[0-9a-fA-F]{4}\b-[0-9a-fA-F]{4}\b-[0-9a-fA-F]{12}$/;
+import { UUID_REGEX } from './utils/uuid.js';
 
 const __dirname = url.fileURLToPath(new URL('.', import.meta.url));
 
@@ -259,7 +257,7 @@ describe(BuildConfigParser, () => {
       //     - name
       //   command: echo "Hi, ${ inputs.name }!"
       const function1 = buildFunctions.say_hi;
-      expect(function1.id).toBe(undefined);
+      expect(function1.id).toBe('say_hi');
       expect(function1.name).toBe('Hi!');
       expect(function1.inputProviders?.[0](ctx, 'unknown-step').id).toBe('name');
       expect(function1.inputProviders?.[0](ctx, 'unknown-step').defaultValue).toBe(undefined);
@@ -270,7 +268,7 @@ describe(BuildConfigParser, () => {
       //   name: Hi, Wojtek!
       //   command: echo "Hi, Wojtek!"
       const function2 = buildFunctions.say_hi_wojtek;
-      expect(function2.id).toBe(undefined);
+      expect(function2.id).toBe('say_hi_wojtek');
       expect(function2.name).toBe('Hi, Wojtek!');
       expect(function2.command).toBe('echo "Hi, Wojtek!"');
 
@@ -280,7 +278,7 @@ describe(BuildConfigParser, () => {
       //     - value
       //   command: set-output value 6
       const function3 = buildFunctions.random;
-      expect(function3.id).toBe(undefined);
+      expect(function3.id).toBe('random');
       expect(function3.name).toBe('Generate random number');
       expect(function3.outputProviders?.[0](ctx, 'unknown-step').id).toBe('value');
       expect(function3.outputProviders?.[0](ctx, 'unknown-step').required).toBe(true);
@@ -290,7 +288,7 @@ describe(BuildConfigParser, () => {
       //   inputs: [value]
       //   command: echo "${ inputs.value }"
       const function4 = buildFunctions.print;
-      expect(function4.id).toBe(undefined);
+      expect(function4.id).toBe('print');
       expect(function4.name).toBe(undefined);
       expect(function4.inputProviders?.[0](ctx, 'unknown-step').id).toBe('value');
       expect(function4.inputProviders?.[0](ctx, 'unknown-step').required).toBe(true);

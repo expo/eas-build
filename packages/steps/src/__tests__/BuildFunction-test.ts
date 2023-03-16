@@ -4,6 +4,7 @@ import { BuildStepInput, BuildStepInputProvider } from '../BuildStepInput.js';
 import { BuildStepOutput, BuildStepOutputProvider } from '../BuildStepOutput.js';
 
 import { createMockContext } from './utils/context.js';
+import { UUID_REGEX } from './utils/uuid.js';
 
 describe(BuildFunction, () => {
   describe('constructor', () => {
@@ -40,7 +41,7 @@ describe(BuildFunction, () => {
         workingDirectory: ctx.workingDirectory,
       });
       expect(step).toBeInstanceOf(BuildStep);
-      expect(step.id).toBe('test1');
+      expect(step.id).toMatch(UUID_REGEX);
       expect(step.name).toBe('Test function');
       expect(step.command).toBe('echo 123');
     });
@@ -56,7 +57,7 @@ describe(BuildFunction, () => {
         workingDirectory: ctx.workingDirectory,
       });
       expect(step).toBeInstanceOf(BuildStep);
-      expect(step.id).toBe('test1');
+      expect(step.id).toMatch(UUID_REGEX);
       expect(step.name).toBe('Test function');
       expect(step.fn).toBe(fn);
     });
