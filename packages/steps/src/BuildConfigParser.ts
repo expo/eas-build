@@ -118,10 +118,11 @@ export class BuildConfigParser {
     }
     const result: BuildFunctionById = {};
     for (const [functionId, buildFunctionConfig] of Object.entries(buildFunctionsConfig)) {
-      result[functionId] = this.createBuildFunctionFromConfig({
+      const buildFunction = this.createBuildFunctionFromConfig({
         id: functionId,
         ...buildFunctionConfig,
       });
+      result[buildFunction.getFullId()] = buildFunction;
     }
     return result;
   }

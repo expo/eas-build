@@ -12,6 +12,7 @@ export type BuildFunctionById = Record<string, BuildFunction>;
 export type BuildFunctionCallInputs = Record<string, string>;
 
 export class BuildFunction {
+  public readonly namespace?: string;
   public readonly id: string;
   public readonly name?: string;
   public readonly platforms?: BuildPlatform[];
@@ -22,6 +23,7 @@ export class BuildFunction {
   public readonly shell?: string;
 
   constructor({
+    namespace,
     id,
     name,
     platforms,
@@ -31,6 +33,7 @@ export class BuildFunction {
     fn,
     shell,
   }: {
+    namespace?: string;
     id: string;
     name?: string;
     platforms?: BuildPlatform[];
@@ -43,6 +46,7 @@ export class BuildFunction {
     assert(command !== undefined || fn !== undefined, 'Either command or fn must be defined.');
     assert(!(command !== undefined && fn !== undefined), 'Command and fn cannot be both set.');
 
+    this.namespace = namespace;
     this.id = id;
     this.name = name;
     this.platforms = platforms;
@@ -51,6 +55,10 @@ export class BuildFunction {
     this.command = command;
     this.fn = fn;
     this.shell = shell;
+  }
+
+  public getFullId(): string {
+    return this.namespace === undefined ? this.id : `${this.namespace}/${this.id}`;
   }
 
   public createBuildStepFromFunctionCall(

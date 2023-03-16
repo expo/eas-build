@@ -29,6 +29,26 @@ describe(BuildFunction, () => {
     });
   });
 
+  describe(BuildFunction.prototype.getFullId, () => {
+    test('namespace is not defined', () => {
+      const buildFunction = new BuildFunction({
+        id: 'upload_artifacts',
+        name: 'Test function',
+        command: 'echo 123',
+      });
+      expect(buildFunction.getFullId()).toBe('upload_artifacts');
+    });
+    test('namespace is defined', () => {
+      const buildFunction = new BuildFunction({
+        namespace: 'eas',
+        id: 'upload_artifacts',
+        name: 'Test function',
+        command: 'echo 123',
+      });
+      expect(buildFunction.getFullId()).toBe('eas/upload_artifacts');
+    });
+  });
+
   describe(BuildFunction.prototype.createBuildStepFromFunctionCall, () => {
     it('returns a BuildStep object', () => {
       const ctx = createMockContext();
