@@ -126,7 +126,11 @@ export const BuildConfigSchema = Joi.object<BuildConfig>({
     steps: Joi.array().items(BuildStepConfigSchema.required()).required(),
   }).required(),
   functions: Joi.object().pattern(
-    Joi.string().min(1).required().disallow('run'),
+    Joi.string()
+      .pattern(/^[\w-]+$/, 'function names')
+      .min(1)
+      .required()
+      .disallow('run'),
     BuildFunctionConfigSchema.required()
   ),
 }).required();

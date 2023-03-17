@@ -10,6 +10,7 @@ import {
   validateBuildConfig,
 } from '../BuildConfig.js';
 import { BuildConfigError } from '../errors/BuildConfigError.js';
+import { getError } from './utils/error.js';
 
 describe(validateBuildConfig, () => {
   test('can throw BuildConfigError', () => {
@@ -260,6 +261,29 @@ describe(validateBuildConfig, () => {
       expect(() => {
         validateBuildConfig(buildConfig, []);
       }).toThrowError(/"functions.run" is not allowed/);
+    });
+    test('function IDs must be alphanumeric (including underscore and dash)', () => {
+      const buildConfig = {
+        build: {
+          steps: [],
+        },
+        functions: {
+          foo: {},
+          upload_artifact: {},
+          'build-project': {},
+          'eas/download_project': {},
+          '!@#$': {},
+        },
+      };
+
+      const error = getError<Error>(() => {
+        validateBuildConfig(buildConfig, []);
+      });
+      expect(error.message).toMatch(/"functions\.eas\/download_project" is not allowed/);
+      expect(error.message).toMatch(/"functions\.!@#\$" is not allowed/);
+      expect(error.message).not.toMatch(/"functions\.foo" is not allowed/);
+      expect(error.message).not.toMatch(/"functions\.build-project" is not allowed/);
+      expect(error.message).not.toMatch(/"functions\.build-project" is not allowed/);
     });
   });
 });

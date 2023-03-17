@@ -264,7 +264,7 @@ export class BuildStep {
     if (name) {
       return name;
     }
-    if (command !== undefined && command !== '') {
+    if (command) {
       const splits = command.trim().split('\n');
       for (const split of splits) {
         const trimmed = split.trim();
