@@ -2,7 +2,8 @@ import { BuildStepContext } from './BuildStepContext.js';
 import { BuildStepRuntimeError } from './errors/BuildStepRuntimeError.js';
 import { interpolateWithOutputs } from './utils/template.js';
 
-export type BuildStepInputCreator = (stepId: string) => BuildStepInput;
+export type BuildStepInputById = Record<string, BuildStepInput>;
+export type BuildStepInputProvider = (ctx: BuildStepContext, stepId: string) => BuildStepInput;
 
 export class BuildStepInput {
   public readonly id: string;
@@ -11,6 +12,14 @@ export class BuildStepInput {
   public readonly required: boolean;
 
   private _value?: string;
+
+  public static createProvider(params: {
+    id: string;
+    defaultValue?: string;
+    required?: boolean;
+  }): BuildStepInputProvider {
+    return (ctx, stepId) => new BuildStepInput(ctx, { ...params, stepId });
+  }
 
   constructor(
     private readonly ctx: BuildStepContext,
@@ -56,4 +65,14 @@ export class BuildStepInput {
     this._value = value;
     return this;
   }
+}
+
+export function makeBuildStepInputByIdMap(inputs?: BuildStepInput[]): BuildStepInputById {
+  if (inputs === undefined) {
+    return {};
+  }
+  return inputs.reduce((acc, input) => {
+    acc[input.id] = input;
+    return acc;
+  }, {} as BuildStepInputById);
 }

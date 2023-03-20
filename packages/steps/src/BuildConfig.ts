@@ -43,7 +43,6 @@ export type BuildStepInputs = Record<string, string>;
 export type BuildStepOutputs = BuildInputOutputParameters;
 
 export interface BuildFunctionConfig {
-  id?: string;
   inputs?: BuildFunctionInputs;
   outputs?: BuildFunctionOutputs;
   name?: string;
@@ -112,8 +111,7 @@ const BuildStepConfigSchema = Joi.any<BuildStepConfig>()
     then: Joi.string().min(1),
   });
 
-const BuildFunctionSchema = Joi.object({
-  id: Joi.string(),
+const BuildFunctionConfigSchema = Joi.object({
   name: Joi.string(),
   platforms: Joi.string().allow(...Object.values(BuildPlatform)),
   inputs: BuildInputOutputParametersSchema,
@@ -128,8 +126,12 @@ export const BuildConfigSchema = Joi.object<BuildConfig>({
     steps: Joi.array().items(BuildStepConfigSchema.required()).required(),
   }).required(),
   functions: Joi.object().pattern(
-    Joi.string().min(1).required().disallow('run'),
-    BuildFunctionSchema.required()
+    Joi.string()
+      .pattern(/^[\w-]+$/, 'function names')
+      .min(1)
+      .required()
+      .disallow('run'),
+    BuildFunctionConfigSchema.required()
   ),
 }).required();
 
@@ -151,7 +153,7 @@ export function isBuildStepBareFunctionCall(
   return typeof step === 'string';
 }
 
-export function validateBuildConfig(rawConfig: object): BuildConfig {
+export function validateBuildConfig(rawConfig: object, externalFunctionIds: string[]): BuildConfig {
   const { error, value: buildConfig } = BuildConfigSchema.validate(rawConfig, {
     allowUnknown: false,
     abortEarly: false,
@@ -160,11 +162,11 @@ export function validateBuildConfig(rawConfig: object): BuildConfig {
     const errorMessage = error.details.map(({ message }) => message).join(', ');
     throw new BuildConfigError(errorMessage, { cause: error });
   }
-  validateAllFunctionsExist(buildConfig);
+  validateAllFunctionsExist(buildConfig, externalFunctionIds);
   return buildConfig;
 }
 
-function validateAllFunctionsExist(config: BuildConfig): void {
+function validateAllFunctionsExist(config: BuildConfig, externalFunctionIds: string[]): void {
   const calledFunctionsSet = new Set<string>();
   for (const step of config.build.steps) {
     if (typeof step === 'string') {
@@ -173,18 +175,21 @@ function validateAllFunctionsExist(config: BuildConfig): void {
       const keys = Object.keys(step);
       assert(
         keys.length === 1,
-        'There must be at most one function call in the step (enforced by joi)'
+        'There must be at most one function call in the step (enforced by joi).'
       );
       calledFunctionsSet.add(keys[0]);
     }
   }
   const calledFunctions = Array.from(calledFunctionsSet);
+  const externalFunctionIdsSet = new Set(externalFunctionIds);
   const nonExistentFunctions = calledFunctions.filter((calledFunction) => {
-    return !(calledFunction in (config.functions ?? {}));
+    return (
+      !(calledFunction in (config.functions ?? {})) && !externalFunctionIdsSet.has(calledFunction)
+    );
   });
   if (nonExistentFunctions.length > 0) {
     throw new BuildConfigError(
-      `Calling non-existent functions: ${nonExistentFunctions.join(', ')}`
+      `Calling non-existent functions: ${nonExistentFunctions.map((f) => `"${f}"`).join(', ')}.`
     );
   }
 }

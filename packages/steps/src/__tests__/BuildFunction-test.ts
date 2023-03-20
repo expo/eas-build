@@ -1,34 +1,95 @@
 import { BuildFunction } from '../BuildFunction.js';
-import { BuildStep } from '../BuildStep.js';
-import { BuildStepInput, BuildStepInputCreator } from '../BuildStepInput.js';
-import { BuildStepOutput, BuildStepOutputCreator } from '../BuildStepOutput.js';
+import { BuildStep, BuildStepFunction } from '../BuildStep.js';
+import { BuildStepInput, BuildStepInputProvider } from '../BuildStepInput.js';
+import { BuildStepOutput, BuildStepOutputProvider } from '../BuildStepOutput.js';
 
 import { createMockContext } from './utils/context.js';
+import { UUID_REGEX } from './utils/uuid.js';
 
 describe(BuildFunction, () => {
+  describe('constructor', () => {
+    it('throws when neither command nor fn is set', () => {
+      expect(() => {
+        // eslint-disable-next-line no-new
+        new BuildFunction({
+          id: 'test1',
+        });
+      }).toThrowError(/Either command or fn must be defined/);
+    });
+
+    it('throws when neither command nor fn is set', () => {
+      expect(() => {
+        // eslint-disable-next-line no-new
+        new BuildFunction({
+          id: 'test1',
+          command: 'echo 123',
+          fn: () => {},
+        });
+      }).toThrowError(/Command and fn cannot be both set/);
+    });
+  });
+
+  describe(BuildFunction.prototype.getFullId, () => {
+    test('namespace is not defined', () => {
+      const buildFunction = new BuildFunction({
+        id: 'upload_artifacts',
+        name: 'Test function',
+        command: 'echo 123',
+      });
+      expect(buildFunction.getFullId()).toBe('upload_artifacts');
+    });
+    test('namespace is defined', () => {
+      const buildFunction = new BuildFunction({
+        namespace: 'eas',
+        id: 'upload_artifacts',
+        name: 'Test function',
+        command: 'echo 123',
+      });
+      expect(buildFunction.getFullId()).toBe('eas/upload_artifacts');
+    });
+  });
+
   describe(BuildFunction.prototype.createBuildStepFromFunctionCall, () => {
     it('returns a BuildStep object', () => {
       const ctx = createMockContext();
-      const func = new BuildFunction(ctx, {
+      const func = new BuildFunction({
         id: 'test1',
         name: 'Test function',
         command: 'echo 123',
       });
-      const step = func.createBuildStepFromFunctionCall({ workingDirectory: ctx.workingDirectory });
+      const step = func.createBuildStepFromFunctionCall(ctx, {
+        workingDirectory: ctx.workingDirectory,
+      });
       expect(step).toBeInstanceOf(BuildStep);
-      expect(step.id).toBe('test1');
+      expect(step.id).toMatch(UUID_REGEX);
       expect(step.name).toBe('Test function');
       expect(step.command).toBe('echo 123');
     });
+    it('works with build step function', () => {
+      const ctx = createMockContext();
+      const fn: BuildStepFunction = () => {};
+      const buildFunction = new BuildFunction({
+        id: 'test1',
+        name: 'Test function',
+        fn,
+      });
+      const step = buildFunction.createBuildStepFromFunctionCall(ctx, {
+        workingDirectory: ctx.workingDirectory,
+      });
+      expect(step).toBeInstanceOf(BuildStep);
+      expect(step.id).toMatch(UUID_REGEX);
+      expect(step.name).toBe('Test function');
+      expect(step.fn).toBe(fn);
+    });
     it('can override id and shell from function definition', () => {
       const ctx = createMockContext();
-      const func = new BuildFunction(ctx, {
+      const func = new BuildFunction({
         id: 'test1',
         name: 'Test function',
         command: 'echo 123',
         shell: '/bin/bash',
       });
-      const step = func.createBuildStepFromFunctionCall({
+      const step = func.createBuildStepFromFunctionCall(ctx, {
         id: 'test2',
         shell: '/bin/zsh',
         workingDirectory: ctx.workingDirectory,
@@ -40,33 +101,33 @@ describe(BuildFunction, () => {
     });
     it('creates function input and output parameters', () => {
       const ctx = createMockContext();
-      const inputCreators: BuildStepInputCreator[] = [
-        (stepId: string) => new BuildStepInput(ctx, { id: 'input1', stepId }),
-        (stepId: string) => new BuildStepInput(ctx, { id: 'input2', stepId }),
+      const inputProviders: BuildStepInputProvider[] = [
+        BuildStepInput.createProvider({ id: 'input1' }),
+        BuildStepInput.createProvider({ id: 'input2' }),
       ];
-      const outputCreators: BuildStepOutputCreator[] = [
-        (stepId: string) => new BuildStepOutput(ctx, { id: 'output1', stepId }),
-        (stepId: string) => new BuildStepOutput(ctx, { id: 'output2', stepId }),
+      const outputProviders: BuildStepOutputProvider[] = [
+        BuildStepOutput.createProvider({ id: 'output1' }),
+        BuildStepOutput.createProvider({ id: 'output2' }),
       ];
-      const func = new BuildFunction(ctx, {
+      const func = new BuildFunction({
         id: 'test1',
         name: 'Test function',
         command:
           'echo ${ inputs.input1 } ${ inputs.input2 }\nset-output output1 value1\nset-output output2 value2',
-        inputCreators,
-        outputCreators,
+        inputProviders,
+        outputProviders,
       });
-      const step = func.createBuildStepFromFunctionCall({
+      const step = func.createBuildStepFromFunctionCall(ctx, {
         callInputs: {
           input1: 'abc',
           input2: 'def',
         },
         workingDirectory: ctx.workingDirectory,
       });
-      expect(func.inputCreators?.[0]).toBe(inputCreators[0]);
-      expect(func.inputCreators?.[1]).toBe(inputCreators[1]);
-      expect(func.outputCreators?.[0]).toBe(outputCreators[0]);
-      expect(func.outputCreators?.[1]).toBe(outputCreators[1]);
+      expect(func.inputProviders?.[0]).toBe(inputProviders[0]);
+      expect(func.inputProviders?.[1]).toBe(inputProviders[1]);
+      expect(func.outputProviders?.[0]).toBe(outputProviders[0]);
+      expect(func.outputProviders?.[1]).toBe(outputProviders[1]);
       expect(step.inputs?.[0].id).toBe('input1');
       expect(step.inputs?.[1].id).toBe('input2');
       expect(step.outputs?.[0].id).toBe('output1');
@@ -74,17 +135,17 @@ describe(BuildFunction, () => {
     });
     it('passes values to build inputs', () => {
       const ctx = createMockContext();
-      const inputCreators: BuildStepInputCreator[] = [
-        (stepId: string) => new BuildStepInput(ctx, { id: 'input1', defaultValue: 'xyz1', stepId }),
-        (stepId: string) => new BuildStepInput(ctx, { id: 'input2', defaultValue: 'xyz2', stepId }),
+      const inputProviders: BuildStepInputProvider[] = [
+        BuildStepInput.createProvider({ id: 'input1', defaultValue: 'xyz1' }),
+        BuildStepInput.createProvider({ id: 'input2', defaultValue: 'xyz2' }),
       ];
-      const func = new BuildFunction(ctx, {
+      const func = new BuildFunction({
         id: 'test1',
         name: 'Test function',
         command: 'echo ${ inputs.input1 } ${ inputs.input2 }',
-        inputCreators,
+        inputProviders,
       });
-      const step = func.createBuildStepFromFunctionCall({
+      const step = func.createBuildStepFromFunctionCall(ctx, {
         id: 'buildStep1',
         callInputs: {
           input1: 'abc',

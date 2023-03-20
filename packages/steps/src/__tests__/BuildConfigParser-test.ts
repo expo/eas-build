@@ -2,17 +2,52 @@ import path from 'path';
 import url from 'url';
 
 import { BuildConfigParser } from '../BuildConfigParser.js';
+import { BuildFunction } from '../BuildFunction.js';
+import { BuildStepFunction } from '../BuildStep.js';
 import { BuildWorkflow } from '../BuildWorkflow.js';
+import { BuildConfigError } from '../errors/BuildConfigError.js';
+import { BuildStepRuntimeError } from '../errors/BuildStepRuntimeError.js';
 import { getDefaultShell } from '../utils/shell/command.js';
 
 import { createMockContext } from './utils/context.js';
-
-const UUID_REGEX =
-  /^[0-9a-fA-F]{8}\b-[0-9a-fA-F]{4}\b-[0-9a-fA-F]{4}\b-[0-9a-fA-F]{4}\b-[0-9a-fA-F]{12}$/;
+import { getError, getErrorAsync } from './utils/error.js';
+import { UUID_REGEX } from './utils/uuid.js';
 
 const __dirname = url.fileURLToPath(new URL('.', import.meta.url));
 
 describe(BuildConfigParser, () => {
+  describe('constructor', () => {
+    it('throws if provided external functions with duplicated IDs', () => {
+      const ctx = createMockContext();
+      const error = getError<BuildStepRuntimeError>(() => {
+        // eslint-disable-next-line no-new
+        new BuildConfigParser(ctx, {
+          configPath: './fake.yml',
+          externalFunctions: [
+            new BuildFunction({ id: 'abc', command: 'echo 123' }),
+            new BuildFunction({ id: 'abc', command: 'echo 456' }),
+          ],
+        });
+      });
+      expect(error).toBeInstanceOf(BuildStepRuntimeError);
+      expect(error.message).toMatch(/Provided external functions with duplicated IDs/);
+    });
+
+    it(`doesn't throw if provided external functions don't have duplicated IDs`, () => {
+      const ctx = createMockContext();
+      expect(() => {
+        // eslint-disable-next-line no-new
+        new BuildConfigParser(ctx, {
+          configPath: './fake.yml',
+          externalFunctions: [
+            new BuildFunction({ namespace: 'a', id: 'abc', command: 'echo 123' }),
+            new BuildFunction({ namespace: 'b', id: 'abc', command: 'echo 456' }),
+          ],
+        });
+      }).not.toThrow();
+    });
+  });
+
   describe(BuildConfigParser.prototype.parseAsync, () => {
     it('returns a BuildWorkflow object', async () => {
       const ctx = createMockContext();
@@ -259,18 +294,18 @@ describe(BuildConfigParser, () => {
       //     - name
       //   command: echo "Hi, ${ inputs.name }!"
       const function1 = buildFunctions.say_hi;
-      expect(function1.id).toBe(undefined);
+      expect(function1.id).toBe('say_hi');
       expect(function1.name).toBe('Hi!');
-      expect(function1.inputCreators?.[0]('unknown-step').id).toBe('name');
-      expect(function1.inputCreators?.[0]('unknown-step').defaultValue).toBe(undefined);
-      expect(function1.inputCreators?.[0]('unknown-step').required).toBe(true);
+      expect(function1.inputProviders?.[0](ctx, 'unknown-step').id).toBe('name');
+      expect(function1.inputProviders?.[0](ctx, 'unknown-step').defaultValue).toBe(undefined);
+      expect(function1.inputProviders?.[0](ctx, 'unknown-step').required).toBe(true);
       expect(function1.command).toBe('echo "Hi, ${ inputs.name }!"');
 
       // say_hi_wojtek:
       //   name: Hi, Wojtek!
       //   command: echo "Hi, Wojtek!"
       const function2 = buildFunctions.say_hi_wojtek;
-      expect(function2.id).toBe(undefined);
+      expect(function2.id).toBe('say_hi_wojtek');
       expect(function2.name).toBe('Hi, Wojtek!');
       expect(function2.command).toBe('echo "Hi, Wojtek!"');
 
@@ -280,21 +315,76 @@ describe(BuildConfigParser, () => {
       //     - value
       //   command: set-output value 6
       const function3 = buildFunctions.random;
-      expect(function3.id).toBe(undefined);
+      expect(function3.id).toBe('random');
       expect(function3.name).toBe('Generate random number');
-      expect(function3.outputCreators?.[0]('unknown-step').id).toBe('value');
-      expect(function3.outputCreators?.[0]('unknown-step').required).toBe(true);
+      expect(function3.outputProviders?.[0](ctx, 'unknown-step').id).toBe('value');
+      expect(function3.outputProviders?.[0](ctx, 'unknown-step').required).toBe(true);
       expect(function3.command).toBe('set-output value 6');
 
       // print:
       //   inputs: [value]
       //   command: echo "${ inputs.value }"
       const function4 = buildFunctions.print;
-      expect(function4.id).toBe(undefined);
+      expect(function4.id).toBe('print');
       expect(function4.name).toBe(undefined);
-      expect(function4.inputCreators?.[0]('unknown-step').id).toBe('value');
-      expect(function4.inputCreators?.[0]('unknown-step').required).toBe(true);
+      expect(function4.inputProviders?.[0](ctx, 'unknown-step').id).toBe('value');
+      expect(function4.inputProviders?.[0](ctx, 'unknown-step').required).toBe(true);
       expect(function4.command).toBe('echo "${ inputs.value }"');
+    });
+
+    it('throws if calling non-existent external functions', async () => {
+      const ctx = createMockContext();
+      const parser = new BuildConfigParser(ctx, {
+        configPath: path.join(__dirname, './fixtures/external-functions.yml'),
+      });
+      const error = await getErrorAsync<BuildConfigError>(async () => {
+        await parser.parseAsync();
+      });
+      expect(error).toBeInstanceOf(BuildConfigError);
+      expect(error.message).toBe(
+        'Calling non-existent functions: "eas/download_project", "eas/build_project".'
+      );
+    });
+
+    it('works with external functions', async () => {
+      const ctx = createMockContext();
+
+      const downloadProjectFn: BuildStepFunction = (ctx) => {
+        ctx.logger.info('Downloading project...');
+      };
+
+      const buildProjectFn: BuildStepFunction = (ctx) => {
+        ctx.logger.info('Building project...');
+      };
+
+      const parser = new BuildConfigParser(ctx, {
+        configPath: path.join(__dirname, './fixtures/external-functions.yml'),
+        externalFunctions: [
+          new BuildFunction({
+            namespace: 'eas',
+            id: 'download_project',
+            fn: downloadProjectFn,
+          }),
+          new BuildFunction({
+            namespace: 'eas',
+            id: 'build_project',
+            fn: buildProjectFn,
+          }),
+        ],
+      });
+
+      const workflow = await parser.parseAsync();
+      expect(workflow.buildSteps.length).toBe(2);
+
+      // - eas/download_project
+      const step1 = workflow.buildSteps[0];
+      expect(step1.id).toMatch(UUID_REGEX);
+      expect(step1.fn).toBe(downloadProjectFn);
+
+      // - eas/build_project
+      const step2 = workflow.buildSteps[1];
+      expect(step2.id).toMatch(UUID_REGEX);
+      expect(step2.fn).toBe(buildProjectFn);
     });
   });
 });

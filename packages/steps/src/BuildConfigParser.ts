@@ -21,22 +21,36 @@ import {
 import { BuildFunction, BuildFunctionById } from './BuildFunction.js';
 import { BuildStep } from './BuildStep.js';
 import { BuildStepContext } from './BuildStepContext.js';
-import { BuildStepInput, BuildStepInputCreator } from './BuildStepInput.js';
-import { BuildStepOutput, BuildStepOutputCreator } from './BuildStepOutput.js';
+import { BuildStepInput, BuildStepInputProvider } from './BuildStepInput.js';
+import { BuildStepOutput, BuildStepOutputProvider } from './BuildStepOutput.js';
 import { BuildWorkflow } from './BuildWorkflow.js';
 import { BuildWorkflowValidator } from './BuildWorkflowValidator.js';
+import { BuildStepRuntimeError } from './errors/BuildStepRuntimeError.js';
+import { duplicates } from './utils/expodash/duplicates.js';
+import { uniq } from './utils/expodash/uniq.js';
 
 export class BuildConfigParser {
   private readonly configPath: string;
+  private readonly externalFunctions?: BuildFunction[];
 
-  constructor(private readonly ctx: BuildStepContext, { configPath }: { configPath: string }) {
+  constructor(
+    private readonly ctx: BuildStepContext,
+    { configPath, externalFunctions }: { configPath: string; externalFunctions?: BuildFunction[] }
+  ) {
+    this.validateExternalFunctions(externalFunctions);
+
     this.configPath = configPath;
+    this.externalFunctions = externalFunctions;
   }
 
   public async parseAsync(): Promise<BuildWorkflow> {
     const rawConfig = await this.readRawConfigAsync();
-    const config = validateBuildConfig(rawConfig);
-    const buildFunctions = this.createBuildFunctionsFromConfig(config.functions);
+    const config = validateBuildConfig(rawConfig, this.getUniqueExternalFunctionIds());
+    const configBuildFunctions = this.createBuildFunctionsFromConfig(config.functions);
+    const buildFunctions = this.mergeBuildFunctionsWithExternal(
+      configBuildFunctions,
+      this.externalFunctions
+    );
     const buildSteps = config.build.steps.map((stepConfig) =>
       this.createBuildStepFromConfig(stepConfig, buildFunctions)
     );
@@ -89,19 +103,19 @@ export class BuildConfigParser {
     } else if (isBuildStepBareFunctionCall(buildStepConfig)) {
       const functionId = buildStepConfig;
       const buildFunction = buildFunctions[functionId];
-      return buildFunction.createBuildStepFromFunctionCall({
+      return buildFunction.createBuildStepFromFunctionCall(this.ctx, {
         workingDirectory: this.getStepWorkingDirectory(),
       });
     } else {
       const keys = Object.keys(buildStepConfig);
       assert(
         keys.length === 1,
-        'There must be at most one function call in the step (enforced by joi)'
+        'There must be at most one function call in the step (enforced by joi).'
       );
       const functionId = keys[0];
       const buildFunctionCallConfig = buildStepConfig[functionId];
       const buildFunction = buildFunctions[functionId];
-      return buildFunction.createBuildStepFromFunctionCall({
+      return buildFunction.createBuildStepFromFunctionCall(this.ctx, {
         id: buildFunctionCallConfig.id,
         callInputs: buildFunctionCallConfig.inputs,
         workingDirectory: this.getStepWorkingDirectory(buildFunctionCallConfig.workingDirectory),
@@ -118,7 +132,11 @@ export class BuildConfigParser {
     }
     const result: BuildFunctionById = {};
     for (const [functionId, buildFunctionConfig] of Object.entries(buildFunctionsConfig)) {
-      result[functionId] = this.createBuildFunctionFromConfig(buildFunctionConfig);
+      const buildFunction = this.createBuildFunctionFromConfig({
+        id: functionId,
+        ...buildFunctionConfig,
+      });
+      result[buildFunction.getFullId()] = buildFunction;
     }
     return result;
   }
@@ -130,12 +148,12 @@ export class BuildConfigParser {
     outputs: outputsConfig,
     shell,
     command,
-  }: BuildFunctionConfig): BuildFunction {
-    const inputCreators =
-      inputsConfig && this.createBuildStepInputCreatorsFromBuildFunctionInputs(inputsConfig);
-    const outputCreators =
-      outputsConfig && this.createBuildStepOutputCreatorsFromBuildFunctionOutputs(outputsConfig);
-    return new BuildFunction(this.ctx, { id, name, inputCreators, outputCreators, shell, command });
+  }: BuildFunctionConfig & { id: string }): BuildFunction {
+    const inputProviders =
+      inputsConfig && this.createBuildStepInputProvidersFromBuildFunctionInputs(inputsConfig);
+    const outputProviders =
+      outputsConfig && this.createBuildStepOutputProvidersFromBuildFunctionOutputs(outputsConfig);
+    return new BuildFunction({ id, name, inputProviders, outputProviders, shell, command });
   }
 
   private createBuildStepInputsFromBuildStepInputsDefinition(
@@ -153,20 +171,13 @@ export class BuildConfigParser {
     );
   }
 
-  private createBuildStepInputCreatorsFromBuildFunctionInputs(
+  private createBuildStepInputProvidersFromBuildFunctionInputs(
     buildFunctionInputs: BuildFunctionInputs
-  ): BuildStepInputCreator[] {
+  ): BuildStepInputProvider[] {
     return buildFunctionInputs.map((entry) => {
-      if (typeof entry === 'string') {
-        return (stepId: string) => new BuildStepInput(this.ctx, { id: entry, stepId });
-      } else {
-        return (stepId: string) =>
-          new BuildStepInput(this.ctx, {
-            id: entry.name,
-            required: entry.required ?? true,
-            stepId,
-          });
-      }
+      return typeof entry === 'string'
+        ? BuildStepInput.createProvider({ id: entry })
+        : BuildStepInput.createProvider({ id: entry.name, required: entry.required ?? true });
     });
   }
 
@@ -185,18 +196,13 @@ export class BuildConfigParser {
     );
   }
 
-  private createBuildStepOutputCreatorsFromBuildFunctionOutputs(
+  private createBuildStepOutputProvidersFromBuildFunctionOutputs(
     buildFunctionOutputs: BuildFunctionOutputs
-  ): BuildStepOutputCreator[] {
+  ): BuildStepOutputProvider[] {
     return buildFunctionOutputs.map((entry) =>
       typeof entry === 'string'
-        ? (stepId: string) => new BuildStepOutput(this.ctx, { id: entry, stepId, required: true })
-        : (stepId: string) =>
-            new BuildStepOutput(this.ctx, {
-              id: entry.name,
-              stepId,
-              required: entry.required ?? true,
-            })
+        ? BuildStepOutput.createProvider({ id: entry, required: true })
+        : BuildStepOutput.createProvider({ id: entry.name, required: entry.required ?? true })
     );
   }
 
@@ -204,5 +210,47 @@ export class BuildConfigParser {
     return workingDirectory !== undefined
       ? path.resolve(this.ctx.workingDirectory, workingDirectory)
       : this.ctx.workingDirectory;
+  }
+
+  private mergeBuildFunctionsWithExternal(
+    configFunctions: BuildFunctionById,
+    externalFunctions?: BuildFunction[]
+  ): BuildFunctionById {
+    const result: BuildFunctionById = { ...configFunctions };
+    if (externalFunctions === undefined) {
+      return result;
+    }
+    for (const buildFunction of externalFunctions) {
+      // functions defined in config shadow the external ones
+      const fullId = buildFunction.getFullId();
+      if (!(fullId in result)) {
+        result[fullId] = buildFunction;
+      }
+    }
+    return result;
+  }
+
+  private validateExternalFunctions(externalFunctions?: BuildFunction[]): void {
+    if (externalFunctions === undefined) {
+      return;
+    }
+    const externalFunctionIds = externalFunctions.map((f) => f.getFullId());
+    const duplicatedExternalFunctionIds = duplicates(externalFunctionIds);
+    if (duplicatedExternalFunctionIds.length === 0) {
+      return;
+    }
+    throw new BuildStepRuntimeError(
+      `Provided external functions with duplicated IDs: ${duplicatedExternalFunctionIds
+        .map((id) => `"${id}"`)
+        .join(', ')}`
+    );
+  }
+
+  private getUniqueExternalFunctionIds(): string[] {
+    if (this.externalFunctions === undefined) {
+      return [];
+    }
+    const ids = this.externalFunctions.map((f) => f.getFullId());
+    return uniq(ids);
   }
 }

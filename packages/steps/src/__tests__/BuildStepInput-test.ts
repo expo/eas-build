@@ -1,5 +1,5 @@
 import { BuildStepRuntimeError } from '../errors/BuildStepRuntimeError.js';
-import { BuildStepInput } from '../BuildStepInput.js';
+import { BuildStepInput, makeBuildStepInputByIdMap } from '../BuildStepInput.js';
 
 import { createMockContext } from './utils/context.js';
 
@@ -45,5 +45,25 @@ describe(BuildStepInput, () => {
     }).toThrowError(
       new BuildStepRuntimeError('Input parameter "foo" for step "test1" is required.')
     );
+  });
+});
+
+describe(makeBuildStepInputByIdMap, () => {
+  it('returns empty object when inputs are undefined', () => {
+    expect(makeBuildStepInputByIdMap(undefined)).toEqual({});
+  });
+
+  it('returns object with inputs indexed by their ids', () => {
+    const ctx = createMockContext();
+    const inputs: BuildStepInput[] = [
+      new BuildStepInput(ctx, { id: 'foo1', stepId: 'test1', defaultValue: 'bar1' }),
+      new BuildStepInput(ctx, { id: 'foo2', stepId: 'test1', defaultValue: 'bar2' }),
+    ];
+    const result = makeBuildStepInputByIdMap(inputs);
+    expect(Object.keys(result).length).toBe(2);
+    expect(result.foo1).toBeDefined();
+    expect(result.foo2).toBeDefined();
+    expect(result.foo1.value).toBe('bar1');
+    expect(result.foo2.value).toBe('bar2');
   });
 });
