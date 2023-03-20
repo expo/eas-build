@@ -72,7 +72,7 @@ describe(BuildConfigParser, () => {
       expect(step1.id).toMatch(UUID_REGEX);
       expect(step1.name).toBeUndefined();
       expect(step1.command).toBe('echo "Hi!"');
-      expect(step1.workingDirectory).toBe(ctx.workingDirectory);
+      expect(step1.ctx.workingDirectory).toBe(ctx.workingDirectory);
       expect(step1.shell).toBe(getDefaultShell());
 
       // - run:
@@ -87,7 +87,7 @@ describe(BuildConfigParser, () => {
       expect(step2.id).toMatch(UUID_REGEX);
       expect(step2.name).toBe('Say HELLO');
       expect(step2.command).toMatchSnapshot();
-      expect(step2.workingDirectory).toBe(ctx.workingDirectory);
+      expect(step2.ctx.workingDirectory).toBe(ctx.workingDirectory);
       expect(step2.shell).toBe(getDefaultShell());
 
       // - run:
@@ -97,7 +97,7 @@ describe(BuildConfigParser, () => {
       expect(step3.id).toBe('id_2137');
       expect(step3.name).toBeUndefined();
       expect(step3.command).toBe('echo "Step with an ID"');
-      expect(step3.workingDirectory).toBe(ctx.workingDirectory);
+      expect(step3.ctx.workingDirectory).toBe(ctx.workingDirectory);
       expect(step3.shell).toBe(getDefaultShell());
 
       // - run:
@@ -108,7 +108,7 @@ describe(BuildConfigParser, () => {
       expect(step4.id).toMatch(UUID_REGEX);
       expect(step4.name).toBe('List files');
       expect(step4.command).toBe('ls -la');
-      expect(step4.workingDirectory).toBe(
+      expect(step4.ctx.workingDirectory).toBe(
         path.join(ctx.workingDirectory, 'relative/path/to/files')
       );
       expect(step4.shell).toBe(getDefaultShell());
@@ -121,7 +121,7 @@ describe(BuildConfigParser, () => {
       expect(step5.id).toMatch(UUID_REGEX);
       expect(step5.name).toBe('List files in another directory');
       expect(step5.command).toBe('ls -la');
-      expect(step5.workingDirectory).toBe('/home/dsokal');
+      expect(step5.ctx.workingDirectory).toBe('/home/dsokal');
       expect(step5.shell).toBe(getDefaultShell());
 
       // - run:
@@ -132,7 +132,7 @@ describe(BuildConfigParser, () => {
       expect(step6.id).toMatch(UUID_REGEX);
       expect(step6.name).toBe('Use non-default shell');
       expect(step6.command).toBe('echo 123');
-      expect(step6.workingDirectory).toBe(ctx.workingDirectory);
+      expect(step6.ctx.workingDirectory).toBe(ctx.workingDirectory);
       expect(step6.shell).toBe('/nib/hsab');
     });
 
@@ -156,7 +156,7 @@ describe(BuildConfigParser, () => {
       expect(step1.id).toMatch(UUID_REGEX);
       expect(step1.name).toBe('Say HI');
       expect(step1.command).toBe('echo "Hi, ${ inputs.name }!"');
-      expect(step1.workingDirectory).toBe(ctx.workingDirectory);
+      expect(step1.ctx.workingDirectory).toBe(ctx.workingDirectory);
       expect(step1.shell).toBe(getDefaultShell());
       expect(step1.inputs).toBeDefined();
       expect(step1.inputs?.[0].id).toBe('name');
@@ -183,7 +183,7 @@ describe(BuildConfigParser, () => {
       expect(step1.id).toMatch(UUID_REGEX);
       expect(step1.name).toBeUndefined();
       expect(step1.command).toMatchSnapshot();
-      expect(step1.workingDirectory).toBe(ctx.workingDirectory);
+      expect(step1.ctx.workingDirectory).toBe(ctx.workingDirectory);
       expect(step1.shell).toBe(getDefaultShell());
       expect(step1.outputs).toBeDefined();
       expect(step1.outputs?.[0].id).toBe('first_name');
@@ -207,7 +207,7 @@ describe(BuildConfigParser, () => {
       expect(step2.id).toMatch(UUID_REGEX);
       expect(step2.name).toBeUndefined();
       expect(step2.command).toMatchSnapshot();
-      expect(step2.workingDirectory).toBe(ctx.workingDirectory);
+      expect(step2.ctx.workingDirectory).toBe(ctx.workingDirectory);
       expect(step2.shell).toBe(getDefaultShell());
       expect(step2.outputs).toBeDefined();
       expect(step2.outputs?.[0].id).toBe('first_name');
@@ -237,7 +237,7 @@ describe(BuildConfigParser, () => {
       expect(step1.id).toMatch(UUID_REGEX);
       expect(step1.name).toBe('Hi!');
       expect(step1.command).toBe('echo "Hi, ${ inputs.name }!"');
-      expect(step1.workingDirectory).toBe(ctx.workingDirectory);
+      expect(step1.ctx.workingDirectory).toBe(ctx.workingDirectory);
       expect(step1.shell).toBe(getDefaultShell());
       expect(step1.inputs?.[0].id).toBe('name');
       expect(step1.inputs?.[0].value).toBe('Dominik');
@@ -249,7 +249,7 @@ describe(BuildConfigParser, () => {
       expect(step2.id).toMatch(UUID_REGEX);
       expect(step2.name).toBe('Hi!');
       expect(step2.command).toBe('echo "Hi, ${ inputs.name }!"');
-      expect(step2.workingDirectory).toBe(ctx.workingDirectory);
+      expect(step2.ctx.workingDirectory).toBe(ctx.workingDirectory);
       expect(step2.shell).toBe(getDefaultShell());
       expect(step2.inputs?.[0].id).toBe('name');
       expect(step2.inputs?.[0].value).toBe('Szymon');
@@ -259,7 +259,7 @@ describe(BuildConfigParser, () => {
       expect(step3.id).toMatch(UUID_REGEX);
       expect(step3.name).toBe('Hi, Wojtek!');
       expect(step3.command).toBe('echo "Hi, Wojtek!"');
-      expect(step3.workingDirectory).toBe(ctx.workingDirectory);
+      expect(step3.ctx.workingDirectory).toBe(ctx.workingDirectory);
       expect(step3.shell).toBe(getDefaultShell());
 
       // - random:
@@ -268,7 +268,7 @@ describe(BuildConfigParser, () => {
       expect(step4.id).toMatch('random_number');
       expect(step4.name).toBe('Generate random number');
       expect(step4.command).toBe('set-output value 6');
-      expect(step4.workingDirectory).toBe(ctx.workingDirectory);
+      expect(step4.ctx.workingDirectory).toBe(ctx.workingDirectory);
       expect(step4.shell).toBe(getDefaultShell());
       expect(step4.outputs?.[0].id).toBe('value');
       expect(step4.outputs?.[0].required).toBe(true);
@@ -280,7 +280,7 @@ describe(BuildConfigParser, () => {
       expect(step5.id).toMatch(UUID_REGEX);
       expect(step5.name).toBe(undefined);
       expect(step5.command).toBe('echo "${ inputs.value }"');
-      expect(step5.workingDirectory).toBe(ctx.workingDirectory);
+      expect(step5.ctx.workingDirectory).toBe(ctx.workingDirectory);
       expect(step5.shell).toBe(getDefaultShell());
       expect(step5.inputs?.[0].id).toBe('value');
       expect(step5.inputs?.[0].required).toBe(true);

@@ -9,27 +9,19 @@ interface BuildContextParams {
   buildId?: string;
   logger?: bunyan;
   skipCleanup?: boolean;
+  workingDirectory?: string;
 }
 
 export function createMockContext({
   buildId,
   logger,
   skipCleanup,
+  workingDirectory,
 }: BuildContextParams = {}): BuildStepContext {
   return new BuildStepContext(
     buildId ?? uuidv4(),
     logger ?? createMockLogger(),
-    skipCleanup ?? false
-  );
-}
-
-export function cloneContextWithOverrides(
-  ctx: BuildStepContext,
-  { buildId, logger, skipCleanup }: BuildContextParams
-): BuildStepContext {
-  return new BuildStepContext(
-    buildId ?? ctx.buildId,
-    logger ?? ctx.logger,
-    skipCleanup ?? ctx.skipCleanup
+    skipCleanup ?? false,
+    workingDirectory
   );
 }

@@ -11,9 +11,10 @@ import { BuildStepOutput } from '../BuildStepOutput.js';
 import { BuildStepRuntimeError } from '../errors/BuildStepRuntimeError.js';
 import { nullthrows } from '../utils/nullthrows.js';
 
-import { createMockContext, cloneContextWithOverrides } from './utils/context.js';
+import { createMockContext } from './utils/context.js';
 import { createMockLogger } from './utils/logger.js';
 import { getError, getErrorAsync } from './utils/error.js';
+import { UUID_REGEX } from './utils/uuid.js';
 
 describe(BuildStep, () => {
   describe('constructor', () => {
@@ -66,6 +67,53 @@ describe(BuildStep, () => {
         workingDirectory: '/tmp',
       });
       expect(step.status).toBe(BuildStepStatus.NEW);
+    });
+
+    it('creates child build context', () => {
+      const ctx = createMockContext();
+      const step = new BuildStep(ctx, {
+        id: 'test1',
+        command: 'ls -la',
+      });
+      expect(step.ctx).toBeInstanceOf(BuildStepContext);
+      expect(step.ctx).not.toBe(ctx);
+    });
+
+    it('creates child build context with correct changed working directory', () => {
+      const ctx = createMockContext({ workingDirectory: '/a/b/c' });
+      const step = new BuildStep(ctx, {
+        id: 'test1',
+        command: 'ls -la',
+        workingDirectory: 'd/e/f',
+      });
+      expect(step.ctx.workingDirectory).toBe('/a/b/c/d/e/f');
+    });
+
+    it('creates child build context with unchanged working directory', () => {
+      const ctx = createMockContext({ workingDirectory: '/a/b/c' });
+      const step = new BuildStep(ctx, {
+        id: 'test1',
+        command: 'ls -la',
+      });
+      expect(step.ctx.workingDirectory).toBe('/a/b/c');
+    });
+
+    it('creates child build context with child logger', () => {
+      // TODO: change this test
+      const ctx = createMockContext();
+      // eslint-disable-next-line no-new
+      new BuildStep(ctx, {
+        id: 'test1',
+        name: 'Test step',
+        command: 'ls -la',
+      });
+      expect(ctx.logger.child).toHaveBeenCalledWith(
+        expect.objectContaining({
+          buildStepInternalId: expect.stringMatching(UUID_REGEX),
+          buildStepId: 'test1',
+          buildStepDisplayName: 'Test step',
+        })
+      );
     });
   });
 
@@ -156,7 +204,8 @@ describe(BuildStep, () => {
               lines.push(line);
             }
           });
-        const ctx = cloneContextWithOverrides(baseStepCtx, { logger });
+        jest.mocked(logger.child).mockReturnValue(logger);
+        const ctx = baseStepCtx.child({ logger });
 
         await Promise.all([
           fs.writeFile(path.join(ctx.workingDirectory, 'expo-abc123'), 'lorem ipsum'),
@@ -222,7 +271,8 @@ describe(BuildStep, () => {
         jest.mocked(logger.warn as any).mockImplementation((line: string) => {
           warnLines.push(line);
         });
-        const ctx = cloneContextWithOverrides(baseStepCtx, { logger });
+        jest.mocked(logger.child).mockReturnValue(logger);
+        const ctx = baseStepCtx.child({ logger });
 
         const step = new BuildStep(ctx, {
           id: 'test1',
@@ -263,7 +313,7 @@ describe(BuildStep, () => {
         await step.executeAsync(env);
 
         expect(fnMock).toHaveBeenCalledWith(
-          baseStepCtx,
+          step.ctx,
           expect.objectContaining({ inputs: expect.any(Object), outputs: expect.any(Object), env })
         );
       });
@@ -359,7 +409,8 @@ describe(BuildStep, () => {
           lines.push(line);
         }
       });
-      const ctx = cloneContextWithOverrides(baseStepCtx, { logger });
+      jest.mocked(logger.child).mockReturnValue(logger);
+      const ctx = baseStepCtx.child({ logger });
       const step = new BuildStep(ctx, {
         id: 'test1',
         command: 'echo $TEST_ABC',
@@ -379,7 +430,8 @@ describe(BuildStep, () => {
           lines.push(line);
         }
       });
-      const ctx = cloneContextWithOverrides(baseStepCtx, { logger });
+      jest.mocked(logger.child).mockReturnValue(logger);
+      const ctx = baseStepCtx.child({ logger });
       const step = new BuildStep(ctx, {
         id: 'test1',
         command:

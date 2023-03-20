@@ -71,9 +71,9 @@ export class BuildFunction {
     }: {
       id?: string;
       callInputs?: BuildFunctionCallInputs;
-      workingDirectory: string;
+      workingDirectory?: string;
       shell?: string;
-    }
+    } = {}
   ): BuildStep {
     const buildStepId = id ?? uuidv4();
 

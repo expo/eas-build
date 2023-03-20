@@ -2,7 +2,6 @@ import assert from 'assert';
 import fs from 'fs/promises';
 import path from 'path';
 
-import { bunyan } from '@expo/logger';
 import { v4 as uuidv4 } from 'uuid';
 
 import { BuildStepContext } from './BuildStepContext.js';
@@ -55,18 +54,17 @@ export class BuildStep {
   public readonly outputs?: BuildStepOutput[];
   public readonly command?: string;
   public readonly fn?: BuildStepFunction;
-  public readonly workingDirectory: string;
   public readonly shell: string;
+  public readonly ctx: BuildStepContext;
   public status: BuildStepStatus;
 
   private readonly internalId: string;
-  private readonly logger: bunyan;
   private readonly inputById: BuildStepInputById;
   private readonly outputById: BuildStepOutputById;
   private executed = false;
 
   constructor(
-    private readonly ctx: BuildStepContext,
+    ctx: BuildStepContext,
     {
       id,
       name,
@@ -74,7 +72,7 @@ export class BuildStep {
       outputs,
       command,
       fn,
-      workingDirectory,
+      workingDirectory: maybeWorkingDirectory,
       shell,
     }: {
       id: string;
@@ -83,7 +81,7 @@ export class BuildStep {
       outputs?: BuildStepOutput[];
       command?: string;
       fn?: BuildStepFunction;
-      workingDirectory: string;
+      workingDirectory?: string;
       shell?: string;
     }
   ) {
@@ -99,23 +97,28 @@ export class BuildStep {
     this.outputById = makeBuildStepOutputByIdMap(outputs);
     this.fn = fn;
     this.command = command;
-    this.workingDirectory = workingDirectory;
     this.shell = shell ?? getDefaultShell();
     this.status = BuildStepStatus.NEW;
 
     this.internalId = uuidv4();
-    this.logger = ctx.logger.child({
+
+    const logger = ctx.logger.child({
       buildStepInternalId: this.internalId,
       buildStepId: this.id,
       buildStepDisplayName: this.displayName,
     });
+    const workingDirectory =
+      maybeWorkingDirectory !== undefined
+        ? path.resolve(ctx.workingDirectory, maybeWorkingDirectory)
+        : ctx.workingDirectory;
+    this.ctx = ctx.child({ logger, workingDirectory });
 
     ctx.registerStep(this);
   }
 
   public async executeAsync(env: BuildStepEnv = process.env): Promise<void> {
     try {
-      this.logger.info(
+      this.ctx.logger.info(
         { marker: BuildStepLogMarker.START_STEP },
         `Executing build step "${this.id}"`
       );
@@ -127,14 +130,14 @@ export class BuildStep {
         await this.exectuteFnAsync(env);
       }
 
-      this.logger.info(
+      this.ctx.logger.info(
         { marker: BuildStepLogMarker.END_STEP, result: BuildStepStatus.SUCCESS },
         `Finished build step "${this.id}" successfully`
       );
       this.status = BuildStepStatus.SUCCESS;
     } catch (err) {
-      this.logger.error({ err });
-      this.logger.error(
+      this.ctx.logger.error({ err });
+      this.ctx.logger.error(
         { marker: BuildStepLogMarker.END_STEP, result: BuildStepStatus.FAIL },
         `Build step "${this.id}" failed`
       );
@@ -166,27 +169,27 @@ export class BuildStep {
 
     try {
       const command = this.interpolateInputsInCommand(this.command, this.inputs);
-      this.logger.debug(`Interpolated inputs in the command template`);
+      this.ctx.logger.debug(`Interpolated inputs in the command template`);
 
       const outputsDir = await createTemporaryOutputsDirectoryAsync(this.ctx, this.id);
-      this.logger.debug(`Created temporary directory for step outputs: ${outputsDir}`);
+      this.ctx.logger.debug(`Created temporary directory for step outputs: ${outputsDir}`);
 
       const scriptPath = await saveScriptToTemporaryFileAsync(this.ctx, this.id, command);
-      this.logger.debug(`Saved script to ${scriptPath}`);
+      this.ctx.logger.debug(`Saved script to ${scriptPath}`);
 
       const { command: shellCommand, args } = getShellCommandAndArgs(this.shell, scriptPath);
-      this.logger.debug(
+      this.ctx.logger.debug(
         `Executing script: ${shellCommand}${args !== undefined ? ` ${args.join(' ')}` : ''}`
       );
       await spawnAsync(shellCommand, args ?? [], {
-        cwd: this.workingDirectory,
-        logger: this.logger,
+        cwd: this.ctx.workingDirectory,
+        logger: this.ctx.logger,
         env: this.getScriptEnv(env, outputsDir),
       });
-      this.logger.debug(`Script completed successfully`);
+      this.ctx.logger.debug(`Script completed successfully`);
 
       await this.collectAndValidateOutputsAsync(outputsDir);
-      this.logger.debug('Finished collecting output paramters');
+      this.ctx.logger.debug('Finished collecting output paramters');
     } finally {
       await cleanUpStepTemporaryDirectoriesAsync(this.ctx, this.id);
     }
@@ -226,16 +229,16 @@ export class BuildStep {
 
     if (nonDefinedOutputIds.length > 0) {
       const idsString = nonDefinedOutputIds.map((i) => `"${i}"`).join(', ');
-      this.logger.warn(`Some outputs are not defined in step config: ${idsString}`);
+      this.ctx.logger.warn(`Some outputs are not defined in step config: ${idsString}`);
     }
 
     const nonSetRequiredOutputIds: string[] = [];
     for (const output of this.outputs ?? []) {
       try {
         const value = output.value;
-        this.logger.debug(`Output parameter "${output.id}" is set to "${value}"`);
+        this.ctx.logger.debug(`Output parameter "${output.id}" is set to "${value}"`);
       } catch (err) {
-        this.logger.debug({ err }, `Getting value for output parameter "${output.id}" failed.`);
+        this.ctx.logger.debug({ err }, `Getting value for output parameter "${output.id}" failed.`);
         nonSetRequiredOutputIds.push(output.id);
       }
     }
