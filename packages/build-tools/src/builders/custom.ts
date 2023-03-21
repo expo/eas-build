@@ -30,15 +30,7 @@ export async function runCustomBuildAsync<T extends Job>(ctx: BuildContext<T>): 
   });
   const workflow = await parser.parseAsync();
   try {
-    try {
-      await workflow.executeAsync(ctx.env);
-    } finally {
-      try {
-        await workflow.cleanUpAsync();
-      } catch (err: any) {
-        ctx.logger.error({ err }, 'Failed to clean up custom build temporary files');
-      }
-    }
+    await workflow.executeAsync(ctx.env);
   } catch (err: any) {
     err.artifacts = ctx.artifacts;
     throw err;

@@ -1,7 +1,7 @@
 import path from 'path';
 
 import { Job } from '@expo/eas-build-job';
-import { BuildFunction, BuildStepInput, BuildStepOutput } from '@expo/steps';
+import { BuildFunction, BuildStepInput } from '@expo/steps';
 import nullthrows from 'nullthrows';
 
 import { ArtifactType, BuildContext } from '../../context';
