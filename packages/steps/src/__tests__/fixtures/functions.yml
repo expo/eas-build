@@ -5,6 +5,7 @@ build:
         inputs:
           name: Dominik
     - say_hi:
+        name: Hi, Szymon!
         inputs:
           name: Szymon
     - say_hi_wojtek

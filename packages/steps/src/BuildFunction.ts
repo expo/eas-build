@@ -65,11 +65,13 @@ export class BuildFunction {
     ctx: BuildStepContext,
     {
       id,
+      name,
       callInputs = {},
       workingDirectory,
       shell,
     }: {
       id?: string;
+      name?: string;
       callInputs?: BuildFunctionCallInputs;
       workingDirectory?: string;
       shell?: string;
@@ -88,7 +90,7 @@ export class BuildFunction {
 
     return new BuildStep(ctx, {
       id: buildStepId,
-      name: this.name,
+      name: name ?? this.name,
       command: this.command,
       fn: this.fn,
       workingDirectory,

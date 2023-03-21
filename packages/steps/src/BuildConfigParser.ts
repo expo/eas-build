@@ -113,6 +113,7 @@ export class BuildConfigParser {
       const buildFunction = buildFunctions[functionId];
       return buildFunction.createBuildStepFromFunctionCall(this.ctx, {
         id: buildFunctionCallConfig.id,
+        name: buildFunctionCallConfig.name,
         callInputs: buildFunctionCallConfig.inputs,
         workingDirectory: buildFunctionCallConfig.workingDirectory,
         shell: buildFunctionCallConfig.shell,

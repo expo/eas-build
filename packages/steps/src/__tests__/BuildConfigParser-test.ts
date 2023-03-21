@@ -243,11 +243,12 @@ describe(BuildConfigParser, () => {
       expect(step1.inputs?.[0].value).toBe('Dominik');
 
       // - say_hi:
+      //     name: Hi, Szymon!
       //     inputs:
       //       name: Szymon
       const step2 = buildSteps[1];
       expect(step2.id).toMatch(UUID_REGEX);
-      expect(step2.name).toBe('Hi!');
+      expect(step2.name).toBe('Hi, Szymon!');
       expect(step2.command).toBe('echo "Hi, ${ inputs.name }!"');
       expect(step2.ctx.workingDirectory).toBe(ctx.workingDirectory);
       expect(step2.shell).toBe(getDefaultShell());
