@@ -8,7 +8,7 @@ import { BuildStep, BuildStepFunction, BuildStepStatus } from '../BuildStep.js';
 import { BuildStepContext } from '../BuildStepContext.js';
 import { BuildStepInput } from '../BuildStepInput.js';
 import { BuildStepOutput } from '../BuildStepOutput.js';
-import { BuildStepRuntimeError } from '../errors/BuildStepRuntimeError.js';
+import { BuildStepRuntimeError } from '../errors.js';
 import { nullthrows } from '../utils/nullthrows.js';
 
 import { createMockContext } from './utils/context.js';

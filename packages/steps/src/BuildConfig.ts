@@ -2,7 +2,7 @@ import assert from 'assert';
 
 import Joi from 'joi';
 
-import { BuildConfigError } from './errors/BuildConfigError.js';
+import { BuildConfigError } from './errors.js';
 import { BuildPlatform } from './BuildPlatform.js';
 
 export interface BuildConfig {

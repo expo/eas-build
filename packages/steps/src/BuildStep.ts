@@ -20,7 +20,7 @@ import {
 } from './BuildTemporaryFiles.js';
 import { spawnAsync } from './utils/shell/spawn.js';
 import { interpolateWithInputs } from './utils/template.js';
-import { BuildStepRuntimeError } from './errors/BuildStepRuntimeError.js';
+import { BuildStepRuntimeError } from './errors.js';
 import { BuildStepEnv } from './BuildStepEnv.js';
 
 export enum BuildStepStatus {
@@ -159,7 +159,7 @@ export class BuildStep {
       );
     }
     if (!this.hasOutputParameter(name)) {
-      throw new BuildStepRuntimeError(`Step "${this.id}" does not have output "${name}"`);
+      throw new BuildStepRuntimeError(`Step "${this.id}" does not have output "${name}".`);
     }
     return this.outputById[name].value;
   }

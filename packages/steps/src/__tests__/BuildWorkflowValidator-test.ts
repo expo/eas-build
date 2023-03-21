@@ -5,8 +5,7 @@ import { BuildStepInput } from '../BuildStepInput.js';
 import { BuildStepOutput } from '../BuildStepOutput.js';
 import { BuildWorkflow } from '../BuildWorkflow.js';
 import { BuildWorkflowValidator } from '../BuildWorkflowValidator.js';
-import { BuildConfigError } from '../errors/BuildConfigError.js';
-import { BuildWorkflowError } from '../errors/BuildWorkflowError.js';
+import { BuildConfigError, BuildWorkflowError } from '../errors.js';
 
 import { createMockContext } from './utils/context.js';
 import { getError } from './utils/error.js';

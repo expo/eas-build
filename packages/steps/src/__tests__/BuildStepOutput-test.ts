@@ -1,5 +1,5 @@
 import { BuildStepOutput, makeBuildStepOutputByIdMap } from '../BuildStepOutput.js';
-import { BuildStepRuntimeError } from '../errors/BuildStepRuntimeError.js';
+import { BuildStepRuntimeError } from '../errors.js';
 
 import { createMockContext } from './utils/context.js';
 

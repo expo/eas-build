@@ -1,4 +1,4 @@
-import { BuildConfigError } from '../errors/BuildConfigError.js';
+import { BuildConfigError } from '../errors.js';
 
 import { nullthrows } from './nullthrows.js';
 

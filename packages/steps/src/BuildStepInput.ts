@@ -1,5 +1,5 @@
 import { BuildStepContext } from './BuildStepContext.js';
-import { BuildStepRuntimeError } from './errors/BuildStepRuntimeError.js';
+import { BuildStepRuntimeError } from './errors.js';
 import { interpolateWithOutputs } from './utils/template.js';
 
 export type BuildStepInputById = Record<string, BuildStepInput>;

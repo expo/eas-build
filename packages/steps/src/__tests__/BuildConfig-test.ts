@@ -9,7 +9,7 @@ import {
   isBuildStepFunctionCall,
   validateBuildConfig,
 } from '../BuildConfig.js';
-import { BuildConfigError } from '../errors/BuildConfigError.js';
+import { BuildConfigError } from '../errors.js';
 
 import { getError } from './utils/error.js';
 

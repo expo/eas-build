@@ -1,7 +1,6 @@
 import { BuildStep } from './BuildStep.js';
 import { BuildWorkflow } from './BuildWorkflow.js';
-import { BuildConfigError } from './errors/BuildConfigError.js';
-import { BuildWorkflowError } from './errors/BuildWorkflowError.js';
+import { BuildConfigError, BuildWorkflowError } from './errors.js';
 import { duplicates } from './utils/expodash/duplicates.js';
 import { findOutputPaths } from './utils/template.js';
 
@@ -13,7 +12,7 @@ export class BuildWorkflowValidator {
     errors.push(...this.validateUniqueStepIds());
     errors.push(...this.validateInputs());
     if (errors.length !== 0) {
-      throw new BuildWorkflowError('Build workflow is invalid', errors);
+      throw new BuildWorkflowError('Build workflow is invalid.', errors);
     }
   }
 

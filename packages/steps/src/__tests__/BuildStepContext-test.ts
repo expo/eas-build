@@ -6,7 +6,7 @@ import { v4 as uuidv4 } from 'uuid';
 
 import { BuildStep } from '../BuildStep.js';
 import { BuildStepContext } from '../BuildStepContext.js';
-import { BuildStepRuntimeError } from '../errors/BuildStepRuntimeError.js';
+import { BuildStepRuntimeError } from '../errors.js';
 
 import { createMockContext } from './utils/context.js';
 import { getError } from './utils/error.js';

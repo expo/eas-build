@@ -1,5 +1,5 @@
 import { BuildStepContext } from './BuildStepContext.js';
-import { BuildStepRuntimeError } from './errors/BuildStepRuntimeError.js';
+import { BuildStepRuntimeError } from './errors.js';
 
 export type BuildStepOutputById = Record<string, BuildStepOutput>;
 export type BuildStepOutputProvider = (ctx: BuildStepContext, stepId: string) => BuildStepOutput;

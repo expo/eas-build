@@ -24,7 +24,7 @@ import { BuildStepInput, BuildStepInputProvider } from './BuildStepInput.js';
 import { BuildStepOutput, BuildStepOutputProvider } from './BuildStepOutput.js';
 import { BuildWorkflow } from './BuildWorkflow.js';
 import { BuildWorkflowValidator } from './BuildWorkflowValidator.js';
-import { BuildStepRuntimeError } from './errors/BuildStepRuntimeError.js';
+import { BuildStepRuntimeError } from './errors.js';
 import { duplicates } from './utils/expodash/duplicates.js';
 import { uniq } from './utils/expodash/uniq.js';
 

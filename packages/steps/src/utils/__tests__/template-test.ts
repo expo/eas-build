@@ -1,4 +1,4 @@
-import { BuildConfigError } from '../../errors/BuildConfigError.js';
+import { BuildConfigError } from '../../errors.js';
 import { getError } from '../../__tests__/utils/error.js';
 import {
   findOutputPaths,

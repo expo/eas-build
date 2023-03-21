@@ -1,4 +1,4 @@
-import { BuildStepRuntimeError } from '../errors/BuildStepRuntimeError.js';
+import { BuildStepRuntimeError } from '../errors.js';
 import { BuildStepInput, makeBuildStepInputByIdMap } from '../BuildStepInput.js';
 
 import { createMockContext } from './utils/context.js';
