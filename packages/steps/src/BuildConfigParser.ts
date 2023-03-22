@@ -9,7 +9,11 @@ import {
   BuildFunctionConfig,
   BuildFunctionInputs,
   BuildFunctionOutputs,
+  BuildStepBareCommandRun,
+  BuildStepBareFunctionCall,
+  BuildStepCommandRun,
   BuildStepConfig,
+  BuildStepFunctionCall,
   BuildStepInputs,
   BuildStepOutputs,
   isBuildStepBareCommandRun,
@@ -68,57 +72,78 @@ export class BuildConfigParser {
     buildFunctions: BuildFunctionById
   ): BuildStep {
     if (isBuildStepCommandRun(buildStepConfig)) {
-      const {
-        id,
-        inputs: inputsConfig,
-        outputs: outputsConfig,
-        name,
-        workingDirectory,
-        shell,
-        command,
-      } = buildStepConfig.run;
-      const stepId = id ?? uuidv4();
-      const inputs =
-        inputsConfig &&
-        this.createBuildStepInputsFromBuildStepInputsDefinition(inputsConfig, stepId);
-      const outputs =
-        outputsConfig && this.createBuildStepOutputsFromDefinition(outputsConfig, stepId);
-      return new BuildStep(this.ctx, {
-        id: stepId,
-        inputs,
-        outputs,
-        name,
-        workingDirectory,
-        shell,
-        command,
-      });
+      return this.createBuildStepFromBuildStepCommandRun(buildStepConfig);
     } else if (isBuildStepBareCommandRun(buildStepConfig)) {
-      const command = buildStepConfig.run;
-      return new BuildStep(this.ctx, {
-        id: uuidv4(),
-        command,
-      });
+      return this.createBuildStepFromBuildStepBareCommandRun(buildStepConfig);
     } else if (isBuildStepBareFunctionCall(buildStepConfig)) {
-      const functionId = buildStepConfig;
-      const buildFunction = buildFunctions[functionId];
-      return buildFunction.createBuildStepFromFunctionCall(this.ctx);
+      return this.createBuildStepFromBuildStepBareFunctionCall(buildFunctions, buildStepConfig);
     } else {
-      const keys = Object.keys(buildStepConfig);
-      assert(
-        keys.length === 1,
-        'There must be at most one function call in the step (enforced by joi).'
-      );
-      const functionId = keys[0];
-      const buildFunctionCallConfig = buildStepConfig[functionId];
-      const buildFunction = buildFunctions[functionId];
-      return buildFunction.createBuildStepFromFunctionCall(this.ctx, {
-        id: buildFunctionCallConfig.id,
-        name: buildFunctionCallConfig.name,
-        callInputs: buildFunctionCallConfig.inputs,
-        workingDirectory: buildFunctionCallConfig.workingDirectory,
-        shell: buildFunctionCallConfig.shell,
-      });
+      return this.createBuildStepFromBuildStepFunctionCall(buildFunctions, buildStepConfig);
     }
+  }
+
+  private createBuildStepFromBuildStepCommandRun({ run }: BuildStepCommandRun): BuildStep {
+    const {
+      id,
+      inputs: inputsConfig,
+      outputs: outputsConfig,
+      name,
+      workingDirectory,
+      shell,
+      command,
+    } = run;
+    const stepId = id ?? uuidv4();
+    const inputs =
+      inputsConfig && this.createBuildStepInputsFromBuildStepInputsDefinition(inputsConfig, stepId);
+    const outputs =
+      outputsConfig && this.createBuildStepOutputsFromDefinition(outputsConfig, stepId);
+    return new BuildStep(this.ctx, {
+      id: stepId,
+      inputs,
+      outputs,
+      name,
+      workingDirectory,
+      shell,
+      command,
+    });
+  }
+
+  private createBuildStepFromBuildStepBareCommandRun({
+    run: command,
+  }: BuildStepBareCommandRun): BuildStep {
+    return new BuildStep(this.ctx, {
+      id: uuidv4(),
+      command,
+    });
+  }
+
+  private createBuildStepFromBuildStepBareFunctionCall(
+    buildFunctions: BuildFunctionById,
+    functionId: BuildStepBareFunctionCall
+  ): BuildStep {
+    const buildFunction = buildFunctions[functionId];
+    return buildFunction.createBuildStepFromFunctionCall(this.ctx);
+  }
+
+  private createBuildStepFromBuildStepFunctionCall(
+    buildFunctions: BuildFunctionById,
+    buildStepFunctionCall: BuildStepFunctionCall
+  ): BuildStep {
+    const keys = Object.keys(buildStepFunctionCall);
+    assert(
+      keys.length === 1,
+      'There must be at most one function call in the step (enforced by joi).'
+    );
+    const functionId = keys[0];
+    const buildFunctionCallConfig = buildStepFunctionCall[functionId];
+    const buildFunction = buildFunctions[functionId];
+    return buildFunction.createBuildStepFromFunctionCall(this.ctx, {
+      id: buildFunctionCallConfig.id,
+      name: buildFunctionCallConfig.name,
+      callInputs: buildFunctionCallConfig.inputs,
+      workingDirectory: buildFunctionCallConfig.workingDirectory,
+      shell: buildFunctionCallConfig.shell,
+    });
   }
 
   private createBuildFunctionsFromConfig(
