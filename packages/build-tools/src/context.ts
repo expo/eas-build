@@ -56,7 +56,7 @@ export interface BuildContextOptions {
     options: SpawnOptions,
     npmVersionAtLeast7: boolean
   ) => SpawnPromise<SpawnResult>;
-  uploadArtifacts: (type: ArtifactType, paths: string[], logger?: bunyan) => Promise<string | null>;
+  uploadArtifacts: (type: ArtifactType, paths: string[], logger: bunyan) => Promise<string | null>;
   reportError?: (
     msg: string,
     err?: Error,
@@ -97,7 +97,7 @@ export class BuildContext<TJob extends Job> {
   private readonly _uploadArtifacts: (
     type: ArtifactType,
     paths: string[],
-    logger?: bunyan
+    logger: bunyan
   ) => Promise<string | null>;
   private buildPhase?: BuildPhase;
   private buildPhaseSkipped = false;
@@ -198,11 +198,7 @@ export class BuildContext<TJob extends Job> {
     this.buildPhaseHasWarnings = true;
   }
 
-  public async uploadArtifacts(
-    type: ArtifactType,
-    paths: string[],
-    logger?: bunyan
-  ): Promise<void> {
+  public async uploadArtifacts(type: ArtifactType, paths: string[], logger: bunyan): Promise<void> {
     const url = await this._uploadArtifacts(type, paths, logger);
     if (url) {
       this.artifacts[type] = url;
