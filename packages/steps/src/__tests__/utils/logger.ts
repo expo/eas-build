@@ -7,7 +7,7 @@ export function createMockLogger(): bunyan {
     debug: jest.fn(),
     error: jest.fn(),
     warn: jest.fn(),
-    child: jest.fn().mockImplementation(() => logger),
+    child: jest.fn().mockImplementation(() => createMockLogger()),
   } as unknown as bunyan;
   return logger;
 }

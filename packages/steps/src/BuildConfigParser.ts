@@ -1,6 +1,5 @@
 import assert from 'assert';
 import fs from 'fs/promises';
-import path from 'path';
 
 import { v4 as uuidv4 } from 'uuid';
 import YAML from 'yaml';
@@ -89,7 +88,7 @@ export class BuildConfigParser {
         inputs,
         outputs,
         name,
-        workingDirectory: this.getStepWorkingDirectory(workingDirectory),
+        workingDirectory,
         shell,
         command,
       });
@@ -97,15 +96,12 @@ export class BuildConfigParser {
       const command = buildStepConfig.run;
       return new BuildStep(this.ctx, {
         id: uuidv4(),
-        workingDirectory: this.ctx.workingDirectory,
         command,
       });
     } else if (isBuildStepBareFunctionCall(buildStepConfig)) {
       const functionId = buildStepConfig;
       const buildFunction = buildFunctions[functionId];
-      return buildFunction.createBuildStepFromFunctionCall(this.ctx, {
-        workingDirectory: this.getStepWorkingDirectory(),
-      });
+      return buildFunction.createBuildStepFromFunctionCall(this.ctx);
     } else {
       const keys = Object.keys(buildStepConfig);
       assert(
@@ -117,8 +113,9 @@ export class BuildConfigParser {
       const buildFunction = buildFunctions[functionId];
       return buildFunction.createBuildStepFromFunctionCall(this.ctx, {
         id: buildFunctionCallConfig.id,
+        name: buildFunctionCallConfig.name,
         callInputs: buildFunctionCallConfig.inputs,
-        workingDirectory: this.getStepWorkingDirectory(buildFunctionCallConfig.workingDirectory),
+        workingDirectory: buildFunctionCallConfig.workingDirectory,
         shell: buildFunctionCallConfig.shell,
       });
     }
@@ -204,12 +201,6 @@ export class BuildConfigParser {
         ? BuildStepOutput.createProvider({ id: entry, required: true })
         : BuildStepOutput.createProvider({ id: entry.name, required: entry.required ?? true })
     );
-  }
-
-  private getStepWorkingDirectory(workingDirectory?: string): string {
-    return workingDirectory !== undefined
-      ? path.resolve(this.ctx.workingDirectory, workingDirectory)
-      : this.ctx.workingDirectory;
   }
 
   private mergeBuildFunctionsWithExternal(

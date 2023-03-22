@@ -34,4 +34,19 @@ export class BuildStepContext {
     }
     return this.stepById[stepId].getOutputValueByName(outputId);
   }
+
+  public child({
+    logger,
+    workingDirectory,
+  }: {
+    logger?: bunyan;
+    workingDirectory?: string;
+  } = {}): BuildStepContext {
+    return new BuildStepContext(
+      this.buildId,
+      logger ?? this.logger,
+      this.skipCleanup,
+      workingDirectory ?? this.workingDirectory
+    );
+  }
 }

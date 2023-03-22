@@ -1,6 +1,0 @@
-build:
-  name: Upload artifacts
-  steps:
-    - run: upload-artifact abc
-    - run: upload-artifact --type build-artifact def
-    - run: upload-artifact --type build-artifact ghi

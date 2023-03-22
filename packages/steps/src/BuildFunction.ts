@@ -65,15 +65,17 @@ export class BuildFunction {
     ctx: BuildStepContext,
     {
       id,
+      name,
       callInputs = {},
       workingDirectory,
       shell,
     }: {
       id?: string;
+      name?: string;
       callInputs?: BuildFunctionCallInputs;
-      workingDirectory: string;
+      workingDirectory?: string;
       shell?: string;
-    }
+    } = {}
   ): BuildStep {
     const buildStepId = id ?? uuidv4();
 
@@ -88,7 +90,7 @@ export class BuildFunction {
 
     return new BuildStep(ctx, {
       id: buildStepId,
-      name: this.name,
+      name: name ?? this.name,
       command: this.command,
       fn: this.fn,
       workingDirectory,

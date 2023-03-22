@@ -17,10 +17,6 @@ async function runAsync(configPath: string, workingDirectory: string): Promise<v
   const parser = new BuildConfigParser(ctx, { configPath });
   const workflow = await parser.parseAsync();
   await workflow.executeAsync();
-  const artifacts = await workflow.collectArtifactsAsync();
-  if (Object.keys(artifacts).length > 0) {
-    logger.info({ artifacts }, 'The workflow produced artifacts');
-  }
 }
 
 const relativeConfigPath = process.argv[2];

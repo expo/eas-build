@@ -62,4 +62,25 @@ describe(BuildStepContext, () => {
       expect(ctx.getStepOutputValue('abc.def')).toBe('ghi');
     });
   });
+  describe(BuildStepContext.prototype.child, () => {
+    it('returns a BuildStepContext object', () => {
+      const ctx = createMockContext();
+      expect(ctx.child()).toBeInstanceOf(BuildStepContext);
+    });
+    it('can override logger', () => {
+      const logger1 = createMockLogger();
+      const logger2 = createMockLogger();
+      const ctx = createMockContext({ logger: logger1 });
+      const childCtx = ctx.child({ logger: logger2 });
+      expect(ctx.logger).toBe(logger1);
+      expect(childCtx.logger).toBe(logger2);
+    });
+    it('can override working directory', () => {
+      const workingDirectoryOverride = '/d/e/f';
+      const ctx = createMockContext();
+      const childCtx = ctx.child({ workingDirectory: workingDirectoryOverride });
+      expect(ctx.workingDirectory).not.toBe(childCtx.workingDirectory);
+      expect(childCtx.workingDirectory).toBe(workingDirectoryOverride);
+    });
+  });
 });
