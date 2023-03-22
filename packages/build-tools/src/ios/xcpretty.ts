@@ -52,8 +52,8 @@ export class XcodeBuildLogger {
   private async startBuildLogger(logsPath: string): Promise<void> {
     try {
       const formatter = ExpoRunFormatter.create(this.projectRoot, {
-        isDebug: false,
         // TODO: Can provide xcode project name for better parsing
+        isDebug: false,
       });
       this.logReaderPromise = spawnAsync('tail', ['-n', '+0', '-f', logsPath], { stdio: 'pipe' });
       assert(this.logReaderPromise.child.stdout, 'stdout is not available');
