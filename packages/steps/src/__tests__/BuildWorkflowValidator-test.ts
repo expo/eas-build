@@ -63,7 +63,7 @@ describe(BuildWorkflowValidator, () => {
           inputs: [
             new BuildStepInput(ctx, {
               id: 'input1',
-              stepId: 'test1',
+              stepDisplayId: BuildStep.getDisplayId('test1'),
               required: true,
               defaultValue: '${ steps.test2.output1 }',
             }),
@@ -73,7 +73,13 @@ describe(BuildWorkflowValidator, () => {
         }),
         new BuildStep(ctx, {
           id: 'test2',
-          outputs: [new BuildStepOutput(ctx, { id: 'output1', stepId: 'test2', required: true })],
+          outputs: [
+            new BuildStepOutput(ctx, {
+              id: 'output1',
+              stepDisplayId: BuildStep.getDisplayId('test2'),
+              required: true,
+            }),
+          ],
           command: 'echo ${ inputs.input1 }',
           workingDirectory: ctx.workingDirectory,
         }),
@@ -90,7 +96,7 @@ describe(BuildWorkflowValidator, () => {
     expect(error.errors.length).toBe(1);
     expect(error.errors[0]).toBeInstanceOf(BuildConfigError);
     expect(error.errors[0].message).toBe(
-      'Input parameter "input1" for step "test1" uses an expression that references an output parameter from the future step "test2".'
+      'Input parameter "input1" for step with id "test1" uses an expression that references an output parameter from the future step with id "test2".'
     );
   });
   test('output from non-existent step', async () => {
@@ -102,7 +108,7 @@ describe(BuildWorkflowValidator, () => {
           inputs: [
             new BuildStepInput(ctx, {
               id: 'input1',
-              stepId: 'test2',
+              stepDisplayId: BuildStep.getDisplayId('test2'),
               required: true,
               defaultValue: '${ steps.test1.output1 }',
             }),
@@ -123,7 +129,7 @@ describe(BuildWorkflowValidator, () => {
     expect(error.errors.length).toBe(1);
     expect(error.errors[0]).toBeInstanceOf(BuildConfigError);
     expect(error.errors[0].message).toBe(
-      'Input parameter "input1" for step "test2" uses an expression that references an output parameter from a non-existent step "test1".'
+      'Input parameter "input1" for step with id "test2" uses an expression that references an output parameter from a non-existent step with id "test1".'
     );
   });
   test('undefined output', async () => {
@@ -132,7 +138,13 @@ describe(BuildWorkflowValidator, () => {
       buildSteps: [
         new BuildStep(ctx, {
           id: 'test1',
-          outputs: [new BuildStepOutput(ctx, { id: 'output1', stepId: 'test1', required: true })],
+          outputs: [
+            new BuildStepOutput(ctx, {
+              id: 'output1',
+              stepDisplayId: BuildStep.getDisplayId('test1'),
+              required: true,
+            }),
+          ],
           command: 'set-output output1 123',
           workingDirectory: ctx.workingDirectory,
         }),
@@ -141,7 +153,7 @@ describe(BuildWorkflowValidator, () => {
           inputs: [
             new BuildStepInput(ctx, {
               id: 'input1',
-              stepId: 'test2',
+              stepDisplayId: BuildStep.getDisplayId('test2'),
               required: true,
               defaultValue: '${ steps.test1.output1 }',
             }),
@@ -154,7 +166,7 @@ describe(BuildWorkflowValidator, () => {
           inputs: [
             new BuildStepInput(ctx, {
               id: 'input2',
-              stepId: 'test3',
+              stepDisplayId: BuildStep.getDisplayId('test3'),
               required: true,
               defaultValue: '${ steps.test2.output2 }',
             }),
@@ -175,7 +187,7 @@ describe(BuildWorkflowValidator, () => {
     expect(error.errors.length).toBe(1);
     expect(error.errors[0]).toBeInstanceOf(BuildConfigError);
     expect(error.errors[0].message).toBe(
-      'Input parameter "input2" for step "test3" uses an expression that references an undefined output parameter "output2" from step "test2".'
+      'Input parameter "input2" for step with id "test3" uses an expression that references an undefined output parameter "output2" from step with id "test2".'
     );
   });
   test('multiple config errors', () => {
@@ -184,7 +196,13 @@ describe(BuildWorkflowValidator, () => {
       buildSteps: [
         new BuildStep(ctx, {
           id: 'test1',
-          outputs: [new BuildStepOutput(ctx, { id: 'output1', stepId: 'test1', required: true })],
+          outputs: [
+            new BuildStepOutput(ctx, {
+              id: 'output1',
+              stepDisplayId: BuildStep.getDisplayId('test1'),
+              required: true,
+            }),
+          ],
           command: 'set-output output1 123',
           workingDirectory: ctx.workingDirectory,
         }),
@@ -193,7 +211,7 @@ describe(BuildWorkflowValidator, () => {
           inputs: [
             new BuildStepInput(ctx, {
               id: 'input1',
-              stepId: 'test2',
+              stepDisplayId: BuildStep.getDisplayId('test2'),
               required: true,
               defaultValue: '${ steps.test4.output1 }',
             }),
@@ -206,7 +224,7 @@ describe(BuildWorkflowValidator, () => {
           inputs: [
             new BuildStepInput(ctx, {
               id: 'input2',
-              stepId: 'test3',
+              stepDisplayId: BuildStep.getDisplayId('test3'),
               required: true,
               defaultValue: '${ steps.test2.output2 }',
             }),
@@ -227,11 +245,11 @@ describe(BuildWorkflowValidator, () => {
     expect(error.errors.length).toBe(2);
     expect(error.errors[0]).toBeInstanceOf(BuildConfigError);
     expect(error.errors[0].message).toBe(
-      'Input parameter "input1" for step "test2" uses an expression that references an output parameter from a non-existent step "test4".'
+      'Input parameter "input1" for step with id "test2" uses an expression that references an output parameter from a non-existent step with id "test4".'
     );
     expect(error.errors[1]).toBeInstanceOf(BuildConfigError);
     expect(error.errors[1].message).toBe(
-      'Input parameter "input2" for step "test3" uses an expression that references an undefined output parameter "output2" from step "test2".'
+      'Input parameter "input2" for step with id "test3" uses an expression that references an undefined output parameter "output2" from step with id "test2".'
     );
   });
 });

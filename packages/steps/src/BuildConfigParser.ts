@@ -1,7 +1,6 @@
 import assert from 'assert';
 import fs from 'fs/promises';
 
-import { v4 as uuidv4 } from 'uuid';
 import YAML from 'yaml';
 
 import {
@@ -92,7 +91,7 @@ export class BuildConfigParser {
       shell,
       command,
     } = run;
-    const stepId = id ?? uuidv4();
+    const stepId = BuildStep.getNewId(id);
     const inputs =
       inputsConfig && this.createBuildStepInputsFromBuildStepInputsDefinition(inputsConfig, stepId);
     const outputs =
@@ -112,7 +111,7 @@ export class BuildConfigParser {
     run: command,
   }: BuildStepBareCommandRun): BuildStep {
     return new BuildStep(this.ctx, {
-      id: uuidv4(),
+      id: BuildStep.getNewId(),
       command,
     });
   }
@@ -180,13 +179,13 @@ export class BuildConfigParser {
 
   private createBuildStepInputsFromBuildStepInputsDefinition(
     buildStepInputs: BuildStepInputs,
-    stepId: string
+    stepDisplayId: string
   ): BuildStepInput[] {
     return Object.entries(buildStepInputs).map(
       ([key, value]) =>
         new BuildStepInput(this.ctx, {
           id: key,
-          stepId,
+          stepDisplayId,
           defaultValue: value,
           required: true,
         })
@@ -205,14 +204,14 @@ export class BuildConfigParser {
 
   private createBuildStepOutputsFromDefinition(
     buildStepOutputs: BuildStepOutputs,
-    stepId: string
+    stepDisplayId: string
   ): BuildStepOutput[] {
     return buildStepOutputs.map((entry) =>
       typeof entry === 'string'
-        ? new BuildStepOutput(this.ctx, { id: entry, stepId, required: true })
+        ? new BuildStepOutput(this.ctx, { id: entry, stepDisplayId, required: true })
         : new BuildStepOutput(this.ctx, {
             id: entry.name,
-            stepId,
+            stepDisplayId,
             required: entry.required ?? true,
           })
     );

@@ -1,7 +1,5 @@
 import assert from 'assert';
 
-import { v4 as uuidv4 } from 'uuid';
-
 import { BuildPlatform } from './BuildPlatform.js';
 import { BuildStep, BuildStepFunction } from './BuildStep.js';
 import { BuildStepContext } from './BuildStepContext.js';
@@ -77,7 +75,7 @@ export class BuildFunction {
       shell?: string;
     } = {}
   ): BuildStep {
-    const buildStepId = id ?? uuidv4();
+    const buildStepId = BuildStep.getNewId(id);
 
     const inputs = this.inputProviders?.map((inputProvider) => {
       const input = inputProvider(ctx, buildStepId);

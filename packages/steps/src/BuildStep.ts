@@ -49,6 +49,7 @@ export type BuildStepFunction = (
 export class BuildStep {
   public readonly id: string;
   public readonly name?: string;
+  public readonly displayId: string;
   public readonly displayName?: string;
   public readonly inputs?: BuildStepInput[];
   public readonly outputs?: BuildStepOutput[];
@@ -62,6 +63,18 @@ export class BuildStep {
   private readonly inputById: BuildStepInputById;
   private readonly outputById: BuildStepOutputById;
   private executed = false;
+
+  static getNewId(userDefinedId?: string): string {
+    return userDefinedId ?? uuidv4();
+  }
+
+  static getDisplayId(id: string, name?: string): string {
+    if (name) {
+      return `name "${name}"`;
+    } else {
+      return `id "${id}"`;
+    }
+  }
 
   constructor(
     ctx: BuildStepContext,
@@ -90,6 +103,7 @@ export class BuildStep {
 
     this.id = id;
     this.name = name;
+    this.displayId = BuildStep.getDisplayId(id, name);
     this.displayName = this.getStepDisplayName(name, command);
     this.inputs = inputs;
     this.outputs = outputs;
@@ -120,7 +134,7 @@ export class BuildStep {
     try {
       this.ctx.logger.info(
         { marker: BuildStepLogMarker.START_STEP },
-        `Executing build step "${this.id}"`
+        `Executing build step with ${this.displayId}`
       );
       this.status = BuildStepStatus.IN_PROGRESS;
 
@@ -132,14 +146,14 @@ export class BuildStep {
 
       this.ctx.logger.info(
         { marker: BuildStepLogMarker.END_STEP, result: BuildStepStatus.SUCCESS },
-        `Finished build step "${this.id}" successfully`
+        `Finished build step with ${this.displayId} successfully`
       );
       this.status = BuildStepStatus.SUCCESS;
     } catch (err) {
       this.ctx.logger.error({ err });
       this.ctx.logger.error(
         { marker: BuildStepLogMarker.END_STEP, result: BuildStepStatus.FAIL },
-        `Build step "${this.id}" failed`
+        `Build step with ${this.displayId} failed`
       );
       this.status = BuildStepStatus.FAIL;
       throw err;
@@ -155,11 +169,13 @@ export class BuildStep {
   public getOutputValueByName(name: string): string | undefined {
     if (!this.executed) {
       throw new BuildStepRuntimeError(
-        `Failed getting output "${name}" from step "${this.id}". The step has not been executed yet.`
+        `Failed getting output "${name}" from step with ${this.displayId}. The step has not been executed yet.`
       );
     }
     if (!this.hasOutputParameter(name)) {
-      throw new BuildStepRuntimeError(`Step "${this.id}" does not have output "${name}".`);
+      throw new BuildStepRuntimeError(
+        `Step with ${this.displayId} does not have output "${name}".`
+      );
     }
     return this.outputById[name].value;
   }

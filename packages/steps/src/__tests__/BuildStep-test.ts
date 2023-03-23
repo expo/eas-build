@@ -17,6 +17,24 @@ import { getError, getErrorAsync } from './utils/error.js';
 import { UUID_REGEX } from './utils/uuid.js';
 
 describe(BuildStep, () => {
+  describe(BuildStep.getNewId, () => {
+    it('returns a uuid if the user-defined id is undefined', () => {
+      expect(BuildStep.getNewId()).toMatch(UUID_REGEX);
+    });
+    it('returns the user-defined id if defined', () => {
+      expect(BuildStep.getNewId('test1')).toBe('test1');
+    });
+  });
+
+  describe(BuildStep.getDisplayId, () => {
+    it('returns the name identifier if step name is defined', () => {
+      expect(BuildStep.getDisplayId('test1', 'Step 1')).toBe('name "Step 1"');
+    });
+    it('returns the id identifier if step name is undefined', () => {
+      expect(BuildStep.getDisplayId('test1')).toBe('id "test1"');
+    });
+  });
+
   describe('constructor', () => {
     it('throws when neither command nor fn is set', () => {
       const mockCtx = mock<BuildStepContext>();
@@ -99,10 +117,8 @@ describe(BuildStep, () => {
     });
 
     it('creates child build context with child logger', () => {
-      // TODO: change this test
       const ctx = createMockContext();
-      // eslint-disable-next-line no-new
-      new BuildStep(ctx, {
+      const step = new BuildStep(ctx, {
         id: 'test1',
         name: 'Test step',
         command: 'ls -la',
@@ -114,6 +130,7 @@ describe(BuildStep, () => {
           buildStepDisplayName: 'Test step',
         })
       );
+      expect(step.ctx.logger).not.toBe(ctx.logger);
     });
   });
 
@@ -229,10 +246,18 @@ describe(BuildStep, () => {
         const step = new BuildStep(baseStepCtx, {
           id: 'test1',
           inputs: [
-            new BuildStepInput(baseStepCtx, { id: 'foo1', stepId: 'test1', defaultValue: 'bar' }),
+            new BuildStepInput(baseStepCtx, {
+              id: 'foo1',
+              stepDisplayId: BuildStep.getDisplayId('test1'),
+              defaultValue: 'bar',
+            }),
           ],
           outputs: [
-            new BuildStepOutput(baseStepCtx, { id: 'foo2', stepId: 'test1', required: true }),
+            new BuildStepOutput(baseStepCtx, {
+              id: 'foo2',
+              stepDisplayId: BuildStep.getDisplayId('test1'),
+              required: true,
+            }),
           ],
           command: 'set-output foo2 ${ inputs.foo1 }',
           workingDirectory: baseStepCtx.workingDirectory,
@@ -244,7 +269,12 @@ describe(BuildStep, () => {
       it('collects the output parameters after calling the script', async () => {
         const step = new BuildStep(baseStepCtx, {
           id: 'test1',
-          outputs: [new BuildStepOutput(baseStepCtx, { id: 'abc', stepId: 'test1' })],
+          outputs: [
+            new BuildStepOutput(baseStepCtx, {
+              id: 'abc',
+              stepDisplayId: BuildStep.getDisplayId('test1'),
+            }),
+          ],
           command: 'set-output abc 123',
           workingDirectory: baseStepCtx.workingDirectory,
         });
@@ -256,7 +286,12 @@ describe(BuildStep, () => {
       it('works with strings with whitespaces passed as a value for an output parameter', async () => {
         const step = new BuildStep(baseStepCtx, {
           id: 'test1',
-          outputs: [new BuildStepOutput(baseStepCtx, { id: 'abc', stepId: 'test1' })],
+          outputs: [
+            new BuildStepOutput(baseStepCtx, {
+              id: 'abc',
+              stepDisplayId: BuildStep.getDisplayId('test1'),
+            }),
+          ],
           command: 'set-output abc "d o m i n i k"',
           workingDirectory: baseStepCtx.workingDirectory,
         });
@@ -288,7 +323,11 @@ describe(BuildStep, () => {
         const step = new BuildStep(baseStepCtx, {
           id: 'test1',
           outputs: [
-            new BuildStepOutput(baseStepCtx, { id: 'abc', stepId: 'test1', required: true }),
+            new BuildStepOutput(baseStepCtx, {
+              id: 'abc',
+              stepDisplayId: BuildStep.getDisplayId('test1'),
+              required: true,
+            }),
           ],
           command: 'echo 123',
           workingDirectory: baseStepCtx.workingDirectory,
@@ -322,11 +361,23 @@ describe(BuildStep, () => {
         const env = { TEST_VAR_1: 'abc' };
 
         const inputs: BuildStepInput[] = [
-          new BuildStepInput(baseStepCtx, { id: 'foo1', stepId: 'test1', defaultValue: 'bar1' }),
-          new BuildStepInput(baseStepCtx, { id: 'foo2', stepId: 'test1', defaultValue: 'bar2' }),
+          new BuildStepInput(baseStepCtx, {
+            id: 'foo1',
+            stepDisplayId: BuildStep.getDisplayId('test1'),
+            defaultValue: 'bar1',
+          }),
+          new BuildStepInput(baseStepCtx, {
+            id: 'foo2',
+            stepDisplayId: BuildStep.getDisplayId('test1'),
+            defaultValue: 'bar2',
+          }),
         ];
         const outputs: BuildStepOutput[] = [
-          new BuildStepOutput(baseStepCtx, { id: 'abc', stepId: 'test1', required: true }),
+          new BuildStepOutput(baseStepCtx, {
+            id: 'abc',
+            stepDisplayId: BuildStep.getDisplayId('test1'),
+            required: true,
+          }),
         ];
 
         const fn: BuildStepFunction = (_ctx, { inputs, outputs }) => {
@@ -362,7 +413,13 @@ describe(BuildStep, () => {
     it('throws an error when the step has not been executed yet', async () => {
       const step = new BuildStep(baseStepCtx, {
         id: 'test1',
-        outputs: [new BuildStepOutput(baseStepCtx, { id: 'abc', stepId: 'test1', required: true })],
+        outputs: [
+          new BuildStepOutput(baseStepCtx, {
+            id: 'abc',
+            stepDisplayId: BuildStep.getDisplayId('test1'),
+            required: true,
+          }),
+        ],
         command: 'set-output abc 123',
         workingDirectory: baseStepCtx.workingDirectory,
       });
@@ -376,7 +433,13 @@ describe(BuildStep, () => {
     it('throws an error when trying to access a non-existent output', async () => {
       const step = new BuildStep(baseStepCtx, {
         id: 'test1',
-        outputs: [new BuildStepOutput(baseStepCtx, { id: 'abc', stepId: 'test1', required: true })],
+        outputs: [
+          new BuildStepOutput(baseStepCtx, {
+            id: 'abc',
+            stepDisplayId: BuildStep.getDisplayId('test1'),
+            required: true,
+          }),
+        ],
         command: 'set-output abc 123',
         workingDirectory: baseStepCtx.workingDirectory,
       });
@@ -385,13 +448,19 @@ describe(BuildStep, () => {
         step.getOutputValueByName('def');
       });
       expect(error).toBeInstanceOf(BuildStepRuntimeError);
-      expect(error.message).toMatch(/Step "test1" does not have output "def"/);
+      expect(error.message).toMatch(/Step with id "test1" does not have output "def"/);
     });
 
     it('returns the output value', async () => {
       const step = new BuildStep(baseStepCtx, {
         id: 'test1',
-        outputs: [new BuildStepOutput(baseStepCtx, { id: 'abc', stepId: 'test1', required: true })],
+        outputs: [
+          new BuildStepOutput(baseStepCtx, {
+            id: 'abc',
+            stepDisplayId: BuildStep.getDisplayId('test1'),
+            required: true,
+          }),
+        ],
         command: 'set-output abc 123',
         workingDirectory: baseStepCtx.workingDirectory,
       });
