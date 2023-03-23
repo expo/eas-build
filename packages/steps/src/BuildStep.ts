@@ -46,11 +46,14 @@ export type BuildStepFunction = (
   }: { inputs: BuildStepInputById; outputs: BuildStepOutputById; env: BuildStepEnv }
 ) => unknown;
 
+// TODO: move to a place common with tests
+const UUID_REGEX =
+  /^[0-9a-fA-F]{8}\b-[0-9a-fA-F]{4}\b-[0-9a-fA-F]{4}\b-[0-9a-fA-F]{4}\b-[0-9a-fA-F]{12}$/;
+
 export class BuildStep {
   public readonly id: string;
   public readonly name?: string;
-  public readonly displayId: string;
-  public readonly displayName?: string;
+  public readonly displayName: string;
   public readonly inputs?: BuildStepInput[];
   public readonly outputs?: BuildStepOutput[];
   public readonly command?: string;
@@ -64,16 +67,35 @@ export class BuildStep {
   private readonly outputById: BuildStepOutputById;
   private executed = false;
 
-  static getNewId(userDefinedId?: string): string {
+  public static getNewId(userDefinedId?: string): string {
     return userDefinedId ?? uuidv4();
   }
 
-  static getDisplayId(id: string, name?: string): string {
+  public static getDisplayName({
+    id,
+    name,
+    command,
+  }: {
+    id: string;
+    name?: string;
+    command?: string;
+  }): string {
     if (name) {
-      return `name "${name}"`;
-    } else {
-      return `id "${id}"`;
+      return name;
     }
+    if (!id.match(UUID_REGEX)) {
+      return id;
+    }
+    if (command) {
+      const splits = command.trim().split('\n');
+      for (const split of splits) {
+        const trimmed = split.trim();
+        if (trimmed && !trimmed.startsWith('#')) {
+          return trimmed;
+        }
+      }
+    }
+    return id;
   }
 
   constructor(
@@ -81,6 +103,7 @@ export class BuildStep {
     {
       id,
       name,
+      displayName,
       inputs,
       outputs,
       command,
@@ -90,6 +113,7 @@ export class BuildStep {
     }: {
       id: string;
       name?: string;
+      displayName: string;
       inputs?: BuildStepInput[];
       outputs?: BuildStepOutput[];
       command?: string;
@@ -103,8 +127,7 @@ export class BuildStep {
 
     this.id = id;
     this.name = name;
-    this.displayId = BuildStep.getDisplayId(id, name);
-    this.displayName = this.getStepDisplayName(name, command);
+    this.displayName = displayName;
     this.inputs = inputs;
     this.outputs = outputs;
     this.inputById = makeBuildStepInputByIdMap(inputs);
@@ -134,7 +157,7 @@ export class BuildStep {
     try {
       this.ctx.logger.info(
         { marker: BuildStepLogMarker.START_STEP },
-        `Executing build step with ${this.displayId}`
+        `Executing build step "${this.displayName}"`
       );
       this.status = BuildStepStatus.IN_PROGRESS;
 
@@ -146,14 +169,14 @@ export class BuildStep {
 
       this.ctx.logger.info(
         { marker: BuildStepLogMarker.END_STEP, result: BuildStepStatus.SUCCESS },
-        `Finished build step with ${this.displayId} successfully`
+        `Finished build step "${this.displayName}" successfully`
       );
       this.status = BuildStepStatus.SUCCESS;
     } catch (err) {
       this.ctx.logger.error({ err });
       this.ctx.logger.error(
         { marker: BuildStepLogMarker.END_STEP, result: BuildStepStatus.FAIL },
-        `Build step with ${this.displayId} failed`
+        `Build step "${this.displayName}" failed`
       );
       this.status = BuildStepStatus.FAIL;
       throw err;
@@ -169,13 +192,11 @@ export class BuildStep {
   public getOutputValueByName(name: string): string | undefined {
     if (!this.executed) {
       throw new BuildStepRuntimeError(
-        `Failed getting output "${name}" from step with ${this.displayId}. The step has not been executed yet.`
+        `Failed getting output "${name}" from step "${this.displayName}". The step has not been executed yet.`
       );
     }
     if (!this.hasOutputParameter(name)) {
-      throw new BuildStepRuntimeError(
-        `Step with ${this.displayId} does not have output "${name}".`
-      );
+      throw new BuildStepRuntimeError(`Step "${this.displayName}" does not have output "${name}".`);
     }
     return this.outputById[name].value;
   }
@@ -277,21 +298,5 @@ export class BuildStep {
       __EXPO_STEPS_WORKING_DIRECTORY: this.ctx.workingDirectory,
       PATH: newPath,
     };
-  }
-
-  private getStepDisplayName(name: string | undefined, command?: string): string | undefined {
-    if (name) {
-      return name;
-    }
-    if (command) {
-      const splits = command.trim().split('\n');
-      for (const split of splits) {
-        const trimmed = split.trim();
-        if (trimmed && !trimmed.startsWith('#')) {
-          return trimmed;
-        }
-      }
-    }
-    return undefined;
   }
 }

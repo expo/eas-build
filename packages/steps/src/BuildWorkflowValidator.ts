@@ -44,19 +44,19 @@ export class BuildWorkflowValidator {
           if (!(referencedStepId in visitedStepByStepId)) {
             if (allStepIds.has(referencedStepId)) {
               const error = new BuildConfigError(
-                `Input parameter "${currentStepInput.id}" for step with ${currentStep.displayId} uses an expression that references an output parameter from the future step with id "${referencedStepId}".`
+                `Input parameter "${currentStepInput.id}" for step "${currentStep.displayName}" uses an expression that references an output parameter from the future step "${referencedStepId}".`
               );
               errors.push(error);
             } else {
               const error = new BuildConfigError(
-                `Input parameter "${currentStepInput.id}" for step with ${currentStep.displayId} uses an expression that references an output parameter from a non-existent step with id "${referencedStepId}".`
+                `Input parameter "${currentStepInput.id}" for step "${currentStep.displayName}" uses an expression that references an output parameter from a non-existent step "${referencedStepId}".`
               );
               errors.push(error);
             }
           } else {
             if (!visitedStepByStepId[referencedStepId].hasOutputParameter(referencedStepOutputId)) {
               const error = new BuildConfigError(
-                `Input parameter "${currentStepInput.id}" for step with ${currentStep.displayId} uses an expression that references an undefined output parameter "${referencedStepOutputId}" from step with id "${referencedStepId}".`
+                `Input parameter "${currentStepInput.id}" for step "${currentStep.displayName}" uses an expression that references an undefined output parameter "${referencedStepOutputId}" from step "${referencedStepId}".`
               );
               errors.push(error);
             }

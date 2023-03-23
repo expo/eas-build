@@ -17,26 +17,31 @@ describe(BuildWorkflowValidator, () => {
       buildSteps: [
         new BuildStep(ctx, {
           id: 'test1',
+          displayName: BuildStep.getDisplayName({ id: 'test1', command: 'echo 123' }),
           command: 'echo 123',
           workingDirectory: ctx.workingDirectory,
         }),
         new BuildStep(ctx, {
           id: 'test1',
+          displayName: BuildStep.getDisplayName({ id: 'test1', command: 'echo 456' }),
           command: 'echo 456',
           workingDirectory: ctx.workingDirectory,
         }),
         new BuildStep(ctx, {
           id: 'test1',
+          displayName: BuildStep.getDisplayName({ id: 'test1', command: 'echo 789' }),
           command: 'echo 789',
           workingDirectory: ctx.workingDirectory,
         }),
         new BuildStep(ctx, {
           id: 'test3',
+          displayName: BuildStep.getDisplayName({ id: 'test3', command: 'echo 123' }),
           command: 'echo 123',
           workingDirectory: ctx.workingDirectory,
         }),
         new BuildStep(ctx, {
           id: 'test3',
+          displayName: BuildStep.getDisplayName({ id: 'test3', command: 'echo 456' }),
           command: 'echo 456',
           workingDirectory: ctx.workingDirectory,
         }),
@@ -56,31 +61,42 @@ describe(BuildWorkflowValidator, () => {
   });
   test('output from future step', async () => {
     const ctx = createMockContext();
+
+    const id1 = 'test1';
+    const command1 = 'set-output output1 123';
+    const displayName1 = BuildStep.getDisplayName({ id: id1, command: command1 });
+
+    const id2 = 'test2';
+    const command2 = 'set-output output1 123';
+    const displayName2 = BuildStep.getDisplayName({ id: id2, command: command2 });
+
     const workflow = new BuildWorkflow(ctx, {
       buildSteps: [
         new BuildStep(ctx, {
-          id: 'test1',
+          id: id1,
+          displayName: displayName1,
           inputs: [
             new BuildStepInput(ctx, {
               id: 'input1',
-              stepDisplayId: BuildStep.getDisplayId('test1'),
+              stepDisplayName: displayName1,
               required: true,
               defaultValue: '${ steps.test2.output1 }',
             }),
           ],
-          command: 'set-output output1 123',
+          command: command1,
           workingDirectory: ctx.workingDirectory,
         }),
         new BuildStep(ctx, {
-          id: 'test2',
+          id: id2,
+          displayName: displayName2,
           outputs: [
             new BuildStepOutput(ctx, {
               id: 'output1',
-              stepDisplayId: BuildStep.getDisplayId('test2'),
+              stepDisplayName: displayName2,
               required: true,
             }),
           ],
-          command: 'echo ${ inputs.input1 }',
+          command: command2,
           workingDirectory: ctx.workingDirectory,
         }),
       ],
@@ -96,24 +112,29 @@ describe(BuildWorkflowValidator, () => {
     expect(error.errors.length).toBe(1);
     expect(error.errors[0]).toBeInstanceOf(BuildConfigError);
     expect(error.errors[0].message).toBe(
-      'Input parameter "input1" for step with id "test1" uses an expression that references an output parameter from the future step with id "test2".'
+      'Input parameter "input1" for step "test1" uses an expression that references an output parameter from the future step "test2".'
     );
   });
   test('output from non-existent step', async () => {
+    const id = 'test2';
+    const command = 'echo ${ inputs.input1 }';
+    const displayName = BuildStep.getDisplayName({ id, command });
+
     const ctx = createMockContext();
     const workflow = new BuildWorkflow(ctx, {
       buildSteps: [
         new BuildStep(ctx, {
-          id: 'test2',
+          id,
+          displayName,
           inputs: [
             new BuildStepInput(ctx, {
               id: 'input1',
-              stepDisplayId: BuildStep.getDisplayId('test2'),
+              stepDisplayName: displayName,
               required: true,
               defaultValue: '${ steps.test1.output1 }',
             }),
           ],
-          command: 'echo ${ inputs.input1 }',
+          command,
           workingDirectory: ctx.workingDirectory,
         }),
       ],
@@ -129,49 +150,64 @@ describe(BuildWorkflowValidator, () => {
     expect(error.errors.length).toBe(1);
     expect(error.errors[0]).toBeInstanceOf(BuildConfigError);
     expect(error.errors[0].message).toBe(
-      'Input parameter "input1" for step with id "test2" uses an expression that references an output parameter from a non-existent step with id "test1".'
+      'Input parameter "input1" for step "test2" uses an expression that references an output parameter from a non-existent step "test1".'
     );
   });
   test('undefined output', async () => {
+    const id1 = 'test1';
+    const command1 = 'set-output output1 123';
+    const displayName1 = BuildStep.getDisplayName({ id: id1, command: command1 });
+
+    const id2 = 'test2';
+    const command2 = 'echo ${ inputs.input1 }';
+    const displayName2 = BuildStep.getDisplayName({ id: id2, command: command2 });
+
+    const id3 = 'test3';
+    const command3 = 'echo ${ inputs.input1 }';
+    const displayName3 = BuildStep.getDisplayName({ id: id3, command: command3 });
+
     const ctx = createMockContext();
     const workflow = new BuildWorkflow(ctx, {
       buildSteps: [
         new BuildStep(ctx, {
-          id: 'test1',
+          id: id1,
+          displayName: displayName1,
           outputs: [
             new BuildStepOutput(ctx, {
               id: 'output1',
-              stepDisplayId: BuildStep.getDisplayId('test1'),
+              stepDisplayName: displayName1,
               required: true,
             }),
           ],
-          command: 'set-output output1 123',
+          command: command1,
           workingDirectory: ctx.workingDirectory,
         }),
         new BuildStep(ctx, {
-          id: 'test2',
+          id: id2,
+          displayName: displayName2,
           inputs: [
             new BuildStepInput(ctx, {
               id: 'input1',
-              stepDisplayId: BuildStep.getDisplayId('test2'),
+              stepDisplayName: displayName2,
               required: true,
               defaultValue: '${ steps.test1.output1 }',
             }),
           ],
-          command: 'echo ${ inputs.input1 }',
+          command: command2,
           workingDirectory: ctx.workingDirectory,
         }),
         new BuildStep(ctx, {
-          id: 'test3',
+          id: id3,
+          displayName: displayName3,
           inputs: [
             new BuildStepInput(ctx, {
               id: 'input2',
-              stepDisplayId: BuildStep.getDisplayId('test3'),
+              stepDisplayName: displayName3,
               required: true,
               defaultValue: '${ steps.test2.output2 }',
             }),
           ],
-          command: 'echo ${ inputs.input2 }',
+          command: command3,
           workingDirectory: ctx.workingDirectory,
         }),
       ],
@@ -187,44 +223,59 @@ describe(BuildWorkflowValidator, () => {
     expect(error.errors.length).toBe(1);
     expect(error.errors[0]).toBeInstanceOf(BuildConfigError);
     expect(error.errors[0].message).toBe(
-      'Input parameter "input2" for step with id "test3" uses an expression that references an undefined output parameter "output2" from step with id "test2".'
+      'Input parameter "input2" for step "test3" uses an expression that references an undefined output parameter "output2" from step "test2".'
     );
   });
   test('multiple config errors', () => {
+    const id1 = 'test1';
+    const command1 = 'set-output output1 123';
+    const displayName1 = BuildStep.getDisplayName({ id: id1, command: command1 });
+
+    const id2 = 'test2';
+    const command2 = 'echo ${ inputs.input1 }';
+    const displayName2 = BuildStep.getDisplayName({ id: id2, command: command2 });
+
+    const id3 = 'test3';
+    const command3 = 'echo ${ inputs.input1 }';
+    const displayName3 = BuildStep.getDisplayName({ id: id3, command: command3 });
+
     const ctx = createMockContext();
     const workflow = new BuildWorkflow(ctx, {
       buildSteps: [
         new BuildStep(ctx, {
-          id: 'test1',
+          id: id1,
+          displayName: displayName1,
           outputs: [
             new BuildStepOutput(ctx, {
               id: 'output1',
-              stepDisplayId: BuildStep.getDisplayId('test1'),
+              stepDisplayName: displayName1,
               required: true,
             }),
           ],
-          command: 'set-output output1 123',
+          command: command1,
           workingDirectory: ctx.workingDirectory,
         }),
         new BuildStep(ctx, {
-          id: 'test2',
+          id: id2,
+          displayName: displayName2,
           inputs: [
             new BuildStepInput(ctx, {
               id: 'input1',
-              stepDisplayId: BuildStep.getDisplayId('test2'),
+              stepDisplayName: displayName2,
               required: true,
               defaultValue: '${ steps.test4.output1 }',
             }),
           ],
-          command: 'echo ${ inputs.input1 }',
+          command: command2,
           workingDirectory: ctx.workingDirectory,
         }),
         new BuildStep(ctx, {
-          id: 'test3',
+          id: id3,
+          displayName: displayName3,
           inputs: [
             new BuildStepInput(ctx, {
               id: 'input2',
-              stepDisplayId: BuildStep.getDisplayId('test3'),
+              stepDisplayName: displayName3,
               required: true,
               defaultValue: '${ steps.test2.output2 }',
             }),
@@ -245,11 +296,11 @@ describe(BuildWorkflowValidator, () => {
     expect(error.errors.length).toBe(2);
     expect(error.errors[0]).toBeInstanceOf(BuildConfigError);
     expect(error.errors[0].message).toBe(
-      'Input parameter "input1" for step with id "test2" uses an expression that references an output parameter from a non-existent step with id "test4".'
+      'Input parameter "input1" for step "test2" uses an expression that references an output parameter from a non-existent step "test4".'
     );
     expect(error.errors[1]).toBeInstanceOf(BuildConfigError);
     expect(error.errors[1].message).toBe(
-      'Input parameter "input2" for step with id "test3" uses an expression that references an undefined output parameter "output2" from step with id "test2".'
+      'Input parameter "input2" for step "test3" uses an expression that references an undefined output parameter "output2" from step "test2".'
     );
   });
 });

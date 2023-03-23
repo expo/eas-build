@@ -4,12 +4,12 @@ import { BuildStepRuntimeError } from './errors.js';
 export type BuildStepOutputById = Record<string, BuildStepOutput>;
 export type BuildStepOutputProvider = (
   ctx: BuildStepContext,
-  stepDisplayId: string
+  stepDisplayName: string
 ) => BuildStepOutput;
 
 export class BuildStepOutput {
   public readonly id: string;
-  public readonly stepDisplayId: string;
+  public readonly stepDisplayName: string;
   public readonly required: boolean;
 
   private _value?: string;
@@ -18,7 +18,7 @@ export class BuildStepOutput {
     id: string;
     required?: boolean;
   }): BuildStepOutputProvider {
-    return (ctx, stepDisplayId) => new BuildStepOutput(ctx, { ...params, stepDisplayId });
+    return (ctx, stepDisplayName) => new BuildStepOutput(ctx, { ...params, stepDisplayName });
   }
 
   constructor(
@@ -26,19 +26,19 @@ export class BuildStepOutput {
     private readonly ctx: BuildStepContext,
     {
       id,
-      stepDisplayId,
+      stepDisplayName,
       required = true,
-    }: { id: string; stepDisplayId: string; required?: boolean }
+    }: { id: string; stepDisplayName: string; required?: boolean }
   ) {
     this.id = id;
-    this.stepDisplayId = stepDisplayId;
+    this.stepDisplayName = stepDisplayName;
     this.required = required;
   }
 
   get value(): string | undefined {
     if (this.required && this._value === undefined) {
       throw new BuildStepRuntimeError(
-        `Output parameter "${this.id}" for step with ${this.stepDisplayId} is required but it was not set.`
+        `Output parameter "${this.id}" for step "${this.stepDisplayName}" is required but it was not set.`
       );
     }
     return this._value;
@@ -47,7 +47,7 @@ export class BuildStepOutput {
   set(value: string | undefined): BuildStepOutput {
     if (this.required && value === undefined) {
       throw new BuildStepRuntimeError(
-        `Output parameter "${this.id}" for step with ${this.stepDisplayId} is required.`
+        `Output parameter "${this.id}" for step "${this.stepDisplayName}" is required.`
       );
     }
     this._value = value;

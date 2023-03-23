@@ -7,7 +7,7 @@ export type BuildStepInputProvider = (ctx: BuildStepContext, stepId: string) => 
 
 export class BuildStepInput {
   public readonly id: string;
-  public readonly stepDisplayId: string;
+  public readonly stepDisplayName: string;
   public readonly defaultValue?: string;
   public readonly required: boolean;
 
@@ -18,25 +18,25 @@ export class BuildStepInput {
     defaultValue?: string;
     required?: boolean;
   }): BuildStepInputProvider {
-    return (ctx, stepDisplayId) => new BuildStepInput(ctx, { ...params, stepDisplayId });
+    return (ctx, stepDisplayName) => new BuildStepInput(ctx, { ...params, stepDisplayName });
   }
 
   constructor(
     private readonly ctx: BuildStepContext,
     {
       id,
-      stepDisplayId,
+      stepDisplayName,
       defaultValue,
       required = true,
     }: {
       id: string;
-      stepDisplayId: string;
+      stepDisplayName: string;
       defaultValue?: string;
       required?: boolean;
     }
   ) {
     this.id = id;
-    this.stepDisplayId = stepDisplayId;
+    this.stepDisplayName = stepDisplayName;
     this.defaultValue = defaultValue;
     this.required = required;
   }
@@ -45,7 +45,7 @@ export class BuildStepInput {
     const rawValue = this._value ?? this.defaultValue;
     if (this.required && rawValue === undefined) {
       throw new BuildStepRuntimeError(
-        `Input parameter "${this.id}" for step with ${this.stepDisplayId} is required but it was not set.`
+        `Input parameter "${this.id}" for step "${this.stepDisplayName}" is required but it was not set.`
       );
     }
 
@@ -59,7 +59,7 @@ export class BuildStepInput {
   set(value: string | undefined): BuildStepInput {
     if (this.required && value === undefined) {
       throw new BuildStepRuntimeError(
-        `Input parameter "${this.id}" for step with ${this.stepDisplayId} is required.`
+        `Input parameter "${this.id}" for step "${this.stepDisplayName}" is required.`
       );
     }
     this._value = value;

@@ -83,7 +83,7 @@ export class BuildConfigParser {
 
   private createBuildStepFromBuildStepCommandRun({ run }: BuildStepCommandRun): BuildStep {
     const {
-      id,
+      id: maybeId,
       inputs: inputsConfig,
       outputs: outputsConfig,
       name,
@@ -91,16 +91,18 @@ export class BuildConfigParser {
       shell,
       command,
     } = run;
-    const stepId = BuildStep.getNewId(id);
+    const id = BuildStep.getNewId(maybeId);
+    const displayName = BuildStep.getDisplayName({ id, name, command });
     const inputs =
-      inputsConfig && this.createBuildStepInputsFromBuildStepInputsDefinition(inputsConfig, stepId);
+      inputsConfig && this.createBuildStepInputsFromDefinition(inputsConfig, displayName);
     const outputs =
-      outputsConfig && this.createBuildStepOutputsFromDefinition(outputsConfig, stepId);
+      outputsConfig && this.createBuildStepOutputsFromDefinition(outputsConfig, displayName);
     return new BuildStep(this.ctx, {
-      id: stepId,
+      id,
       inputs,
       outputs,
       name,
+      displayName,
       workingDirectory,
       shell,
       command,
@@ -110,8 +112,11 @@ export class BuildConfigParser {
   private createBuildStepFromBuildStepBareCommandRun({
     run: command,
   }: BuildStepBareCommandRun): BuildStep {
+    const id = BuildStep.getNewId();
+    const displayName = BuildStep.getDisplayName({ id, command });
     return new BuildStep(this.ctx, {
-      id: BuildStep.getNewId(),
+      id,
+      displayName,
       command,
     });
   }
@@ -177,15 +182,15 @@ export class BuildConfigParser {
     return new BuildFunction({ id, name, inputProviders, outputProviders, shell, command });
   }
 
-  private createBuildStepInputsFromBuildStepInputsDefinition(
+  private createBuildStepInputsFromDefinition(
     buildStepInputs: BuildStepInputs,
-    stepDisplayId: string
+    stepDisplayName: string
   ): BuildStepInput[] {
     return Object.entries(buildStepInputs).map(
       ([key, value]) =>
         new BuildStepInput(this.ctx, {
           id: key,
-          stepDisplayId,
+          stepDisplayName,
           defaultValue: value,
           required: true,
         })
@@ -204,14 +209,14 @@ export class BuildConfigParser {
 
   private createBuildStepOutputsFromDefinition(
     buildStepOutputs: BuildStepOutputs,
-    stepDisplayId: string
+    stepDisplayName: string
   ): BuildStepOutput[] {
     return buildStepOutputs.map((entry) =>
       typeof entry === 'string'
-        ? new BuildStepOutput(this.ctx, { id: entry, stepDisplayId, required: true })
+        ? new BuildStepOutput(this.ctx, { id: entry, stepDisplayName, required: true })
         : new BuildStepOutput(this.ctx, {
             id: entry.name,
-            stepDisplayId,
+            stepDisplayName,
             required: entry.required ?? true,
           })
     );

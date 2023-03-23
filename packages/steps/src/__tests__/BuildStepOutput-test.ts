@@ -9,7 +9,7 @@ describe(BuildStepOutput, () => {
     const ctx = createMockContext();
     const o = new BuildStepOutput(ctx, {
       id: 'foo',
-      stepDisplayId: BuildStep.getDisplayId('test1'),
+      stepDisplayName: BuildStep.getDisplayName({ id: 'test1' }),
     });
     o.set('bar');
     expect(o.value).toBe('bar');
@@ -19,7 +19,7 @@ describe(BuildStepOutput, () => {
     const ctx = createMockContext();
     const o = new BuildStepOutput(ctx, {
       id: 'foo',
-      stepDisplayId: BuildStep.getDisplayId('test1'),
+      stepDisplayName: BuildStep.getDisplayName({ id: 'test1' }),
       required: true,
     });
     expect(() => {
@@ -27,7 +27,7 @@ describe(BuildStepOutput, () => {
       o.value;
     }).toThrowError(
       new BuildStepRuntimeError(
-        'Output parameter "foo" for step with id "test1" is required but it was not set.'
+        'Output parameter "foo" for step "test1" is required but it was not set.'
       )
     );
   });
@@ -36,13 +36,13 @@ describe(BuildStepOutput, () => {
     const ctx = createMockContext();
     const i = new BuildStepOutput(ctx, {
       id: 'foo',
-      stepDisplayId: BuildStep.getDisplayId('test1'),
+      stepDisplayName: BuildStep.getDisplayName({ id: 'test1' }),
       required: true,
     });
     expect(() => {
       i.set(undefined);
     }).toThrowError(
-      new BuildStepRuntimeError('Output parameter "foo" for step with id "test1" is required.')
+      new BuildStepRuntimeError('Output parameter "foo" for step "test1" is required.')
     );
   });
 });
@@ -57,12 +57,12 @@ describe(makeBuildStepOutputByIdMap, () => {
     const outputs: BuildStepOutput[] = [
       new BuildStepOutput(ctx, {
         id: 'abc1',
-        stepDisplayId: BuildStep.getDisplayId('test1'),
+        stepDisplayName: BuildStep.getDisplayName({ id: 'test1' }),
         required: true,
       }),
       new BuildStepOutput(ctx, {
         id: 'abc2',
-        stepDisplayId: BuildStep.getDisplayId('test1'),
+        stepDisplayName: BuildStep.getDisplayName({ id: 'test1' }),
         required: true,
       }),
     ];

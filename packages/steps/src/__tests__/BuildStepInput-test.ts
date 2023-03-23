@@ -9,7 +9,7 @@ describe(BuildStepInput, () => {
     const ctx = createMockContext();
     const i = new BuildStepInput(ctx, {
       id: 'foo',
-      stepDisplayId: BuildStep.getDisplayId('test1'),
+      stepDisplayName: BuildStep.getDisplayName({ id: 'test1' }),
     });
     i.set('bar');
     expect(i.value).toBe('bar');
@@ -19,7 +19,7 @@ describe(BuildStepInput, () => {
     const ctx = createMockContext();
     const i = new BuildStepInput(ctx, {
       id: 'foo',
-      stepDisplayId: BuildStep.getDisplayId('test1'),
+      stepDisplayName: BuildStep.getDisplayName({ id: 'test1' }),
       defaultValue: 'baz',
     });
     expect(i.value).toBe('baz');
@@ -29,7 +29,7 @@ describe(BuildStepInput, () => {
     const ctx = createMockContext();
     const i = new BuildStepInput(ctx, {
       id: 'foo',
-      stepDisplayId: BuildStep.getDisplayId('test1'),
+      stepDisplayName: BuildStep.getDisplayName({ id: 'test1' }),
       required: true,
     });
     expect(() => {
@@ -37,7 +37,7 @@ describe(BuildStepInput, () => {
       i.value;
     }).toThrowError(
       new BuildStepRuntimeError(
-        'Input parameter "foo" for step with id "test1" is required but it was not set.'
+        'Input parameter "foo" for step "test1" is required but it was not set.'
       )
     );
   });
@@ -46,13 +46,13 @@ describe(BuildStepInput, () => {
     const ctx = createMockContext();
     const i = new BuildStepInput(ctx, {
       id: 'foo',
-      stepDisplayId: BuildStep.getDisplayId('test1'),
+      stepDisplayName: BuildStep.getDisplayName({ id: 'test1' }),
       required: true,
     });
     expect(() => {
       i.set(undefined);
     }).toThrowError(
-      new BuildStepRuntimeError('Input parameter "foo" for step with id "test1" is required.')
+      new BuildStepRuntimeError('Input parameter "foo" for step "test1" is required.')
     );
   });
 });
@@ -67,12 +67,12 @@ describe(makeBuildStepInputByIdMap, () => {
     const inputs: BuildStepInput[] = [
       new BuildStepInput(ctx, {
         id: 'foo1',
-        stepDisplayId: BuildStep.getDisplayId('test1'),
+        stepDisplayName: BuildStep.getDisplayName({ id: 'test1' }),
         defaultValue: 'bar1',
       }),
       new BuildStepInput(ctx, {
         id: 'foo2',
-        stepDisplayId: BuildStep.getDisplayId('test1'),
+        stepDisplayName: BuildStep.getDisplayName({ id: 'test1' }),
         defaultValue: 'bar2',
       }),
     ];
