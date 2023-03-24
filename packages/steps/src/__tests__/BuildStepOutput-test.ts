@@ -1,5 +1,6 @@
+import { BuildStep } from '../BuildStep.js';
 import { BuildStepOutput, makeBuildStepOutputByIdMap } from '../BuildStepOutput.js';
-import { BuildStepRuntimeError } from '../errors/BuildStepRuntimeError.js';
+import { BuildStepRuntimeError } from '../errors.js';
 
 import { createMockContext } from './utils/context.js';
 
@@ -8,7 +9,7 @@ describe(BuildStepOutput, () => {
     const ctx = createMockContext();
     const o = new BuildStepOutput(ctx, {
       id: 'foo',
-      stepId: 'test1',
+      stepDisplayName: BuildStep.getDisplayName({ id: 'test1' }),
     });
     o.set('bar');
     expect(o.value).toBe('bar');
@@ -16,7 +17,11 @@ describe(BuildStepOutput, () => {
 
   test('enforces required policy when reading value', () => {
     const ctx = createMockContext();
-    const o = new BuildStepOutput(ctx, { id: 'foo', stepId: 'test1', required: true });
+    const o = new BuildStepOutput(ctx, {
+      id: 'foo',
+      stepDisplayName: BuildStep.getDisplayName({ id: 'test1' }),
+      required: true,
+    });
     expect(() => {
       // eslint-disable-next-line
       o.value;
@@ -29,7 +34,11 @@ describe(BuildStepOutput, () => {
 
   test('enforces required policy when setting value', () => {
     const ctx = createMockContext();
-    const i = new BuildStepOutput(ctx, { id: 'foo', stepId: 'test1', required: true });
+    const i = new BuildStepOutput(ctx, {
+      id: 'foo',
+      stepDisplayName: BuildStep.getDisplayName({ id: 'test1' }),
+      required: true,
+    });
     expect(() => {
       i.set(undefined);
     }).toThrowError(
@@ -46,8 +55,16 @@ describe(makeBuildStepOutputByIdMap, () => {
   it('returns object with outputs indexed by their ids', () => {
     const ctx = createMockContext();
     const outputs: BuildStepOutput[] = [
-      new BuildStepOutput(ctx, { id: 'abc1', stepId: 'test1', required: true }),
-      new BuildStepOutput(ctx, { id: 'abc2', stepId: 'test1', required: true }),
+      new BuildStepOutput(ctx, {
+        id: 'abc1',
+        stepDisplayName: BuildStep.getDisplayName({ id: 'test1' }),
+        required: true,
+      }),
+      new BuildStepOutput(ctx, {
+        id: 'abc2',
+        stepDisplayName: BuildStep.getDisplayName({ id: 'test1' }),
+        required: true,
+      }),
     ];
     const result = makeBuildStepOutputByIdMap(outputs);
     expect(Object.keys(result).length).toBe(2);

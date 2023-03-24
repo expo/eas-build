@@ -1,7 +1,7 @@
 import path from 'path';
 
 import { BuildPhase, Job } from '@expo/eas-build-job';
-import { BuildConfigParser, BuildStepContext } from '@expo/steps';
+import { BuildConfigParser, BuildStepContext, errors } from '@expo/steps';
 import nullthrows from 'nullthrows';
 
 import { Artifacts, BuildContext } from '../context';
@@ -28,7 +28,19 @@ export async function runCustomBuildAsync<T extends Job>(ctx: BuildContext<T>): 
     configPath,
     externalFunctions: easFunctions,
   });
-  const workflow = await parser.parseAsync();
+  const workflow = await ctx.runBuildPhase(BuildPhase.PARSE_CUSTOM_WORKFLOW_CONFIG, async () => {
+    try {
+      return await parser.parseAsync();
+    } catch (parseError: any) {
+      ctx.logger.error('Failed to parse the custom build config file.');
+      if (parseError instanceof errors.BuildWorkflowError) {
+        for (const err of parseError.errors) {
+          ctx.logger.error({ err });
+        }
+      }
+      throw parseError;
+    }
+  });
   try {
     await workflow.executeAsync(ctx.env);
   } catch (err: any) {

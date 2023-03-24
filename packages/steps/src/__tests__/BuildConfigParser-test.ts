@@ -5,8 +5,7 @@ import { BuildConfigParser } from '../BuildConfigParser.js';
 import { BuildFunction } from '../BuildFunction.js';
 import { BuildStepFunction } from '../BuildStep.js';
 import { BuildWorkflow } from '../BuildWorkflow.js';
-import { BuildConfigError } from '../errors/BuildConfigError.js';
-import { BuildStepRuntimeError } from '../errors/BuildStepRuntimeError.js';
+import { BuildConfigError, BuildStepRuntimeError } from '../errors.js';
 import { getDefaultShell } from '../utils/shell/command.js';
 
 import { createMockContext } from './utils/context.js';

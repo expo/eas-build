@@ -3,12 +3,13 @@ import path from 'path';
 
 import { jest } from '@jest/globals';
 import { instance, mock, verify, when } from 'ts-mockito';
+import { v4 as uuidv4 } from 'uuid';
 
 import { BuildStep, BuildStepFunction, BuildStepStatus } from '../BuildStep.js';
 import { BuildStepContext } from '../BuildStepContext.js';
 import { BuildStepInput } from '../BuildStepInput.js';
 import { BuildStepOutput } from '../BuildStepOutput.js';
-import { BuildStepRuntimeError } from '../errors/BuildStepRuntimeError.js';
+import { BuildStepRuntimeError } from '../errors.js';
 import { nullthrows } from '../utils/nullthrows.js';
 
 import { createMockContext } from './utils/context.js';
@@ -17,15 +18,49 @@ import { getError, getErrorAsync } from './utils/error.js';
 import { UUID_REGEX } from './utils/uuid.js';
 
 describe(BuildStep, () => {
+  describe(BuildStep.getNewId, () => {
+    it('returns a uuid if the user-defined id is undefined', () => {
+      expect(BuildStep.getNewId()).toMatch(UUID_REGEX);
+    });
+    it('returns the user-defined id if defined', () => {
+      expect(BuildStep.getNewId('test1')).toBe('test1');
+    });
+  });
+
+  describe(BuildStep.getDisplayName, () => {
+    it('returns the name if defined', () => {
+      expect(BuildStep.getDisplayName({ id: 'test1', name: 'Step 1' })).toBe('Step 1');
+    });
+    it("returns the id if it's not a uuid", () => {
+      expect(BuildStep.getDisplayName({ id: 'test1' })).toBe('test1');
+    });
+    it('returns the first line of the command if name is undefined and id is a uuid', () => {
+      expect(BuildStep.getDisplayName({ id: uuidv4(), command: 'echo 123\necho 456' })).toBe(
+        'echo 123'
+      );
+    });
+    it('returns the first non-comment line of the command', async () => {
+      expect(
+        BuildStep.getDisplayName({ id: uuidv4(), command: '# list files\nls -la\necho 123' })
+      ).toBe('ls -la');
+    });
+    it('returns the uuid id if neither name nor command is defined', () => {
+      const id = uuidv4();
+      expect(BuildStep.getDisplayName({ id })).toBe(id);
+    });
+  });
+
   describe('constructor', () => {
     it('throws when neither command nor fn is set', () => {
       const mockCtx = mock<BuildStepContext>();
       when(mockCtx.logger).thenReturn(createMockLogger());
       const ctx = instance(mockCtx);
       expect(() => {
+        const id = 'test1';
         // eslint-disable-next-line no-new
         new BuildStep(ctx, {
-          id: 'test1',
+          id,
+          displayName: BuildStep.getDisplayName({ id }),
           workingDirectory: '/tmp',
         });
       }).toThrowError(/Either command or fn must be defined/);
@@ -36,11 +71,16 @@ describe(BuildStep, () => {
       when(mockCtx.logger).thenReturn(createMockLogger());
       const ctx = instance(mockCtx);
       expect(() => {
+        const id = 'test1';
+        const command = 'echo 123';
+        const displayName = BuildStep.getDisplayName({ id, command });
+
         // eslint-disable-next-line no-new
         new BuildStep(ctx, {
-          id: 'test1',
+          id,
+          displayName,
           workingDirectory: '/tmp',
-          command: 'echo 123',
+          command,
           fn: () => {},
         });
       }).toThrowError(/Command and fn cannot be both set/);
@@ -50,9 +90,15 @@ describe(BuildStep, () => {
       const mockCtx = mock<BuildStepContext>();
       when(mockCtx.logger).thenReturn(createMockLogger());
       const ctx = instance(mockCtx);
+
+      const id = 'test1';
+      const command = 'ls -la';
+      const displayName = BuildStep.getDisplayName({ id, command });
+
       const step = new BuildStep(ctx, {
-        id: 'test1',
-        command: 'ls -la',
+        id,
+        displayName,
+        command,
         workingDirectory: '/tmp',
       });
       // eslint-disable-next-line @typescript-eslint/no-confusing-void-expression
@@ -61,9 +107,15 @@ describe(BuildStep, () => {
 
     it('sets the status to NEW', () => {
       const ctx = createMockContext();
+
+      const id = 'test1';
+      const command = 'ls -la';
+      const displayName = BuildStep.getDisplayName({ id, command });
+
       const step = new BuildStep(ctx, {
-        id: 'test1',
-        command: 'ls -la',
+        id,
+        displayName,
+        command,
         workingDirectory: '/tmp',
       });
       expect(step.status).toBe(BuildStepStatus.NEW);
@@ -71,9 +123,15 @@ describe(BuildStep, () => {
 
     it('creates child build context', () => {
       const ctx = createMockContext();
+
+      const id = 'test1';
+      const command = 'ls -la';
+      const displayName = BuildStep.getDisplayName({ id, command });
+
       const step = new BuildStep(ctx, {
-        id: 'test1',
-        command: 'ls -la',
+        id,
+        displayName,
+        command,
       });
       expect(step.ctx).toBeInstanceOf(BuildStepContext);
       expect(step.ctx).not.toBe(ctx);
@@ -81,9 +139,15 @@ describe(BuildStep, () => {
 
     it('creates child build context with correct changed working directory', () => {
       const ctx = createMockContext({ workingDirectory: '/a/b/c' });
+
+      const id = 'test1';
+      const command = 'ls -la';
+      const displayName = BuildStep.getDisplayName({ id, command });
+
       const step = new BuildStep(ctx, {
-        id: 'test1',
-        command: 'ls -la',
+        id,
+        displayName,
+        command,
         workingDirectory: 'd/e/f',
       });
       expect(step.ctx.workingDirectory).toBe('/a/b/c/d/e/f');
@@ -91,21 +155,32 @@ describe(BuildStep, () => {
 
     it('creates child build context with unchanged working directory', () => {
       const ctx = createMockContext({ workingDirectory: '/a/b/c' });
+
+      const id = 'test1';
+      const command = 'ls -la';
+      const displayName = BuildStep.getDisplayName({ id, command });
+
       const step = new BuildStep(ctx, {
-        id: 'test1',
-        command: 'ls -la',
+        id,
+        command,
+        displayName,
       });
       expect(step.ctx.workingDirectory).toBe('/a/b/c');
     });
 
     it('creates child build context with child logger', () => {
-      // TODO: change this test
       const ctx = createMockContext();
-      // eslint-disable-next-line no-new
-      new BuildStep(ctx, {
-        id: 'test1',
-        name: 'Test step',
-        command: 'ls -la',
+
+      const id = 'test1';
+      const name = 'Test step';
+      const command = 'ls -la';
+      const displayName = BuildStep.getDisplayName({ id, name, command });
+
+      const step = new BuildStep(ctx, {
+        id,
+        name,
+        displayName,
+        command,
       });
       expect(ctx.logger.child).toHaveBeenCalledWith(
         expect.objectContaining({
@@ -114,49 +189,7 @@ describe(BuildStep, () => {
           buildStepDisplayName: 'Test step',
         })
       );
-    });
-  });
-
-  describe('displayName', () => {
-    it('defaults to the step name', () => {
-      const ctx = createMockContext();
-      const step = new BuildStep(ctx, {
-        id: 'test1',
-        name: 'List files',
-        command: 'ls -la',
-        workingDirectory: ctx.workingDirectory,
-      });
-      expect(step.displayName).toBe('List files');
-    });
-
-    it('uses the first line of the command', async () => {
-      const ctx = createMockContext();
-      const step = new BuildStep(ctx, {
-        id: 'test1',
-        command: 'ls -la\necho 123',
-        workingDirectory: ctx.workingDirectory,
-      });
-      expect(step.displayName).toBe('ls -la');
-    });
-
-    it('uses the first non-comment line of the command', async () => {
-      const ctx = createMockContext();
-      const step = new BuildStep(ctx, {
-        id: 'test1',
-        command: '# list files\nls -la\necho 123',
-        workingDirectory: ctx.workingDirectory,
-      });
-      expect(step.displayName).toBe('ls -la');
-    });
-
-    it('is undefined if step name is not defined and fn was passed to the step', () => {
-      const ctx = createMockContext();
-      const step = new BuildStep(ctx, {
-        id: 'test1',
-        fn: () => {},
-        workingDirectory: ctx.workingDirectory,
-      });
-      expect(step.displayName).toBe(undefined);
+      expect(step.ctx.logger).not.toBe(ctx.logger);
     });
   });
 
@@ -172,9 +205,14 @@ describe(BuildStep, () => {
     });
 
     it('sets status to FAIL when step fails', async () => {
+      const id = 'test1';
+      const command = 'false';
+      const displayName = BuildStep.getDisplayName({ id, command });
+
       const step = new BuildStep(baseStepCtx, {
-        id: 'test1',
-        command: 'false',
+        id,
+        command,
+        displayName,
         workingDirectory: baseStepCtx.workingDirectory,
       });
       await expect(step.executeAsync()).rejects.toThrow();
@@ -182,9 +220,14 @@ describe(BuildStep, () => {
     });
 
     it('sets status to SUCCESS when step succeeds', async () => {
+      const id = 'test1';
+      const command = 'true';
+      const displayName = BuildStep.getDisplayName({ id, command });
+
       const step = new BuildStep(baseStepCtx, {
-        id: 'test1',
-        command: 'true',
+        id,
+        displayName,
+        command,
         workingDirectory: baseStepCtx.workingDirectory,
       });
       await step.executeAsync();
@@ -213,9 +256,14 @@ describe(BuildStep, () => {
           fs.writeFile(path.join(ctx.workingDirectory, 'expo-ghi789'), 'lorem ipsum'),
         ]);
 
+        const id = 'test1';
+        const command = 'ls -la';
+        const displayName = BuildStep.getDisplayName({ id, command });
+
         const step = new BuildStep(ctx, {
-          id: 'test1',
-          command: 'ls -la',
+          id,
+          command,
+          displayName,
           workingDirectory: ctx.workingDirectory,
         });
         await step.executeAsync();
@@ -226,15 +274,28 @@ describe(BuildStep, () => {
       });
 
       it('interpolates the input parameters in command template', async () => {
+        const id = 'test1';
+        const command = 'set-output foo2 ${ inputs.foo1 }';
+        const displayName = BuildStep.getDisplayName({ id, command });
+
         const step = new BuildStep(baseStepCtx, {
-          id: 'test1',
+          id,
+          displayName,
           inputs: [
-            new BuildStepInput(baseStepCtx, { id: 'foo1', stepId: 'test1', defaultValue: 'bar' }),
+            new BuildStepInput(baseStepCtx, {
+              id: 'foo1',
+              stepDisplayName: displayName,
+              defaultValue: 'bar',
+            }),
           ],
           outputs: [
-            new BuildStepOutput(baseStepCtx, { id: 'foo2', stepId: 'test1', required: true }),
+            new BuildStepOutput(baseStepCtx, {
+              id: 'foo2',
+              stepDisplayName: displayName,
+              required: true,
+            }),
           ],
-          command: 'set-output foo2 ${ inputs.foo1 }',
+          command,
           workingDirectory: baseStepCtx.workingDirectory,
         });
         await step.executeAsync();
@@ -242,10 +303,20 @@ describe(BuildStep, () => {
       });
 
       it('collects the output parameters after calling the script', async () => {
+        const id = 'test1';
+        const command = 'set-output abc 123';
+        const displayName = BuildStep.getDisplayName({ id, command });
+
         const step = new BuildStep(baseStepCtx, {
-          id: 'test1',
-          outputs: [new BuildStepOutput(baseStepCtx, { id: 'abc', stepId: 'test1' })],
-          command: 'set-output abc 123',
+          id,
+          displayName,
+          outputs: [
+            new BuildStepOutput(baseStepCtx, {
+              id: 'abc',
+              stepDisplayName: displayName,
+            }),
+          ],
+          command,
           workingDirectory: baseStepCtx.workingDirectory,
         });
         await step.executeAsync();
@@ -254,10 +325,20 @@ describe(BuildStep, () => {
       });
 
       it('works with strings with whitespaces passed as a value for an output parameter', async () => {
+        const id = 'test1';
+        const command = 'set-output abc "d o m i n i k"';
+        const displayName = BuildStep.getDisplayName({ id, command });
+
         const step = new BuildStep(baseStepCtx, {
-          id: 'test1',
-          outputs: [new BuildStepOutput(baseStepCtx, { id: 'abc', stepId: 'test1' })],
-          command: 'set-output abc "d o m i n i k"',
+          id,
+          displayName,
+          outputs: [
+            new BuildStepOutput(baseStepCtx, {
+              id: 'abc',
+              stepDisplayName: displayName,
+            }),
+          ],
+          command,
           workingDirectory: baseStepCtx.workingDirectory,
         });
         await step.executeAsync();
@@ -274,9 +355,14 @@ describe(BuildStep, () => {
         jest.mocked(logger.child).mockReturnValue(logger);
         const ctx = baseStepCtx.child({ logger });
 
+        const id = 'test1';
+        const command = 'set-output abc 123';
+        const displayName = BuildStep.getDisplayName({ id, command });
+
         const step = new BuildStep(ctx, {
-          id: 'test1',
-          command: 'set-output abc 123',
+          id,
+          command,
+          displayName,
           workingDirectory: ctx.workingDirectory,
         });
         await step.executeAsync();
@@ -285,12 +371,21 @@ describe(BuildStep, () => {
       });
 
       it('throws an error if some required output parameters have not been set with set-output in script', async () => {
+        const id = 'test1';
+        const command = 'echo 123';
+        const displayName = BuildStep.getDisplayName({ id, command });
+
         const step = new BuildStep(baseStepCtx, {
-          id: 'test1',
+          id,
+          displayName,
           outputs: [
-            new BuildStepOutput(baseStepCtx, { id: 'abc', stepId: 'test1', required: true }),
+            new BuildStepOutput(baseStepCtx, {
+              id: 'abc',
+              stepDisplayName: displayName,
+              required: true,
+            }),
           ],
-          command: 'echo 123',
+          command,
           workingDirectory: baseStepCtx.workingDirectory,
         });
         const error = await getErrorAsync<BuildStepRuntimeError>(async () => step.executeAsync());
@@ -304,8 +399,12 @@ describe(BuildStep, () => {
         const fnMock = jest.fn();
         const env = { TEST1: 'abc' };
 
+        const id = 'test1';
+        const displayName = BuildStep.getDisplayName({ id });
+
         const step = new BuildStep(baseStepCtx, {
-          id: 'test1',
+          id,
+          displayName,
           fn: fnMock,
           workingDirectory: baseStepCtx.workingDirectory,
         });
@@ -321,12 +420,27 @@ describe(BuildStep, () => {
       it('passes input and output parameters to the function', async () => {
         const env = { TEST_VAR_1: 'abc' };
 
+        const id = 'test1';
+        const displayName = BuildStep.getDisplayName({ id });
+
         const inputs: BuildStepInput[] = [
-          new BuildStepInput(baseStepCtx, { id: 'foo1', stepId: 'test1', defaultValue: 'bar1' }),
-          new BuildStepInput(baseStepCtx, { id: 'foo2', stepId: 'test1', defaultValue: 'bar2' }),
+          new BuildStepInput(baseStepCtx, {
+            id: 'foo1',
+            stepDisplayName: displayName,
+            defaultValue: 'bar1',
+          }),
+          new BuildStepInput(baseStepCtx, {
+            id: 'foo2',
+            stepDisplayName: displayName,
+            defaultValue: 'bar2',
+          }),
         ];
         const outputs: BuildStepOutput[] = [
-          new BuildStepOutput(baseStepCtx, { id: 'abc', stepId: 'test1', required: true }),
+          new BuildStepOutput(baseStepCtx, {
+            id: 'abc',
+            stepDisplayName: displayName,
+            required: true,
+          }),
         ];
 
         const fn: BuildStepFunction = (_ctx, { inputs, outputs }) => {
@@ -334,7 +448,8 @@ describe(BuildStep, () => {
         };
 
         const step = new BuildStep(baseStepCtx, {
-          id: 'test1',
+          id,
+          displayName,
           inputs,
           outputs,
           fn,
@@ -360,10 +475,21 @@ describe(BuildStep, () => {
     });
 
     it('throws an error when the step has not been executed yet', async () => {
+      const id = 'test1';
+      const command = 'set-output abc 123';
+      const displayName = BuildStep.getDisplayName({ id, command });
+
       const step = new BuildStep(baseStepCtx, {
-        id: 'test1',
-        outputs: [new BuildStepOutput(baseStepCtx, { id: 'abc', stepId: 'test1', required: true })],
-        command: 'set-output abc 123',
+        id,
+        displayName,
+        outputs: [
+          new BuildStepOutput(baseStepCtx, {
+            id: 'abc',
+            stepDisplayName: displayName,
+            required: true,
+          }),
+        ],
+        command,
         workingDirectory: baseStepCtx.workingDirectory,
       });
       const error = getError<BuildStepRuntimeError>(() => {
@@ -374,10 +500,21 @@ describe(BuildStep, () => {
     });
 
     it('throws an error when trying to access a non-existent output', async () => {
+      const id = 'test1';
+      const command = 'set-output abc 123';
+      const displayName = BuildStep.getDisplayName({ id, command });
+
       const step = new BuildStep(baseStepCtx, {
-        id: 'test1',
-        outputs: [new BuildStepOutput(baseStepCtx, { id: 'abc', stepId: 'test1', required: true })],
-        command: 'set-output abc 123',
+        id,
+        displayName,
+        outputs: [
+          new BuildStepOutput(baseStepCtx, {
+            id: 'abc',
+            stepDisplayName: displayName,
+            required: true,
+          }),
+        ],
+        command,
         workingDirectory: baseStepCtx.workingDirectory,
       });
       await step.executeAsync();
@@ -389,10 +526,21 @@ describe(BuildStep, () => {
     });
 
     it('returns the output value', async () => {
+      const id = 'test1';
+      const command = 'set-output abc 123';
+      const displayName = BuildStep.getDisplayName({ id, command });
+
       const step = new BuildStep(baseStepCtx, {
-        id: 'test1',
-        outputs: [new BuildStepOutput(baseStepCtx, { id: 'abc', stepId: 'test1', required: true })],
-        command: 'set-output abc 123',
+        id,
+        displayName,
+        outputs: [
+          new BuildStepOutput(baseStepCtx, {
+            id: 'abc',
+            stepDisplayName: displayName,
+            required: true,
+          }),
+        ],
+        command,
         workingDirectory: baseStepCtx.workingDirectory,
       });
       await step.executeAsync();
@@ -410,10 +558,16 @@ describe(BuildStep, () => {
         }
       });
       jest.mocked(logger.child).mockReturnValue(logger);
+
+      const id = 'test1';
+      const command = 'echo $TEST_ABC';
+      const displayName = BuildStep.getDisplayName({ id, command });
+
       const ctx = baseStepCtx.child({ logger });
       const step = new BuildStep(ctx, {
-        id: 'test1',
-        command: 'echo $TEST_ABC',
+        id,
+        displayName,
+        command,
         workingDirectory: ctx.workingDirectory,
       });
       await step.executeAsync({ TEST_ABC: 'lorem ipsum' });
@@ -431,11 +585,17 @@ describe(BuildStep, () => {
         }
       });
       jest.mocked(logger.child).mockReturnValue(logger);
+
+      const id = 'test1';
+      const command =
+        'echo $__EXPO_STEPS_BUILD_ID\necho $__EXPO_STEPS_OUTPUTS_DIR\necho $__EXPO_STEPS_WORKING_DIRECTORY';
+      const displayName = BuildStep.getDisplayName({ id, command });
+
       const ctx = baseStepCtx.child({ logger });
       const step = new BuildStep(ctx, {
-        id: 'test1',
-        command:
-          'echo $__EXPO_STEPS_BUILD_ID\necho $__EXPO_STEPS_OUTPUTS_DIR\necho $__EXPO_STEPS_WORKING_DIRECTORY',
+        id,
+        displayName,
+        command,
         workingDirectory: ctx.workingDirectory,
       });
       await step.executeAsync();

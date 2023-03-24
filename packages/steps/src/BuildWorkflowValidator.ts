@@ -1,7 +1,6 @@
 import { BuildStep } from './BuildStep.js';
 import { BuildWorkflow } from './BuildWorkflow.js';
-import { BuildConfigError } from './errors/BuildConfigError.js';
-import { BuildWorkflowError } from './errors/BuildWorkflowError.js';
+import { BuildConfigError, BuildWorkflowError } from './errors.js';
 import { duplicates } from './utils/expodash/duplicates.js';
 import { findOutputPaths } from './utils/template.js';
 
@@ -13,7 +12,7 @@ export class BuildWorkflowValidator {
     errors.push(...this.validateUniqueStepIds());
     errors.push(...this.validateInputs());
     if (errors.length !== 0) {
-      throw new BuildWorkflowError('Build workflow is invalid', errors);
+      throw new BuildWorkflowError('Build workflow is invalid.', errors);
     }
   }
 
@@ -34,37 +33,37 @@ export class BuildWorkflowValidator {
     const errors: BuildConfigError[] = [];
 
     const allStepIds = new Set(this.workflow.buildSteps.map((s) => s.id));
-    const stepByStepId: Record<string, BuildStep> = {};
-    for (const step of this.workflow.buildSteps) {
-      for (const input of step.inputs ?? []) {
-        if (input.defaultValue === undefined) {
+    const visitedStepByStepId: Record<string, BuildStep> = {};
+    for (const currentStep of this.workflow.buildSteps) {
+      for (const currentStepInput of currentStep.inputs ?? []) {
+        if (currentStepInput.defaultValue === undefined) {
           continue;
         }
-        const paths = findOutputPaths(input.defaultValue);
-        for (const { stepId, outputId } of paths) {
-          if (!(stepId in stepByStepId)) {
-            if (allStepIds.has(stepId)) {
+        const paths = findOutputPaths(currentStepInput.defaultValue);
+        for (const { stepId: referencedStepId, outputId: referencedStepOutputId } of paths) {
+          if (!(referencedStepId in visitedStepByStepId)) {
+            if (allStepIds.has(referencedStepId)) {
               const error = new BuildConfigError(
-                `Input parameter "${input.id}" for step "${step.id}" uses an expression that references an output parameter from the future step "${stepId}".`
+                `Input parameter "${currentStepInput.id}" for step "${currentStep.displayName}" uses an expression that references an output parameter from the future step "${referencedStepId}".`
               );
               errors.push(error);
             } else {
               const error = new BuildConfigError(
-                `Input parameter "${input.id}" for step "${step.id}" uses an expression that references an output parameter from a non-existent step "${stepId}".`
+                `Input parameter "${currentStepInput.id}" for step "${currentStep.displayName}" uses an expression that references an output parameter from a non-existent step "${referencedStepId}".`
               );
               errors.push(error);
             }
           } else {
-            if (!stepByStepId[stepId].hasOutputParameter(outputId)) {
+            if (!visitedStepByStepId[referencedStepId].hasOutputParameter(referencedStepOutputId)) {
               const error = new BuildConfigError(
-                `Input parameter "${input.id}" for step "${step.id}" uses an expression that references an undefined output parameter "${outputId}" from step "${stepId}".`
+                `Input parameter "${currentStepInput.id}" for step "${currentStep.displayName}" uses an expression that references an undefined output parameter "${referencedStepOutputId}" from step "${referencedStepId}".`
               );
               errors.push(error);
             }
           }
         }
       }
-      stepByStepId[step.id] = step;
+      visitedStepByStepId[currentStep.id] = currentStep;
     }
 
     return errors;

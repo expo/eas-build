@@ -1,4 +1,5 @@
-import { BuildStepRuntimeError } from '../errors/BuildStepRuntimeError.js';
+import { BuildStepRuntimeError } from '../errors.js';
+import { BuildStep } from '../BuildStep.js';
 import { BuildStepInput, makeBuildStepInputByIdMap } from '../BuildStepInput.js';
 
 import { createMockContext } from './utils/context.js';
@@ -8,7 +9,7 @@ describe(BuildStepInput, () => {
     const ctx = createMockContext();
     const i = new BuildStepInput(ctx, {
       id: 'foo',
-      stepId: 'test1',
+      stepDisplayName: BuildStep.getDisplayName({ id: 'test1' }),
     });
     i.set('bar');
     expect(i.value).toBe('bar');
@@ -18,7 +19,7 @@ describe(BuildStepInput, () => {
     const ctx = createMockContext();
     const i = new BuildStepInput(ctx, {
       id: 'foo',
-      stepId: 'test1',
+      stepDisplayName: BuildStep.getDisplayName({ id: 'test1' }),
       defaultValue: 'baz',
     });
     expect(i.value).toBe('baz');
@@ -26,7 +27,11 @@ describe(BuildStepInput, () => {
 
   test('enforces required policy when reading value', () => {
     const ctx = createMockContext();
-    const i = new BuildStepInput(ctx, { id: 'foo', stepId: 'test1', required: true });
+    const i = new BuildStepInput(ctx, {
+      id: 'foo',
+      stepDisplayName: BuildStep.getDisplayName({ id: 'test1' }),
+      required: true,
+    });
     expect(() => {
       // eslint-disable-next-line
       i.value;
@@ -39,7 +44,11 @@ describe(BuildStepInput, () => {
 
   test('enforces required policy when setting value', () => {
     const ctx = createMockContext();
-    const i = new BuildStepInput(ctx, { id: 'foo', stepId: 'test1', required: true });
+    const i = new BuildStepInput(ctx, {
+      id: 'foo',
+      stepDisplayName: BuildStep.getDisplayName({ id: 'test1' }),
+      required: true,
+    });
     expect(() => {
       i.set(undefined);
     }).toThrowError(
@@ -56,8 +65,16 @@ describe(makeBuildStepInputByIdMap, () => {
   it('returns object with inputs indexed by their ids', () => {
     const ctx = createMockContext();
     const inputs: BuildStepInput[] = [
-      new BuildStepInput(ctx, { id: 'foo1', stepId: 'test1', defaultValue: 'bar1' }),
-      new BuildStepInput(ctx, { id: 'foo2', stepId: 'test1', defaultValue: 'bar2' }),
+      new BuildStepInput(ctx, {
+        id: 'foo1',
+        stepDisplayName: BuildStep.getDisplayName({ id: 'test1' }),
+        defaultValue: 'bar1',
+      }),
+      new BuildStepInput(ctx, {
+        id: 'foo2',
+        stepDisplayName: BuildStep.getDisplayName({ id: 'test1' }),
+        defaultValue: 'bar2',
+      }),
     ];
     const result = makeBuildStepInputByIdMap(inputs);
     expect(Object.keys(result).length).toBe(2);

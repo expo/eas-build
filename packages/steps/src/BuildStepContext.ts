@@ -5,7 +5,7 @@ import { bunyan } from '@expo/logger';
 
 import { BuildStep } from './BuildStep.js';
 import { parseOutputPath } from './utils/template.js';
-import { BuildStepRuntimeError } from './errors/BuildStepRuntimeError.js';
+import { BuildStepRuntimeError } from './errors.js';
 
 export class BuildStepContext {
   public readonly baseWorkingDirectory: string;

@@ -1,7 +1,6 @@
 import assert from 'assert';
 import fs from 'fs/promises';
 
-import { v4 as uuidv4 } from 'uuid';
 import YAML from 'yaml';
 
 import {
@@ -9,7 +8,11 @@ import {
   BuildFunctionConfig,
   BuildFunctionInputs,
   BuildFunctionOutputs,
+  BuildStepBareCommandRun,
+  BuildStepBareFunctionCall,
+  BuildStepCommandRun,
   BuildStepConfig,
+  BuildStepFunctionCall,
   BuildStepInputs,
   BuildStepOutputs,
   isBuildStepBareCommandRun,
@@ -24,7 +27,7 @@ import { BuildStepInput, BuildStepInputProvider } from './BuildStepInput.js';
 import { BuildStepOutput, BuildStepOutputProvider } from './BuildStepOutput.js';
 import { BuildWorkflow } from './BuildWorkflow.js';
 import { BuildWorkflowValidator } from './BuildWorkflowValidator.js';
-import { BuildStepRuntimeError } from './errors/BuildStepRuntimeError.js';
+import { BuildStepRuntimeError } from './errors.js';
 import { duplicates } from './utils/expodash/duplicates.js';
 import { uniq } from './utils/expodash/uniq.js';
 
@@ -68,57 +71,83 @@ export class BuildConfigParser {
     buildFunctions: BuildFunctionById
   ): BuildStep {
     if (isBuildStepCommandRun(buildStepConfig)) {
-      const {
-        id,
-        inputs: inputsConfig,
-        outputs: outputsConfig,
-        name,
-        workingDirectory,
-        shell,
-        command,
-      } = buildStepConfig.run;
-      const stepId = id ?? uuidv4();
-      const inputs =
-        inputsConfig &&
-        this.createBuildStepInputsFromBuildStepInputsDefinition(inputsConfig, stepId);
-      const outputs =
-        outputsConfig && this.createBuildStepOutputsFromDefinition(outputsConfig, stepId);
-      return new BuildStep(this.ctx, {
-        id: stepId,
-        inputs,
-        outputs,
-        name,
-        workingDirectory,
-        shell,
-        command,
-      });
+      return this.createBuildStepFromBuildStepCommandRun(buildStepConfig);
     } else if (isBuildStepBareCommandRun(buildStepConfig)) {
-      const command = buildStepConfig.run;
-      return new BuildStep(this.ctx, {
-        id: uuidv4(),
-        command,
-      });
+      return this.createBuildStepFromBuildStepBareCommandRun(buildStepConfig);
     } else if (isBuildStepBareFunctionCall(buildStepConfig)) {
-      const functionId = buildStepConfig;
-      const buildFunction = buildFunctions[functionId];
-      return buildFunction.createBuildStepFromFunctionCall(this.ctx);
+      return this.createBuildStepFromBuildStepBareFunctionCall(buildFunctions, buildStepConfig);
     } else {
-      const keys = Object.keys(buildStepConfig);
-      assert(
-        keys.length === 1,
-        'There must be at most one function call in the step (enforced by joi).'
-      );
-      const functionId = keys[0];
-      const buildFunctionCallConfig = buildStepConfig[functionId];
-      const buildFunction = buildFunctions[functionId];
-      return buildFunction.createBuildStepFromFunctionCall(this.ctx, {
-        id: buildFunctionCallConfig.id,
-        name: buildFunctionCallConfig.name,
-        callInputs: buildFunctionCallConfig.inputs,
-        workingDirectory: buildFunctionCallConfig.workingDirectory,
-        shell: buildFunctionCallConfig.shell,
-      });
+      return this.createBuildStepFromBuildStepFunctionCall(buildFunctions, buildStepConfig);
     }
+  }
+
+  private createBuildStepFromBuildStepCommandRun({ run }: BuildStepCommandRun): BuildStep {
+    const {
+      id: maybeId,
+      inputs: inputsConfig,
+      outputs: outputsConfig,
+      name,
+      workingDirectory,
+      shell,
+      command,
+    } = run;
+    const id = BuildStep.getNewId(maybeId);
+    const displayName = BuildStep.getDisplayName({ id, name, command });
+    const inputs =
+      inputsConfig && this.createBuildStepInputsFromDefinition(inputsConfig, displayName);
+    const outputs =
+      outputsConfig && this.createBuildStepOutputsFromDefinition(outputsConfig, displayName);
+    return new BuildStep(this.ctx, {
+      id,
+      inputs,
+      outputs,
+      name,
+      displayName,
+      workingDirectory,
+      shell,
+      command,
+    });
+  }
+
+  private createBuildStepFromBuildStepBareCommandRun({
+    run: command,
+  }: BuildStepBareCommandRun): BuildStep {
+    const id = BuildStep.getNewId();
+    const displayName = BuildStep.getDisplayName({ id, command });
+    return new BuildStep(this.ctx, {
+      id,
+      displayName,
+      command,
+    });
+  }
+
+  private createBuildStepFromBuildStepBareFunctionCall(
+    buildFunctions: BuildFunctionById,
+    functionId: BuildStepBareFunctionCall
+  ): BuildStep {
+    const buildFunction = buildFunctions[functionId];
+    return buildFunction.createBuildStepFromFunctionCall(this.ctx);
+  }
+
+  private createBuildStepFromBuildStepFunctionCall(
+    buildFunctions: BuildFunctionById,
+    buildStepFunctionCall: BuildStepFunctionCall
+  ): BuildStep {
+    const keys = Object.keys(buildStepFunctionCall);
+    assert(
+      keys.length === 1,
+      'There must be at most one function call in the step (enforced by joi).'
+    );
+    const functionId = keys[0];
+    const buildFunctionCallConfig = buildStepFunctionCall[functionId];
+    const buildFunction = buildFunctions[functionId];
+    return buildFunction.createBuildStepFromFunctionCall(this.ctx, {
+      id: buildFunctionCallConfig.id,
+      name: buildFunctionCallConfig.name,
+      callInputs: buildFunctionCallConfig.inputs,
+      workingDirectory: buildFunctionCallConfig.workingDirectory,
+      shell: buildFunctionCallConfig.shell,
+    });
   }
 
   private createBuildFunctionsFromConfig(
@@ -153,15 +182,15 @@ export class BuildConfigParser {
     return new BuildFunction({ id, name, inputProviders, outputProviders, shell, command });
   }
 
-  private createBuildStepInputsFromBuildStepInputsDefinition(
+  private createBuildStepInputsFromDefinition(
     buildStepInputs: BuildStepInputs,
-    stepId: string
+    stepDisplayName: string
   ): BuildStepInput[] {
     return Object.entries(buildStepInputs).map(
       ([key, value]) =>
         new BuildStepInput(this.ctx, {
           id: key,
-          stepId,
+          stepDisplayName,
           defaultValue: value,
           required: true,
         })
@@ -180,14 +209,14 @@ export class BuildConfigParser {
 
   private createBuildStepOutputsFromDefinition(
     buildStepOutputs: BuildStepOutputs,
-    stepId: string
+    stepDisplayName: string
   ): BuildStepOutput[] {
     return buildStepOutputs.map((entry) =>
       typeof entry === 'string'
-        ? new BuildStepOutput(this.ctx, { id: entry, stepId, required: true })
+        ? new BuildStepOutput(this.ctx, { id: entry, stepDisplayName, required: true })
         : new BuildStepOutput(this.ctx, {
             id: entry.name,
-            stepId,
+            stepDisplayName,
             required: entry.required ?? true,
           })
     );
