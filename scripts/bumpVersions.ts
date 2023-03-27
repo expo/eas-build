@@ -45,9 +45,12 @@ function getModulesToBump(modules: LocalModule[], changedFilesJsonPath?: string)
   }
   const changedModulePaths = getChangedModulePaths(changedFilesJsonPath);
   console.log('changedModulePaths', changedModulePaths);
-  return modules.filter((m) =>
+  const x = modules.filter((m) =>
     changedModulePaths.some((changedModulePath) => m.location.endsWith(changedModulePath))
   );
+  console.log('modules', modules);
+  console.log('x', x);
+  return x;
 }
 
 function getChangedModulePaths(changedFilesJsonPath: string): string[] {
