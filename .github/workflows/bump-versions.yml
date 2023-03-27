@@ -23,6 +23,9 @@ jobs:
         with:
           node-version: 18
 
+      - name: Install dependencies
+        run: yarn install --frozen-lockfile --check-files
+
       - name: Bump versions
         run: yarn bump-versions .github/outputs/all_changed_and_modified_files.json
 
