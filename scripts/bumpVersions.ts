@@ -114,6 +114,12 @@ async function setNewVersionsAsync(
   nextVersions: ModuleToVersionMap
 ): Promise<void> {
   for (const m of localModules) {
+    console.log(
+      {
+        cwd: m.location,
+      },
+      `running yarn ${['version', '--new-version', nextVersions[m.name]].join(' ')}`
+    );
     await spawnAsync('yarn', ['version', '--new-version', nextVersions[m.name]], {
       cwd: m.location,
     });
