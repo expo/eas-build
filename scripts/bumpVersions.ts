@@ -44,6 +44,7 @@ function getModulesToBump(modules: LocalModule[], changedFilesJsonPath?: string)
     return modules;
   }
   const changedModulePaths = getChangedModulePaths(changedFilesJsonPath);
+  console.log('changedModulePaths', changedModulePaths);
   return modules.filter((m) =>
     changedModulePaths.some((changedModulePath) => m.location.endsWith(changedModulePath))
   );
@@ -52,12 +53,14 @@ function getModulesToBump(modules: LocalModule[], changedFilesJsonPath?: string)
 function getChangedModulePaths(changedFilesJsonPath: string): string[] {
   const changedFiles: string[] = require(changedFilesJsonPath);
   const changedFilesInPackagesDir = changedFiles.filter((f) => f.startsWith('packages/'));
+  console.log('changedFilesInPackagesDir', changedFilesInPackagesDir);
   const changedModulePaths = changedFilesInPackagesDir.map((f) => {
     const matched = f.match(/(packages\/[^/]+)\//);
     const moduleDirectory = matched?.[1];
     assert(moduleDirectory);
     return moduleDirectory;
   });
+  console.log('changedModulePaths', changedModulePaths);
   return [...new Set(changedModulePaths)];
 }
 
