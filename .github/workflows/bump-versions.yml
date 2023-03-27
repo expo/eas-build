@@ -9,7 +9,7 @@ name: Bump versions
 jobs:
   bump-verisons:
     runs-on: ubuntu-latest
-    if: ${{ github.event.issue.pull_request && github.event.issue.user.login == github.event.comment.user.login && startsWith(github.event.comment.body, '/bump-versions') }}
+    # if: ${{ github.event.issue.pull_request && github.event.issue.user.login == github.event.comment.user.login && startsWith(github.event.comment.body, '/bump-versions') }}
     steps:
       - run: echo 123
       # - uses: actions/checkout@v2
