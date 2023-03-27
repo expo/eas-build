@@ -25,6 +25,8 @@ async function runAsync(): Promise<void> {
   const modulesToBump = getModulesToBump(publicLocalModules, maybeChangedFilesJsonAbsolutePath);
   const currentPublishedVersions = await getCurrentPublishedVersionsAsync(modulesToBump);
   const nextVersions = getNextModuleVersions(modulesToBump, currentPublishedVersions);
+  console.log('currentPublishedVersions', currentPublishedVersions);
+  console.log('nextVersions', nextVersions);
   await setNewVersionsAsync(modulesToBump, nextVersions);
 }
 
