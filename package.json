@@ -8,7 +8,7 @@
     "lint": "eslint 'packages/*/src/**/*.ts'",
     "test": "lerna run test",
     "clean": "lerna run clean && rm -rf node_modules",
-    "bump-versions": "ts-node scripts/checkVersions.ts"
+    "bump-versions": "ts-node scripts/bumpVersions.ts"
   },
   "engines": {
     "node": ">=14.0.0"
