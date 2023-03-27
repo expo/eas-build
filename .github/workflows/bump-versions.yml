@@ -7,7 +7,7 @@ on:
 name: Bump versions
 
 jobs:
-  bump-verisons:
+  bump-versions:
     runs-on: ubuntu-latest
     # if: ${{ github.event.issue.pull_request && github.event.issue.user.login == github.event.comment.user.login && startsWith(github.event.comment.body, '/bump-versions') }}
     steps:
@@ -20,6 +20,7 @@ jobs:
 
       - name: Verify the contents of the .github/added_files.json file
         run: |
+          ls -la .github
           cat .github/added_files.json
       #   with:
       #     token: ${{ secrets.EXPO_BOT_PAT }}
