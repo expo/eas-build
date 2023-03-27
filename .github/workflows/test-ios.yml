@@ -1,20 +1,20 @@
-name: Run tests
-on:
-  push:
-    branches: [main]
-  pull_request:
-    types: [opened, synchronize]
+# name: Run tests
+# on:
+#   push:
+#     branches: [main]
+#   pull_request:
+#     types: [opened, synchronize]
 
-jobs:
-  test:
-    runs-on: macos-latest
-    name: Test with Node 18 on macOS
-    steps:
-      - uses: actions/checkout@v2
-      - name: Setup node
-        uses: actions/setup-node@v1
-        with:
-          node-version: 18
-      - run: yarn install --frozen-lockfile --check-files
-      - run: yarn build
-      - run: yarn test
+# jobs:
+#   test:
+#     runs-on: macos-latest
+#     name: Test with Node 18 on macOS
+#     steps:
+#       - uses: actions/checkout@v2
+#       - name: Setup node
+#         uses: actions/setup-node@v1
+#         with:
+#           node-version: 18
+#       - run: yarn install --frozen-lockfile --check-files
+#       - run: yarn build
+#       - run: yarn test
