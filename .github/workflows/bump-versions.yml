@@ -35,6 +35,9 @@ jobs:
       - name: Bump versions
         run: yarn bump-versions .github/outputs/all_changed_and_modified_files.json
 
+      - name: Remove tj-actions/changed-files output files
+        run: rm -rf .github/outputs
+
       - name: Commit and push
         run: |
           git add .
