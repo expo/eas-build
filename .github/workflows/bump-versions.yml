@@ -12,48 +12,29 @@ jobs:
     # if: ${{ github.event.issue.pull_request && github.event.issue.user.login == github.event.comment.user.login && startsWith(github.event.comment.body, '/bump-versions') }}
     steps:
       - uses: actions/checkout@v2
+
       - name: Get changed files and write the outputs to a json file
         uses: tj-actions/changed-files@v35
         with:
           json: true
           write_output_files: true
 
-      - name: Verify the contents of the .github/outputs/all_changed_and_modified_files.json file
-        run: |
-          cat .github/outputs/all_changed_and_modified_files.json
-      #   with:
-      #     token: ${{ secrets.EXPO_BOT_PAT }}
-      # - uses: actions/setup-node@v2
-      #   with:
-      #     node-version: 18
-      # - name: Checkout Pull Request
-      #   run: hub pr checkout ${{ github.event.issue.number }}
-      #   env:
-      #     GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      # - name: Install dependencies
-      #   working-directory: ./scripts
-      #   run: yarn install --frozen-lockfile --check-files
-      # - name: Add changelog entry
-      #   working-directory: ./scripts
-      #   run: |
-      #     PARAMS=${PR_COMMENT_BODY#/changelog-entry }
-      #     if [[ ! "$PARAMS" =~ " " ]]; then
-      #       echo "Invalid /changelog-entry command"
-      #       exit 1
-      #     fi
-      #     CATEGORY=$( cut -d ' ' -f 1 <<< "$PARAMS" | sed -e 's/^[[:space:]]*//' )
-      #     MESSAGE=$( cut -d ' ' -f 2- <<< "$PARAMS" | sed -e 's/^[[:space:]]*//' )
-      #     yarn changelog-entry "$CATEGORY" "$MESSAGE"
-      #   env:
-      #     GITHUB_PR_AUTHOR: ${{ github.event.issue.user.login }}
-      #     GITHUB_PR_NUMBER: ${{ github.event.issue.number }}
-      #     PR_COMMENT_BODY: ${{ github.event.comment.body }}
-      # - name: Commit and push
-      #   run: |
-      #     # use the last commit author name and email
-      #     git config --global user.name "$(git --no-pager log --format=format:'%an' -n 1)"
-      #     git config --global user.email "$(git --no-pager log --format=format:'%ae' -n 1)"
+      - uses: actions/setup-node@v2
+        with:
+          node-version: 18
 
-      #     git add CHANGELOG.md
-      #     git commit -m "update CHANGELOG.md"
-      #     git push
+      - name: Bump versions
+        run: yarn bump-versions .github/outputs/all_changed_and_modified_files.json
+
+      - name: Commit and push
+        run: |
+          git add .
+          if [ -z "$(git status --porcelain)" ]; then
+            echo "There's nothing to bump"
+          else
+            # use the last commit author name and email
+            git config --global user.name "$(git --no-pager log --format=format:'%an' -n 1)"
+            git config --global user.email "$(git --no-pager log --format=format:'%ae' -n 1)"
+            git commit -m "Bump versions"
+            git push
+          fi
