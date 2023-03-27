@@ -1,6 +1,4 @@
-import * as Builders from './builders';
-
-export { Builders };
+export * as Builders from './builders';
 
 export {
   Artifacts,
