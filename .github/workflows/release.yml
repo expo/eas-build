@@ -1,0 +1,26 @@
+on:
+  push:
+    tags:
+      - 'v*' # Push events to a tag matching v*, i.e. v1.0, v20.15.10
+
+name: Release
+
+jobs:
+  publish-to-npm:
+    name: Publish to npm
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - uses: actions/setup-node@v2
+        with:
+          registry-url: 'https://registry.npmjs.org/'
+          scope: 'expo'
+          node-version: 18
+      - name: Install dependencies
+        run: yarn install --frozen-lockfile --check-files
+      - name: Build
+        run: yarn build
+      - name: Publish packages to npm
+        run: yarn lerna publish from-package --yes --no-verify-access
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_ACCESS_TOKEN }}

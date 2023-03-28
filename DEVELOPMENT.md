@@ -30,7 +30,12 @@ Change like that could be e.g. introducing a new required field in the job objec
 
 ### Updating `local-build-plugin` in EAS CLI
 
-- Run `./scripts/publish.js`.
+- Run `yarn release`.
 - If there are breaking changes, update `eas-build-job` package in EAS CLI and make sure everything works as expected.
 - Tag the newly published version as `eas-cli` - `npm dist-tag add eas-cli-local-build-plugin@VERSION eas-cli`.
-- Publish a new EAS CLI version. EAS CLI uses a fixed version of the `eas-cli-local-build-plugin` package, the version is set based on `eas-cli` tag at the publish time.
+- Publish a new EAS CLI version. EAS CLI uses a fixed version of the `eas-cli-local-build-plugin` package, the version is set based on the `eas-cli` tag at the publish time.
+
+## Releasing
+
+- Run `yarn release` and confirm / change the next version.
+- Sit back and relax, the rest of the process runs on GHA.
