@@ -76,7 +76,7 @@ export async function configureEnvFromBuildProfileAsync<TJob extends Job>(
   }
   const stdout = spawnResult.stdout.toString();
   const parsed = JSON.parse(stdout);
-  const env = validateEnvs(parsed);
+  const env = validateEnvs(parsed.buildProfile);
   ctx.updateEnv(env);
 }
 
@@ -119,7 +119,7 @@ function validateEasBuildInternalResult<TJob extends Job>(
 function validateEnvs(result: any): Env {
   const { value, error } = Joi.object({
     env: Joi.object().pattern(Joi.string(), Joi.string()),
-  }).validate(result.env, {
+  }).validate(result, {
     stripUnknown: true,
     convert: true,
     abortEarly: false,
