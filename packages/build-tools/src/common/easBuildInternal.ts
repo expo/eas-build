@@ -7,6 +7,7 @@ import Joi from 'joi';
 import nullthrows from 'nullthrows';
 
 import { BuildContext } from '../context';
+import { isAtLeastNpm7Async } from '../utils/packageManager';
 
 const EAS_CLI_STAGING_NPM_TAG = 'latest-eas-build-staging';
 const EAS_CLI_PRODUCTION_NPM_TAG = 'latest-eas-build';
@@ -19,7 +20,7 @@ const EasBuildInternalResultSchema = Joi.object<{ job: object; metadata: object 
 export async function runEasBuildInternalAsync<TJob extends Job>(
   ctx: BuildContext<TJob>
 ): Promise<void> {
-  const { cmd, args, extraEnv } = resolveEasCommandPrefixAndEnv();
+  const { cmd, args, extraEnv } = resolveEasCommandPrefixAndEnv(await isAtLeastNpm7Async());
   const { buildProfile } = ctx.job;
   assert(buildProfile, 'build profile is missing in a build from git-based integration.');
   const result = await spawn(
@@ -46,7 +47,7 @@ export async function runEasBuildInternalAsync<TJob extends Job>(
 export async function configureEnvFromBuildProfileAsync<TJob extends Job>(
   ctx: BuildContext<TJob>
 ): Promise<void> {
-  const { cmd, args, extraEnv } = resolveEasCommandPrefixAndEnv();
+  const { cmd, args, extraEnv } = resolveEasCommandPrefixAndEnv(await isAtLeastNpm7Async());
   const { buildProfile } = ctx.job;
   assert(buildProfile, 'build profile is missing in a build from git-based integration.');
   let spawnResult;
@@ -80,7 +81,12 @@ export async function configureEnvFromBuildProfileAsync<TJob extends Job>(
   ctx.updateEnv(env);
 }
 
-function resolveEasCommandPrefixAndEnv(): { cmd: string; args: string[]; extraEnv: Env } {
+function resolveEasCommandPrefixAndEnv(isAtLeastNpm7Async: boolean): {
+  cmd: string;
+  args: string[];
+  extraEnv: Env;
+} {
+  const npxArgsPrefix = isAtLeastNpm7Async ? ['-y'] : [];
   if (process.env.ENVIRONMENT === 'development') {
     return {
       cmd: process.env.EAS_BUILD_INTERNAL_EXECUTABLE ?? `eas`,
@@ -90,11 +96,15 @@ function resolveEasCommandPrefixAndEnv(): { cmd: string; args: string[]; extraEn
   } else if (process.env.ENVIRONMENT === 'staging') {
     return {
       cmd: 'npx',
-      args: ['--yes', `eas-cli@${EAS_CLI_STAGING_NPM_TAG}`],
+      args: [...npxArgsPrefix, `eas-cli@${EAS_CLI_STAGING_NPM_TAG}`],
       extraEnv: { EXPO_STAGING: '1' },
     };
   } else {
-    return { cmd: 'npx', args: ['--yes', `eas-cli@${EAS_CLI_PRODUCTION_NPM_TAG}`], extraEnv: {} };
+    return {
+      cmd: 'npx',
+      args: [...npxArgsPrefix, `eas-cli@${EAS_CLI_PRODUCTION_NPM_TAG}`],
+      extraEnv: {},
+    };
   }
 }
 
