@@ -1,7 +1,7 @@
 on:
   push:
     tags:
-      - '*@*' # Push events to a tag matching v*, i.e. v1.0, v20.15.10
+      - 'v*' # Push events to a tag matching v*, i.e. v1.0, v20.15.10
 
 name: Release
 
@@ -23,4 +23,4 @@ jobs:
       - name: Publish packages to npm
         run: yarn lerna publish from-package --yes --no-verify-access
         env:
-          NODE_AUTH_TOKEN: ${{ secrets.NODE_AUTH_TOKEN }}
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_ACCESS_TOKEN }}
