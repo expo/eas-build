@@ -70,10 +70,9 @@ async function run() {
     if (shouldPrerelease) {
       args.push('--tag', 'alpha');
     } else if (name === 'eas-cli-local-build-plugin') {
-      args.push('--tag', 'next');
-      console.log(`  using dist-tag 'next', run 'npm dist-tag add ${name}@${version} latest'`);
-      console.log(`  after testing the release to promote it to the latest tag`);
-      console.log(`  in case of breaking changes new eas-cli needs to be released`);
+      console.log(`  Run "npm dist-tag add eas-cli-local-build-plugin@${version} eas-cli"`);
+      console.log(`  to update eas-cli-local-build-plugin in EAS CLI. The version will be`);
+      console.log(`  updated automatically on the next EAS CLI release.`);
     }
 
     await spawnAsync('npm', args, {
