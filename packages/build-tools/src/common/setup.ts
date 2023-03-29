@@ -1,4 +1,4 @@
-import { SpawnResult } from '@expo/turtle-spawn';
+import spawn, { SpawnResult } from '@expo/turtle-spawn';
 import { BuildPhase, Ios, Job, Platform } from '@expo/eas-build-job';
 import { BuildTrigger } from '@expo/eas-build-job/dist/common';
 
@@ -7,7 +7,7 @@ import { deleteXcodeEnvLocalIfExistsAsync } from '../ios/xcodeEnv';
 import { Hook, runHookIfPresent } from '../utils/hooks';
 import { createNpmrcIfNotExistsAsync, logIfNpmrcExistsAsync } from '../utils/npmrc';
 import { isAtLeastNpm7Async } from '../utils/packageManager';
-import { readPackageJson, runExpoCliCommand } from '../utils/project';
+import { readPackageJson } from '../utils/project';
 
 import { prepareProjectSourcesAsync } from './projectSources';
 import { installDependenciesAsync } from './installDependencies';
@@ -85,18 +85,13 @@ async function runExpoDoctor<TJob extends Job>(ctx: BuildContext<TJob>): Promise
   ctx.logger.info('Running "expo doctor"');
   let timeout: NodeJS.Timeout | undefined;
   let timedOut = false;
+  const argsPrefix = (await isAtLeastNpm7Async()) ? ['-y'] : [];
   try {
-    const promise = runExpoCliCommand(
-      ctx,
-      ['doctor'],
-      {
-        cwd: ctx.reactNativeProjectDirectory,
-        logger: ctx.logger,
-        env: ctx.env,
-      },
-      // local Expo CLI does not have "doctor" for now
-      { forceUseGlobalExpoCli: true, npmVersionAtLeast7: await isAtLeastNpm7Async() }
-    );
+    const promise = spawn('npx', [...argsPrefix, 'expo-doctor'], {
+      cwd: ctx.reactNativeProjectDirectory,
+      logger: ctx.logger,
+      env: ctx.env,
+    });
     timeout = setTimeout(() => {
       timedOut = true;
       promise.child.kill();
