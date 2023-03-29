@@ -220,7 +220,7 @@ export class BuildContext<TJob extends Job> {
   public updateJobInformation(job: TJob, metadata: Metadata): void {
     if (this._job.triggeredBy !== BuildTrigger.GIT_BASED_INTEGRATION) {
       throw new Error(
-        `Updating job information is only allowed when build was triggered by a git-based integration.`
+        'Updating job information is only allowed when build was triggered by a git-based integration.'
       );
     }
     this._job = { ...job, triggeredBy: this._job.triggeredBy };
