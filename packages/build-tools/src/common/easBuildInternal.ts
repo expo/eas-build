@@ -20,7 +20,7 @@ const EasBuildInternalResultSchema = Joi.object<{ job: object; metadata: object 
 export async function runEasBuildInternalAsync<TJob extends Job>(
   ctx: BuildContext<TJob>
 ): Promise<void> {
-  const { cmd, args, extraEnv } = resolveEasCommandPrefixAndEnv(await isAtLeastNpm7Async());
+  const { cmd, args, extraEnv } = await resolveEasCommandPrefixAndEnvAsync();
   const { buildProfile } = ctx.job;
   assert(buildProfile, 'build profile is missing in a build from git-based integration.');
   const result = await spawn(
@@ -47,7 +47,7 @@ export async function runEasBuildInternalAsync<TJob extends Job>(
 export async function configureEnvFromBuildProfileAsync<TJob extends Job>(
   ctx: BuildContext<TJob>
 ): Promise<void> {
-  const { cmd, args, extraEnv } = resolveEasCommandPrefixAndEnv(await isAtLeastNpm7Async());
+  const { cmd, args, extraEnv } = await resolveEasCommandPrefixAndEnvAsync();
   const { buildProfile } = ctx.job;
   assert(buildProfile, 'build profile is missing in a build from git-based integration.');
   let spawnResult;
@@ -81,12 +81,12 @@ export async function configureEnvFromBuildProfileAsync<TJob extends Job>(
   ctx.updateEnv(env);
 }
 
-function resolveEasCommandPrefixAndEnv(isAtLeastNpm7Async: boolean): {
+async function resolveEasCommandPrefixAndEnvAsync(): Promise<{
   cmd: string;
   args: string[];
   extraEnv: Env;
-} {
-  const npxArgsPrefix = isAtLeastNpm7Async ? ['-y'] : [];
+}> {
+  const npxArgsPrefix = (await isAtLeastNpm7Async()) ? ['-y'] : [];
   if (process.env.ENVIRONMENT === 'development') {
     return {
       cmd: process.env.EAS_BUILD_INTERNAL_EXECUTABLE ?? `eas`,
