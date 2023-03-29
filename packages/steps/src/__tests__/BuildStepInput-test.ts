@@ -68,6 +68,18 @@ describe(BuildStepInput, () => {
       });
     }).toThrowError(/is not one of its allowed values/);
   });
+
+  test('setting non-allowed value', () => {
+    const ctx = createMockContext();
+    const input = new BuildStepInput(ctx, {
+      id: 'foo',
+      stepDisplayName: BuildStep.getDisplayName({ id: 'test1' }),
+      allowedValues: ['1', '2', '3'],
+    });
+    expect(() => {
+      input.set('5');
+    }).toThrowError(/is not one of its allowed values/);
+  });
 });
 
 describe(makeBuildStepInputByIdMap, () => {

@@ -63,6 +63,17 @@ export class BuildStepInput {
         `Input parameter "${this.id}" for step "${this.stepDisplayName}" is required.`
       );
     }
+    if (
+      value !== undefined &&
+      this.allowedValues !== undefined &&
+      !this.allowedValues.includes(value)
+    ) {
+      throw new BuildStepRuntimeError(
+        `Value "${value}" for input parameter "${this.id}" for step "${
+          this.stepDisplayName
+        }" is not one of its allowed values: ${this.allowedValues.map((i) => `"${i}"`).join(', ')}.`
+      );
+    }
     this._value = value;
     return this;
   }
