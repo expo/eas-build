@@ -35,7 +35,7 @@ export class BuildStepOutput {
     this.required = required;
   }
 
-  get value(): string | undefined {
+  public get value(): string | undefined {
     if (this.required && this._value === undefined) {
       throw new BuildStepRuntimeError(
         `Output parameter "${this.id}" for step "${this.stepDisplayName}" is required but it was not set.`
@@ -44,7 +44,7 @@ export class BuildStepOutput {
     return this._value;
   }
 
-  set(value: string | undefined): BuildStepOutput {
+  public set(value: string | undefined): BuildStepOutput {
     if (this.required && value === undefined) {
       throw new BuildStepRuntimeError(
         `Output parameter "${this.id}" for step "${this.stepDisplayName}" is required.`

@@ -33,7 +33,7 @@ describe(BuildStepInput, () => {
       required: true,
     });
     expect(() => {
-      // eslint-disable-next-line
+      // eslint-disable-next-line @typescript-eslint/no-unused-expressions
       i.value;
     }).toThrowError(
       new BuildStepRuntimeError(
@@ -54,6 +54,19 @@ describe(BuildStepInput, () => {
     }).toThrowError(
       new BuildStepRuntimeError('Input parameter "foo" for step "test1" is required.')
     );
+  });
+
+  test('throws an error if default value is not one of the allowed values', () => {
+    const ctx = createMockContext();
+    expect(() => {
+      // eslint-disable-next-line no-new
+      new BuildStepInput(ctx, {
+        id: 'foo',
+        stepDisplayName: BuildStep.getDisplayName({ id: 'test1' }),
+        allowedValues: ['1', '2', '3'],
+        defaultValue: '4',
+      });
+    }).toThrowError(/is not one of its allowed values/);
   });
 });
 
