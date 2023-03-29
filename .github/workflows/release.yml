@@ -24,3 +24,14 @@ jobs:
         run: yarn lerna publish from-package --yes --no-verify-access
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_ACCESS_TOKEN }}
+  open-pr-in-turtle-v2:
+    name: Open a PR with version bumps in turtle-v2
+    needs: publish-to-npm
+    runs-on: ubuntu-latest
+    steps:
+      - name: Open a PR with version bumps in turtle-v2
+        uses: benc-uk/workflow-dispatch@v1
+        with:
+          repo: expo/turtle-v2
+          workflow: update-eas-build-modules.yml
+          token: ${{ secrets.EXPO_BOT_PAT }}
