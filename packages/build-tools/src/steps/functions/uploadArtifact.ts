@@ -19,11 +19,10 @@ export function createUploadArtifactStepsFunction<T extends Job>(
     id: 'upload_artifact',
     name: 'Upload artifact',
     inputProviders: [
-      // TODO: refactor when BuildStepInput supports "allowedValues" option
-      // either "application-archive" or "build-artifact"
       BuildStepInput.createProvider({
         id: 'type',
         defaultValue: BuildArtifactType.APPLICATION_ARCHIVE,
+        allowedValues: [BuildArtifactType.APPLICATION_ARCHIVE, BuildArtifactType.BUILD_ARTIFACT],
       }),
       BuildStepInput.createProvider({ id: 'path', required: true }),
     ],
