@@ -7,7 +7,7 @@ import fs from 'fs-extra';
 import { bunyan } from '@expo/logger';
 
 import { BuildContext } from '../context';
-import { getAllChildrenRecursiveAsync } from '../utils/processes';
+import { getParentAndDescendantProcessPidsAsync } from '../utils/processes';
 
 export async function ensureLFLineEndingsInGradlewScript<TJob extends Job>(
   ctx: BuildContext<TJob>
@@ -57,7 +57,7 @@ function adjustOOMScore(spawnPromise: SpawnPromise<SpawnResult>, logger: bunyan)
     async () => {
       try {
         assert(spawnPromise.child.pid);
-        const children = await getAllChildrenRecursiveAsync(spawnPromise.child.pid);
+        const children = await getParentAndDescendantProcessPidsAsync(spawnPromise.child.pid);
         await Promise.all(
           children.map(async (pid: number) => {
             // Value 800 is just a guess here. It's probably higher than most other

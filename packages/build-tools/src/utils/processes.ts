@@ -11,18 +11,18 @@ async function getChildrenPidsAsync(parentPids: number[]): Promise<number[]> {
     .filter((i) => i);
 }
 
-export async function getAllChildrenRecursiveAsync(ppid: number): Promise<number[]> {
-  const children: number[] = [ppid];
-  let shouldRetry = true;
-  while (shouldRetry) {
-    const pids = await getChildrenPidsAsync(children);
-    shouldRetry = false;
+export async function getParentAndDescendantProcessPidsAsync(ppid: number): Promise<number[]> {
+  const children = new Set<number>([ppid]);
+  let shouldCheckAgain = true;
+  while (shouldCheckAgain) {
+    const pids = await getChildrenPidsAsync([...children]);
+    shouldCheckAgain = false;
     for (const pid of pids) {
-      if (!children.includes(pid)) {
-        shouldRetry = true;
-        children.push(pid);
+      if (!children.has(pid)) {
+        shouldCheckAgain = true;
+        children.add(pid);
       }
     }
   }
-  return children;
+  return [...children];
 }

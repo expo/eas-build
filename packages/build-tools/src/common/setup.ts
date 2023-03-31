@@ -9,7 +9,7 @@ import { Hook, runHookIfPresent } from '../utils/hooks';
 import { createNpmrcIfNotExistsAsync, logIfNpmrcExistsAsync } from '../utils/npmrc';
 import { isAtLeastNpm7Async } from '../utils/packageManager';
 import { readPackageJson, shouldUseGlobalExpoCli } from '../utils/project';
-import { getAllChildrenRecursiveAsync } from '../utils/processes';
+import { getParentAndDescendantProcessPidsAsync } from '../utils/processes';
 
 import { prepareProjectSourcesAsync } from './projectSources';
 import { installDependenciesAsync } from './installDependencies';
@@ -111,7 +111,7 @@ async function runExpoDoctor<TJob extends Job>(ctx: BuildContext<TJob>): Promise
     timeout = setTimeout(async () => {
       timedOut = true;
       const ppid = nullthrows(promise.child.pid);
-      (await getAllChildrenRecursiveAsync(ppid)).forEach((pid) => {
+      (await getParentAndDescendantProcessPidsAsync(ppid)).forEach((pid) => {
         process.kill(pid);
       });
       ctx.reportError?.(`"expo doctor" timed out`, undefined, {
