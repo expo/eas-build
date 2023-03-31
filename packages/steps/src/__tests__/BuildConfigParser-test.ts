@@ -227,7 +227,7 @@ describe(BuildConfigParser, () => {
       const workflow = await parser.parseAsync();
 
       const { buildSteps } = workflow;
-      expect(buildSteps.length).toBe(5);
+      expect(buildSteps.length).toBe(6);
 
       // - say_hi:
       //     inputs:
@@ -285,8 +285,26 @@ describe(BuildConfigParser, () => {
       expect(step5.inputs?.[0].id).toBe('value');
       expect(step5.inputs?.[0].required).toBe(true);
 
+      // - say_hi_2:
+      //     inputs:
+      //       greeting: Hello
+      const step6 = buildSteps[5];
+      expect(step6.id).toMatch(UUID_REGEX);
+      expect(step6.name).toBe('Hi!');
+      expect(step6.command).toBe('echo "${ inputs.greeting }, ${ inputs.name }!"');
+      expect(step6.ctx.workingDirectory).toBe(ctx.workingDirectory);
+      expect(step6.shell).toBe(getDefaultShell());
+      expect(step6.inputs?.[0].id).toBe('greeting');
+      expect(step6.inputs?.[0].required).toBe(true);
+      expect(step6.inputs?.[0].defaultValue).toBe('Hi');
+      expect(step6.inputs?.[0].allowedValues).toEqual(['Hi', 'Hello']);
+      expect(step6.inputs?.[1].id).toBe('name');
+      expect(step6.inputs?.[1].required).toBe(true);
+      expect(step6.inputs?.[1].defaultValue).toBe('Brent');
+      expect(step6.inputs?.[1].allowedValues).toEqual(undefined);
+
       const { buildFunctions } = workflow;
-      expect(Object.keys(buildFunctions).length).toBe(4);
+      expect(Object.keys(buildFunctions).length).toBe(5);
 
       // say_hi:
       //   name: Hi!
@@ -330,6 +348,27 @@ describe(BuildConfigParser, () => {
       expect(function4.inputProviders?.[0](ctx, 'unknown-step').id).toBe('value');
       expect(function4.inputProviders?.[0](ctx, 'unknown-step').required).toBe(true);
       expect(function4.command).toBe('echo "${ inputs.value }"');
+
+      // say_hi_2:
+      //   name: Hi!
+      //   inputs:
+      //     - name: greeting
+      //       default_value: Hi
+      //       allowed_values: [Hi, Hello]
+      //     - name: name
+      //       default_value: Brent
+      //   command: echo "${ inputs.greeting }, ${ inputs.name }!"
+      const function5 = buildFunctions.say_hi_2;
+      expect(function5.id).toBe('say_hi_2');
+      expect(function5.name).toBe('Hi!');
+      expect(function5.inputProviders?.[0](ctx, 'unknown-step').id).toBe('greeting');
+      expect(function5.inputProviders?.[0](ctx, 'unknown-step').required).toBe(true);
+      expect(function5.inputProviders?.[0](ctx, 'unknown-step').defaultValue).toBe('Hi');
+      expect(function5.inputProviders?.[0](ctx, 'unknown-step').allowedValues).toEqual([
+        'Hi',
+        'Hello',
+      ]);
+      expect(function5.command).toBe('echo "${ inputs.greeting }, ${ inputs.name }!"');
     });
 
     it('throws if calling non-existent external functions', async () => {

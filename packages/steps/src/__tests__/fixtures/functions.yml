@@ -14,6 +14,9 @@ build:
     - print:
         inputs:
           value: ${ steps.random_number.value }
+    - say_hi_2:
+        inputs:
+          greeting: Hello
 
 functions:
   say_hi:
@@ -31,3 +34,12 @@ functions:
   print:
     inputs: [value]
     command: echo "${ inputs.value }"
+  say_hi_2:
+    name: Hi!
+    inputs:
+      - name: greeting
+        default_value: Hi
+        allowed_values: [Hi, Hello]
+      - name: name
+        default_value: Brent
+    command: echo "${ inputs.greeting }, ${ inputs.name }!"

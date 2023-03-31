@@ -273,7 +273,7 @@ describe(BuildStep, () => {
         expect(lines.find((line) => line.match('expo-ghi789'))).toBeTruthy();
       });
 
-      it('interpolates the input parameters in command template', async () => {
+      it('interpolates the inputs in command template', async () => {
         const id = 'test1';
         const command = 'set-output foo2 ${ inputs.foo1 }';
         const displayName = BuildStep.getDisplayName({ id, command });
@@ -302,7 +302,7 @@ describe(BuildStep, () => {
         expect(step.getOutputValueByName('foo2')).toBe('bar');
       });
 
-      it('collects the output parameters after calling the script', async () => {
+      it('collects the outputs after calling the script', async () => {
         const id = 'test1';
         const command = 'set-output abc 123';
         const displayName = BuildStep.getDisplayName({ id, command });
@@ -346,7 +346,7 @@ describe(BuildStep, () => {
         expect(abc?.value).toBe('d o m i n i k');
       });
 
-      it('prints a warning if some of the output parameters set with set-output are not defined in step config', async () => {
+      it('prints a warning if some of the outputs set with set-output are not defined in step config', async () => {
         const logger = createMockLogger();
         const warnLines: string[] = [];
         jest.mocked(logger.warn as any).mockImplementation((line: string) => {
@@ -370,7 +370,7 @@ describe(BuildStep, () => {
         expect(found).not.toBeUndefined();
       });
 
-      it('throws an error if some required output parameters have not been set with set-output in script', async () => {
+      it('throws an error if some required outputs have not been set with set-output in script', async () => {
         const id = 'test1';
         const command = 'echo 123';
         const displayName = BuildStep.getDisplayName({ id, command });
@@ -390,7 +390,7 @@ describe(BuildStep, () => {
         });
         const error = await getErrorAsync<BuildStepRuntimeError>(async () => step.executeAsync());
         expect(error).toBeInstanceOf(BuildStepRuntimeError);
-        expect(error.message).toMatch(/Some required output parameters have not been set: "abc"/);
+        expect(error.message).toMatch(/Some required outputs have not been set: "abc"/);
       });
     });
 
@@ -417,7 +417,7 @@ describe(BuildStep, () => {
         );
       });
 
-      it('passes input and output parameters to the function', async () => {
+      it('passes input and outputs to the function', async () => {
         const env = { TEST_VAR_1: 'abc' };
 
         const id = 'test1';
