@@ -33,8 +33,6 @@ export class BuildStepInput {
     private readonly ctx: BuildStepContext,
     { id, stepDisplayName, allowedValues, defaultValue, required = true }: BuildStepInputParams
   ) {
-    this.validateDefaultValue(allowedValues, defaultValue);
-
     this.id = id;
     this.stepDisplayName = stepDisplayName;
     this.allowedValues = allowedValues;
@@ -63,32 +61,16 @@ export class BuildStepInput {
         `Input parameter "${this.id}" for step "${this.stepDisplayName}" is required.`
       );
     }
-    if (
-      value !== undefined &&
-      this.allowedValues !== undefined &&
-      !this.allowedValues.includes(value)
-    ) {
-      throw new BuildStepRuntimeError(
-        `Value "${value}" for input parameter "${this.id}" for step "${
-          this.stepDisplayName
-        }" is not one of its allowed values: ${this.allowedValues.map((i) => `"${i}"`).join(', ')}.`
-      );
-    }
     this._value = value;
     return this;
   }
 
-  private validateDefaultValue(allowedValues?: string[], defaultValue?: string): void {
-    if (allowedValues === undefined || defaultValue === undefined) {
-      return;
+  public isValueOneOfAllowedValues(): boolean {
+    const value = this._value ?? this.defaultValue;
+    if (this.allowedValues === undefined || value === undefined) {
+      return true;
     }
-    if (!allowedValues.includes(defaultValue)) {
-      throw new BuildStepRuntimeError(
-        `Default value "${defaultValue}" for input parameter "${this.id}" for step "${
-          this.stepDisplayName
-        }" is not one of its allowed values: ${allowedValues.map((i) => `"${i}"`).join(', ')}.`
-      );
-    }
+    return this.allowedValues.includes(value);
   }
 }
 

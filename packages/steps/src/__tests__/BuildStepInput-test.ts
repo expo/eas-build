@@ -55,31 +55,6 @@ describe(BuildStepInput, () => {
       new BuildStepRuntimeError('Input parameter "foo" for step "test1" is required.')
     );
   });
-
-  test('throws an error if default value is not one of the allowed values', () => {
-    const ctx = createMockContext();
-    expect(() => {
-      // eslint-disable-next-line no-new
-      new BuildStepInput(ctx, {
-        id: 'foo',
-        stepDisplayName: BuildStep.getDisplayName({ id: 'test1' }),
-        allowedValues: ['1', '2', '3'],
-        defaultValue: '4',
-      });
-    }).toThrowError(/is not one of its allowed values/);
-  });
-
-  test('setting non-allowed value', () => {
-    const ctx = createMockContext();
-    const input = new BuildStepInput(ctx, {
-      id: 'foo',
-      stepDisplayName: BuildStep.getDisplayName({ id: 'test1' }),
-      allowedValues: ['1', '2', '3'],
-    });
-    expect(() => {
-      input.set('5');
-    }).toThrowError(/is not one of its allowed values/);
-  });
 });
 
 describe(makeBuildStepInputByIdMap, () => {
