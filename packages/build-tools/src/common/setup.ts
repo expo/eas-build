@@ -1,19 +1,21 @@
-import spawn, { SpawnResult } from '@expo/turtle-spawn';
+import spawn, { SpawnPromise, SpawnResult } from '@expo/turtle-spawn';
 import { BuildPhase, Ios, Job, Platform } from '@expo/eas-build-job';
 import { BuildTrigger } from '@expo/eas-build-job/dist/common';
+import nullthrows from 'nullthrows';
 
 import { BuildContext } from '../context';
 import { deleteXcodeEnvLocalIfExistsAsync } from '../ios/xcodeEnv';
 import { Hook, runHookIfPresent } from '../utils/hooks';
 import { createNpmrcIfNotExistsAsync, logIfNpmrcExistsAsync } from '../utils/npmrc';
 import { isAtLeastNpm7Async } from '../utils/packageManager';
-import { readPackageJson } from '../utils/project';
+import { readPackageJson, shouldUseGlobalExpoCli } from '../utils/project';
+import { getAllChildrenRecursiveAsync } from '../utils/processes';
 
 import { prepareProjectSourcesAsync } from './projectSources';
 import { installDependenciesAsync } from './installDependencies';
 import { configureEnvFromBuildProfileAsync, runEasBuildInternalAsync } from './easBuildInternal';
 
-const MAX_EXPO_DOCTOR_TIMEOUT_MS = 20 * 1000;
+const MAX_EXPO_DOCTOR_TIMEOUT_MS = 30 * 1000;
 
 class DoctorTimeoutError extends Error {}
 
@@ -85,16 +87,33 @@ async function runExpoDoctor<TJob extends Job>(ctx: BuildContext<TJob>): Promise
   ctx.logger.info('Running "expo doctor"');
   let timeout: NodeJS.Timeout | undefined;
   let timedOut = false;
-  const argsPrefix = (await isAtLeastNpm7Async()) ? ['-y'] : [];
+  const isAtLeastNpm7 = await isAtLeastNpm7Async();
   try {
-    const promise = spawn('npx', [...argsPrefix, 'expo-doctor'], {
-      cwd: ctx.reactNativeProjectDirectory,
-      logger: ctx.logger,
-      env: ctx.env,
-    });
-    timeout = setTimeout(() => {
+    let promise: SpawnPromise<SpawnResult>;
+    if (!shouldUseGlobalExpoCli(ctx)) {
+      const argsPrefix = isAtLeastNpm7 ? ['-y'] : [];
+      promise = spawn('npx', [...argsPrefix, 'expo-doctor'], {
+        cwd: ctx.reactNativeProjectDirectory,
+        logger: ctx.logger,
+        env: ctx.env,
+      });
+    } else {
+      promise = ctx.runGlobalExpoCliCommand(
+        ['doctor'],
+        {
+          cwd: ctx.reactNativeProjectDirectory,
+          logger: ctx.logger,
+          env: ctx.env,
+        },
+        isAtLeastNpm7
+      );
+    }
+    timeout = setTimeout(async () => {
       timedOut = true;
-      promise.child.kill();
+      const ppid = nullthrows(promise.child.pid);
+      (await getAllChildrenRecursiveAsync(ppid)).forEach((pid) => {
+        process.kill(pid);
+      });
       ctx.reportError?.(`"expo doctor" timed out`, undefined, {
         extras: { buildId: ctx.env.EAS_BUILD_ID },
       });
