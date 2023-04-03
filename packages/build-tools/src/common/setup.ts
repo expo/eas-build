@@ -111,7 +111,8 @@ async function runExpoDoctor<TJob extends Job>(ctx: BuildContext<TJob>): Promise
     timeout = setTimeout(async () => {
       timedOut = true;
       const ppid = nullthrows(promise.child.pid);
-      (await getParentAndDescendantProcessPidsAsync(ppid)).forEach((pid) => {
+      const pids = await getParentAndDescendantProcessPidsAsync(ppid);
+      pids.forEach((pid) => {
         process.kill(pid);
       });
       ctx.reportError?.(`"expo doctor" timed out`, undefined, {

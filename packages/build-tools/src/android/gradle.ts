@@ -57,9 +57,9 @@ function adjustOOMScore(spawnPromise: SpawnPromise<SpawnResult>, logger: bunyan)
     async () => {
       try {
         assert(spawnPromise.child.pid);
-        const children = await getParentAndDescendantProcessPidsAsync(spawnPromise.child.pid);
+        const pids = await getParentAndDescendantProcessPidsAsync(spawnPromise.child.pid);
         await Promise.all(
-          children.map(async (pid: number) => {
+          pids.map(async (pid: number) => {
             // Value 800 is just a guess here. It's probably higher than most other
             // process. I didn't want to set it any higher, because I'm not sure if OOM Killer
             // can start killing processes when there is still enough memory left.
