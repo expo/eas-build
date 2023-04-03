@@ -1,14 +1,18 @@
 import spawn from '@expo/turtle-spawn';
 
 async function getChildrenPidsAsync(parentPids: number[]): Promise<number[]> {
-  const result = await spawn('pgrep', ['-P', parentPids.join(',')], {
-    stdio: 'pipe',
-  });
-  return result.stdout
-    .toString()
-    .split('\n')
-    .map((i) => Number(i.trim()))
-    .filter((i) => i);
+  try {
+    const result = await spawn('pgrep', ['-P', parentPids.join(',')], {
+      stdio: 'pipe',
+    });
+    return result.stdout
+      .toString()
+      .split('\n')
+      .map((i) => Number(i.trim()))
+      .filter((i) => i);
+  } catch {
+    return [];
+  }
 }
 
 export async function getParentAndDescendantProcessPidsAsync(ppid: number): Promise<number[]> {
