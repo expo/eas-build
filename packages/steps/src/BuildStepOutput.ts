@@ -7,6 +7,15 @@ export type BuildStepOutputProvider = (
   stepDisplayName: string
 ) => BuildStepOutput;
 
+interface BuildStepOutputProviderParams {
+  id: string;
+  required?: boolean;
+}
+
+interface BuildStepOutputParams extends BuildStepOutputProviderParams {
+  stepDisplayName: string;
+}
+
 export class BuildStepOutput {
   public readonly id: string;
   public readonly stepDisplayName: string;
@@ -14,28 +23,21 @@ export class BuildStepOutput {
 
   private _value?: string;
 
-  public static createProvider(params: {
-    id: string;
-    required?: boolean;
-  }): BuildStepOutputProvider {
+  public static createProvider(params: BuildStepOutputProviderParams): BuildStepOutputProvider {
     return (ctx, stepDisplayName) => new BuildStepOutput(ctx, { ...params, stepDisplayName });
   }
 
   constructor(
     // @ts-expect-error ctx is not used in this class but let's keep it here for consistency
     private readonly ctx: BuildStepContext,
-    {
-      id,
-      stepDisplayName,
-      required = true,
-    }: { id: string; stepDisplayName: string; required?: boolean }
+    { id, stepDisplayName, required = true }: BuildStepOutputParams
   ) {
     this.id = id;
     this.stepDisplayName = stepDisplayName;
     this.required = required;
   }
 
-  get value(): string | undefined {
+  public get value(): string | undefined {
     if (this.required && this._value === undefined) {
       throw new BuildStepRuntimeError(
         `Output parameter "${this.id}" for step "${this.stepDisplayName}" is required but it was not set.`
@@ -44,7 +46,7 @@ export class BuildStepOutput {
     return this._value;
   }
 
-  set(value: string | undefined): BuildStepOutput {
+  public set(value: string | undefined): BuildStepOutput {
     if (this.required && value === undefined) {
       throw new BuildStepRuntimeError(
         `Output parameter "${this.id}" for step "${this.stepDisplayName}" is required.`

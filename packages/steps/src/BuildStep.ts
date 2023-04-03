@@ -281,10 +281,9 @@ export class BuildStep {
     }
     if (nonSetRequiredOutputIds.length > 0) {
       const idsString = nonSetRequiredOutputIds.map((i) => `"${i}"`).join(', ');
-      throw new BuildStepRuntimeError(
-        `Some required output parameters have not been set: ${idsString}`,
-        { metadata: { ids: nonSetRequiredOutputIds } }
-      );
+      throw new BuildStepRuntimeError(`Some required outputs have not been set: ${idsString}`, {
+        metadata: { ids: nonSetRequiredOutputIds },
+      });
     }
   }
 

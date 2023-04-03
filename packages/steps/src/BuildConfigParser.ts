@@ -203,7 +203,12 @@ export class BuildConfigParser {
     return buildFunctionInputs.map((entry) => {
       return typeof entry === 'string'
         ? BuildStepInput.createProvider({ id: entry })
-        : BuildStepInput.createProvider({ id: entry.name, required: entry.required ?? true });
+        : BuildStepInput.createProvider({
+            id: entry.name,
+            required: entry.required ?? true,
+            defaultValue: entry.defaultValue,
+            allowedValues: entry.allowedValues,
+          });
     });
   }
 

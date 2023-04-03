@@ -2,6 +2,7 @@ import { BuildStep } from './BuildStep.js';
 import { BuildWorkflow } from './BuildWorkflow.js';
 import { BuildConfigError, BuildWorkflowError } from './errors.js';
 import { duplicates } from './utils/expodash/duplicates.js';
+import { nullthrows } from './utils/nullthrows.js';
 import { findOutputPaths } from './utils/template.js';
 
 export class BuildWorkflowValidator {
@@ -38,6 +39,18 @@ export class BuildWorkflowValidator {
       for (const currentStepInput of currentStep.inputs ?? []) {
         if (currentStepInput.defaultValue === undefined) {
           continue;
+        }
+        if (!currentStepInput.isValueOneOfAllowedValues()) {
+          const error = new BuildConfigError(
+            `Input parameter "${currentStepInput.id}" for step "${
+              currentStep.displayName
+            }" is set to "${
+              currentStepInput.value
+            }" which is not one of the allowed values: ${nullthrows(currentStepInput.allowedValues)
+              .map((i) => `"${i}"`)
+              .join(', ')}.`
+          );
+          errors.push(error);
         }
         const paths = findOutputPaths(currentStepInput.defaultValue);
         for (const { stepId: referencedStepId, outputId: referencedStepOutputId } of paths) {

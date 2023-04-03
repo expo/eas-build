@@ -33,7 +33,7 @@ describe(BuildStepInput, () => {
       required: true,
     });
     expect(() => {
-      // eslint-disable-next-line
+      // eslint-disable-next-line @typescript-eslint/no-unused-expressions
       i.value;
     }).toThrowError(
       new BuildStepRuntimeError(

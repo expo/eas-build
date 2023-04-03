@@ -5,6 +5,7 @@ import { v4 as uuidv4 } from 'uuid';
 
 import { BuildConfigParser } from '../BuildConfigParser.js';
 import { BuildStepContext } from '../BuildStepContext.js';
+import { BuildWorkflowError } from '../errors.js';
 
 const logger = createLogger({
   name: 'steps-cli',
@@ -32,4 +33,10 @@ const workingDirectory = path.resolve(process.cwd(), relativeWorkingDirectoryPat
 
 runAsync(configPath, workingDirectory).catch((err) => {
   logger.error({ err }, 'Build failed');
+  if (err instanceof BuildWorkflowError) {
+    logger.error('Failed to parse the custom build config file.');
+    for (const detailedErr of err.errors) {
+      logger.error({ err: detailedErr });
+    }
+  }
 });

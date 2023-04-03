@@ -283,8 +283,66 @@ describe(validateBuildConfig, () => {
       expect(error.message).toMatch(/"functions\.eas\/download_project" is not allowed/);
       expect(error.message).toMatch(/"functions\.!@#\$" is not allowed/);
       expect(error.message).not.toMatch(/"functions\.foo" is not allowed/);
+      expect(error.message).not.toMatch(/"functions\.upload_artifact" is not allowed/);
       expect(error.message).not.toMatch(/"functions\.build-project" is not allowed/);
-      expect(error.message).not.toMatch(/"functions\.build-project" is not allowed/);
+    });
+    test('invalid default and allowed values for function inputs', () => {
+      const buildConfig = {
+        build: {
+          steps: ['abc'],
+        },
+        functions: {
+          abc: {
+            inputs: [
+              {
+                name: 'i1',
+                default_value: 1,
+              },
+              {
+                name: 'i2',
+                default_value: '1',
+                allowed_values: ['2', '3'],
+              },
+            ],
+            command: 'echo "${ inputs.i1 } ${ inputs.i2 }"',
+          },
+        },
+      };
+
+      const error = getError<Error>(() => {
+        validateBuildConfig(buildConfig, []);
+      });
+      expect(error.message).toMatch(/"functions.abc.inputs\[0\].defaultValue" must be a string/);
+      expect(error.message).toMatch(
+        /"functions.abc.inputs\[1\].defaultValue" must be one of allowed values/
+      );
+    });
+    test('valid default and allowed values for function inputs', () => {
+      const buildConfig = {
+        build: {
+          steps: ['abc'],
+        },
+        functions: {
+          abc: {
+            inputs: [
+              {
+                name: 'i1',
+                default_value: '1',
+              },
+              {
+                name: 'i2',
+                default_value: '1',
+                allowed_values: ['1', '2'],
+              },
+            ],
+            command: 'echo "${ inputs.i1 } ${ inputs.i2 }"',
+          },
+        },
+      };
+
+      expect(() => {
+        validateBuildConfig(buildConfig, []);
+      }).not.toThrow();
     });
   });
 });

@@ -99,7 +99,7 @@ describe(BuildFunction, () => {
       expect(step.id).toBe('test2');
       expect(step.shell).toBe('/bin/zsh');
     });
-    it('creates function input and output parameters', () => {
+    it('creates function inputs and outputs', () => {
       const ctx = createMockContext();
       const inputProviders: BuildStepInputProvider[] = [
         BuildStepInput.createProvider({ id: 'input1' }),

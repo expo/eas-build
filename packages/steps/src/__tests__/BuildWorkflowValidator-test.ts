@@ -59,6 +59,46 @@ describe(BuildWorkflowValidator, () => {
     expect(error.errors[0]).toBeInstanceOf(BuildConfigError);
     expect(error.errors[0].message).toBe('Duplicated step IDs: "test1", "test3"');
   });
+  test('input set to a non-allowed value', async () => {
+    const ctx = createMockContext();
+
+    const id1 = 'test1';
+    const command1 = 'set-output output1 123';
+    const displayName1 = BuildStep.getDisplayName({ id: id1, command: command1 });
+
+    const workflow = new BuildWorkflow(ctx, {
+      buildSteps: [
+        new BuildStep(ctx, {
+          id: id1,
+          displayName: displayName1,
+          inputs: [
+            new BuildStepInput(ctx, {
+              id: 'input1',
+              stepDisplayName: displayName1,
+              required: true,
+              defaultValue: '3',
+              allowedValues: ['1', '2'],
+            }),
+          ],
+          command: command1,
+          workingDirectory: ctx.workingDirectory,
+        }),
+      ],
+      buildFunctions: {},
+    });
+
+    const validator = new BuildWorkflowValidator(workflow);
+    const error = getError<BuildWorkflowError>(() => {
+      validator.validate();
+    });
+    expect(error).toBeInstanceOf(BuildWorkflowError);
+    assert(error instanceof BuildWorkflowError);
+    expect(error.errors.length).toBe(1);
+    expect(error.errors[0]).toBeInstanceOf(BuildConfigError);
+    expect(error.errors[0].message).toBe(
+      'Input parameter "input1" for step "test1" is set to "3" which is not one of the allowed values: "1", "2".'
+    );
+  });
   test('output from future step', async () => {
     const ctx = createMockContext();
 

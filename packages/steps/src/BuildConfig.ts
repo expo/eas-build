@@ -40,7 +40,13 @@ export type BuildFunctionCallConfig = {
 };
 
 export type BuildStepInputs = Record<string, string>;
-export type BuildStepOutputs = BuildInputOutputParameters;
+export type BuildStepOutputs = (
+  | string
+  | {
+      name: string;
+      required?: boolean;
+    }
+)[];
 
 export interface BuildFunctionConfig {
   inputs?: BuildFunctionInputs;
@@ -51,18 +57,39 @@ export interface BuildFunctionConfig {
   command: string;
 }
 
-export type BuildFunctionInputs = BuildInputOutputParameters;
-export type BuildFunctionOutputs = BuildInputOutputParameters;
-
-export type BuildInputOutputParameters = (
+export type BuildFunctionInputs = (
   | string
   | {
       name: string;
+      defaultValue?: string;
+      allowedValues?: string[];
       required?: boolean;
     }
 )[];
+export type BuildFunctionOutputs = BuildStepOutputs;
 
-const BuildInputOutputParametersSchema = Joi.array().items(
+const BuildFunctionInputsSchema = Joi.array().items(
+  Joi.alternatives().try(
+    Joi.string().required(),
+    Joi.object({
+      name: Joi.string().required(),
+      defaultValue: Joi.alternatives().conditional('allowedValues', {
+        is: Joi.exist(),
+        then: Joi.string()
+          .valid(Joi.in('allowedValues'))
+          .messages({ 'any.only': '{{#label}} must be one of allowed values' }),
+        otherwise: Joi.string(),
+      }),
+      allowedValues: Joi.array().items(Joi.string()),
+      required: Joi.boolean(),
+    })
+      .rename('allowed_values', 'allowedValues')
+      .rename('default_value', 'defaultValue')
+      .required()
+  )
+);
+
+const BuildStepOutputsSchema = Joi.array().items(
   Joi.alternatives().try(
     Joi.string().required(),
     Joi.object({
@@ -97,7 +124,7 @@ const BuildStepConfigSchema = Joi.any<BuildStepConfig>()
   .when(Joi.object({ run: Joi.object().unknown().required() }), {
     then: Joi.object({
       run: BuildFunctionCallSchema.keys({
-        outputs: BuildInputOutputParametersSchema,
+        outputs: BuildStepOutputsSchema,
         command: Joi.string().required(),
       }),
     }),
@@ -114,8 +141,8 @@ const BuildStepConfigSchema = Joi.any<BuildStepConfig>()
 const BuildFunctionConfigSchema = Joi.object({
   name: Joi.string(),
   platforms: Joi.string().allow(...Object.values(BuildPlatform)),
-  inputs: BuildInputOutputParametersSchema,
-  outputs: BuildInputOutputParametersSchema,
+  inputs: BuildFunctionInputsSchema,
+  outputs: BuildStepOutputsSchema,
   command: Joi.string().required(),
   shell: Joi.string(),
 });
