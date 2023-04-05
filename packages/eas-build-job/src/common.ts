@@ -115,7 +115,10 @@ export interface Cache {
   disabled: boolean;
   clear: boolean;
   key?: string;
-  cacheDefaultPaths: boolean;
+  /**
+   * @deprecated We don't cache anything by default anymore.
+   */
+  cacheDefaultPaths?: boolean;
   customPaths: string[];
 }
 
