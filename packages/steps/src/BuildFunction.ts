@@ -20,6 +20,10 @@ export class BuildFunction {
   public readonly fn?: BuildStepFunction;
   public readonly shell?: string;
 
+  public static isFulldIdNamespaced(fullId: string): boolean {
+    return fullId.includes('/');
+  }
+
   constructor({
     namespace,
     id,

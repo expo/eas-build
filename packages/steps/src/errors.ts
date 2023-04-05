@@ -17,6 +17,8 @@ abstract class UserError extends Error {
 
 export class BuildConfigError extends UserError {}
 
+export { YAMLParseError as BuildConfigYAMLError } from 'yaml';
+
 export class BuildInternalError extends Error {}
 
 export class BuildStepRuntimeError extends UserError {}

@@ -1,7 +1,4 @@
 import assert from 'assert';
-import fs from 'fs/promises';
-
-import YAML from 'yaml';
 
 import {
   BuildConfig,
@@ -18,7 +15,7 @@ import {
   isBuildStepBareCommandRun,
   isBuildStepBareFunctionCall,
   isBuildStepCommandRun,
-  validateBuildConfig,
+  readAndValidateBuildConfigAsync,
 } from './BuildConfig.js';
 import { BuildFunction, BuildFunctionById } from './BuildFunction.js';
 import { BuildStep } from './BuildStep.js';
@@ -46,8 +43,9 @@ export class BuildConfigParser {
   }
 
   public async parseAsync(): Promise<BuildWorkflow> {
-    const rawConfig = await this.readRawConfigAsync();
-    const config = validateBuildConfig(rawConfig, this.getUniqueExternalFunctionIds());
+    const config = await readAndValidateBuildConfigAsync(this.configPath, {
+      externalFunctionIds: this.getExternalFunctionFullIds(),
+    });
     const configBuildFunctions = this.createBuildFunctionsFromConfig(config.functions);
     const buildFunctions = this.mergeBuildFunctionsWithExternal(
       configBuildFunctions,
@@ -59,11 +57,6 @@ export class BuildConfigParser {
     const workflow = new BuildWorkflow(this.ctx, { buildSteps, buildFunctions });
     new BuildWorkflowValidator(workflow).validate();
     return workflow;
-  }
-
-  private async readRawConfigAsync(): Promise<any> {
-    const contents = await fs.readFile(this.configPath, 'utf-8');
-    return YAML.parse(contents);
   }
 
   private createBuildStepFromConfig(
@@ -271,7 +264,7 @@ export class BuildConfigParser {
     );
   }
 
-  private getUniqueExternalFunctionIds(): string[] {
+  private getExternalFunctionFullIds(): string[] {
     if (this.externalFunctions === undefined) {
       return [];
     }

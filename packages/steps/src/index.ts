@@ -1,3 +1,4 @@
+export { readAndValidateBuildConfigAsync } from './BuildConfig.js';
 export { BuildConfigParser } from './BuildConfigParser.js';
 export { BuildFunction } from './BuildFunction.js';
 export { BuildStepInput } from './BuildStepInput.js';
