@@ -1,9 +1,12 @@
 import assert from 'assert';
+import fs from 'fs/promises';
 
 import Joi from 'joi';
+import YAML from 'yaml';
 
 import { BuildConfigError } from './errors.js';
 import { BuildPlatform } from './BuildPlatform.js';
+import { BuildFunction } from './BuildFunction.js';
 
 export interface BuildConfig {
   build: {
@@ -162,6 +165,40 @@ export const BuildConfigSchema = Joi.object<BuildConfig>({
   ),
 }).required();
 
+interface BuildConfigValidationParams {
+  externalFunctionIds?: string[];
+  skipNamespacedFunctionsCheck?: boolean;
+}
+
+export async function readAndValidateBuildConfigAsync(
+  configPath: string,
+  params: BuildConfigValidationParams = {}
+): Promise<BuildConfig> {
+  const rawConfig = await readRawBuildConfigAsync(configPath);
+  return validateBuildConfig(rawConfig, params);
+}
+
+export async function readRawBuildConfigAsync(configPath: string): Promise<any> {
+  const contents = await fs.readFile(configPath, 'utf-8');
+  return YAML.parse(contents);
+}
+
+export function validateBuildConfig(
+  rawConfig: object,
+  params: BuildConfigValidationParams
+): BuildConfig {
+  const { error, value: buildConfig } = BuildConfigSchema.validate(rawConfig, {
+    allowUnknown: false,
+    abortEarly: false,
+  });
+  if (error) {
+    const errorMessage = error.details.map(({ message }) => message).join(', ');
+    throw new BuildConfigError(errorMessage, { cause: error });
+  }
+  validateAllFunctionsExist(buildConfig, params);
+  return buildConfig;
+}
+
 export function isBuildStepCommandRun(step: BuildStepConfig): step is BuildStepCommandRun {
   return typeof step === 'object' && typeof step.run === 'object';
 }
@@ -180,20 +217,10 @@ export function isBuildStepBareFunctionCall(
   return typeof step === 'string';
 }
 
-export function validateBuildConfig(rawConfig: object, externalFunctionIds: string[]): BuildConfig {
-  const { error, value: buildConfig } = BuildConfigSchema.validate(rawConfig, {
-    allowUnknown: false,
-    abortEarly: false,
-  });
-  if (error) {
-    const errorMessage = error.details.map(({ message }) => message).join(', ');
-    throw new BuildConfigError(errorMessage, { cause: error });
-  }
-  validateAllFunctionsExist(buildConfig, externalFunctionIds);
-  return buildConfig;
-}
-
-function validateAllFunctionsExist(config: BuildConfig, externalFunctionIds: string[]): void {
+function validateAllFunctionsExist(
+  config: BuildConfig,
+  { externalFunctionIds = [], skipNamespacedFunctionsCheck }: BuildConfigValidationParams = {}
+): void {
   const calledFunctionsSet = new Set<string>();
   for (const step of config.build.steps) {
     if (typeof step === 'string') {
@@ -210,6 +237,9 @@ function validateAllFunctionsExist(config: BuildConfig, externalFunctionIds: str
   const calledFunctions = Array.from(calledFunctionsSet);
   const externalFunctionIdsSet = new Set(externalFunctionIds);
   const nonExistentFunctions = calledFunctions.filter((calledFunction) => {
+    if (BuildFunction.isFulldIdNamespaced(calledFunction) && skipNamespacedFunctionsCheck) {
+      return false;
+    }
     return (
       !(calledFunction in (config.functions ?? {})) && !externalFunctionIdsSet.has(calledFunction)
     );

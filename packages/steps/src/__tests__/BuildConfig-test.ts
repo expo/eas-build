@@ -1,3 +1,7 @@
+import assert from 'assert';
+import path from 'path';
+import url from 'url';
+
 import {
   BuildStepBareCommandRun,
   BuildStepBareFunctionCall,
@@ -7,18 +11,55 @@ import {
   isBuildStepBareFunctionCall,
   isBuildStepCommandRun,
   isBuildStepFunctionCall,
+  readRawBuildConfigAsync,
+  readAndValidateBuildConfigAsync,
   validateBuildConfig,
 } from '../BuildConfig.js';
-import { BuildConfigError } from '../errors.js';
+import { BuildConfigError, BuildConfigYAMLError } from '../errors.js';
 
-import { getError } from './utils/error.js';
+import { getError, getErrorAsync } from './utils/error.js';
+
+const __dirname = url.fileURLToPath(new URL('.', import.meta.url));
+
+describe(readAndValidateBuildConfigAsync, () => {
+  test('valid custom build config', async () => {
+    const config = await readAndValidateBuildConfigAsync(
+      path.join(__dirname, './fixtures/build.yml'),
+      { externalFunctionIds: [] }
+    );
+    expect(typeof config).toBe('object');
+    expect(config.build.name).toBe('Foobar');
+    assert(isBuildStepBareCommandRun(config.build.steps[0]));
+    expect(config.build.steps[0].run).toBe('echo "Hi!"');
+  });
+});
+
+describe(readRawBuildConfigAsync, () => {
+  test('non-existent file', async () => {
+    await expect(readRawBuildConfigAsync('/fake/path/a.yml')).rejects.toThrowError(
+      /no such file or directory/
+    );
+  });
+  test('invalid yaml file', async () => {
+    const error = await getErrorAsync(async () => {
+      return await readRawBuildConfigAsync(path.join(__dirname, './fixtures/invalid.yml'));
+    });
+    expect(error).toBeInstanceOf(BuildConfigYAMLError);
+    expect(error.message).toMatch(/Map keys must be unique at line/);
+  });
+
+  test('valid yaml file', async () => {
+    const rawConfig = await readRawBuildConfigAsync(path.join(__dirname, './fixtures/build.yml'));
+    expect(typeof rawConfig).toBe('object');
+  });
+});
 
 describe(validateBuildConfig, () => {
   test('can throw BuildConfigError', () => {
     const buildConfig = {};
 
     expect(() => {
-      validateBuildConfig(buildConfig, []);
+      validateBuildConfig(buildConfig, { externalFunctionIds: [] });
     }).toThrowError(BuildConfigError);
   });
 
@@ -35,7 +76,7 @@ describe(validateBuildConfig, () => {
       };
 
       expect(() => {
-        validateBuildConfig(buildConfig, []);
+        validateBuildConfig(buildConfig, { externalFunctionIds: [] });
       }).not.toThrowError();
     });
 
@@ -52,7 +93,7 @@ describe(validateBuildConfig, () => {
         };
 
         expect(() => {
-          validateBuildConfig(buildConfig, []);
+          validateBuildConfig(buildConfig, { externalFunctionIds: [] });
         }).toThrowError(/".*\.command" is required/);
       });
       test('non-existent fields', () => {
@@ -70,7 +111,7 @@ describe(validateBuildConfig, () => {
         };
 
         expect(() => {
-          validateBuildConfig(buildConfig, []);
+          validateBuildConfig(buildConfig, { externalFunctionIds: [] });
         }).toThrowError(/".*\.blah" is not allowed/);
       });
       test('valid command', () => {
@@ -87,7 +128,7 @@ describe(validateBuildConfig, () => {
         };
 
         expect(() => {
-          validateBuildConfig(buildConfig, []);
+          validateBuildConfig(buildConfig, { externalFunctionIds: [] });
         }).not.toThrowError();
       });
     });
@@ -106,7 +147,7 @@ describe(validateBuildConfig, () => {
         };
 
         expect(() => {
-          validateBuildConfig(buildConfig, []);
+          validateBuildConfig(buildConfig, { externalFunctionIds: [] });
         }).not.toThrowError();
       });
       test('non-existent fields', () => {
@@ -128,7 +169,7 @@ describe(validateBuildConfig, () => {
         };
 
         expect(() => {
-          validateBuildConfig(buildConfig, []);
+          validateBuildConfig(buildConfig, { externalFunctionIds: [] });
         }).toThrowError(/".*\.blah" is not allowed/);
       });
       test('command is not allowed', () => {
@@ -150,7 +191,7 @@ describe(validateBuildConfig, () => {
         };
 
         expect(() => {
-          validateBuildConfig(buildConfig, []);
+          validateBuildConfig(buildConfig, { externalFunctionIds: [] });
         }).toThrowError(/".*\.command" is not allowed/);
       });
       test('call with inputs', () => {
@@ -174,7 +215,7 @@ describe(validateBuildConfig, () => {
         };
 
         expect(() => {
-          validateBuildConfig(buildConfig, []);
+          validateBuildConfig(buildConfig, { externalFunctionIds: [] });
         }).not.toThrowError();
       });
       test('at most one function call per step', () => {
@@ -206,7 +247,7 @@ describe(validateBuildConfig, () => {
         };
 
         expect(() => {
-          validateBuildConfig(buildConfig, []);
+          validateBuildConfig(buildConfig, { externalFunctionIds: [] });
         }).toThrowError();
       });
       test('non-existent functions', () => {
@@ -217,8 +258,36 @@ describe(validateBuildConfig, () => {
         };
 
         expect(() => {
-          validateBuildConfig(buildConfig, []);
+          validateBuildConfig(buildConfig, { externalFunctionIds: [] });
         }).toThrowError(/Calling non-existent functions: "say_hi", "say_hello"/);
+      });
+      test('non-existent namespaced functions with skipNamespacedFunctionsCheck = false', () => {
+        const buildConfig = {
+          build: {
+            steps: ['abc/say_hi', 'abc/say_hello'],
+          },
+        };
+
+        expect(() => {
+          validateBuildConfig(buildConfig, {
+            externalFunctionIds: [],
+            skipNamespacedFunctionsCheck: false,
+          });
+        }).toThrowError(/Calling non-existent functions: "abc\/say_hi", "abc\/say_hello"/);
+      });
+      test('non-existent namespaced functions with skipNamespacedFunctionsCheck = true', () => {
+        const buildConfig = {
+          build: {
+            steps: ['abc/say_hi', 'abc/say_hello'],
+          },
+        };
+
+        expect(() => {
+          validateBuildConfig(buildConfig, {
+            externalFunctionIds: [],
+            skipNamespacedFunctionsCheck: true,
+          });
+        }).not.toThrow();
       });
       test('works with external functions', () => {
         const buildConfig = {
@@ -228,7 +297,7 @@ describe(validateBuildConfig, () => {
         };
 
         expect(() => {
-          validateBuildConfig(buildConfig, ['say_hi', 'say_hello']);
+          validateBuildConfig(buildConfig, { externalFunctionIds: ['say_hi', 'say_hello'] });
         }).not.toThrowError();
       });
     });
@@ -246,7 +315,7 @@ describe(validateBuildConfig, () => {
       };
 
       expect(() => {
-        validateBuildConfig(buildConfig, []);
+        validateBuildConfig(buildConfig, { externalFunctionIds: [] });
       }).toThrowError(/".*\.say_hi\.command" is required/);
     });
     test('"run" is not allowed for function name', () => {
@@ -260,7 +329,7 @@ describe(validateBuildConfig, () => {
       };
 
       expect(() => {
-        validateBuildConfig(buildConfig, []);
+        validateBuildConfig(buildConfig, { externalFunctionIds: [] });
       }).toThrowError(/"functions.run" is not allowed/);
     });
     test('function IDs must be alphanumeric (including underscore and dash)', () => {
@@ -278,7 +347,7 @@ describe(validateBuildConfig, () => {
       };
 
       const error = getError<Error>(() => {
-        validateBuildConfig(buildConfig, []);
+        validateBuildConfig(buildConfig, { externalFunctionIds: [] });
       });
       expect(error.message).toMatch(/"functions\.eas\/download_project" is not allowed/);
       expect(error.message).toMatch(/"functions\.!@#\$" is not allowed/);
@@ -310,7 +379,7 @@ describe(validateBuildConfig, () => {
       };
 
       const error = getError<Error>(() => {
-        validateBuildConfig(buildConfig, []);
+        validateBuildConfig(buildConfig, { externalFunctionIds: [] });
       });
       expect(error.message).toMatch(/"functions.abc.inputs\[0\].defaultValue" must be a string/);
       expect(error.message).toMatch(
@@ -341,7 +410,7 @@ describe(validateBuildConfig, () => {
       };
 
       expect(() => {
-        validateBuildConfig(buildConfig, []);
+        validateBuildConfig(buildConfig, { externalFunctionIds: [] });
       }).not.toThrow();
     });
   });
