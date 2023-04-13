@@ -43,8 +43,7 @@ function createTestIosJob({
     cache: {
       clear: false,
       disabled: false,
-      cacheDefaultPaths: true,
-      customPaths: [],
+      paths: [],
     },
     secrets: {
       buildCredentials,
