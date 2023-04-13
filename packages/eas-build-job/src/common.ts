@@ -119,7 +119,11 @@ export interface Cache {
    * @deprecated We don't cache anything by default anymore.
    */
   cacheDefaultPaths?: boolean;
-  customPaths: string[];
+  /**
+   * @deprecated We use paths now since there is no default caching anymore.
+   */
+  customPaths?: string[];
+  paths: string[];
 }
 
 export const CacheSchema = Joi.object({
@@ -128,6 +132,7 @@ export const CacheSchema = Joi.object({
   key: Joi.string().allow('').max(128),
   cacheDefaultPaths: Joi.boolean(),
   customPaths: Joi.array().items(Joi.string()).default([]),
+  paths: Joi.array().items(Joi.string()).default([]),
 });
 
 export interface BuildPhaseStats {
