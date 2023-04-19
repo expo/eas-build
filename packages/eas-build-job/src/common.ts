@@ -131,7 +131,7 @@ export const CacheSchema = Joi.object({
   clear: Joi.boolean().default(false),
   key: Joi.string().allow('').max(128),
   cacheDefaultPaths: Joi.boolean(),
-  customPaths: Joi.array().items(Joi.string()).default([]),
+  customPaths: Joi.array().items(Joi.string()),
   paths: Joi.array().items(Joi.string()).default([]),
 });
 
