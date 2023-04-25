@@ -1,0 +1,10 @@
+import:
+  - functions-file-1.yml
+
+build:
+  name: Import!
+  steps:
+    - say_hi:
+        inputs:
+          name: Dominik
+    - say_hi_wojtek

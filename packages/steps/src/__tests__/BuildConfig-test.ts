@@ -13,7 +13,14 @@ import {
   isBuildStepFunctionCall,
   readRawBuildConfigAsync,
   readAndValidateBuildConfigAsync,
-  validateBuildConfig,
+  validateConfig,
+  BuildFunctionsConfigFileSchema,
+  BuildConfigSchema,
+  validateAllFunctionsExist,
+  BuildConfig,
+  mergeConfigWithImportedFunctions,
+  BuildFunctions,
+  readAndValidateBuildFunctionsConfigFileAsync,
 } from '../BuildConfig.js';
 import { BuildConfigError, BuildConfigYAMLError } from '../errors.js';
 
@@ -25,12 +32,41 @@ describe(readAndValidateBuildConfigAsync, () => {
   test('valid custom build config', async () => {
     const config = await readAndValidateBuildConfigAsync(
       path.join(__dirname, './fixtures/build.yml'),
-      { externalFunctionIds: [] }
+      {
+        externalFunctionIds: [],
+      }
     );
     expect(typeof config).toBe('object');
     expect(config.build.name).toBe('Foobar');
     assert(isBuildStepBareCommandRun(config.build.steps[0]));
     expect(config.build.steps[0].run).toBe('echo "Hi!"');
+  });
+  test('valid custom build config with imports', async () => {
+    const config = await readAndValidateBuildConfigAsync(
+      path.join(__dirname, './fixtures/build-with-import.yml'),
+      {
+        externalFunctionIds: [],
+      }
+    );
+    expect(typeof config).toBe('object');
+    expect(config.build.name).toBe('Import!');
+    assert(isBuildStepFunctionCall(config.build.steps[0]));
+    expect(config.build.steps[0]).toMatchObject({ say_hi: expect.any(Object) });
+    assert(isBuildStepBareFunctionCall(config.build.steps[1]));
+    expect(config.build.steps[1]).toBe('say_hi_wojtek');
+    expect(config.functions?.say_hi).toBeDefined();
+    expect(config.functions?.say_hi_wojtek).toBeDefined();
+  });
+});
+
+describe(readAndValidateBuildFunctionsConfigFileAsync, () => {
+  test('valid functions config', async () => {
+    const config = await readAndValidateBuildFunctionsConfigFileAsync(
+      path.join(__dirname, './fixtures/functions-file-1.yml')
+    );
+    expect(typeof config).toBe('object');
+    expect(config.import?.[0]).toBe('functions-file-2.yml');
+    expect(config.functions?.say_hi).toBeDefined();
   });
 });
 
@@ -54,365 +90,474 @@ describe(readRawBuildConfigAsync, () => {
   });
 });
 
-describe(validateBuildConfig, () => {
+describe(validateConfig, () => {
   test('can throw BuildConfigError', () => {
     const buildConfig = {};
 
     expect(() => {
-      validateBuildConfig(buildConfig, { externalFunctionIds: [] });
+      validateConfig(BuildConfigSchema, buildConfig);
     }).toThrowError(BuildConfigError);
   });
 
-  describe('steps', () => {
-    test('inline command', () => {
-      const buildConfig = {
-        build: {
-          steps: [
-            {
-              run: 'echo 123',
-            },
-          ],
-        },
-      };
+  describe('with BuildConfigSchema', () => {
+    describe('import', () => {
+      test('non-yaml files', () => {
+        const buildConfig = {
+          import: ['a.apk', 'b.ipa'],
+          build: {
+            steps: [{ run: 'echo 123' }],
+          },
+        };
 
-      expect(() => {
-        validateBuildConfig(buildConfig, { externalFunctionIds: [] });
-      }).not.toThrowError();
+        const error = getError<Error>(() => {
+          validateConfig(BuildConfigSchema, buildConfig);
+        });
+        expect(error.message).toMatch(
+          /"import\[0\]" with value ".*" fails to match the required pattern/
+        );
+        expect(error.message).toMatch(
+          /"import\[1\]" with value ".*" fails to match the required pattern/
+        );
+      });
+      test('yaml files', () => {
+        const buildConfig = {
+          import: ['a.yaml', 'b.yml'],
+          build: {
+            steps: [{ run: 'echo 123' }],
+          },
+        };
+
+        expect(() => {
+          validateConfig(BuildConfigSchema, buildConfig);
+        }).not.toThrowError();
+      });
     });
 
-    describe('commands', () => {
+    describe('build.steps', () => {
+      test('inline command', () => {
+        const buildConfig = {
+          build: {
+            steps: [
+              {
+                run: 'echo 123',
+              },
+            ],
+          },
+        };
+
+        expect(() => {
+          validateConfig(BuildConfigSchema, buildConfig);
+        }).not.toThrowError();
+      });
+
+      describe('commands', () => {
+        test('command is required', () => {
+          const buildConfig = {
+            build: {
+              steps: [
+                {
+                  run: {},
+                },
+              ],
+            },
+          };
+
+          expect(() => {
+            validateConfig(BuildConfigSchema, buildConfig);
+          }).toThrowError(/".*\.command" is required/);
+        });
+        test('non-existent fields', () => {
+          const buildConfig = {
+            build: {
+              steps: [
+                {
+                  run: {
+                    command: 'echo 123',
+                    blah: '123',
+                  },
+                },
+              ],
+            },
+          };
+
+          expect(() => {
+            validateConfig(BuildConfigSchema, buildConfig);
+          }).toThrowError(/".*\.blah" is not allowed/);
+        });
+        test('valid command', () => {
+          const buildConfig = {
+            build: {
+              steps: [
+                {
+                  run: {
+                    command: 'echo 123',
+                  },
+                },
+              ],
+            },
+          };
+
+          expect(() => {
+            validateConfig(BuildConfigSchema, buildConfig);
+          }).not.toThrowError();
+        });
+      });
+
+      describe('function calls', () => {
+        test('bare call', () => {
+          const buildConfig = {
+            build: {
+              steps: ['say_hi'],
+            },
+            functions: {
+              say_hi: {
+                command: 'echo Hi!',
+              },
+            },
+          };
+
+          expect(() => {
+            validateConfig(BuildConfigSchema, buildConfig);
+          }).not.toThrowError();
+        });
+        test('non-existent fields', () => {
+          const buildConfig = {
+            build: {
+              steps: [
+                {
+                  say_hi: {
+                    blah: '123',
+                  },
+                },
+              ],
+            },
+            functions: {
+              say_hi: {
+                command: 'echo Hi!',
+              },
+            },
+          };
+
+          expect(() => {
+            validateConfig(BuildConfigSchema, buildConfig);
+          }).toThrowError(/".*\.blah" is not allowed/);
+        });
+        test('command is not allowed', () => {
+          const buildConfig = {
+            build: {
+              steps: [
+                {
+                  say_hi: {
+                    command: 'echo 123',
+                  },
+                },
+              ],
+            },
+            functions: {
+              say_hi: {
+                command: 'echo Hi!',
+              },
+            },
+          };
+
+          expect(() => {
+            validateConfig(BuildConfigSchema, buildConfig);
+          }).toThrowError(/".*\.command" is not allowed/);
+        });
+        test('call with inputs', () => {
+          const buildConfig = {
+            build: {
+              steps: [
+                {
+                  say_hi: {
+                    inputs: {
+                      name: 'Dominik',
+                    },
+                  },
+                },
+              ],
+            },
+            functions: {
+              say_hi: {
+                command: 'echo "Hi, ${ inputs.name }!"',
+              },
+            },
+          };
+
+          expect(() => {
+            validateConfig(BuildConfigSchema, buildConfig);
+          }).not.toThrowError();
+        });
+        test('at most one function call per step', () => {
+          const buildConfig = {
+            build: {
+              steps: [
+                {
+                  say_hi: {
+                    inputs: {
+                      name: 'Dominik',
+                    },
+                  },
+                  say_hello: {
+                    inputs: {
+                      name: 'Dominik',
+                    },
+                  },
+                },
+              ],
+            },
+            functions: {
+              say_hi: {
+                command: 'echo "Hi, ${ inputs.name }!"',
+              },
+              say_hello: {
+                command: 'echo "Hello, ${ inputs.name }!"',
+              },
+            },
+          };
+
+          expect(() => {
+            validateConfig(BuildConfigSchema, buildConfig);
+          }).toThrowError();
+        });
+      });
+    });
+
+    describe('functions', () => {
       test('command is required', () => {
         const buildConfig = {
           build: {
-            steps: [
-              {
-                run: {},
-              },
-            ],
-          },
-        };
-
-        expect(() => {
-          validateBuildConfig(buildConfig, { externalFunctionIds: [] });
-        }).toThrowError(/".*\.command" is required/);
-      });
-      test('non-existent fields', () => {
-        const buildConfig = {
-          build: {
-            steps: [
-              {
-                run: {
-                  command: 'echo 123',
-                  blah: '123',
-                },
-              },
-            ],
-          },
-        };
-
-        expect(() => {
-          validateBuildConfig(buildConfig, { externalFunctionIds: [] });
-        }).toThrowError(/".*\.blah" is not allowed/);
-      });
-      test('valid command', () => {
-        const buildConfig = {
-          build: {
-            steps: [
-              {
-                run: {
-                  command: 'echo 123',
-                },
-              },
-            ],
-          },
-        };
-
-        expect(() => {
-          validateBuildConfig(buildConfig, { externalFunctionIds: [] });
-        }).not.toThrowError();
-      });
-    });
-
-    describe('function calls', () => {
-      test('bare call', () => {
-        const buildConfig = {
-          build: {
-            steps: ['say_hi'],
+            steps: [],
           },
           functions: {
-            say_hi: {
-              command: 'echo Hi!',
-            },
+            say_hi: {},
           },
         };
 
         expect(() => {
-          validateBuildConfig(buildConfig, { externalFunctionIds: [] });
-        }).not.toThrowError();
+          validateConfig(BuildConfigSchema, buildConfig);
+        }).toThrowError(/".*\.say_hi\.command" is required/);
       });
-      test('non-existent fields', () => {
+      test('"run" is not allowed for function name', () => {
         const buildConfig = {
           build: {
-            steps: [
-              {
-                say_hi: {
-                  blah: '123',
-                },
-              },
-            ],
+            steps: [],
           },
           functions: {
-            say_hi: {
-              command: 'echo Hi!',
-            },
+            run: {},
           },
         };
 
         expect(() => {
-          validateBuildConfig(buildConfig, { externalFunctionIds: [] });
-        }).toThrowError(/".*\.blah" is not allowed/);
+          validateConfig(BuildConfigSchema, buildConfig);
+        }).toThrowError(/"functions.run" is not allowed/);
       });
-      test('command is not allowed', () => {
+      test('function IDs must be alphanumeric (including underscore and dash)', () => {
         const buildConfig = {
           build: {
-            steps: [
-              {
-                say_hi: {
-                  command: 'echo 123',
-                },
-              },
-            ],
+            steps: [],
           },
           functions: {
-            say_hi: {
-              command: 'echo Hi!',
-            },
+            foo: {},
+            upload_artifact: {},
+            'build-project': {},
+            'eas/download_project': {},
+            '!@#$': {},
           },
         };
 
-        expect(() => {
-          validateBuildConfig(buildConfig, { externalFunctionIds: [] });
-        }).toThrowError(/".*\.command" is not allowed/);
+        const error = getError<Error>(() => {
+          validateConfig(BuildConfigSchema, buildConfig);
+        });
+        expect(error.message).toMatch(/"functions\.eas\/download_project" is not allowed/);
+        expect(error.message).toMatch(/"functions\.!@#\$" is not allowed/);
+        expect(error.message).not.toMatch(/"functions\.foo" is not allowed/);
+        expect(error.message).not.toMatch(/"functions\.upload_artifact" is not allowed/);
+        expect(error.message).not.toMatch(/"functions\.build-project" is not allowed/);
       });
-      test('call with inputs', () => {
+      test('invalid default and allowed values for function inputs', () => {
         const buildConfig = {
           build: {
-            steps: [
-              {
-                say_hi: {
-                  inputs: {
-                    name: 'Dominik',
-                  },
-                },
-              },
-            ],
+            steps: ['abc'],
           },
           functions: {
-            say_hi: {
-              command: 'echo "Hi, ${ inputs.name }!"',
+            abc: {
+              inputs: [
+                {
+                  name: 'i1',
+                  default_value: 1,
+                },
+                {
+                  name: 'i2',
+                  default_value: '1',
+                  allowed_values: ['2', '3'],
+                },
+              ],
+              command: 'echo "${ inputs.i1 } ${ inputs.i2 }"',
             },
           },
         };
 
-        expect(() => {
-          validateBuildConfig(buildConfig, { externalFunctionIds: [] });
-        }).not.toThrowError();
+        const error = getError<Error>(() => {
+          validateConfig(BuildConfigSchema, buildConfig);
+        });
+        expect(error.message).toMatch(/"functions.abc.inputs\[0\].defaultValue" must be a string/);
+        expect(error.message).toMatch(
+          /"functions.abc.inputs\[1\].defaultValue" must be one of allowed values/
+        );
       });
-      test('at most one function call per step', () => {
+      test('valid default and allowed values for function inputs', () => {
         const buildConfig = {
           build: {
-            steps: [
-              {
-                say_hi: {
-                  inputs: {
-                    name: 'Dominik',
-                  },
-                },
-                say_hello: {
-                  inputs: {
-                    name: 'Dominik',
-                  },
-                },
-              },
-            ],
+            steps: ['abc'],
           },
           functions: {
-            say_hi: {
-              command: 'echo "Hi, ${ inputs.name }!"',
+            abc: {
+              inputs: [
+                {
+                  name: 'i1',
+                  default_value: '1',
+                },
+                {
+                  name: 'i2',
+                  default_value: '1',
+                  allowed_values: ['1', '2'],
+                },
+              ],
+              command: 'echo "${ inputs.i1 } ${ inputs.i2 }"',
             },
-            say_hello: {
-              command: 'echo "Hello, ${ inputs.name }!"',
-            },
           },
         };
 
         expect(() => {
-          validateBuildConfig(buildConfig, { externalFunctionIds: [] });
-        }).toThrowError();
-      });
-      test('non-existent functions', () => {
-        const buildConfig = {
-          build: {
-            steps: ['say_hi', 'say_hello'],
-          },
-        };
-
-        expect(() => {
-          validateBuildConfig(buildConfig, { externalFunctionIds: [] });
-        }).toThrowError(/Calling non-existent functions: "say_hi", "say_hello"/);
-      });
-      test('non-existent namespaced functions with skipNamespacedFunctionsCheck = false', () => {
-        const buildConfig = {
-          build: {
-            steps: ['abc/say_hi', 'abc/say_hello'],
-          },
-        };
-
-        expect(() => {
-          validateBuildConfig(buildConfig, {
-            externalFunctionIds: [],
-            skipNamespacedFunctionsCheck: false,
-          });
-        }).toThrowError(/Calling non-existent functions: "abc\/say_hi", "abc\/say_hello"/);
-      });
-      test('non-existent namespaced functions with skipNamespacedFunctionsCheck = true', () => {
-        const buildConfig = {
-          build: {
-            steps: ['abc/say_hi', 'abc/say_hello'],
-          },
-        };
-
-        expect(() => {
-          validateBuildConfig(buildConfig, {
-            externalFunctionIds: [],
-            skipNamespacedFunctionsCheck: true,
-          });
+          validateConfig(BuildConfigSchema, buildConfig);
         }).not.toThrow();
-      });
-      test('works with external functions', () => {
-        const buildConfig = {
-          build: {
-            steps: ['say_hi', 'say_hello'],
-          },
-        };
-
-        expect(() => {
-          validateBuildConfig(buildConfig, { externalFunctionIds: ['say_hi', 'say_hello'] });
-        }).not.toThrowError();
       });
     });
   });
 
-  describe('functions', () => {
-    test('command is required', () => {
-      const buildConfig = {
-        build: {
-          steps: [],
-        },
-        functions: {
-          say_hi: {},
-        },
-      };
-
-      expect(() => {
-        validateBuildConfig(buildConfig, { externalFunctionIds: [] });
-      }).toThrowError(/".*\.say_hi\.command" is required/);
-    });
-    test('"run" is not allowed for function name', () => {
-      const buildConfig = {
-        build: {
-          steps: [],
-        },
-        functions: {
-          run: {},
-        },
-      };
-
-      expect(() => {
-        validateBuildConfig(buildConfig, { externalFunctionIds: [] });
-      }).toThrowError(/"functions.run" is not allowed/);
-    });
-    test('function IDs must be alphanumeric (including underscore and dash)', () => {
-      const buildConfig = {
-        build: {
-          steps: [],
-        },
-        functions: {
-          foo: {},
-          upload_artifact: {},
-          'build-project': {},
-          'eas/download_project': {},
-          '!@#$': {},
-        },
-      };
-
-      const error = getError<Error>(() => {
-        validateBuildConfig(buildConfig, { externalFunctionIds: [] });
-      });
-      expect(error.message).toMatch(/"functions\.eas\/download_project" is not allowed/);
-      expect(error.message).toMatch(/"functions\.!@#\$" is not allowed/);
-      expect(error.message).not.toMatch(/"functions\.foo" is not allowed/);
-      expect(error.message).not.toMatch(/"functions\.upload_artifact" is not allowed/);
-      expect(error.message).not.toMatch(/"functions\.build-project" is not allowed/);
-    });
-    test('invalid default and allowed values for function inputs', () => {
-      const buildConfig = {
+  describe('with BuildFunctionsConfigFileSchema', () => {
+    test('"build" is not allowed', () => {
+      const buildFunctionsConfig = {
         build: {
           steps: ['abc'],
         },
         functions: {
-          abc: {
-            inputs: [
-              {
-                name: 'i1',
-                default_value: 1,
-              },
-              {
-                name: 'i2',
-                default_value: '1',
-                allowed_values: ['2', '3'],
-              },
-            ],
-            command: 'echo "${ inputs.i1 } ${ inputs.i2 }"',
-          },
+          abc: { command: 'echo abc' },
         },
       };
-
       const error = getError<Error>(() => {
-        validateBuildConfig(buildConfig, { externalFunctionIds: [] });
+        validateConfig(BuildFunctionsConfigFileSchema, buildFunctionsConfig);
       });
-      expect(error.message).toMatch(/"functions.abc.inputs\[0\].defaultValue" must be a string/);
-      expect(error.message).toMatch(
-        /"functions.abc.inputs\[1\].defaultValue" must be one of allowed values/
-      );
+      expect(error).toBeInstanceOf(BuildConfigError);
+      expect(error.message).toBe('"build" is not allowed');
     });
-    test('valid default and allowed values for function inputs', () => {
-      const buildConfig = {
-        build: {
-          steps: ['abc'],
-        },
+    test('valid config', () => {
+      const buildFunctionsConfig = {
         functions: {
-          abc: {
-            inputs: [
-              {
-                name: 'i1',
-                default_value: '1',
-              },
-              {
-                name: 'i2',
-                default_value: '1',
-                allowed_values: ['1', '2'],
-              },
-            ],
-            command: 'echo "${ inputs.i1 } ${ inputs.i2 }"',
-          },
+          abc: { command: 'echo abc' },
         },
       };
-
       expect(() => {
-        validateBuildConfig(buildConfig, { externalFunctionIds: [] });
+        validateConfig(BuildFunctionsConfigFileSchema, buildFunctionsConfig);
       }).not.toThrow();
     });
+  });
+});
+
+describe(mergeConfigWithImportedFunctions, () => {
+  test('merging config with imported functions', () => {
+    const buildConfig: BuildConfig = {
+      import: ['func.yaml'],
+      build: {
+        steps: ['a', 'b', 'c'],
+      },
+      functions: {
+        a: { command: 'echo a' },
+      },
+    };
+    const importedFunctions: BuildFunctions = {
+      b: { command: 'echo b' },
+      c: { command: 'echo c' },
+    };
+    mergeConfigWithImportedFunctions(buildConfig, importedFunctions);
+    expect(buildConfig.functions?.b).toBe(importedFunctions.b);
+    expect(buildConfig.functions?.c).toBe(importedFunctions.c);
+  });
+  test('functions from base config shadow the imported ones', () => {
+    const buildConfig: BuildConfig = {
+      build: {
+        steps: ['a', 'b', 'c'],
+      },
+      functions: {
+        a: { command: 'echo a1' },
+      },
+    };
+    const importedFunctions: BuildFunctions = {
+      a: { command: 'echo a2' },
+      b: { command: 'echo b' },
+      c: { command: 'echo c' },
+    };
+    mergeConfigWithImportedFunctions(buildConfig, importedFunctions);
+    expect(buildConfig.functions?.a).not.toBe(importedFunctions.a);
+    expect(buildConfig.functions?.a.command).toBe('echo a1');
+    expect(buildConfig.functions?.b).toBe(importedFunctions.b);
+    expect(buildConfig.functions?.c).toBe(importedFunctions.c);
+  });
+});
+
+describe(validateAllFunctionsExist, () => {
+  test('non-existent functions', () => {
+    const buildConfig: BuildConfig = {
+      build: {
+        steps: ['say_hi', 'say_hello'],
+      },
+    };
+
+    expect(() => {
+      validateAllFunctionsExist(buildConfig, { externalFunctionIds: [] });
+    }).toThrowError(/Calling non-existent functions: "say_hi", "say_hello"/);
+  });
+  test('non-existent namespaced functions with skipNamespacedFunctionsCheck = false', () => {
+    const buildConfig: BuildConfig = {
+      build: {
+        steps: ['abc/say_hi', 'abc/say_hello'],
+      },
+    };
+
+    expect(() => {
+      validateAllFunctionsExist(buildConfig, {
+        externalFunctionIds: [],
+        skipNamespacedFunctionsCheck: false,
+      });
+    }).toThrowError(/Calling non-existent functions: "abc\/say_hi", "abc\/say_hello"/);
+  });
+  test('non-existent namespaced functions with skipNamespacedFunctionsCheck = true', () => {
+    const buildConfig: BuildConfig = {
+      build: {
+        steps: ['abc/say_hi', 'abc/say_hello'],
+      },
+    };
+
+    expect(() => {
+      validateAllFunctionsExist(buildConfig, {
+        externalFunctionIds: [],
+        skipNamespacedFunctionsCheck: true,
+      });
+    }).not.toThrow();
+  });
+  test('works with external functions', () => {
+    const buildConfig: BuildConfig = {
+      build: {
+        steps: ['say_hi', 'say_hello'],
+      },
+    };
+
+    expect(() => {
+      validateAllFunctionsExist(buildConfig, {
+        externalFunctionIds: ['say_hi', 'say_hello'],
+      });
+    }).not.toThrowError();
   });
 });
 

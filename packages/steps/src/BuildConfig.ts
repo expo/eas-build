@@ -1,19 +1,26 @@
 import assert from 'assert';
 import fs from 'fs/promises';
+import path from 'path';
 
 import Joi from 'joi';
 import YAML from 'yaml';
 
-import { BuildConfigError } from './errors.js';
+import { BuildConfigError, BuildWorkflowError } from './errors.js';
 import { BuildPlatform } from './BuildPlatform.js';
 import { BuildFunction } from './BuildFunction.js';
 
-export interface BuildConfig {
+export type BuildFunctions = Record<string, BuildFunctionConfig>;
+
+interface BuildFunctionsConfigFile {
+  import?: string[];
+  functions?: BuildFunctions;
+}
+
+export interface BuildConfig extends BuildFunctionsConfigFile {
   build: {
     name?: string;
     steps: BuildStepConfig[];
   };
-  functions?: Record<string, BuildFunctionConfig>;
 }
 
 export type BuildStepConfig =
@@ -150,11 +157,8 @@ const BuildFunctionConfigSchema = Joi.object({
   shell: Joi.string(),
 });
 
-export const BuildConfigSchema = Joi.object<BuildConfig>({
-  build: Joi.object({
-    name: Joi.string(),
-    steps: Joi.array().items(BuildStepConfigSchema.required()).required(),
-  }).required(),
+export const BuildFunctionsConfigFileSchema = Joi.object<BuildFunctionsConfigFile>({
+  import: Joi.array().items(Joi.string().pattern(/\.y(a)?ml$/)),
   functions: Joi.object().pattern(
     Joi.string()
       .pattern(/^[\w-]+$/, 'function names')
@@ -163,6 +167,13 @@ export const BuildConfigSchema = Joi.object<BuildConfig>({
       .disallow('run'),
     BuildFunctionConfigSchema.required()
   ),
+}).required();
+
+export const BuildConfigSchema = BuildFunctionsConfigFileSchema.append<BuildConfig>({
+  build: Joi.object({
+    name: Joi.string(),
+    steps: Joi.array().items(BuildStepConfigSchema.required()).required(),
+  }).required(),
 }).required();
 
 interface BuildConfigValidationParams {
@@ -175,7 +186,71 @@ export async function readAndValidateBuildConfigAsync(
   params: BuildConfigValidationParams = {}
 ): Promise<BuildConfig> {
   const rawConfig = await readRawBuildConfigAsync(configPath);
-  return validateBuildConfig(rawConfig, params);
+
+  const config = validateConfig(BuildConfigSchema, rawConfig);
+  const importedFunctions = await importFunctionsAsync(configPath, config.import);
+  mergeConfigWithImportedFunctions(config, importedFunctions);
+  validateAllFunctionsExist(config, params);
+  return config;
+}
+
+async function importFunctionsAsync(
+  baseConfigPath: string,
+  configPathsToImport?: string[]
+): Promise<BuildFunctions> {
+  if (!configPathsToImport) {
+    return {};
+  }
+
+  const baseConfigDir = path.dirname(baseConfigPath);
+
+  const errors: BuildConfigError[] = [];
+  const importedFunctions: BuildFunctions = {};
+  // this is a set of visited files identified by ABSOLUTE paths
+  const visitedFiles = new Set<string>([baseConfigPath]);
+  const configFilesToVisit = [
+    ...(configPathsToImport ?? []).map((childConfigRelativePath) =>
+      path.resolve(baseConfigDir, childConfigRelativePath)
+    ),
+  ];
+  while (configFilesToVisit.length > 0) {
+    const childConfigPath = configFilesToVisit.shift();
+    assert(childConfigPath, 'Guaranteed by loop condition');
+    if (visitedFiles.has(childConfigPath)) {
+      continue;
+    }
+    try {
+      const childConfig = await readAndValidateBuildFunctionsConfigFileAsync(childConfigPath);
+      for (const functionName in childConfig.functions) {
+        if (!(functionName in importedFunctions)) {
+          importedFunctions[functionName] = childConfig.functions[functionName];
+        }
+      }
+      if (childConfig.import) {
+        const childDir = path.dirname(childConfigPath);
+        configFilesToVisit.push(
+          ...childConfig.import.map((relativePath) => path.resolve(childDir, relativePath))
+        );
+      }
+    } catch (err) {
+      if (err instanceof BuildConfigError) {
+        errors.push(err);
+      } else {
+        throw err;
+      }
+    }
+  }
+  if (errors.length > 0) {
+    throw new BuildWorkflowError(`Detected build config errors in imported files.`, errors);
+  }
+  return importedFunctions;
+}
+
+export async function readAndValidateBuildFunctionsConfigFileAsync(
+  configPath: string
+): Promise<BuildFunctionsConfigFile> {
+  const rawConfig = await readRawBuildConfigAsync(configPath);
+  return validateConfig(BuildFunctionsConfigFileSchema, rawConfig);
 }
 
 export async function readRawBuildConfigAsync(configPath: string): Promise<any> {
@@ -183,20 +258,38 @@ export async function readRawBuildConfigAsync(configPath: string): Promise<any> 
   return YAML.parse(contents);
 }
 
-export function validateBuildConfig(
-  rawConfig: object,
-  params: BuildConfigValidationParams
-): BuildConfig {
-  const { error, value: buildConfig } = BuildConfigSchema.validate(rawConfig, {
+export function validateConfig<T>(
+  schema: Joi.ObjectSchema<T>,
+  config: object,
+  configFilePath?: string
+): T {
+  const { error, value } = schema.validate(config, {
     allowUnknown: false,
     abortEarly: false,
   });
   if (error) {
     const errorMessage = error.details.map(({ message }) => message).join(', ');
-    throw new BuildConfigError(errorMessage, { cause: error });
+    throw new BuildConfigError(errorMessage, {
+      cause: error,
+      ...(configFilePath && { metadata: { configFilePath } }),
+    });
   }
-  validateAllFunctionsExist(buildConfig, params);
-  return buildConfig;
+  return value;
+}
+
+export function mergeConfigWithImportedFunctions(
+  config: BuildConfig,
+  importedFunctions: BuildFunctions
+): void {
+  if (Object.keys(importedFunctions).length === 0) {
+    return;
+  }
+  config.functions ??= {};
+  for (const functionName in importedFunctions) {
+    if (!(functionName in config.functions)) {
+      config.functions[functionName] = importedFunctions[functionName];
+    }
+  }
 }
 
 export function isBuildStepCommandRun(step: BuildStepConfig): step is BuildStepCommandRun {
@@ -217,9 +310,9 @@ export function isBuildStepBareFunctionCall(
   return typeof step === 'string';
 }
 
-function validateAllFunctionsExist(
+export function validateAllFunctionsExist(
   config: BuildConfig,
-  { externalFunctionIds = [], skipNamespacedFunctionsCheck }: BuildConfigValidationParams = {}
+  { externalFunctionIds = [], skipNamespacedFunctionsCheck }: BuildConfigValidationParams
 ): void {
   const calledFunctionsSet = new Set<string>();
   for (const step of config.build.steps) {
