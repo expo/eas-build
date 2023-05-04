@@ -12,7 +12,7 @@ import { BuildFunction } from './BuildFunction.js';
 export type BuildFunctions = Record<string, BuildFunctionConfig>;
 
 interface BuildFunctionsConfigFile {
-  import?: string[];
+  configFilesToImport?: string[];
   functions?: BuildFunctions;
 }
 
@@ -158,7 +158,7 @@ const BuildFunctionConfigSchema = Joi.object({
 });
 
 export const BuildFunctionsConfigFileSchema = Joi.object<BuildFunctionsConfigFile>({
-  import: Joi.array().items(Joi.string().pattern(/\.y(a)?ml$/)),
+  configFilesToImport: Joi.array().items(Joi.string().pattern(/\.y(a)?ml$/)),
   functions: Joi.object().pattern(
     Joi.string()
       .pattern(/^[\w-]+$/, 'function names')
@@ -167,7 +167,9 @@ export const BuildFunctionsConfigFileSchema = Joi.object<BuildFunctionsConfigFil
       .disallow('run'),
     BuildFunctionConfigSchema.required()
   ),
-}).required();
+})
+  .rename('import', 'configFilesToImport')
+  .required();
 
 export const BuildConfigSchema = BuildFunctionsConfigFileSchema.append<BuildConfig>({
   build: Joi.object({
@@ -188,7 +190,7 @@ export async function readAndValidateBuildConfigAsync(
   const rawConfig = await readRawBuildConfigAsync(configPath);
 
   const config = validateConfig(BuildConfigSchema, rawConfig);
-  const importedFunctions = await importFunctionsAsync(configPath, config.import);
+  const importedFunctions = await importFunctionsAsync(configPath, config.configFilesToImport);
   mergeConfigWithImportedFunctions(config, importedFunctions);
   validateAllFunctionsExist(config, params);
   return config;
@@ -208,17 +210,16 @@ async function importFunctionsAsync(
   const importedFunctions: BuildFunctions = {};
   // this is a set of visited files identified by ABSOLUTE paths
   const visitedFiles = new Set<string>([baseConfigPath]);
-  const configFilesToVisit = [
-    ...(configPathsToImport ?? []).map((childConfigRelativePath) =>
-      path.resolve(baseConfigDir, childConfigRelativePath)
-    ),
-  ];
+  const configFilesToVisit = (configPathsToImport ?? []).map((childConfigRelativePath) =>
+    path.resolve(baseConfigDir, childConfigRelativePath)
+  );
   while (configFilesToVisit.length > 0) {
     const childConfigPath = configFilesToVisit.shift();
     assert(childConfigPath, 'Guaranteed by loop condition');
     if (visitedFiles.has(childConfigPath)) {
       continue;
     }
+    visitedFiles.add(childConfigPath);
     try {
       const childConfig = await readAndValidateBuildFunctionsConfigFileAsync(childConfigPath);
       for (const functionName in childConfig.functions) {
@@ -226,10 +227,12 @@ async function importFunctionsAsync(
           importedFunctions[functionName] = childConfig.functions[functionName];
         }
       }
-      if (childConfig.import) {
+      if (childConfig.configFilesToImport) {
         const childDir = path.dirname(childConfigPath);
         configFilesToVisit.push(
-          ...childConfig.import.map((relativePath) => path.resolve(childDir, relativePath))
+          ...childConfig.configFilesToImport.map((relativePath) =>
+            path.resolve(childDir, relativePath)
+          )
         );
       }
     } catch (err) {
@@ -284,7 +287,7 @@ export function mergeConfigWithImportedFunctions(
   if (Object.keys(importedFunctions).length === 0) {
     return;
   }
-  config.functions ??= {};
+  config.functions = config.functions ?? {};
   for (const functionName in importedFunctions) {
     if (!(functionName in config.functions)) {
       config.functions[functionName] = importedFunctions[functionName];

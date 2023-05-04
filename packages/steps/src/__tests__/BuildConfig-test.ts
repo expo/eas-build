@@ -57,6 +57,31 @@ describe(readAndValidateBuildConfigAsync, () => {
     expect(config.functions?.say_hi).toBeDefined();
     expect(config.functions?.say_hi_wojtek).toBeDefined();
   });
+  test('import cycle does not result in infinite loop', async () => {
+    const config = await readAndValidateBuildConfigAsync(
+      path.join(__dirname, './fixtures/build-with-import-cycle.yml'),
+      {
+        externalFunctionIds: [],
+      }
+    );
+    expect(typeof config).toBe('object');
+    expect(config.build.name).toBe('Import!');
+    assert(isBuildStepFunctionCall(config.build.steps[0]));
+    expect(config.build.steps[0]).toMatchObject({ say_hi: expect.any(Object) });
+    expect(config.functions?.say_hi).toBeDefined();
+  });
+  test('function precedence', async () => {
+    const config = await readAndValidateBuildConfigAsync(
+      path.join(__dirname, './fixtures/build-with-import.yml'),
+      {
+        externalFunctionIds: [],
+      }
+    );
+    expect(typeof config).toBe('object');
+    expect(config.functions?.say_hi_wojtek).toBeDefined();
+    expect(config.functions?.say_hi_wojtek.name).toBe('Hi, Wojtek!');
+    expect(config.functions?.say_hi_wojtek.command).toBe('echo "Hi, Wojtek!"');
+  });
 });
 
 describe(readAndValidateBuildFunctionsConfigFileAsync, () => {
@@ -65,7 +90,7 @@ describe(readAndValidateBuildFunctionsConfigFileAsync, () => {
       path.join(__dirname, './fixtures/functions-file-1.yml')
     );
     expect(typeof config).toBe('object');
-    expect(config.import?.[0]).toBe('functions-file-2.yml');
+    expect(config.configFilesToImport?.[0]).toBe('functions-file-2.yml');
     expect(config.functions?.say_hi).toBeDefined();
   });
 });
@@ -103,7 +128,7 @@ describe(validateConfig, () => {
     describe('import', () => {
       test('non-yaml files', () => {
         const buildConfig = {
-          import: ['a.apk', 'b.ipa'],
+          configFilesToImport: ['a.apk', 'b.ipa'],
           build: {
             steps: [{ run: 'echo 123' }],
           },
@@ -113,15 +138,15 @@ describe(validateConfig, () => {
           validateConfig(BuildConfigSchema, buildConfig);
         });
         expect(error.message).toMatch(
-          /"import\[0\]" with value ".*" fails to match the required pattern/
+          /"configFilesToImport\[0\]" with value ".*" fails to match the required pattern/
         );
         expect(error.message).toMatch(
-          /"import\[1\]" with value ".*" fails to match the required pattern/
+          /"configFilesToImport\[1\]" with value ".*" fails to match the required pattern/
         );
       });
       test('yaml files', () => {
         const buildConfig = {
-          import: ['a.yaml', 'b.yml'],
+          configFilesToImport: ['a.yaml', 'b.yml'],
           build: {
             steps: [{ run: 'echo 123' }],
           },
@@ -468,7 +493,7 @@ describe(validateConfig, () => {
 describe(mergeConfigWithImportedFunctions, () => {
   test('merging config with imported functions', () => {
     const buildConfig: BuildConfig = {
-      import: ['func.yaml'],
+      configFilesToImport: ['func.yaml'],
       build: {
         steps: ['a', 'b', 'c'],
       },
