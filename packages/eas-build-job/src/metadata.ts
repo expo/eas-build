@@ -139,6 +139,11 @@ export type Metadata = {
    * Build mode
    */
   buildMode?: 'build' | 'resign' | 'custom';
+
+  /**
+   * Workflow name available for custom builds.
+   */
+  customWorkflowName?: string;
 };
 
 export const MetadataSchema = Joi.object({
@@ -168,6 +173,7 @@ export const MetadataSchema = Joi.object({
   runFromCI: Joi.boolean(),
   runWithNoWaitFlag: Joi.boolean(),
   buildMode: Joi.string().valid('build', 'resign', 'custom'),
+  customWorkflowName: Joi.string(),
 });
 
 export function sanitizeMetadata(metadata: object): Metadata {
