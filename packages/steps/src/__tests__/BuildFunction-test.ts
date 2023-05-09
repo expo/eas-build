@@ -1,4 +1,7 @@
+import { jest } from '@jest/globals';
+
 import { BuildFunction } from '../BuildFunction.js';
+import { BuildPlatform } from '../BuildPlatform.js';
 import { BuildStep, BuildStepFunction } from '../BuildStep.js';
 import { BuildStepInput, BuildStepInputProvider } from '../BuildStepInput.js';
 import { BuildStepOutput, BuildStepOutputProvider } from '../BuildStepOutput.js';
@@ -175,6 +178,61 @@ describe(BuildFunction, () => {
       });
       expect(step.inputs?.[0].value).toBe('abc');
       expect(step.inputs?.[1].value).toBe('def');
+    });
+    describe('wraps function in platform check if platforms property is set', () => {
+      it('and throws error when the wrapper function is executed if platform is not allowed', async () => {
+        const originalPlatform = process.platform;
+        Object.defineProperty(process, 'platform', {
+          value: 'win32',
+        });
+
+        const ctx = createMockContext();
+        const allowedPlatform = [BuildPlatform.DARWIN, BuildPlatform.LINUX];
+        const fn: BuildStepFunction = () => {};
+        const func = new BuildFunction({
+          id: 'test1',
+          name: 'Test function',
+          fn,
+          platforms: allowedPlatform,
+        });
+        const step = func.createBuildStepFromFunctionCall(ctx, {
+          workingDirectory: ctx.workingDirectory,
+        });
+        expect(step.fn).not.toBe(fn);
+        await expect(step.executeAsync()).rejects.toThrowError(
+          'Current platform (win32) does not match any of the allowed platforms (darwin, linux) for this function'
+        );
+
+        Object.defineProperty(process, 'platform', {
+          value: originalPlatform,
+        });
+      });
+      it('and executes base function when the wrapper function is executed if platform is allowed', async () => {
+        const originalPlatform = process.platform;
+        Object.defineProperty(process, 'platform', {
+          value: 'linux',
+        });
+
+        const ctx = createMockContext();
+        const allowedPlatform = [BuildPlatform.DARWIN, BuildPlatform.LINUX];
+        const fn: BuildStepFunction = jest.fn(() => {});
+        const func = new BuildFunction({
+          id: 'test1',
+          name: 'Test function',
+          fn,
+          platforms: allowedPlatform,
+        });
+        const step = func.createBuildStepFromFunctionCall(ctx, {
+          workingDirectory: ctx.workingDirectory,
+        });
+        expect(step.fn).not.toBe(fn);
+        await expect(step.executeAsync()).resolves.not.toThrowError();
+        expect(fn).toHaveBeenCalled();
+
+        Object.defineProperty(process, 'platform', {
+          value: originalPlatform,
+        });
+      });
     });
   });
 });

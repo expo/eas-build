@@ -3,8 +3,9 @@ import assert from 'assert';
 import { BuildPlatform } from './BuildPlatform.js';
 import { BuildStep, BuildStepFunction } from './BuildStep.js';
 import { BuildStepContext } from './BuildStepContext.js';
-import { BuildStepInputProvider } from './BuildStepInput.js';
-import { BuildStepOutputProvider } from './BuildStepOutput.js';
+import { BuildStepInputById, BuildStepInputProvider } from './BuildStepInput.js';
+import { BuildStepOutputById, BuildStepOutputProvider } from './BuildStepOutput.js';
+import { BuildStepEnv } from './BuildStepEnv.js';
 
 export type BuildFunctionById = Record<string, BuildFunction>;
 export type BuildFunctionCallInputs = Record<string, string>;
@@ -101,11 +102,36 @@ export class BuildFunction {
       name: buildStepName,
       displayName: buildStepDisplayName,
       command: this.command,
-      fn: this.fn,
+      fn: this.maybeWrapFunctionInPlatformCheck(this.fn, this.platforms),
       workingDirectory,
       inputs,
       outputs,
       shell,
     });
+  }
+
+  private maybeWrapFunctionInPlatformCheck(
+    fn?: BuildStepFunction,
+    allowedPlatforms?: BuildPlatform[]
+  ): BuildStepFunction | undefined {
+    if (!fn || !allowedPlatforms) {
+      return fn;
+    }
+
+    return async (
+      ctx: BuildStepContext,
+      args: { inputs: BuildStepInputById; outputs: BuildStepOutputById; env: BuildStepEnv }
+    ) => {
+      assert(
+        (allowedPlatforms as string[]).includes(process.platform),
+        `Current platform (${
+          process.platform
+        }) does not match any of the allowed platforms (${allowedPlatforms.join(
+          ', '
+        )}) for this function.`
+      );
+
+      return await fn(ctx, args);
+    };
   }
 }
