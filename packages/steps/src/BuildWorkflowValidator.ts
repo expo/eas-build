@@ -1,3 +1,6 @@
+import { Platform } from '@expo/eas-build-job';
+
+import { BuildPlatform } from './BuildPlatform.js';
 import { BuildStep } from './BuildStep.js';
 import { BuildWorkflow } from './BuildWorkflow.js';
 import { BuildConfigError, BuildWorkflowError } from './errors.js';
@@ -5,13 +8,19 @@ import { duplicates } from './utils/expodash/duplicates.js';
 import { nullthrows } from './utils/nullthrows.js';
 import { findOutputPaths } from './utils/template.js';
 
+const buildPlatformToWorkerPlatform: Record<Platform, BuildPlatform> = {
+  [Platform.ANDROID]: BuildPlatform.LINUX,
+  [Platform.IOS]: BuildPlatform.DARWIN,
+};
+
 export class BuildWorkflowValidator {
   constructor(private readonly workflow: BuildWorkflow) {}
 
-  public validate(): void {
+  public validate(requestedPlatform: Platform): void {
     const errors: BuildConfigError[] = [];
     errors.push(...this.validateUniqueStepIds());
     errors.push(...this.validateInputs());
+    errors.push(...this.validateAllowedPlatforms(requestedPlatform));
     if (errors.length !== 0) {
       throw new BuildWorkflowError('Build workflow is invalid.', errors);
     }
@@ -79,6 +88,26 @@ export class BuildWorkflowValidator {
       visitedStepByStepId[currentStep.id] = currentStep;
     }
 
+    return errors;
+  }
+
+  private validateAllowedPlatforms(requestedBuildPlatform: Platform): BuildConfigError[] {
+    const errors: BuildConfigError[] = [];
+    for (const step of this.workflow.buildSteps) {
+      if (
+        step.ctx.allowedPlatforms &&
+        !step.ctx.allowedPlatforms.includes(buildPlatformToWorkerPlatform[requestedBuildPlatform])
+      ) {
+        const error = new BuildConfigError(
+          `Step "${
+            step.displayName
+          }" is not allowed on platform "${requestedBuildPlatform}", because the underlying worker platform is "${
+            buildPlatformToWorkerPlatform[requestedBuildPlatform]
+          }". Allowed platforms for this steps are: ${step.ctx.allowedPlatforms.join(', ')}.`
+        );
+        errors.push(error);
+      }
+    }
     return errors;
   }
 }

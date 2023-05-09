@@ -1,11 +1,14 @@
 import assert from 'assert';
 
-import { BuildStep } from '../BuildStep.js';
+import { Platform } from '@expo/eas-build-job';
+
+import { BuildStep, BuildStepFunction } from '../BuildStep.js';
 import { BuildStepInput } from '../BuildStepInput.js';
 import { BuildStepOutput } from '../BuildStepOutput.js';
 import { BuildWorkflow } from '../BuildWorkflow.js';
 import { BuildWorkflowValidator } from '../BuildWorkflowValidator.js';
 import { BuildConfigError, BuildWorkflowError } from '../errors.js';
+import { BuildPlatform } from '../BuildPlatform.js';
 
 import { createMockContext } from './utils/context.js';
 import { getError } from './utils/error.js';
@@ -51,7 +54,7 @@ describe(BuildWorkflowValidator, () => {
 
     const validator = new BuildWorkflowValidator(workflow);
     const error = getError<BuildWorkflowError>(() => {
-      validator.validate();
+      validator.validate(Platform.IOS);
     });
     expect(error).toBeInstanceOf(BuildWorkflowError);
     assert(error instanceof BuildWorkflowError);
@@ -89,7 +92,7 @@ describe(BuildWorkflowValidator, () => {
 
     const validator = new BuildWorkflowValidator(workflow);
     const error = getError<BuildWorkflowError>(() => {
-      validator.validate();
+      validator.validate(Platform.IOS);
     });
     expect(error).toBeInstanceOf(BuildWorkflowError);
     assert(error instanceof BuildWorkflowError);
@@ -145,7 +148,7 @@ describe(BuildWorkflowValidator, () => {
 
     const validator = new BuildWorkflowValidator(workflow);
     const error = getError<BuildWorkflowError>(() => {
-      validator.validate();
+      validator.validate(Platform.IOS);
     });
     expect(error).toBeInstanceOf(BuildWorkflowError);
     assert(error instanceof BuildWorkflowError);
@@ -183,7 +186,7 @@ describe(BuildWorkflowValidator, () => {
 
     const validator = new BuildWorkflowValidator(workflow);
     const error = getError<BuildWorkflowError>(() => {
-      validator.validate();
+      validator.validate(Platform.IOS);
     });
     expect(error).toBeInstanceOf(BuildWorkflowError);
     assert(error instanceof BuildWorkflowError);
@@ -256,7 +259,7 @@ describe(BuildWorkflowValidator, () => {
 
     const validator = new BuildWorkflowValidator(workflow);
     const error = getError<BuildWorkflowError>(() => {
-      validator.validate();
+      validator.validate(Platform.IOS);
     });
     expect(error).toBeInstanceOf(BuildWorkflowError);
     assert(error instanceof BuildWorkflowError);
@@ -329,7 +332,7 @@ describe(BuildWorkflowValidator, () => {
 
     const validator = new BuildWorkflowValidator(workflow);
     const error = getError<BuildWorkflowError>(() => {
-      validator.validate();
+      validator.validate(Platform.IOS);
     });
     expect(error).toBeInstanceOf(BuildWorkflowError);
     assert(error instanceof BuildWorkflowError);
@@ -341,6 +344,37 @@ describe(BuildWorkflowValidator, () => {
     expect(error.errors[1]).toBeInstanceOf(BuildConfigError);
     expect(error.errors[1].message).toBe(
       'Input parameter "input2" for step "test3" uses an expression that references an undefined output parameter "output2" from step "test2".'
+    );
+  });
+  test('not allowed platform for build step', async () => {
+    const id = 'test';
+    const displayName = BuildStep.getDisplayName({ id });
+    const fn: BuildStepFunction = () => {};
+
+    const ctx = createMockContext();
+    const workflow = new BuildWorkflow(ctx, {
+      buildSteps: [
+        new BuildStep(ctx, {
+          id,
+          displayName,
+          fn,
+          workingDirectory: ctx.workingDirectory,
+          allowedPlatforms: [BuildPlatform.DARWIN],
+        }),
+      ],
+      buildFunctions: {},
+    });
+
+    const validator = new BuildWorkflowValidator(workflow);
+    const error = getError<BuildWorkflowError>(() => {
+      validator.validate(Platform.ANDROID);
+    });
+    expect(error).toBeInstanceOf(BuildWorkflowError);
+    assert(error instanceof BuildWorkflowError);
+    expect(error.errors.length).toBe(1);
+    expect(error.errors[0]).toBeInstanceOf(BuildConfigError);
+    expect(error.errors[0].message).toBe(
+      `Step "${displayName}" is not allowed on platform "${Platform.ANDROID}", because the underlying worker platform is "${BuildPlatform.LINUX}". Allowed platforms for this steps are: ${BuildPlatform.DARWIN}.`
     );
   });
 });

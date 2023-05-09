@@ -22,6 +22,6 @@ export function createMockContext({
     buildId ?? uuidv4(),
     logger ?? createMockLogger(),
     skipCleanup ?? false,
-    workingDirectory
+    { workingDirectory }
   );
 }

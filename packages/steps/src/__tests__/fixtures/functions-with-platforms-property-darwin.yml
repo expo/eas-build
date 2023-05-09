@@ -1,0 +1,14 @@
+functions:
+  say_hi:
+    name: Hi!
+    inputs:
+      - name
+    command: echo "Hi, ${ inputs.name }!"
+    platforms: ['darwin']
+
+  say_bye:
+    name: Bye!
+    inputs:
+      - name
+    command: echo "Hi, ${ inputs.name }!"
+    platforms: ['darwin']

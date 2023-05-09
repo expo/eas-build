@@ -21,7 +21,7 @@ export async function runCustomBuildAsync<T extends Job>(ctx: BuildContext<T>): 
     ctx.env.EAS_BUILD_ID,
     ctx.logger.child({ phase: BuildPhase.CUSTOM }),
     false,
-    ctx.reactNativeProjectDirectory
+    { workingDirectory: ctx.reactNativeProjectDirectory }
   );
   const easFunctions = getEasFunctions(ctx);
   const parser = new BuildConfigParser(buildStepContext, {
@@ -30,7 +30,7 @@ export async function runCustomBuildAsync<T extends Job>(ctx: BuildContext<T>): 
   });
   const workflow = await ctx.runBuildPhase(BuildPhase.PARSE_CUSTOM_WORKFLOW_CONFIG, async () => {
     try {
-      return await parser.parseAsync();
+      return await parser.parseAsync(ctx.job.platform);
     } catch (parseError: any) {
       ctx.logger.error('Failed to parse the custom build config file.');
       if (parseError instanceof errors.BuildWorkflowError) {

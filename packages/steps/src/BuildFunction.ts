@@ -106,6 +106,7 @@ export class BuildFunction {
       inputs,
       outputs,
       shell,
+      allowedPlatforms: this.platforms,
     });
   }
 }

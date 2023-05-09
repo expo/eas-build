@@ -22,6 +22,7 @@ import { spawnAsync } from './utils/shell/spawn.js';
 import { interpolateWithInputs } from './utils/template.js';
 import { BuildStepRuntimeError } from './errors.js';
 import { BuildStepEnv } from './BuildStepEnv.js';
+import { BuildPlatform } from './BuildPlatform.js';
 
 export enum BuildStepStatus {
   NEW = 'new',
@@ -110,6 +111,7 @@ export class BuildStep {
       fn,
       workingDirectory: maybeWorkingDirectory,
       shell,
+      allowedPlatforms,
     }: {
       id: string;
       name?: string;
@@ -120,6 +122,7 @@ export class BuildStep {
       fn?: BuildStepFunction;
       workingDirectory?: string;
       shell?: string;
+      allowedPlatforms?: BuildPlatform[];
     }
   ) {
     assert(command !== undefined || fn !== undefined, 'Either command or fn must be defined.');
@@ -148,7 +151,7 @@ export class BuildStep {
       maybeWorkingDirectory !== undefined
         ? path.resolve(ctx.workingDirectory, maybeWorkingDirectory)
         : ctx.workingDirectory;
-    this.ctx = ctx.child({ logger, workingDirectory });
+    this.ctx = ctx.child({ logger, workingDirectory, allowedPlatforms });
 
     ctx.registerStep(this);
   }

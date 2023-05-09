@@ -93,6 +93,13 @@ describe(readAndValidateBuildFunctionsConfigFileAsync, () => {
     expect(config.configFilesToImport?.[0]).toBe('functions-file-2.yml');
     expect(config.functions?.say_hi).toBeDefined();
   });
+  test('valid functions with platform property config', async () => {
+    const config = await readAndValidateBuildFunctionsConfigFileAsync(
+      path.join(__dirname, './fixtures/functions-with-platforms-property.yml')
+    );
+    expect(typeof config).toBe('object');
+    expect(config.functions?.say_hi).toBeDefined();
+  });
 });
 
 describe(readRawBuildConfigAsync, () => {

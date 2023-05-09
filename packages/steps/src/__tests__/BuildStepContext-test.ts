@@ -31,7 +31,7 @@ describe(BuildStepContext, () => {
     });
     it('can use the workingDirectory passed to the constructor', () => {
       const workingDirectory = '/path/to/working/dir';
-      const ctx = new BuildStepContext(uuidv4(), createMockLogger(), false, workingDirectory);
+      const ctx = new BuildStepContext(uuidv4(), createMockLogger(), false, { workingDirectory });
       expect(ctx.workingDirectory).toBe(workingDirectory);
     });
   });
@@ -81,6 +81,13 @@ describe(BuildStepContext, () => {
       const childCtx = ctx.child({ workingDirectory: workingDirectoryOverride });
       expect(ctx.workingDirectory).not.toBe(childCtx.workingDirectory);
       expect(childCtx.workingDirectory).toBe(workingDirectoryOverride);
+    });
+    it('can override allowed platforms', () => {
+      const allowedPlatformsOverride = ['ios', 'android'];
+      const ctx = createMockContext();
+      const childCtx = ctx.child();
+      expect(ctx.allowedPlatforms).not.toBe(allowedPlatformsOverride);
+      expect(childCtx.workingDirectory).toBe(allowedPlatformsOverride);
     });
   });
 });
