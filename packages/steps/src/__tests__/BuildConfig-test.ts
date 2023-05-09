@@ -465,6 +465,42 @@ describe(validateConfig, () => {
           validateConfig(BuildConfigSchema, buildConfig);
         }).not.toThrow();
       });
+
+      test('valid allowed platforms for function', () => {
+        const buildConfig = {
+          build: {
+            steps: ['abc'],
+          },
+          functions: {
+            abc: {
+              platforms: ['linux', 'darwin'],
+              command: 'echo "${ inputs.i1 } ${ inputs.i2 }"',
+            },
+          },
+        };
+
+        expect(() => {
+          validateConfig(BuildConfigSchema, buildConfig);
+        }).not.toThrow();
+      });
+    });
+
+    test('invalid allowed platforms for function', () => {
+      const buildConfig = {
+        build: {
+          steps: ['abc'],
+        },
+        functions: {
+          abc: {
+            platforms: ['invalid'],
+            command: 'echo "${ inputs.i1 } ${ inputs.i2 }"',
+          },
+        },
+      };
+
+      expect(() => {
+        validateConfig(BuildConfigSchema, buildConfig);
+      }).toThrow();
     });
   });
 

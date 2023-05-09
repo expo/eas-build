@@ -169,12 +169,21 @@ export class BuildConfigParser {
     outputs: outputsConfig,
     shell,
     command,
+    platforms,
   }: BuildFunctionConfig & { id: string }): BuildFunction {
     const inputProviders =
       inputsConfig && this.createBuildStepInputProvidersFromBuildFunctionInputs(inputsConfig);
     const outputProviders =
       outputsConfig && this.createBuildStepOutputProvidersFromBuildFunctionOutputs(outputsConfig);
-    return new BuildFunction({ id, name, inputProviders, outputProviders, shell, command });
+    return new BuildFunction({
+      id,
+      name,
+      inputProviders,
+      outputProviders,
+      shell,
+      command,
+      platforms,
+    });
   }
 
   private createBuildStepInputsFromDefinition(

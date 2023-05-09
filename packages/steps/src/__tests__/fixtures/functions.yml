@@ -36,6 +36,7 @@ functions:
     command: echo "${ inputs.value }"
   say_hi_2:
     name: Hi!
+    platforms: ['darwin', 'linux']
     inputs:
       - name: greeting
         default_value: Hi

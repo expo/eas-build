@@ -150,7 +150,7 @@ const BuildStepConfigSchema = Joi.any<BuildStepConfig>()
 
 const BuildFunctionConfigSchema = Joi.object({
   name: Joi.string(),
-  platforms: Joi.array().allow(...Object.values(BuildPlatform)),
+  platforms: Joi.array().items(...Object.values(BuildPlatform)),
   inputs: BuildFunctionInputsSchema,
   outputs: BuildStepOutputsSchema,
   command: Joi.string().required(),
