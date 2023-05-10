@@ -1,6 +1,3 @@
-import { Platform } from '@expo/eas-build-job';
-
-import { BuildPlatform } from './BuildPlatform.js';
 import { BuildStep } from './BuildStep.js';
 import { BuildWorkflow } from './BuildWorkflow.js';
 import { BuildConfigError, BuildWorkflowError } from './errors.js';
@@ -8,19 +5,14 @@ import { duplicates } from './utils/expodash/duplicates.js';
 import { nullthrows } from './utils/nullthrows.js';
 import { findOutputPaths } from './utils/template.js';
 
-const buildPlatformToWorkerPlatform: Record<Platform, BuildPlatform> = {
-  [Platform.ANDROID]: BuildPlatform.LINUX,
-  [Platform.IOS]: BuildPlatform.DARWIN,
-};
-
 export class BuildWorkflowValidator {
   constructor(private readonly workflow: BuildWorkflow) {}
 
-  public validate(requestedPlatform: Platform): void {
+  public validate(): void {
     const errors: BuildConfigError[] = [];
     errors.push(...this.validateUniqueStepIds());
     errors.push(...this.validateInputs());
-    errors.push(...this.validateAllowedPlatforms(requestedPlatform));
+    errors.push(...this.validateAllowedPlatforms());
     if (errors.length !== 0) {
       throw new BuildWorkflowError('Build workflow is invalid.', errors);
     }
@@ -91,19 +83,17 @@ export class BuildWorkflowValidator {
     return errors;
   }
 
-  private validateAllowedPlatforms(requestedBuildPlatform: Platform): BuildConfigError[] {
+  private validateAllowedPlatforms(): BuildConfigError[] {
     const errors: BuildConfigError[] = [];
     for (const step of this.workflow.buildSteps) {
       if (
-        step.ctx.allowedPlatforms &&
-        !step.ctx.allowedPlatforms.includes(buildPlatformToWorkerPlatform[requestedBuildPlatform])
+        step.allowedPlatforms &&
+        !step.allowedPlatforms.includes(this.workflow.buildSteps[0].ctx.platform)
       ) {
         const error = new BuildConfigError(
-          `Step "${
-            step.displayName
-          }" is not allowed on platform "${requestedBuildPlatform}", because the underlying worker platform is "${
-            buildPlatformToWorkerPlatform[requestedBuildPlatform]
-          }". Allowed platforms for this steps are: ${step.ctx.allowedPlatforms
+          `Step "${step.displayName}" is not allowed on platform "${
+            this.workflow.buildSteps[0].ctx.platform
+          }". Allowed platforms for this steps are: ${step.allowedPlatforms
             .map((p) => `"${p}"`)
             .join(', ')}.`
         );

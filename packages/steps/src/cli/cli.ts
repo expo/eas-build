@@ -2,11 +2,11 @@ import path from 'path';
 
 import { createLogger } from '@expo/logger';
 import { v4 as uuidv4 } from 'uuid';
-import { Platform } from '@expo/eas-build-job';
 
 import { BuildConfigParser } from '../BuildConfigParser.js';
 import { BuildStepContext } from '../BuildStepContext.js';
 import { BuildWorkflowError } from '../errors.js';
+import { BuildPlatform } from '../BuildPlatform.js';
 
 const logger = createLogger({
   name: 'steps-cli',
@@ -16,21 +16,21 @@ const logger = createLogger({
 async function runAsync(
   configPath: string,
   workingDirectory: string,
-  platform: Platform
+  platform: BuildPlatform
 ): Promise<void> {
   const fakeBuildId = uuidv4();
-  const ctx = new BuildStepContext(fakeBuildId, logger, false, { workingDirectory });
+  const ctx = new BuildStepContext(fakeBuildId, logger, false, platform, workingDirectory);
   const parser = new BuildConfigParser(ctx, { configPath });
-  const workflow = await parser.parseAsync(platform);
+  const workflow = await parser.parseAsync();
   await workflow.executeAsync();
 }
 
 const relativeConfigPath = process.argv[2];
 const relativeWorkingDirectoryPath = process.argv[3];
-const platform: Platform = process.argv[4] as Platform;
+const platform: BuildPlatform = process.argv[4] as BuildPlatform;
 
 if (!relativeConfigPath || !relativeWorkingDirectoryPath || !platform) {
-  console.error('Usage: yarn cli config.yml path/to/working/directory ios|android');
+  console.error('Usage: yarn cli config.yml path/to/working/directory darwin|linux');
   process.exit(1);
 }
 

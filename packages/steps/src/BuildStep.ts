@@ -55,6 +55,7 @@ export class BuildStep {
   public readonly id: string;
   public readonly name?: string;
   public readonly displayName: string;
+  public readonly allowedPlatforms?: BuildPlatform[];
   public readonly inputs?: BuildStepInput[];
   public readonly outputs?: BuildStepOutput[];
   public readonly command?: string;
@@ -111,7 +112,7 @@ export class BuildStep {
       fn,
       workingDirectory: maybeWorkingDirectory,
       shell,
-      allowedPlatforms,
+      allowedPlatforms: maybeAllowedPlatforms,
     }: {
       id: string;
       name?: string;
@@ -131,6 +132,7 @@ export class BuildStep {
     this.id = id;
     this.name = name;
     this.displayName = displayName;
+    this.allowedPlatforms = maybeAllowedPlatforms;
     this.inputs = inputs;
     this.outputs = outputs;
     this.inputById = makeBuildStepInputByIdMap(inputs);
@@ -151,7 +153,7 @@ export class BuildStep {
       maybeWorkingDirectory !== undefined
         ? path.resolve(ctx.workingDirectory, maybeWorkingDirectory)
         : ctx.workingDirectory;
-    this.ctx = ctx.child({ logger, workingDirectory, allowedPlatforms });
+    this.ctx = ctx.child({ logger, workingDirectory });
 
     ctx.registerStep(this);
   }

@@ -16,23 +16,29 @@ import { createMockLogger } from './utils/logger.js';
 describe(BuildStepContext, () => {
   describe('baseWorkingDirectory', () => {
     it('is in os.tmpdir()', () => {
-      const ctx = new BuildStepContext(uuidv4(), createMockLogger(), false);
+      const ctx = new BuildStepContext(uuidv4(), createMockLogger(), false, BuildPlatform.LINUX);
       expect(ctx.baseWorkingDirectory.startsWith(os.tmpdir())).toBe(true);
     });
     it('uses the build id as a path component', () => {
       const buildId = uuidv4();
-      const ctx = new BuildStepContext(buildId, createMockLogger(), false);
+      const ctx = new BuildStepContext(buildId, createMockLogger(), false, BuildPlatform.LINUX);
       expect(ctx.baseWorkingDirectory).toMatch(buildId);
     });
   });
   describe('workingDirectory', () => {
     it('defaults to "project" directory in ctx.baseWorkingDirectory', () => {
-      const ctx = new BuildStepContext(uuidv4(), createMockLogger(), false);
+      const ctx = new BuildStepContext(uuidv4(), createMockLogger(), false, BuildPlatform.LINUX);
       expect(ctx.workingDirectory).toBe(path.join(ctx.baseWorkingDirectory, 'project'));
     });
     it('can use the workingDirectory passed to the constructor', () => {
       const workingDirectory = '/path/to/working/dir';
-      const ctx = new BuildStepContext(uuidv4(), createMockLogger(), false, { workingDirectory });
+      const ctx = new BuildStepContext(
+        uuidv4(),
+        createMockLogger(),
+        false,
+        BuildPlatform.LINUX,
+        workingDirectory
+      );
       expect(ctx.workingDirectory).toBe(workingDirectory);
     });
   });
@@ -82,13 +88,6 @@ describe(BuildStepContext, () => {
       const childCtx = ctx.child({ workingDirectory: workingDirectoryOverride });
       expect(ctx.workingDirectory).not.toBe(childCtx.workingDirectory);
       expect(childCtx.workingDirectory).toBe(workingDirectoryOverride);
-    });
-    it('can override allowed platforms', () => {
-      const allowedPlatformsOverride = [BuildPlatform.LINUX];
-      const ctx = createMockContext();
-      const childCtx = ctx.child({ allowedPlatforms: allowedPlatformsOverride });
-      expect(ctx.allowedPlatforms).not.toBe(allowedPlatformsOverride);
-      expect(childCtx.allowedPlatforms).toBe(allowedPlatformsOverride);
     });
   });
 });

@@ -1,8 +1,6 @@
 import path from 'path';
 import url from 'url';
 
-import { Platform } from '@expo/eas-build-job';
-
 import { BuildConfigParser } from '../BuildConfigParser.js';
 import { BuildFunction } from '../BuildFunction.js';
 import { BuildStepFunction } from '../BuildStep.js';
@@ -56,7 +54,7 @@ describe(BuildConfigParser, () => {
       const parser = new BuildConfigParser(ctx, {
         configPath: path.join(__dirname, './fixtures/build.yml'),
       });
-      const result = await parser.parseAsync(Platform.IOS);
+      const result = await parser.parseAsync();
       expect(result).toBeInstanceOf(BuildWorkflow);
     });
 
@@ -65,7 +63,7 @@ describe(BuildConfigParser, () => {
       const parser = new BuildConfigParser(ctx, {
         configPath: path.join(__dirname, './fixtures/build.yml'),
       });
-      const workflow = await parser.parseAsync(Platform.IOS);
+      const workflow = await parser.parseAsync();
       const buildSteps = workflow.buildSteps;
       expect(buildSteps.length).toBe(6);
 
@@ -143,7 +141,7 @@ describe(BuildConfigParser, () => {
       const parser = new BuildConfigParser(ctx, {
         configPath: path.join(__dirname, './fixtures/inputs.yml'),
       });
-      const workflow = await parser.parseAsync(Platform.IOS);
+      const workflow = await parser.parseAsync();
       const buildSteps = workflow.buildSteps;
       expect(buildSteps.length).toBe(1);
 
@@ -172,7 +170,7 @@ describe(BuildConfigParser, () => {
       const parser = new BuildConfigParser(ctx, {
         configPath: path.join(__dirname, './fixtures/outputs.yml'),
       });
-      const workflow = await parser.parseAsync(Platform.IOS);
+      const workflow = await parser.parseAsync();
       const buildSteps = workflow.buildSteps;
       expect(buildSteps.length).toBe(2);
 
@@ -227,7 +225,7 @@ describe(BuildConfigParser, () => {
       const parser = new BuildConfigParser(ctx, {
         configPath: path.join(__dirname, './fixtures/functions.yml'),
       });
-      const workflow = await parser.parseAsync(Platform.IOS);
+      const workflow = await parser.parseAsync();
 
       const { buildSteps } = workflow;
       expect(buildSteps.length).toBe(6);
@@ -297,7 +295,7 @@ describe(BuildConfigParser, () => {
       expect(step6.command).toBe('echo "${ inputs.greeting }, ${ inputs.name }!"');
       expect(step6.ctx.workingDirectory).toBe(ctx.workingDirectory);
       expect(step6.shell).toBe(getDefaultShell());
-      expect(step6.ctx.allowedPlatforms).toEqual([BuildPlatform.DARWIN, BuildPlatform.LINUX]);
+      expect(step6.allowedPlatforms).toEqual([BuildPlatform.DARWIN, BuildPlatform.LINUX]);
       expect(step6.inputs?.[0].id).toBe('greeting');
       expect(step6.inputs?.[0].required).toBe(true);
       expect(step6.inputs?.[0].defaultValue).toBe('Hi');
@@ -382,7 +380,7 @@ describe(BuildConfigParser, () => {
         configPath: path.join(__dirname, './fixtures/external-functions.yml'),
       });
       const error = await getErrorAsync<BuildConfigError>(async () => {
-        await parser.parseAsync(Platform.IOS);
+        await parser.parseAsync();
       });
       expect(error).toBeInstanceOf(BuildConfigError);
       expect(error.message).toBe(
@@ -417,7 +415,7 @@ describe(BuildConfigParser, () => {
         ],
       });
 
-      const workflow = await parser.parseAsync(Platform.IOS);
+      const workflow = await parser.parseAsync();
       expect(workflow.buildSteps.length).toBe(2);
 
       // - eas/download_project

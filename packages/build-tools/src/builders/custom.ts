@@ -1,12 +1,17 @@
 import path from 'path';
 
-import { BuildPhase, Job } from '@expo/eas-build-job';
-import { BuildConfigParser, BuildStepContext, errors } from '@expo/steps';
+import { BuildPhase, Job, Platform } from '@expo/eas-build-job';
+import { BuildConfigParser, BuildStepContext, errors, BuildPlatform } from '@expo/steps';
 import nullthrows from 'nullthrows';
 
 import { Artifacts, BuildContext } from '../context';
 import { prepareProjectSourcesAsync } from '../common/projectSources';
 import { getEasFunctions } from '../steps/easFunctions';
+
+const platformToCustomBuildPlatform: Record<Platform, BuildPlatform> = {
+  [Platform.ANDROID]: BuildPlatform.LINUX,
+  [Platform.IOS]: BuildPlatform.DARWIN,
+};
 
 export async function runCustomBuildAsync<T extends Job>(ctx: BuildContext<T>): Promise<Artifacts> {
   await prepareProjectSourcesAsync(ctx);
@@ -21,7 +26,8 @@ export async function runCustomBuildAsync<T extends Job>(ctx: BuildContext<T>): 
     ctx.env.EAS_BUILD_ID,
     ctx.logger.child({ phase: BuildPhase.CUSTOM }),
     false,
-    { workingDirectory: ctx.reactNativeProjectDirectory }
+    platformToCustomBuildPlatform[ctx.job.platform],
+    ctx.reactNativeProjectDirectory
   );
   const easFunctions = getEasFunctions(ctx);
   const parser = new BuildConfigParser(buildStepContext, {
@@ -30,7 +36,7 @@ export async function runCustomBuildAsync<T extends Job>(ctx: BuildContext<T>): 
   });
   const workflow = await ctx.runBuildPhase(BuildPhase.PARSE_CUSTOM_WORKFLOW_CONFIG, async () => {
     try {
-      return await parser.parseAsync(ctx.job.platform);
+      return await parser.parseAsync();
     } catch (parseError: any) {
       ctx.logger.error('Failed to parse the custom build config file.');
       if (parseError instanceof errors.BuildWorkflowError) {

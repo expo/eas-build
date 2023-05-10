@@ -1,7 +1,5 @@
 import assert from 'assert';
 
-import { Platform } from '@expo/eas-build-job';
-
 import {
   BuildConfig,
   BuildFunctionConfig,
@@ -44,7 +42,7 @@ export class BuildConfigParser {
     this.externalFunctions = externalFunctions;
   }
 
-  public async parseAsync(requestedPlatform: Platform): Promise<BuildWorkflow> {
+  public async parseAsync(): Promise<BuildWorkflow> {
     const config = await readAndValidateBuildConfigAsync(this.configPath, {
       externalFunctionIds: this.getExternalFunctionFullIds(),
     });
@@ -57,7 +55,7 @@ export class BuildConfigParser {
       this.createBuildStepFromConfig(stepConfig, buildFunctions)
     );
     const workflow = new BuildWorkflow(this.ctx, { buildSteps, buildFunctions });
-    new BuildWorkflowValidator(workflow).validate(requestedPlatform);
+    new BuildWorkflowValidator(workflow).validate();
     return workflow;
   }
 

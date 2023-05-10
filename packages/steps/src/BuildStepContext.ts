@@ -9,7 +9,6 @@ import { BuildStepRuntimeError } from './errors.js';
 import { BuildPlatform } from './BuildPlatform.js';
 
 export class BuildStepContext {
-  public readonly allowedPlatforms?: BuildPlatform[];
   public readonly baseWorkingDirectory: string;
   public readonly workingDirectory: string;
 
@@ -19,12 +18,11 @@ export class BuildStepContext {
     public readonly buildId: string,
     public readonly logger: bunyan,
     public readonly skipCleanup: boolean,
-    additionalArgs?: { workingDirectory?: string; allowedPlatforms?: BuildPlatform[] }
+    public readonly platform: BuildPlatform,
+    workingDirectory?: string
   ) {
     this.baseWorkingDirectory = path.join(os.tmpdir(), 'eas-build', buildId);
-    this.workingDirectory =
-      additionalArgs?.workingDirectory ?? path.join(this.baseWorkingDirectory, 'project');
-    this.allowedPlatforms = additionalArgs?.allowedPlatforms;
+    this.workingDirectory = workingDirectory ?? path.join(this.baseWorkingDirectory, 'project');
   }
 
   public registerStep(step: BuildStep): void {
@@ -42,15 +40,16 @@ export class BuildStepContext {
   public child({
     logger,
     workingDirectory,
-    allowedPlatforms: allowedPlatform,
   }: {
     logger?: bunyan;
     workingDirectory?: string;
-    allowedPlatforms?: BuildPlatform[];
   } = {}): BuildStepContext {
-    return new BuildStepContext(this.buildId, logger ?? this.logger, this.skipCleanup, {
-      allowedPlatforms: allowedPlatform ?? this.allowedPlatforms,
-      workingDirectory: workingDirectory ?? this.workingDirectory,
-    });
+    return new BuildStepContext(
+      this.buildId,
+      logger ?? this.logger,
+      this.skipCleanup,
+      this.platform,
+      workingDirectory ?? this.workingDirectory
+    );
   }
 }
