@@ -87,7 +87,7 @@ describe(BuildStepContext, () => {
       const ctx = createMockContext();
       const childCtx = ctx.child();
       expect(ctx.allowedPlatforms).not.toBe(allowedPlatformsOverride);
-      expect(childCtx.workingDirectory).toBe(allowedPlatformsOverride);
+      expect(childCtx.allowedPlatforms).toBe(allowedPlatformsOverride);
     });
   });
 });
