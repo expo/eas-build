@@ -85,15 +85,13 @@ export class BuildWorkflowValidator {
 
   private validateAllowedPlatforms(): BuildConfigError[] {
     const errors: BuildConfigError[] = [];
+    const currentPlatform = this.workflow.buildSteps[0].ctx.platform;
     for (const step of this.workflow.buildSteps) {
-      if (
-        step.allowedPlatforms &&
-        !step.allowedPlatforms.includes(this.workflow.buildSteps[0].ctx.platform)
-      ) {
+      if (step.allowedPlatforms && !step.allowedPlatforms.includes(currentPlatform)) {
         const error = new BuildConfigError(
-          `Step "${step.displayName}" is not allowed on platform "${
-            this.workflow.buildSteps[0].ctx.platform
-          }". Allowed platforms for this steps are: ${step.allowedPlatforms
+          `Step "${
+            step.displayName
+          }" is not allowed on platform "${currentPlatform}". Allowed platforms for this steps are: ${step.allowedPlatforms
             .map((p) => `"${p}"`)
             .join(', ')}.`
         );
