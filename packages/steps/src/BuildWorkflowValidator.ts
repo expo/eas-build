@@ -85,7 +85,7 @@ export class BuildWorkflowValidator {
 
   private validateAllowedPlatforms(): BuildConfigError[] {
     const errors: BuildConfigError[] = [];
-    const currentPlatform = this.workflow.buildSteps[0].ctx.platform;
+    const currentPlatform = this.workflow.ctx.platform;
     for (const step of this.workflow.buildSteps) {
       if (step.allowedPlatforms && !step.allowedPlatforms.includes(currentPlatform)) {
         const error = new BuildConfigError(

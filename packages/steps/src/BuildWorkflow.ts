@@ -8,8 +8,7 @@ export class BuildWorkflow {
   public readonly buildFunctions: BuildFunctionById;
 
   constructor(
-    // @ts-expect-error ctx is not used in this class but let's keep it here for consistency
-    private readonly ctx: BuildStepContext,
+    public readonly ctx: BuildStepContext,
     { buildSteps, buildFunctions }: { buildSteps: BuildStep[]; buildFunctions: BuildFunctionById }
   ) {
     this.buildSteps = buildSteps;
