@@ -23,6 +23,7 @@
     "prepack": "./build.sh",
     "watch": "chokidar --initial \"src/**/*.ts\" -i \"src/**/__tests__/**/*\" -c \"./build.sh\"",
     "test": "node --experimental-vm-modules --no-warnings node_modules/.bin/jest -c=jest.config.cjs --no-cache",
+    "test:coverage": "node --experimental-vm-modules --no-warnings node_modules/.bin/jest -c=jest.config.cjs --no-cache --coverage",
     "test:watch": "yarn test --watch",
     "clean": "rm -rf node_modules dist_* coverage"
   },

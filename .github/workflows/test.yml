@@ -24,7 +24,6 @@ jobs:
       - run: yarn install --frozen-lockfile --check-files
       - run: yarn build
       - run: yarn test
-        if: ${{ !matrix.coverage }}
       - run: yarn lint --max-warnings=0
       - run: yarn test --coverage
         if: ${{ matrix.coverage }}
