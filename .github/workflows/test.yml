@@ -11,6 +11,9 @@ jobs:
     strategy:
       matrix:
         node: ['14', '16', '18']
+        include:
+          - node: '18'
+            coverage: true
     name: Test with Node ${{ matrix.node }} on Linux
     steps:
       - uses: actions/checkout@v2
@@ -21,4 +24,10 @@ jobs:
       - run: yarn install --frozen-lockfile --check-files
       - run: yarn build
       - run: yarn test
+        if: ${{ !matrix.coverage }}
       - run: yarn lint --max-warnings=0
+        if: ${{ matrix.coverage }}
+      - uses: codecov/codecov-action@v1
+        if: ${{ matrix.coverage }}
+        with:
+          token: ${{ secrets.CODECOV_TOKEN }}

@@ -6,9 +6,6 @@ module.exports = {
     '**/__tests__/*.test.ts',
     ...(process.platform === 'darwin' ? ['**/__tests__/*.test.ios.ts'] : []),
   ],
-  collectCoverage: true,
-  coverageReporters: ['json', 'lcov'],
-  coverageDirectory: '../coverage/tests/',
   clearMocks: true,
   setupFilesAfterEnv: ['<rootDir>/../jest/setup-tests.ts'],
 };
