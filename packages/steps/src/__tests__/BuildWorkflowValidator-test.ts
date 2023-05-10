@@ -374,7 +374,7 @@ describe(BuildWorkflowValidator, () => {
     expect(error.errors.length).toBe(1);
     expect(error.errors[0]).toBeInstanceOf(BuildConfigError);
     expect(error.errors[0].message).toBe(
-      `Step "${displayName}" is not allowed on platform "${Platform.ANDROID}", because the underlying worker platform is "${BuildPlatform.LINUX}". Allowed platforms for this steps are: ${BuildPlatform.DARWIN}.`
+      `Step "${displayName}" is not allowed on platform "${Platform.ANDROID}", because the underlying worker platform is "${BuildPlatform.LINUX}". Allowed platforms for this steps are: "${BuildPlatform.DARWIN}".`
     );
   });
 });

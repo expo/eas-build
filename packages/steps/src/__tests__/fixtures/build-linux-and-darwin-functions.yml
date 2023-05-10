@@ -1,0 +1,11 @@
+import:
+  - functions-with-platforms-property-darwin-and-linux.yml
+
+build:
+  steps:
+    - say_hi_linux_and_darwin:
+        inputs:
+          name: Doninik
+    - say_bye_linux_and_darwin:
+        inputs:
+          name: Dominik

@@ -103,7 +103,9 @@ export class BuildWorkflowValidator {
             step.displayName
           }" is not allowed on platform "${requestedBuildPlatform}", because the underlying worker platform is "${
             buildPlatformToWorkerPlatform[requestedBuildPlatform]
-          }". Allowed platforms for this steps are: ${step.ctx.allowedPlatforms.join(', ')}.`
+          }". Allowed platforms for this steps are: ${step.ctx.allowedPlatforms
+            .map((p) => `"${p}"`)
+            .join(', ')}.`
         );
         errors.push(error);
       }

@@ -7,6 +7,7 @@ import { v4 as uuidv4 } from 'uuid';
 import { BuildStep } from '../BuildStep.js';
 import { BuildStepContext } from '../BuildStepContext.js';
 import { BuildStepRuntimeError } from '../errors.js';
+import { BuildPlatform } from '../BuildPlatform.js';
 
 import { createMockContext } from './utils/context.js';
 import { getError } from './utils/error.js';
@@ -83,9 +84,9 @@ describe(BuildStepContext, () => {
       expect(childCtx.workingDirectory).toBe(workingDirectoryOverride);
     });
     it('can override allowed platforms', () => {
-      const allowedPlatformsOverride = ['ios', 'android'];
+      const allowedPlatformsOverride = [BuildPlatform.LINUX];
       const ctx = createMockContext();
-      const childCtx = ctx.child();
+      const childCtx = ctx.child({ allowedPlatforms: allowedPlatformsOverride });
       expect(ctx.allowedPlatforms).not.toBe(allowedPlatformsOverride);
       expect(childCtx.allowedPlatforms).toBe(allowedPlatformsOverride);
     });

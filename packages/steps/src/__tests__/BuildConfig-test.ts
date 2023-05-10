@@ -98,7 +98,7 @@ describe(readAndValidateBuildFunctionsConfigFileAsync, () => {
       path.join(__dirname, './fixtures/functions-with-platforms-property.yml')
     );
     expect(typeof config).toBe('object');
-    expect(config.functions?.say_hi).toBeDefined();
+    expect(config.functions?.say_hi_linux_and_darwin).toBeDefined();
   });
 });
 
