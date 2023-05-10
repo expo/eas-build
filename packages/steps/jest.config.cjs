@@ -12,10 +12,9 @@ module.exports = {
   testEnvironment: 'node',
   rootDir: 'src',
   testMatch: ['**/__tests__/*-test.ts'],
-  collectCoverage: true,
   coverageReporters: ['json', 'lcov'],
   coverageDirectory: '../coverage/tests/',
-  collectCoverageFrom: ['<rootDir>/src/**/*.{ts,tsx,js,jsx}'],
+  collectCoverageFrom: ['**/*.ts'],
   moduleNameMapper: {
     '^(\\.\\.?/.*)\\.js$': ['$1.ts', '$0'],
   },
