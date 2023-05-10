@@ -2,23 +2,26 @@ name: Run tests
 on:
   push:
     branches: [main]
+    paths:
+        - 'packages/steps/**'
+        - '.github/workflows/coverage.yml'
   pull_request:
     types: [opened, synchronize]
+    paths:
+        - 'packages/steps/**'
+        - '.github/workflows/coverage.yml'
 
 jobs:
   test:
     runs-on: ubuntu-latest
-    strategy:
-      matrix:
-        node: ['14', '16', '18']
-    name: Test with Node ${{ matrix.node }} on Linux
+    name: '@expo/steps code coverage'
     steps:
       - uses: actions/checkout@v2
       - name: Setup node
         uses: actions/setup-node@v1
         with:
-          node-version: ${{ matrix.node }}
+          node-version: 18
       - run: yarn install --frozen-lockfile --check-files
       - run: yarn build
-      - run: yarn test
-      - run: yarn lint --max-warnings=0
+      - run: yarn test:coverage
+      - uses: codecov/codecov-action@v1
