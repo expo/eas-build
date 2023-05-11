@@ -206,6 +206,10 @@ export class BuildStep {
     return this.outputById[name].value;
   }
 
+  public canBeRunOnRuntimePlatform(): boolean {
+    return !this.allowedPlatforms || this.allowedPlatforms.includes(this.ctx.runtimePlatform);
+  }
+
   private async executeCommandAsync(env: BuildStepEnv): Promise<void> {
     assert(this.command, 'Command must be defined.');
 

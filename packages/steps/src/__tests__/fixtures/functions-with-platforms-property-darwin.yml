@@ -4,11 +4,11 @@ functions:
     inputs:
       - name
     command: echo "Hi, ${ inputs.name }!"
-    platforms: ['darwin']
+    platforms: [darwin]
 
   say_bye_darwin:
     name: Bye!
     inputs:
       - name
     command: echo "Bye, ${ inputs.name }!"
-    platforms: ['darwin']
+    platforms: [darwin]

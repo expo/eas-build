@@ -27,7 +27,7 @@ async function runAsync(
 
 const relativeConfigPath = process.argv[2];
 const relativeWorkingDirectoryPath = process.argv[3];
-const platform: BuildPlatform = process.argv[4] as BuildPlatform;
+const platform: BuildPlatform = (process.argv[4] ?? process.platform) as BuildPlatform;
 
 if (!relativeConfigPath || !relativeWorkingDirectoryPath || !platform) {
   console.error('Usage: yarn cli config.yml path/to/working/directory darwin|linux');

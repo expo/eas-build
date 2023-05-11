@@ -474,7 +474,7 @@ describe(validateConfig, () => {
           functions: {
             abc: {
               platforms: ['linux', 'darwin'],
-              command: 'echo "${ inputs.i1 } ${ inputs.i2 }"',
+              command: 'echo "abc"',
             },
           },
         };
@@ -493,7 +493,7 @@ describe(validateConfig, () => {
         functions: {
           abc: {
             platforms: ['invalid'],
-            command: 'echo "${ inputs.i1 } ${ inputs.i2 }"',
+            command: 'echo "abc"',
           },
         },
       };

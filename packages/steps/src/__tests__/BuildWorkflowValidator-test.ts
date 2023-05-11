@@ -344,12 +344,12 @@ describe(BuildWorkflowValidator, () => {
       'Input parameter "input2" for step "test3" uses an expression that references an undefined output parameter "output2" from step "test2".'
     );
   });
-  test('not allowed platform for build step', async () => {
+  test('unallowed platform for build step', async () => {
     const id = 'test';
     const displayName = BuildStep.getDisplayName({ id });
     const fn: BuildStepFunction = () => {};
 
-    const ctx = createMockContext({ platform: BuildPlatform.LINUX });
+    const ctx = createMockContext({ runtimePlatform: BuildPlatform.LINUX });
     const workflow = new BuildWorkflow(ctx, {
       buildSteps: [
         new BuildStep(ctx, {

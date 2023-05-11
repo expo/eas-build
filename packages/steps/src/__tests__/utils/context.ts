@@ -10,7 +10,7 @@ interface BuildContextParams {
   buildId?: string;
   logger?: bunyan;
   skipCleanup?: boolean;
-  platform?: BuildPlatform;
+  runtimePlatform?: BuildPlatform;
   workingDirectory?: string;
 }
 
@@ -18,14 +18,14 @@ export function createMockContext({
   buildId,
   logger,
   skipCleanup,
-  platform,
+  runtimePlatform,
   workingDirectory,
 }: BuildContextParams = {}): BuildStepContext {
   return new BuildStepContext(
     buildId ?? uuidv4(),
     logger ?? createMockLogger(),
     skipCleanup ?? false,
-    platform ?? BuildPlatform.LINUX,
+    runtimePlatform ?? BuildPlatform.LINUX,
     workingDirectory
   );
 }
