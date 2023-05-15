@@ -90,8 +90,11 @@ export class BuildWorkflowValidator {
         const error = new BuildConfigError(
           `Step "${step.displayName}" is not allowed on platform "${
             step.ctx.runtimePlatform
-          }". Allowed platforms for this steps are: ${step.supportedRuntimePlatforms
-            ?.map((p) => `"${p}"`) // if canBeRunOnRuntimePlatform() is false step.allowedPlatforms can't be undefined
+          }". Allowed platforms for this steps are: ${nullthrows(
+            step.supportedRuntimePlatforms,
+            `step.allowedPlatforms can't be falsy if canBeRunOnRuntimePlatform() is false`
+          )
+            .map((p) => `"${p}"`)
             .join(', ')}.`
         );
         errors.push(error);

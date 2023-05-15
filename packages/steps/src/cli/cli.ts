@@ -30,8 +30,8 @@ const relativeWorkingDirectoryPath = process.argv[3];
 const platform: BuildRuntimePlatform = (process.argv[4] ??
   process.platform) as BuildRuntimePlatform;
 
-if (!relativeConfigPath || !relativeWorkingDirectoryPath || !platform) {
-  console.error('Usage: yarn cli config.yml path/to/working/directory darwin|linux');
+if (!relativeConfigPath || !relativeWorkingDirectoryPath) {
+  console.error('Usage: yarn cli config.yml path/to/working/directory [darwin|linux]');
   process.exit(1);
 }
 
