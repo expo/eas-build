@@ -7,6 +7,7 @@
     "build": "lerna bootstrap && lerna run build",
     "lint": "eslint 'packages/*/src/**/*.ts'",
     "test": "lerna run test",
+    "test:coverage": "lerna run test:coverage",
     "clean": "lerna run clean && rm -rf node_modules",
     "release": "./scripts/release.sh"
   },
