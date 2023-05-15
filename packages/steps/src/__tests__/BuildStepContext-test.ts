@@ -7,7 +7,7 @@ import { v4 as uuidv4 } from 'uuid';
 import { BuildStep } from '../BuildStep.js';
 import { BuildStepContext } from '../BuildStepContext.js';
 import { BuildStepRuntimeError } from '../errors.js';
-import { BuildPlatform } from '../BuildPlatform.js';
+import { BuildRuntimePlatform } from '../BuildRuntimePlatform.js';
 
 import { createMockContext } from './utils/context.js';
 import { getError } from './utils/error.js';
@@ -16,18 +16,33 @@ import { createMockLogger } from './utils/logger.js';
 describe(BuildStepContext, () => {
   describe('baseWorkingDirectory', () => {
     it('is in os.tmpdir()', () => {
-      const ctx = new BuildStepContext(uuidv4(), createMockLogger(), false, BuildPlatform.LINUX);
+      const ctx = new BuildStepContext(
+        uuidv4(),
+        createMockLogger(),
+        false,
+        BuildRuntimePlatform.LINUX
+      );
       expect(ctx.baseWorkingDirectory.startsWith(os.tmpdir())).toBe(true);
     });
     it('uses the build id as a path component', () => {
       const buildId = uuidv4();
-      const ctx = new BuildStepContext(buildId, createMockLogger(), false, BuildPlatform.LINUX);
+      const ctx = new BuildStepContext(
+        buildId,
+        createMockLogger(),
+        false,
+        BuildRuntimePlatform.LINUX
+      );
       expect(ctx.baseWorkingDirectory).toMatch(buildId);
     });
   });
   describe('workingDirectory', () => {
     it('defaults to "project" directory in ctx.baseWorkingDirectory', () => {
-      const ctx = new BuildStepContext(uuidv4(), createMockLogger(), false, BuildPlatform.LINUX);
+      const ctx = new BuildStepContext(
+        uuidv4(),
+        createMockLogger(),
+        false,
+        BuildRuntimePlatform.LINUX
+      );
       expect(ctx.workingDirectory).toBe(path.join(ctx.baseWorkingDirectory, 'project'));
     });
     it('can use the workingDirectory passed to the constructor', () => {
@@ -36,7 +51,7 @@ describe(BuildStepContext, () => {
         uuidv4(),
         createMockLogger(),
         false,
-        BuildPlatform.LINUX,
+        BuildRuntimePlatform.LINUX,
         workingDirectory
       );
       expect(ctx.workingDirectory).toBe(workingDirectory);

@@ -6,7 +6,7 @@ import { v4 as uuidv4 } from 'uuid';
 import { BuildConfigParser } from '../BuildConfigParser.js';
 import { BuildStepContext } from '../BuildStepContext.js';
 import { BuildWorkflowError } from '../errors.js';
-import { BuildPlatform } from '../BuildPlatform.js';
+import { BuildRuntimePlatform } from '../BuildRuntimePlatform.js';
 
 const logger = createLogger({
   name: 'steps-cli',
@@ -16,7 +16,7 @@ const logger = createLogger({
 async function runAsync(
   configPath: string,
   workingDirectory: string,
-  platform: BuildPlatform
+  platform: BuildRuntimePlatform
 ): Promise<void> {
   const fakeBuildId = uuidv4();
   const ctx = new BuildStepContext(fakeBuildId, logger, false, platform, workingDirectory);
@@ -27,7 +27,8 @@ async function runAsync(
 
 const relativeConfigPath = process.argv[2];
 const relativeWorkingDirectoryPath = process.argv[3];
-const platform: BuildPlatform = (process.argv[4] ?? process.platform) as BuildPlatform;
+const platform: BuildRuntimePlatform = (process.argv[4] ??
+  process.platform) as BuildRuntimePlatform;
 
 if (!relativeConfigPath || !relativeWorkingDirectoryPath || !platform) {
   console.error('Usage: yarn cli config.yml path/to/working/directory darwin|linux');

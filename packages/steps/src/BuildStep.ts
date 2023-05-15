@@ -22,7 +22,7 @@ import { spawnAsync } from './utils/shell/spawn.js';
 import { interpolateWithInputs } from './utils/template.js';
 import { BuildStepRuntimeError } from './errors.js';
 import { BuildStepEnv } from './BuildStepEnv.js';
-import { BuildPlatform } from './BuildPlatform.js';
+import { BuildRuntimePlatform } from './BuildRuntimePlatform.js';
 
 export enum BuildStepStatus {
   NEW = 'new',
@@ -55,7 +55,7 @@ export class BuildStep {
   public readonly id: string;
   public readonly name?: string;
   public readonly displayName: string;
-  public readonly allowedPlatforms?: BuildPlatform[];
+  public readonly supportedRuntimePlatforms?: BuildRuntimePlatform[];
   public readonly inputs?: BuildStepInput[];
   public readonly outputs?: BuildStepOutput[];
   public readonly command?: string;
@@ -112,7 +112,7 @@ export class BuildStep {
       fn,
       workingDirectory: maybeWorkingDirectory,
       shell,
-      allowedPlatforms: maybeAllowedPlatforms,
+      supportedRuntimePlatforms: maybeSupportedRuntimePlatforms,
     }: {
       id: string;
       name?: string;
@@ -123,7 +123,7 @@ export class BuildStep {
       fn?: BuildStepFunction;
       workingDirectory?: string;
       shell?: string;
-      allowedPlatforms?: BuildPlatform[];
+      supportedRuntimePlatforms?: BuildRuntimePlatform[];
     }
   ) {
     assert(command !== undefined || fn !== undefined, 'Either command or fn must be defined.');
@@ -132,7 +132,7 @@ export class BuildStep {
     this.id = id;
     this.name = name;
     this.displayName = displayName;
-    this.allowedPlatforms = maybeAllowedPlatforms;
+    this.supportedRuntimePlatforms = maybeSupportedRuntimePlatforms;
     this.inputs = inputs;
     this.outputs = outputs;
     this.inputById = makeBuildStepInputByIdMap(inputs);
@@ -207,7 +207,10 @@ export class BuildStep {
   }
 
   public canBeRunOnRuntimePlatform(): boolean {
-    return !this.allowedPlatforms || this.allowedPlatforms.includes(this.ctx.runtimePlatform);
+    return (
+      !this.supportedRuntimePlatforms ||
+      this.supportedRuntimePlatforms.includes(this.ctx.runtimePlatform)
+    );
   }
 
   private async executeCommandAsync(env: BuildStepEnv): Promise<void> {

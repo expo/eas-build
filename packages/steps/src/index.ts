@@ -1,7 +1,7 @@
 export { readAndValidateBuildConfigAsync } from './BuildConfig.js';
 export { BuildConfigParser } from './BuildConfigParser.js';
 export { BuildFunction } from './BuildFunction.js';
-export { BuildPlatform } from './BuildPlatform.js';
+export { BuildRuntimePlatform } from './BuildRuntimePlatform.js';
 export { BuildStepInput } from './BuildStepInput.js';
 export { BuildStepOutput } from './BuildStepOutput.js';
 export { BuildStepContext } from './BuildStepContext.js';

@@ -6,7 +6,7 @@ import Joi from 'joi';
 import YAML from 'yaml';
 
 import { BuildConfigError, BuildWorkflowError } from './errors.js';
-import { BuildPlatform } from './BuildPlatform.js';
+import { BuildRuntimePlatform } from './BuildRuntimePlatform.js';
 import { BuildFunction } from './BuildFunction.js';
 
 export type BuildFunctions = Record<string, BuildFunctionConfig>;
@@ -62,7 +62,7 @@ export interface BuildFunctionConfig {
   inputs?: BuildFunctionInputs;
   outputs?: BuildFunctionOutputs;
   name?: string;
-  platforms?: BuildPlatform[];
+  supportedRuntimePlatforms?: BuildRuntimePlatform[];
   shell?: string;
   command: string;
 }
@@ -150,12 +150,12 @@ const BuildStepConfigSchema = Joi.any<BuildStepConfig>()
 
 const BuildFunctionConfigSchema = Joi.object({
   name: Joi.string(),
-  platforms: Joi.array().items(...Object.values(BuildPlatform)),
+  supportedRuntimePlatforms: Joi.array().items(...Object.values(BuildRuntimePlatform)),
   inputs: BuildFunctionInputsSchema,
   outputs: BuildStepOutputsSchema,
   command: Joi.string().required(),
   shell: Joi.string(),
-});
+}).rename('supported_runtime_platforms', 'supportedRuntimePlatforms');
 
 export const BuildFunctionsConfigFileSchema = Joi.object<BuildFunctionsConfigFile>({
   configFilesToImport: Joi.array().items(Joi.string().pattern(/\.y(a)?ml$/)),

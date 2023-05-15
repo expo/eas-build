@@ -167,7 +167,7 @@ export class BuildConfigParser {
     outputs: outputsConfig,
     shell,
     command,
-    platforms,
+    supportedRuntimePlatforms,
   }: BuildFunctionConfig & { id: string }): BuildFunction {
     const inputProviders =
       inputsConfig && this.createBuildStepInputProvidersFromBuildFunctionInputs(inputsConfig);
@@ -180,7 +180,7 @@ export class BuildConfigParser {
       outputProviders,
       shell,
       command,
-      platforms,
+      supportedRuntimePlatforms,
     });
   }
 

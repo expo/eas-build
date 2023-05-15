@@ -1,6 +1,6 @@
 import assert from 'assert';
 
-import { BuildPlatform } from './BuildPlatform.js';
+import { BuildRuntimePlatform } from './BuildRuntimePlatform.js';
 import { BuildStep, BuildStepFunction } from './BuildStep.js';
 import { BuildStepContext } from './BuildStepContext.js';
 import { BuildStepInputProvider } from './BuildStepInput.js';
@@ -13,7 +13,7 @@ export class BuildFunction {
   public readonly namespace?: string;
   public readonly id: string;
   public readonly name?: string;
-  public readonly platforms?: BuildPlatform[];
+  public readonly supportedRuntimePlatforms?: BuildRuntimePlatform[];
   public readonly inputProviders?: BuildStepInputProvider[];
   public readonly outputProviders?: BuildStepOutputProvider[];
   public readonly command?: string;
@@ -28,7 +28,7 @@ export class BuildFunction {
     namespace,
     id,
     name,
-    platforms,
+    supportedRuntimePlatforms,
     inputProviders,
     outputProviders,
     command,
@@ -38,7 +38,7 @@ export class BuildFunction {
     namespace?: string;
     id: string;
     name?: string;
-    platforms?: BuildPlatform[];
+    supportedRuntimePlatforms?: BuildRuntimePlatform[];
     inputProviders?: BuildStepInputProvider[];
     outputProviders?: BuildStepOutputProvider[];
     command?: string;
@@ -51,7 +51,7 @@ export class BuildFunction {
     this.namespace = namespace;
     this.id = id;
     this.name = name;
-    this.platforms = platforms;
+    this.supportedRuntimePlatforms = supportedRuntimePlatforms;
     this.inputProviders = inputProviders;
     this.outputProviders = outputProviders;
     this.command = command;
@@ -106,7 +106,7 @@ export class BuildFunction {
       inputs,
       outputs,
       shell,
-      allowedPlatforms: this.platforms,
+      supportedRuntimePlatforms: this.supportedRuntimePlatforms,
     });
   }
 }

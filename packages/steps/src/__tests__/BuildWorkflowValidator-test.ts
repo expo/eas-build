@@ -6,7 +6,7 @@ import { BuildStepOutput } from '../BuildStepOutput.js';
 import { BuildWorkflow } from '../BuildWorkflow.js';
 import { BuildWorkflowValidator } from '../BuildWorkflowValidator.js';
 import { BuildConfigError, BuildWorkflowError } from '../errors.js';
-import { BuildPlatform } from '../BuildPlatform.js';
+import { BuildRuntimePlatform } from '../BuildRuntimePlatform.js';
 
 import { createMockContext } from './utils/context.js';
 import { getError } from './utils/error.js';
@@ -349,7 +349,7 @@ describe(BuildWorkflowValidator, () => {
     const displayName = BuildStep.getDisplayName({ id });
     const fn: BuildStepFunction = () => {};
 
-    const ctx = createMockContext({ runtimePlatform: BuildPlatform.LINUX });
+    const ctx = createMockContext({ runtimePlatform: BuildRuntimePlatform.LINUX });
     const workflow = new BuildWorkflow(ctx, {
       buildSteps: [
         new BuildStep(ctx, {
@@ -357,7 +357,7 @@ describe(BuildWorkflowValidator, () => {
           displayName,
           fn,
           workingDirectory: ctx.workingDirectory,
-          allowedPlatforms: [BuildPlatform.DARWIN],
+          supportedRuntimePlatforms: [BuildRuntimePlatform.DARWIN],
         }),
       ],
       buildFunctions: {},
@@ -372,7 +372,7 @@ describe(BuildWorkflowValidator, () => {
     expect(error.errors.length).toBe(1);
     expect(error.errors[0]).toBeInstanceOf(BuildConfigError);
     expect(error.errors[0].message).toBe(
-      `Step "${displayName}" is not allowed on platform "${BuildPlatform.LINUX}". Allowed platforms for this steps are: "${BuildPlatform.DARWIN}".`
+      `Step "${displayName}" is not allowed on platform "${BuildRuntimePlatform.LINUX}". Allowed platforms for this steps are: "${BuildRuntimePlatform.DARWIN}".`
     );
   });
 });

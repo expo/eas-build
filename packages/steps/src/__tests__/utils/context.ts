@@ -2,7 +2,7 @@ import { bunyan } from '@expo/logger';
 import { v4 as uuidv4 } from 'uuid';
 
 import { BuildStepContext } from '../../BuildStepContext.js';
-import { BuildPlatform } from '../../BuildPlatform.js';
+import { BuildRuntimePlatform } from '../../BuildRuntimePlatform.js';
 
 import { createMockLogger } from './logger.js';
 
@@ -10,7 +10,7 @@ interface BuildContextParams {
   buildId?: string;
   logger?: bunyan;
   skipCleanup?: boolean;
-  runtimePlatform?: BuildPlatform;
+  runtimePlatform?: BuildRuntimePlatform;
   workingDirectory?: string;
 }
 
@@ -25,7 +25,7 @@ export function createMockContext({
     buildId ?? uuidv4(),
     logger ?? createMockLogger(),
     skipCleanup ?? false,
-    runtimePlatform ?? BuildPlatform.LINUX,
+    runtimePlatform ?? BuildRuntimePlatform.LINUX,
     workingDirectory
   );
 }

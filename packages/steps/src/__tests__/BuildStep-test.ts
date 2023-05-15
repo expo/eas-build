@@ -11,7 +11,7 @@ import { BuildStepInput } from '../BuildStepInput.js';
 import { BuildStepOutput } from '../BuildStepOutput.js';
 import { BuildStepRuntimeError } from '../errors.js';
 import { nullthrows } from '../utils/nullthrows.js';
-import { BuildPlatform } from '../BuildPlatform.js';
+import { BuildRuntimePlatform } from '../BuildRuntimePlatform.js';
 
 import { createMockContext } from './utils/context.js';
 import { createMockLogger } from './utils/logger.js';
@@ -615,7 +615,7 @@ describe(BuildStep.prototype.canBeRunOnRuntimePlatform, () => {
   let baseStepCtx: BuildStepContext;
 
   beforeEach(async () => {
-    baseStepCtx = createMockContext({ runtimePlatform: BuildPlatform.LINUX });
+    baseStepCtx = createMockContext({ runtimePlatform: BuildRuntimePlatform.LINUX });
     await fs.mkdir(baseStepCtx.workingDirectory, { recursive: true });
   });
   afterEach(async () => {
@@ -644,7 +644,7 @@ describe(BuildStep.prototype.canBeRunOnRuntimePlatform, () => {
     const step = new BuildStep(baseStepCtx, {
       id,
       displayName,
-      allowedPlatforms: [BuildPlatform.DARWIN, BuildPlatform.LINUX],
+      supportedRuntimePlatforms: [BuildRuntimePlatform.DARWIN, BuildRuntimePlatform.LINUX],
       command,
       workingDirectory: baseStepCtx.workingDirectory,
     });
@@ -659,7 +659,7 @@ describe(BuildStep.prototype.canBeRunOnRuntimePlatform, () => {
     const step = new BuildStep(baseStepCtx, {
       id,
       displayName,
-      allowedPlatforms: [BuildPlatform.DARWIN],
+      supportedRuntimePlatforms: [BuildRuntimePlatform.DARWIN],
       command,
       workingDirectory: baseStepCtx.workingDirectory,
     });
