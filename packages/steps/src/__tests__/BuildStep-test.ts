@@ -11,6 +11,7 @@ import { BuildStepInput } from '../BuildStepInput.js';
 import { BuildStepOutput } from '../BuildStepOutput.js';
 import { BuildStepRuntimeError } from '../errors.js';
 import { nullthrows } from '../utils/nullthrows.js';
+import { BuildRuntimePlatform } from '../BuildRuntimePlatform.js';
 
 import { createMockContext } from './utils/context.js';
 import { createMockLogger } from './utils/logger.js';
@@ -607,5 +608,61 @@ describe(BuildStep, () => {
       ).toBeTruthy();
       expect(lines.find((line) => line.match(ctx.workingDirectory))).toBeTruthy();
     });
+  });
+});
+
+describe(BuildStep.prototype.canBeRunOnRuntimePlatform, () => {
+  let baseStepCtx: BuildStepContext;
+
+  beforeEach(async () => {
+    baseStepCtx = createMockContext({ runtimePlatform: BuildRuntimePlatform.LINUX });
+    await fs.mkdir(baseStepCtx.workingDirectory, { recursive: true });
+  });
+  afterEach(async () => {
+    await fs.rm(baseStepCtx.baseWorkingDirectory, { recursive: true });
+  });
+
+  it('returns true when the step does not have a platform filter', async () => {
+    const id = 'test1';
+    const command = 'set-output abc 123';
+    const displayName = BuildStep.getDisplayName({ id, command });
+
+    const step = new BuildStep(baseStepCtx, {
+      id,
+      displayName,
+      command,
+      workingDirectory: baseStepCtx.workingDirectory,
+    });
+    expect(step.canBeRunOnRuntimePlatform()).toBe(true);
+  });
+
+  it('returns true when the step has a platform filter and the platform matches', async () => {
+    const id = 'test1';
+    const command = 'set-output abc 123';
+    const displayName = BuildStep.getDisplayName({ id, command });
+
+    const step = new BuildStep(baseStepCtx, {
+      id,
+      displayName,
+      supportedRuntimePlatforms: [BuildRuntimePlatform.DARWIN, BuildRuntimePlatform.LINUX],
+      command,
+      workingDirectory: baseStepCtx.workingDirectory,
+    });
+    expect(step.canBeRunOnRuntimePlatform()).toBe(true);
+  });
+
+  it('returns false when the step has a platform filter and the platform does not match', async () => {
+    const id = 'test1';
+    const command = 'set-output abc 123';
+    const displayName = BuildStep.getDisplayName({ id, command });
+
+    const step = new BuildStep(baseStepCtx, {
+      id,
+      displayName,
+      supportedRuntimePlatforms: [BuildRuntimePlatform.DARWIN],
+      command,
+      workingDirectory: baseStepCtx.workingDirectory,
+    });
+    expect(step.canBeRunOnRuntimePlatform()).toBe(false);
   });
 });

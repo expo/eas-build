@@ -6,6 +6,7 @@ import { bunyan } from '@expo/logger';
 import { BuildStep } from './BuildStep.js';
 import { parseOutputPath } from './utils/template.js';
 import { BuildStepRuntimeError } from './errors.js';
+import { BuildRuntimePlatform } from './BuildRuntimePlatform.js';
 
 export class BuildStepContext {
   public readonly baseWorkingDirectory: string;
@@ -17,6 +18,7 @@ export class BuildStepContext {
     public readonly buildId: string,
     public readonly logger: bunyan,
     public readonly skipCleanup: boolean,
+    public readonly runtimePlatform: BuildRuntimePlatform,
     workingDirectory?: string
   ) {
     this.baseWorkingDirectory = path.join(os.tmpdir(), 'eas-build', buildId);
@@ -46,6 +48,7 @@ export class BuildStepContext {
       this.buildId,
       logger ?? this.logger,
       this.skipCleanup,
+      this.runtimePlatform,
       workingDirectory ?? this.workingDirectory
     );
   }

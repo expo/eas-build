@@ -22,6 +22,7 @@ import { spawnAsync } from './utils/shell/spawn.js';
 import { interpolateWithInputs } from './utils/template.js';
 import { BuildStepRuntimeError } from './errors.js';
 import { BuildStepEnv } from './BuildStepEnv.js';
+import { BuildRuntimePlatform } from './BuildRuntimePlatform.js';
 
 export enum BuildStepStatus {
   NEW = 'new',
@@ -54,6 +55,7 @@ export class BuildStep {
   public readonly id: string;
   public readonly name?: string;
   public readonly displayName: string;
+  public readonly supportedRuntimePlatforms?: BuildRuntimePlatform[];
   public readonly inputs?: BuildStepInput[];
   public readonly outputs?: BuildStepOutput[];
   public readonly command?: string;
@@ -110,6 +112,7 @@ export class BuildStep {
       fn,
       workingDirectory: maybeWorkingDirectory,
       shell,
+      supportedRuntimePlatforms: maybeSupportedRuntimePlatforms,
     }: {
       id: string;
       name?: string;
@@ -120,6 +123,7 @@ export class BuildStep {
       fn?: BuildStepFunction;
       workingDirectory?: string;
       shell?: string;
+      supportedRuntimePlatforms?: BuildRuntimePlatform[];
     }
   ) {
     assert(command !== undefined || fn !== undefined, 'Either command or fn must be defined.');
@@ -128,6 +132,7 @@ export class BuildStep {
     this.id = id;
     this.name = name;
     this.displayName = displayName;
+    this.supportedRuntimePlatforms = maybeSupportedRuntimePlatforms;
     this.inputs = inputs;
     this.outputs = outputs;
     this.inputById = makeBuildStepInputByIdMap(inputs);
@@ -199,6 +204,13 @@ export class BuildStep {
       throw new BuildStepRuntimeError(`Step "${this.displayName}" does not have output "${name}".`);
     }
     return this.outputById[name].value;
+  }
+
+  public canBeRunOnRuntimePlatform(): boolean {
+    return (
+      !this.supportedRuntimePlatforms ||
+      this.supportedRuntimePlatforms.includes(this.ctx.runtimePlatform)
+    );
   }
 
   private async executeCommandAsync(env: BuildStepEnv): Promise<void> {

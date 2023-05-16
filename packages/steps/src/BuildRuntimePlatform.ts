@@ -1,4 +1,4 @@
-export enum BuildPlatform {
+export enum BuildRuntimePlatform {
   DARWIN = 'darwin',
   LINUX = 'linux',
 }

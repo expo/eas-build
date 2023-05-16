@@ -7,6 +7,7 @@ import { BuildStepFunction } from '../BuildStep.js';
 import { BuildWorkflow } from '../BuildWorkflow.js';
 import { BuildConfigError, BuildStepRuntimeError } from '../errors.js';
 import { getDefaultShell } from '../utils/shell/command.js';
+import { BuildRuntimePlatform } from '../BuildRuntimePlatform.js';
 
 import { createMockContext } from './utils/context.js';
 import { getError, getErrorAsync } from './utils/error.js';
@@ -294,6 +295,10 @@ describe(BuildConfigParser, () => {
       expect(step6.command).toBe('echo "${ inputs.greeting }, ${ inputs.name }!"');
       expect(step6.ctx.workingDirectory).toBe(ctx.workingDirectory);
       expect(step6.shell).toBe(getDefaultShell());
+      expect(step6.supportedRuntimePlatforms).toEqual([
+        BuildRuntimePlatform.DARWIN,
+        BuildRuntimePlatform.LINUX,
+      ]);
       expect(step6.inputs?.[0].id).toBe('greeting');
       expect(step6.inputs?.[0].required).toBe(true);
       expect(step6.inputs?.[0].defaultValue).toBe('Hi');
@@ -369,6 +374,10 @@ describe(BuildConfigParser, () => {
         'Hello',
       ]);
       expect(function5.command).toBe('echo "${ inputs.greeting }, ${ inputs.name }!"');
+      expect(function5.supportedRuntimePlatforms).toEqual([
+        BuildRuntimePlatform.DARWIN,
+        BuildRuntimePlatform.LINUX,
+      ]);
     });
 
     it('throws if calling non-existent external functions', async () => {

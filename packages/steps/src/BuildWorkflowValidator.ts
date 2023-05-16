@@ -12,6 +12,7 @@ export class BuildWorkflowValidator {
     const errors: BuildConfigError[] = [];
     errors.push(...this.validateUniqueStepIds());
     errors.push(...this.validateInputs());
+    errors.push(...this.validateAllowedPlatforms());
     if (errors.length !== 0) {
       throw new BuildWorkflowError('Build workflow is invalid.', errors);
     }
@@ -79,6 +80,26 @@ export class BuildWorkflowValidator {
       visitedStepByStepId[currentStep.id] = currentStep;
     }
 
+    return errors;
+  }
+
+  private validateAllowedPlatforms(): BuildConfigError[] {
+    const errors: BuildConfigError[] = [];
+    for (const step of this.workflow.buildSteps) {
+      if (!step.canBeRunOnRuntimePlatform()) {
+        const error = new BuildConfigError(
+          `Step "${step.displayName}" is not allowed on platform "${
+            step.ctx.runtimePlatform
+          }". Allowed platforms for this step are: ${nullthrows(
+            step.supportedRuntimePlatforms,
+            `step.supportedRuntimePlatforms can't be falsy if canBeRunOnRuntimePlatform() is false`
+          )
+            .map((p) => `"${p}"`)
+            .join(', ')}.`
+        );
+        errors.push(error);
+      }
+    }
     return errors;
   }
 }

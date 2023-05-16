@@ -33,6 +33,7 @@ functions:
   say_hi_brent:
     name: Say HI
     command: echo "Hi, Brent!"
+    supported_platforms: [darwin, linux]
   random:
     name: Generate random number
     outputs:

@@ -93,6 +93,13 @@ describe(readAndValidateBuildFunctionsConfigFileAsync, () => {
     expect(config.configFilesToImport?.[0]).toBe('functions-file-2.yml');
     expect(config.functions?.say_hi).toBeDefined();
   });
+  test('valid functions with platform property config', async () => {
+    const config = await readAndValidateBuildFunctionsConfigFileAsync(
+      path.join(__dirname, './fixtures/functions-with-platforms-property.yml')
+    );
+    expect(typeof config).toBe('object');
+    expect(config.functions?.say_hi_linux_and_darwin).toBeDefined();
+  });
 });
 
 describe(readRawBuildConfigAsync, () => {
@@ -458,6 +465,42 @@ describe(validateConfig, () => {
           validateConfig(BuildConfigSchema, buildConfig);
         }).not.toThrow();
       });
+
+      test('valid allowed platforms for function', () => {
+        const buildConfig = {
+          build: {
+            steps: ['abc'],
+          },
+          functions: {
+            abc: {
+              supported_platforms: ['linux', 'darwin'],
+              command: 'echo "abc"',
+            },
+          },
+        };
+
+        expect(() => {
+          validateConfig(BuildConfigSchema, buildConfig);
+        }).not.toThrow();
+      });
+    });
+
+    test('invalid allowed platforms for function', () => {
+      const buildConfig = {
+        build: {
+          steps: ['abc'],
+        },
+        functions: {
+          abc: {
+            supported_platforms: ['invalid'],
+            command: 'echo "abc"',
+          },
+        },
+      };
+
+      expect(() => {
+        validateConfig(BuildConfigSchema, buildConfig);
+      }).toThrow();
     });
   });
 
