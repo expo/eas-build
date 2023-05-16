@@ -372,7 +372,7 @@ describe(BuildWorkflowValidator, () => {
     expect(error.errors.length).toBe(1);
     expect(error.errors[0]).toBeInstanceOf(BuildConfigError);
     expect(error.errors[0].message).toBe(
-      `Step "${displayName}" is not allowed on platform "${BuildRuntimePlatform.LINUX}". Allowed platforms for this steps are: "${BuildRuntimePlatform.DARWIN}".`
+      `Step "${displayName}" is not allowed on platform "${BuildRuntimePlatform.LINUX}". Allowed platforms for this step are: "${BuildRuntimePlatform.DARWIN}".`
     );
   });
 });
