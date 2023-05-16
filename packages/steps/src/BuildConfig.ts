@@ -155,7 +155,7 @@ const BuildFunctionConfigSchema = Joi.object({
   outputs: BuildStepOutputsSchema,
   command: Joi.string().required(),
   shell: Joi.string(),
-}).rename('supported_runtime_platforms', 'supportedRuntimePlatforms');
+}).rename('supported_platforms', 'supportedRuntimePlatforms');
 
 export const BuildFunctionsConfigFileSchema = Joi.object<BuildFunctionsConfigFile>({
   configFilesToImport: Joi.array().items(Joi.string().pattern(/\.y(a)?ml$/)),

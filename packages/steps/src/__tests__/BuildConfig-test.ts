@@ -473,7 +473,7 @@ describe(validateConfig, () => {
           },
           functions: {
             abc: {
-              supported_runtime_platforms: ['linux', 'darwin'],
+              supported_platforms: ['linux', 'darwin'],
               command: 'echo "abc"',
             },
           },
@@ -492,7 +492,7 @@ describe(validateConfig, () => {
         },
         functions: {
           abc: {
-            supported_runtime_platforms: ['invalid'],
+            supported_platforms: ['invalid'],
             command: 'echo "abc"',
           },
         },

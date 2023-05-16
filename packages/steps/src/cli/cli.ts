@@ -16,10 +16,10 @@ const logger = createLogger({
 async function runAsync(
   configPath: string,
   workingDirectory: string,
-  platform: BuildRuntimePlatform
+  runtimePlatform: BuildRuntimePlatform
 ): Promise<void> {
   const fakeBuildId = uuidv4();
-  const ctx = new BuildStepContext(fakeBuildId, logger, false, platform, workingDirectory);
+  const ctx = new BuildStepContext(fakeBuildId, logger, false, runtimePlatform, workingDirectory);
   const parser = new BuildConfigParser(ctx, { configPath });
   const workflow = await parser.parseAsync();
   await workflow.executeAsync();

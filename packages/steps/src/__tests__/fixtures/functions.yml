@@ -36,7 +36,7 @@ functions:
     command: echo "${ inputs.value }"
   say_hi_2:
     name: Hi!
-    supported_runtime_platforms: [darwin, linux]
+    supported_platforms: [darwin, linux]
     inputs:
       - name: greeting
         default_value: Hi

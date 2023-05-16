@@ -4,11 +4,11 @@ functions:
     inputs:
       - name
     command: echo "Hi, ${ inputs.name }!"
-    supported_runtime_platforms: [linux]
+    supported_platforms: [linux]
 
   say_bye_linux:
     name: Bye!
     inputs:
       - name
     command: echo "Bye, ${ inputs.name }!"
-    supported_runtime_platforms: [linux]
+    supported_platforms: [linux]
