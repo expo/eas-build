@@ -20,7 +20,8 @@ describe(BuildStepContext, () => {
         uuidv4(),
         createMockLogger(),
         false,
-        BuildRuntimePlatform.LINUX
+        BuildRuntimePlatform.LINUX,
+        '/non/existent/path'
       );
       expect(ctx.baseWorkingDirectory.startsWith(os.tmpdir())).toBe(true);
     });
@@ -30,7 +31,8 @@ describe(BuildStepContext, () => {
         buildId,
         createMockLogger(),
         false,
-        BuildRuntimePlatform.LINUX
+        BuildRuntimePlatform.LINUX,
+        '/non/existent/path'
       );
       expect(ctx.baseWorkingDirectory).toMatch(buildId);
     });
@@ -41,7 +43,8 @@ describe(BuildStepContext, () => {
         uuidv4(),
         createMockLogger(),
         false,
-        BuildRuntimePlatform.LINUX
+        BuildRuntimePlatform.LINUX,
+        '/non/existent/path'
       );
       expect(ctx.workingDirectory).toBe(path.join(ctx.baseWorkingDirectory, 'project'));
     });
@@ -52,6 +55,7 @@ describe(BuildStepContext, () => {
         createMockLogger(),
         false,
         BuildRuntimePlatform.LINUX,
+        '/non/existent/path',
         workingDirectory
       );
       expect(ctx.workingDirectory).toBe(workingDirectory);

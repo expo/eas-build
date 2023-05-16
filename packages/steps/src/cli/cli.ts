@@ -19,7 +19,14 @@ async function runAsync(
   runtimePlatform: BuildRuntimePlatform
 ): Promise<void> {
   const fakeBuildId = uuidv4();
-  const ctx = new BuildStepContext(fakeBuildId, logger, false, runtimePlatform, workingDirectory);
+  const ctx = new BuildStepContext(
+    fakeBuildId,
+    logger,
+    false,
+    runtimePlatform,
+    workingDirectory,
+    workingDirectory
+  );
   const parser = new BuildConfigParser(ctx, { configPath });
   const workflow = await parser.parseAsync();
   await workflow.executeAsync();

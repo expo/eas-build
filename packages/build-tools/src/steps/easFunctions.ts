@@ -3,8 +3,9 @@ import { BuildFunction } from '@expo/steps';
 
 import { BuildContext } from '../context';
 
-import { createUploadArtifactStepsFunction } from './functions/uploadArtifact';
+import { createUploadArtifactBuildFunction } from './functions/uploadArtifact';
+import { createCheckoutBuildFunction } from './functions/checkout';
 
 export function getEasFunctions<T extends Job>(ctx: BuildContext<T>): BuildFunction[] {
-  return [createUploadArtifactStepsFunction(ctx)];
+  return [createCheckoutBuildFunction(), createUploadArtifactBuildFunction(ctx)];
 }

@@ -14,8 +14,7 @@ const platformToBuildRuntimePlatform: Record<Platform, BuildRuntimePlatform> = {
 };
 
 export async function runCustomBuildAsync<T extends Job>(ctx: BuildContext<T>): Promise<Artifacts> {
-  await prepareProjectSourcesAsync(ctx);
-
+  await prepareProjectSourcesAsync(ctx, ctx.temporaryCustomBuildDirectory);
   const relativeConfigPath = nullthrows(
     ctx.job.customBuildConfig?.path,
     'Custom build config must be defined for custom builds'
@@ -27,7 +26,8 @@ export async function runCustomBuildAsync<T extends Job>(ctx: BuildContext<T>): 
     ctx.logger.child({ phase: BuildPhase.CUSTOM }),
     false,
     platformToBuildRuntimePlatform[ctx.job.platform],
-    ctx.reactNativeProjectDirectory
+    ctx.temporaryCustomBuildDirectory,
+    ctx.buildDirectory
   );
   const easFunctions = getEasFunctions(ctx);
   const parser = new BuildConfigParser(buildStepContext, {

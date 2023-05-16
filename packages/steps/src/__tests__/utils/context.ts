@@ -11,6 +11,7 @@ interface BuildContextParams {
   logger?: bunyan;
   skipCleanup?: boolean;
   runtimePlatform?: BuildRuntimePlatform;
+  projectSourceDirectory?: string;
   workingDirectory?: string;
 }
 
@@ -19,6 +20,7 @@ export function createMockContext({
   logger,
   skipCleanup,
   runtimePlatform,
+  projectSourceDirectory,
   workingDirectory,
 }: BuildContextParams = {}): BuildStepContext {
   return new BuildStepContext(
@@ -26,6 +28,7 @@ export function createMockContext({
     logger ?? createMockLogger(),
     skipCleanup ?? false,
     runtimePlatform ?? BuildRuntimePlatform.LINUX,
+    projectSourceDirectory ?? '/non/existent/dir',
     workingDirectory
   );
 }
