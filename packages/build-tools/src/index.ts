@@ -10,3 +10,5 @@ export {
   LogBuffer,
   SkipNativeBuildError,
 } from './context';
+
+export { findAndUploadXcodeBuildLogsAsync } from './ios/xcodeBuildLogs';
