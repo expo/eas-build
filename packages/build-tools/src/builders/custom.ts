@@ -19,7 +19,10 @@ export async function runCustomBuildAsync<T extends Job>(ctx: BuildContext<T>): 
     ctx.job.customBuildConfig?.path,
     'Custom build config must be defined for custom builds'
   );
-  const configPath = path.join(ctx.getReactNativeProjectDirectory(), relativeConfigPath);
+  const configPath = path.join(
+    ctx.getReactNativeProjectDirectory(ctx.temporaryCustomBuildDirectory),
+    relativeConfigPath
+  );
 
   const buildStepContext = new BuildStepContext(
     ctx.env.EAS_BUILD_ID,
