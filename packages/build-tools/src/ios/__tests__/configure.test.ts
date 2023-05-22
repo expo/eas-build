@@ -48,7 +48,7 @@ describe(configureXcodeProject, () => {
       buildConfiguration: 'Release',
     };
     const ctx = {
-      reactNativeProjectDirectory: '/app',
+      getReactNativeProjectDirectory: () => '/app',
       logger: { info: jest.fn() },
       job: {},
     };
@@ -102,7 +102,7 @@ describe(configureXcodeProject, () => {
       buildConfiguration: 'Release',
     };
     const ctx = {
-      reactNativeProjectDirectory: '/app',
+      getReactNativeProjectDirectory: () => '/app',
       logger: { info: jest.fn() },
       job: {},
     };
@@ -149,7 +149,7 @@ describe(configureXcodeProject, () => {
       buildConfiguration: 'Release',
     };
     const ctx = {
-      reactNativeProjectDirectory: '/app',
+      getReactNativeProjectDirectory: () => '/app',
       logger: { info: jest.fn() },
       job: {
         version: {
@@ -219,7 +219,7 @@ describe(configureXcodeProject, () => {
       buildConfiguration: 'Release',
     };
     const ctx = {
-      reactNativeProjectDirectory: '/app',
+      getReactNativeProjectDirectory: () => '/app',
       logger: { info: jest.fn() },
       job: {
         version: {
