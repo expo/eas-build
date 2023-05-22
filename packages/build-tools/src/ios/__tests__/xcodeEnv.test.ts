@@ -24,7 +24,7 @@ describe(deleteXcodeEnvLocalIfExistsAsync, () => {
     );
 
     const mockCtx = mock<BuildContext<Ios.Job>>();
-    when(mockCtx.reactNativeProjectDirectory).thenReturn('/app');
+    when(mockCtx.getReactNativeProjectDirectory()).thenReturn('/app');
     when(mockCtx.logger).thenReturn(instance(mock<bunyan>()));
     const ctx = instance(mockCtx);
 

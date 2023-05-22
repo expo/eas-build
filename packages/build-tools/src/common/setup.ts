@@ -36,7 +36,7 @@ export async function setupAsync<TJob extends Job>(ctx: BuildContext<TJob>): Pro
       await configureEnvFromBuildProfileAsync(ctx);
     }
     // try to read package.json to see if it exists and is valid
-    return readPackageJson(ctx.reactNativeProjectDirectory);
+    return readPackageJson(ctx.getReactNativeProjectDirectory());
   });
 
   await ctx.runBuildPhase(BuildPhase.PRE_INSTALL_HOOK, async () => {
@@ -93,7 +93,7 @@ async function runExpoDoctor<TJob extends Job>(ctx: BuildContext<TJob>): Promise
     if (!shouldUseGlobalExpoCli(ctx)) {
       const argsPrefix = isAtLeastNpm7 ? ['-y'] : [];
       promise = spawn('npx', [...argsPrefix, 'expo-doctor'], {
-        cwd: ctx.reactNativeProjectDirectory,
+        cwd: ctx.getReactNativeProjectDirectory(),
         logger: ctx.logger,
         env: ctx.env,
       });
@@ -101,7 +101,7 @@ async function runExpoDoctor<TJob extends Job>(ctx: BuildContext<TJob>): Promise
       promise = ctx.runGlobalExpoCliCommand(
         ['doctor'],
         {
-          cwd: ctx.reactNativeProjectDirectory,
+          cwd: ctx.getReactNativeProjectDirectory(),
           logger: ctx.logger,
           env: ctx.env,
         },

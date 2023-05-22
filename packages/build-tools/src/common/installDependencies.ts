@@ -10,11 +10,11 @@ import { isUsingYarn2 } from '../utils/project';
 export async function installDependenciesAsync<TJob extends Job>(
   ctx: BuildContext<TJob>
 ): Promise<void> {
-  const packagerRunDir = findPackagerRootDir(ctx.reactNativeProjectDirectory);
-  if (packagerRunDir !== ctx.reactNativeProjectDirectory) {
+  const packagerRunDir = findPackagerRootDir(ctx.getReactNativeProjectDirectory());
+  if (packagerRunDir !== ctx.getReactNativeProjectDirectory()) {
     const relativeReactNativeProjectDirectory = path.relative(
       ctx.buildDirectory,
-      ctx.reactNativeProjectDirectory
+      ctx.getReactNativeProjectDirectory()
     );
     ctx.logger.info(
       `We detected that '${relativeReactNativeProjectDirectory}' is a ${ctx.packageManager} workspace`
@@ -26,7 +26,7 @@ export async function installDependenciesAsync<TJob extends Job>(
   if (ctx.packageManager === PackageManager.PNPM) {
     args = ['install', '--no-frozen-lockfile'];
   } else if (ctx.packageManager === PackageManager.YARN) {
-    const isYarn2 = await isUsingYarn2(ctx.reactNativeProjectDirectory);
+    const isYarn2 = await isUsingYarn2(ctx.getReactNativeProjectDirectory());
     if (isYarn2) {
       args = ['install', '--no-immutable'];
     }

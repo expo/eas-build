@@ -16,10 +16,10 @@ import { resolveBuildConfiguration, resolveScheme } from './resolve';
 export async function isTVOS(ctx: BuildContext<Ios.Job>): Promise<boolean> {
   const scheme = resolveScheme(ctx);
 
-  const project = IOSConfig.XcodeUtils.getPbxproj(ctx.reactNativeProjectDirectory);
+  const project = IOSConfig.XcodeUtils.getPbxproj(ctx.getReactNativeProjectDirectory());
 
   const targetName = await IOSConfig.BuildScheme.getApplicationTargetNameForSchemeAsync(
-    ctx.reactNativeProjectDirectory,
+    ctx.getReactNativeProjectDirectory(),
     scheme
   );
 

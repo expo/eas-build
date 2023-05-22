@@ -6,7 +6,11 @@ import fs from 'fs-extra';
 import { BuildContext } from '../context';
 
 export async function deleteXcodeEnvLocalIfExistsAsync(ctx: BuildContext<Ios.Job>): Promise<void> {
-  const xcodeEnvLocalPath = path.join(ctx.reactNativeProjectDirectory, 'ios', '.xcode.env.local');
+  const xcodeEnvLocalPath = path.join(
+    ctx.getReactNativeProjectDirectory(),
+    'ios',
+    '.xcode.env.local'
+  );
   if (await fs.pathExists(xcodeEnvLocalPath)) {
     ctx.markBuildPhaseHasWarnings();
     ctx.logger.warn(

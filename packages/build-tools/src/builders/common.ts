@@ -43,7 +43,7 @@ export async function runBuilderWithHooksAsync<T extends Job>(
           const buildArtifacts = (
             await Promise.all(
               ctx.job.buildArtifactPaths.map((path) =>
-                findArtifacts(ctx.reactNativeProjectDirectory, path, ctx.logger)
+                findArtifacts(ctx.getReactNativeProjectDirectory(), path, ctx.logger)
               )
             )
           ).flat();

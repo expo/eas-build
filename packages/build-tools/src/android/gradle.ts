@@ -12,7 +12,7 @@ import { getParentAndDescendantProcessPidsAsync } from '../utils/processes';
 export async function ensureLFLineEndingsInGradlewScript<TJob extends Job>(
   ctx: BuildContext<TJob>
 ): Promise<void> {
-  const gradlewPath = path.join(ctx.reactNativeProjectDirectory, 'android', 'gradlew');
+  const gradlewPath = path.join(ctx.getReactNativeProjectDirectory(), 'android', 'gradlew');
   const gradlewContent = await fs.readFile(gradlewPath, 'utf8');
   if (gradlewContent.includes('\r')) {
     ctx.logger.info('Replacing CRLF line endings with LF in gradlew script');
@@ -24,7 +24,7 @@ export async function runGradleCommand(
   ctx: BuildContext<Android.Job>,
   gradleCommand: string
 ): Promise<void> {
-  const androidDir = path.join(ctx.reactNativeProjectDirectory, 'android');
+  const androidDir = path.join(ctx.getReactNativeProjectDirectory(), 'android');
   ctx.logger.info(`Running 'gradlew ${gradleCommand}' in ${androidDir}`);
   const spawnPromise = spawn('bash', ['-c', `sh gradlew ${gradleCommand}`], {
     cwd: androidDir,

@@ -23,7 +23,7 @@ export async function runHookIfPresent<TJob extends Job>(
   hook: Hook,
   { extraEnvs }: { extraEnvs?: Record<string, string> } = {}
 ): Promise<void> {
-  const projectDir = ctx.reactNativeProjectDirectory;
+  const projectDir = ctx.getReactNativeProjectDirectory();
   const packageJson = readPackageJson(projectDir);
   if (packageJson.scripts?.[hook]) {
     ctx.logger.info(`Script '${hook}' is present in package.json, running it...`);

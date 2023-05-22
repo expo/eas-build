@@ -27,7 +27,7 @@ export async function runEasBuildInternalAsync<TJob extends Job>(
     cmd,
     [...args, 'build:internal', '--platform', ctx.job.platform, '--profile', buildProfile],
     {
-      cwd: ctx.reactNativeProjectDirectory,
+      cwd: ctx.getReactNativeProjectDirectory(),
       env: {
         ...ctx.env,
         EXPO_TOKEN: nullthrows(ctx.job.secrets, 'Secrets must be defined for non-custom builds')
@@ -66,7 +66,7 @@ export async function configureEnvFromBuildProfileAsync<TJob extends Job>(
         '--eas-json-only',
       ],
       {
-        cwd: ctx.reactNativeProjectDirectory,
+        cwd: ctx.getReactNativeProjectDirectory(),
         env: { ...ctx.env, ...extraEnv },
       }
     );

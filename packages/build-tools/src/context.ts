@@ -148,15 +148,16 @@ export class BuildContext<TJob extends Job> {
   public get environmentSecrectsDirectory(): string {
     return path.join(this.workingdir, 'environment-secrets');
   }
-  public get reactNativeProjectDirectory(): string {
-    return this.getReactNativeProjectDirectory(this.buildDirectory);
-  }
   public get packageManager(): PackageManager {
-    return resolvePackageManager(this.reactNativeProjectDirectory);
+    return resolvePackageManager(this.getReactNativeProjectDirectory());
   }
   public get appConfig(): ExpoConfig {
     if (!this._appConfig) {
-      this._appConfig = readAppConfig(this.reactNativeProjectDirectory, this.env, this.logger).exp;
+      this._appConfig = readAppConfig(
+        this.getReactNativeProjectDirectory(),
+        this.env,
+        this.logger
+      ).exp;
     }
     return this._appConfig;
   }
@@ -253,7 +254,7 @@ export class BuildContext<TJob extends Job> {
     return buildError;
   }
 
-  public getReactNativeProjectDirectory(baseDirectory: string): string {
+  public getReactNativeProjectDirectory(baseDirectory = this.buildDirectory): string {
     return path.join(baseDirectory, this.job.projectRootDirectory ?? '.');
   }
 

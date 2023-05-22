@@ -24,7 +24,7 @@ export async function createNpmrcIfNotExistsAsync(ctx: BuildContext<Job>): Promi
 
 export async function logIfNpmrcExistsAsync(ctx: BuildContext<Job>): Promise<void> {
   const projectNpmrcPath = path.join(
-    findPackagerRootDir(ctx.reactNativeProjectDirectory),
+    findPackagerRootDir(ctx.getReactNativeProjectDirectory()),
     '.npmrc'
   );
   if (await fs.pathExists(projectNpmrcPath)) {

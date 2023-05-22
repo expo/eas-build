@@ -51,7 +51,7 @@ async function configureCredentialsAsync(
       `Assigning provisioning profile '${profile.name}' (Apple Team ID: ${profile.teamId}) to target '${targetName}'`
     );
     IOSConfig.ProvisioningProfile.setProvisioningProfileForPbxproj(
-      ctx.reactNativeProjectDirectory,
+      ctx.getReactNativeProjectDirectory(),
       {
         targetName,
         profileName: profile.name,
@@ -72,8 +72,8 @@ async function updateVersionsAsync(
     buildConfiguration: string;
   }
 ): Promise<void> {
-  const project = IOSConfig.XcodeUtils.getPbxproj(ctx.reactNativeProjectDirectory);
-  const iosDir = path.join(ctx.reactNativeProjectDirectory, 'ios');
+  const project = IOSConfig.XcodeUtils.getPbxproj(ctx.getReactNativeProjectDirectory());
+  const iosDir = path.join(ctx.getReactNativeProjectDirectory(), 'ios');
 
   const infoPlistPaths: string[] = [];
   for (const targetName of targetNames) {

@@ -105,7 +105,7 @@ async function buildAsync(ctx: BuildContext<Ios.Job>): Promise<void> {
 
   await ctx.runBuildPhase(BuildPhase.UPLOAD_APPLICATION_ARCHIVE, async () => {
     const applicationArchives = await findArtifacts(
-      ctx.reactNativeProjectDirectory,
+      ctx.getReactNativeProjectDirectory(),
       resolveArtifactPath(ctx),
       ctx.logger
     );
@@ -121,11 +121,11 @@ async function readEntitlementsAsync(
   try {
     const applicationTargetName =
       await IOSConfig.BuildScheme.getApplicationTargetNameForSchemeAsync(
-        ctx.reactNativeProjectDirectory,
+        ctx.getReactNativeProjectDirectory(),
         scheme
       );
     const entitlementsPath = IOSConfig.Entitlements.getEntitlementsPath(
-      ctx.reactNativeProjectDirectory,
+      ctx.getReactNativeProjectDirectory(),
       {
         buildConfiguration,
         targetName: applicationTargetName,
