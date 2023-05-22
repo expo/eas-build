@@ -14,20 +14,20 @@ const platformToBuildRuntimePlatform: Record<Platform, BuildRuntimePlatform> = {
 };
 
 export async function runCustomBuildAsync<T extends Job>(ctx: BuildContext<T>): Promise<Artifacts> {
-  await prepareProjectSourcesAsync(ctx);
-
+  await prepareProjectSourcesAsync(ctx, ctx.temporaryCustomBuildDirectory);
   const relativeConfigPath = nullthrows(
     ctx.job.customBuildConfig?.path,
     'Custom build config must be defined for custom builds'
   );
-  const configPath = path.join(ctx.reactNativeProjectDirectory, relativeConfigPath);
+  const configPath = path.join(ctx.getReactNativeProjectDirectory(), relativeConfigPath);
 
   const buildStepContext = new BuildStepContext(
     ctx.env.EAS_BUILD_ID,
     ctx.logger.child({ phase: BuildPhase.CUSTOM }),
     false,
     platformToBuildRuntimePlatform[ctx.job.platform],
-    ctx.reactNativeProjectDirectory
+    ctx.temporaryCustomBuildDirectory,
+    ctx.buildDirectory
   );
   const easFunctions = getEasFunctions(ctx);
   const parser = new BuildConfigParser(buildStepContext, {

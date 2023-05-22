@@ -138,7 +138,7 @@ export async function configureEASExpoUpdatesAsync(ctx: BuildContext<Job>): Prom
 }
 
 export async function configureExpoUpdatesIfInstalledAsync(ctx: BuildContext<Job>): Promise<void> {
-  if (!(await isExpoUpdatesInstalledAsync(ctx.reactNativeProjectDirectory))) {
+  if (!(await isExpoUpdatesInstalledAsync(ctx.getReactNativeProjectDirectory()))) {
     return;
   }
 

@@ -38,11 +38,11 @@ export async function runFastlaneGym<TJob extends Ios.Job>(
   if (ctx.skipNativeBuild) {
     throw new SkipNativeBuildError('Skipping fastlane build');
   }
-  const buildLogger = new XcodeBuildLogger(ctx.logger, ctx.reactNativeProjectDirectory);
+  const buildLogger = new XcodeBuildLogger(ctx.logger, ctx.getReactNativeProjectDirectory());
   void buildLogger.watchLogFiles(ctx.buildLogsDirectory);
   try {
     await runFastlane(['gym'], {
-      cwd: path.join(ctx.reactNativeProjectDirectory, 'ios'),
+      cwd: path.join(ctx.getReactNativeProjectDirectory(), 'ios'),
       logger: ctx.logger,
       env: ctx.env,
     });
@@ -118,7 +118,7 @@ async function ensureGymfileExists<TJob extends Ios.Job>(
     entitlements: object | null;
   }
 ): Promise<void> {
-  const gymfilePath = path.join(ctx.reactNativeProjectDirectory, 'ios/Gymfile');
+  const gymfilePath = path.join(ctx.getReactNativeProjectDirectory(), 'ios/Gymfile');
 
   if (await fs.pathExists(gymfilePath)) {
     ctx.logger.info('Gymfile already exists');

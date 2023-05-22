@@ -11,13 +11,13 @@ const APPLY_EAS_BUILD_GRADLE_LINE = 'apply from: "./eas-build.gradle"';
 
 export async function configureBuildGradle(ctx: BuildContext<Android.Job>): Promise<void> {
   ctx.logger.info('Injecting signing config into build.gradle');
-  if (await fs.pathExists(getEasBuildGradlePath(ctx.reactNativeProjectDirectory))) {
+  if (await fs.pathExists(getEasBuildGradlePath(ctx.getReactNativeProjectDirectory()))) {
     ctx.markBuildPhaseHasWarnings();
     ctx.logger.warn('eas-build.gradle script is deprecated, please remove it from your project.');
   }
-  await deleteEasBuildGradle(ctx.reactNativeProjectDirectory);
-  await createEasBuildGradle(ctx.reactNativeProjectDirectory);
-  await addApplyToBuildGradle(ctx.reactNativeProjectDirectory);
+  await deleteEasBuildGradle(ctx.getReactNativeProjectDirectory());
+  await createEasBuildGradle(ctx.getReactNativeProjectDirectory());
+  await addApplyToBuildGradle(ctx.getReactNativeProjectDirectory());
 }
 
 async function deleteEasBuildGradle(projectRoot: string): Promise<void> {

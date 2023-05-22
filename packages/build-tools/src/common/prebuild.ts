@@ -21,7 +21,7 @@ export async function prebuildAsync<TJob extends Job>(
     !customExpoCliVersion || semver.satisfies(customExpoCliVersion, '>=5.4.4');
 
   const spawnOptions: SpawnOptions = {
-    cwd: ctx.reactNativeProjectDirectory,
+    cwd: ctx.getReactNativeProjectDirectory(),
     logger: ctx.logger,
     env: {
       ...(shouldDisableSharp ? { EXPO_IMAGE_UTILS_NO_SHARP: '1' } : {}),

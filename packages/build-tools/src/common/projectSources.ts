@@ -9,19 +9,25 @@ import downloadFile from '@expo/downloader';
 import { BuildContext } from '../context';
 
 export async function prepareProjectSourcesAsync<TJob extends Job>(
-  ctx: BuildContext<TJob>
+  ctx: BuildContext<TJob>,
+  destinationDirectory = ctx.buildDirectory
 ): Promise<void> {
   if ([ArchiveSourceType.S3, ArchiveSourceType.GCS].includes(ctx.job.projectArchive.type)) {
     throw new Error('GCS and S3 project sources should be resolved earlier to url');
   } else if (ctx.job.projectArchive.type === ArchiveSourceType.PATH) {
-    await prepareProjectSourcesLocallyAsync(ctx, ctx.job.projectArchive.path); // used in eas build --local
+    await prepareProjectSourcesLocallyAsync(ctx, ctx.job.projectArchive.path, destinationDirectory); // used in eas build --local
   } else if (ctx.job.projectArchive.type === ArchiveSourceType.URL) {
-    await downloadAndUnpackProjectFromTarGzAsync(ctx, ctx.job.projectArchive.url);
+    await downloadAndUnpackProjectFromTarGzAsync(
+      ctx,
+      ctx.job.projectArchive.url,
+      destinationDirectory
+    );
   } else if (ctx.job.projectArchive.type === ArchiveSourceType.GIT) {
     await shallowCloneRepositoryAsync(
       ctx,
       ctx.job.projectArchive.repositoryUrl,
-      ctx.job.projectArchive.gitRef
+      ctx.job.projectArchive.gitRef,
+      destinationDirectory
     );
   }
 }
@@ -29,13 +35,14 @@ export async function prepareProjectSourcesAsync<TJob extends Job>(
 async function shallowCloneRepositoryAsync<TJob extends Job>(
   ctx: BuildContext<TJob>,
   projectRepoUrl: string,
-  gitRef: string
+  gitRef: string,
+  destinationDirectory: string
 ): Promise<void> {
   try {
-    await spawn('git', ['init'], { cwd: ctx.buildDirectory });
-    await spawn('git', ['remote', 'add', 'origin', projectRepoUrl], { cwd: ctx.buildDirectory });
-    await spawn('git', ['fetch', 'origin', '--depth', '1', gitRef], { cwd: ctx.buildDirectory });
-    await spawn('git', ['checkout', gitRef], { cwd: ctx.buildDirectory });
+    await spawn('git', ['init'], { cwd: destinationDirectory });
+    await spawn('git', ['remote', 'add', 'origin', projectRepoUrl], { cwd: destinationDirectory });
+    await spawn('git', ['fetch', 'origin', '--depth', '1', gitRef], { cwd: destinationDirectory });
+    await spawn('git', ['checkout', gitRef], { cwd: destinationDirectory });
   } catch (err: any) {
     const sanitizedUrl = getSanitizedGitUrl(projectRepoUrl);
     if (sanitizedUrl) {
@@ -62,7 +69,8 @@ function getSanitizedGitUrl(maybeGitUrl: string): string | null {
 
 export async function downloadAndUnpackProjectFromTarGzAsync<TJob extends Job>(
   ctx: BuildContext<TJob>,
-  projectArchiveUrl: string
+  projectArchiveUrl: string,
+  destinationDirectory: string
 ): Promise<void> {
   const projectTarball = path.join(ctx.workingdir, 'project.tar.gz');
   try {
@@ -75,7 +83,7 @@ export async function downloadAndUnpackProjectFromTarGzAsync<TJob extends Job>(
   }
 
   await unpackTarGzAsync({
-    destination: ctx.buildDirectory,
+    destination: destinationDirectory,
     source: projectTarball,
     logger: ctx.logger,
   });
@@ -83,13 +91,14 @@ export async function downloadAndUnpackProjectFromTarGzAsync<TJob extends Job>(
 
 async function prepareProjectSourcesLocallyAsync<TJob extends Job>(
   ctx: BuildContext<TJob>,
-  projectArchivePath: string
+  projectArchivePath: string,
+  destinationDirectory: string
 ): Promise<void> {
   const projectTarball = path.join(ctx.workingdir, 'project.tar.gz');
   await fs.copy(projectArchivePath, projectTarball);
 
   await unpackTarGzAsync({
-    destination: ctx.buildDirectory,
+    destination: destinationDirectory,
     source: projectTarball,
     logger: ctx.logger,
   });

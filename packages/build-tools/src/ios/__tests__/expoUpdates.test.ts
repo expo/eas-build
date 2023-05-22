@@ -41,7 +41,7 @@ describe(iosSetClassicReleaseChannelNativelyAsync, () => {
     );
 
     const ctx = {
-      reactNativeProjectDirectory: '/app',
+      getReactNativeProjectDirectory: () => '/app',
       job: { releaseChannel },
       logger: { info: () => {} },
     };
@@ -64,7 +64,7 @@ describe(iosSetChannelNativelyAsync, () => {
     );
 
     const ctx = {
-      reactNativeProjectDirectory: '/app',
+      getReactNativeProjectDirectory: () => '/app',
       job: { updates: { channel } },
       logger: { info: () => {} },
     };
@@ -103,7 +103,7 @@ describe(iosGetNativelyDefinedChannelAsync, () => {
     );
 
     const ctx = {
-      reactNativeProjectDirectory: '/app',
+      getReactNativeProjectDirectory: () => '/app',
       logger: { info: () => {} },
     };
     await expect(iosGetNativelyDefinedChannelAsync(ctx as any)).resolves.toBe('staging-123');
@@ -132,7 +132,7 @@ describe(iosGetNativelyDefinedClassicReleaseChannelAsync, () => {
     );
 
     const ctx = {
-      reactNativeProjectDirectory: '/app',
+      getReactNativeProjectDirectory: () => '/app',
       logger: { info: () => {} },
     };
     const nativelyDefinedReleaseChannel = await iosGetNativelyDefinedClassicReleaseChannelAsync(
@@ -165,7 +165,7 @@ describe(iosGetNativelyDefinedRuntimeVersionAsync, () => {
     );
 
     const ctx = {
-      reactNativeProjectDirectory: '/app',
+      getReactNativeProjectDirectory: () => '/app',
       logger: { info: () => {} },
     };
 
@@ -187,7 +187,7 @@ describe(iosSetRuntimeVersionNativelyAsync, () => {
       '/app'
     );
     const ctx = {
-      reactNativeProjectDirectory: '/app',
+      getReactNativeProjectDirectory: () => '/app',
       logger: { info: () => {} },
     };
 
@@ -216,7 +216,7 @@ describe(iosSetRuntimeVersionNativelyAsync, () => {
       '/app'
     );
     const ctx = {
-      reactNativeProjectDirectory: '/app',
+      getReactNativeProjectDirectory: () => '/app',
       logger: { info: () => {} },
     };
 

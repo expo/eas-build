@@ -17,7 +17,7 @@ export async function androidSetRuntimeVersionNativelyAsync(
   runtimeVersion: string
 ): Promise<void> {
   const manifestPath = await AndroidConfig.Paths.getAndroidManifestAsync(
-    ctx.reactNativeProjectDirectory
+    ctx.getReactNativeProjectDirectory()
   );
 
   if (!(await fs.pathExists(manifestPath))) {
@@ -39,7 +39,7 @@ export async function androidSetChannelNativelyAsync(ctx: BuildContext<Job>): Pr
   assert(ctx.job.updates?.channel, 'updates.channel must be defined');
 
   const manifestPath = await AndroidConfig.Paths.getAndroidManifestAsync(
-    ctx.reactNativeProjectDirectory
+    ctx.getReactNativeProjectDirectory()
   );
 
   if (!(await fs.pathExists(manifestPath))) {
@@ -68,7 +68,7 @@ export async function androidGetNativelyDefinedChannelAsync(
   ctx: BuildContext<Job>
 ): Promise<string | null> {
   const manifestPath = await AndroidConfig.Paths.getAndroidManifestAsync(
-    ctx.reactNativeProjectDirectory
+    ctx.getReactNativeProjectDirectory()
   );
 
   if (!(await fs.pathExists(manifestPath))) {
@@ -98,7 +98,7 @@ export async function androidSetClassicReleaseChannelNativelyAsync(
   const escapedReleaseChannel = XML.escapeAndroidString(releaseChannel);
 
   const manifestPath = await AndroidConfig.Paths.getAndroidManifestAsync(
-    ctx.reactNativeProjectDirectory
+    ctx.getReactNativeProjectDirectory()
   );
   if (!(await fs.pathExists(manifestPath))) {
     throw new Error(`Couldn't find Android manifest at ${manifestPath}`);
@@ -106,7 +106,7 @@ export async function androidSetClassicReleaseChannelNativelyAsync(
 
   // Store the release channel in a string resource to ensure it is interpreted as a string
   const stringResourcePath = await AndroidConfig.Strings.getProjectStringsXMLPathAsync(
-    ctx.reactNativeProjectDirectory
+    ctx.getReactNativeProjectDirectory()
   );
   const stringResourceObject = await AndroidConfig.Resources.readResourcesXMLAsync({
     path: stringResourcePath,
@@ -138,7 +138,7 @@ export async function androidGetNativelyDefinedClassicReleaseChannelAsync(
   ctx: BuildContext<Job>
 ): Promise<string | null> {
   const manifestPath = await AndroidConfig.Paths.getAndroidManifestAsync(
-    ctx.reactNativeProjectDirectory
+    ctx.getReactNativeProjectDirectory()
   );
   if (!(await fs.pathExists(manifestPath))) {
     return null;
@@ -155,7 +155,7 @@ export async function androidGetNativelyDefinedRuntimeVersionAsync(
   ctx: BuildContext<Job>
 ): Promise<string | null> {
   const manifestPath = await AndroidConfig.Paths.getAndroidManifestAsync(
-    ctx.reactNativeProjectDirectory
+    ctx.getReactNativeProjectDirectory()
   );
   if (!(await fs.pathExists(manifestPath))) {
     return null;

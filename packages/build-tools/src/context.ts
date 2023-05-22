@@ -139,21 +139,25 @@ export class BuildContext<TJob extends Job> {
   public get buildDirectory(): string {
     return path.join(this.workingdir, 'build');
   }
+  public get temporaryCustomBuildDirectory(): string {
+    return path.join(this.workingdir, 'temporary-custom-build');
+  }
   public get buildLogsDirectory(): string {
     return path.join(this.workingdir, 'logs');
   }
   public get environmentSecrectsDirectory(): string {
     return path.join(this.workingdir, 'environment-secrets');
   }
-  public get reactNativeProjectDirectory(): string {
-    return path.join(this.buildDirectory, this.job.projectRootDirectory ?? '.');
-  }
   public get packageManager(): PackageManager {
-    return resolvePackageManager(this.reactNativeProjectDirectory);
+    return resolvePackageManager(this.getReactNativeProjectDirectory());
   }
   public get appConfig(): ExpoConfig {
     if (!this._appConfig) {
-      this._appConfig = readAppConfig(this.reactNativeProjectDirectory, this.env, this.logger).exp;
+      this._appConfig = readAppConfig(
+        this.getReactNativeProjectDirectory(),
+        this.env,
+        this.logger
+      ).exp;
     }
     return this._appConfig;
   }
@@ -248,6 +252,10 @@ export class BuildContext<TJob extends Job> {
       this.logger.error(`Error: ${buildError.userFacingMessage}`);
     }
     return buildError;
+  }
+
+  public getReactNativeProjectDirectory(baseDirectory = this.buildDirectory): string {
+    return path.join(baseDirectory, this.job.projectRootDirectory ?? '.');
   }
 
   private setBuildPhase(buildPhase: BuildPhase, { doNotMarkStart = false } = {}): void {

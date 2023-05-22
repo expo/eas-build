@@ -17,7 +17,7 @@ export async function iosSetRuntimeVersionNativelyAsync(
   ctx: BuildContext<Job>,
   runtimeVersion: string
 ): Promise<void> {
-  const expoPlistPath = IOSConfig.Paths.getExpoPlistPath(ctx.reactNativeProjectDirectory);
+  const expoPlistPath = IOSConfig.Paths.getExpoPlistPath(ctx.getReactNativeProjectDirectory());
 
   if (!(await fs.pathExists(expoPlistPath))) {
     throw new Error(`${expoPlistPath} does not exist`);
@@ -34,7 +34,7 @@ export async function iosSetRuntimeVersionNativelyAsync(
 export async function iosSetChannelNativelyAsync(ctx: BuildContext<Job>): Promise<void> {
   assert(ctx.job.updates?.channel, 'updates.channel must be defined');
 
-  const expoPlistPath = IOSConfig.Paths.getExpoPlistPath(ctx.reactNativeProjectDirectory);
+  const expoPlistPath = IOSConfig.Paths.getExpoPlistPath(ctx.getReactNativeProjectDirectory());
 
   if (!(await fs.pathExists(expoPlistPath))) {
     throw new Error(`${expoPlistPath} does not exist`);
@@ -57,7 +57,7 @@ export async function iosSetChannelNativelyAsync(ctx: BuildContext<Job>): Promis
 export async function iosGetNativelyDefinedChannelAsync(
   ctx: BuildContext<Job>
 ): Promise<string | null> {
-  const expoPlistPath = IOSConfig.Paths.getExpoPlistPath(ctx.reactNativeProjectDirectory);
+  const expoPlistPath = IOSConfig.Paths.getExpoPlistPath(ctx.getReactNativeProjectDirectory());
 
   if (!(await fs.pathExists(expoPlistPath))) {
     return null;
@@ -82,7 +82,7 @@ export async function iosSetClassicReleaseChannelNativelyAsync(
 ): Promise<void> {
   assert(ctx.job.releaseChannel, 'releaseChannel must be defined');
 
-  const expoPlistPath = IOSConfig.Paths.getExpoPlistPath(ctx.reactNativeProjectDirectory);
+  const expoPlistPath = IOSConfig.Paths.getExpoPlistPath(ctx.getReactNativeProjectDirectory());
 
   if (!(await fs.pathExists(expoPlistPath))) {
     throw new Error(`${expoPlistPath} does not exist`);
@@ -99,7 +99,7 @@ export async function iosSetClassicReleaseChannelNativelyAsync(
 export async function iosGetNativelyDefinedClassicReleaseChannelAsync(
   ctx: BuildContext<Job>
 ): Promise<string | null> {
-  const expoPlistPath = IOSConfig.Paths.getExpoPlistPath(ctx.reactNativeProjectDirectory);
+  const expoPlistPath = IOSConfig.Paths.getExpoPlistPath(ctx.getReactNativeProjectDirectory());
   if (!(await fs.pathExists(expoPlistPath))) {
     return null;
   }
@@ -114,7 +114,7 @@ export async function iosGetNativelyDefinedClassicReleaseChannelAsync(
 export async function iosGetNativelyDefinedRuntimeVersionAsync(
   ctx: BuildContext<Job>
 ): Promise<string | null> {
-  const expoPlistPath = IOSConfig.Paths.getExpoPlistPath(ctx.reactNativeProjectDirectory);
+  const expoPlistPath = IOSConfig.Paths.getExpoPlistPath(ctx.getReactNativeProjectDirectory());
   if (!(await fs.pathExists(expoPlistPath))) {
     return null;
   }

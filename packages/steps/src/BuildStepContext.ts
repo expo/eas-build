@@ -19,6 +19,7 @@ export class BuildStepContext {
     public readonly logger: bunyan,
     public readonly skipCleanup: boolean,
     public readonly runtimePlatform: BuildRuntimePlatform,
+    public readonly projectSourceDirectory: string,
     workingDirectory?: string
   ) {
     this.baseWorkingDirectory = path.join(os.tmpdir(), 'eas-build', buildId);
@@ -49,6 +50,7 @@ export class BuildStepContext {
       logger ?? this.logger,
       this.skipCleanup,
       this.runtimePlatform,
+      this.projectSourceDirectory,
       workingDirectory ?? this.workingDirectory
     );
   }

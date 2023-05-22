@@ -6,7 +6,7 @@ import spawn from '@expo/turtle-spawn';
 import { BuildContext } from '../context';
 
 export async function installPods<TJob extends Ios.Job>(ctx: BuildContext<TJob>): Promise<void> {
-  const iosDir = path.join(ctx.reactNativeProjectDirectory, 'ios');
+  const iosDir = path.join(ctx.getReactNativeProjectDirectory(), 'ios');
 
   await spawn('pod', ['install'], {
     cwd: iosDir,

@@ -29,6 +29,7 @@ describe(expoUpdates.configureExpoUpdatesIfInstalledAsync, () => {
 
     await expoUpdates.configureExpoUpdatesIfInstalledAsync({
       job: { Platform: Platform.IOS },
+      getReactNativeProjectDirectory: () => '/app',
     } as any);
 
     expect(androidSetChannelNativelyAsync).not.toBeCalled();
@@ -51,6 +52,7 @@ describe(expoUpdates.configureExpoUpdatesIfInstalledAsync, () => {
         platform: Platform.IOS,
       },
       logger: { info: () => {} },
+      getReactNativeProjectDirectory: () => '/app',
     } as any;
     await expoUpdates.configureExpoUpdatesIfInstalledAsync(managedCtx);
 
@@ -77,6 +79,7 @@ describe(expoUpdates.configureExpoUpdatesIfInstalledAsync, () => {
         platform: Platform.IOS,
       },
       logger: { info: () => {} },
+      getReactNativeProjectDirectory: () => '/app',
     } as any;
     await expoUpdates.configureExpoUpdatesIfInstalledAsync(managedCtx);
 
@@ -98,6 +101,7 @@ describe(expoUpdates.configureExpoUpdatesIfInstalledAsync, () => {
       },
       job: { updates: { channel: 'main' }, releaseChannel: 'default', platform: Platform.IOS },
       logger: { info: () => {} },
+      getReactNativeProjectDirectory: () => '/app',
     } as any;
     await expoUpdates.configureExpoUpdatesIfInstalledAsync(managedCtx);
 
@@ -115,6 +119,7 @@ describe(expoUpdates.configureExpoUpdatesIfInstalledAsync, () => {
       appConfig: { updates: {} },
       job: { platform: Platform.IOS },
       logger: { info: () => {} },
+      getReactNativeProjectDirectory: () => '/app',
     } as any;
     await expoUpdates.configureExpoUpdatesIfInstalledAsync(managedCtx);
 
@@ -133,6 +138,7 @@ describe(expoUpdates.configureExpoUpdatesIfInstalledAsync, () => {
       appConfig: {},
       job: { releaseChannel: 'default', platform: Platform.IOS },
       logger: { info: () => {} },
+      getReactNativeProjectDirectory: () => '/app',
     } as any;
     await expoUpdates.configureExpoUpdatesIfInstalledAsync(managedCtx);
 
@@ -150,6 +156,7 @@ describe(expoUpdates.configureExpoUpdatesIfInstalledAsync, () => {
       appConfig: {},
       job: { platform: Platform.IOS },
       logger: { info: infoLogger, warn: () => {} },
+      getReactNativeProjectDirectory: () => '/app',
     } as any;
     await expoUpdates.configureExpoUpdatesIfInstalledAsync(managedCtx);
 

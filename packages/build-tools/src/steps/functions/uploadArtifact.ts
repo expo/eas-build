@@ -11,7 +11,7 @@ enum BuildArtifactType {
   BUILD_ARTIFACT = 'build-artifact',
 }
 
-export function createUploadArtifactStepsFunction<T extends Job>(
+export function createUploadArtifactBuildFunction<T extends Job>(
   ctx: BuildContext<T>
 ): BuildFunction {
   return new BuildFunction({

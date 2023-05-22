@@ -37,7 +37,7 @@ describe(androidSetClassicReleaseChannelNativelyAsync, () => {
 
     const releaseChannel = 'blah';
     const ctx = {
-      reactNativeProjectDirectory: '/app',
+      getReactNativeProjectDirectory: () => '/app',
       job: { releaseChannel },
       logger: { info: () => {} },
     };
@@ -53,7 +53,7 @@ describe(androidSetClassicReleaseChannelNativelyAsync, () => {
     ).toBe('@string/release_channel');
 
     const stringResourcePath = await AndroidConfig.Strings.getProjectStringsXMLPathAsync(
-      ctx.reactNativeProjectDirectory
+      ctx.getReactNativeProjectDirectory()
     );
     const stringResourceObject = await AndroidConfig.Resources.readResourcesXMLAsync({
       path: stringResourcePath,
@@ -74,7 +74,7 @@ describe(androidSetChannelNativelyAsync, () => {
       '/app'
     );
     const ctx = {
-      reactNativeProjectDirectory: '/app',
+      getReactNativeProjectDirectory: () => '/app',
       job: { updates: { channel } },
       logger: { info: () => {} },
     };
@@ -103,7 +103,7 @@ describe(androidGetNativelyDefinedChannelAsync, () => {
       '/app'
     );
     const ctx = {
-      reactNativeProjectDirectory: '/app',
+      getReactNativeProjectDirectory: () => '/app',
       logger: { info: () => {} },
     };
 
@@ -123,7 +123,7 @@ describe(androidGetNativelyDefinedClassicReleaseChannelAsync, () => {
       '/app'
     );
     const ctx = {
-      reactNativeProjectDirectory: '/app',
+      getReactNativeProjectDirectory: () => '/app',
       job: {},
       logger: { info: () => {} },
     };
@@ -147,7 +147,7 @@ describe(androidGetNativelyDefinedRuntimeVersionAsync, () => {
       '/app'
     );
     const ctx = {
-      reactNativeProjectDirectory: '/app',
+      getReactNativeProjectDirectory: () => '/app',
       job: {},
       logger: { info: () => {} },
     };
@@ -171,7 +171,7 @@ describe(androidSetRuntimeVersionNativelyAsync, () => {
       '/app'
     );
     const ctx = {
-      reactNativeProjectDirectory: '/app',
+      getReactNativeProjectDirectory: () => '/app',
       job: {},
       logger: { info: () => {} },
     };
@@ -196,7 +196,7 @@ describe(androidSetRuntimeVersionNativelyAsync, () => {
       '/app'
     );
     const ctx = {
-      reactNativeProjectDirectory: '/app',
+      getReactNativeProjectDirectory: () => '/app',
       job: {},
       logger: { info: () => {} },
     };
