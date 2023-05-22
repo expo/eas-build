@@ -1,7 +1,7 @@
 {
   "name": "@expo/steps",
   "type": "module",
-  "version": "1.0.13",
+  "version": "1.0.15",
   "main": "./dist_commonjs/index.cjs",
   "types": "./dist_esm/index.d.ts",
   "exports": {
