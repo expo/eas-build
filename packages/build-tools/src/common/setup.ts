@@ -45,7 +45,7 @@ export async function setupAsync<TJob extends Job>(ctx: BuildContext<TJob>): Pro
   });
 
   await ctx.runBuildPhase(BuildPhase.INSTALL_DEPENDENCIES, async () => {
-    await installDependenciesAsync(ctx);
+    await installDependenciesAsync(ctx, ctx.logger);
   });
 
   if (ctx.job.triggeredBy === BuildTrigger.GIT_BASED_INTEGRATION) {

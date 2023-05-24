@@ -34,7 +34,7 @@ export async function prebuildAsync<TJob extends Job>(
   await runExpoCliCommand(ctx, prebuildCommandArgs, spawnOptions, {
     npmVersionAtLeast7: await isAtLeastNpm7Async(),
   });
-  await installDependenciesAsync(ctx);
+  await installDependenciesAsync(ctx, ctx.logger);
 }
 
 function getPrebuildCommandArgs<TJob extends Job>(ctx: BuildContext<TJob>): string[] {

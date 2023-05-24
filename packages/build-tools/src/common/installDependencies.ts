@@ -1,6 +1,7 @@
 import path from 'path';
 
 import { Job } from '@expo/eas-build-job';
+import { bunyan } from '@expo/logger';
 import spawn from '@expo/turtle-spawn';
 
 import { BuildContext } from '../context';
@@ -8,7 +9,8 @@ import { findPackagerRootDir, PackageManager } from '../utils/packageManager';
 import { isUsingYarn2 } from '../utils/project';
 
 export async function installDependenciesAsync<TJob extends Job>(
-  ctx: BuildContext<TJob>
+  ctx: BuildContext<TJob>,
+  logger: bunyan
 ): Promise<void> {
   const packagerRunDir = findPackagerRootDir(ctx.getReactNativeProjectDirectory());
   if (packagerRunDir !== ctx.getReactNativeProjectDirectory()) {
@@ -16,7 +18,7 @@ export async function installDependenciesAsync<TJob extends Job>(
       ctx.buildDirectory,
       ctx.getReactNativeProjectDirectory()
     );
-    ctx.logger.info(
+    logger.info(
       `We detected that '${relativeReactNativeProjectDirectory}' is a ${ctx.packageManager} workspace`
     );
   }
@@ -31,7 +33,7 @@ export async function installDependenciesAsync<TJob extends Job>(
       args = ['install', '--no-immutable'];
     }
   }
-  ctx.logger.info(
+  logger.info(
     `Running "${ctx.packageManager} ${args.join(' ')}" in ${
       relativePackagerRunDir
         ? `directory '${relativePackagerRunDir}'`
@@ -40,7 +42,7 @@ export async function installDependenciesAsync<TJob extends Job>(
   );
   await spawn(ctx.packageManager, args, {
     cwd: packagerRunDir,
-    logger: ctx.logger,
+    logger,
     env: ctx.env,
   });
 }
