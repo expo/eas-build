@@ -6,7 +6,7 @@ import nullthrows from 'nullthrows';
 import { BuildContext } from '../context';
 import { deleteXcodeEnvLocalIfExistsAsync } from '../ios/xcodeEnv';
 import { Hook, runHookIfPresent } from '../utils/hooks';
-import { createNpmrcIfNotExistsAsync, logIfNpmrcExistsAsync } from '../utils/npmrc';
+import { setUpNpmrcAsync } from '../utils/npmrc';
 import { isAtLeastNpm7Async } from '../utils/packageManager';
 import { readPackageJson, shouldUseGlobalExpoCli } from '../utils/project';
 import { getParentAndDescendantProcessPidsAsync } from '../utils/processes';
@@ -22,11 +22,7 @@ class DoctorTimeoutError extends Error {}
 export async function setupAsync<TJob extends Job>(ctx: BuildContext<TJob>): Promise<void> {
   const packageJson = await ctx.runBuildPhase(BuildPhase.PREPARE_PROJECT, async () => {
     await prepareProjectSourcesAsync(ctx);
-    if (ctx.env.NPM_TOKEN) {
-      await createNpmrcIfNotExistsAsync(ctx);
-    } else {
-      await logIfNpmrcExistsAsync(ctx);
-    }
+    await setUpNpmrcAsync(ctx, ctx.logger);
     if (ctx.job.platform === Platform.IOS && ctx.env.EAS_BUILD_RUNNER === 'eas-build') {
       await deleteXcodeEnvLocalIfExistsAsync(ctx as BuildContext<Ios.Job>);
     }
