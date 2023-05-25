@@ -1,7 +1,12 @@
+import path from 'path';
+
 import spawn, { SpawnPromise, SpawnResult } from '@expo/turtle-spawn';
+import fs from 'fs-extra';
 import { BuildPhase, Ios, Job, Platform } from '@expo/eas-build-job';
 import { BuildTrigger } from '@expo/eas-build-job/dist/common';
 import nullthrows from 'nullthrows';
+import { ExpoConfig } from '@expo/config';
+import { UserFacingError } from '@expo/eas-build-job/dist/errors';
 
 import { BuildContext } from '../context';
 import { deleteXcodeEnvLocalIfExistsAsync } from '../ios/xcodeEnv';
@@ -59,8 +64,10 @@ export async function setupAsync<TJob extends Job>(ctx: BuildContext<TJob>): Pro
   }
 
   await ctx.runBuildPhase(BuildPhase.READ_APP_CONFIG, async () => {
+    const appConfig = ctx.appConfig;
     ctx.logger.info('Using app configuration:');
-    ctx.logger.info(JSON.stringify(ctx.appConfig, null, 2));
+    ctx.logger.info(JSON.stringify(appConfig, null, 2));
+    await validateAppConfigAsync(ctx, appConfig);
   });
 
   const hasExpoPackage = !!packageJson.dependencies?.expo;
@@ -129,5 +136,38 @@ async function runExpoDoctor<TJob extends Job>(ctx: BuildContext<TJob>): Promise
     if (timeout) {
       clearTimeout(timeout);
     }
+  }
+}
+
+async function validateAppConfigAsync(
+  ctx: BuildContext<Job>,
+  appConfig: ExpoConfig
+): Promise<void> {
+  if (
+    appConfig?.extra?.projectId &&
+    ctx.env.EAS_BUILD_PROJECT_ID &&
+    appConfig.extra.projectId !== ctx.env.EAS_BUILD_PROJECT_ID
+  ) {
+    const isUsingDynamicConfig =
+      (await fs.pathExists(path.join(ctx.getReactNativeProjectDirectory(), 'app.config.ts'))) ||
+      (await fs.pathExists(path.join(ctx.getReactNativeProjectDirectory(), 'app.config.js')));
+    const isGitHubBuild = ctx.job.triggeredBy === BuildTrigger.GIT_BASED_INTEGRATION;
+    let extraMessage = '';
+    if (isGitHubBuild && isUsingDynamicConfig) {
+      extraMessage =
+        'Make sure you connected your GitHub repository to the correct Expo project and if you are using environment variables to switch between projects in app.config.js/app.config.ts remember to set those variables in eas.json too. ';
+    } else if (isGitHubBuild) {
+      extraMessage = 'Make sure you connected your GitHub repository to the correct Expo project. ';
+    } else if (isUsingDynamicConfig) {
+      extraMessage =
+        'If you are using environment variables to switch between projects in app.config.js/app.config.ts, make sure those variables are also set inside EAS Build. You can do that using "env" field in eas.json or EAS Secrets. ';
+    }
+    throw new UserFacingError(
+      'EAS_BUILD_PROJECT_ID_MISMATCH',
+      `The value of the "extra.projectId" field in app config does not match current project id. ${extraMessage}Learn more: https://expo.fyi/eas-config-mismatch.`
+    );
+  } else if (ctx.env.EAS_BUILD_PROJECT_ID && !appConfig?.extra?.projectId) {
+    ctx.logger.error(`The "extra.projectId" field is missing from your app config.`);
+    ctx.markBuildPhaseHasWarnings();
   }
 }
