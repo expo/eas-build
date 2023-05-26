@@ -30,7 +30,8 @@ export async function runCustomBuildAsync<T extends Job>(ctx: BuildContext<T>): 
     false,
     platformToBuildRuntimePlatform[ctx.job.platform],
     ctx.temporaryCustomBuildDirectory,
-    ctx.buildDirectory
+    ctx.buildDirectory,
+    ctx.getReactNativeProjectDirectory()
   );
   const easFunctions = getEasFunctions(ctx);
   const parser = new BuildConfigParser(buildStepContext, {

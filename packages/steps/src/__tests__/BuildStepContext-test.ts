@@ -14,16 +14,17 @@ import { getError } from './utils/error.js';
 import { createMockLogger } from './utils/logger.js';
 
 describe(BuildStepContext, () => {
-  describe('baseWorkingDirectory', () => {
+  describe('stepsInternalBuildDirectory', () => {
     it('is in os.tmpdir()', () => {
       const ctx = new BuildStepContext(
         uuidv4(),
         createMockLogger(),
         false,
         BuildRuntimePlatform.LINUX,
-        '/non/existent/path'
+        '/non/existent/path',
+        '/another/non/existent/path'
       );
-      expect(ctx.baseWorkingDirectory.startsWith(os.tmpdir())).toBe(true);
+      expect(ctx.stepsInternalBuildDirectory.startsWith(os.tmpdir())).toBe(true);
     });
     it('uses the build id as a path component', () => {
       const buildId = uuidv4();
@@ -32,21 +33,23 @@ describe(BuildStepContext, () => {
         createMockLogger(),
         false,
         BuildRuntimePlatform.LINUX,
-        '/non/existent/path'
+        '/non/existent/path',
+        '/another/non/existent/path'
       );
-      expect(ctx.baseWorkingDirectory).toMatch(buildId);
+      expect(ctx.stepsInternalBuildDirectory).toMatch(buildId);
     });
   });
   describe('workingDirectory', () => {
-    it('defaults to "project" directory in ctx.baseWorkingDirectory', () => {
+    it('defaults to "project" directory in ctx.stepsInternalBuildDirectory', () => {
       const ctx = new BuildStepContext(
         uuidv4(),
         createMockLogger(),
         false,
         BuildRuntimePlatform.LINUX,
-        '/non/existent/path'
+        '/non/existent/path',
+        '/another/non/existent/path'
       );
-      expect(ctx.workingDirectory).toBe(path.join(ctx.baseWorkingDirectory, 'project'));
+      expect(ctx.workingDirectory).toBe(path.join(ctx.stepsInternalBuildDirectory, 'project'));
     });
     it('can use the workingDirectory passed to the constructor', () => {
       const workingDirectory = '/path/to/working/dir';
@@ -56,6 +59,7 @@ describe(BuildStepContext, () => {
         false,
         BuildRuntimePlatform.LINUX,
         '/non/existent/path',
+        '/another/non/existent/path',
         workingDirectory
       );
       expect(ctx.workingDirectory).toBe(workingDirectory);

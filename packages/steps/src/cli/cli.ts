@@ -15,7 +15,7 @@ const logger = createLogger({
 
 async function runAsync(
   configPath: string,
-  workingDirectory: string,
+  relativeProjectDirectory: string,
   runtimePlatform: BuildRuntimePlatform
 ): Promise<void> {
   const fakeBuildId = uuidv4();
@@ -24,8 +24,9 @@ async function runAsync(
     logger,
     false,
     runtimePlatform,
-    workingDirectory,
-    workingDirectory
+    relativeProjectDirectory,
+    relativeProjectDirectory,
+    relativeProjectDirectory
   );
   const parser = new BuildConfigParser(ctx, { configPath });
   const workflow = await parser.parseAsync();
@@ -33,17 +34,17 @@ async function runAsync(
 }
 
 const relativeConfigPath = process.argv[2];
-const relativeWorkingDirectoryPath = process.argv[3];
+const relativeProjectDirectoryPath = process.argv[3];
 const platform: BuildRuntimePlatform = (process.argv[4] ??
   process.platform) as BuildRuntimePlatform;
 
-if (!relativeConfigPath || !relativeWorkingDirectoryPath) {
-  console.error('Usage: yarn cli config.yml path/to/working/directory [darwin|linux]');
+if (!relativeConfigPath || !relativeProjectDirectoryPath) {
+  console.error('Usage: yarn cli config.yml path/to/project/directory [darwin|linux]');
   process.exit(1);
 }
 
 const configPath = path.resolve(process.cwd(), relativeConfigPath);
-const workingDirectory = path.resolve(process.cwd(), relativeWorkingDirectoryPath);
+const workingDirectory = path.resolve(process.cwd(), relativeProjectDirectoryPath);
 
 runAsync(configPath, workingDirectory, platform).catch((err) => {
   logger.error({ err }, 'Build failed');

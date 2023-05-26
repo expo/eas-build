@@ -12,6 +12,7 @@ interface BuildContextParams {
   skipCleanup?: boolean;
   runtimePlatform?: BuildRuntimePlatform;
   projectSourceDirectory?: string;
+  projectTargetDirectory?: string;
   workingDirectory?: string;
 }
 
@@ -21,6 +22,7 @@ export function createMockContext({
   skipCleanup,
   runtimePlatform,
   projectSourceDirectory,
+  projectTargetDirectory,
   workingDirectory,
 }: BuildContextParams = {}): BuildStepContext {
   return new BuildStepContext(
@@ -29,6 +31,7 @@ export function createMockContext({
     skipCleanup ?? false,
     runtimePlatform ?? BuildRuntimePlatform.LINUX,
     projectSourceDirectory ?? '/non/existent/dir',
+    projectTargetDirectory ?? '/another/non/existent/dir',
     workingDirectory
   );
 }
