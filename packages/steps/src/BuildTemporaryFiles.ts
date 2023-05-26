@@ -38,7 +38,7 @@ export async function cleanUpStepTemporaryDirectoriesAsync(
   ctx.logger.debug({ stepTemporaryDirectory }, 'Removed step temporary directory');
 }
 function getTemporaryStepDirPath(ctx: BuildStepContext, stepId: string): string {
-  return path.join(ctx.baseWorkingDirectory, 'steps', stepId);
+  return path.join(ctx.stepsInternalBuildDirectory, 'steps', stepId);
 }
 
 function getTemporaryScriptsDirPath(ctx: BuildStepContext, stepId: string): string {

@@ -9,7 +9,7 @@ import { BuildStepRuntimeError } from './errors.js';
 import { BuildRuntimePlatform } from './BuildRuntimePlatform.js';
 
 export class BuildStepContext {
-  public readonly baseWorkingDirectory: string;
+  public readonly stepsInternalBuildDirectory: string;
   public readonly workingDirectory: string;
 
   private stepById: Record<string, BuildStep> = {};
@@ -20,10 +20,12 @@ export class BuildStepContext {
     public readonly skipCleanup: boolean,
     public readonly runtimePlatform: BuildRuntimePlatform,
     public readonly projectSourceDirectory: string,
+    public readonly projectTargetDirectory: string,
     workingDirectory?: string
   ) {
-    this.baseWorkingDirectory = path.join(os.tmpdir(), 'eas-build', buildId);
-    this.workingDirectory = workingDirectory ?? path.join(this.baseWorkingDirectory, 'project');
+    this.stepsInternalBuildDirectory = path.join(os.tmpdir(), 'eas-build', buildId);
+    this.workingDirectory =
+      workingDirectory ?? path.join(this.stepsInternalBuildDirectory, 'project');
   }
 
   public registerStep(step: BuildStep): void {
@@ -51,6 +53,7 @@ export class BuildStepContext {
       this.skipCleanup,
       this.runtimePlatform,
       this.projectSourceDirectory,
+      this.projectTargetDirectory,
       workingDirectory ?? this.workingDirectory
     );
   }

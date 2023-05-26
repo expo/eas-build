@@ -202,7 +202,7 @@ describe(BuildStep, () => {
       await fs.mkdir(baseStepCtx.workingDirectory, { recursive: true });
     });
     afterEach(async () => {
-      await fs.rm(baseStepCtx.baseWorkingDirectory, { recursive: true });
+      await fs.rm(baseStepCtx.stepsInternalBuildDirectory, { recursive: true });
     });
 
     it('sets status to FAIL when step fails', async () => {
@@ -472,7 +472,7 @@ describe(BuildStep, () => {
       await fs.mkdir(baseStepCtx.workingDirectory, { recursive: true });
     });
     afterEach(async () => {
-      await fs.rm(baseStepCtx.baseWorkingDirectory, { recursive: true });
+      await fs.rm(baseStepCtx.stepsInternalBuildDirectory, { recursive: true });
     });
 
     it('throws an error when the step has not been executed yet', async () => {
@@ -603,7 +603,7 @@ describe(BuildStep, () => {
       expect(lines.find((line) => line.match(ctx.buildId))).toBeTruthy();
       expect(
         lines.find((line) =>
-          line.startsWith(path.join(ctx.baseWorkingDirectory, 'steps/test1/outputs'))
+          line.startsWith(path.join(ctx.stepsInternalBuildDirectory, 'steps/test1/outputs'))
         )
       ).toBeTruthy();
       expect(lines.find((line) => line.match(ctx.workingDirectory))).toBeTruthy();
@@ -619,7 +619,7 @@ describe(BuildStep.prototype.canBeRunOnRuntimePlatform, () => {
     await fs.mkdir(baseStepCtx.workingDirectory, { recursive: true });
   });
   afterEach(async () => {
-    await fs.rm(baseStepCtx.baseWorkingDirectory, { recursive: true });
+    await fs.rm(baseStepCtx.stepsInternalBuildDirectory, { recursive: true });
   });
 
   it('returns true when the step does not have a platform filter', async () => {
