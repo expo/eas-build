@@ -17,8 +17,9 @@ import ProvisioningProfile, {
   ProvisioningProfileData,
 } from './provisioningProfile';
 
+// keep in sync with EasContext.credentials.ios in @expo/steps package
 export interface IosCredentials {
-  applicationTargetProvisioningProfile: ProvisioningProfile<Ios.Job>;
+  applicationTargetProvisioningProfile: ProvisioningProfileData;
   keychainPath: string;
   targetProvisioningProfiles: TargetProvisioningProfiles;
   distributionType: DistributionType;
@@ -74,7 +75,7 @@ class IosCredentialsManager<TJob extends Ios.Job> {
     const { distributionType, teamId } = applicationTargetProvisioningProfile.data;
 
     return {
-      applicationTargetProvisioningProfile,
+      applicationTargetProvisioningProfile: applicationTargetProvisioningProfile.data,
       keychainPath: this.keychain.data.path,
       targetProvisioningProfiles,
       distributionType,
@@ -82,10 +83,13 @@ class IosCredentialsManager<TJob extends Ios.Job> {
     };
   }
 
-  public async cleanUp(): Promise<void> {
+  public async cleanUp(logger: bunyan): Promise<void> {
     if (this.cleanedUp || (!this.keychain && this.provisioningProfiles.length === 0)) {
+      logger.info('Nothing to clean up');
       return;
     }
+
+    logger.info('Cleaning up iOS credentials');
 
     if (this.keychain) {
       await this.keychain.destroy();
@@ -154,7 +158,7 @@ class IosCredentialsManager<TJob extends Ios.Job> {
 
       return provisioningProfile;
     } catch (err) {
-      await this.cleanUp();
+      await this.cleanUp(logger);
       throw err;
     }
   }

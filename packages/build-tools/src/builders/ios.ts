@@ -38,8 +38,8 @@ async function buildAsync(ctx: BuildContext<Ios.Job>): Promise<void> {
   const hasNativeCode = ctx.job.type === Workflow.GENERIC;
 
   try {
-    await ctx.runBuildPhase(BuildPhase.PREPARE_CREDENTIALS, async () => {
-      await prepareIosCredentials(ctx, ctx.logger);
+    const credentials = await ctx.runBuildPhase(BuildPhase.PREPARE_CREDENTIALS, async () => {
+      return await prepareIosCredentials(ctx, ctx.logger);
     });
 
     await ctx.runBuildPhase(BuildPhase.PREBUILD, async () => {
@@ -50,8 +50,8 @@ async function buildAsync(ctx: BuildContext<Ios.Job>): Promise<void> {
         );
         return;
       }
-      const extraEnvs: Record<string, string> = ctx.credentials?.teamId
-        ? { APPLE_TEAM_ID: ctx.credentials.teamId }
+      const extraEnvs: Record<string, string> = credentials?.teamId
+        ? { APPLE_TEAM_ID: credentials.teamId }
         : {};
       await prebuildAsync(ctx, { extraEnvs });
     });
@@ -69,7 +69,6 @@ async function buildAsync(ctx: BuildContext<Ios.Job>): Promise<void> {
     });
 
     const buildConfiguration = resolveBuildConfiguration(ctx);
-    const credentials = ctx.credentials;
     if (credentials) {
       await ctx.runBuildPhase(BuildPhase.CONFIGURE_XCODE_PROJECT, async () => {
         await configureXcodeProject(ctx, { credentials, buildConfiguration });
@@ -92,7 +91,7 @@ async function buildAsync(ctx: BuildContext<Ios.Job>): Promise<void> {
     });
   } finally {
     await ctx.runBuildPhase(BuildPhase.CLEAN_UP_CREDENTIALS, async () => {
-      await cleanUpIosCredentials(ctx, ctx.logger);
+      await cleanUpIosCredentials(ctx.logger);
     });
   }
 
@@ -153,19 +152,19 @@ async function resignAsync(ctx: BuildContext<Ios.Job>): Promise<Artifacts> {
   );
 
   try {
-    await ctx.runBuildPhase(BuildPhase.PREPARE_CREDENTIALS, async () => {
-      await prepareIosCredentials(ctx, ctx.logger);
+    const credentials = await ctx.runBuildPhase(BuildPhase.PREPARE_CREDENTIALS, async () => {
+      return await prepareIosCredentials(ctx, ctx.logger);
     });
 
     await ctx.runBuildPhase(BuildPhase.RUN_FASTLANE, async () => {
       await runFastlaneResign(ctx, {
-        credentials: nullthrows(ctx.credentials),
+        credentials: nullthrows(credentials),
         ipaPath: applicationArchivePath,
       });
     });
   } finally {
     await ctx.runBuildPhase(BuildPhase.CLEAN_UP_CREDENTIALS, async () => {
-      await getIosCredentialsManager().cleanUp();
+      await getIosCredentialsManager().cleanUp(ctx.logger);
     });
   }
 

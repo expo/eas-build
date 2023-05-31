@@ -73,7 +73,7 @@ describe('IosCredentialsManager', () => {
       });
       const manager = getIosCredentialsManager();
       const credentials = await manager.prepare(ctx, ctx.logger);
-      await manager.cleanUp();
+      await manager.cleanUp(ctx.logger);
 
       assert(credentials, 'credentials must be defined');
 

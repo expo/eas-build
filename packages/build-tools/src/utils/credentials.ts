@@ -6,8 +6,9 @@ import { v4 as uuidv4 } from 'uuid';
 import fs from 'fs-extra';
 
 import { BuildContext } from '../context';
-import { getIosCredentialsManager } from '../ios/credentials/manager';
+import { IosCredentials, getIosCredentialsManager } from '../ios/credentials/manager';
 
+// keep in sync with EasContext.credentials.android in @expo/steps package
 export interface AndroidCredentials {
   keystore: {
     keystorePath: string;
@@ -30,7 +31,7 @@ export async function prepareAndroidCredentials(
   logger.info("Restoring project's secrets");
   const keystorePath = path.join(ctx.buildDirectory, `keystore-${uuidv4()}`);
   await fs.writeFile(keystorePath, Buffer.from(buildCredentials.keystore.dataBase64, 'base64'));
-  const credentialsJson = {
+  const credentials = {
     keystore: {
       keystorePath,
       keystorePassword: buildCredentials.keystore.keystorePassword,
@@ -38,25 +39,17 @@ export async function prepareAndroidCredentials(
       keyPassword: buildCredentials.keystore.keyPassword,
     },
   };
-  return credentialsJson;
+  return credentials;
 }
 
 export async function prepareIosCredentials(
   ctx: BuildContext<Ios.Job>,
   logger: bunyan
-): Promise<void> {
+): Promise<IosCredentials | null> {
   const credentialsManager = getIosCredentialsManager();
-  ctx.credentials = await credentialsManager.prepare(ctx, logger);
+  return await credentialsManager.prepare(ctx, logger);
 }
 
-export async function cleanUpIosCredentials(
-  ctx: BuildContext<Ios.Job>,
-  logger: bunyan
-): Promise<void> {
-  if (ctx.credentials) {
-    logger.info('Cleaning up iOS credentials');
-    await getIosCredentialsManager().cleanUp();
-  } else {
-    logger.info('Nothing to clean up');
-  }
+export async function cleanUpIosCredentials(logger: bunyan): Promise<void> {
+  await getIosCredentialsManager().cleanUp(logger);
 }

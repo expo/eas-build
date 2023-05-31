@@ -1,10 +1,9 @@
 import path from 'path';
 
-import { Ios } from '@expo/eas-build-job';
 import { vol } from 'memfs';
 
 import { configureXcodeProject } from '../configure';
-import ProvisioningProfile, { DistributionType } from '../credentials/provisioningProfile';
+import { DistributionType, ProvisioningProfileData } from '../credentials/provisioningProfile';
 
 jest.mock('fs');
 const originalFs = jest.requireActual('fs');
@@ -43,7 +42,7 @@ describe(configureXcodeProject, () => {
         },
         distributionType: DistributionType.APP_STORE,
         teamId: 'ABCDEFGH',
-        applicationTargetProvisioningProfile: {} as ProvisioningProfile<Ios.Job>,
+        applicationTargetProvisioningProfile: {} as ProvisioningProfileData,
       },
       buildConfiguration: 'Release',
     };
@@ -97,7 +96,7 @@ describe(configureXcodeProject, () => {
         },
         distributionType: DistributionType.APP_STORE,
         teamId: 'ABCDEFGH',
-        applicationTargetProvisioningProfile: {} as ProvisioningProfile<Ios.Job>,
+        applicationTargetProvisioningProfile: {} as ProvisioningProfileData,
       },
       buildConfiguration: 'Release',
     };
@@ -144,7 +143,7 @@ describe(configureXcodeProject, () => {
         },
         distributionType: DistributionType.APP_STORE,
         teamId: 'ABCDEFGH',
-        applicationTargetProvisioningProfile: {} as ProvisioningProfile<Ios.Job>,
+        applicationTargetProvisioningProfile: {} as ProvisioningProfileData,
       },
       buildConfiguration: 'Release',
     };
@@ -214,7 +213,7 @@ describe(configureXcodeProject, () => {
         },
         distributionType: DistributionType.APP_STORE,
         teamId: 'ABCDEFGH',
-        applicationTargetProvisioningProfile: {} as ProvisioningProfile<Ios.Job>,
+        applicationTargetProvisioningProfile: {} as ProvisioningProfileData,
       },
       buildConfiguration: 'Release',
     };

@@ -1,6 +1,6 @@
 import { BuildStepContext } from './BuildStepContext.js';
 import { BuildStepRuntimeError } from './errors.js';
-import { interpolateWithOutputs } from './utils/template.js';
+import { interpolateWithOutputsAndEasContext } from './utils/template.js';
 
 export type BuildStepInputById = Record<string, BuildStepInput>;
 export type BuildStepInputProvider = (ctx: BuildStepContext, stepId: string) => BuildStepInput;
@@ -51,7 +51,10 @@ export class BuildStepInput {
     if (rawValue === undefined) {
       return rawValue;
     } else {
-      return interpolateWithOutputs(rawValue, (path) => this.ctx.getStepOutputValue(path) ?? '');
+      return interpolateWithOutputsAndEasContext(
+        rawValue,
+        (path) => this.ctx.getStepOutputValue(path) ?? ''
+      );
     }
   }
 

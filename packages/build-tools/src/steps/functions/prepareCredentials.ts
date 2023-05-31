@@ -13,9 +13,29 @@ export function createPrepareCredentialsBuildFunction<T extends Job>(
     name: 'Prepare credentials',
     fn: async (stepsCtx) => {
       if (ctx.job.platform === Platform.ANDROID) {
-        await prepareAndroidCredentials(ctx as BuildContext<Android.Job>, stepsCtx.logger);
+        const androidCredentials = await prepareAndroidCredentials(
+          ctx as BuildContext<Android.Job>,
+          stepsCtx.logger
+        );
+        stepsCtx.sharedEasContext = {
+          ...stepsCtx.sharedEasContext,
+          credentials: {
+            ...(stepsCtx.sharedEasContext.credentials ?? {}),
+            android: androidCredentials,
+          },
+        };
       } else {
-        await prepareIosCredentials(ctx as BuildContext<Ios.Job>, stepsCtx.logger);
+        const iosCredentials = await prepareIosCredentials(
+          ctx as BuildContext<Ios.Job>,
+          stepsCtx.logger
+        );
+        stepsCtx.sharedEasContext = {
+          ...stepsCtx.sharedEasContext,
+          credentials: {
+            ...(stepsCtx.sharedEasContext.credentials ?? {}),
+            ios: iosCredentials,
+          },
+        };
       }
     },
   });

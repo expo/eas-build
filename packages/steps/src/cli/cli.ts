@@ -26,6 +26,7 @@ async function runAsync(
     runtimePlatform,
     relativeProjectDirectory,
     relativeProjectDirectory,
+    {},
     relativeProjectDirectory
   );
   const parser = new BuildConfigParser(ctx, { configPath });

@@ -10,7 +10,6 @@ import {
   errors,
   Metadata,
   EnvironmentSecretType,
-  Ios,
 } from '@expo/eas-build-job';
 import { ExpoConfig } from '@expo/config';
 import { bunyan } from '@expo/logger';
@@ -21,8 +20,6 @@ import { PackageManager, resolvePackageManager } from './utils/packageManager';
 import { resolveBuildPhaseErrorAsync } from './buildErrors/detectError';
 import { readAppConfig } from './utils/appConfig';
 import { createTemporaryEnvironmentSecretFile } from './utils/environmentSecrets';
-import { IosCredentials } from './ios/credentials/manager';
-import { AndroidCredentials } from './utils/credentials';
 
 export enum ArtifactType {
   APPLICATION_ARCHIVE = 'APPLICATION_ARCHIVE',
@@ -92,7 +89,6 @@ export class BuildContext<TJob extends Job> {
   ) => void;
   public readonly skipNativeBuild?: boolean;
   public artifacts: Artifacts = {};
-  public credentials: (TJob extends Ios.Job ? IosCredentials : AndroidCredentials) | null = null;
 
   private _env: Env;
   private _job: TJob;

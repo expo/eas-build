@@ -7,6 +7,7 @@ import { BuildStep } from './BuildStep.js';
 import { parseOutputPath } from './utils/template.js';
 import { BuildStepRuntimeError } from './errors.js';
 import { BuildRuntimePlatform } from './BuildRuntimePlatform.js';
+import { EasContext } from './EasContext.js';
 
 export class BuildStepContext {
   public readonly stepsInternalBuildDirectory: string;
@@ -21,6 +22,7 @@ export class BuildStepContext {
     public readonly runtimePlatform: BuildRuntimePlatform,
     public readonly projectSourceDirectory: string,
     public readonly projectTargetDirectory: string,
+    public sharedEasContext: EasContext,
     workingDirectory?: string
   ) {
     this.stepsInternalBuildDirectory = path.join(os.tmpdir(), 'eas-build', buildId);
@@ -54,6 +56,7 @@ export class BuildStepContext {
       this.runtimePlatform,
       this.projectSourceDirectory,
       this.projectTargetDirectory,
+      this.sharedEasContext,
       workingDirectory ?? this.workingDirectory
     );
   }
