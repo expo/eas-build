@@ -3,6 +3,7 @@ import { v4 as uuidv4 } from 'uuid';
 
 import { BuildStepContext } from '../../BuildStepContext.js';
 import { BuildRuntimePlatform } from '../../BuildRuntimePlatform.js';
+import { EasContext } from '../../EasContext.js';
 
 import { createMockLogger } from './logger.js';
 
@@ -13,6 +14,7 @@ interface BuildContextParams {
   runtimePlatform?: BuildRuntimePlatform;
   projectSourceDirectory?: string;
   projectTargetDirectory?: string;
+  easContext?: EasContext;
   workingDirectory?: string;
 }
 
@@ -23,6 +25,7 @@ export function createMockContext({
   runtimePlatform,
   projectSourceDirectory,
   projectTargetDirectory,
+  easContext,
   workingDirectory,
 }: BuildContextParams = {}): BuildStepContext {
   return new BuildStepContext(
@@ -32,6 +35,7 @@ export function createMockContext({
     runtimePlatform ?? BuildRuntimePlatform.LINUX,
     projectSourceDirectory ?? '/non/existent/dir',
     projectTargetDirectory ?? '/another/non/existent/dir',
+    easContext ?? {},
     workingDirectory
   );
 }

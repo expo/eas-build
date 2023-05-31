@@ -22,7 +22,8 @@ describe(BuildStepContext, () => {
         false,
         BuildRuntimePlatform.LINUX,
         '/non/existent/path',
-        '/another/non/existent/path'
+        '/another/non/existent/path',
+        {}
       );
       expect(ctx.stepsInternalBuildDirectory.startsWith(os.tmpdir())).toBe(true);
     });
@@ -34,7 +35,8 @@ describe(BuildStepContext, () => {
         false,
         BuildRuntimePlatform.LINUX,
         '/non/existent/path',
-        '/another/non/existent/path'
+        '/another/non/existent/path',
+        {}
       );
       expect(ctx.stepsInternalBuildDirectory).toMatch(buildId);
     });
@@ -47,7 +49,8 @@ describe(BuildStepContext, () => {
         false,
         BuildRuntimePlatform.LINUX,
         '/non/existent/path',
-        '/another/non/existent/path'
+        '/another/non/existent/path',
+        {}
       );
       expect(ctx.workingDirectory).toBe(path.join(ctx.stepsInternalBuildDirectory, 'project'));
     });
@@ -60,6 +63,7 @@ describe(BuildStepContext, () => {
         BuildRuntimePlatform.LINUX,
         '/non/existent/path',
         '/another/non/existent/path',
+        {},
         workingDirectory
       );
       expect(ctx.workingDirectory).toBe(workingDirectory);
