@@ -144,9 +144,9 @@ async function validateAppConfigAsync(
   appConfig: ExpoConfig
 ): Promise<void> {
   if (
-    appConfig?.extra?.projectId &&
+    appConfig?.extra?.eas?.projectId &&
     ctx.env.EAS_BUILD_PROJECT_ID &&
-    appConfig.extra.projectId !== ctx.env.EAS_BUILD_PROJECT_ID
+    appConfig.extra.eas.projectId !== ctx.env.EAS_BUILD_PROJECT_ID
   ) {
     const isUsingDynamicConfig =
       (await fs.pathExists(path.join(ctx.getReactNativeProjectDirectory(), 'app.config.ts'))) ||
@@ -166,7 +166,7 @@ async function validateAppConfigAsync(
       'EAS_BUILD_PROJECT_ID_MISMATCH',
       `The value of the "extra.projectId" field in app config does not match current project id. ${extraMessage}Learn more: https://expo.fyi/eas-config-mismatch.`
     );
-  } else if (ctx.env.EAS_BUILD_PROJECT_ID && !appConfig?.extra?.projectId) {
+  } else if (ctx.env.EAS_BUILD_PROJECT_ID && !appConfig?.extra?.eas?.projectId) {
     ctx.logger.error(`The "extra.projectId" field is missing from your app config.`);
     ctx.markBuildPhaseHasWarnings();
   }
