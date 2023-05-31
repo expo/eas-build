@@ -9,13 +9,14 @@ import { configureExpoUpdatesIfInstalledAsync } from '../utils/expoUpdates';
 import { findArtifacts } from '../utils/artifacts';
 import { Hook, runHookIfPresent } from '../utils/hooks';
 import { configureXcodeProject } from '../ios/configure';
-import CredentialsManager from '../ios/credentials/manager';
+import { getIosCredentialsManager } from '../ios/credentials/manager';
 import { runFastlaneGym, runFastlaneResign } from '../ios/fastlane';
 import { installPods } from '../ios/pod';
 import { downloadApplicationArchiveAsync } from '../ios/resign';
 import { resolveArtifactPath, resolveBuildConfiguration, resolveScheme } from '../ios/resolve';
 import { setupAsync } from '../common/setup';
 import { prebuildAsync } from '../common/prebuild';
+import { cleanUpIosCredentials, prepareIosCredentials } from '../utils/credentials';
 
 import { runBuilderWithHooksAsync } from './common';
 import { runCustomBuildAsync } from './custom';
@@ -36,10 +37,9 @@ async function buildAsync(ctx: BuildContext<Ios.Job>): Promise<void> {
   await setupAsync(ctx);
   const hasNativeCode = ctx.job.type === Workflow.GENERIC;
 
-  const credentialsManager = new CredentialsManager(ctx);
   try {
-    const credentials = await ctx.runBuildPhase(BuildPhase.PREPARE_CREDENTIALS, async () => {
-      return await credentialsManager.prepare();
+    await ctx.runBuildPhase(BuildPhase.PREPARE_CREDENTIALS, async () => {
+      await prepareIosCredentials(ctx, ctx.logger);
     });
 
     await ctx.runBuildPhase(BuildPhase.PREBUILD, async () => {
@@ -50,8 +50,8 @@ async function buildAsync(ctx: BuildContext<Ios.Job>): Promise<void> {
         );
         return;
       }
-      const extraEnvs: Record<string, string> = credentials?.teamId
-        ? { APPLE_TEAM_ID: credentials.teamId }
+      const extraEnvs: Record<string, string> = ctx.credentials?.teamId
+        ? { APPLE_TEAM_ID: ctx.credentials.teamId }
         : {};
       await prebuildAsync(ctx, { extraEnvs });
     });
@@ -69,6 +69,7 @@ async function buildAsync(ctx: BuildContext<Ios.Job>): Promise<void> {
     });
 
     const buildConfiguration = resolveBuildConfiguration(ctx);
+    const credentials = ctx.credentials;
     if (credentials) {
       await ctx.runBuildPhase(BuildPhase.CONFIGURE_XCODE_PROJECT, async () => {
         await configureXcodeProject(ctx, { credentials, buildConfiguration });
@@ -91,7 +92,7 @@ async function buildAsync(ctx: BuildContext<Ios.Job>): Promise<void> {
     });
   } finally {
     await ctx.runBuildPhase(BuildPhase.CLEAN_UP_CREDENTIALS, async () => {
-      await credentialsManager.cleanUp();
+      await cleanUpIosCredentials(ctx, ctx.logger);
     });
   }
 
@@ -151,21 +152,20 @@ async function resignAsync(ctx: BuildContext<Ios.Job>): Promise<Artifacts> {
     }
   );
 
-  const credentialsManager = new CredentialsManager(ctx);
   try {
-    const credentials = await ctx.runBuildPhase(BuildPhase.PREPARE_CREDENTIALS, async () => {
-      return await credentialsManager.prepare();
+    await ctx.runBuildPhase(BuildPhase.PREPARE_CREDENTIALS, async () => {
+      await prepareIosCredentials(ctx, ctx.logger);
     });
 
     await ctx.runBuildPhase(BuildPhase.RUN_FASTLANE, async () => {
       await runFastlaneResign(ctx, {
-        credentials: nullthrows(credentials),
+        credentials: nullthrows(ctx.credentials),
         ipaPath: applicationArchivePath,
       });
     });
   } finally {
     await ctx.runBuildPhase(BuildPhase.CLEAN_UP_CREDENTIALS, async () => {
-      await credentialsManager.cleanUp();
+      await getIosCredentialsManager().cleanUp();
     });
   }
 

@@ -3,7 +3,7 @@ import path from 'path';
 import templateFile from '@expo/template-file';
 import fs from 'fs-extra';
 
-import { Credentials } from './credentials/manager';
+import { IosCredentials } from './credentials/manager';
 
 const ARCHIVE_TEMPLATE_FILE_PATH = path.join(__dirname, '../../templates/Gymfile.archive.template');
 const SIMULATOR_TEMPLATE_FILE_PATH = path.join(
@@ -13,7 +13,7 @@ const SIMULATOR_TEMPLATE_FILE_PATH = path.join(
 
 interface ArchiveBuildOptions {
   outputFile: string;
-  credentials: Credentials;
+  credentials: IosCredentials;
   scheme: string;
   buildConfiguration?: string;
   outputDirectory: string;

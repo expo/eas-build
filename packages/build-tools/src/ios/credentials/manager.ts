@@ -5,8 +5,8 @@ import path from 'path';
 import { Ios } from '@expo/eas-build-job';
 import fs from 'fs-extra';
 import { orderBy } from 'lodash';
-import nullthrows from 'nullthrows';
 import { v4 as uuid } from 'uuid';
+import { bunyan } from '@expo/logger';
 
 import { BuildContext } from '../../context';
 
@@ -17,7 +17,7 @@ import ProvisioningProfile, {
   ProvisioningProfileData,
 } from './provisioningProfile';
 
-export interface Credentials {
+export interface IosCredentials {
   applicationTargetProvisioningProfile: ProvisioningProfile<Ios.Job>;
   keychainPath: string;
   targetProvisioningProfiles: TargetProvisioningProfiles;
@@ -27,36 +27,40 @@ export interface Credentials {
 
 export type TargetProvisioningProfiles = Record<string, ProvisioningProfileData>;
 
-export default class IosCredentialsManager<TJob extends Ios.Job> {
+let iosCredentialsManager: IosCredentialsManager<Ios.Job>;
+
+export function getIosCredentialsManager(): IosCredentialsManager<Ios.Job> {
+  return iosCredentialsManager ?? new IosCredentialsManager();
+}
+
+class IosCredentialsManager<TJob extends Ios.Job> {
   private keychain?: Keychain<TJob>;
   private readonly provisioningProfiles: ProvisioningProfile<TJob>[] = [];
   private cleanedUp = false;
 
-  constructor(private readonly ctx: BuildContext<TJob>) {}
-
-  public async prepare(): Promise<Credentials | null> {
-    if (this.ctx.job.simulator) {
+  public async prepare(ctx: BuildContext<TJob>, logger: bunyan): Promise<IosCredentials | null> {
+    if (ctx.job.simulator) {
       return null;
     }
 
-    const { buildCredentials } = nullthrows(
-      this.ctx.job.secrets,
-      'Secrets must be defined for non-custom builds'
-    );
+    const { buildCredentials } = ctx.job.secrets;
+
     if (!buildCredentials) {
       throw new Error('credentials are required for an iOS build');
     }
 
-    this.ctx.logger.info('Preparing credentials');
+    logger.info('Preparing credentials');
 
-    this.ctx.logger.info('Creating keychain');
-    this.keychain = new Keychain(this.ctx);
+    logger.info('Creating keychain');
+    this.keychain = new Keychain(ctx);
     await this.keychain.create();
 
     const targets = Object.keys(buildCredentials);
     const targetProvisioningProfiles: TargetProvisioningProfiles = {};
     for (const target of targets) {
       const provisioningProfile = await this.prepareTargetCredentials(
+        ctx,
+        logger,
         target,
         buildCredentials[target]
       );
@@ -95,41 +99,43 @@ export default class IosCredentialsManager<TJob extends Ios.Job> {
   }
 
   private async prepareTargetCredentials(
+    ctx: BuildContext<TJob>,
+    logger: bunyan,
     target: string,
     targetCredentials: Ios.TargetCredentials
   ): Promise<ProvisioningProfile<TJob>> {
     try {
       assert(this.keychain, 'Keychain should be initialized');
 
-      this.ctx.logger.info(`Preparing credentials for target '${target}'`);
+      logger.info(`Preparing credentials for target '${target}'`);
       const distCertPath = path.join(os.tmpdir(), `${uuid()}.p12`);
 
-      this.ctx.logger.info('Getting distribution certificate fingerprint and common name');
+      logger.info('Getting distribution certificate fingerprint and common name');
       const certificateFingerprint = distributionCertificateUtils.getFingerprint(
         targetCredentials.distributionCertificate
       );
       const certificateCommonName = distributionCertificateUtils.getCommonName(
         targetCredentials.distributionCertificate
       );
-      this.ctx.logger.info(
+      logger.info(
         `Fingerprint = "${certificateFingerprint}", common name = ${certificateCommonName}`
       );
 
-      this.ctx.logger.info(`Writing distribution certificate to ${distCertPath}`);
+      logger.info(`Writing distribution certificate to ${distCertPath}`);
       await fs.writeFile(
         distCertPath,
         Buffer.from(targetCredentials.distributionCertificate.dataBase64, 'base64')
       );
 
-      this.ctx.logger.info('Importing distribution certificate into the keychain');
+      logger.info('Importing distribution certificate into the keychain');
       await this.keychain.importCertificate(
         distCertPath,
         targetCredentials.distributionCertificate.password
       );
 
-      this.ctx.logger.info('Initializing provisioning profile');
+      logger.info('Initializing provisioning profile');
       const provisioningProfile = new ProvisioningProfile(
-        this.ctx,
+        ctx,
         Buffer.from(targetCredentials.provisioningProfileBase64, 'base64'),
         this.keychain.data.path,
         target,
@@ -137,17 +143,13 @@ export default class IosCredentialsManager<TJob extends Ios.Job> {
       );
       await provisioningProfile.init();
 
-      this.ctx.logger.info(
-        'Validating whether distribution certificate has been imported successfully'
-      );
+      logger.info('Validating whether distribution certificate has been imported successfully');
       await this.keychain.ensureCertificateImported(
         provisioningProfile.data.teamId,
         certificateFingerprint
       );
 
-      this.ctx.logger.info(
-        'Verifying whether the distribution certificate and provisioning profile match'
-      );
+      logger.info('Verifying whether the distribution certificate and provisioning profile match');
       provisioningProfile.verifyCertificate(certificateFingerprint);
 
       return provisioningProfile;

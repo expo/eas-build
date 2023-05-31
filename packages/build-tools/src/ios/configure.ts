@@ -8,7 +8,7 @@ import plist from '@expo/plist';
 
 import { BuildContext } from '../context';
 
-import { Credentials } from './credentials/manager';
+import { IosCredentials } from './credentials/manager';
 
 async function configureXcodeProject(
   ctx: BuildContext<Ios.Job>,
@@ -16,7 +16,7 @@ async function configureXcodeProject(
     credentials,
     buildConfiguration,
   }: {
-    credentials: Credentials;
+    credentials: IosCredentials;
     buildConfiguration: string;
   }
 ): Promise<void> {
@@ -40,7 +40,7 @@ async function configureCredentialsAsync(
     credentials,
     buildConfiguration,
   }: {
-    credentials: Credentials;
+    credentials: IosCredentials;
     buildConfiguration: string;
   }
 ): Promise<void> {

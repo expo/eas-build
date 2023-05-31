@@ -72,7 +72,7 @@ export interface Job {
   updates?: {
     channel?: string;
   };
-  secrets?: BuildSecrets;
+  secrets: BuildSecrets;
   builderEnvironment?: BuilderEnvironment;
   cache: Cache;
   developmentClient?: boolean;

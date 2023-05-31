@@ -4,7 +4,6 @@ import { Env, Job, Metadata, sanitizeJob, sanitizeMetadata } from '@expo/eas-bui
 import { PipeMode } from '@expo/logger';
 import spawn from '@expo/turtle-spawn';
 import Joi from 'joi';
-import nullthrows from 'nullthrows';
 
 import { BuildContext } from '../context';
 import { isAtLeastNpm7Async } from '../utils/packageManager';
@@ -30,8 +29,7 @@ export async function runEasBuildInternalAsync<TJob extends Job>(
       cwd: ctx.getReactNativeProjectDirectory(),
       env: {
         ...ctx.env,
-        EXPO_TOKEN: nullthrows(ctx.job.secrets, 'Secrets must be defined for non-custom builds')
-          .robotAccessToken,
+        EXPO_TOKEN: ctx.job.secrets.robotAccessToken,
         ...extraEnv,
       },
       logger: ctx.logger,

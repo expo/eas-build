@@ -6,7 +6,7 @@ import { BuildMode, BuildTrigger } from '@expo/eas-build-job/dist/common';
 
 import { BuildContext } from '../../../context';
 import { distributionCertificate, provisioningProfile } from '../__tests__/fixtures';
-import IosCredentialsManager from '../manager';
+import { getIosCredentialsManager } from '../manager';
 
 jest.setTimeout(60 * 1000);
 
@@ -51,7 +51,7 @@ function createTestIosJob({
   };
 }
 
-describe(IosCredentialsManager, () => {
+describe('IosCredentialsManager', () => {
   describe('.prepare', () => {
     it('should prepare credentials for the build process', async () => {
       const targetName = 'testapp';
@@ -71,8 +71,8 @@ describe(IosCredentialsManager, () => {
         runGlobalExpoCliCommand: jest.fn(),
         uploadArtifacts: jest.fn(),
       });
-      const manager = new IosCredentialsManager(ctx);
-      const credentials = await manager.prepare();
+      const manager = getIosCredentialsManager();
+      const credentials = await manager.prepare(ctx, ctx.logger);
       await manager.cleanUp();
 
       assert(credentials, 'credentials must be defined');

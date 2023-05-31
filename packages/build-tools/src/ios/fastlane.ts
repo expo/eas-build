@@ -9,7 +9,7 @@ import nullthrows from 'nullthrows';
 import { BuildContext, SkipNativeBuildError } from '../context';
 
 import { createGymfileForArchiveBuild, createGymfileForSimulatorBuild } from './gymfile';
-import { Credentials } from './credentials/manager';
+import { IosCredentials } from './credentials/manager';
 import { XcodeBuildLogger } from './xcpretty';
 import { isTVOS } from './tvos';
 import { createFastfileForResigningBuild } from './fastfile';
@@ -24,7 +24,7 @@ export async function runFastlaneGym<TJob extends Ios.Job>(
   }: {
     scheme: string;
     buildConfiguration?: string;
-    credentials: Credentials | null;
+    credentials: IosCredentials | null;
     entitlements: object | null;
   }
 ): Promise<void> {
@@ -53,7 +53,7 @@ export async function runFastlaneGym<TJob extends Ios.Job>(
 
 export async function runFastlaneResign<TJob extends Ios.Job>(
   ctx: BuildContext<TJob>,
-  { credentials, ipaPath }: { credentials: Credentials; ipaPath: string }
+  { credentials, ipaPath }: { credentials: IosCredentials; ipaPath: string }
 ): Promise<void> {
   const { certificateCommonName } = credentials.applicationTargetProvisioningProfile.data;
 
@@ -113,7 +113,7 @@ async function ensureGymfileExists<TJob extends Ios.Job>(
   }: {
     scheme: string;
     buildConfiguration?: string;
-    credentials: Credentials | null;
+    credentials: IosCredentials | null;
     logsDirectory: string;
     entitlements: object | null;
   }

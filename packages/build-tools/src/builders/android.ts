@@ -1,5 +1,4 @@
 import { Android, BuildMode, BuildPhase, Workflow } from '@expo/eas-build-job';
-import nullthrows from 'nullthrows';
 
 import { Artifacts, ArtifactType, BuildContext, SkipNativeBuildError } from '../context';
 import { configureExpoUpdatesIfInstalledAsync } from '../utils/expoUpdates';
@@ -55,9 +54,7 @@ async function buildAsync(ctx: BuildContext<Android.Job>): Promise<void> {
     await runHookIfPresent(ctx, Hook.POST_INSTALL);
   });
 
-  if (
-    nullthrows(ctx.job.secrets, 'Secrets must be defined for non-custom builds').buildCredentials
-  ) {
+  if (ctx.job.secrets.buildCredentials) {
     await ctx.runBuildPhase(BuildPhase.PREPARE_CREDENTIALS, async () => {
       await restoreCredentials(ctx);
       await configureBuildGradle(ctx);
