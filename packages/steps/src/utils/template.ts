@@ -4,6 +4,7 @@ import { nullthrows } from './nullthrows.js';
 
 export const BUILD_STEP_INPUT_EXPRESSION_REGEXP = /\${\s*inputs\.([\S]+)\s*}/;
 export const BUILD_STEP_OUTPUT_EXPRESSION_REGEXP = /\${\s*steps\.([\S]+)\s*}/;
+export const EAS_CTX_EXPRESSION_REGEXP = /\${\s*easCtx\.([\S]+)\s*}/;
 
 export function interpolateWithInputs(
   templateString: string,
@@ -17,6 +18,13 @@ export function interpolateWithOutputs(
   fn: (path: string) => string
 ): string {
   return interpolate(templateString, BUILD_STEP_OUTPUT_EXPRESSION_REGEXP, fn);
+}
+
+export function interpolateWithEasCtx(
+  templateString: string,
+  fn: (path: string) => string
+): string {
+  return interpolate(templateString, EAS_CTX_EXPRESSION_REGEXP, fn);
 }
 
 function interpolate(

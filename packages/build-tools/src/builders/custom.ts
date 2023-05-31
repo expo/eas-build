@@ -31,7 +31,7 @@ export async function runCustomBuildAsync<T extends Job>(ctx: BuildContext<T>): 
     platformToBuildRuntimePlatform[ctx.job.platform],
     ctx.temporaryCustomBuildDirectory,
     ctx.buildDirectory,
-    { env: ctx.env },
+    {},
     ctx.getReactNativeProjectDirectory()
   );
   const easFunctions = getEasFunctions(ctx);
@@ -53,7 +53,7 @@ export async function runCustomBuildAsync<T extends Job>(ctx: BuildContext<T>): 
     }
   });
   try {
-    await workflow.executeAsync();
+    await workflow.executeAsync(ctx.env);
   } catch (err: any) {
     err.artifacts = ctx.artifacts;
     throw err;

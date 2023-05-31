@@ -37,5 +37,4 @@ export interface EasContext {
     android?: AndroidCredentials;
     ios?: IosCredentials | null;
   };
-  env?: Record<string, string>;
 }

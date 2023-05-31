@@ -19,7 +19,7 @@ import {
   saveScriptToTemporaryFileAsync,
 } from './BuildTemporaryFiles.js';
 import { spawnAsync } from './utils/shell/spawn.js';
-import { interpolateWithInputs } from './utils/template.js';
+import { interpolateWithEasCtx, interpolateWithInputs } from './utils/template.js';
 import { BuildStepRuntimeError } from './errors.js';
 import { BuildStepEnv } from './BuildStepEnv.js';
 import { BuildRuntimePlatform } from './BuildRuntimePlatform.js';
@@ -258,7 +258,11 @@ export class BuildStep {
       acc[input.id] = input.value ?? '';
       return acc;
     }, {} as Record<string, string>);
-    return interpolateWithInputs(command, vars);
+    const interpolatedWithInputs = interpolateWithInputs(command, vars);
+    return interpolateWithEasCtx(
+      interpolatedWithInputs,
+      (path) => this.ctx.getEasContextValue(path) ?? ''
+    );
   }
 
   private async collectAndValidateOutputsAsync(outputsDir: string): Promise<void> {

@@ -42,6 +42,20 @@ export class BuildStepContext {
     return this.stepById[stepId].getOutputValueByName(outputId);
   }
 
+  public getEasContextValue(path: string): string | undefined {
+    const arrPath = path.split('.').slice(1);
+    let value: any = this.sharedEasContext;
+    for (const key of arrPath) {
+      if (!(key in value)) {
+        throw new BuildStepRuntimeError(
+          `EAS context field "${path}" does not exist. Make sure you are using the correct field name and if so, ensure that steps which sets this field were ran prior to this step.`
+        );
+      }
+      value = value[key];
+    }
+    return value;
+  }
+
   public child({
     logger,
     workingDirectory,
