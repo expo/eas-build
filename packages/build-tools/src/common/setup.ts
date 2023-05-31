@@ -164,10 +164,10 @@ async function validateAppConfigAsync(
     }
     throw new UserFacingError(
       'EAS_BUILD_PROJECT_ID_MISMATCH',
-      `The value of the "extra.projectId" field in app config does not match current project id. ${extraMessage}Learn more: https://expo.fyi/eas-config-mismatch.`
+      `The value of the "extra.eas.projectId" field (${appConfig.extra.eas.projectId}) in the app config does not match the current project id (${ctx.env.EAS_BUILD_PROJECT_ID}). ${extraMessage}Learn more: https://expo.fyi/eas-config-mismatch.`
     );
   } else if (ctx.env.EAS_BUILD_PROJECT_ID && !appConfig?.extra?.eas?.projectId) {
-    ctx.logger.error(`The "extra.projectId" field is missing from your app config.`);
+    ctx.logger.error(`The "extra.eas.projectId" field is missing from your app config.`);
     ctx.markBuildPhaseHasWarnings();
   }
 }
