@@ -1,6 +1,6 @@
-import { anything, instance, mock, verify } from 'ts-mockito';
+import { anything, instance, mock, verify, when } from 'ts-mockito';
 
-import { BuildStep } from '../BuildStep.js';
+import { BuildStep, BuildStepStatus } from '../BuildStep.js';
 import { BuildStepEnv } from '../BuildStepEnv.js';
 import { BuildWorkflow } from '../BuildWorkflow.js';
 
@@ -74,6 +74,37 @@ describe(BuildWorkflow, () => {
       verify(mockBuildStep1.executeAsync(mockEnv));
       verify(mockBuildStep2.executeAsync(mockEnv));
       verify(mockBuildStep3.executeAsync(mockEnv));
+    });
+
+    it('executes steps with environment variables passed to the workflow', async () => {
+      const ctx = createMockContext();
+      const mockBuildStep1 = mock<BuildStep>();
+      const mockBuildStep2 = mock<BuildStep>();
+
+      when(mockBuildStep2.shouldAlwaysRun).thenReturn(true);
+      when(mockBuildStep2.status).thenReturn(BuildStepStatus.NEW);
+
+      const failingBuildStep = new BuildStep(ctx, {
+        id: 'someid',
+        displayName: 'somename',
+        fn: () => {
+          throw new Error('this will fail');
+        },
+      });
+
+      const buildSteps: BuildStep[] = [
+        failingBuildStep,
+        instance(mockBuildStep1),
+        instance(mockBuildStep2),
+      ];
+      const mockEnv: BuildStepEnv = { ABC: '123' };
+      const workflow = new BuildWorkflow(ctx, { buildSteps, buildFunctions: {} });
+      try {
+        await workflow.executeAsync(mockEnv);
+      } catch {}
+
+      verify(mockBuildStep1.executeAsync(mockEnv)).never();
+      verify(mockBuildStep2.executeAsync(mockEnv)).once();
     });
   });
 });

@@ -11,6 +11,7 @@ export function createCleanUpCredentialsBuildFunction<T extends Job>(
     namespace: 'eas',
     id: 'clean_up_credentials',
     name: 'Clean up credentials',
+    enforceBuildStepShouldAlwaysRun: true,
     fn: async (stepsCtx) => {
       if (ctx.job.platform === Platform.IOS) {
         await cleanUpIosCredentials(stepsCtx.logger);

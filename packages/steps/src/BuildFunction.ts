@@ -19,6 +19,7 @@ export class BuildFunction {
   public readonly command?: string;
   public readonly fn?: BuildStepFunction;
   public readonly shell?: string;
+  public readonly enforceBuildStepShouldAlwaysRun: boolean;
 
   public static isFulldIdNamespaced(fullId: string): boolean {
     return fullId.includes('/');
@@ -34,6 +35,7 @@ export class BuildFunction {
     command,
     fn,
     shell,
+    enforceBuildStepShouldAlwaysRun: maybeEnforceBuildStepShouldAlwaysRun,
   }: {
     namespace?: string;
     id: string;
@@ -44,6 +46,7 @@ export class BuildFunction {
     command?: string;
     fn?: BuildStepFunction;
     shell?: string;
+    enforceBuildStepShouldAlwaysRun?: boolean;
   }) {
     assert(command !== undefined || fn !== undefined, 'Either command or fn must be defined.');
     assert(!(command !== undefined && fn !== undefined), 'Command and fn cannot be both set.');
@@ -57,6 +60,7 @@ export class BuildFunction {
     this.command = command;
     this.fn = fn;
     this.shell = shell;
+    this.enforceBuildStepShouldAlwaysRun = maybeEnforceBuildStepShouldAlwaysRun ?? false;
   }
 
   public getFullId(): string {
@@ -107,6 +111,7 @@ export class BuildFunction {
       outputs,
       shell,
       supportedRuntimePlatforms: this.supportedRuntimePlatforms,
+      shouldAlwaysRun: this.enforceBuildStepShouldAlwaysRun,
     });
   }
 }

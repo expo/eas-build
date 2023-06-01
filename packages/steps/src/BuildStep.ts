@@ -54,6 +54,7 @@ const UUID_REGEX =
 export class BuildStep {
   public readonly id: string;
   public readonly name?: string;
+  public readonly shouldAlwaysRun: boolean;
   public readonly displayName: string;
   public readonly supportedRuntimePlatforms?: BuildRuntimePlatform[];
   public readonly inputs?: BuildStepInput[];
@@ -113,6 +114,7 @@ export class BuildStep {
       workingDirectory: maybeWorkingDirectory,
       shell,
       supportedRuntimePlatforms: maybeSupportedRuntimePlatforms,
+      shouldAlwaysRun: maybeShouldAlwaysRun,
     }: {
       id: string;
       name?: string;
@@ -124,6 +126,7 @@ export class BuildStep {
       workingDirectory?: string;
       shell?: string;
       supportedRuntimePlatforms?: BuildRuntimePlatform[];
+      shouldAlwaysRun?: boolean;
     }
   ) {
     assert(command !== undefined || fn !== undefined, 'Either command or fn must be defined.');
@@ -141,6 +144,7 @@ export class BuildStep {
     this.command = command;
     this.shell = shell ?? getDefaultShell();
     this.status = BuildStepStatus.NEW;
+    this.shouldAlwaysRun = maybeShouldAlwaysRun ?? false;
 
     this.internalId = uuidv4();
 
