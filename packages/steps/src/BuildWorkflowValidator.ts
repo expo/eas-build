@@ -1,11 +1,14 @@
 import { BuildStep } from './BuildStep.js';
 import { BuildWorkflow } from './BuildWorkflow.js';
+import { getAllReachablePathsInEasContextObject } from './EasContext.js';
 import { BuildConfigError, BuildWorkflowError } from './errors.js';
 import { duplicates } from './utils/expodash/duplicates.js';
 import { nullthrows } from './utils/nullthrows.js';
-import { findOutputPaths } from './utils/template.js';
+import { EAS_CTX_EXPRESSION_REGEXP, findOutputPaths } from './utils/template.js';
 
 export class BuildWorkflowValidator {
+  public readonly reachableEasCtxPaths = getAllReachablePathsInEasContextObject();
+
   constructor(private readonly workflow: BuildWorkflow) {}
 
   public validate(): void {
@@ -13,6 +16,7 @@ export class BuildWorkflowValidator {
     errors.push(...this.validateUniqueStepIds());
     errors.push(...this.validateInputs());
     errors.push(...this.validateAllowedPlatforms());
+    errors.push(...this.validateEasContextUsage());
     if (errors.length !== 0) {
       throw new BuildWorkflowError('Build workflow is invalid.', errors);
     }
@@ -42,12 +46,13 @@ export class BuildWorkflowValidator {
           continue;
         }
         if (!currentStepInput.isValueOneOfAllowedValues()) {
+          currentStep.ctx.logger.warn('hmm');
           const error = new BuildConfigError(
             `Input parameter "${currentStepInput.id}" for step "${
               currentStep.displayName
-            }" is set to "${
-              currentStepInput.value
-            }" which is not one of the allowed values: ${nullthrows(currentStepInput.allowedValues)
+            }" is set to "${currentStepInput.getRawValue()}" which is not one of the allowed values: ${nullthrows(
+              currentStepInput.allowedValues
+            )
               .map((i) => `"${i}"`)
               .join(', ')}.`
           );
@@ -78,6 +83,63 @@ export class BuildWorkflowValidator {
         }
       }
       visitedStepByStepId[currentStep.id] = currentStep;
+    }
+
+    return errors;
+  }
+
+  private validateEasContextUsage(): BuildConfigError[] {
+    const errors: BuildConfigError[] = [];
+
+    for (const currentStep of this.workflow.buildSteps) {
+      for (const currentStepInput of currentStep.inputs ?? []) {
+        const rawInputValue = currentStepInput.getRawValue();
+        if (!rawInputValue) {
+          continue;
+        }
+        const matched = rawInputValue.match(new RegExp(EAS_CTX_EXPRESSION_REGEXP, 'g'));
+        if (!matched) {
+          continue;
+        }
+        for (const match of matched) {
+          const [, actualPath] = nullthrows(match.match(EAS_CTX_EXPRESSION_REGEXP));
+          let isReachable = false;
+          for (const reachablePath of this.reachableEasCtxPaths) {
+            if (actualPath.match(reachablePath)) {
+              isReachable = true;
+            }
+          }
+          if (!isReachable) {
+            const error = new BuildConfigError(
+              `Input parameter "${currentStepInput.id}" for step "${currentStep.displayName}" uses an expression that references invalid EAS context key "${actualPath}".`
+            );
+            errors.push(error);
+          }
+        }
+      }
+      const command = currentStep.command;
+      if (!command) {
+        continue;
+      }
+      const matched = command.match(new RegExp(EAS_CTX_EXPRESSION_REGEXP, 'g'));
+      if (!matched) {
+        continue;
+      }
+      for (const match of matched) {
+        const [, actualPath] = nullthrows(match.match(EAS_CTX_EXPRESSION_REGEXP));
+        let isReachable = false;
+        for (const reachablePath of this.reachableEasCtxPaths) {
+          if (actualPath.match(reachablePath)) {
+            isReachable = true;
+          }
+        }
+        if (!isReachable) {
+          const error = new BuildConfigError(
+            `Command for step "${currentStep.displayName}" uses an expression that references invalid EAS context key "${actualPath}".`
+          );
+          errors.push(error);
+        }
+      }
     }
 
     return errors;

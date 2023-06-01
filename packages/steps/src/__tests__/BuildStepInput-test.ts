@@ -1,6 +1,7 @@
 import { BuildStepRuntimeError } from '../errors.js';
 import { BuildStep } from '../BuildStep.js';
 import { BuildStepInput, makeBuildStepInputByIdMap } from '../BuildStepInput.js';
+import { mockAndroidCredentials } from '../EasContext.js';
 
 import { createMockContext } from './utils/context.js';
 
@@ -57,14 +58,6 @@ describe(BuildStepInput, () => {
   });
 
   test('correctly gets value from EAS context', () => {
-    const mockAndroidCredentials = {
-      keystore: {
-        keystorePath: 'mock-path',
-        keystorePassword: 'mock-password',
-        keyAlias: 'mock-alias',
-        keyPassword: 'mock-password',
-      },
-    };
     const ctx = createMockContext({
       easContext: { credentials: { android: mockAndroidCredentials } },
     });

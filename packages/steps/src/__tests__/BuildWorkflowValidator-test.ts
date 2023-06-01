@@ -9,7 +9,7 @@ import { BuildConfigError, BuildWorkflowError } from '../errors.js';
 import { BuildRuntimePlatform } from '../BuildRuntimePlatform.js';
 
 import { createMockContext } from './utils/context.js';
-import { getError } from './utils/error.js';
+import { NoErrorThrownError, getError } from './utils/error.js';
 
 describe(BuildWorkflowValidator, () => {
   test('non unique step ids', async () => {
@@ -99,6 +99,148 @@ describe(BuildWorkflowValidator, () => {
     expect(error.errors[0].message).toBe(
       'Input parameter "input1" for step "test1" is set to "3" which is not one of the allowed values: "1", "2".'
     );
+  });
+  test('input set to invalid EAS context', async () => {
+    const ctx = createMockContext();
+
+    const id1 = 'test1';
+    const command1 = 'set-output output1 123';
+    const displayName1 = BuildStep.getDisplayName({ id: id1, command: command1 });
+
+    const input = new BuildStepInput(ctx, {
+      id: 'input1',
+      stepDisplayName: displayName1,
+      required: true,
+    });
+    input.set('${ easCtx.invalid.field }');
+    const workflow = new BuildWorkflow(ctx, {
+      buildSteps: [
+        new BuildStep(ctx, {
+          id: id1,
+          displayName: displayName1,
+          inputs: [input],
+          command: command1,
+          workingDirectory: ctx.workingDirectory,
+        }),
+      ],
+      buildFunctions: {},
+    });
+
+    const validator = new BuildWorkflowValidator(workflow);
+    const error = getError<BuildWorkflowError>(() => {
+      validator.validate();
+    });
+    expect(error).toBeInstanceOf(BuildWorkflowError);
+    assert(error instanceof BuildWorkflowError);
+    expect(error.errors.length).toBe(1);
+    expect(error.errors[0]).toBeInstanceOf(BuildConfigError);
+    expect(error.errors[0].message).toBe(
+      'Input parameter "input1" for step "test1" uses an expression that references invalid EAS context key "invalid.field".'
+    );
+  });
+  test('input set to valid EAS context', async () => {
+    const ctx = createMockContext();
+
+    const id1 = 'test1';
+    const command1 = 'set-output output1 123';
+    const displayName1 = BuildStep.getDisplayName({ id: id1, command: command1 });
+
+    const input = new BuildStepInput(ctx, {
+      id: 'input1',
+      stepDisplayName: displayName1,
+      required: true,
+    });
+    input.set('${ easCtx.credentials.android.keystore.keystorePassword }');
+    const workflow = new BuildWorkflow(ctx, {
+      buildSteps: [
+        new BuildStep(ctx, {
+          id: id1,
+          displayName: displayName1,
+          inputs: [input],
+          command: command1,
+          workingDirectory: ctx.workingDirectory,
+        }),
+      ],
+      buildFunctions: {},
+    });
+
+    const validator = new BuildWorkflowValidator(workflow);
+    const error = getError<BuildWorkflowError>(() => {
+      validator.validate();
+    });
+    expect(error).toBeInstanceOf(NoErrorThrownError);
+  });
+  test('command referencing invalid EAS context field', async () => {
+    const ctx = createMockContext();
+
+    const id1 = 'test1';
+    const command1 = '${ easCtx.invalid.field }';
+    const displayName1 = BuildStep.getDisplayName({ id: id1, command: command1 });
+
+    const input = new BuildStepInput(ctx, {
+      id: 'input1',
+      stepDisplayName: displayName1,
+      defaultValue: '2',
+      required: true,
+    });
+
+    const workflow = new BuildWorkflow(ctx, {
+      buildSteps: [
+        new BuildStep(ctx, {
+          id: id1,
+          displayName: displayName1,
+          inputs: [input],
+          command: command1,
+          workingDirectory: ctx.workingDirectory,
+        }),
+      ],
+      buildFunctions: {},
+    });
+
+    const validator = new BuildWorkflowValidator(workflow);
+    const error = getError<BuildWorkflowError>(() => {
+      validator.validate();
+    });
+    expect(error).toBeInstanceOf(BuildWorkflowError);
+    assert(error instanceof BuildWorkflowError);
+    expect(error.errors.length).toBe(1);
+    expect(error.errors[0]).toBeInstanceOf(BuildConfigError);
+    expect(error.errors[0].message).toBe(
+      'Command for step "test1" uses an expression that references invalid EAS context key "invalid.field".'
+    );
+  });
+  test('command referencing valid EAS context field', async () => {
+    const ctx = createMockContext();
+
+    const id1 = 'test1';
+    const command1 = '${ easCtx.credentials.android.keystore.keystorePassword }';
+    const displayName1 = BuildStep.getDisplayName({ id: id1, command: command1 });
+
+    const input = new BuildStepInput(ctx, {
+      id: 'input1',
+      stepDisplayName: displayName1,
+      defaultValue: '2',
+      required: true,
+    });
+
+    const workflow = new BuildWorkflow(ctx, {
+      buildSteps: [
+        new BuildStep(ctx, {
+          id: id1,
+          displayName: displayName1,
+          inputs: [input],
+          command: command1,
+          workingDirectory: ctx.workingDirectory,
+        }),
+      ],
+      buildFunctions: {},
+    });
+
+    const validator = new BuildWorkflowValidator(workflow);
+    const error = getError<BuildWorkflowError>(() => {
+      validator.validate();
+    });
+    expect(error).toBeInstanceOf(NoErrorThrownError);
   });
   test('output from future step', async () => {
     const ctx = createMockContext();

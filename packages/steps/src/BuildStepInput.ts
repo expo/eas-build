@@ -55,10 +55,18 @@ export class BuildStepInput {
         rawValue,
         (path) => this.ctx.getStepOutputValue(path) ?? ''
       );
-      return interpolateWithEasCtx(
+      const value = interpolateWithEasCtx(
         interpolatedWithOutputs,
         (path) => this.ctx.getEasContextValue(path) ?? ''
       );
+      if (this.allowedValues && !this.allowedValues.includes(value)) {
+        throw new BuildStepRuntimeError(
+          `Input parameter "${this.id}" for step "${
+            this.stepDisplayName
+          }" must be one of: ${this.allowedValues.join(', ')}.`
+        );
+      }
+      return value;
     }
   }
 
@@ -78,6 +86,10 @@ export class BuildStepInput {
       return true;
     }
     return this.allowedValues.includes(value);
+  }
+
+  public getRawValue(): string | undefined {
+    return this._value ?? this.defaultValue;
   }
 }
 

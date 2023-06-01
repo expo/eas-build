@@ -53,6 +53,9 @@ export class BuildStepContext {
       }
       value = value[key];
     }
+    if (Buffer.isBuffer(value)) {
+      return value.toString();
+    }
     if (typeof value !== 'string' && typeof value !== 'undefined') {
       throw new BuildStepRuntimeError(
         `EAS context field "${path}" is not a string or undefined. It is of type "${typeof value}". We currently only support accessing string or undefined values from the EAS context.`

@@ -8,7 +8,7 @@ import { BuildStep } from '../BuildStep.js';
 import { BuildStepContext } from '../BuildStepContext.js';
 import { BuildStepRuntimeError } from '../errors.js';
 import { BuildRuntimePlatform } from '../BuildRuntimePlatform.js';
-import { emptyEasContext } from '../EasContext.js';
+import { emptyEasContext, mockAndroidCredentials, mockIosCredentials } from '../EasContext.js';
 
 import { createMockContext } from './utils/context.js';
 import { getError } from './utils/error.js';
@@ -98,14 +98,6 @@ describe(BuildStepContext, () => {
     });
   });
   describe(BuildStepContext.prototype.getEasContextValue, () => {
-    const mockAndroidCredentials = {
-      keystore: {
-        keystorePath: 'mock-path',
-        keystorePassword: 'mock-password',
-        keyAlias: 'mock-alias',
-        keyPassword: 'mock-password',
-      },
-    };
     it('throws an error if the EAS context references a non-existent field', () => {
       const ctx = createMockContext({ easContext: { credentials: {} } });
       const error = getError<BuildStepRuntimeError>(() => {
@@ -135,6 +127,20 @@ describe(BuildStepContext, () => {
         },
       });
       expect(ctx.getEasContextValue('credentials.android.keystore.keystorePath')).toBe('mock-path');
+    });
+    it('converts buffer value to string', () => {
+      const ctx = createMockContext({
+        easContext: {
+          credentials: {
+            ios: mockIosCredentials,
+          },
+        },
+      });
+      expect(
+        ctx.getEasContextValue(
+          'credentials.ios.applicationTargetProvisioningProfile.developerCertificate'
+        )
+      ).toBe('mock-certificate');
     });
   });
   describe(BuildStepContext.prototype.child, () => {

@@ -12,20 +12,12 @@ import { BuildStepOutput } from '../BuildStepOutput.js';
 import { BuildStepRuntimeError } from '../errors.js';
 import { nullthrows } from '../utils/nullthrows.js';
 import { BuildRuntimePlatform } from '../BuildRuntimePlatform.js';
+import { mockAndroidCredentials } from '../EasContext.js';
 
 import { createMockContext } from './utils/context.js';
 import { createMockLogger } from './utils/logger.js';
 import { getError, getErrorAsync } from './utils/error.js';
 import { UUID_REGEX } from './utils/uuid.js';
-
-const mockAndroidCredentials = {
-  keystore: {
-    keystorePath: 'mock-path',
-    keystorePassword: 'mock-password',
-    keyAlias: 'mock-alias',
-    keyPassword: 'mock-password',
-  },
-};
 
 describe(BuildStep, () => {
   describe(BuildStep.getNewId, () => {
