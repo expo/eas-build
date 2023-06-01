@@ -19,6 +19,9 @@ export function createCleanUpCredentialsBuildFunction<T extends Job>(
         android: undefined,
         ios: undefined,
       };
+      stepsCtx.logger.info(
+        'Cleared  ${ easCtx.credentials.ios } and ${ easCtx.credentials.android } values'
+      );
     },
   });
 }

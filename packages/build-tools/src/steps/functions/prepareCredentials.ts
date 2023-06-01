@@ -21,6 +21,7 @@ export function createPrepareCredentialsBuildFunction<T extends Job>(
           ...stepsCtx.sharedEasContext.credentials,
           android: androidCredentials,
         };
+        stepsCtx.logger.info('Set  ${ easCtx.credentials.android } values');
       } else {
         const iosCredentials = await prepareIosCredentials(
           ctx as BuildContext<Ios.Job>,
@@ -30,6 +31,7 @@ export function createPrepareCredentialsBuildFunction<T extends Job>(
           ...stepsCtx.sharedEasContext.credentials,
           ios: iosCredentials,
         };
+        stepsCtx.logger.info('Set  ${ easCtx.credentials.ios } values');
       }
     },
   });
