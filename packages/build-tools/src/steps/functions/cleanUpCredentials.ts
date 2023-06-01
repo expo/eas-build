@@ -15,12 +15,9 @@ export function createCleanUpCredentialsBuildFunction<T extends Job>(
       if (ctx.job.platform === Platform.IOS) {
         await cleanUpIosCredentials(stepsCtx.logger);
       }
-      stepsCtx.sharedEasContext = {
-        ...stepsCtx.sharedEasContext,
-        credentials: {
-          android: undefined,
-          ios: undefined,
-        },
+      stepsCtx.sharedEasContext.credentials = {
+        android: undefined,
+        ios: undefined,
       };
     },
   });

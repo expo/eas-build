@@ -5,12 +5,12 @@ import { BuildConfigParser } from '../BuildConfigParser.js';
 import { BuildFunction } from '../BuildFunction.js';
 import { BuildStepFunction } from '../BuildStep.js';
 import { BuildWorkflow } from '../BuildWorkflow.js';
-import { BuildConfigError, BuildStepRuntimeError } from '../errors.js';
+import { BuildConfigError, BuildStepRuntimeError, BuildWorkflowError } from '../errors.js';
 import { getDefaultShell } from '../utils/shell/command.js';
 import { BuildRuntimePlatform } from '../BuildRuntimePlatform.js';
 
 import { createMockContext } from './utils/context.js';
-import { getError, getErrorAsync } from './utils/error.js';
+import { NoErrorThrownError, getError, getErrorAsync } from './utils/error.js';
 import { UUID_REGEX } from './utils/uuid.js';
 
 const __dirname = url.fileURLToPath(new URL('.', import.meta.url));
@@ -392,6 +392,28 @@ describe(BuildConfigParser, () => {
       expect(error.message).toBe(
         'Calling non-existent functions: "eas/download_project", "eas/build_project".'
       );
+    });
+
+    it('throws if using invalid EAS context field', async () => {
+      const ctx = createMockContext();
+      const parser = new BuildConfigParser(ctx, {
+        configPath: path.join(__dirname, './fixtures/invalid-eas-ctx.yml'),
+      });
+      const error = await getErrorAsync<BuildWorkflowError>(async () => {
+        await parser.parseAsync();
+      });
+      expect(error).toBeInstanceOf(BuildWorkflowError);
+    });
+
+    it('does not throw if using potentially valid EAS context field', async () => {
+      const ctx = createMockContext();
+      const parser = new BuildConfigParser(ctx, {
+        configPath: path.join(__dirname, './fixtures/valid-eas-ctx.yml'),
+      });
+      const error = await getErrorAsync<NoErrorThrownError>(async () => {
+        await parser.parseAsync();
+      });
+      expect(error).toBeInstanceOf(NoErrorThrownError);
     });
 
     it('works with external functions', async () => {

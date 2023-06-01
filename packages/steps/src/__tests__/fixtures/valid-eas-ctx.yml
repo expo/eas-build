@@ -1,0 +1,6 @@
+build:
+  name: External functions
+  steps:
+    - run:
+        name: Test
+        command: echo "${ easCtx.credentials.android.keystore.keystorePassword }"

@@ -22,7 +22,7 @@ export class BuildStepContext {
     public readonly runtimePlatform: BuildRuntimePlatform,
     public readonly projectSourceDirectory: string,
     public readonly projectTargetDirectory: string,
-    public sharedEasContext: EasContext,
+    public readonly sharedEasContext: EasContext,
     workingDirectory?: string
   ) {
     this.stepsInternalBuildDirectory = path.join(os.tmpdir(), 'eas-build', buildId);

@@ -17,24 +17,18 @@ export function createPrepareCredentialsBuildFunction<T extends Job>(
           ctx as BuildContext<Android.Job>,
           stepsCtx.logger
         );
-        stepsCtx.sharedEasContext = {
-          ...stepsCtx.sharedEasContext,
-          credentials: {
-            ...stepsCtx.sharedEasContext.credentials,
-            android: androidCredentials,
-          },
+        stepsCtx.sharedEasContext.credentials = {
+          ...stepsCtx.sharedEasContext.credentials,
+          android: androidCredentials,
         };
       } else {
         const iosCredentials = await prepareIosCredentials(
           ctx as BuildContext<Ios.Job>,
           stepsCtx.logger
         );
-        stepsCtx.sharedEasContext = {
-          ...stepsCtx.sharedEasContext,
-          credentials: {
-            ...stepsCtx.sharedEasContext.credentials,
-            ios: iosCredentials,
-          },
+        stepsCtx.sharedEasContext.credentials = {
+          ...stepsCtx.sharedEasContext.credentials,
+          ios: iosCredentials,
         };
       }
     },

@@ -255,7 +255,7 @@ export class BuildStep {
     inputs?: BuildStepInput[]
   ): string {
     if (!inputs) {
-      return command;
+      return interpolateWithEasCtx(command, (path) => this.ctx.getEasContextValue(path) ?? '');
     }
     const vars = inputs.reduce((acc, input) => {
       acc[input.id] = input.value ?? '';
