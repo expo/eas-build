@@ -1,7 +1,13 @@
 import path from 'path';
 
 import { BuildPhase, Job, Platform } from '@expo/eas-build-job';
-import { BuildConfigParser, BuildStepContext, errors, BuildRuntimePlatform } from '@expo/steps';
+import {
+  BuildConfigParser,
+  BuildStepContext,
+  errors,
+  BuildRuntimePlatform,
+  emptyEasContext,
+} from '@expo/steps';
 import nullthrows from 'nullthrows';
 
 import { Artifacts, BuildContext } from '../context';
@@ -31,7 +37,7 @@ export async function runCustomBuildAsync<T extends Job>(ctx: BuildContext<T>): 
     platformToBuildRuntimePlatform[ctx.job.platform],
     ctx.temporaryCustomBuildDirectory,
     ctx.buildDirectory,
-    {},
+    emptyEasContext,
     ctx.getReactNativeProjectDirectory()
   );
   const easFunctions = getEasFunctions(ctx);

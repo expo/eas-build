@@ -33,8 +33,12 @@ interface IosCredentials {
 }
 
 export interface EasContext {
-  credentials?: {
+  credentials: {
     android?: AndroidCredentials;
     ios?: IosCredentials | null;
   };
 }
+
+export const emptyEasContext: EasContext = {
+  credentials: {},
+};

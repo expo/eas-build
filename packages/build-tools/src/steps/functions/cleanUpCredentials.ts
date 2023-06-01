@@ -1,15 +1,27 @@
-import { BuildFunction, BuildRuntimePlatform } from '@expo/steps';
+import { BuildFunction } from '@expo/steps';
+import { Job, Platform } from '@expo/eas-build-job';
 
 import { cleanUpIosCredentials } from '../../utils/credentials';
+import { BuildContext } from '../../context';
 
-export function createCleanUpCredentialsBuildFunction(): BuildFunction {
+export function createCleanUpCredentialsBuildFunction<T extends Job>(
+  ctx: BuildContext<T>
+): BuildFunction {
   return new BuildFunction({
     namespace: 'eas',
-    id: 'clean_up_ios_credentials',
-    name: 'Clean up iOS credentials',
-    supportedRuntimePlatforms: [BuildRuntimePlatform.DARWIN],
+    id: 'clean_up_credentials',
+    name: 'Clean up credentials',
     fn: async (stepsCtx) => {
-      await cleanUpIosCredentials(stepsCtx.logger);
+      if (ctx.job.platform === Platform.IOS) {
+        await cleanUpIosCredentials(stepsCtx.logger);
+      }
+      stepsCtx.sharedEasContext = {
+        ...stepsCtx.sharedEasContext,
+        credentials: {
+          android: undefined,
+          ios: undefined,
+        },
+      };
     },
   });
 }

@@ -7,3 +7,4 @@ export { BuildStepOutput } from './BuildStepOutput.js';
 export { BuildStepContext } from './BuildStepContext.js';
 export { BuildWorkflow } from './BuildWorkflow.js';
 export * as errors from './errors.js';
+export { emptyEasContext } from './EasContext.js';

@@ -7,6 +7,7 @@ import { BuildConfigParser } from '../BuildConfigParser.js';
 import { BuildStepContext } from '../BuildStepContext.js';
 import { BuildWorkflowError } from '../errors.js';
 import { BuildRuntimePlatform } from '../BuildRuntimePlatform.js';
+import { emptyEasContext } from '../EasContext.js';
 
 const logger = createLogger({
   name: 'steps-cli',
@@ -26,7 +27,7 @@ async function runAsync(
     runtimePlatform,
     relativeProjectDirectory,
     relativeProjectDirectory,
-    {},
+    emptyEasContext,
     relativeProjectDirectory
   );
   const parser = new BuildConfigParser(ctx, { configPath });

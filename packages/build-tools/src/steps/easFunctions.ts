@@ -17,6 +17,6 @@ export function getEasFunctions<T extends Job>(ctx: BuildContext<T>): BuildFunct
     createSetUpNpmrcBuildFunction(ctx),
     createInstallNodeModulesBuildFunction(ctx),
     createPrepareCredentialsBuildFunction(ctx),
-    createCleanUpCredentialsBuildFunction(),
+    createCleanUpCredentialsBuildFunction(ctx),
   ];
 }

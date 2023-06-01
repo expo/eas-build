@@ -20,7 +20,7 @@ export function createPrepareCredentialsBuildFunction<T extends Job>(
         stepsCtx.sharedEasContext = {
           ...stepsCtx.sharedEasContext,
           credentials: {
-            ...(stepsCtx.sharedEasContext.credentials ?? {}),
+            ...stepsCtx.sharedEasContext.credentials,
             android: androidCredentials,
           },
         };
@@ -32,7 +32,7 @@ export function createPrepareCredentialsBuildFunction<T extends Job>(
         stepsCtx.sharedEasContext = {
           ...stepsCtx.sharedEasContext,
           credentials: {
-            ...(stepsCtx.sharedEasContext.credentials ?? {}),
+            ...stepsCtx.sharedEasContext.credentials,
             ios: iosCredentials,
           },
         };
