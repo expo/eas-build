@@ -217,7 +217,7 @@ export class BuildStep {
     assert(this.command, 'Command must be defined.');
 
     try {
-      const command = this.interpolateInputsInCommand(this.command, this.inputs);
+      const command = this.interpolateInputsAndEasContextInCommand(this.command, this.inputs);
       this.ctx.logger.debug(`Interpolated inputs in the command template`);
 
       const outputsDir = await createTemporaryOutputsDirectoryAsync(this.ctx, this.id);
@@ -250,7 +250,10 @@ export class BuildStep {
     await this.fn(this.ctx, { inputs: this.inputById, outputs: this.outputById, env });
   }
 
-  private interpolateInputsInCommand(command: string, inputs?: BuildStepInput[]): string {
+  private interpolateInputsAndEasContextInCommand(
+    command: string,
+    inputs?: BuildStepInput[]
+  ): string {
     if (!inputs) {
       return command;
     }

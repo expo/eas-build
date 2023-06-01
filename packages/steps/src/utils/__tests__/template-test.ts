@@ -2,6 +2,7 @@ import { BuildConfigError } from '../../errors.js';
 import { getError } from '../../__tests__/utils/error.js';
 import {
   findOutputPaths,
+  interpolateWithEasCtx,
   interpolateWithInputs,
   interpolateWithOutputs,
   parseOutputPath,
@@ -29,6 +30,24 @@ describe(interpolateWithOutputs, () => {
       }
     );
     expect(result).toBe('foobarbaz');
+  });
+});
+
+describe(interpolateWithEasCtx, () => {
+  test('interpolation', () => {
+    const result = interpolateWithEasCtx(
+      'test credentials: ${ easCtx.credentials.ios.teamId } ${ easCtx.credentials.android.keychainPassword }',
+      (path) => {
+        if (path === 'credentials.ios.teamId') {
+          return 'mock-team-id';
+        } else if (path === 'credentials.android.keychainPassword') {
+          return 'mock-keychain-password';
+        } else {
+          return 'x';
+        }
+      }
+    );
+    expect(result).toBe('test credentials: mock-team-id mock-keychain-password');
   });
 });
 

@@ -18,6 +18,15 @@ import { createMockLogger } from './utils/logger.js';
 import { getError, getErrorAsync } from './utils/error.js';
 import { UUID_REGEX } from './utils/uuid.js';
 
+const mockAndroidCredentials = {
+  keystore: {
+    keystorePath: 'mock-path',
+    keystorePassword: 'mock-password',
+    keyAlias: 'mock-alias',
+    keyPassword: 'mock-password',
+  },
+};
+
 describe(BuildStep, () => {
   describe(BuildStep.getNewId, () => {
     it('returns a uuid if the user-defined id is undefined', () => {
@@ -303,6 +312,38 @@ describe(BuildStep, () => {
         expect(step.getOutputValueByName('foo2')).toBe('bar');
       });
 
+      it('interpolates the EAS context in command template', async () => {
+        const ctx = createMockContext({
+          easContext: { credentials: { android: mockAndroidCredentials } },
+        });
+        const id = 'test1';
+        const command = 'set-output foo2 ${ easCtx.credentials.android.keystore.keystorePath }';
+        const displayName = BuildStep.getDisplayName({ id, command });
+
+        const step = new BuildStep(ctx, {
+          id,
+          displayName,
+          inputs: [
+            new BuildStepInput(ctx, {
+              id: 'foo1',
+              stepDisplayName: displayName,
+              defaultValue: 'bar',
+            }),
+          ],
+          outputs: [
+            new BuildStepOutput(ctx, {
+              id: 'foo2',
+              stepDisplayName: displayName,
+              required: true,
+            }),
+          ],
+          command,
+          workingDirectory: baseStepCtx.workingDirectory,
+        });
+        await step.executeAsync();
+        expect(step.getOutputValueByName('foo2')).toBe('mock-path');
+      });
+
       it('collects the outputs after calling the script', async () => {
         const id = 'test1';
         const command = 'set-output abc 123';
@@ -416,6 +457,51 @@ describe(BuildStep, () => {
           step.ctx,
           expect.objectContaining({ inputs: expect.any(Object), outputs: expect.any(Object), env })
         );
+      });
+
+      it('when editting easContext changes top level sharedEasContext as well', async () => {
+        const env = { TEST1: 'abc' };
+
+        const id = 'test1';
+        const displayName = BuildStep.getDisplayName({ id });
+
+        const step1 = new BuildStep(baseStepCtx, {
+          id,
+          displayName,
+          fn: (stepsCtx) => {
+            stepsCtx.sharedEasContext.credentials.android = mockAndroidCredentials;
+          },
+          workingDirectory: baseStepCtx.workingDirectory,
+        });
+        const step2 = new BuildStep(baseStepCtx, {
+          id,
+          displayName,
+          fn: (stepsCtx) => {
+            stepsCtx.sharedEasContext.credentials.android = mockAndroidCredentials;
+          },
+          workingDirectory: baseStepCtx.workingDirectory,
+        });
+
+        expect(baseStepCtx).not.toEqual(step1.ctx);
+        expect(baseStepCtx.sharedEasContext).toEqual({ credentials: {} });
+
+        await step1.executeAsync(env);
+
+        expect(baseStepCtx.sharedEasContext).toEqual({
+          credentials: {
+            android: mockAndroidCredentials,
+          },
+        });
+        expect(step1.ctx.sharedEasContext).toEqual({
+          credentials: {
+            android: mockAndroidCredentials,
+          },
+        });
+        expect(step2.ctx.sharedEasContext).toEqual({
+          credentials: {
+            android: mockAndroidCredentials,
+          },
+        });
       });
 
       it('passes input and outputs to the function', async () => {

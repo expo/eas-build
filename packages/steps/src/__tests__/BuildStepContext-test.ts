@@ -8,6 +8,7 @@ import { BuildStep } from '../BuildStep.js';
 import { BuildStepContext } from '../BuildStepContext.js';
 import { BuildStepRuntimeError } from '../errors.js';
 import { BuildRuntimePlatform } from '../BuildRuntimePlatform.js';
+import { emptyEasContext } from '../EasContext.js';
 
 import { createMockContext } from './utils/context.js';
 import { getError } from './utils/error.js';
@@ -23,7 +24,7 @@ describe(BuildStepContext, () => {
         BuildRuntimePlatform.LINUX,
         '/non/existent/path',
         '/another/non/existent/path',
-        {}
+        emptyEasContext
       );
       expect(ctx.stepsInternalBuildDirectory.startsWith(os.tmpdir())).toBe(true);
     });
@@ -36,7 +37,7 @@ describe(BuildStepContext, () => {
         BuildRuntimePlatform.LINUX,
         '/non/existent/path',
         '/another/non/existent/path',
-        {}
+        emptyEasContext
       );
       expect(ctx.stepsInternalBuildDirectory).toMatch(buildId);
     });
@@ -50,7 +51,7 @@ describe(BuildStepContext, () => {
         BuildRuntimePlatform.LINUX,
         '/non/existent/path',
         '/another/non/existent/path',
-        {}
+        emptyEasContext
       );
       expect(ctx.workingDirectory).toBe(path.join(ctx.stepsInternalBuildDirectory, 'project'));
     });
@@ -63,7 +64,7 @@ describe(BuildStepContext, () => {
         BuildRuntimePlatform.LINUX,
         '/non/existent/path',
         '/another/non/existent/path',
-        {},
+        emptyEasContext,
         workingDirectory
       );
       expect(ctx.workingDirectory).toBe(workingDirectory);
@@ -94,6 +95,46 @@ describe(BuildStepContext, () => {
 
       ctx.registerStep(step);
       expect(ctx.getStepOutputValue('abc.def')).toBe('ghi');
+    });
+  });
+  describe(BuildStepContext.prototype.getEasContextValue, () => {
+    const mockAndroidCredentials = {
+      keystore: {
+        keystorePath: 'mock-path',
+        keystorePassword: 'mock-password',
+        keyAlias: 'mock-alias',
+        keyPassword: 'mock-password',
+      },
+    };
+    it('throws an error if the EAS context references a non-existent field', () => {
+      const ctx = createMockContext({ easContext: { credentials: {} } });
+      const error = getError<BuildStepRuntimeError>(() => {
+        ctx.getEasContextValue('credentials.android');
+      });
+      expect(error).toBeInstanceOf(BuildStepRuntimeError);
+      expect(error.message).toMatch(/EAS context field "credentials.android" does not exist/);
+    });
+    it('throws an error if the EAS context references a field of object type', () => {
+      const ctx = createMockContext({
+        easContext: { credentials: { android: mockAndroidCredentials } },
+      });
+      const error = getError<BuildStepRuntimeError>(() => {
+        ctx.getEasContextValue('credentials.android');
+      });
+      expect(error).toBeInstanceOf(BuildStepRuntimeError);
+      expect(error.message).toMatch(
+        /EAS context field "credentials.android" is not a string or undefined/
+      );
+    });
+    it('returns correct value if field exists', () => {
+      const ctx = createMockContext({
+        easContext: {
+          credentials: {
+            android: mockAndroidCredentials,
+          },
+        },
+      });
+      expect(ctx.getEasContextValue('credentials.android.keystore.keystorePath')).toBe('mock-path');
     });
   });
   describe(BuildStepContext.prototype.child, () => {

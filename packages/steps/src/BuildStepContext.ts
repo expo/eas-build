@@ -43,7 +43,7 @@ export class BuildStepContext {
   }
 
   public getEasContextValue(path: string): string | undefined {
-    const arrPath = path.split('.').slice(1);
+    const arrPath = path.split('.');
     let value: any = this.sharedEasContext;
     for (const key of arrPath) {
       if (!(key in value)) {
@@ -52,6 +52,11 @@ export class BuildStepContext {
         );
       }
       value = value[key];
+    }
+    if (typeof value !== 'string' && typeof value !== 'undefined') {
+      throw new BuildStepRuntimeError(
+        `EAS context field "${path}" is not a string or undefined. It is of type "${typeof value}". We currently only support accessing string or undefined values from the EAS context.`
+      );
     }
     return value;
   }

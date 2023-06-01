@@ -55,6 +55,27 @@ describe(BuildStepInput, () => {
       new BuildStepRuntimeError('Input parameter "foo" for step "test1" is required.')
     );
   });
+
+  test('correctly gets value from EAS context', () => {
+    const mockAndroidCredentials = {
+      keystore: {
+        keystorePath: 'mock-path',
+        keystorePassword: 'mock-password',
+        keyAlias: 'mock-alias',
+        keyPassword: 'mock-password',
+      },
+    };
+    const ctx = createMockContext({
+      easContext: { credentials: { android: mockAndroidCredentials } },
+    });
+    const i = new BuildStepInput(ctx, {
+      id: 'foo',
+      stepDisplayName: BuildStep.getDisplayName({ id: 'test1' }),
+      required: true,
+    });
+    i.set('${ easCtx.credentials.android.keystore.keystorePath }');
+    expect(i.value).toBe('mock-path');
+  });
 });
 
 describe(makeBuildStepInputByIdMap, () => {
