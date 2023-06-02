@@ -1,6 +1,6 @@
 import { Writable } from 'stream';
 
-import bunyan from '@expo/bunyan';
+import bunyan from 'bunyan';
 import chalk from 'chalk';
 import omit from 'lodash/omit';
 import { LogBuffer } from '@expo/build-tools';
