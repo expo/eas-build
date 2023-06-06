@@ -11,6 +11,8 @@ import { installDependenciesAsync } from './installDependencies';
 
 export interface PrebuildOptions {
   extraEnvs?: Record<string, string>;
+  clean?: boolean;
+  skipDependencyUpdate?: string;
 }
 
 export async function prebuildAsync<TJob extends Job>(
@@ -31,19 +33,28 @@ export async function prebuildAsync<TJob extends Job>(
     },
   };
 
-  const prebuildCommandArgs = getPrebuildCommandArgs(ctx);
+  const prebuildCommandArgs = getPrebuildCommandArgs(ctx, { options });
   await runExpoCliCommand(ctx, prebuildCommandArgs, spawnOptions, {
     npmVersionAtLeast7: await isAtLeastNpm7Async(),
   });
   await installDependenciesAsync(ctx, { logger, workingDir });
 }
 
-function getPrebuildCommandArgs<TJob extends Job>(ctx: BuildContext<TJob>): string[] {
+function getPrebuildCommandArgs<TJob extends Job>(
+  ctx: BuildContext<TJob>,
+  { options }: { options?: PrebuildOptions }
+): string[] {
   let prebuildCommand =
     ctx.job.experimental?.prebuildCommand ??
     `prebuild --non-interactive --no-install --platform ${ctx.job.platform}`;
   if (!prebuildCommand.match(/(?:--platform| -p)/)) {
     prebuildCommand = `${prebuildCommand} --platform ${ctx.job.platform}`;
+  }
+  if (options?.skipDependencyUpdate) {
+    prebuildCommand = `${prebuildCommand} --skip-dependency-update ${options.skipDependencyUpdate}`;
+  }
+  if (options?.clean) {
+    prebuildCommand = `${prebuildCommand} --clean`;
   }
   const npxCommandPrefix = 'npx ';
   const expoCommandPrefix = 'expo ';

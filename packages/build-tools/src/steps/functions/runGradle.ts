@@ -20,7 +20,7 @@ export function createRunGradleBuildFunction<T extends Job>(ctx: BuildContext<T>
       // TODO: resolve extra envs for GH builds using resolveVersionOverridesEnvs function when adding GH builds support
       await runGradleCommand(ctx, {
         logger: stepsCtx.logger,
-        gradleCommand: nullthrows(inputs.gradle_command.value),
+        gradleCommand: nullthrows(inputs.gradle_command.value).toString(),
         androidDir: stepsCtx.workingDirectory,
       });
     },

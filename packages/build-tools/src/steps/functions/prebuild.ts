@@ -11,6 +11,16 @@ export function createPrebuildBuildFunction<T extends Job>(ctx: BuildContext<T>)
     name: 'Prebuild',
     inputProviders: [
       BuildStepInput.createProvider({
+        id: 'skip_dependency_update',
+        required: true,
+        defaultValue: false,
+      }),
+      BuildStepInput.createProvider({
+        id: 'clean',
+        required: true,
+        defaultValue: false,
+      }),
+      BuildStepInput.createProvider({
         id: 'apple_team_id',
         required: false,
       }),
@@ -18,12 +28,16 @@ export function createPrebuildBuildFunction<T extends Job>(ctx: BuildContext<T>)
     fn: async (stepsCtx, { inputs }) => {
       // TODO: make sure we can pass Apple Team ID to prebuild when adding credentials for custom builds
       const extraEnvs: Record<string, string> = inputs.apple_team_id.value
-        ? { APPLE_TEAM_ID: inputs.apple_team_id.value }
+        ? { APPLE_TEAM_ID: inputs.apple_team_id.value.toString() }
         : {};
       await prebuildAsync(ctx, {
         logger: stepsCtx.logger,
         workingDir: stepsCtx.workingDirectory,
-        options: { extraEnvs },
+        options: {
+          extraEnvs,
+          clean: !!inputs.clean.value,
+          skipDependencyUpdate: inputs.skip_dependency_update.value?.toString(),
+        },
       });
     },
   });
