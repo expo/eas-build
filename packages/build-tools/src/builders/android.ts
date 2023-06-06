@@ -1,9 +1,15 @@
+import path from 'path';
+
 import { Android, BuildMode, BuildPhase, Workflow } from '@expo/eas-build-job';
 import nullthrows from 'nullthrows';
 
 import { Artifacts, ArtifactType, BuildContext, SkipNativeBuildError } from '../context';
 import { configureExpoUpdatesIfInstalledAsync } from '../utils/expoUpdates';
-import { runGradleCommand, ensureLFLineEndingsInGradlewScript } from '../android/gradle';
+import {
+  runGradleCommand,
+  ensureLFLineEndingsInGradlewScript,
+  resolveVersionOverridesEnvs,
+} from '../android/gradle';
 import { findArtifacts } from '../utils/artifacts';
 import { Hook, runHookIfPresent } from '../utils/hooks';
 import { restoreCredentials } from '../android/credentials';
@@ -44,7 +50,10 @@ async function buildAsync(ctx: BuildContext<Android.Job>): Promise<void> {
       );
       return;
     }
-    await prebuildAsync(ctx);
+    await prebuildAsync(ctx, {
+      logger: ctx.logger,
+      workingDir: ctx.getReactNativeProjectDirectory(),
+    });
   });
 
   await ctx.runBuildPhase(BuildPhase.RESTORE_CACHE, async () => {
@@ -72,7 +81,12 @@ async function buildAsync(ctx: BuildContext<Android.Job>): Promise<void> {
   }
   await ctx.runBuildPhase(BuildPhase.RUN_GRADLEW, async () => {
     const gradleCommand = resolveGradleCommand(ctx.job);
-    await runGradleCommand(ctx, gradleCommand);
+    await runGradleCommand(ctx, {
+      logger: ctx.logger,
+      gradleCommand,
+      androidDir: path.join(ctx.getReactNativeProjectDirectory(), 'android'),
+      extraEnvs: resolveVersionOverridesEnvs(ctx),
+    });
   });
 
   await ctx.runBuildPhase(BuildPhase.PRE_UPLOAD_ARTIFACTS_HOOK, async () => {

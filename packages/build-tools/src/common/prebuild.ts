@@ -1,6 +1,7 @@
 import { Job } from '@expo/eas-build-job';
 import { SpawnOptions } from '@expo/turtle-spawn';
 import semver from 'semver';
+import { bunyan } from '@expo/logger';
 
 import { BuildContext } from '../context';
 import { isAtLeastNpm7Async } from '../utils/packageManager';
@@ -14,15 +15,15 @@ export interface PrebuildOptions {
 
 export async function prebuildAsync<TJob extends Job>(
   ctx: BuildContext<TJob>,
-  options?: PrebuildOptions
+  { logger, workingDir, options }: { logger: bunyan; workingDir: string; options?: PrebuildOptions }
 ): Promise<void> {
   const customExpoCliVersion = ctx.job.builderEnvironment?.expoCli;
   const shouldDisableSharp =
     !customExpoCliVersion || semver.satisfies(customExpoCliVersion, '>=5.4.4');
 
   const spawnOptions: SpawnOptions = {
-    cwd: ctx.getReactNativeProjectDirectory(),
-    logger: ctx.logger,
+    cwd: workingDir,
+    logger,
     env: {
       ...(shouldDisableSharp ? { EXPO_IMAGE_UTILS_NO_SHARP: '1' } : {}),
       ...options?.extraEnvs,
@@ -34,7 +35,7 @@ export async function prebuildAsync<TJob extends Job>(
   await runExpoCliCommand(ctx, prebuildCommandArgs, spawnOptions, {
     npmVersionAtLeast7: await isAtLeastNpm7Async(),
   });
-  await installDependenciesAsync(ctx, ctx.logger);
+  await installDependenciesAsync(ctx, { logger, workingDir });
 }
 
 function getPrebuildCommandArgs<TJob extends Job>(ctx: BuildContext<TJob>): string[] {

@@ -12,7 +12,10 @@ export function createInstallNodeModulesBuildFunction<T extends Job>(
     id: 'install_node_modules',
     name: 'Install node modules',
     fn: async (stepsCtx) => {
-      await installDependenciesAsync(ctx, stepsCtx.logger);
+      await installDependenciesAsync(ctx, {
+        logger: stepsCtx.logger,
+        workingDir: stepsCtx.workingDirectory,
+      });
     },
   });
 }

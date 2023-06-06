@@ -21,14 +21,18 @@ export async function ensureLFLineEndingsInGradlewScript<TJob extends Job>(
 }
 
 export async function runGradleCommand(
-  ctx: BuildContext<Android.Job>,
-  gradleCommand: string
+  ctx: BuildContext<Job>,
+  {
+    logger,
+    gradleCommand,
+    androidDir,
+    extraEnvs,
+  }: { logger: bunyan; gradleCommand: string; androidDir: string; extraEnvs?: Env }
 ): Promise<void> {
-  const androidDir = path.join(ctx.getReactNativeProjectDirectory(), 'android');
-  ctx.logger.info(`Running 'gradlew ${gradleCommand}' in ${androidDir}`);
+  logger.info(`Running 'gradlew ${gradleCommand}' in ${androidDir}`);
   const spawnPromise = spawn('bash', ['-c', `sh gradlew ${gradleCommand}`], {
     cwd: androidDir,
-    logger: ctx.logger,
+    logger,
     lineTransformer: (line?: string) => {
       if (!line || /^\.+$/.exec(line)) {
         return null;
@@ -36,10 +40,10 @@ export async function runGradleCommand(
         return line;
       }
     },
-    env: { ...ctx.env, ...resolveVersionOverridesEnvs(ctx) },
+    env: { ...ctx.env, ...extraEnvs },
   });
   if (ctx.env.EAS_BUILD_RUNNER === 'eas-build' && process.platform === 'linux') {
-    adjustOOMScore(spawnPromise, ctx.logger);
+    adjustOOMScore(spawnPromise, logger);
   }
 
   await spawnPromise;
@@ -78,7 +82,7 @@ function adjustOOMScore(spawnPromise: SpawnPromise<SpawnResult>, logger: bunyan)
 
 // Version envs should be set at the beginning of the build, but when building
 // from github those values are resolved latter.
-function resolveVersionOverridesEnvs(ctx: BuildContext<Android.Job>): Env {
+export function resolveVersionOverridesEnvs(ctx: BuildContext<Android.Job>): Env {
   const extraEnvs: Env = {};
   if (ctx.job.version?.versionCode && !ctx.env.EAS_BUILD_ANDROID_VERSION_CODE) {
     extraEnvs.EAS_BUILD_ANDROID_VERSION_CODE = ctx.job.version.versionCode;
