@@ -7,7 +7,7 @@ import { runGradleCommand } from '../../android/gradle';
 
 export function createRunGradleBuildFunction<T extends Job>(ctx: BuildContext<T>): BuildFunction {
   return new BuildFunction({
-    namespace: 'eas',
+    namespace: 'utils',
     id: 'run_gradle',
     name: 'Run Gradle',
     inputProviders: [
