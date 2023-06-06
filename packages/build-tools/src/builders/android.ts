@@ -8,7 +8,6 @@ import { configureExpoUpdatesIfInstalledAsync } from '../utils/expoUpdates';
 import {
   runGradleCommand,
   ensureLFLineEndingsInGradlewScript,
-  resolveVersionOverridesEnvs,
   resolveGradleCommand,
 } from '../android/gradle';
 import { findArtifacts } from '../utils/artifacts';
@@ -86,7 +85,6 @@ async function buildAsync(ctx: BuildContext<Android.Job>): Promise<void> {
       logger: ctx.logger,
       gradleCommand,
       androidDir: path.join(ctx.getReactNativeProjectDirectory(), 'android'),
-      extraEnvs: resolveVersionOverridesEnvs(ctx),
     });
   });
 

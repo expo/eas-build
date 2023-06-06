@@ -1,6 +1,6 @@
 import path from 'path';
 
-import { Job, Platform } from '@expo/eas-build-job';
+import { Android, Job, Platform } from '@expo/eas-build-job';
 import { BuildFunction, errors } from '@expo/steps';
 import fs from 'fs-extra';
 
@@ -24,7 +24,7 @@ export function createBuildReactNativeAppBuildFunction<T extends Job>(
         }
         stepsCtx.logger.info('Building Android project');
         // TODO: resolve extra envs for GH builds using resolveVersionOverridesEnvs function when adding GH builds support
-        await runGradleCommand(ctx, {
+        await runGradleCommand(ctx as BuildContext<Android.Job>, {
           logger: stepsCtx.logger,
           gradleCommand: resolveGradleCommand(ctx.job),
           androidDir,

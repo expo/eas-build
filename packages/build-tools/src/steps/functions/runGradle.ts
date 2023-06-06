@@ -1,5 +1,5 @@
-import { Job } from '@expo/eas-build-job';
-import { BuildFunction, BuildStepInput } from '@expo/steps';
+import { Android, Job, Platform } from '@expo/eas-build-job';
+import { BuildFunction, BuildStepInput, errors } from '@expo/steps';
 import nullthrows from 'nullthrows';
 
 import { BuildContext } from '../../context';
@@ -18,7 +18,10 @@ export function createRunGradleBuildFunction<T extends Job>(ctx: BuildContext<T>
     ],
     fn: async (stepsCtx, { inputs }) => {
       // TODO: resolve extra envs for GH builds using resolveVersionOverridesEnvs function when adding GH builds support
-      await runGradleCommand(ctx, {
+      if (ctx.job.platform !== Platform.ANDROID) {
+        throw new errors.BuildStepRuntimeError('This step is only supported for Android');
+      }
+      await runGradleCommand(ctx as BuildContext<Android.Job>, {
         logger: stepsCtx.logger,
         gradleCommand: nullthrows(inputs.gradle_command.value).toString(),
         androidDir: stepsCtx.workingDirectory,
