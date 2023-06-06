@@ -16,6 +16,7 @@ export function createPrebuildBuildFunction<T extends Job>(ctx: BuildContext<T>)
       }),
     ],
     fn: async (stepsCtx, { inputs }) => {
+      // TODO: make sure we can pass Apple Team ID to prebuild when adding credentials for custom builds
       const extraEnvs: Record<string, string> = inputs.apple_team_id.value
         ? { APPLE_TEAM_ID: inputs.apple_team_id.value }
         : {};
