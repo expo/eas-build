@@ -53,7 +53,10 @@ export class BuildWorkflowValidator {
           );
           errors.push(error);
         }
-        const paths = findOutputPaths(currentStepInput.defaultValue);
+        const paths =
+          typeof currentStepInput.defaultValue !== 'boolean'
+            ? findOutputPaths(currentStepInput.defaultValue)
+            : [];
         for (const { stepId: referencedStepId, outputId: referencedStepOutputId } of paths) {
           if (!(referencedStepId in visitedStepByStepId)) {
             if (allStepIds.has(referencedStepId)) {

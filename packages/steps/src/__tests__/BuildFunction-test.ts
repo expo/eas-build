@@ -122,7 +122,7 @@ describe(BuildFunction, () => {
     it('creates function inputs and outputs', () => {
       const ctx = createMockContext();
       const inputProviders: BuildStepInputProvider[] = [
-        BuildStepInput.createProvider({ id: 'input1' }),
+        BuildStepInput.createProvider({ id: 'input1', defaultValue: true }),
         BuildStepInput.createProvider({ id: 'input2' }),
       ];
       const outputProviders: BuildStepOutputProvider[] = [
@@ -158,6 +158,7 @@ describe(BuildFunction, () => {
       const inputProviders: BuildStepInputProvider[] = [
         BuildStepInput.createProvider({ id: 'input1', defaultValue: 'xyz1' }),
         BuildStepInput.createProvider({ id: 'input2', defaultValue: 'xyz2' }),
+        BuildStepInput.createProvider({ id: 'input3', defaultValue: 'xyz3' }),
       ];
       const func = new BuildFunction({
         id: 'test1',
@@ -170,11 +171,13 @@ describe(BuildFunction, () => {
         callInputs: {
           input1: 'abc',
           input2: 'def',
+          input3: false,
         },
         workingDirectory: ctx.workingDirectory,
       });
       expect(step.inputs?.[0].value).toBe('abc');
       expect(step.inputs?.[1].value).toBe('def');
+      expect(step.inputs?.[2].value).toBe(false);
     });
   });
 });

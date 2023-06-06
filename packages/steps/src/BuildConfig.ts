@@ -49,7 +49,7 @@ export type BuildFunctionCallConfig = {
   shell?: string;
 };
 
-export type BuildStepInputs = Record<string, string>;
+export type BuildStepInputs = Record<string, string | boolean>;
 export type BuildStepOutputs = (
   | string
   | {
@@ -71,8 +71,8 @@ export type BuildFunctionInputs = (
   | string
   | {
       name: string;
-      defaultValue?: string;
-      allowedValues?: string[];
+      defaultValue?: string | boolean;
+      allowedValues?: (string | boolean)[];
       required?: boolean;
     }
 )[];
@@ -85,12 +85,12 @@ const BuildFunctionInputsSchema = Joi.array().items(
       name: Joi.string().required(),
       defaultValue: Joi.alternatives().conditional('allowedValues', {
         is: Joi.exist(),
-        then: Joi.string()
-          .valid(Joi.in('allowedValues'))
-          .messages({ 'any.only': '{{#label}} must be one of allowed values' }),
-        otherwise: Joi.string(),
+        then: Joi.valid(Joi.in('allowedValues')).messages({
+          'any.only': '{{#label}} must be one of allowed values',
+        }),
+        otherwise: Joi.alternatives().try(Joi.string(), Joi.boolean()),
       }),
-      allowedValues: Joi.array().items(Joi.string()),
+      allowedValues: Joi.array().items(Joi.string(), Joi.boolean()),
       required: Joi.boolean(),
     })
       .rename('allowed_values', 'allowedValues')
@@ -111,7 +111,7 @@ const BuildStepOutputsSchema = Joi.array().items(
 
 const BuildFunctionCallSchema = Joi.object({
   id: Joi.string(),
-  inputs: Joi.object().pattern(Joi.string(), Joi.string()),
+  inputs: Joi.object().pattern(Joi.string(), Joi.alternatives().try(Joi.string(), Joi.boolean())),
   name: Joi.string(),
   workingDirectory: Joi.string(),
   shell: Joi.string(),

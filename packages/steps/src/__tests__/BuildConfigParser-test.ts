@@ -146,16 +146,16 @@ describe(BuildConfigParser, () => {
       expect(buildSteps.length).toBe(1);
 
       // - run:
-      //     name: Say HI
-      //     inputs:
-      //       name: Dominik Sokal
-      //       country: Poland
-      //     command: |
-      //       echo "Hi, ${ inputs.name }!"
+      //   name: Say HI
+      //   inputs:
+      //     name: Dominik Sokal
+      //     country: Poland
+      //     boolean_value: true
+      //   command: echo "Hi, ${ inputs.name }, ${ inputs.boolean_value }!"
       const step1 = buildSteps[0];
       expect(step1.id).toMatch(UUID_REGEX);
       expect(step1.name).toBe('Say HI');
-      expect(step1.command).toBe('echo "Hi, ${ inputs.name }!"');
+      expect(step1.command).toBe('echo "Hi, ${ inputs.name }, ${ inputs.boolean_value }!"');
       expect(step1.ctx.workingDirectory).toBe(ctx.workingDirectory);
       expect(step1.shell).toBe(getDefaultShell());
       expect(step1.inputs).toBeDefined();
@@ -163,6 +163,8 @@ describe(BuildConfigParser, () => {
       expect(step1.inputs?.[0].value).toBe('Dominik Sokal');
       expect(step1.inputs?.[1].id).toBe('country');
       expect(step1.inputs?.[1].value).toBe('Poland');
+      expect(step1.inputs?.[2].id).toBe('boolean_value');
+      expect(step1.inputs?.[2].value).toBe(true);
     });
 
     it('parses outputs', async () => {
@@ -307,6 +309,10 @@ describe(BuildConfigParser, () => {
       expect(step6.inputs?.[1].required).toBe(true);
       expect(step6.inputs?.[1].defaultValue).toBe('Brent');
       expect(step6.inputs?.[1].allowedValues).toEqual(undefined);
+      expect(step6.inputs?.[2].id).toBe('test');
+      expect(step6.inputs?.[2].required).toBe(true);
+      expect(step6.inputs?.[2].defaultValue).toBe(false);
+      expect(step6.inputs?.[2].allowedValues).toEqual([false, true, '1']);
 
       const { buildFunctions } = workflow;
       expect(Object.keys(buildFunctions).length).toBe(5);

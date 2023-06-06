@@ -7,8 +7,8 @@ export type BuildStepInputProvider = (ctx: BuildStepContext, stepId: string) => 
 
 interface BuildStepInputProviderParams {
   id: string;
-  allowedValues?: string[];
-  defaultValue?: string;
+  allowedValues?: (string | boolean)[];
+  defaultValue?: string | boolean;
   required?: boolean;
 }
 
@@ -19,11 +19,11 @@ interface BuildStepInputParams extends BuildStepInputProviderParams {
 export class BuildStepInput {
   public readonly id: string;
   public readonly stepDisplayName: string;
-  public readonly defaultValue?: string;
-  public readonly allowedValues?: string[];
+  public readonly defaultValue?: string | boolean;
+  public readonly allowedValues?: (string | boolean)[];
   public readonly required: boolean;
 
-  private _value?: string;
+  private _value?: string | boolean;
 
   public static createProvider(params: BuildStepInputProviderParams): BuildStepInputProvider {
     return (ctx, stepDisplayName) => new BuildStepInput(ctx, { ...params, stepDisplayName });
@@ -40,7 +40,7 @@ export class BuildStepInput {
     this.required = required;
   }
 
-  public get value(): string | undefined {
+  public get value(): string | boolean | undefined {
     const rawValue = this._value ?? this.defaultValue;
     if (this.required && rawValue === undefined) {
       throw new BuildStepRuntimeError(
@@ -48,14 +48,14 @@ export class BuildStepInput {
       );
     }
 
-    if (rawValue === undefined) {
+    if (rawValue === undefined || typeof rawValue === 'boolean') {
       return rawValue;
     } else {
       return interpolateWithOutputs(rawValue, (path) => this.ctx.getStepOutputValue(path) ?? '');
     }
   }
 
-  public set(value: string | undefined): BuildStepInput {
+  public set(value: string | boolean | undefined): BuildStepInput {
     if (this.required && value === undefined) {
       throw new BuildStepRuntimeError(
         `Input parameter "${this.id}" for step "${this.stepDisplayName}" is required.`

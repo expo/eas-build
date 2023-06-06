@@ -435,6 +435,11 @@ describe(BuildStep, () => {
             stepDisplayName: displayName,
             defaultValue: 'bar2',
           }),
+          new BuildStepInput(baseStepCtx, {
+            id: 'foo3',
+            stepDisplayName: displayName,
+            defaultValue: true,
+          }),
         ];
         const outputs: BuildStepOutput[] = [
           new BuildStepOutput(baseStepCtx, {
@@ -445,7 +450,7 @@ describe(BuildStep, () => {
         ];
 
         const fn: BuildStepFunction = (_ctx, { inputs, outputs }) => {
-          outputs.abc.set(`${inputs.foo1.value} ${inputs.foo2.value}`);
+          outputs.abc.set(`${inputs.foo1.value} ${inputs.foo2.value} ${inputs.foo3.value}`);
         };
 
         const step = new BuildStep(baseStepCtx, {
@@ -459,7 +464,7 @@ describe(BuildStep, () => {
 
         await step.executeAsync(env);
 
-        expect(step.getOutputValueByName('abc')).toBe('bar1 bar2');
+        expect(step.getOutputValueByName('abc')).toBe('bar1 bar2 true');
       });
     });
   });

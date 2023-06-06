@@ -7,7 +7,7 @@ import { BuildStepInputProvider } from './BuildStepInput.js';
 import { BuildStepOutputProvider } from './BuildStepOutput.js';
 
 export type BuildFunctionById = Record<string, BuildFunction>;
-export type BuildFunctionCallInputs = Record<string, string>;
+export type BuildFunctionCallInputs = Record<string, string | boolean>;
 
 export class BuildFunction {
   public readonly namespace?: string;
