@@ -9,6 +9,7 @@ import { createSetUpNpmrcBuildFunction } from './functions/setUpNpmrc';
 import { createInstallNodeModulesBuildFunction } from './functions/installNodeModules';
 import { createRunGradleBuildFunction } from './functions/runGradle';
 import { createPrebuildBuildFunction } from './functions/prebuild';
+import { createBuildReactNativeAppBuildFunction } from './functions/build';
 
 export function getEasFunctions<T extends Job>(ctx: BuildContext<T>): BuildFunction[] {
   return [
@@ -18,5 +19,6 @@ export function getEasFunctions<T extends Job>(ctx: BuildContext<T>): BuildFunct
     createInstallNodeModulesBuildFunction(ctx),
     createPrebuildBuildFunction(ctx),
     createRunGradleBuildFunction(ctx),
+    createBuildReactNativeAppBuildFunction(ctx),
   ];
 }

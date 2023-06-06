@@ -9,6 +9,7 @@ import {
   runGradleCommand,
   ensureLFLineEndingsInGradlewScript,
   resolveVersionOverridesEnvs,
+  resolveGradleCommand,
 } from '../android/gradle';
 import { findArtifacts } from '../utils/artifacts';
 import { Hook, runHookIfPresent } from '../utils/hooks';
@@ -106,18 +107,4 @@ async function buildAsync(ctx: BuildContext<Android.Job>): Promise<void> {
     ctx.logger.info(`Application archives: ${applicationArchives.join(', ')}`);
     await ctx.uploadArtifacts(ArtifactType.APPLICATION_ARCHIVE, applicationArchives, ctx.logger);
   });
-}
-
-function resolveGradleCommand(job: Android.Job): string {
-  if (job.gradleCommand) {
-    return job.gradleCommand;
-  } else if (job.developmentClient) {
-    return ':app:assembleDebug';
-  } else if (!job.buildType) {
-    return ':app:bundleRelease';
-  } else if (job.buildType === Android.BuildType.APK) {
-    return ':app:assembleRelease';
-  } else {
-    return ':app:bundleRelease';
-  }
 }

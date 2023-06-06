@@ -92,3 +92,17 @@ export function resolveVersionOverridesEnvs(ctx: BuildContext<Android.Job>): Env
   }
   return extraEnvs;
 }
+
+export function resolveGradleCommand(job: Android.Job): string {
+  if (job.gradleCommand) {
+    return job.gradleCommand;
+  } else if (job.developmentClient) {
+    return ':app:assembleDebug';
+  } else if (!job.buildType) {
+    return ':app:bundleRelease';
+  } else if (job.buildType === Android.BuildType.APK) {
+    return ':app:assembleRelease';
+  } else {
+    return ':app:bundleRelease';
+  }
+}
