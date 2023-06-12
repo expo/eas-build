@@ -17,7 +17,6 @@ export function createRunGradleBuildFunction<T extends Job>(ctx: BuildContext<T>
       }),
     ],
     fn: async (stepsCtx, { inputs }) => {
-      // TODO: resolve extra envs for GH builds using resolveVersionOverridesEnvs function when adding GH builds support
       if (ctx.job.platform !== Platform.ANDROID) {
         throw new errors.BuildStepRuntimeError('This step is only supported for Android');
       }

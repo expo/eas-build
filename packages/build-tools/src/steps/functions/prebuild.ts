@@ -12,12 +12,10 @@ export function createPrebuildBuildFunction<T extends Job>(ctx: BuildContext<T>)
     inputProviders: [
       BuildStepInput.createProvider({
         id: 'skip_dependency_update',
-        required: true,
         defaultValue: false,
       }),
       BuildStepInput.createProvider({
         id: 'clean',
-        required: true,
         defaultValue: false,
       }),
       BuildStepInput.createProvider({

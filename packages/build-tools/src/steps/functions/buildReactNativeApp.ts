@@ -23,7 +23,6 @@ export function createBuildReactNativeAppBuildFunction<T extends Job>(
           );
         }
         stepsCtx.logger.info('Building Android project');
-        // TODO: resolve extra envs for GH builds using resolveVersionOverridesEnvs function when adding GH builds support
         await runGradleCommand(ctx as BuildContext<Android.Job>, {
           logger: stepsCtx.logger,
           gradleCommand: resolveGradleCommand(ctx.job),
