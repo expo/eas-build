@@ -1,6 +1,6 @@
 # @expo/logger
 
-`@expo/logger` is a wrapper around `@expo/bunyan` library.
+`@expo/logger` is a wrapper around `bunyan` library.
 
 ## Repository
 

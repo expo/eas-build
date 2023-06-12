@@ -1,4 +1,4 @@
-import bunyan from '@expo/bunyan';
+import bunyan from 'bunyan';
 
 import LoggerLevel from './level';
 import { pipe, pipeSpawnOutput, PipeMode } from './pipe';
@@ -18,4 +18,5 @@ const defaultLogger = createLogger({
 });
 
 export default defaultLogger;
-export { LoggerLevel, bunyan, createLogger, pipe, pipeSpawnOutput, PipeMode };
+export { LoggerLevel, createLogger, pipe, pipeSpawnOutput, PipeMode };
+export type { bunyan };

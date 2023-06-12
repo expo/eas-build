@@ -1,6 +1,6 @@
 import { Readable } from 'stream';
 
-import bunyan from '@expo/bunyan';
+import type bunyan from 'bunyan';
 
 type LineLogger = (line: string) => void;
 type LineTransformer = (line: string) => string | null;

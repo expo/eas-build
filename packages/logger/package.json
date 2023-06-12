@@ -19,9 +19,10 @@
   "bugs": "https://github.com/expo/eas-build/issues",
   "license": "BUSL-1.1",
   "dependencies": {
-    "@expo/bunyan": "^4.0.0"
+    "bunyan": "^1.8.15"
   },
   "devDependencies": {
+    "@types/bunyan": "^1.8.8",
     "@types/jest": "^29.4.0",
     "@types/node": "^18.11.18",
     "jest": "^29.4.1",

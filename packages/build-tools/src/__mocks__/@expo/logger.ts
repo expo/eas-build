@@ -1,4 +1,4 @@
-import bunyan from '@expo/bunyan';
+import bunyan from 'bunyan';
 
 export function createLogger(): bunyan {
   const logger = {
