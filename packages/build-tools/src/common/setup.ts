@@ -17,7 +17,7 @@ import { readPackageJson, shouldUseGlobalExpoCli } from '../utils/project';
 import { getParentAndDescendantProcessPidsAsync } from '../utils/processes';
 
 import { prepareProjectSourcesAsync } from './projectSources';
-import { installDependenciesAsync } from './installDependencies';
+import { installDependenciesAsync, resolvePackagerDir } from './installDependencies';
 import { configureEnvFromBuildProfileAsync, runEasBuildInternalAsync } from './easBuildInternal';
 
 const MAX_EXPO_DOCTOR_TIMEOUT_MS = 30 * 1000;
@@ -50,7 +50,10 @@ export async function setupAsync<TJob extends Job>(ctx: BuildContext<TJob>): Pro
   });
 
   await ctx.runBuildPhase(BuildPhase.INSTALL_DEPENDENCIES, async () => {
-    await installDependenciesAsync(ctx, ctx.logger);
+    await installDependenciesAsync(ctx, {
+      logger: ctx.logger,
+      workingDir: resolvePackagerDir(ctx),
+    });
   });
 
   if (ctx.job.triggeredBy === BuildTrigger.GIT_BASED_INTEGRATION) {

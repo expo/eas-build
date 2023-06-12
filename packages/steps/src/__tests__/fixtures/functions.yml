@@ -43,4 +43,7 @@ functions:
         allowed_values: [Hi, Hello]
       - name: name
         default_value: Brent
+      - name: test
+        default_value: false
+        allowed_values: [false, true, "1"]
     command: echo "${ inputs.greeting }, ${ inputs.name }!"

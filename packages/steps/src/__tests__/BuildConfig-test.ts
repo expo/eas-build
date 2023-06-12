@@ -320,6 +320,30 @@ describe(validateConfig, () => {
             validateConfig(BuildConfigSchema, buildConfig);
           }).not.toThrowError();
         });
+        test('call with inputs boolean', () => {
+          const buildConfig = {
+            build: {
+              steps: [
+                {
+                  test_boolean: {
+                    inputs: {
+                      boolean: true,
+                    },
+                  },
+                },
+              ],
+            },
+            functions: {
+              test_boolean: {
+                command: 'echo "${ inputs.boolean }!"',
+              },
+            },
+          };
+
+          expect(() => {
+            validateConfig(BuildConfigSchema, buildConfig);
+          }).not.toThrowError();
+        });
         test('at most one function call per step', () => {
           const buildConfig = {
             build: {
@@ -332,7 +356,7 @@ describe(validateConfig, () => {
                   },
                   say_hello: {
                     inputs: {
-                      name: 'Dominik',
+                      name: false,
                     },
                   },
                 },
@@ -433,7 +457,9 @@ describe(validateConfig, () => {
         const error = getError<Error>(() => {
           validateConfig(BuildConfigSchema, buildConfig);
         });
-        expect(error.message).toMatch(/"functions.abc.inputs\[0\].defaultValue" must be a string/);
+        expect(error.message).toMatch(
+          /"functions.abc.inputs\[0\].defaultValue" must be one of \[string, boolean\]/
+        );
         expect(error.message).toMatch(
           /"functions.abc.inputs\[1\].defaultValue" must be one of allowed values/
         );
@@ -455,8 +481,13 @@ describe(validateConfig, () => {
                   default_value: '1',
                   allowed_values: ['1', '2'],
                 },
+                {
+                  name: 'i3',
+                  default_value: true,
+                  allowed_values: [true, false, '1'],
+                },
               ],
-              command: 'echo "${ inputs.i1 } ${ inputs.i2 }"',
+              command: 'echo "${ inputs.i1 } ${ inputs.i2 } ${ inputs.i3 }"',
             },
           },
         };

@@ -1,6 +1,7 @@
 import { Job } from '@expo/eas-build-job';
 import { SpawnOptions } from '@expo/turtle-spawn';
 import semver from 'semver';
+import { bunyan } from '@expo/logger';
 
 import { BuildContext } from '../context';
 import { isAtLeastNpm7Async } from '../utils/packageManager';
@@ -10,19 +11,21 @@ import { installDependenciesAsync } from './installDependencies';
 
 export interface PrebuildOptions {
   extraEnvs?: Record<string, string>;
+  clean?: boolean;
+  skipDependencyUpdate?: string;
 }
 
 export async function prebuildAsync<TJob extends Job>(
   ctx: BuildContext<TJob>,
-  options?: PrebuildOptions
+  { logger, workingDir, options }: { logger: bunyan; workingDir: string; options?: PrebuildOptions }
 ): Promise<void> {
   const customExpoCliVersion = ctx.job.builderEnvironment?.expoCli;
   const shouldDisableSharp =
     !customExpoCliVersion || semver.satisfies(customExpoCliVersion, '>=5.4.4');
 
   const spawnOptions: SpawnOptions = {
-    cwd: ctx.getReactNativeProjectDirectory(),
-    logger: ctx.logger,
+    cwd: workingDir,
+    logger,
     env: {
       ...(shouldDisableSharp ? { EXPO_IMAGE_UTILS_NO_SHARP: '1' } : {}),
       ...options?.extraEnvs,
@@ -30,19 +33,28 @@ export async function prebuildAsync<TJob extends Job>(
     },
   };
 
-  const prebuildCommandArgs = getPrebuildCommandArgs(ctx);
+  const prebuildCommandArgs = getPrebuildCommandArgs(ctx, { options });
   await runExpoCliCommand(ctx, prebuildCommandArgs, spawnOptions, {
     npmVersionAtLeast7: await isAtLeastNpm7Async(),
   });
-  await installDependenciesAsync(ctx, ctx.logger);
+  await installDependenciesAsync(ctx, { logger, workingDir });
 }
 
-function getPrebuildCommandArgs<TJob extends Job>(ctx: BuildContext<TJob>): string[] {
+function getPrebuildCommandArgs<TJob extends Job>(
+  ctx: BuildContext<TJob>,
+  { options }: { options?: PrebuildOptions }
+): string[] {
   let prebuildCommand =
     ctx.job.experimental?.prebuildCommand ??
     `prebuild --non-interactive --no-install --platform ${ctx.job.platform}`;
   if (!prebuildCommand.match(/(?:--platform| -p)/)) {
     prebuildCommand = `${prebuildCommand} --platform ${ctx.job.platform}`;
+  }
+  if (options?.skipDependencyUpdate) {
+    prebuildCommand = `${prebuildCommand} --skip-dependency-update ${options.skipDependencyUpdate}`;
+  }
+  if (options?.clean) {
+    prebuildCommand = `${prebuildCommand} --clean`;
   }
   const npxCommandPrefix = 'npx ';
   const expoCommandPrefix = 'expo ';

@@ -255,7 +255,7 @@ export class BuildStep {
       return command;
     }
     const vars = inputs.reduce((acc, input) => {
-      acc[input.id] = input.value ?? '';
+      acc[input.id] = input.value?.toString() ?? '';
       return acc;
     }, {} as Record<string, string>);
     return interpolateWithInputs(command, vars);

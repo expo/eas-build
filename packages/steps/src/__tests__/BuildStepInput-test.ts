@@ -5,7 +5,7 @@ import { BuildStepInput, makeBuildStepInputByIdMap } from '../BuildStepInput.js'
 import { createMockContext } from './utils/context.js';
 
 describe(BuildStepInput, () => {
-  test('basic case', () => {
+  test('basic case string', () => {
     const ctx = createMockContext();
     const i = new BuildStepInput(ctx, {
       id: 'foo',
@@ -15,7 +15,17 @@ describe(BuildStepInput, () => {
     expect(i.value).toBe('bar');
   });
 
-  test('default value', () => {
+  test('basic case boolean', () => {
+    const ctx = createMockContext();
+    const i = new BuildStepInput(ctx, {
+      id: 'foo',
+      stepDisplayName: BuildStep.getDisplayName({ id: 'test1' }),
+    });
+    i.set(false);
+    expect(i.value).toBe(false);
+  });
+
+  test('default value string', () => {
     const ctx = createMockContext();
     const i = new BuildStepInput(ctx, {
       id: 'foo',
@@ -23,6 +33,16 @@ describe(BuildStepInput, () => {
       defaultValue: 'baz',
     });
     expect(i.value).toBe('baz');
+  });
+
+  test('default value boolean', () => {
+    const ctx = createMockContext();
+    const i = new BuildStepInput(ctx, {
+      id: 'foo',
+      stepDisplayName: BuildStep.getDisplayName({ id: 'test1' }),
+      defaultValue: true,
+    });
+    expect(i.value).toBe(true);
   });
 
   test('enforces required policy when reading value', () => {
@@ -75,12 +95,18 @@ describe(makeBuildStepInputByIdMap, () => {
         stepDisplayName: BuildStep.getDisplayName({ id: 'test1' }),
         defaultValue: 'bar2',
       }),
+      new BuildStepInput(ctx, {
+        id: 'foo3',
+        stepDisplayName: BuildStep.getDisplayName({ id: 'test1' }),
+        defaultValue: true,
+      }),
     ];
     const result = makeBuildStepInputByIdMap(inputs);
-    expect(Object.keys(result).length).toBe(2);
+    expect(Object.keys(result).length).toBe(3);
     expect(result.foo1).toBeDefined();
     expect(result.foo2).toBeDefined();
     expect(result.foo1.value).toBe('bar1');
     expect(result.foo2.value).toBe('bar2');
+    expect(result.foo3.value).toBe(true);
   });
 });

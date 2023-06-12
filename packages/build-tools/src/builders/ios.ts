@@ -53,7 +53,11 @@ async function buildAsync(ctx: BuildContext<Ios.Job>): Promise<void> {
       const extraEnvs: Record<string, string> = credentials?.teamId
         ? { APPLE_TEAM_ID: credentials.teamId }
         : {};
-      await prebuildAsync(ctx, { extraEnvs });
+      await prebuildAsync(ctx, {
+        logger: ctx.logger,
+        workingDir: ctx.getReactNativeProjectDirectory(),
+        options: { extraEnvs },
+      });
     });
 
     await ctx.runBuildPhase(BuildPhase.RESTORE_CACHE, async () => {

@@ -80,6 +80,13 @@ describe(BuildWorkflowValidator, () => {
               defaultValue: '3',
               allowedValues: ['1', '2'],
             }),
+            new BuildStepInput(ctx, {
+              id: 'input2',
+              stepDisplayName: displayName1,
+              required: true,
+              defaultValue: '3',
+              allowedValues: [true, false],
+            }),
           ],
           command: command1,
           workingDirectory: ctx.workingDirectory,
@@ -94,10 +101,13 @@ describe(BuildWorkflowValidator, () => {
     });
     expect(error).toBeInstanceOf(BuildWorkflowError);
     assert(error instanceof BuildWorkflowError);
-    expect(error.errors.length).toBe(1);
+    expect(error.errors.length).toBe(2);
     expect(error.errors[0]).toBeInstanceOf(BuildConfigError);
     expect(error.errors[0].message).toBe(
       'Input parameter "input1" for step "test1" is set to "3" which is not one of the allowed values: "1", "2".'
+    );
+    expect(error.errors[1].message).toBe(
+      'Input parameter "input2" for step "test1" is set to "3" which is not one of the allowed values: "true", "false".'
     );
   });
   test('output from future step', async () => {

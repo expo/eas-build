@@ -27,8 +27,13 @@ export function createUploadArtifactBuildFunction<T extends Job>(
       BuildStepInput.createProvider({ id: 'path', required: true }),
     ],
     fn: async (stepsCtx, { inputs }) => {
-      const artifactType = validateAndConvertBuildArtifactType(nullthrows(inputs.type.value));
-      const filePath = path.resolve(stepsCtx.workingDirectory, nullthrows(inputs.path.value));
+      const artifactType = validateAndConvertBuildArtifactType(
+        nullthrows(inputs.type.value).toString()
+      );
+      const filePath = path.resolve(
+        stepsCtx.workingDirectory,
+        nullthrows(inputs.path.value).toString()
+      );
       await ctx.uploadArtifacts(artifactType, [filePath], stepsCtx.logger);
     },
   });

@@ -22,13 +22,16 @@ export async function ensureLFLineEndingsInGradlewScript<TJob extends Job>(
 
 export async function runGradleCommand(
   ctx: BuildContext<Android.Job>,
-  gradleCommand: string
+  {
+    logger,
+    gradleCommand,
+    androidDir,
+  }: { logger: bunyan; gradleCommand: string; androidDir: string }
 ): Promise<void> {
-  const androidDir = path.join(ctx.getReactNativeProjectDirectory(), 'android');
-  ctx.logger.info(`Running 'gradlew ${gradleCommand}' in ${androidDir}`);
+  logger.info(`Running 'gradlew ${gradleCommand}' in ${androidDir}`);
   const spawnPromise = spawn('bash', ['-c', `sh gradlew ${gradleCommand}`], {
     cwd: androidDir,
-    logger: ctx.logger,
+    logger,
     lineTransformer: (line?: string) => {
       if (!line || /^\.+$/.exec(line)) {
         return null;
@@ -39,7 +42,7 @@ export async function runGradleCommand(
     env: { ...ctx.env, ...resolveVersionOverridesEnvs(ctx) },
   });
   if (ctx.env.EAS_BUILD_RUNNER === 'eas-build' && process.platform === 'linux') {
-    adjustOOMScore(spawnPromise, ctx.logger);
+    adjustOOMScore(spawnPromise, logger);
   }
 
   await spawnPromise;
@@ -87,4 +90,18 @@ function resolveVersionOverridesEnvs(ctx: BuildContext<Android.Job>): Env {
     extraEnvs.EAS_BUILD_ANDROID_VERSION_NAME = ctx.job.version.versionName;
   }
   return extraEnvs;
+}
+
+export function resolveGradleCommand(job: Android.Job): string {
+  if (job.gradleCommand) {
+    return job.gradleCommand;
+  } else if (job.developmentClient) {
+    return ':app:assembleDebug';
+  } else if (!job.buildType) {
+    return ':app:bundleRelease';
+  } else if (job.buildType === Android.BuildType.APK) {
+    return ':app:assembleRelease';
+  } else {
+    return ':app:bundleRelease';
+  }
 }

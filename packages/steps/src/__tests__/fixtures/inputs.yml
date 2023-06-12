@@ -6,4 +6,5 @@ build:
         inputs:
           name: Dominik Sokal
           country: Poland
-        command: echo "Hi, ${ inputs.name }!"
+          boolean_value: true
+        command: echo "Hi, ${ inputs.name }, ${ inputs.boolean_value }!"
