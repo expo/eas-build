@@ -7,7 +7,7 @@ import { BuildContext } from '../context';
 import { isAtLeastNpm7Async } from '../utils/packageManager';
 import { runExpoCliCommand, shouldUseGlobalExpoCli } from '../utils/project';
 
-import { installDependenciesAsync } from './installDependencies';
+import { installDependenciesAsync, resolvePackagerDir } from './installDependencies';
 
 export interface PrebuildOptions {
   extraEnvs?: Record<string, string>;
@@ -37,7 +37,7 @@ export async function prebuildAsync<TJob extends Job>(
   await runExpoCliCommand(ctx, prebuildCommandArgs, spawnOptions, {
     npmVersionAtLeast7: await isAtLeastNpm7Async(),
   });
-  await installDependenciesAsync(ctx, { logger, workingDir });
+  await installDependenciesAsync(ctx, { logger, workingDir: resolvePackagerDir(ctx) });
 }
 
 function getPrebuildCommandArgs<TJob extends Job>(
