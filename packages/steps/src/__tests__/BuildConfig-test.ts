@@ -525,7 +525,8 @@ describe(validateConfig, () => {
                 {
                   name: 'i3',
                   default_value: true,
-                  allowed_values: [true, false, '1'],
+                  allowed_values: [true, false],
+                  type: 'boolean',
                 },
                 {
                   name: 'i4',

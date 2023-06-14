@@ -1,5 +1,5 @@
 import { Job } from '@expo/eas-build-job';
-import { BuildFunction, BuildStepInput } from '@expo/steps';
+import { BuildFunction, BuildStepInput, BuildStepInputValueTypeName } from '@expo/steps';
 
 import { BuildContext } from '../../context';
 import { prebuildAsync } from '../../common/prebuild';
@@ -13,10 +13,12 @@ export function createPrebuildBuildFunction<T extends Job>(ctx: BuildContext<T>)
       BuildStepInput.createProvider({
         id: 'skip_dependency_update',
         defaultValue: false,
+        allowedValueTypeName: BuildStepInputValueTypeName.BOOLEAN,
       }),
       BuildStepInput.createProvider({
         id: 'clean',
         defaultValue: false,
+        allowedValueTypeName: BuildStepInputValueTypeName.BOOLEAN,
       }),
       BuildStepInput.createProvider({
         id: 'apple_team_id',

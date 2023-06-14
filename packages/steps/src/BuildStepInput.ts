@@ -77,17 +77,17 @@ export class BuildStepInput {
     }
   }
 
+  public get rawValue(): BuildStepInputValueType | undefined {
+    return this._value ?? this.defaultValue;
+  }
+
   public set(value: BuildStepInputValueType | undefined): BuildStepInput {
     if (this.required && value === undefined) {
       throw new BuildStepRuntimeError(
         `Input parameter "${this.id}" for step "${this.stepDisplayName}" is required.`
       );
     }
-    if (typeof value !== this.allowedValueTypeName && value !== undefined) {
-      throw new BuildStepRuntimeError(
-        `Input parameter "${this.id}" for step "${this.stepDisplayName}" must be of type "${this.allowedValueTypeName}".`
-      );
-    }
+
     this._value = value;
     return this;
   }

@@ -114,20 +114,6 @@ describe(BuildStepInput, () => {
       new BuildStepRuntimeError('Input parameter "foo" for step "test1" is required.')
     );
   });
-
-  test('enforces allowed value type policy when setting value', () => {
-    const ctx = createMockContext();
-    const i = new BuildStepInput(ctx, {
-      id: 'foo',
-      stepDisplayName: BuildStep.getDisplayName({ id: 'test1' }),
-      allowedValueTypeName: BuildStepInputValueTypeName.BOOLEAN,
-    });
-    expect(() => {
-      i.set('bar');
-    }).toThrowError(
-      new BuildStepRuntimeError('Input parameter "foo" for step "test1" must be of type "boolean".')
-    );
-  });
 });
 
 describe(makeBuildStepInputByIdMap, () => {
