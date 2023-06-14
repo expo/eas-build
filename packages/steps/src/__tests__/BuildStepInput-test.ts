@@ -101,6 +101,23 @@ describe(BuildStepInput, () => {
     );
   });
 
+  test('enforces correct value type when reading a value', () => {
+    const ctx = createMockContext();
+    const i = new BuildStepInput(ctx, {
+      id: 'foo',
+      stepDisplayName: BuildStep.getDisplayName({ id: 'test1' }),
+      required: true,
+      allowedValueTypeName: BuildStepInputValueTypeName.BOOLEAN,
+    });
+    i.set('bar');
+    expect(() => {
+      // eslint-disable-next-line @typescript-eslint/no-unused-expressions
+      i.value;
+    }).toThrowError(
+      new BuildStepRuntimeError('Input parameter "foo" for step "test1" must be of type "boolean".')
+    );
+  });
+
   test('enforces required policy when setting value', () => {
     const ctx = createMockContext();
     const i = new BuildStepInput(ctx, {
