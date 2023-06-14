@@ -1,6 +1,10 @@
 import { BuildFunction } from '../BuildFunction.js';
 import { BuildStep, BuildStepFunction } from '../BuildStep.js';
-import { BuildStepInput, BuildStepInputProvider } from '../BuildStepInput.js';
+import {
+  BuildStepInput,
+  BuildStepInputProvider,
+  BuildStepInputValueTypeName,
+} from '../BuildStepInput.js';
 import { BuildStepOutput, BuildStepOutputProvider } from '../BuildStepOutput.js';
 
 import { createMockContext } from './utils/context.js';
@@ -122,8 +126,17 @@ describe(BuildFunction, () => {
     it('creates function inputs and outputs', () => {
       const ctx = createMockContext();
       const inputProviders: BuildStepInputProvider[] = [
-        BuildStepInput.createProvider({ id: 'input1', defaultValue: true }),
+        BuildStepInput.createProvider({
+          id: 'input1',
+          defaultValue: true,
+          allowedValueTypeName: BuildStepInputValueTypeName.BOOLEAN,
+        }),
         BuildStepInput.createProvider({ id: 'input2' }),
+        BuildStepInput.createProvider({
+          id: 'input3',
+          defaultValue: 1,
+          allowedValueTypeName: BuildStepInputValueTypeName.NUMBER,
+        }),
       ];
       const outputProviders: BuildStepOutputProvider[] = [
         BuildStepOutput.createProvider({ id: 'output1' }),
@@ -139,7 +152,7 @@ describe(BuildFunction, () => {
       });
       const step = func.createBuildStepFromFunctionCall(ctx, {
         callInputs: {
-          input1: 'abc',
+          input1: true,
           input2: 'def',
         },
         workingDirectory: ctx.workingDirectory,
@@ -150,6 +163,7 @@ describe(BuildFunction, () => {
       expect(func.outputProviders?.[1]).toBe(outputProviders[1]);
       expect(step.inputs?.[0].id).toBe('input1');
       expect(step.inputs?.[1].id).toBe('input2');
+      expect(step.inputs?.[2].id).toBe('input3');
       expect(step.outputs?.[0].id).toBe('output1');
       expect(step.outputs?.[1].id).toBe('output2');
     });
@@ -158,7 +172,11 @@ describe(BuildFunction, () => {
       const inputProviders: BuildStepInputProvider[] = [
         BuildStepInput.createProvider({ id: 'input1', defaultValue: 'xyz1' }),
         BuildStepInput.createProvider({ id: 'input2', defaultValue: 'xyz2' }),
-        BuildStepInput.createProvider({ id: 'input3', defaultValue: 'xyz3' }),
+        BuildStepInput.createProvider({
+          id: 'input3',
+          defaultValue: true,
+          allowedValueTypeName: BuildStepInputValueTypeName.BOOLEAN,
+        }),
       ];
       const func = new BuildFunction({
         id: 'test1',

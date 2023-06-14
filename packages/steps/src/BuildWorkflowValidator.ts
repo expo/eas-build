@@ -54,7 +54,7 @@ export class BuildWorkflowValidator {
           errors.push(error);
         }
         const paths =
-          typeof currentStepInput.defaultValue !== 'boolean'
+          typeof currentStepInput.defaultValue === 'string'
             ? findOutputPaths(currentStepInput.defaultValue)
             : [];
         for (const { stepId: referencedStepId, outputId: referencedStepOutputId } of paths) {

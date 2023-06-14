@@ -20,7 +20,11 @@ import {
 import { BuildFunction, BuildFunctionById } from './BuildFunction.js';
 import { BuildStep } from './BuildStep.js';
 import { BuildStepContext } from './BuildStepContext.js';
-import { BuildStepInput, BuildStepInputProvider } from './BuildStepInput.js';
+import {
+  BuildStepInput,
+  BuildStepInputProvider,
+  BuildStepInputValueTypeName,
+} from './BuildStepInput.js';
 import { BuildStepOutput, BuildStepOutputProvider } from './BuildStepOutput.js';
 import { BuildWorkflow } from './BuildWorkflow.js';
 import { BuildWorkflowValidator } from './BuildWorkflowValidator.js';
@@ -195,6 +199,7 @@ export class BuildConfigParser {
           stepDisplayName,
           defaultValue: value,
           required: true,
+          allowedValueTypeName: typeof value as BuildStepInputValueTypeName,
         })
     );
   }
@@ -210,6 +215,7 @@ export class BuildConfigParser {
             required: entry.required ?? true,
             defaultValue: entry.defaultValue,
             allowedValues: entry.allowedValues,
+            allowedValueTypeName: entry.allowedValueType,
           });
     });
   }

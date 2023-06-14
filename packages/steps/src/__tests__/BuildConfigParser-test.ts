@@ -8,6 +8,7 @@ import { BuildWorkflow } from '../BuildWorkflow.js';
 import { BuildConfigError, BuildStepRuntimeError } from '../errors.js';
 import { getDefaultShell } from '../utils/shell/command.js';
 import { BuildRuntimePlatform } from '../BuildRuntimePlatform.js';
+import { BuildStepInputValueTypeName } from '../BuildStepInput.js';
 
 import { createMockContext } from './utils/context.js';
 import { getError, getErrorAsync } from './utils/error.js';
@@ -151,6 +152,7 @@ describe(BuildConfigParser, () => {
       //     name: Dominik Sokal
       //     country: Poland
       //     boolean_value: true
+      //     number_value: 123
       //   command: echo "Hi, ${ inputs.name }, ${ inputs.boolean_value }!"
       const step1 = buildSteps[0];
       expect(step1.id).toMatch(UUID_REGEX);
@@ -161,10 +163,16 @@ describe(BuildConfigParser, () => {
       expect(step1.inputs).toBeDefined();
       expect(step1.inputs?.[0].id).toBe('name');
       expect(step1.inputs?.[0].value).toBe('Dominik Sokal');
+      expect(step1.inputs?.[0].allowedValueTypeName).toBe(BuildStepInputValueTypeName.STRING);
       expect(step1.inputs?.[1].id).toBe('country');
       expect(step1.inputs?.[1].value).toBe('Poland');
+      expect(step1.inputs?.[1].allowedValueTypeName).toBe(BuildStepInputValueTypeName.STRING);
       expect(step1.inputs?.[2].id).toBe('boolean_value');
       expect(step1.inputs?.[2].value).toBe(true);
+      expect(step1.inputs?.[2].allowedValueTypeName).toBe(BuildStepInputValueTypeName.BOOLEAN);
+      expect(step1.inputs?.[3].id).toBe('number_value');
+      expect(step1.inputs?.[3].value).toBe(123);
+      expect(step1.inputs?.[3].allowedValueTypeName).toBe(BuildStepInputValueTypeName.NUMBER);
     });
 
     it('parses outputs', async () => {
@@ -243,6 +251,7 @@ describe(BuildConfigParser, () => {
       expect(step1.shell).toBe(getDefaultShell());
       expect(step1.inputs?.[0].id).toBe('name');
       expect(step1.inputs?.[0].value).toBe('Dominik');
+      expect(step1.inputs?.[0].allowedValueTypeName).toBe(BuildStepInputValueTypeName.STRING);
 
       // - say_hi:
       //     name: Hi, Szymon!
@@ -256,6 +265,7 @@ describe(BuildConfigParser, () => {
       expect(step2.shell).toBe(getDefaultShell());
       expect(step2.inputs?.[0].id).toBe('name');
       expect(step2.inputs?.[0].value).toBe('Szymon');
+      expect(step2.inputs?.[0].allowedValueTypeName).toBe(BuildStepInputValueTypeName.STRING);
 
       // - say_hi_wojtek
       const step3 = buildSteps[2];
@@ -287,10 +297,12 @@ describe(BuildConfigParser, () => {
       expect(step5.shell).toBe(getDefaultShell());
       expect(step5.inputs?.[0].id).toBe('value');
       expect(step5.inputs?.[0].required).toBe(true);
+      expect(step5.inputs?.[0].allowedValueTypeName).toBe(BuildStepInputValueTypeName.STRING);
 
       // - say_hi_2:
       //     inputs:
       //       greeting: Hello
+      //       num: 123
       const step6 = buildSteps[5];
       expect(step6.id).toMatch(UUID_REGEX);
       expect(step6.name).toBe('Hi!');
@@ -305,14 +317,22 @@ describe(BuildConfigParser, () => {
       expect(step6.inputs?.[0].required).toBe(true);
       expect(step6.inputs?.[0].defaultValue).toBe('Hi');
       expect(step6.inputs?.[0].allowedValues).toEqual(['Hi', 'Hello']);
+      expect(step6.inputs?.[0].allowedValueTypeName).toBe(BuildStepInputValueTypeName.STRING);
       expect(step6.inputs?.[1].id).toBe('name');
       expect(step6.inputs?.[1].required).toBe(true);
       expect(step6.inputs?.[1].defaultValue).toBe('Brent');
       expect(step6.inputs?.[1].allowedValues).toEqual(undefined);
+      expect(step6.inputs?.[1].allowedValueTypeName).toBe(BuildStepInputValueTypeName.STRING);
       expect(step6.inputs?.[2].id).toBe('test');
       expect(step6.inputs?.[2].required).toBe(true);
       expect(step6.inputs?.[2].defaultValue).toBe(false);
-      expect(step6.inputs?.[2].allowedValues).toEqual([false, true, '1']);
+      expect(step6.inputs?.[2].allowedValues).toEqual([false, true]);
+      expect(step6.inputs?.[2].allowedValueTypeName).toBe(BuildStepInputValueTypeName.BOOLEAN);
+      expect(step6.inputs?.[3].id).toBe('number');
+      expect(step6.inputs?.[3].required).toBe(true);
+      expect(step6.inputs?.[3].defaultValue).toBe(undefined);
+      expect(step6.inputs?.[3].allowedValues).toEqual(undefined);
+      expect(step6.inputs?.[3].allowedValueTypeName).toBe(BuildStepInputValueTypeName.NUMBER);
 
       const { buildFunctions } = workflow;
       expect(Object.keys(buildFunctions).length).toBe(5);
@@ -361,14 +381,21 @@ describe(BuildConfigParser, () => {
       expect(function4.command).toBe('echo "${ inputs.value }"');
 
       // say_hi_2:
-      //   name: Hi!
-      //   inputs:
-      //     - name: greeting
-      //       default_value: Hi
-      //       allowed_values: [Hi, Hello]
-      //     - name: name
-      //       default_value: Brent
-      //   command: echo "${ inputs.greeting }, ${ inputs.name }!"
+      // name: Hi!
+      // supported_platforms: [darwin, linux]
+      // inputs:
+      //   - name: greeting
+      //     default_value: Hi
+      //     allowed_values: [Hi, Hello]
+      //   - name: name
+      //     default_value: Brent
+      //   - name: test
+      //     default_value: false
+      //     allowed_values: [false, true]
+      //     type: boolean
+      //   - name: number
+      //     type: number
+      // command: echo "${ inputs.greeting }, ${ inputs.name }!"
       const function5 = buildFunctions.say_hi_2;
       expect(function5.id).toBe('say_hi_2');
       expect(function5.name).toBe('Hi!');
@@ -379,6 +406,21 @@ describe(BuildConfigParser, () => {
         'Hi',
         'Hello',
       ]);
+      expect(function5.inputProviders?.[2](ctx, 'unknown-step').allowedValueTypeName).toBe(
+        BuildStepInputValueTypeName.BOOLEAN
+      );
+      expect(function5.inputProviders?.[2](ctx, 'unknown-step').id).toBe('test');
+      expect(function5.inputProviders?.[2](ctx, 'unknown-step').required).toBe(true);
+      expect(function5.inputProviders?.[2](ctx, 'unknown-step').defaultValue).toBe(false);
+      expect(function5.inputProviders?.[2](ctx, 'unknown-step').allowedValues).toEqual([
+        false,
+        true,
+      ]);
+      expect(function5.inputProviders?.[3](ctx, 'unknown-step').allowedValueTypeName).toBe(
+        BuildStepInputValueTypeName.NUMBER
+      );
+      expect(function5.inputProviders?.[3](ctx, 'unknown-step').id).toBe('number');
+      expect(function5.inputProviders?.[3](ctx, 'unknown-step').required).toBe(true);
       expect(function5.command).toBe('echo "${ inputs.greeting }, ${ inputs.name }!"');
       expect(function5.supportedRuntimePlatforms).toEqual([
         BuildRuntimePlatform.DARWIN,

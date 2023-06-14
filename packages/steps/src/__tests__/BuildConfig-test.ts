@@ -100,6 +100,17 @@ describe(readAndValidateBuildFunctionsConfigFileAsync, () => {
     expect(typeof config).toBe('object');
     expect(config.functions?.say_hi_linux_and_darwin).toBeDefined();
   });
+  test('invalid functions config', async () => {
+    const error = await getErrorAsync<BuildConfigError>(async () => {
+      return await readAndValidateBuildFunctionsConfigFileAsync(
+        path.join(__dirname, './fixtures/invalid-functions.yml')
+      );
+    });
+    expect(error).toBeInstanceOf(BuildConfigError);
+    expect(error.message).toMatch(
+      /"functions.say_hi.inputs\[0\].allowedValues\[1\]" must be a boolean/
+    );
+  });
 });
 
 describe(readRawBuildConfigAsync, () => {
@@ -335,6 +346,12 @@ describe(validateConfig, () => {
             },
             functions: {
               test_boolean: {
+                inputs: [
+                  {
+                    name: 'boolean',
+                    type: 'boolean',
+                  },
+                ],
                 command: 'echo "${ inputs.boolean }!"',
               },
             },
@@ -431,7 +448,7 @@ describe(validateConfig, () => {
         expect(error.message).not.toMatch(/"functions\.upload_artifact" is not allowed/);
         expect(error.message).not.toMatch(/"functions\.build-project" is not allowed/);
       });
-      test('invalid default and allowed values for function inputs', () => {
+      test('invalid default, allowed values and type for function inputs', () => {
         const buildConfig = {
           build: {
             steps: ['abc'],
@@ -445,8 +462,24 @@ describe(validateConfig, () => {
                 },
                 {
                   name: 'i2',
-                  default_value: '1',
-                  allowed_values: ['2', '3'],
+                  default_value: 'hi',
+                  allowed_values: ['bye'],
+                },
+                {
+                  name: 'i3',
+                  default_value: 'hhh',
+                  type: 'string',
+                  allowed_values: [1, 2],
+                },
+                {
+                  name: 'i4',
+                  default_value: 'hello',
+                  type: 'wrong',
+                },
+                {
+                  name: 'i5',
+                  default_value: true,
+                  type: 'number',
                 },
               ],
               command: 'echo "${ inputs.i1 } ${ inputs.i2 }"',
@@ -457,12 +490,20 @@ describe(validateConfig, () => {
         const error = getError<Error>(() => {
           validateConfig(BuildConfigSchema, buildConfig);
         });
-        expect(error.message).toMatch(
-          /"functions.abc.inputs\[0\].defaultValue" must be one of \[string, boolean\]/
-        );
+        expect(error.message).toMatch(/"functions.abc.inputs\[0\].defaultValue" must be a string/);
         expect(error.message).toMatch(
           /"functions.abc.inputs\[1\].defaultValue" must be one of allowed values/
         );
+        expect(error.message).toMatch(
+          /"functions.abc.inputs\[2\].allowedValues\[0\]" must be a string/
+        );
+        expect(error.message).toMatch(
+          /"functions.abc.inputs\[2\].allowedValues\[1\]" must be a string/
+        );
+        expect(error.message).toMatch(
+          /"functions.abc.inputs\[3\].allowedValueType" must be one of \[string, boolean, number\]/
+        );
+        expect(error.message).toMatch(/"functions.abc.inputs\[4\].defaultValue" must be a number/);
       });
       test('valid default and allowed values for function inputs', () => {
         const buildConfig = {
@@ -485,6 +526,12 @@ describe(validateConfig, () => {
                   name: 'i3',
                   default_value: true,
                   allowed_values: [true, false, '1'],
+                },
+                {
+                  name: 'i4',
+                  default_value: 1,
+                  type: 'number',
+                  allowed_values: [1, 2],
                 },
               ],
               command: 'echo "${ inputs.i1 } ${ inputs.i2 } ${ inputs.i3 }"',

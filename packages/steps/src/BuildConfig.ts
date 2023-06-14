@@ -8,6 +8,7 @@ import YAML from 'yaml';
 import { BuildConfigError, BuildWorkflowError } from './errors.js';
 import { BuildRuntimePlatform } from './BuildRuntimePlatform.js';
 import { BuildFunction } from './BuildFunction.js';
+import { BuildStepInputValueType, BuildStepInputValueTypeName } from './BuildStepInput.js';
 
 export type BuildFunctions = Record<string, BuildFunctionConfig>;
 
@@ -49,7 +50,7 @@ export type BuildFunctionCallConfig = {
   shell?: string;
 };
 
-export type BuildStepInputs = Record<string, string | boolean>;
+export type BuildStepInputs = Record<string, BuildStepInputValueType>;
 export type BuildStepOutputs = (
   | string
   | {
@@ -71,32 +72,54 @@ export type BuildFunctionInputs = (
   | string
   | {
       name: string;
-      defaultValue?: string | boolean;
-      allowedValues?: (string | boolean)[];
+      defaultValue?: BuildStepInputValueType;
+      allowedValues?: BuildStepInputValueType[];
       required?: boolean;
+      allowedValueType: BuildStepInputValueTypeName;
     }
 )[];
 export type BuildFunctionOutputs = BuildStepOutputs;
 
 const BuildFunctionInputsSchema = Joi.array().items(
-  Joi.alternatives().try(
-    Joi.string().required(),
-    Joi.object({
+  Joi.alternatives().conditional(Joi.ref('.'), {
+    is: Joi.string(),
+    then: Joi.string().required(),
+    otherwise: Joi.object({
       name: Joi.string().required(),
-      defaultValue: Joi.alternatives().conditional('allowedValues', {
+      defaultValue: Joi.when('allowedValues', {
         is: Joi.exist(),
         then: Joi.valid(Joi.in('allowedValues')).messages({
           'any.only': '{{#label}} must be one of allowed values',
         }),
-        otherwise: Joi.alternatives().try(Joi.string(), Joi.boolean()),
+        otherwise: Joi.when('allowedValueType', {
+          is: BuildStepInputValueTypeName.STRING,
+          then: Joi.string(),
+          otherwise: Joi.when('allowedValueType', {
+            is: BuildStepInputValueTypeName.BOOLEAN,
+            then: Joi.boolean(),
+            otherwise: Joi.number(),
+          }),
+        }),
       }),
-      allowedValues: Joi.array().items(Joi.string(), Joi.boolean()),
+      allowedValues: Joi.when('allowedValueType', {
+        is: BuildStepInputValueTypeName.STRING,
+        then: Joi.array().items(Joi.string()),
+        otherwise: Joi.when('allowedValueType', {
+          is: BuildStepInputValueTypeName.BOOLEAN,
+          then: Joi.array().items(Joi.boolean()),
+          otherwise: Joi.array().items(Joi.number()),
+        }),
+      }),
+      allowedValueType: Joi.string()
+        .valid(...Object.values(BuildStepInputValueTypeName))
+        .default(BuildStepInputValueTypeName.STRING),
       required: Joi.boolean(),
     })
       .rename('allowed_values', 'allowedValues')
       .rename('default_value', 'defaultValue')
-      .required()
-  )
+      .rename('type', 'allowedValueType')
+      .required(),
+  })
 );
 
 const BuildStepOutputsSchema = Joi.array().items(
@@ -111,7 +134,10 @@ const BuildStepOutputsSchema = Joi.array().items(
 
 const BuildFunctionCallSchema = Joi.object({
   id: Joi.string(),
-  inputs: Joi.object().pattern(Joi.string(), Joi.alternatives().try(Joi.string(), Joi.boolean())),
+  inputs: Joi.object().pattern(
+    Joi.string(),
+    Joi.alternatives().try(Joi.string(), Joi.boolean(), Joi.number())
+  ),
   name: Joi.string(),
   workingDirectory: Joi.string(),
   shell: Joi.string(),
