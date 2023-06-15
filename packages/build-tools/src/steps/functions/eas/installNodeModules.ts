@@ -1,8 +1,8 @@
 import { Job } from '@expo/eas-build-job';
 import { BuildFunction } from '@expo/steps';
 
-import { BuildContext } from '../../context';
-import { installDependenciesAsync } from '../../common/installDependencies';
+import { BuildContext } from '../../../context';
+import { installDependenciesAsync } from '../../../common/installDependencies';
 
 export function createInstallNodeModulesBuildFunction<T extends Job>(
   ctx: BuildContext<T>

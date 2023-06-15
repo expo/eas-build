@@ -6,7 +6,7 @@ import nullthrows from 'nullthrows';
 
 import { Artifacts, ArtifactType, BuildContext } from '../context';
 import { configureExpoUpdatesIfInstalledAsync } from '../utils/expoUpdates';
-import { findArtifacts } from '../utils/artifacts';
+import { uploadApplicationArchive } from '../utils/artifacts';
 import { Hook, runHookIfPresent } from '../utils/hooks';
 import { configureXcodeProject } from '../ios/configure';
 import CredentialsManager from '../ios/credentials/manager';
@@ -108,13 +108,11 @@ async function buildAsync(ctx: BuildContext<Ios.Job>): Promise<void> {
   });
 
   await ctx.runBuildPhase(BuildPhase.UPLOAD_APPLICATION_ARCHIVE, async () => {
-    const applicationArchives = await findArtifacts(
-      ctx.getReactNativeProjectDirectory(),
-      resolveArtifactPath(ctx),
-      ctx.logger
-    );
-    ctx.logger.info(`Application archives: ${applicationArchives.join(', ')}`);
-    await ctx.uploadArtifacts(ArtifactType.APPLICATION_ARCHIVE, applicationArchives, ctx.logger);
+    await uploadApplicationArchive(ctx, {
+      patternOrPath: resolveArtifactPath(ctx),
+      rootDir: ctx.getReactNativeProjectDirectory(),
+      logger: ctx.logger,
+    });
   });
 }
 

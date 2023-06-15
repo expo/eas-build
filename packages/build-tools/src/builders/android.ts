@@ -3,14 +3,14 @@ import path from 'path';
 import { Android, BuildMode, BuildPhase, Workflow } from '@expo/eas-build-job';
 import nullthrows from 'nullthrows';
 
-import { Artifacts, ArtifactType, BuildContext, SkipNativeBuildError } from '../context';
+import { Artifacts, BuildContext, SkipNativeBuildError } from '../context';
 import { configureExpoUpdatesIfInstalledAsync } from '../utils/expoUpdates';
 import {
   runGradleCommand,
   ensureLFLineEndingsInGradlewScript,
   resolveGradleCommand,
 } from '../android/gradle';
-import { findArtifacts } from '../utils/artifacts';
+import { uploadApplicationArchive } from '../utils/artifacts';
 import { Hook, runHookIfPresent } from '../utils/hooks';
 import { restoreCredentials } from '../android/credentials';
 import { configureBuildGradle } from '../android/gradleConfig';
@@ -97,12 +97,10 @@ async function buildAsync(ctx: BuildContext<Android.Job>): Promise<void> {
   });
 
   await ctx.runBuildPhase(BuildPhase.UPLOAD_APPLICATION_ARCHIVE, async () => {
-    const applicationArchives = await findArtifacts(
-      ctx.getReactNativeProjectDirectory(),
-      ctx.job.applicationArchivePath ?? 'android/app/build/outputs/**/*.{apk,aab}',
-      ctx.logger
-    );
-    ctx.logger.info(`Application archives: ${applicationArchives.join(', ')}`);
-    await ctx.uploadArtifacts(ArtifactType.APPLICATION_ARCHIVE, applicationArchives, ctx.logger);
+    await uploadApplicationArchive(ctx, {
+      patternOrPath: ctx.job.applicationArchivePath ?? 'android/app/build/outputs/**/*.{apk,aab}',
+      rootDir: ctx.getReactNativeProjectDirectory(),
+      logger: ctx.logger,
+    });
   });
 }

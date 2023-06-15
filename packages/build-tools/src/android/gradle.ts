@@ -2,7 +2,7 @@ import path from 'path';
 import assert from 'assert';
 
 import spawn, { SpawnPromise, SpawnResult } from '@expo/turtle-spawn';
-import { Android, Env, Job } from '@expo/eas-build-job';
+import { Android, Env, Job, Platform } from '@expo/eas-build-job';
 import fs from 'fs-extra';
 import { bunyan } from '@expo/logger';
 
@@ -21,7 +21,7 @@ export async function ensureLFLineEndingsInGradlewScript<TJob extends Job>(
 }
 
 export async function runGradleCommand(
-  ctx: BuildContext<Android.Job>,
+  ctx: BuildContext<Job>,
   {
     logger,
     gradleCommand,
@@ -81,12 +81,20 @@ function adjustOOMScore(spawnPromise: SpawnPromise<SpawnResult>, logger: bunyan)
 
 // Version envs should be set at the beginning of the build, but when building
 // from github those values are resolved latter.
-function resolveVersionOverridesEnvs(ctx: BuildContext<Android.Job>): Env {
+function resolveVersionOverridesEnvs(ctx: BuildContext<Job>): Env {
   const extraEnvs: Env = {};
-  if (ctx.job.version?.versionCode && !ctx.env.EAS_BUILD_ANDROID_VERSION_CODE) {
+  if (
+    ctx.job.platform === Platform.ANDROID &&
+    ctx.job.version?.versionCode &&
+    !ctx.env.EAS_BUILD_ANDROID_VERSION_CODE
+  ) {
     extraEnvs.EAS_BUILD_ANDROID_VERSION_CODE = ctx.job.version.versionCode;
   }
-  if (ctx.job.version?.versionName && !ctx.env.EAS_BUILD_ANDROID_VERSION_NAME) {
+  if (
+    ctx.job.platform === Platform.ANDROID &&
+    ctx.job.version?.versionName &&
+    !ctx.env.EAS_BUILD_ANDROID_VERSION_NAME
+  ) {
     extraEnvs.EAS_BUILD_ANDROID_VERSION_NAME = ctx.job.version.versionName;
   }
   return extraEnvs;

@@ -1,8 +1,8 @@
 import { Job } from '@expo/eas-build-job';
 import { BuildFunction, BuildStepInput, BuildStepInputValueTypeName } from '@expo/steps';
 
-import { BuildContext } from '../../context';
-import { prebuildAsync } from '../../common/prebuild';
+import { BuildContext } from '../../../context';
+import { prebuildAsync } from '../../../common/prebuild';
 
 export function createPrebuildBuildFunction<T extends Job>(ctx: BuildContext<T>): BuildFunction {
   return new BuildFunction({

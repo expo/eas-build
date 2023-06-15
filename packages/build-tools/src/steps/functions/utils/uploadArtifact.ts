@@ -4,7 +4,7 @@ import { Job } from '@expo/eas-build-job';
 import { BuildFunction, BuildStepInput } from '@expo/steps';
 import nullthrows from 'nullthrows';
 
-import { ArtifactType, BuildContext } from '../../context';
+import { ArtifactType, BuildContext } from '../../../context';
 
 enum BuildArtifactType {
   APPLICATION_ARCHIVE = 'application-archive',
@@ -15,7 +15,7 @@ export function createUploadArtifactBuildFunction<T extends Job>(
   ctx: BuildContext<T>
 ): BuildFunction {
   return new BuildFunction({
-    namespace: 'eas',
+    namespace: 'utils',
     id: 'upload_artifact',
     name: 'Upload artifact',
     inputProviders: [
