@@ -4,8 +4,8 @@ import { Android, Job, Platform } from '@expo/eas-build-job';
 import { BuildFunction, errors } from '@expo/steps';
 import fs from 'fs-extra';
 
-import { BuildContext } from '../../context';
-import { resolveGradleCommand, runGradleCommand } from '../../android/gradle';
+import { BuildContext } from '../../../context';
+import { resolveGradleCommand, runGradleCommand } from '../../../android/gradle';
 
 export function createBuildReactNativeAppBuildFunction<T extends Job>(
   ctx: BuildContext<T>
