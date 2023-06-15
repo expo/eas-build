@@ -91,25 +91,31 @@ const BuildFunctionInputsSchema = Joi.array().items(
         then: Joi.valid(Joi.in('allowedValues')).messages({
           'any.only': '{{#label}} must be one of allowed values',
         }),
-        otherwise: Joi.when('allowedValueType', {
+      })
+        .when('allowedValueType', {
           is: BuildStepInputValueTypeName.STRING,
           then: Joi.string(),
-          otherwise: Joi.when('allowedValueType', {
-            is: BuildStepInputValueTypeName.BOOLEAN,
-            then: Joi.boolean(),
-            otherwise: Joi.number(),
-          }),
+        })
+        .when('allowedValueType', {
+          is: BuildStepInputValueTypeName.BOOLEAN,
+          then: Joi.boolean(),
+        })
+        .when('allowedValueType', {
+          is: BuildStepInputValueTypeName.NUMBER,
+          then: Joi.number(),
         }),
-      }),
       allowedValues: Joi.when('allowedValueType', {
         is: BuildStepInputValueTypeName.STRING,
         then: Joi.array().items(Joi.string()),
-        otherwise: Joi.when('allowedValueType', {
+      })
+        .when('allowedValueType', {
           is: BuildStepInputValueTypeName.BOOLEAN,
           then: Joi.array().items(Joi.boolean()),
-          otherwise: Joi.array().items(Joi.number()),
+        })
+        .when('allowedValueType', {
+          is: BuildStepInputValueTypeName.NUMBER,
+          then: Joi.array().items(Joi.number()),
         }),
-      }),
       allowedValueType: Joi.string()
         .valid(...Object.values(BuildStepInputValueTypeName))
         .default(BuildStepInputValueTypeName.STRING),
