@@ -7,7 +7,7 @@ import { Job } from '@expo/eas-build-job';
 
 import { ArtifactType, BuildContext } from '../context';
 
-async function findArtifacts(
+export async function findArtifacts(
   rootDir: string,
   patternOrPath: string,
   buildLogger: bunyan
