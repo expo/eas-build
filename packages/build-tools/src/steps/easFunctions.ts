@@ -10,7 +10,7 @@ import { createInstallNodeModulesBuildFunction } from './functions/eas/installNo
 import { createRunGradleBuildFunction } from './functions/utils/runGradle';
 import { createPrebuildBuildFunction } from './functions/eas/prebuild';
 import { createBuildReactNativeAppBuildFunction } from './functions/eas/buildReactNativeApp';
-import { createFindAndUploadApplicationArchiveBuildFunction } from './functions/eas/findAndUploadApplicationArchive';
+import { createFindAndUploadBuildArtifactsBuildFunction } from './functions/eas/findAndUploadBuildArtifacts';
 
 export function getEasFunctions<T extends Job>(ctx: BuildContext<T>): BuildFunction[] {
   return [
@@ -21,6 +21,6 @@ export function getEasFunctions<T extends Job>(ctx: BuildContext<T>): BuildFunct
     createPrebuildBuildFunction(ctx),
     createRunGradleBuildFunction(ctx),
     createBuildReactNativeAppBuildFunction(ctx),
-    createFindAndUploadApplicationArchiveBuildFunction(ctx),
+    createFindAndUploadBuildArtifactsBuildFunction(ctx),
   ];
 }

@@ -1,8 +1,8 @@
 import { BuildPhase, Ios, Job, Platform } from '@expo/eas-build-job';
 
-import { Artifacts, ArtifactType, BuildContext } from '../context';
+import { Artifacts, BuildContext } from '../context';
 import { findAndUploadXcodeBuildLogsAsync } from '../ios/xcodeBuildLogs';
-import { findArtifacts } from '../utils/artifacts';
+import { maybeFindAndUploadBuildArtifacts } from '../utils/artifacts';
 import { Hook, runHookIfPresent } from '../utils/hooks';
 
 export async function runBuilderWithHooksAsync<T extends Job>(
@@ -36,22 +36,7 @@ export async function runBuilderWithHooksAsync<T extends Job>(
       }
 
       await ctx.runBuildPhase(BuildPhase.UPLOAD_BUILD_ARTIFACTS, async () => {
-        if (!ctx.job.buildArtifactPaths || ctx.job.buildArtifactPaths.length === 0) {
-          return;
-        }
-        try {
-          const buildArtifacts = (
-            await Promise.all(
-              ctx.job.buildArtifactPaths.map((path) =>
-                findArtifacts(ctx.getReactNativeProjectDirectory(), path, ctx.logger)
-              )
-            )
-          ).flat();
-          ctx.logger.info(`Uploading build artifacts: ${buildArtifacts.join(', ')}`);
-          await ctx.uploadArtifacts(ArtifactType.BUILD_ARTIFACTS, buildArtifacts, ctx.logger);
-        } catch (err: any) {
-          ctx.logger.error({ err }, 'Failed to upload build artifacts');
-        }
+        await maybeFindAndUploadBuildArtifacts(ctx, ctx.logger);
       });
     }
   } catch (err: any) {

@@ -3,8 +3,11 @@ import path from 'path';
 import fs from 'fs-extra';
 import fg from 'fast-glob';
 import { bunyan } from '@expo/logger';
+import { Job } from '@expo/eas-build-job';
 
-export async function findArtifacts(
+import { ArtifactType, BuildContext } from '../context';
+
+async function findArtifacts(
   rootDir: string,
   patternOrPath: string,
   buildLogger: bunyan
@@ -42,4 +45,43 @@ async function logMissingFileError(artifactPath: string, buildLogger: bunyan): P
       )}].`
     );
   }
+}
+
+export async function maybeFindAndUploadBuildArtifacts(
+  ctx: BuildContext<Job>,
+  logger: bunyan
+): Promise<void> {
+  if (!ctx.job.buildArtifactPaths || ctx.job.buildArtifactPaths.length === 0) {
+    return;
+  }
+  try {
+    const buildArtifacts = (
+      await Promise.all(
+        ctx.job.buildArtifactPaths.map((path) =>
+          findArtifacts(ctx.getReactNativeProjectDirectory(), path, logger)
+        )
+      )
+    ).flat();
+    logger.info(`Uploading build artifacts: ${buildArtifacts.join(', ')}`);
+    await ctx.uploadArtifacts(ArtifactType.BUILD_ARTIFACTS, buildArtifacts, logger);
+  } catch (err: any) {
+    logger.error({ err }, 'Failed to upload build artifacts');
+  }
+}
+
+export async function uploadApplicationArchive(
+  ctx: BuildContext<Job>,
+  {
+    logger,
+    patternOrPath,
+    rootDir,
+  }: {
+    logger: bunyan;
+    patternOrPath: string;
+    rootDir: string;
+  }
+): Promise<void> {
+  const applicationArchives = await findArtifacts(rootDir, patternOrPath, logger);
+  logger.info(`Application archives: ${applicationArchives.join(', ')}`);
+  await ctx.uploadArtifacts(ArtifactType.APPLICATION_ARCHIVE, applicationArchives, logger);
 }
