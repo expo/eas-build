@@ -19,12 +19,12 @@ import {
 } from './BuildConfig.js';
 import { BuildFunction, BuildFunctionById } from './BuildFunction.js';
 import { BuildStep } from './BuildStep.js';
-import { BuildStepContext } from './BuildStepContext.js';
 import {
   BuildStepInput,
   BuildStepInputProvider,
   BuildStepInputValueTypeName,
 } from './BuildStepInput.js';
+import { BuildStepGlobalContext } from './BuildStepContext.js';
 import { BuildStepOutput, BuildStepOutputProvider } from './BuildStepOutput.js';
 import { BuildWorkflow } from './BuildWorkflow.js';
 import { BuildWorkflowValidator } from './BuildWorkflowValidator.js';
@@ -37,7 +37,7 @@ export class BuildConfigParser {
   private readonly externalFunctions?: BuildFunction[];
 
   constructor(
-    private readonly ctx: BuildStepContext,
+    private readonly ctx: BuildStepGlobalContext,
     { configPath, externalFunctions }: { configPath: string; externalFunctions?: BuildFunction[] }
   ) {
     this.validateExternalFunctions(externalFunctions);

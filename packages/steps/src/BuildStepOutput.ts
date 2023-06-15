@@ -1,9 +1,9 @@
-import { BuildStepContext } from './BuildStepContext.js';
+import { BuildStepGlobalContext } from './BuildStepContext.js';
 import { BuildStepRuntimeError } from './errors.js';
 
 export type BuildStepOutputById = Record<string, BuildStepOutput>;
 export type BuildStepOutputProvider = (
-  ctx: BuildStepContext,
+  ctx: BuildStepGlobalContext,
   stepDisplayName: string
 ) => BuildStepOutput;
 
@@ -29,7 +29,7 @@ export class BuildStepOutput {
 
   constructor(
     // @ts-expect-error ctx is not used in this class but let's keep it here for consistency
-    private readonly ctx: BuildStepContext,
+    private readonly ctx: BuildStepGlobalContext,
     { id, stepDisplayName, required = true }: BuildStepOutputParams
   ) {
     this.id = id;

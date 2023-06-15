@@ -1,79 +1,57 @@
 import os from 'os';
-import path from 'path';
 
 import { instance, mock, when } from 'ts-mockito';
-import { v4 as uuidv4 } from 'uuid';
 
 import { BuildStep } from '../BuildStep.js';
-import { BuildStepContext } from '../BuildStepContext.js';
+import { BuildStepGlobalContext, BuildStepContext } from '../BuildStepContext.js';
 import { BuildStepRuntimeError } from '../errors.js';
 import { BuildRuntimePlatform } from '../BuildRuntimePlatform.js';
 
-import { createMockContext } from './utils/context.js';
+import { createGlobalContextMock, MockContextProvider } from './utils/context.js';
 import { getError } from './utils/error.js';
 import { createMockLogger } from './utils/logger.js';
 
-describe(BuildStepContext, () => {
+describe(BuildStepGlobalContext, () => {
   describe('stepsInternalBuildDirectory', () => {
     it('is in os.tmpdir()', () => {
-      const ctx = new BuildStepContext(
-        uuidv4(),
-        createMockLogger(),
-        false,
-        BuildRuntimePlatform.LINUX,
-        '/non/existent/path',
-        '/another/non/existent/path'
+      const ctx = new BuildStepGlobalContext(
+        new MockContextProvider(
+          createMockLogger(),
+          BuildRuntimePlatform.LINUX,
+          '/non/existent/path',
+          '/another/non/existent/path',
+          '/working/dir/path'
+        ),
+        false
       );
       expect(ctx.stepsInternalBuildDirectory.startsWith(os.tmpdir())).toBe(true);
     });
-    it('uses the build id as a path component', () => {
-      const buildId = uuidv4();
-      const ctx = new BuildStepContext(
-        buildId,
-        createMockLogger(),
-        false,
-        BuildRuntimePlatform.LINUX,
-        '/non/existent/path',
-        '/another/non/existent/path'
-      );
-      expect(ctx.stepsInternalBuildDirectory).toMatch(buildId);
-    });
   });
   describe('workingDirectory', () => {
-    it('defaults to "project" directory in ctx.stepsInternalBuildDirectory', () => {
-      const ctx = new BuildStepContext(
-        uuidv4(),
-        createMockLogger(),
-        false,
-        BuildRuntimePlatform.LINUX,
-        '/non/existent/path',
-        '/another/non/existent/path'
-      );
-      expect(ctx.workingDirectory).toBe(path.join(ctx.stepsInternalBuildDirectory, 'project'));
-    });
-    it('can use the workingDirectory passed to the constructor', () => {
+    it('can use the defaultWorkingDirectory returned by BuildContextProvider', () => {
       const workingDirectory = '/path/to/working/dir';
-      const ctx = new BuildStepContext(
-        uuidv4(),
-        createMockLogger(),
-        false,
-        BuildRuntimePlatform.LINUX,
-        '/non/existent/path',
-        '/another/non/existent/path',
-        workingDirectory
+      const ctx = new BuildStepGlobalContext(
+        new MockContextProvider(
+          createMockLogger(),
+          BuildRuntimePlatform.LINUX,
+          '/non/existent/path',
+          '/another/non/existent/path',
+          workingDirectory
+        ),
+        false
       );
-      expect(ctx.workingDirectory).toBe(workingDirectory);
+      expect(ctx.defaultWorkingDirectory).toBe(workingDirectory);
     });
   });
-  describe(BuildStepContext.prototype.registerStep, () => {
+  describe(BuildStepGlobalContext.prototype.registerStep, () => {
     it('exists', () => {
-      const ctx = createMockContext();
+      const ctx = createGlobalContextMock();
       expect(typeof ctx.registerStep).toBe('function');
     });
   });
-  describe(BuildStepContext.prototype.getStepOutputValue, () => {
+  describe(BuildStepGlobalContext.prototype.getStepOutputValue, () => {
     it('throws an error if the step output references a non-existent step', () => {
-      const ctx = createMockContext();
+      const ctx = createGlobalContextMock();
       const error = getError<BuildStepRuntimeError>(() => {
         ctx.getStepOutputValue('abc.def');
       });
@@ -81,7 +59,7 @@ describe(BuildStepContext, () => {
       expect(error.message).toMatch(/Step "abc" does not exist/);
     });
     it('calls getOutputValueByName on the step to get the output value', () => {
-      const ctx = createMockContext();
+      const ctx = createGlobalContextMock();
 
       const mockStep = mock<BuildStep>();
       when(mockStep.id).thenReturn('abc');
@@ -92,24 +70,32 @@ describe(BuildStepContext, () => {
       expect(ctx.getStepOutputValue('abc.def')).toBe('ghi');
     });
   });
-  describe(BuildStepContext.prototype.child, () => {
+  describe(BuildStepGlobalContext.prototype.stepCtx, () => {
     it('returns a BuildStepContext object', () => {
-      const ctx = createMockContext();
-      expect(ctx.child()).toBeInstanceOf(BuildStepContext);
+      const ctx = createGlobalContextMock();
+      expect(
+        ctx.stepCtx({ logger: ctx.baseLogger, workingDirectory: ctx.defaultWorkingDirectory })
+      ).toBeInstanceOf(BuildStepContext);
     });
     it('can override logger', () => {
       const logger1 = createMockLogger();
       const logger2 = createMockLogger();
-      const ctx = createMockContext({ logger: logger1 });
-      const childCtx = ctx.child({ logger: logger2 });
-      expect(ctx.logger).toBe(logger1);
+      const ctx = createGlobalContextMock({ logger: logger1 });
+      const childCtx = ctx.stepCtx({
+        logger: logger2,
+        workingDirectory: ctx.defaultWorkingDirectory,
+      });
+      expect(ctx.baseLogger).toBe(logger1);
       expect(childCtx.logger).toBe(logger2);
     });
     it('can override working directory', () => {
       const workingDirectoryOverride = '/d/e/f';
-      const ctx = createMockContext();
-      const childCtx = ctx.child({ workingDirectory: workingDirectoryOverride });
-      expect(ctx.workingDirectory).not.toBe(childCtx.workingDirectory);
+      const ctx = createGlobalContextMock();
+      const childCtx = ctx.stepCtx({
+        workingDirectory: workingDirectoryOverride,
+        logger: ctx.baseLogger,
+      });
+      expect(ctx.defaultWorkingDirectory).not.toBe(childCtx.workingDirectory);
       expect(childCtx.workingDirectory).toBe(workingDirectoryOverride);
     });
   });

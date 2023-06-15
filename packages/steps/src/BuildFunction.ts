@@ -2,7 +2,7 @@ import assert from 'assert';
 
 import { BuildRuntimePlatform } from './BuildRuntimePlatform.js';
 import { BuildStep, BuildStepFunction } from './BuildStep.js';
-import { BuildStepContext } from './BuildStepContext.js';
+import { BuildStepGlobalContext } from './BuildStepContext.js';
 import { BuildStepInputProvider, BuildStepInputValueType } from './BuildStepInput.js';
 import { BuildStepOutputProvider } from './BuildStepOutput.js';
 
@@ -64,7 +64,7 @@ export class BuildFunction {
   }
 
   public createBuildStepFromFunctionCall(
-    ctx: BuildStepContext,
+    ctx: BuildStepGlobalContext,
     {
       id,
       name,

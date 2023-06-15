@@ -6,14 +6,14 @@ import { instance, mock, verify, when } from 'ts-mockito';
 import { v4 as uuidv4 } from 'uuid';
 
 import { BuildStep, BuildStepFunction, BuildStepStatus } from '../BuildStep.js';
-import { BuildStepContext } from '../BuildStepContext.js';
 import { BuildStepInput, BuildStepInputValueTypeName } from '../BuildStepInput.js';
+import { BuildStepGlobalContext, BuildStepContext } from '../BuildStepContext.js';
 import { BuildStepOutput } from '../BuildStepOutput.js';
 import { BuildStepRuntimeError } from '../errors.js';
 import { nullthrows } from '../utils/nullthrows.js';
 import { BuildRuntimePlatform } from '../BuildRuntimePlatform.js';
 
-import { createMockContext } from './utils/context.js';
+import { createGlobalContextMock } from './utils/context.js';
 import { createMockLogger } from './utils/logger.js';
 import { getError, getErrorAsync } from './utils/error.js';
 import { UUID_REGEX } from './utils/uuid.js';
@@ -53,8 +53,8 @@ describe(BuildStep, () => {
 
   describe('constructor', () => {
     it('throws when neither command nor fn is set', () => {
-      const mockCtx = mock<BuildStepContext>();
-      when(mockCtx.logger).thenReturn(createMockLogger());
+      const mockCtx = mock<BuildStepGlobalContext>();
+      when(mockCtx.baseLogger).thenReturn(createMockLogger());
       const ctx = instance(mockCtx);
       expect(() => {
         const id = 'test1';
@@ -68,8 +68,8 @@ describe(BuildStep, () => {
     });
 
     it('throws when neither command nor fn is set', () => {
-      const mockCtx = mock<BuildStepContext>();
-      when(mockCtx.logger).thenReturn(createMockLogger());
+      const mockCtx = mock<BuildStepGlobalContext>();
+      when(mockCtx.baseLogger).thenReturn(createMockLogger());
       const ctx = instance(mockCtx);
       expect(() => {
         const id = 'test1';
@@ -88,8 +88,8 @@ describe(BuildStep, () => {
     });
 
     it('calls ctx.registerStep with the new object', () => {
-      const mockCtx = mock<BuildStepContext>();
-      when(mockCtx.logger).thenReturn(createMockLogger());
+      const mockCtx = mock<BuildStepGlobalContext>();
+      when(mockCtx.baseLogger).thenReturn(createMockLogger());
       const ctx = instance(mockCtx);
 
       const id = 'test1';
@@ -107,7 +107,7 @@ describe(BuildStep, () => {
     });
 
     it('sets the status to NEW', () => {
-      const ctx = createMockContext();
+      const ctx = createGlobalContextMock();
 
       const id = 'test1';
       const command = 'ls -la';
@@ -123,7 +123,7 @@ describe(BuildStep, () => {
     });
 
     it('creates child build context', () => {
-      const ctx = createMockContext();
+      const ctx = createGlobalContextMock();
 
       const id = 'test1';
       const command = 'ls -la';
@@ -139,7 +139,7 @@ describe(BuildStep, () => {
     });
 
     it('creates child build context with correct changed working directory', () => {
-      const ctx = createMockContext({ workingDirectory: '/a/b/c' });
+      const ctx = createGlobalContextMock({ workingDirectory: '/a/b/c' });
 
       const id = 'test1';
       const command = 'ls -la';
@@ -155,7 +155,7 @@ describe(BuildStep, () => {
     });
 
     it('creates child build context with unchanged working directory', () => {
-      const ctx = createMockContext({ workingDirectory: '/a/b/c' });
+      const ctx = createGlobalContextMock({ workingDirectory: '/a/b/c' });
 
       const id = 'test1';
       const command = 'ls -la';
@@ -170,7 +170,7 @@ describe(BuildStep, () => {
     });
 
     it('creates child build context with child logger', () => {
-      const ctx = createMockContext();
+      const ctx = createGlobalContextMock();
 
       const id = 'test1';
       const name = 'Test step';
@@ -183,23 +183,24 @@ describe(BuildStep, () => {
         displayName,
         command,
       });
-      expect(ctx.logger.child).toHaveBeenCalledWith(
+      expect(ctx.baseLogger.child).toHaveBeenCalledWith(
         expect.objectContaining({
           buildStepInternalId: expect.stringMatching(UUID_REGEX),
           buildStepId: 'test1',
           buildStepDisplayName: 'Test step',
         })
       );
-      expect(step.ctx.logger).not.toBe(ctx.logger);
+      expect(step.ctx.logger).not.toBe(ctx.baseLogger);
     });
   });
 
   describe(BuildStep.prototype.executeAsync, () => {
-    let baseStepCtx: BuildStepContext;
+    let baseStepCtx: BuildStepGlobalContext;
 
     beforeEach(async () => {
-      baseStepCtx = createMockContext();
-      await fs.mkdir(baseStepCtx.workingDirectory, { recursive: true });
+      baseStepCtx = createGlobalContextMock();
+      await fs.mkdir(baseStepCtx.defaultWorkingDirectory, { recursive: true });
+      await fs.mkdir(baseStepCtx.stepsInternalBuildDirectory, { recursive: true });
     });
     afterEach(async () => {
       await fs.rm(baseStepCtx.stepsInternalBuildDirectory, { recursive: true });
@@ -214,7 +215,6 @@ describe(BuildStep, () => {
         id,
         command,
         displayName,
-        workingDirectory: baseStepCtx.workingDirectory,
       });
       await expect(step.executeAsync()).rejects.toThrow();
       expect(step.status).toBe(BuildStepStatus.FAIL);
@@ -229,7 +229,6 @@ describe(BuildStep, () => {
         id,
         displayName,
         command,
-        workingDirectory: baseStepCtx.workingDirectory,
       });
       await step.executeAsync();
       expect(step.status).toBe(BuildStepStatus.SUCCESS);
@@ -249,23 +248,31 @@ describe(BuildStep, () => {
             }
           });
         jest.mocked(logger.child).mockReturnValue(logger);
-        const ctx = baseStepCtx.child({ logger });
+        (baseStepCtx as any).baseLogger = logger;
 
         await Promise.all([
-          fs.writeFile(path.join(ctx.workingDirectory, 'expo-abc123'), 'lorem ipsum'),
-          fs.writeFile(path.join(ctx.workingDirectory, 'expo-def456'), 'lorem ipsum'),
-          fs.writeFile(path.join(ctx.workingDirectory, 'expo-ghi789'), 'lorem ipsum'),
+          fs.writeFile(
+            path.join(baseStepCtx.defaultWorkingDirectory, 'expo-abc123'),
+            'lorem ipsum'
+          ),
+          fs.writeFile(
+            path.join(baseStepCtx.defaultWorkingDirectory, 'expo-def456'),
+            'lorem ipsum'
+          ),
+          fs.writeFile(
+            path.join(baseStepCtx.defaultWorkingDirectory, 'expo-ghi789'),
+            'lorem ipsum'
+          ),
         ]);
 
         const id = 'test1';
         const command = 'ls -la';
         const displayName = BuildStep.getDisplayName({ id, command });
 
-        const step = new BuildStep(ctx, {
+        const step = new BuildStep(baseStepCtx, {
           id,
           command,
           displayName,
-          workingDirectory: ctx.workingDirectory,
         });
         await step.executeAsync();
 
@@ -297,7 +304,6 @@ describe(BuildStep, () => {
             }),
           ],
           command,
-          workingDirectory: baseStepCtx.workingDirectory,
         });
         await step.executeAsync();
         expect(step.getOutputValueByName('foo2')).toBe('bar');
@@ -318,7 +324,6 @@ describe(BuildStep, () => {
             }),
           ],
           command,
-          workingDirectory: baseStepCtx.workingDirectory,
         });
         await step.executeAsync();
         const abc = nullthrows(step.outputs).find((output) => output.id === 'abc');
@@ -340,7 +345,6 @@ describe(BuildStep, () => {
             }),
           ],
           command,
-          workingDirectory: baseStepCtx.workingDirectory,
         });
         await step.executeAsync();
         const abc = nullthrows(step.outputs).find((output) => output.id === 'abc');
@@ -354,17 +358,17 @@ describe(BuildStep, () => {
           warnLines.push(line);
         });
         jest.mocked(logger.child).mockReturnValue(logger);
-        const ctx = baseStepCtx.child({ logger });
+
+        (baseStepCtx as any).baseLogger = logger;
 
         const id = 'test1';
         const command = 'set-output abc 123';
         const displayName = BuildStep.getDisplayName({ id, command });
 
-        const step = new BuildStep(ctx, {
+        const step = new BuildStep(baseStepCtx, {
           id,
           command,
           displayName,
-          workingDirectory: ctx.workingDirectory,
         });
         await step.executeAsync();
         const found = warnLines.find((l) => l.match(/Some outputs are not defined in step config/));
@@ -387,7 +391,6 @@ describe(BuildStep, () => {
             }),
           ],
           command,
-          workingDirectory: baseStepCtx.workingDirectory,
         });
         const error = await getErrorAsync<BuildStepRuntimeError>(async () => step.executeAsync());
         expect(error).toBeInstanceOf(BuildStepRuntimeError);
@@ -407,7 +410,6 @@ describe(BuildStep, () => {
           id,
           displayName,
           fn: fnMock,
-          workingDirectory: baseStepCtx.workingDirectory,
         });
 
         await step.executeAsync(env);
@@ -468,7 +470,6 @@ describe(BuildStep, () => {
           inputs,
           outputs,
           fn,
-          workingDirectory: baseStepCtx.workingDirectory,
         });
 
         await step.executeAsync(env);
@@ -479,11 +480,12 @@ describe(BuildStep, () => {
   });
 
   describe(BuildStep.prototype.getOutputValueByName, () => {
-    let baseStepCtx: BuildStepContext;
+    let baseStepCtx: BuildStepGlobalContext;
 
     beforeEach(async () => {
-      baseStepCtx = createMockContext();
-      await fs.mkdir(baseStepCtx.workingDirectory, { recursive: true });
+      baseStepCtx = createGlobalContextMock();
+      await fs.mkdir(baseStepCtx.defaultWorkingDirectory, { recursive: true });
+      await fs.mkdir(baseStepCtx.stepsInternalBuildDirectory, { recursive: true });
     });
     afterEach(async () => {
       await fs.rm(baseStepCtx.stepsInternalBuildDirectory, { recursive: true });
@@ -505,7 +507,6 @@ describe(BuildStep, () => {
           }),
         ],
         command,
-        workingDirectory: baseStepCtx.workingDirectory,
       });
       const error = getError<BuildStepRuntimeError>(() => {
         step.getOutputValueByName('abc');
@@ -530,7 +531,6 @@ describe(BuildStep, () => {
           }),
         ],
         command,
-        workingDirectory: baseStepCtx.workingDirectory,
       });
       await step.executeAsync();
       const error = getError<BuildStepRuntimeError>(() => {
@@ -556,7 +556,6 @@ describe(BuildStep, () => {
           }),
         ],
         command,
-        workingDirectory: baseStepCtx.workingDirectory,
       });
       await step.executeAsync();
       expect(step.getOutputValueByName('abc')).toBe('123');
@@ -578,12 +577,12 @@ describe(BuildStep, () => {
       const command = 'echo $TEST_ABC';
       const displayName = BuildStep.getDisplayName({ id, command });
 
-      const ctx = baseStepCtx.child({ logger });
-      const step = new BuildStep(ctx, {
+      (baseStepCtx as any).baseLogger = logger;
+
+      const step = new BuildStep(baseStepCtx, {
         id,
         displayName,
         command,
-        workingDirectory: ctx.workingDirectory,
       });
       await step.executeAsync({ TEST_ABC: 'lorem ipsum' });
       expect(lines.find((line) => line.match('lorem ipsum'))).toBeTruthy();
@@ -606,31 +605,30 @@ describe(BuildStep, () => {
         'echo $__EXPO_STEPS_BUILD_ID\necho $__EXPO_STEPS_OUTPUTS_DIR\necho $__EXPO_STEPS_WORKING_DIRECTORY';
       const displayName = BuildStep.getDisplayName({ id, command });
 
-      const ctx = baseStepCtx.child({ logger });
-      const step = new BuildStep(ctx, {
+      (baseStepCtx as any).baseLogger = logger;
+      const step = new BuildStep(baseStepCtx, {
         id,
         displayName,
         command,
-        workingDirectory: ctx.workingDirectory,
       });
       await step.executeAsync();
-      expect(lines.find((line) => line.match(ctx.buildId))).toBeTruthy();
       expect(
         lines.find((line) =>
-          line.startsWith(path.join(ctx.stepsInternalBuildDirectory, 'steps/test1/outputs'))
+          line.startsWith(path.join(baseStepCtx.stepsInternalBuildDirectory, 'steps/test1/outputs'))
         )
       ).toBeTruthy();
-      expect(lines.find((line) => line.match(ctx.workingDirectory))).toBeTruthy();
+      expect(lines.find((line) => line.match(baseStepCtx.defaultWorkingDirectory))).toBeTruthy();
     });
   });
 });
 
 describe(BuildStep.prototype.canBeRunOnRuntimePlatform, () => {
-  let baseStepCtx: BuildStepContext;
+  let baseStepCtx: BuildStepGlobalContext;
 
   beforeEach(async () => {
-    baseStepCtx = createMockContext({ runtimePlatform: BuildRuntimePlatform.LINUX });
-    await fs.mkdir(baseStepCtx.workingDirectory, { recursive: true });
+    baseStepCtx = createGlobalContextMock({ runtimePlatform: BuildRuntimePlatform.LINUX });
+    await fs.mkdir(baseStepCtx.defaultWorkingDirectory, { recursive: true });
+    await fs.mkdir(baseStepCtx.stepsInternalBuildDirectory, { recursive: true });
   });
   afterEach(async () => {
     await fs.rm(baseStepCtx.stepsInternalBuildDirectory, { recursive: true });
@@ -645,7 +643,6 @@ describe(BuildStep.prototype.canBeRunOnRuntimePlatform, () => {
       id,
       displayName,
       command,
-      workingDirectory: baseStepCtx.workingDirectory,
     });
     expect(step.canBeRunOnRuntimePlatform()).toBe(true);
   });
@@ -660,7 +657,6 @@ describe(BuildStep.prototype.canBeRunOnRuntimePlatform, () => {
       displayName,
       supportedRuntimePlatforms: [BuildRuntimePlatform.DARWIN, BuildRuntimePlatform.LINUX],
       command,
-      workingDirectory: baseStepCtx.workingDirectory,
     });
     expect(step.canBeRunOnRuntimePlatform()).toBe(true);
   });
@@ -675,7 +671,6 @@ describe(BuildStep.prototype.canBeRunOnRuntimePlatform, () => {
       displayName,
       supportedRuntimePlatforms: [BuildRuntimePlatform.DARWIN],
       command,
-      workingDirectory: baseStepCtx.workingDirectory,
     });
     expect(step.canBeRunOnRuntimePlatform()).toBe(false);
   });

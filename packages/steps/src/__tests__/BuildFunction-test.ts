@@ -7,7 +7,7 @@ import {
 } from '../BuildStepInput.js';
 import { BuildStepOutput, BuildStepOutputProvider } from '../BuildStepOutput.js';
 
-import { createMockContext } from './utils/context.js';
+import { createGlobalContextMock } from './utils/context.js';
 import { UUID_REGEX } from './utils/uuid.js';
 
 describe(BuildFunction, () => {
@@ -75,14 +75,14 @@ describe(BuildFunction, () => {
 
   describe(BuildFunction.prototype.createBuildStepFromFunctionCall, () => {
     it('returns a BuildStep object', () => {
-      const ctx = createMockContext();
+      const ctx = createGlobalContextMock();
       const func = new BuildFunction({
         id: 'test1',
         name: 'Test function',
         command: 'echo 123',
       });
       const step = func.createBuildStepFromFunctionCall(ctx, {
-        workingDirectory: ctx.workingDirectory,
+        workingDirectory: ctx.defaultWorkingDirectory,
       });
       expect(step).toBeInstanceOf(BuildStep);
       expect(step.id).toMatch(UUID_REGEX);
@@ -90,7 +90,7 @@ describe(BuildFunction, () => {
       expect(step.command).toBe('echo 123');
     });
     it('works with build step function', () => {
-      const ctx = createMockContext();
+      const ctx = createGlobalContextMock();
       const fn: BuildStepFunction = () => {};
       const buildFunction = new BuildFunction({
         id: 'test1',
@@ -98,7 +98,7 @@ describe(BuildFunction, () => {
         fn,
       });
       const step = buildFunction.createBuildStepFromFunctionCall(ctx, {
-        workingDirectory: ctx.workingDirectory,
+        workingDirectory: ctx.defaultWorkingDirectory,
       });
       expect(step).toBeInstanceOf(BuildStep);
       expect(step.id).toMatch(UUID_REGEX);
@@ -106,7 +106,7 @@ describe(BuildFunction, () => {
       expect(step.fn).toBe(fn);
     });
     it('can override id and shell from function definition', () => {
-      const ctx = createMockContext();
+      const ctx = createGlobalContextMock();
       const func = new BuildFunction({
         id: 'test1',
         name: 'Test function',
@@ -116,7 +116,7 @@ describe(BuildFunction, () => {
       const step = func.createBuildStepFromFunctionCall(ctx, {
         id: 'test2',
         shell: '/bin/zsh',
-        workingDirectory: ctx.workingDirectory,
+        workingDirectory: ctx.defaultWorkingDirectory,
       });
       expect(func.id).toBe('test1');
       expect(func.shell).toBe('/bin/bash');
@@ -124,7 +124,7 @@ describe(BuildFunction, () => {
       expect(step.shell).toBe('/bin/zsh');
     });
     it('creates function inputs and outputs', () => {
-      const ctx = createMockContext();
+      const ctx = createGlobalContextMock();
       const inputProviders: BuildStepInputProvider[] = [
         BuildStepInput.createProvider({
           id: 'input1',
@@ -155,7 +155,7 @@ describe(BuildFunction, () => {
           input1: true,
           input2: 'def',
         },
-        workingDirectory: ctx.workingDirectory,
+        workingDirectory: ctx.defaultWorkingDirectory,
       });
       expect(func.inputProviders?.[0]).toBe(inputProviders[0]);
       expect(func.inputProviders?.[1]).toBe(inputProviders[1]);
@@ -168,7 +168,7 @@ describe(BuildFunction, () => {
       expect(step.outputs?.[1].id).toBe('output2');
     });
     it('passes values to build inputs', () => {
-      const ctx = createMockContext();
+      const ctx = createGlobalContextMock();
       const inputProviders: BuildStepInputProvider[] = [
         BuildStepInput.createProvider({ id: 'input1', defaultValue: 'xyz1' }),
         BuildStepInput.createProvider({ id: 'input2', defaultValue: 'xyz2' }),
@@ -191,7 +191,7 @@ describe(BuildFunction, () => {
           input2: 'def',
           input3: false,
         },
-        workingDirectory: ctx.workingDirectory,
+        workingDirectory: ctx.defaultWorkingDirectory,
       });
       expect(step.inputs?.[0].value).toBe('abc');
       expect(step.inputs?.[1].value).toBe('def');

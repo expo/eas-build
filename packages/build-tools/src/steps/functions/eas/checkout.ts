@@ -8,9 +8,13 @@ export function createCheckoutBuildFunction(): BuildFunction {
     name: 'Checkout',
     fn: async (stepsCtx) => {
       stepsCtx.logger.info('Checking out project directory');
-      await fs.move(stepsCtx.projectSourceDirectory, stepsCtx.projectTargetDirectory, {
-        overwrite: true,
-      });
+      await fs.move(
+        stepsCtx.global.projectSourceDirectory,
+        stepsCtx.global.projectTargetDirectory,
+        {
+          overwrite: true,
+        }
+      );
     },
   });
 }

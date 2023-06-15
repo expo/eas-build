@@ -1,32 +1,53 @@
 import path from 'path';
 
-import { createLogger } from '@expo/logger';
-import { v4 as uuidv4 } from 'uuid';
+import { bunyan, createLogger } from '@expo/logger';
 
 import { BuildConfigParser } from '../BuildConfigParser.js';
-import { BuildStepContext } from '../BuildStepContext.js';
+import { ExternalBuildContextProvider, BuildStepGlobalContext } from '../BuildStepContext.js';
 import { BuildWorkflowError } from '../errors.js';
 import { BuildRuntimePlatform } from '../BuildRuntimePlatform.js';
+import { BuildStepEnv } from '../BuildStepEnv.js';
 
 const logger = createLogger({
   name: 'steps-cli',
   level: 'info',
 });
 
+export class CliContextProvider implements ExternalBuildContextProvider {
+  private _env: BuildStepEnv = {};
+
+  constructor(
+    public readonly logger: bunyan,
+    public readonly runtimePlatform: BuildRuntimePlatform,
+    public readonly projectSourceDirectory: string,
+    public readonly projectTargetDirectory: string,
+    public readonly defaultWorkingDirectory: string
+  ) {}
+  public get env(): BuildStepEnv {
+    return this._env;
+  }
+  public staticContext(): any {
+    return {};
+  }
+  public updateEnv(env: BuildStepEnv): void {
+    this._env = env;
+  }
+}
+
 async function runAsync(
   configPath: string,
   relativeProjectDirectory: string,
   runtimePlatform: BuildRuntimePlatform
 ): Promise<void> {
-  const fakeBuildId = uuidv4();
-  const ctx = new BuildStepContext(
-    fakeBuildId,
-    logger,
-    false,
-    runtimePlatform,
-    relativeProjectDirectory,
-    relativeProjectDirectory,
-    relativeProjectDirectory
+  const ctx = new BuildStepGlobalContext(
+    new CliContextProvider(
+      logger,
+      runtimePlatform,
+      relativeProjectDirectory,
+      relativeProjectDirectory,
+      relativeProjectDirectory
+    ),
+    false
   );
   const parser = new BuildConfigParser(ctx, { configPath });
   const workflow = await parser.parseAsync();

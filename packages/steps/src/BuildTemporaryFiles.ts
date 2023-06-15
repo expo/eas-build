@@ -3,10 +3,10 @@ import fs from 'fs/promises';
 
 import { v4 as uuidv4 } from 'uuid';
 
-import { BuildStepContext } from './BuildStepContext.js';
+import { BuildStepGlobalContext } from './BuildStepContext.js';
 
 export async function saveScriptToTemporaryFileAsync(
-  ctx: BuildStepContext,
+  ctx: BuildStepGlobalContext,
   stepId: string,
   scriptContents: string
 ): Promise<string> {
@@ -18,7 +18,7 @@ export async function saveScriptToTemporaryFileAsync(
 }
 
 export async function createTemporaryOutputsDirectoryAsync(
-  ctx: BuildStepContext,
+  ctx: BuildStepGlobalContext,
   stepId: string
 ): Promise<string> {
   const directory = getTemporaryOutputsDirPath(ctx, stepId);
@@ -27,7 +27,7 @@ export async function createTemporaryOutputsDirectoryAsync(
 }
 
 export async function cleanUpStepTemporaryDirectoriesAsync(
-  ctx: BuildStepContext,
+  ctx: BuildStepGlobalContext,
   stepId: string
 ): Promise<void> {
   if (ctx.skipCleanup) {
@@ -35,16 +35,16 @@ export async function cleanUpStepTemporaryDirectoriesAsync(
   }
   const stepTemporaryDirectory = getTemporaryStepDirPath(ctx, stepId);
   await fs.rm(stepTemporaryDirectory, { recursive: true, force: true });
-  ctx.logger.debug({ stepTemporaryDirectory }, 'Removed step temporary directory');
+  ctx.baseLogger.debug({ stepTemporaryDirectory }, 'Removed step temporary directory');
 }
-function getTemporaryStepDirPath(ctx: BuildStepContext, stepId: string): string {
+function getTemporaryStepDirPath(ctx: BuildStepGlobalContext, stepId: string): string {
   return path.join(ctx.stepsInternalBuildDirectory, 'steps', stepId);
 }
 
-function getTemporaryScriptsDirPath(ctx: BuildStepContext, stepId: string): string {
+function getTemporaryScriptsDirPath(ctx: BuildStepGlobalContext, stepId: string): string {
   return path.join(getTemporaryStepDirPath(ctx, stepId), 'scripts');
 }
 
-function getTemporaryOutputsDirPath(ctx: BuildStepContext, stepId: string): string {
+function getTemporaryOutputsDirPath(ctx: BuildStepGlobalContext, stepId: string): string {
   return path.join(getTemporaryStepDirPath(ctx, stepId), 'outputs');
 }
