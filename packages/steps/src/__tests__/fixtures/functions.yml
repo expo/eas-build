@@ -17,6 +17,7 @@ build:
     - say_hi_2:
         inputs:
           greeting: Hello
+          number: 123
 
 functions:
   say_hi:
@@ -45,5 +46,8 @@ functions:
         default_value: Brent
       - name: test
         default_value: false
-        allowed_values: [false, true, "1"]
+        allowed_values: [false, true]
+        type: boolean
+      - name: number
+        type: number
     command: echo "${ inputs.greeting }, ${ inputs.name }!"

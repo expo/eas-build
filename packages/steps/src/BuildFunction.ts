@@ -3,11 +3,11 @@ import assert from 'assert';
 import { BuildRuntimePlatform } from './BuildRuntimePlatform.js';
 import { BuildStep, BuildStepFunction } from './BuildStep.js';
 import { BuildStepContext } from './BuildStepContext.js';
-import { BuildStepInputProvider } from './BuildStepInput.js';
+import { BuildStepInputProvider, BuildStepInputValueType } from './BuildStepInput.js';
 import { BuildStepOutputProvider } from './BuildStepOutput.js';
 
 export type BuildFunctionById = Record<string, BuildFunction>;
-export type BuildFunctionCallInputs = Record<string, string | boolean>;
+export type BuildFunctionCallInputs = Record<string, BuildStepInputValueType>;
 
 export class BuildFunction {
   public readonly namespace?: string;

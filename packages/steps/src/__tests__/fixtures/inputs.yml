@@ -7,4 +7,5 @@ build:
           name: Dominik Sokal
           country: Poland
           boolean_value: true
+          number_value: 123
         command: echo "Hi, ${ inputs.name }, ${ inputs.boolean_value }!"

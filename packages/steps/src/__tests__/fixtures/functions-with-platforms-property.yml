@@ -9,6 +9,7 @@ functions:
   say_bye_linux_and_darwin:
     name: Bye!
     inputs:
-      - name
+      - name: name
+        type: string
     command: echo "Bye, ${ inputs.name }!"
     supported_platforms: [darwin, linux]

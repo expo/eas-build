@@ -7,6 +7,7 @@ import { BuildWorkflow } from '../BuildWorkflow.js';
 import { BuildWorkflowValidator } from '../BuildWorkflowValidator.js';
 import { BuildConfigError, BuildWorkflowError } from '../errors.js';
 import { BuildRuntimePlatform } from '../BuildRuntimePlatform.js';
+import { BuildFunction } from '../BuildFunction.js';
 
 import { createMockContext } from './utils/context.js';
 import { getError } from './utils/error.js';
@@ -108,6 +109,78 @@ describe(BuildWorkflowValidator, () => {
     );
     expect(error.errors[1].message).toBe(
       'Input parameter "input2" for step "test1" is set to "3" which is not one of the allowed values: "true", "false".'
+    );
+  });
+  test('required function input without default value and value passed to step', async () => {
+    const ctx = createMockContext();
+
+    const func = new BuildFunction({
+      id: 'say_hi',
+      inputProviders: [
+        BuildStepInput.createProvider({
+          id: 'id1',
+          required: true,
+        }),
+      ],
+      command: 'echo "hi"',
+    });
+
+    const workflow = new BuildWorkflow(ctx, {
+      buildSteps: [
+        func.createBuildStepFromFunctionCall(ctx, {
+          id: 'step_id',
+          callInputs: {},
+        }),
+      ],
+      buildFunctions: {
+        say_hi: func,
+      },
+    });
+
+    const validator = new BuildWorkflowValidator(workflow);
+    const error = getError<BuildWorkflowError>(() => {
+      validator.validate();
+    });
+    expect(error).toBeInstanceOf(BuildWorkflowError);
+    expect((error as BuildWorkflowError).errors[0].message).toBe(
+      'Input parameter "id1" for step "step_id" is required but it was not set.'
+    );
+  });
+  test('invalid input type passed to step', async () => {
+    const ctx = createMockContext();
+
+    const func = new BuildFunction({
+      id: 'say_hi',
+      inputProviders: [
+        BuildStepInput.createProvider({
+          id: 'id1',
+          required: true,
+        }),
+      ],
+      command: 'echo "hi"',
+    });
+
+    const workflow = new BuildWorkflow(ctx, {
+      buildSteps: [
+        func.createBuildStepFromFunctionCall(ctx, {
+          id: 'step_id',
+          callInputs: {
+            id1: 123,
+          },
+        }),
+      ],
+      buildFunctions: {
+        say_hi: func,
+      },
+    });
+
+    const validator = new BuildWorkflowValidator(workflow);
+    const error = getError<BuildWorkflowError>(() => {
+      validator.validate();
+    });
+    expect(error).toBeInstanceOf(BuildWorkflowError);
+    expect((error as BuildWorkflowError).errors[0].message).toBe(
+      'Input parameter "id1" for step "step_id" is set to "123" which is not of type "string".'
     );
   });
   test('output from future step', async () => {

@@ -1,6 +1,10 @@
 import { BuildStepRuntimeError } from '../errors.js';
 import { BuildStep } from '../BuildStep.js';
-import { BuildStepInput, makeBuildStepInputByIdMap } from '../BuildStepInput.js';
+import {
+  BuildStepInput,
+  BuildStepInputValueTypeName,
+  makeBuildStepInputByIdMap,
+} from '../BuildStepInput.js';
 
 import { createMockContext } from './utils/context.js';
 
@@ -20,9 +24,32 @@ describe(BuildStepInput, () => {
     const i = new BuildStepInput(ctx, {
       id: 'foo',
       stepDisplayName: BuildStep.getDisplayName({ id: 'test1' }),
+      allowedValueTypeName: BuildStepInputValueTypeName.BOOLEAN,
     });
     i.set(false);
     expect(i.value).toBe(false);
+  });
+
+  test('basic case number', () => {
+    const ctx = createMockContext();
+    const i = new BuildStepInput(ctx, {
+      id: 'foo',
+      stepDisplayName: BuildStep.getDisplayName({ id: 'test1' }),
+      allowedValueTypeName: BuildStepInputValueTypeName.NUMBER,
+    });
+    i.set(42);
+    expect(i.value).toBe(42);
+  });
+
+  test('basic case undefined', () => {
+    const ctx = createMockContext();
+    const i = new BuildStepInput(ctx, {
+      id: 'foo',
+      stepDisplayName: BuildStep.getDisplayName({ id: 'test1' }),
+      required: false,
+    });
+    i.set(undefined);
+    expect(i.value).toBeUndefined();
   });
 
   test('default value string', () => {
@@ -41,8 +68,20 @@ describe(BuildStepInput, () => {
       id: 'foo',
       stepDisplayName: BuildStep.getDisplayName({ id: 'test1' }),
       defaultValue: true,
+      allowedValueTypeName: BuildStepInputValueTypeName.BOOLEAN,
     });
     expect(i.value).toBe(true);
+  });
+
+  test('default value number', () => {
+    const ctx = createMockContext();
+    const i = new BuildStepInput(ctx, {
+      id: 'foo',
+      stepDisplayName: BuildStep.getDisplayName({ id: 'test1' }),
+      defaultValue: 42,
+      allowedValueTypeName: BuildStepInputValueTypeName.NUMBER,
+    });
+    expect(i.value).toBe(42);
   });
 
   test('enforces required policy when reading value', () => {
@@ -59,6 +98,23 @@ describe(BuildStepInput, () => {
       new BuildStepRuntimeError(
         'Input parameter "foo" for step "test1" is required but it was not set.'
       )
+    );
+  });
+
+  test('enforces correct value type when reading a value', () => {
+    const ctx = createMockContext();
+    const i = new BuildStepInput(ctx, {
+      id: 'foo',
+      stepDisplayName: BuildStep.getDisplayName({ id: 'test1' }),
+      required: true,
+      allowedValueTypeName: BuildStepInputValueTypeName.BOOLEAN,
+    });
+    i.set('bar');
+    expect(() => {
+      // eslint-disable-next-line @typescript-eslint/no-unused-expressions
+      i.value;
+    }).toThrowError(
+      new BuildStepRuntimeError('Input parameter "foo" for step "test1" must be of type "boolean".')
     );
   });
 
@@ -99,6 +155,7 @@ describe(makeBuildStepInputByIdMap, () => {
         id: 'foo3',
         stepDisplayName: BuildStep.getDisplayName({ id: 'test1' }),
         defaultValue: true,
+        allowedValueTypeName: BuildStepInputValueTypeName.BOOLEAN,
       }),
     ];
     const result = makeBuildStepInputByIdMap(inputs);

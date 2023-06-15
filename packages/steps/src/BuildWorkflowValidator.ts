@@ -38,6 +38,23 @@ export class BuildWorkflowValidator {
     const visitedStepByStepId: Record<string, BuildStep> = {};
     for (const currentStep of this.workflow.buildSteps) {
       for (const currentStepInput of currentStep.inputs ?? []) {
+        if (currentStepInput.required && currentStepInput.rawValue === undefined) {
+          const error = new BuildConfigError(
+            `Input parameter "${currentStepInput.id}" for step "${currentStep.displayName}" is required but it was not set.`
+          );
+          errors.push(error);
+        }
+
+        if (
+          currentStepInput.rawValue !== undefined &&
+          typeof currentStepInput.rawValue !== currentStepInput.allowedValueTypeName
+        ) {
+          const error = new BuildConfigError(
+            `Input parameter "${currentStepInput.id}" for step "${currentStep.displayName}" is set to "${currentStepInput.rawValue}" which is not of type "${currentStepInput.allowedValueTypeName}".`
+          );
+          errors.push(error);
+        }
+
         if (currentStepInput.defaultValue === undefined) {
           continue;
         }
@@ -54,7 +71,7 @@ export class BuildWorkflowValidator {
           errors.push(error);
         }
         const paths =
-          typeof currentStepInput.defaultValue !== 'boolean'
+          typeof currentStepInput.defaultValue === 'string'
             ? findOutputPaths(currentStepInput.defaultValue)
             : [];
         for (const { stepId: referencedStepId, outputId: referencedStepOutputId } of paths) {

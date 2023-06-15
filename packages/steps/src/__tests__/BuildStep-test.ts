@@ -7,7 +7,7 @@ import { v4 as uuidv4 } from 'uuid';
 
 import { BuildStep, BuildStepFunction, BuildStepStatus } from '../BuildStep.js';
 import { BuildStepContext } from '../BuildStepContext.js';
-import { BuildStepInput } from '../BuildStepInput.js';
+import { BuildStepInput, BuildStepInputValueTypeName } from '../BuildStepInput.js';
 import { BuildStepOutput } from '../BuildStepOutput.js';
 import { BuildStepRuntimeError } from '../errors.js';
 import { nullthrows } from '../utils/nullthrows.js';
@@ -439,6 +439,13 @@ describe(BuildStep, () => {
             id: 'foo3',
             stepDisplayName: displayName,
             defaultValue: true,
+            allowedValueTypeName: BuildStepInputValueTypeName.BOOLEAN,
+          }),
+          new BuildStepInput(baseStepCtx, {
+            id: 'foo4',
+            stepDisplayName: displayName,
+            defaultValue: 27,
+            allowedValueTypeName: BuildStepInputValueTypeName.NUMBER,
           }),
         ];
         const outputs: BuildStepOutput[] = [
@@ -450,7 +457,9 @@ describe(BuildStep, () => {
         ];
 
         const fn: BuildStepFunction = (_ctx, { inputs, outputs }) => {
-          outputs.abc.set(`${inputs.foo1.value} ${inputs.foo2.value} ${inputs.foo3.value}`);
+          outputs.abc.set(
+            `${inputs.foo1.value} ${inputs.foo2.value} ${inputs.foo3.value} ${inputs.foo4.value}`
+          );
         };
 
         const step = new BuildStep(baseStepCtx, {
@@ -464,7 +473,7 @@ describe(BuildStep, () => {
 
         await step.executeAsync(env);
 
-        expect(step.getOutputValueByName('abc')).toBe('bar1 bar2 true');
+        expect(step.getOutputValueByName('abc')).toBe('bar1 bar2 true 27');
       });
     });
   });
