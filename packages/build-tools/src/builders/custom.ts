@@ -41,7 +41,7 @@ export async function runCustomBuildAsync<T extends Job>(ctx: BuildContext<T>): 
     }
   });
   try {
-    await workflow.executeAsync(ctx.env);
+    await workflow.executeAsync();
   } catch (err: any) {
     err.artifacts = ctx.artifacts;
     throw err;
