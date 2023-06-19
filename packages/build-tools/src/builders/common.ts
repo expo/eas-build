@@ -32,11 +32,15 @@ export async function runBuilderWithHooksAsync<T extends Job>(
       });
 
       if (ctx.job.platform === Platform.IOS) {
-        await findAndUploadXcodeBuildLogsAsync(ctx as BuildContext<Ios.Job>);
+        await findAndUploadXcodeBuildLogsAsync(ctx as BuildContext<Ios.Job>, {
+          logger: ctx.logger,
+        });
       }
 
       await ctx.runBuildPhase(BuildPhase.UPLOAD_BUILD_ARTIFACTS, async () => {
-        await maybeFindAndUploadBuildArtifacts(ctx, ctx.logger);
+        await maybeFindAndUploadBuildArtifacts(ctx, {
+          logger: ctx.logger,
+        });
       });
     }
   } catch (err: any) {
