@@ -49,7 +49,7 @@ async function logMissingFileError(artifactPath: string, buildLogger: bunyan): P
 
 export async function maybeFindAndUploadBuildArtifacts(
   ctx: BuildContext<Job>,
-  logger: bunyan
+  { logger }: { logger: bunyan }
 ): Promise<void> {
   if (!ctx.job.buildArtifactPaths || ctx.job.buildArtifactPaths.length === 0) {
     return;

@@ -7,6 +7,7 @@ import {
   uploadApplicationArchive,
 } from '../../../utils/artifacts';
 import { resolveArtifactPath } from '../../../ios/resolve';
+import { findAndUploadXcodeBuildLogsAsync } from '../../../ios/xcodeBuildLogs';
 
 export function createFindAndUploadBuildArtifactsBuildFunction<T extends Job>(
   ctx: BuildContext<T>
@@ -25,7 +26,14 @@ export function createFindAndUploadBuildArtifactsBuildFunction<T extends Job>(
         rootDir: stepsCtx.workingDirectory,
         patternOrPath: applicationArchivePatternOrPath,
       });
-      await maybeFindAndUploadBuildArtifacts(ctx, stepsCtx.logger);
+      await maybeFindAndUploadBuildArtifacts(ctx, {
+        logger: stepsCtx.logger,
+      });
+      if (ctx.job.platform === Platform.IOS) {
+        await findAndUploadXcodeBuildLogsAsync(ctx as BuildContext<Ios.Job>, {
+          logger: stepsCtx.logger,
+        });
+      }
     },
   });
 }

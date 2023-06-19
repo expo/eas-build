@@ -3,17 +3,21 @@ import path from 'path';
 
 import { Ios } from '@expo/eas-build-job';
 import fg from 'fast-glob';
+import { bunyan } from '@expo/logger';
 
 import { ArtifactType, BuildContext } from '../context';
 
-export async function findAndUploadXcodeBuildLogsAsync(ctx: BuildContext<Ios.Job>): Promise<void> {
+export async function findAndUploadXcodeBuildLogsAsync(
+  ctx: BuildContext<Ios.Job>,
+  { logger }: { logger: bunyan }
+): Promise<void> {
   try {
     const xcodeBuildLogsPath = await findXcodeBuildLogsPathAsync(ctx.buildLogsDirectory);
     if (xcodeBuildLogsPath) {
-      await ctx.uploadArtifacts(ArtifactType.XCODE_BUILD_LOGS, [xcodeBuildLogsPath], ctx.logger);
+      await ctx.uploadArtifacts(ArtifactType.XCODE_BUILD_LOGS, [xcodeBuildLogsPath], logger);
     }
   } catch (err: any) {
-    ctx.logger.debug({ err }, 'Failed to upload Xcode build logs');
+    logger.debug({ err }, 'Failed to upload Xcode build logs');
   }
 }
 
