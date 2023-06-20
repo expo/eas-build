@@ -1,4 +1,4 @@
-import { BuildStepContext } from './BuildStepContext.js';
+import { BuildStepGlobalContext } from './BuildStepContext.js';
 import { BuildStepRuntimeError } from './errors.js';
 import { interpolateWithOutputs } from './utils/template.js';
 
@@ -10,7 +10,10 @@ export enum BuildStepInputValueTypeName {
 export type BuildStepInputValueType = string | boolean | number;
 
 export type BuildStepInputById = Record<string, BuildStepInput>;
-export type BuildStepInputProvider = (ctx: BuildStepContext, stepId: string) => BuildStepInput;
+export type BuildStepInputProvider = (
+  ctx: BuildStepGlobalContext,
+  stepId: string
+) => BuildStepInput;
 
 interface BuildStepInputProviderParams {
   id: string;
@@ -39,7 +42,7 @@ export class BuildStepInput {
   }
 
   constructor(
-    private readonly ctx: BuildStepContext,
+    private readonly ctx: BuildStepGlobalContext,
     {
       id,
       stepDisplayName,

@@ -6,11 +6,11 @@ import {
   makeBuildStepInputByIdMap,
 } from '../BuildStepInput.js';
 
-import { createMockContext } from './utils/context.js';
+import { createGlobalContextMock } from './utils/context.js';
 
 describe(BuildStepInput, () => {
   test('basic case string', () => {
-    const ctx = createMockContext();
+    const ctx = createGlobalContextMock();
     const i = new BuildStepInput(ctx, {
       id: 'foo',
       stepDisplayName: BuildStep.getDisplayName({ id: 'test1' }),
@@ -20,7 +20,7 @@ describe(BuildStepInput, () => {
   });
 
   test('basic case boolean', () => {
-    const ctx = createMockContext();
+    const ctx = createGlobalContextMock();
     const i = new BuildStepInput(ctx, {
       id: 'foo',
       stepDisplayName: BuildStep.getDisplayName({ id: 'test1' }),
@@ -31,7 +31,7 @@ describe(BuildStepInput, () => {
   });
 
   test('basic case number', () => {
-    const ctx = createMockContext();
+    const ctx = createGlobalContextMock();
     const i = new BuildStepInput(ctx, {
       id: 'foo',
       stepDisplayName: BuildStep.getDisplayName({ id: 'test1' }),
@@ -42,7 +42,7 @@ describe(BuildStepInput, () => {
   });
 
   test('basic case undefined', () => {
-    const ctx = createMockContext();
+    const ctx = createGlobalContextMock();
     const i = new BuildStepInput(ctx, {
       id: 'foo',
       stepDisplayName: BuildStep.getDisplayName({ id: 'test1' }),
@@ -53,7 +53,7 @@ describe(BuildStepInput, () => {
   });
 
   test('default value string', () => {
-    const ctx = createMockContext();
+    const ctx = createGlobalContextMock();
     const i = new BuildStepInput(ctx, {
       id: 'foo',
       stepDisplayName: BuildStep.getDisplayName({ id: 'test1' }),
@@ -63,7 +63,7 @@ describe(BuildStepInput, () => {
   });
 
   test('default value boolean', () => {
-    const ctx = createMockContext();
+    const ctx = createGlobalContextMock();
     const i = new BuildStepInput(ctx, {
       id: 'foo',
       stepDisplayName: BuildStep.getDisplayName({ id: 'test1' }),
@@ -74,7 +74,7 @@ describe(BuildStepInput, () => {
   });
 
   test('default value number', () => {
-    const ctx = createMockContext();
+    const ctx = createGlobalContextMock();
     const i = new BuildStepInput(ctx, {
       id: 'foo',
       stepDisplayName: BuildStep.getDisplayName({ id: 'test1' }),
@@ -85,7 +85,7 @@ describe(BuildStepInput, () => {
   });
 
   test('enforces required policy when reading value', () => {
-    const ctx = createMockContext();
+    const ctx = createGlobalContextMock();
     const i = new BuildStepInput(ctx, {
       id: 'foo',
       stepDisplayName: BuildStep.getDisplayName({ id: 'test1' }),
@@ -102,7 +102,7 @@ describe(BuildStepInput, () => {
   });
 
   test('enforces correct value type when reading a value', () => {
-    const ctx = createMockContext();
+    const ctx = createGlobalContextMock();
     const i = new BuildStepInput(ctx, {
       id: 'foo',
       stepDisplayName: BuildStep.getDisplayName({ id: 'test1' }),
@@ -119,7 +119,7 @@ describe(BuildStepInput, () => {
   });
 
   test('enforces required policy when setting value', () => {
-    const ctx = createMockContext();
+    const ctx = createGlobalContextMock();
     const i = new BuildStepInput(ctx, {
       id: 'foo',
       stepDisplayName: BuildStep.getDisplayName({ id: 'test1' }),
@@ -139,7 +139,7 @@ describe(makeBuildStepInputByIdMap, () => {
   });
 
   it('returns object with inputs indexed by their ids', () => {
-    const ctx = createMockContext();
+    const ctx = createGlobalContextMock();
     const inputs: BuildStepInput[] = [
       new BuildStepInput(ctx, {
         id: 'foo1',

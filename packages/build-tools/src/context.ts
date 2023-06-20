@@ -139,13 +139,10 @@ export class BuildContext<TJob extends Job> {
   public get buildDirectory(): string {
     return path.join(this.workingdir, 'build');
   }
-  public get temporaryCustomBuildDirectory(): string {
-    return path.join(this.workingdir, 'temporary-custom-build');
-  }
   public get buildLogsDirectory(): string {
     return path.join(this.workingdir, 'logs');
   }
-  public get environmentSecrectsDirectory(): string {
+  public get environmentSecretsDirectory(): string {
     return path.join(this.workingdir, 'environment-secrets');
   }
   public get packageManager(): PackageManager {
@@ -315,7 +312,7 @@ export class BuildContext<TJob extends Job> {
         environmentSecrets[name] = value;
       } else {
         environmentSecrets[name] = createTemporaryEnvironmentSecretFile(
-          this.environmentSecrectsDirectory,
+          this.environmentSecretsDirectory,
           value
         );
       }

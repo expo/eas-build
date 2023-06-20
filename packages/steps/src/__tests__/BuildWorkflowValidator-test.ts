@@ -9,43 +9,38 @@ import { BuildConfigError, BuildWorkflowError } from '../errors.js';
 import { BuildRuntimePlatform } from '../BuildRuntimePlatform.js';
 import { BuildFunction } from '../BuildFunction.js';
 
-import { createMockContext } from './utils/context.js';
+import { createGlobalContextMock } from './utils/context.js';
 import { getError } from './utils/error.js';
 
 describe(BuildWorkflowValidator, () => {
   test('non unique step ids', async () => {
-    const ctx = createMockContext();
+    const ctx = createGlobalContextMock();
     const workflow = new BuildWorkflow(ctx, {
       buildSteps: [
         new BuildStep(ctx, {
           id: 'test1',
           displayName: BuildStep.getDisplayName({ id: 'test1', command: 'echo 123' }),
           command: 'echo 123',
-          workingDirectory: ctx.workingDirectory,
         }),
         new BuildStep(ctx, {
           id: 'test1',
           displayName: BuildStep.getDisplayName({ id: 'test1', command: 'echo 456' }),
           command: 'echo 456',
-          workingDirectory: ctx.workingDirectory,
         }),
         new BuildStep(ctx, {
           id: 'test1',
           displayName: BuildStep.getDisplayName({ id: 'test1', command: 'echo 789' }),
           command: 'echo 789',
-          workingDirectory: ctx.workingDirectory,
         }),
         new BuildStep(ctx, {
           id: 'test3',
           displayName: BuildStep.getDisplayName({ id: 'test3', command: 'echo 123' }),
           command: 'echo 123',
-          workingDirectory: ctx.workingDirectory,
         }),
         new BuildStep(ctx, {
           id: 'test3',
           displayName: BuildStep.getDisplayName({ id: 'test3', command: 'echo 456' }),
           command: 'echo 456',
-          workingDirectory: ctx.workingDirectory,
         }),
       ],
       buildFunctions: {},
@@ -62,7 +57,7 @@ describe(BuildWorkflowValidator, () => {
     expect(error.errors[0].message).toBe('Duplicated step IDs: "test1", "test3"');
   });
   test('input set to a non-allowed value', async () => {
-    const ctx = createMockContext();
+    const ctx = createGlobalContextMock();
 
     const id1 = 'test1';
     const command1 = 'set-output output1 123';
@@ -90,7 +85,6 @@ describe(BuildWorkflowValidator, () => {
             }),
           ],
           command: command1,
-          workingDirectory: ctx.workingDirectory,
         }),
       ],
       buildFunctions: {},
@@ -112,7 +106,7 @@ describe(BuildWorkflowValidator, () => {
     );
   });
   test('required function input without default value and value passed to step', async () => {
-    const ctx = createMockContext();
+    const ctx = createGlobalContextMock();
 
     const func = new BuildFunction({
       id: 'say_hi',
@@ -147,7 +141,7 @@ describe(BuildWorkflowValidator, () => {
     );
   });
   test('invalid input type passed to step', async () => {
-    const ctx = createMockContext();
+    const ctx = createGlobalContextMock();
 
     const func = new BuildFunction({
       id: 'say_hi',
@@ -184,7 +178,7 @@ describe(BuildWorkflowValidator, () => {
     );
   });
   test('output from future step', async () => {
-    const ctx = createMockContext();
+    const ctx = createGlobalContextMock();
 
     const id1 = 'test1';
     const command1 = 'set-output output1 123';
@@ -208,7 +202,6 @@ describe(BuildWorkflowValidator, () => {
             }),
           ],
           command: command1,
-          workingDirectory: ctx.workingDirectory,
         }),
         new BuildStep(ctx, {
           id: id2,
@@ -221,7 +214,6 @@ describe(BuildWorkflowValidator, () => {
             }),
           ],
           command: command2,
-          workingDirectory: ctx.workingDirectory,
         }),
       ],
       buildFunctions: {},
@@ -244,7 +236,7 @@ describe(BuildWorkflowValidator, () => {
     const command = 'echo ${ inputs.input1 }';
     const displayName = BuildStep.getDisplayName({ id, command });
 
-    const ctx = createMockContext();
+    const ctx = createGlobalContextMock();
     const workflow = new BuildWorkflow(ctx, {
       buildSteps: [
         new BuildStep(ctx, {
@@ -259,7 +251,6 @@ describe(BuildWorkflowValidator, () => {
             }),
           ],
           command,
-          workingDirectory: ctx.workingDirectory,
         }),
       ],
       buildFunctions: {},
@@ -290,7 +281,7 @@ describe(BuildWorkflowValidator, () => {
     const command3 = 'echo ${ inputs.input1 }';
     const displayName3 = BuildStep.getDisplayName({ id: id3, command: command3 });
 
-    const ctx = createMockContext();
+    const ctx = createGlobalContextMock();
     const workflow = new BuildWorkflow(ctx, {
       buildSteps: [
         new BuildStep(ctx, {
@@ -304,7 +295,6 @@ describe(BuildWorkflowValidator, () => {
             }),
           ],
           command: command1,
-          workingDirectory: ctx.workingDirectory,
         }),
         new BuildStep(ctx, {
           id: id2,
@@ -318,7 +308,6 @@ describe(BuildWorkflowValidator, () => {
             }),
           ],
           command: command2,
-          workingDirectory: ctx.workingDirectory,
         }),
         new BuildStep(ctx, {
           id: id3,
@@ -332,7 +321,6 @@ describe(BuildWorkflowValidator, () => {
             }),
           ],
           command: command3,
-          workingDirectory: ctx.workingDirectory,
         }),
       ],
       buildFunctions: {},
@@ -363,7 +351,7 @@ describe(BuildWorkflowValidator, () => {
     const command3 = 'echo ${ inputs.input1 }';
     const displayName3 = BuildStep.getDisplayName({ id: id3, command: command3 });
 
-    const ctx = createMockContext();
+    const ctx = createGlobalContextMock();
     const workflow = new BuildWorkflow(ctx, {
       buildSteps: [
         new BuildStep(ctx, {
@@ -377,7 +365,6 @@ describe(BuildWorkflowValidator, () => {
             }),
           ],
           command: command1,
-          workingDirectory: ctx.workingDirectory,
         }),
         new BuildStep(ctx, {
           id: id2,
@@ -391,7 +378,6 @@ describe(BuildWorkflowValidator, () => {
             }),
           ],
           command: command2,
-          workingDirectory: ctx.workingDirectory,
         }),
         new BuildStep(ctx, {
           id: id3,
@@ -405,7 +391,6 @@ describe(BuildWorkflowValidator, () => {
             }),
           ],
           command: 'echo ${ inputs.input2 }',
-          workingDirectory: ctx.workingDirectory,
         }),
       ],
       buildFunctions: {},
@@ -432,14 +417,13 @@ describe(BuildWorkflowValidator, () => {
     const displayName = BuildStep.getDisplayName({ id });
     const fn: BuildStepFunction = () => {};
 
-    const ctx = createMockContext({ runtimePlatform: BuildRuntimePlatform.LINUX });
+    const ctx = createGlobalContextMock({ runtimePlatform: BuildRuntimePlatform.LINUX });
     const workflow = new BuildWorkflow(ctx, {
       buildSteps: [
         new BuildStep(ctx, {
           id,
           displayName,
           fn,
-          workingDirectory: ctx.workingDirectory,
           supportedRuntimePlatforms: [BuildRuntimePlatform.DARWIN],
         }),
       ],

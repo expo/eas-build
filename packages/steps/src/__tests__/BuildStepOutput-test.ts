@@ -2,11 +2,11 @@ import { BuildStep } from '../BuildStep.js';
 import { BuildStepOutput, makeBuildStepOutputByIdMap } from '../BuildStepOutput.js';
 import { BuildStepRuntimeError } from '../errors.js';
 
-import { createMockContext } from './utils/context.js';
+import { createGlobalContextMock } from './utils/context.js';
 
 describe(BuildStepOutput, () => {
   test('basic case', () => {
-    const ctx = createMockContext();
+    const ctx = createGlobalContextMock();
     const o = new BuildStepOutput(ctx, {
       id: 'foo',
       stepDisplayName: BuildStep.getDisplayName({ id: 'test1' }),
@@ -16,7 +16,7 @@ describe(BuildStepOutput, () => {
   });
 
   test('enforces required policy when reading value', () => {
-    const ctx = createMockContext();
+    const ctx = createGlobalContextMock();
     const o = new BuildStepOutput(ctx, {
       id: 'foo',
       stepDisplayName: BuildStep.getDisplayName({ id: 'test1' }),
@@ -33,7 +33,7 @@ describe(BuildStepOutput, () => {
   });
 
   test('enforces required policy when setting value', () => {
-    const ctx = createMockContext();
+    const ctx = createGlobalContextMock();
     const i = new BuildStepOutput(ctx, {
       id: 'foo',
       stepDisplayName: BuildStep.getDisplayName({ id: 'test1' }),
@@ -53,7 +53,7 @@ describe(makeBuildStepOutputByIdMap, () => {
   });
 
   it('returns object with outputs indexed by their ids', () => {
-    const ctx = createMockContext();
+    const ctx = createGlobalContextMock();
     const outputs: BuildStepOutput[] = [
       new BuildStepOutput(ctx, {
         id: 'abc1',

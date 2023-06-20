@@ -10,7 +10,7 @@ import { getDefaultShell } from '../utils/shell/command.js';
 import { BuildRuntimePlatform } from '../BuildRuntimePlatform.js';
 import { BuildStepInputValueTypeName } from '../BuildStepInput.js';
 
-import { createMockContext } from './utils/context.js';
+import { createGlobalContextMock } from './utils/context.js';
 import { getError, getErrorAsync } from './utils/error.js';
 import { UUID_REGEX } from './utils/uuid.js';
 
@@ -19,7 +19,7 @@ const __dirname = url.fileURLToPath(new URL('.', import.meta.url));
 describe(BuildConfigParser, () => {
   describe('constructor', () => {
     it('throws if provided external functions with duplicated IDs', () => {
-      const ctx = createMockContext();
+      const ctx = createGlobalContextMock();
       const error = getError<BuildStepRuntimeError>(() => {
         // eslint-disable-next-line no-new
         new BuildConfigParser(ctx, {
@@ -35,7 +35,7 @@ describe(BuildConfigParser, () => {
     });
 
     it(`doesn't throw if provided external functions don't have duplicated IDs`, () => {
-      const ctx = createMockContext();
+      const ctx = createGlobalContextMock();
       expect(() => {
         // eslint-disable-next-line no-new
         new BuildConfigParser(ctx, {
@@ -51,7 +51,7 @@ describe(BuildConfigParser, () => {
 
   describe(BuildConfigParser.prototype.parseAsync, () => {
     it('returns a BuildWorkflow object', async () => {
-      const ctx = createMockContext();
+      const ctx = createGlobalContextMock();
       const parser = new BuildConfigParser(ctx, {
         configPath: path.join(__dirname, './fixtures/build.yml'),
       });
@@ -60,7 +60,7 @@ describe(BuildConfigParser, () => {
     });
 
     it('parses steps from the build workflow', async () => {
-      const ctx = createMockContext();
+      const ctx = createGlobalContextMock();
       const parser = new BuildConfigParser(ctx, {
         configPath: path.join(__dirname, './fixtures/build.yml'),
       });
@@ -73,7 +73,7 @@ describe(BuildConfigParser, () => {
       expect(step1.id).toMatch(UUID_REGEX);
       expect(step1.name).toBeUndefined();
       expect(step1.command).toBe('echo "Hi!"');
-      expect(step1.ctx.workingDirectory).toBe(ctx.workingDirectory);
+      expect(step1.ctx.workingDirectory).toBe(ctx.defaultWorkingDirectory);
       expect(step1.shell).toBe(getDefaultShell());
 
       // - run:
@@ -88,7 +88,7 @@ describe(BuildConfigParser, () => {
       expect(step2.id).toMatch(UUID_REGEX);
       expect(step2.name).toBe('Say HELLO');
       expect(step2.command).toMatchSnapshot();
-      expect(step2.ctx.workingDirectory).toBe(ctx.workingDirectory);
+      expect(step2.ctx.workingDirectory).toBe(ctx.defaultWorkingDirectory);
       expect(step2.shell).toBe(getDefaultShell());
 
       // - run:
@@ -98,7 +98,7 @@ describe(BuildConfigParser, () => {
       expect(step3.id).toBe('id_2137');
       expect(step3.name).toBeUndefined();
       expect(step3.command).toBe('echo "Step with an ID"');
-      expect(step3.ctx.workingDirectory).toBe(ctx.workingDirectory);
+      expect(step3.ctx.workingDirectory).toBe(ctx.defaultWorkingDirectory);
       expect(step3.shell).toBe(getDefaultShell());
 
       // - run:
@@ -110,7 +110,7 @@ describe(BuildConfigParser, () => {
       expect(step4.name).toBe('List files');
       expect(step4.command).toBe('ls -la');
       expect(step4.ctx.workingDirectory).toBe(
-        path.join(ctx.workingDirectory, 'relative/path/to/files')
+        path.join(ctx.defaultWorkingDirectory, 'relative/path/to/files')
       );
       expect(step4.shell).toBe(getDefaultShell());
 
@@ -133,12 +133,12 @@ describe(BuildConfigParser, () => {
       expect(step6.id).toMatch(UUID_REGEX);
       expect(step6.name).toBe('Use non-default shell');
       expect(step6.command).toBe('echo 123');
-      expect(step6.ctx.workingDirectory).toBe(ctx.workingDirectory);
+      expect(step6.ctx.workingDirectory).toBe(ctx.defaultWorkingDirectory);
       expect(step6.shell).toBe('/nib/hsab');
     });
 
     it('parses inputs', async () => {
-      const ctx = createMockContext();
+      const ctx = createGlobalContextMock();
       const parser = new BuildConfigParser(ctx, {
         configPath: path.join(__dirname, './fixtures/inputs.yml'),
       });
@@ -158,7 +158,7 @@ describe(BuildConfigParser, () => {
       expect(step1.id).toMatch(UUID_REGEX);
       expect(step1.name).toBe('Say HI');
       expect(step1.command).toBe('echo "Hi, ${ inputs.name }, ${ inputs.boolean_value }!"');
-      expect(step1.ctx.workingDirectory).toBe(ctx.workingDirectory);
+      expect(step1.ctx.workingDirectory).toBe(ctx.defaultWorkingDirectory);
       expect(step1.shell).toBe(getDefaultShell());
       expect(step1.inputs).toBeDefined();
       expect(step1.inputs?.[0].id).toBe('name');
@@ -176,7 +176,7 @@ describe(BuildConfigParser, () => {
     });
 
     it('parses outputs', async () => {
-      const ctx = createMockContext();
+      const ctx = createGlobalContextMock();
       const parser = new BuildConfigParser(ctx, {
         configPath: path.join(__dirname, './fixtures/outputs.yml'),
       });
@@ -193,7 +193,7 @@ describe(BuildConfigParser, () => {
       expect(step1.id).toMatch(UUID_REGEX);
       expect(step1.name).toBeUndefined();
       expect(step1.command).toMatchSnapshot();
-      expect(step1.ctx.workingDirectory).toBe(ctx.workingDirectory);
+      expect(step1.ctx.workingDirectory).toBe(ctx.defaultWorkingDirectory);
       expect(step1.shell).toBe(getDefaultShell());
       expect(step1.outputs).toBeDefined();
       expect(step1.outputs?.[0].id).toBe('first_name');
@@ -217,7 +217,7 @@ describe(BuildConfigParser, () => {
       expect(step2.id).toMatch(UUID_REGEX);
       expect(step2.name).toBeUndefined();
       expect(step2.command).toMatchSnapshot();
-      expect(step2.ctx.workingDirectory).toBe(ctx.workingDirectory);
+      expect(step2.ctx.workingDirectory).toBe(ctx.defaultWorkingDirectory);
       expect(step2.shell).toBe(getDefaultShell());
       expect(step2.outputs).toBeDefined();
       expect(step2.outputs?.[0].id).toBe('first_name');
@@ -231,7 +231,7 @@ describe(BuildConfigParser, () => {
     });
 
     it('parses functions and function calls', async () => {
-      const ctx = createMockContext();
+      const ctx = createGlobalContextMock();
       const parser = new BuildConfigParser(ctx, {
         configPath: path.join(__dirname, './fixtures/functions.yml'),
       });
@@ -247,7 +247,7 @@ describe(BuildConfigParser, () => {
       expect(step1.id).toMatch(UUID_REGEX);
       expect(step1.name).toBe('Hi!');
       expect(step1.command).toBe('echo "Hi, ${ inputs.name }!"');
-      expect(step1.ctx.workingDirectory).toBe(ctx.workingDirectory);
+      expect(step1.ctx.workingDirectory).toBe(ctx.defaultWorkingDirectory);
       expect(step1.shell).toBe(getDefaultShell());
       expect(step1.inputs?.[0].id).toBe('name');
       expect(step1.inputs?.[0].value).toBe('Dominik');
@@ -261,7 +261,7 @@ describe(BuildConfigParser, () => {
       expect(step2.id).toMatch(UUID_REGEX);
       expect(step2.name).toBe('Hi, Szymon!');
       expect(step2.command).toBe('echo "Hi, ${ inputs.name }!"');
-      expect(step2.ctx.workingDirectory).toBe(ctx.workingDirectory);
+      expect(step2.ctx.workingDirectory).toBe(ctx.defaultWorkingDirectory);
       expect(step2.shell).toBe(getDefaultShell());
       expect(step2.inputs?.[0].id).toBe('name');
       expect(step2.inputs?.[0].value).toBe('Szymon');
@@ -272,7 +272,7 @@ describe(BuildConfigParser, () => {
       expect(step3.id).toMatch(UUID_REGEX);
       expect(step3.name).toBe('Hi, Wojtek!');
       expect(step3.command).toBe('echo "Hi, Wojtek!"');
-      expect(step3.ctx.workingDirectory).toBe(ctx.workingDirectory);
+      expect(step3.ctx.workingDirectory).toBe(ctx.defaultWorkingDirectory);
       expect(step3.shell).toBe(getDefaultShell());
 
       // - random:
@@ -281,7 +281,7 @@ describe(BuildConfigParser, () => {
       expect(step4.id).toMatch('random_number');
       expect(step4.name).toBe('Generate random number');
       expect(step4.command).toBe('set-output value 6');
-      expect(step4.ctx.workingDirectory).toBe(ctx.workingDirectory);
+      expect(step4.ctx.workingDirectory).toBe(ctx.defaultWorkingDirectory);
       expect(step4.shell).toBe(getDefaultShell());
       expect(step4.outputs?.[0].id).toBe('value');
       expect(step4.outputs?.[0].required).toBe(true);
@@ -293,7 +293,7 @@ describe(BuildConfigParser, () => {
       expect(step5.id).toMatch(UUID_REGEX);
       expect(step5.name).toBe(undefined);
       expect(step5.command).toBe('echo "${ inputs.value }"');
-      expect(step5.ctx.workingDirectory).toBe(ctx.workingDirectory);
+      expect(step5.ctx.workingDirectory).toBe(ctx.defaultWorkingDirectory);
       expect(step5.shell).toBe(getDefaultShell());
       expect(step5.inputs?.[0].id).toBe('value');
       expect(step5.inputs?.[0].required).toBe(true);
@@ -307,7 +307,7 @@ describe(BuildConfigParser, () => {
       expect(step6.id).toMatch(UUID_REGEX);
       expect(step6.name).toBe('Hi!');
       expect(step6.command).toBe('echo "${ inputs.greeting }, ${ inputs.name }!"');
-      expect(step6.ctx.workingDirectory).toBe(ctx.workingDirectory);
+      expect(step6.ctx.workingDirectory).toBe(ctx.defaultWorkingDirectory);
       expect(step6.shell).toBe(getDefaultShell());
       expect(step6.supportedRuntimePlatforms).toEqual([
         BuildRuntimePlatform.DARWIN,
@@ -429,7 +429,7 @@ describe(BuildConfigParser, () => {
     });
 
     it('throws if calling non-existent external functions', async () => {
-      const ctx = createMockContext();
+      const ctx = createGlobalContextMock();
       const parser = new BuildConfigParser(ctx, {
         configPath: path.join(__dirname, './fixtures/external-functions.yml'),
       });
@@ -443,7 +443,7 @@ describe(BuildConfigParser, () => {
     });
 
     it('works with external functions', async () => {
-      const ctx = createMockContext();
+      const ctx = createGlobalContextMock();
 
       const downloadProjectFn: BuildStepFunction = (ctx) => {
         ctx.logger.info('Downloading project...');

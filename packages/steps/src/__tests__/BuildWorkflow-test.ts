@@ -4,7 +4,7 @@ import { BuildStep } from '../BuildStep.js';
 import { BuildStepEnv } from '../BuildStepEnv.js';
 import { BuildWorkflow } from '../BuildWorkflow.js';
 
-import { createMockContext } from './utils/context.js';
+import { createGlobalContextMock } from './utils/context.js';
 
 describe(BuildWorkflow, () => {
   describe(BuildWorkflow.prototype.executeAsync, () => {
@@ -20,7 +20,7 @@ describe(BuildWorkflow, () => {
         instance(mockBuildStep3),
       ];
 
-      const ctx = createMockContext();
+      const ctx = createGlobalContextMock();
       const workflow = new BuildWorkflow(ctx, { buildSteps, buildFunctions: {} });
       await workflow.executeAsync();
 
@@ -41,7 +41,7 @@ describe(BuildWorkflow, () => {
         instance(mockBuildStep2),
       ];
 
-      const ctx = createMockContext();
+      const ctx = createGlobalContextMock();
       const workflow = new BuildWorkflow(ctx, { buildSteps, buildFunctions: {} });
       await workflow.executeAsync();
 
@@ -67,7 +67,7 @@ describe(BuildWorkflow, () => {
 
       const mockEnv: BuildStepEnv = { ABC: '123' };
 
-      const ctx = createMockContext();
+      const ctx = createGlobalContextMock();
       const workflow = new BuildWorkflow(ctx, { buildSteps, buildFunctions: {} });
       await workflow.executeAsync(mockEnv);
 

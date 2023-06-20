@@ -1,7 +1,7 @@
 import { BuildFunctionById } from './BuildFunction.js';
 import { BuildStep } from './BuildStep.js';
-import { BuildStepContext } from './BuildStepContext.js';
 import { BuildStepEnv } from './BuildStepEnv.js';
+import { BuildStepGlobalContext } from './BuildStepContext.js';
 
 export class BuildWorkflow {
   public readonly buildSteps: BuildStep[];
@@ -9,7 +9,7 @@ export class BuildWorkflow {
 
   constructor(
     // @ts-expect-error ctx is not used in this class but let's keep it here for consistency
-    private readonly ctx: BuildStepContext,
+    private readonly ctx: BuildStepGlobalContext,
     { buildSteps, buildFunctions }: { buildSteps: BuildStep[]; buildFunctions: BuildFunctionById }
   ) {
     this.buildSteps = buildSteps;

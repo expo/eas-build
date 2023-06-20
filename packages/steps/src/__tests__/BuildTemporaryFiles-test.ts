@@ -7,16 +7,16 @@ import {
   saveScriptToTemporaryFileAsync,
 } from '../BuildTemporaryFiles.js';
 
-import { createMockContext } from './utils/context.js';
+import { createGlobalContextMock } from './utils/context.js';
 
 describe(saveScriptToTemporaryFileAsync, () => {
   it('saves the script in a directory inside os.tmpdir()', async () => {
-    const ctx = createMockContext();
+    const ctx = createGlobalContextMock();
     const scriptPath = await saveScriptToTemporaryFileAsync(ctx, 'foo', 'echo 123\necho 456');
     expect(scriptPath.startsWith(os.tmpdir())).toBe(true);
   });
   it('saves the script to a temporary file', async () => {
-    const ctx = createMockContext();
+    const ctx = createGlobalContextMock();
     const contents = 'echo 123\necho 456';
     const scriptPath = await saveScriptToTemporaryFileAsync(ctx, 'foo', contents);
     await expect(fs.readFile(scriptPath, 'utf-8')).resolves.toBe(contents);
@@ -25,12 +25,12 @@ describe(saveScriptToTemporaryFileAsync, () => {
 
 describe(createTemporaryOutputsDirectoryAsync, () => {
   it('creates a temporary directory for output values', async () => {
-    const ctx = createMockContext();
+    const ctx = createGlobalContextMock();
     const outputsPath = await createTemporaryOutputsDirectoryAsync(ctx, 'foo');
     await expect(fs.stat(outputsPath)).resolves.not.toThrow();
   });
   it('creates a temporary directory inside os.tmpdir()', async () => {
-    const ctx = createMockContext();
+    const ctx = createGlobalContextMock();
     const outputsPath = await createTemporaryOutputsDirectoryAsync(ctx, 'foo');
     expect(outputsPath.startsWith(os.tmpdir())).toBe(true);
   });
@@ -38,7 +38,7 @@ describe(createTemporaryOutputsDirectoryAsync, () => {
 
 describe(cleanUpStepTemporaryDirectoriesAsync, () => {
   it('removes the step temporary directories', async () => {
-    const ctx = createMockContext();
+    const ctx = createGlobalContextMock();
     const scriptPath = await saveScriptToTemporaryFileAsync(ctx, 'foo', 'echo 123');
     const outputsPath = await createTemporaryOutputsDirectoryAsync(ctx, 'foo');
     await expect(fs.stat(scriptPath)).resolves.toBeTruthy();
@@ -49,7 +49,7 @@ describe(cleanUpStepTemporaryDirectoriesAsync, () => {
   });
 
   it(`doesn't fail if temporary directories don't exist`, async () => {
-    const ctx = createMockContext();
+    const ctx = createGlobalContextMock();
     await expect(cleanUpStepTemporaryDirectoriesAsync(ctx, 'foo')).resolves.not.toThrow();
   });
 });

@@ -4,7 +4,7 @@ import path from 'path';
 
 import { v4 as uuidv4 } from 'uuid';
 
-import { BuildStepContext } from './BuildStepContext.js';
+import { BuildStepContext, BuildStepGlobalContext } from './BuildStepContext.js';
 import { BuildStepInput, BuildStepInputById, makeBuildStepInputByIdMap } from './BuildStepInput.js';
 import {
   BuildStepOutput,
@@ -101,7 +101,7 @@ export class BuildStep {
   }
 
   constructor(
-    ctx: BuildStepContext,
+    ctx: BuildStepGlobalContext,
     {
       id,
       name,
@@ -144,16 +144,16 @@ export class BuildStep {
 
     this.internalId = uuidv4();
 
-    const logger = ctx.logger.child({
+    const logger = ctx.baseLogger.child({
       buildStepInternalId: this.internalId,
       buildStepId: this.id,
       buildStepDisplayName: this.displayName,
     });
     const workingDirectory =
       maybeWorkingDirectory !== undefined
-        ? path.resolve(ctx.workingDirectory, maybeWorkingDirectory)
-        : ctx.workingDirectory;
-    this.ctx = ctx.child({ logger, workingDirectory });
+        ? path.resolve(ctx.defaultWorkingDirectory, maybeWorkingDirectory)
+        : ctx.defaultWorkingDirectory;
+    this.ctx = ctx.stepCtx({ logger, workingDirectory });
 
     ctx.registerStep(this);
   }
@@ -209,7 +209,7 @@ export class BuildStep {
   public canBeRunOnRuntimePlatform(): boolean {
     return (
       !this.supportedRuntimePlatforms ||
-      this.supportedRuntimePlatforms.includes(this.ctx.runtimePlatform)
+      this.supportedRuntimePlatforms.includes(this.ctx.global.runtimePlatform)
     );
   }
 
@@ -220,10 +220,10 @@ export class BuildStep {
       const command = this.interpolateInputsInCommand(this.command, this.inputs);
       this.ctx.logger.debug(`Interpolated inputs in the command template`);
 
-      const outputsDir = await createTemporaryOutputsDirectoryAsync(this.ctx, this.id);
+      const outputsDir = await createTemporaryOutputsDirectoryAsync(this.ctx.global, this.id);
       this.ctx.logger.debug(`Created temporary directory for step outputs: ${outputsDir}`);
 
-      const scriptPath = await saveScriptToTemporaryFileAsync(this.ctx, this.id, command);
+      const scriptPath = await saveScriptToTemporaryFileAsync(this.ctx.global, this.id, command);
       this.ctx.logger.debug(`Saved script to ${scriptPath}`);
 
       const { command: shellCommand, args } = getShellCommandAndArgs(this.shell, scriptPath);
@@ -240,7 +240,7 @@ export class BuildStep {
       await this.collectAndValidateOutputsAsync(outputsDir);
       this.ctx.logger.debug('Finished collecting output paramters');
     } finally {
-      await cleanUpStepTemporaryDirectoriesAsync(this.ctx, this.id);
+      await cleanUpStepTemporaryDirectoriesAsync(this.ctx.global, this.id);
     }
   }
 
@@ -304,7 +304,6 @@ export class BuildStep {
     const newPath = currentPath ? `${BIN_PATH}:${currentPath}` : BIN_PATH;
     return {
       ...env,
-      __EXPO_STEPS_BUILD_ID: this.ctx.buildId,
       __EXPO_STEPS_OUTPUTS_DIR: outputsDir,
       __EXPO_STEPS_WORKING_DIRECTORY: this.ctx.workingDirectory,
       PATH: newPath,
