@@ -402,6 +402,7 @@ describe(BuildStep, () => {
       it('executes the function passed to the step', async () => {
         const fnMock = jest.fn();
         const env = { TEST1: 'abc' };
+        baseStepCtx.updateEnv(env);
 
         const id = 'test1';
         const displayName = BuildStep.getDisplayName({ id });
@@ -412,7 +413,7 @@ describe(BuildStep, () => {
           fn: fnMock,
         });
 
-        await step.executeAsync(env);
+        await step.executeAsync();
 
         expect(fnMock).toHaveBeenCalledWith(
           step.ctx,
@@ -422,6 +423,7 @@ describe(BuildStep, () => {
 
       it('passes input and outputs to the function', async () => {
         const env = { TEST_VAR_1: 'abc' };
+        baseStepCtx.updateEnv(env);
 
         const id = 'test1';
         const displayName = BuildStep.getDisplayName({ id });
@@ -472,7 +474,7 @@ describe(BuildStep, () => {
           fn,
         });
 
-        await step.executeAsync(env);
+        await step.executeAsync();
 
         expect(step.getOutputValueByName('abc')).toBe('bar1 bar2 true 27');
       });
@@ -562,6 +564,7 @@ describe(BuildStep, () => {
     });
 
     it('propagates environment variables to the script', async () => {
+      baseStepCtx.updateEnv({ TEST_ABC: 'lorem ipsum' });
       const logger = createMockLogger();
       const lines: string[] = [];
       jest.mocked(logger.info as any).mockImplementation((obj: object | string, line?: string) => {
@@ -584,7 +587,7 @@ describe(BuildStep, () => {
         displayName,
         command,
       });
-      await step.executeAsync({ TEST_ABC: 'lorem ipsum' });
+      await step.executeAsync();
       expect(lines.find((line) => line.match('lorem ipsum'))).toBeTruthy();
     });
 
@@ -602,7 +605,7 @@ describe(BuildStep, () => {
 
       const id = 'test1';
       const command =
-        'echo $__EXPO_STEPS_BUILD_ID\necho $__EXPO_STEPS_OUTPUTS_DIR\necho $__EXPO_STEPS_WORKING_DIRECTORY';
+        'echo $__EXPO_STEPS_BUILD_ID\necho $__EXPO_STEPS_OUTPUTS_DIR\necho $__EXPO_STEPS_ENVS_DIR\necho $__EXPO_STEPS_WORKING_DIRECTORY';
       const displayName = BuildStep.getDisplayName({ id, command });
 
       (baseStepCtx as any).baseLogger = logger;
@@ -614,10 +617,46 @@ describe(BuildStep, () => {
       await step.executeAsync();
       expect(
         lines.find((line) =>
+          line.startsWith(path.join(baseStepCtx.stepsInternalBuildDirectory, 'steps/test1/envs'))
+        )
+      ).toBeTruthy();
+      expect(
+        lines.find((line) =>
           line.startsWith(path.join(baseStepCtx.stepsInternalBuildDirectory, 'steps/test1/outputs'))
         )
       ).toBeTruthy();
       expect(lines.find((line) => line.match(baseStepCtx.defaultWorkingDirectory))).toBeTruthy();
+    });
+    it('can update global env object with set-env', async () => {
+      const id = 'test1';
+      const command = 'set-env EXAMPLE value';
+      const displayName = BuildStep.getDisplayName({ id, command });
+
+      const step = new BuildStep(baseStepCtx, {
+        id,
+        displayName,
+        command,
+      });
+      await step.executeAsync();
+      expect(baseStepCtx.env.EXAMPLE).toBe('value');
+    });
+    it('can override existing envs in global env object with set-env', async () => {
+      const id = 'test1';
+      const command = 'set-env EXAMPLE value';
+      const displayName = BuildStep.getDisplayName({ id, command });
+
+      baseStepCtx.updateEnv({
+        EXAMPLE: 'test1',
+        EXAMPLE_2: 'test2',
+      });
+      const step = new BuildStep(baseStepCtx, {
+        id,
+        displayName,
+        command,
+      });
+      await step.executeAsync();
+      expect(baseStepCtx.env.EXAMPLE).toBe('value');
+      expect(baseStepCtx.env.EXAMPLE_2).toBe('test2');
     });
   });
 });

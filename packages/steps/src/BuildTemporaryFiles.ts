@@ -26,6 +26,15 @@ export async function createTemporaryOutputsDirectoryAsync(
   return directory;
 }
 
+export async function createTemporaryEnvsDirectoryAsync(
+  ctx: BuildStepGlobalContext,
+  stepId: string
+): Promise<string> {
+  const directory = getTemporaryEnvsDirPath(ctx, stepId);
+  await fs.mkdir(directory, { recursive: true });
+  return directory;
+}
+
 export async function cleanUpStepTemporaryDirectoriesAsync(
   ctx: BuildStepGlobalContext,
   stepId: string
@@ -37,6 +46,7 @@ export async function cleanUpStepTemporaryDirectoriesAsync(
   await fs.rm(stepTemporaryDirectory, { recursive: true, force: true });
   ctx.baseLogger.debug({ stepTemporaryDirectory }, 'Removed step temporary directory');
 }
+
 function getTemporaryStepDirPath(ctx: BuildStepGlobalContext, stepId: string): string {
   return path.join(ctx.stepsInternalBuildDirectory, 'steps', stepId);
 }
@@ -47,4 +57,8 @@ function getTemporaryScriptsDirPath(ctx: BuildStepGlobalContext, stepId: string)
 
 function getTemporaryOutputsDirPath(ctx: BuildStepGlobalContext, stepId: string): string {
   return path.join(getTemporaryStepDirPath(ctx, stepId), 'outputs');
+}
+
+function getTemporaryEnvsDirPath(ctx: BuildStepGlobalContext, stepId: string): string {
+  return path.join(getTemporaryStepDirPath(ctx, stepId), 'envs');
 }

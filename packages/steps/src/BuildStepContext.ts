@@ -51,6 +51,14 @@ export class BuildStepGlobalContext {
     return this.provider.defaultWorkingDirectory;
   }
 
+  public get env(): BuildStepEnv {
+    return this.provider.env;
+  }
+
+  public updateEnv(updatedEnv: BuildStepEnv): void {
+    this.provider.updateEnv(updatedEnv);
+  }
+
   public registerStep(step: BuildStep): void {
     this.stepById[step.id] = step;
   }

@@ -1,5 +1,5 @@
 build:
-  name: Inputs and outputs
+  name: Inputs, outputs and envs
   steps:
     - run:
         name: Say HI
@@ -24,6 +24,13 @@ build:
           echo "Producing more output"
           set-output required_param "abc 123 456"
     - run:
+        name: Set env variable
+        command: |
+          echo "Setting env variable EXAMPLE_VALUE=123"
+          set-env EXAMPLE_VALUE "123 
+
+          test"
+    - run:
         name: Use output from another step
         inputs:
           foo: ${ steps.id123.foo }
@@ -33,3 +40,4 @@ build:
           echo "foo = \"${ inputs.foo }\""
           echo "bar = \"${ inputs.bar }\""
           echo "baz = \"${ inputs.baz }\""
+          echo "env EXAMPLE_VALUE=$EXAMPLE_VALUE"

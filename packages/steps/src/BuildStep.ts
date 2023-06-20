@@ -15,6 +15,7 @@ import { BIN_PATH } from './utils/shell/bin.js';
 import { getDefaultShell, getShellCommandAndArgs } from './utils/shell/command.js';
 import {
   cleanUpStepTemporaryDirectoriesAsync,
+  createTemporaryEnvsDirectoryAsync,
   createTemporaryOutputsDirectoryAsync,
   saveScriptToTemporaryFileAsync,
 } from './BuildTemporaryFiles.js';
@@ -158,7 +159,7 @@ export class BuildStep {
     ctx.registerStep(this);
   }
 
-  public async executeAsync(env: BuildStepEnv = process.env): Promise<void> {
+  public async executeAsync(): Promise<void> {
     try {
       this.ctx.logger.info(
         { marker: BuildStepLogMarker.START_STEP },
@@ -167,9 +168,9 @@ export class BuildStep {
       this.status = BuildStepStatus.IN_PROGRESS;
 
       if (this.command !== undefined) {
-        await this.executeCommandAsync(env);
+        await this.executeCommandAsync();
       } else {
-        await this.exectuteFnAsync(env);
+        await this.exectuteFnAsync();
       }
 
       this.ctx.logger.info(
@@ -213,7 +214,7 @@ export class BuildStep {
     );
   }
 
-  private async executeCommandAsync(env: BuildStepEnv): Promise<void> {
+  private async executeCommandAsync(): Promise<void> {
     assert(this.command, 'Command must be defined.');
 
     try {
@@ -222,6 +223,11 @@ export class BuildStep {
 
       const outputsDir = await createTemporaryOutputsDirectoryAsync(this.ctx.global, this.id);
       this.ctx.logger.debug(`Created temporary directory for step outputs: ${outputsDir}`);
+
+      const envsDir = await createTemporaryEnvsDirectoryAsync(this.ctx.global, this.id);
+      this.ctx.logger.debug(
+        `Created temporary directory for step environment variables: ${outputsDir}`
+      );
 
       const scriptPath = await saveScriptToTemporaryFileAsync(this.ctx.global, this.id, command);
       this.ctx.logger.debug(`Saved script to ${scriptPath}`);
@@ -233,21 +239,26 @@ export class BuildStep {
       await spawnAsync(shellCommand, args ?? [], {
         cwd: this.ctx.workingDirectory,
         logger: this.ctx.logger,
-        env: this.getScriptEnv(env, outputsDir),
+        env: this.getScriptEnv({ outputsDir, envsDir }),
       });
       this.ctx.logger.debug(`Script completed successfully`);
 
       await this.collectAndValidateOutputsAsync(outputsDir);
+      await this.collectAndUpdateEnvsAsync(envsDir);
       this.ctx.logger.debug('Finished collecting output paramters');
     } finally {
       await cleanUpStepTemporaryDirectoriesAsync(this.ctx.global, this.id);
     }
   }
 
-  private async exectuteFnAsync(env: BuildStepEnv): Promise<void> {
+  private async exectuteFnAsync(): Promise<void> {
     assert(this.fn, 'Function (fn) must be defined');
 
-    await this.fn(this.ctx, { inputs: this.inputById, outputs: this.outputById, env });
+    await this.fn(this.ctx, {
+      inputs: this.inputById,
+      outputs: this.outputById,
+      env: this.ctx.global.env,
+    });
   }
 
   private interpolateInputsInCommand(command: string, inputs?: BuildStepInput[]): string {
@@ -299,12 +310,35 @@ export class BuildStep {
     }
   }
 
-  private getScriptEnv(env: BuildStepEnv, outputsDir: string): Record<string, string> {
+  private async collectAndUpdateEnvsAsync(envsDir: string): Promise<void> {
+    const filenames = await fs.readdir(envsDir);
+
+    const entries = await Promise.all(
+      filenames.map(async (basename) => {
+        const rawContents = await fs.readFile(path.join(envsDir, basename), 'utf-8');
+        return [basename, rawContents];
+      })
+    );
+    this.ctx.global.updateEnv({
+      ...this.ctx.global.env,
+      ...Object.fromEntries(entries),
+    });
+  }
+
+  private getScriptEnv({
+    envsDir,
+    outputsDir,
+  }: {
+    envsDir: string;
+    outputsDir: string;
+  }): Record<string, string> {
+    const env = this.ctx.global.env;
     const currentPath = env.PATH ?? process.env.PATH;
     const newPath = currentPath ? `${BIN_PATH}:${currentPath}` : BIN_PATH;
     return {
       ...env,
       __EXPO_STEPS_OUTPUTS_DIR: outputsDir,
+      __EXPO_STEPS_ENVS_DIR: envsDir,
       __EXPO_STEPS_WORKING_DIRECTORY: this.ctx.workingDirectory,
       PATH: newPath,
     };

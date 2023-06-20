@@ -1,6 +1,5 @@
 import { BuildFunctionById } from './BuildFunction.js';
 import { BuildStep } from './BuildStep.js';
-import { BuildStepEnv } from './BuildStepEnv.js';
 import { BuildStepGlobalContext } from './BuildStepContext.js';
 
 export class BuildWorkflow {
@@ -16,9 +15,9 @@ export class BuildWorkflow {
     this.buildFunctions = buildFunctions;
   }
 
-  public async executeAsync(env: BuildStepEnv = process.env): Promise<void> {
+  public async executeAsync(): Promise<void> {
     for (const step of this.buildSteps) {
-      await step.executeAsync(env);
+      await step.executeAsync();
     }
   }
 }
