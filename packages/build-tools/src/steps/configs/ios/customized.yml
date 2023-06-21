@@ -1,3 +1,4 @@
+# this is the example of customized config for running iOS builds the users can build using custom builds
 build:
   name: highly customized iOS builds example
   steps:

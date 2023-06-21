@@ -1,3 +1,4 @@
+# this is the config the users will see when they eject
 build:
   name: base iOS build implemented using automagical eas functions
   steps:
