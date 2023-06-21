@@ -25,6 +25,6 @@ export function getEasFunctions(
     createPrebuildBuildFunction(ctx),
     createRunGradleBuildFunction(oldCtx),
     createBuildReactNativeAppBuildFunction(oldCtx),
-    createFindAndUploadBuildArtifactsBuildFunction(oldCtx),
+    createFindAndUploadBuildArtifactsBuildFunction(ctx),
   ];
 }

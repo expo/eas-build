@@ -12,7 +12,7 @@ const platformToBuildRuntimePlatform: Record<Platform, BuildRuntimePlatform> = {
 };
 
 export interface BuilderRuntimeApi {
-  uploadArtifacts: (type: ArtifactType, paths: string[], logger: bunyan) => Promise<string | null>;
+  uploadArtifacts: (type: ArtifactType, paths: string[], logger: bunyan) => Promise<void>;
 }
 
 export class CustomBuildContext implements ExternalBuildContextProvider {
@@ -46,7 +46,7 @@ export class CustomBuildContext implements ExternalBuildContextProvider {
     this.projectTargetDirectory = path.join(buildCtx.workingdir, 'build');
     this.defaultWorkingDirectory = buildCtx.getReactNativeProjectDirectory();
     this.runtimeApi = {
-      uploadArtifacts: buildCtx['_uploadArtifacts'],
+      uploadArtifacts: (...args) => buildCtx['uploadArtifacts'](...args),
     };
   }
 
