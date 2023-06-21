@@ -286,7 +286,7 @@ export class BuildStep {
           : input.value?.toString() ?? '';
       return acc;
     }, {} as Record<string, string>);
-    const interpolatedWithGlobalContext = interpolateWithGlobalContext(command, (path) => {
+    const valueInterpolatedWithGlobalContext = interpolateWithGlobalContext(command, (path) => {
       return (
         getObjectValueForInterpolation(path, {
           projectSourceDirectory: this.ctx.global.projectSourceDirectory,
@@ -297,7 +297,7 @@ export class BuildStep {
         })?.toString() ?? ''
       );
     });
-    return interpolateWithInputs(interpolatedWithGlobalContext, vars);
+    return interpolateWithInputs(valueInterpolatedWithGlobalContext, vars);
   }
 
   private async collectAndValidateOutputsAsync(outputsDir: string): Promise<void> {

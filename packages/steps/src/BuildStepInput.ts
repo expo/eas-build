@@ -73,18 +73,17 @@ export class BuildStepInput {
       );
     }
 
-    if (
+    const valueDoesNotRequireInterpolation =
       rawValue === undefined ||
       typeof rawValue === 'boolean' ||
       typeof rawValue === 'number' ||
-      typeof rawValue === 'object'
-    ) {
+      typeof rawValue === 'object';
+    if (valueDoesNotRequireInterpolation) {
+      const isJsonValue =
+        typeof rawValue === 'object' &&
+        this.allowedValueTypeName === BuildStepInputValueTypeName.JSON;
       if (
-        !(
-          typeof rawValue == this.allowedValueTypeName ||
-          (typeof rawValue === 'object' &&
-            this.allowedValueTypeName === BuildStepInputValueTypeName.JSON)
-        ) &&
+        !(typeof rawValue == this.allowedValueTypeName || isJsonValue) &&
         rawValue !== undefined
       ) {
         throw new BuildStepRuntimeError(
@@ -93,7 +92,7 @@ export class BuildStepInput {
       }
       return rawValue;
     } else {
-      const interpolatedWithGlobalContext = interpolateWithGlobalContext(rawValue, (path) => {
+      const valueInterpolatedWithGlobalContext = interpolateWithGlobalContext(rawValue, (path) => {
         return (
           getObjectValueForInterpolation(path, {
             projectSourceDirectory: this.ctx.projectSourceDirectory,
@@ -104,11 +103,13 @@ export class BuildStepInput {
           })?.toString() ?? ''
         );
       });
-      const interpolatedWithOutputsAndGlobalContext = interpolateWithOutputs(
-        interpolatedWithGlobalContext,
+      const valueInterpolatedWithOutputsAndGlobalContext = interpolateWithOutputs(
+        valueInterpolatedWithGlobalContext,
         (path) => this.ctx.getStepOutputValue(path) ?? ''
       );
-      return this.parseInterpolatedInputValueToAllowedType(interpolatedWithOutputsAndGlobalContext);
+      return this.parseInterpolatedInputValueToAllowedType(
+        valueInterpolatedWithOutputsAndGlobalContext
+      );
     }
   }
 

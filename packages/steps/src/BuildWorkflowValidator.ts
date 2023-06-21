@@ -47,14 +47,18 @@ export class BuildWorkflowValidator {
           errors.push(error);
         }
 
+        const isStepOrContextReference =
+          typeof currentStepInput.rawValue === 'string' &&
+          STEP_OR_CONTEXT_REFERENCE_REGEX.exec(currentStepInput.rawValue);
+        const isJson =
+          typeof currentStepInput.rawValue === 'object' &&
+          currentStepInput.allowedValueTypeName === BuildStepInputValueTypeName.JSON;
         if (
           currentStepInput.rawValue !== undefined &&
           !(
             typeof currentStepInput.rawValue === currentStepInput.allowedValueTypeName ||
-            (typeof currentStepInput.rawValue === 'string' &&
-              STEP_OR_CONTEXT_REFERENCE_REGEX.exec(currentStepInput.rawValue)) ||
-            (typeof currentStepInput.rawValue === 'object' &&
-              currentStepInput.allowedValueTypeName === BuildStepInputValueTypeName.JSON)
+            isStepOrContextReference ||
+            isJson
           )
         ) {
           const error = new BuildConfigError(
