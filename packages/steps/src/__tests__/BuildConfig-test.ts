@@ -40,6 +40,8 @@ describe(readAndValidateBuildConfigAsync, () => {
     expect(config.build.name).toBe('Foobar');
     assert(isBuildStepBareCommandRun(config.build.steps[0]));
     expect(config.build.steps[0].run).toBe('echo "Hi!"');
+    assert(isBuildStepCommandRun(config.build.steps[2]));
+    expect(config.build.steps[2].run.env).toMatchObject({ FOO: 'bar', BAR: 'baz' });
   });
   test('valid custom build config with imports', async () => {
     const config = await readAndValidateBuildConfigAsync(
@@ -51,7 +53,15 @@ describe(readAndValidateBuildConfigAsync, () => {
     expect(typeof config).toBe('object');
     expect(config.build.name).toBe('Import!');
     assert(isBuildStepFunctionCall(config.build.steps[0]));
-    expect(config.build.steps[0]).toMatchObject({ say_hi: expect.any(Object) });
+    expect(config.build.steps[0]).toMatchObject({
+      say_hi: {
+        inputs: { name: 'Dominik' },
+        env: {
+          ENV1: 'value1',
+          ENV2: 'value2',
+        },
+      },
+    });
     assert(isBuildStepBareFunctionCall(config.build.steps[1]));
     expect(config.build.steps[1]).toBe('say_hi_wojtek');
     expect(config.functions?.say_hi).toBeDefined();
@@ -227,6 +237,48 @@ describe(validateConfig, () => {
             validateConfig(BuildConfigSchema, buildConfig);
           }).toThrowError(/".*\.blah" is not allowed/);
         });
+        test('invalid env structure', () => {
+          const buildConfig = {
+            build: {
+              steps: [
+                {
+                  run: {
+                    command: 'echo 123',
+                    env: {
+                      ENV1: {
+                        invalid: '123',
+                      },
+                    },
+                  },
+                },
+              ],
+            },
+          };
+
+          expect(() => {
+            validateConfig(BuildConfigSchema, buildConfig);
+          }).toThrowError(/"build.steps\[0\].run.env.ENV1" must be a string/);
+        });
+        test('invalid env type', () => {
+          const buildConfig = {
+            build: {
+              steps: [
+                {
+                  run: {
+                    command: 'echo 123',
+                    env: {
+                      ENV1: true,
+                    },
+                  },
+                },
+              ],
+            },
+          };
+
+          expect(() => {
+            validateConfig(BuildConfigSchema, buildConfig);
+          }).toThrowError(/"build.steps\[0\].run.env.ENV1" must be a string/);
+        });
         test('valid command', () => {
           const buildConfig = {
             build: {
@@ -234,6 +286,10 @@ describe(validateConfig, () => {
                 {
                   run: {
                     command: 'echo 123',
+                    env: {
+                      FOO: 'bar',
+                      BAZ: 'baz',
+                    },
                   },
                 },
               ],
@@ -330,6 +386,84 @@ describe(validateConfig, () => {
           expect(() => {
             validateConfig(BuildConfigSchema, buildConfig);
           }).not.toThrowError();
+        });
+        test('call with env', () => {
+          const buildConfig = {
+            build: {
+              steps: [
+                {
+                  say_hi: {
+                    env: {
+                      ENV1: 'value1',
+                      ENV2: 'value2',
+                    },
+                    inputs: {
+                      name: 'Dominik',
+                    },
+                  },
+                },
+              ],
+            },
+            functions: {
+              say_hi: {
+                command: 'echo "Hi, ${ inputs.name }!"',
+              },
+            },
+          };
+
+          expect(() => {
+            validateConfig(BuildConfigSchema, buildConfig);
+          }).not.toThrowError();
+        });
+        test('invalid env type', () => {
+          const buildConfig = {
+            build: {
+              steps: [
+                {
+                  say_hi: {
+                    env: {
+                      ENV1: true,
+                    },
+                  },
+                },
+              ],
+            },
+            functions: {
+              say_hi: {
+                command: 'echo "Hi!"',
+              },
+            },
+          };
+
+          expect(() => {
+            validateConfig(BuildConfigSchema, buildConfig);
+          }).toThrowError(/"build.steps\[0\].say_hi.env.ENV1" must be a string/);
+        });
+        test('invalid env structure', () => {
+          const buildConfig = {
+            build: {
+              steps: [
+                {
+                  say_hi: {
+                    env: {
+                      ENV1: {
+                        invalid: '123',
+                      },
+                    },
+                  },
+                },
+              ],
+            },
+            functions: {
+              say_hi: {
+                command: 'echo "Hi!"',
+              },
+            },
+          };
+
+          expect(() => {
+            validateConfig(BuildConfigSchema, buildConfig);
+          }).toThrowError(/"build.steps\[0\].say_hi.env.ENV1" must be a string/);
         });
         test('call with inputs boolean', () => {
           const buildConfig = {

@@ -63,6 +63,7 @@ export class BuildStep {
   public readonly fn?: BuildStepFunction;
   public readonly shell: string;
   public readonly ctx: BuildStepContext;
+  public readonly env: Record<string, string>;
   public status: BuildStepStatus;
 
   private readonly internalId: string;
@@ -114,6 +115,7 @@ export class BuildStep {
       workingDirectory: maybeWorkingDirectory,
       shell,
       supportedRuntimePlatforms: maybeSupportedRuntimePlatforms,
+      env,
     }: {
       id: string;
       name?: string;
@@ -125,6 +127,7 @@ export class BuildStep {
       workingDirectory?: string;
       shell?: string;
       supportedRuntimePlatforms?: BuildRuntimePlatform[];
+      env?: Record<string, string>;
     }
   ) {
     assert(command !== undefined || fn !== undefined, 'Either command or fn must be defined.');
@@ -155,6 +158,7 @@ export class BuildStep {
         ? path.resolve(ctx.defaultWorkingDirectory, maybeWorkingDirectory)
         : ctx.defaultWorkingDirectory;
     this.ctx = ctx.stepCtx({ logger, workingDirectory });
+    this.env = env ?? {};
 
     ctx.registerStep(this);
   }
@@ -257,7 +261,10 @@ export class BuildStep {
     await this.fn(this.ctx, {
       inputs: this.inputById,
       outputs: this.outputById,
-      env: this.ctx.global.env,
+      env: {
+        ...this.ctx.global.env,
+        ...this.env,
+      },
     });
   }
 
@@ -332,7 +339,7 @@ export class BuildStep {
     envsDir: string;
     outputsDir: string;
   }): Record<string, string> {
-    const env = this.ctx.global.env;
+    const env = { ...this.ctx.global.env, ...this.env };
     const currentPath = env.PATH ?? process.env.PATH;
     const newPath = currentPath ? `${BIN_PATH}:${currentPath}` : BIN_PATH;
     return {

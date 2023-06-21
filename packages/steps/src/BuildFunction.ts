@@ -71,12 +71,14 @@ export class BuildFunction {
       callInputs = {},
       workingDirectory,
       shell,
+      env,
     }: {
       id?: string;
       name?: string;
       callInputs?: BuildFunctionCallInputs;
       workingDirectory?: string;
       shell?: string;
+      env?: Record<string, string>;
     } = {}
   ): BuildStep {
     const buildStepId = BuildStep.getNewId(id);
@@ -107,6 +109,7 @@ export class BuildFunction {
       outputs,
       shell,
       supportedRuntimePlatforms: this.supportedRuntimePlatforms,
+      env,
     });
   }
 }

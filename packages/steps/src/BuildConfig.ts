@@ -48,6 +48,7 @@ export type BuildFunctionCallConfig = {
   name?: string;
   workingDirectory?: string;
   shell?: string;
+  env?: Record<string, string>;
 };
 
 export type BuildStepInputs = Record<string, BuildStepInputValueType>;
@@ -147,6 +148,7 @@ const BuildFunctionCallSchema = Joi.object({
   name: Joi.string(),
   workingDirectory: Joi.string(),
   shell: Joi.string(),
+  env: Joi.object().pattern(Joi.string(), Joi.string()),
 }).rename('working_directory', 'workingDirectory');
 
 const BuildStepConfigSchema = Joi.any<BuildStepConfig>()
