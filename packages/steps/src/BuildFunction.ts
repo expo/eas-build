@@ -5,6 +5,7 @@ import { BuildStep, BuildStepFunction } from './BuildStep.js';
 import { BuildStepGlobalContext } from './BuildStepContext.js';
 import { BuildStepInputProvider, BuildStepInputValueType } from './BuildStepInput.js';
 import { BuildStepOutputProvider } from './BuildStepOutput.js';
+import { BuildStepEnv } from './BuildStepEnv.js';
 
 export type BuildFunctionById = Record<string, BuildFunction>;
 export type BuildFunctionCallInputs = Record<string, BuildStepInputValueType>;
@@ -78,7 +79,7 @@ export class BuildFunction {
       callInputs?: BuildFunctionCallInputs;
       workingDirectory?: string;
       shell?: string;
-      env?: Record<string, string>;
+      env?: BuildStepEnv;
     } = {}
   ): BuildStep {
     const buildStepId = BuildStep.getNewId(id);

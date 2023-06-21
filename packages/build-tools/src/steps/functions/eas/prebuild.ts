@@ -29,18 +29,10 @@ export function createPrebuildBuildFunction(ctx: CustomBuildContext): BuildFunct
         defaultValue: false,
         allowedValueTypeName: BuildStepInputValueTypeName.BOOLEAN,
       }),
-      BuildStepInput.createProvider({
-        id: 'apple_team_id',
-        required: false,
-      }),
     ],
-    fn: async (stepCtx, { inputs }) => {
+    fn: async (stepCtx, { inputs, env }) => {
       const { logger } = stepCtx;
       // TODO: make sure we can pass Apple Team ID to prebuild when adding credentials for custom builds
-      const extraEnvs: Record<string, string> = inputs.apple_team_id.value
-        ? { APPLE_TEAM_ID: inputs.apple_team_id.value.toString() }
-        : {};
-
       const packageManager = resolvePackageManager(ctx.projectTargetDirectory);
       const prebuildCommandArgs = getPrebuildCommandArgs(ctx.job, {
         clean: inputs.clean.value as boolean,
@@ -52,8 +44,7 @@ export function createPrebuildBuildFunction(ctx: CustomBuildContext): BuildFunct
         logger,
         env: {
           EXPO_IMAGE_UTILS_NO_SHARP: '1',
-          ...extraEnvs,
-          ...ctx.env,
+          ...env,
         },
       };
       if (packageManager === PackageManager.NPM) {
@@ -65,7 +56,7 @@ export function createPrebuildBuildFunction(ctx: CustomBuildContext): BuildFunct
       } else {
         throw new Error(`Unsupported package manager: ${packageManager}`);
       }
-      await installNodeModules(stepCtx, ctx);
+      await installNodeModules(stepCtx, ctx, env);
     },
   });
 }

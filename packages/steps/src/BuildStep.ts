@@ -63,7 +63,7 @@ export class BuildStep {
   public readonly fn?: BuildStepFunction;
   public readonly shell: string;
   public readonly ctx: BuildStepContext;
-  public readonly env: Record<string, string>;
+  public readonly env: BuildStepEnv;
   public status: BuildStepStatus;
 
   private readonly internalId: string;
@@ -127,7 +127,7 @@ export class BuildStep {
       workingDirectory?: string;
       shell?: string;
       supportedRuntimePlatforms?: BuildRuntimePlatform[];
-      env?: Record<string, string>;
+      env?: BuildStepEnv;
     }
   ) {
     assert(command !== undefined || fn !== undefined, 'Either command or fn must be defined.');
