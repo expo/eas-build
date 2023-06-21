@@ -23,7 +23,7 @@ export class MockContextProvider implements ExternalBuildContextProvider {
     public readonly projectSourceDirectory: string,
     public readonly projectTargetDirectory: string,
     public readonly defaultWorkingDirectory: string,
-    public readonly staticContextContent: Record<string, any>
+    public readonly staticContextContent: Record<string, any> = {}
   ) {}
   public get env(): BuildStepEnv {
     return this._env;
