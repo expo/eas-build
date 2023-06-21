@@ -2,6 +2,7 @@ import { Job } from '@expo/eas-build-job';
 import { BuildFunction } from '@expo/steps';
 
 import { BuildContext } from '../context';
+import { CustomBuildContext } from '../customBuildContext';
 
 import { createUploadArtifactBuildFunction } from './functions/utils/uploadArtifact';
 import { createCheckoutBuildFunction } from './functions/eas/checkout';
@@ -12,15 +13,18 @@ import { createPrebuildBuildFunction } from './functions/eas/prebuild';
 import { createBuildReactNativeAppBuildFunction } from './functions/eas/buildReactNativeApp';
 import { createFindAndUploadBuildArtifactsBuildFunction } from './functions/eas/findAndUploadBuildArtifacts';
 
-export function getEasFunctions<T extends Job>(ctx: BuildContext<T>): BuildFunction[] {
+export function getEasFunctions(
+  ctx: CustomBuildContext,
+  oldCtx: BuildContext<Job> // TODO: remove
+): BuildFunction[] {
   return [
     createCheckoutBuildFunction(),
     createUploadArtifactBuildFunction(ctx),
     createSetUpNpmrcBuildFunction(ctx),
     createInstallNodeModulesBuildFunction(ctx),
     createPrebuildBuildFunction(ctx),
-    createRunGradleBuildFunction(ctx),
-    createBuildReactNativeAppBuildFunction(ctx),
-    createFindAndUploadBuildArtifactsBuildFunction(ctx),
+    createRunGradleBuildFunction(oldCtx),
+    createBuildReactNativeAppBuildFunction(oldCtx),
+    createFindAndUploadBuildArtifactsBuildFunction(oldCtx),
   ];
 }
