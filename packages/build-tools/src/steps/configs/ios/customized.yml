@@ -1,0 +1,82 @@
+build:
+  name: highly customized iOS builds example
+  steps:
+    - eas/checkout
+
+    - run:
+        name: Install dependencies
+        command: yarn install
+
+    # reads Apple team id from job credentials
+    - eas/read_team_id
+
+    - run:
+        env:
+          APPLE_TEAM_ID: ${ eas/read_team_id.apple_team_id } # or other custom value
+        name: Run expo prebuild
+        command: npx expo prebuild --non-interactive --no-install --platform ios
+
+    - run:
+        name: Install pods
+        working_directory: ./ios
+        command: pod install
+
+    - utils/configure_ios_credentials:
+        inputs:
+          credentials: ${ globalCtx.job.secrets.buildCredentials } # can pass other object or specify it inline
+
+    - utils/set_ios_build_number_and_app_version:
+        inputs:
+          build_number: ${ globalCtx.job.secrets.version.buildNumber } # can pass other value or specify it inline
+          app_version: ${ globalCtx.job.secrets.version.appVersion } # can pass other value or specify it inline
+
+    - utils/generate_gymfile_from_template:
+        inputs:
+          keychain_path: ${ utils/generate_ios_credentials_and_prepare_xcode_project.keychain_path } # or other custom value
+          provisioning_profiles: ${ utils/generate_ios_credentials_and_prepare_xcode_project.provisioning_profiles } # or other custom value
+          extra:
+            sample: sample_value
+          # can pass any template
+          template: |
+            suppress_xcode_output(true)
+            clean(<%- CLEAN %>)
+
+            scheme("<%- SCHEME %>")
+            <% if (SCHEME_BUILD_CONFIGURATION) { %>
+            configuration("<%- SCHEME_BUILD_CONFIGURATION %>")
+            <% } %>
+
+            export_options({
+              method: "<%- EXPORT_METHOD %>",
+              provisioningProfiles: {<% _.forEach(PROFILES, function(profile) { %>
+                "<%- profile.BUNDLE_ID %>" => "<%- profile.UUID %>",<% }); %>
+              }<% if (ICLOUD_CONTAINER_ENVIRONMENT) { %>,
+              iCloudContainerEnvironment: "<%- ICLOUD_CONTAINER_ENVIRONMENT %>"
+            <% } %>
+            })
+
+            export_xcargs "OTHER_CODE_SIGN_FLAGS=\"--keychain <%- KEYCHAIN_PATH %>\""
+
+            disable_xcpretty(true)
+            buildlog_path("<%- LOGS_DIRECTORY %>")
+
+            output_directory("<%- OUTPUT_DIRECTORY %>")
+            some_other_value("<%- EXTRA_SAMPLE %>")
+
+    - run:
+        name: Build iOS app
+        working_directory: ./ios
+        command: fastlane gym
+
+    # important: eas/upload_artifact for app archive can be called exactly once with current implementation
+    - eas/upload_artifact:
+        name: Upload application archive
+        inputs:
+          path: fixtures/app.ipa
+
+    # important: eas/upload_artifact for build-artifact can be called exactly once with current implementation
+    - eas/upload_artifact:
+        name: Upload build artifact
+        inputs:
+          type: build-artifact
+          path: assets/icon.png

@@ -1,0 +1,32 @@
+build:
+  name: base iOS build implemented using automagical eas functions
+  steps:
+    - eas/checkout
+
+    # auto selects package manager
+    # installs node_modules
+    - eas/install_node_modules
+
+    # runs expo prebuild
+    # auto resolves Apple team id if applicable
+    - eas/prebuild
+        # inputs:
+        #   clear: true
+        #   skip_dependency_update: ['react', 'react-native']
+
+    - run:
+        name: Install pods
+        working_directory: ./ios
+        command: pod install
+
+    # configures credentials
+    # prepares Xcode project
+    # configures build number and app version
+    # creates gymfile
+    # runs fastlane
+    - eas/build_react_native_app
+
+    # auto finds and uploads build artifacts
+    # auto finds and uploads application archives
+    # auto finds and uploads Xcode logs
+    - eas/find_and_upload_build_artifacts

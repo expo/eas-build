@@ -1,0 +1,39 @@
+build:
+  name: highly customized Android builds example
+  steps:
+    - eas/checkout
+
+    - run:
+        name: Install dependencies
+        command: yarn install
+
+    - run:
+        name: Run expo prebuild
+        command: npx expo prebuild --non-interactive --no-install --platform android
+
+    - utils/inject_android_credentials:
+        inputs:
+          credentials: ${ globalCtx.secrets.buildCredentials } # can pass other object or specify it inline
+
+    - utils/inject_version_code_and_version_name:
+        inputs:
+          version_code: ${ globalCtx.job.secrets.version.versionCode } # can pass other value or specify it inline
+          version_name: ${ globalCtx.job.secrets.version.versionName } # can pass other value or specify it inline
+
+    - run:
+        name: Build Android app
+        working_directory: ./android
+        command: gradle :app:bundleRelease
+
+    # important: eas/upload_artifact for app archive can be called exactly once with current implementation
+    - eas/upload_artifact:
+        name: Upload application archive
+        inputs:
+          path: fixtures/app.aab
+
+    # important: eas/upload_artifact for build-artifact can be called exactly once with current implementation
+    - eas/upload_artifact:
+        name: Upload build artifact
+        inputs:
+          type: build-artifact
+          path: assets/icon.png

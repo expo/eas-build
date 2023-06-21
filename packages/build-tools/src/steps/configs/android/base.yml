@@ -1,0 +1,24 @@
+build:
+  name: base Android build implemented using automagical eas functions
+  steps:
+    - eas/checkout
+
+    # auto selects package manager
+    # installs node_modules
+    - eas/install_node_modules
+
+    # runs expo prebuild
+    - eas/prebuild
+        # inputs:
+        #   clear: true
+        #   skip_dependency_update: ['react', 'react-native']
+
+    # configures credentials
+    # injects credentials into gradle
+    # injects version code and name into gradle
+    # runs gradle
+    - eas/build_react_native_app
+
+    # auto finds and uploads build artifacts
+    # auto finds and uploads application archives
+    - eas/find_and_upload_build_artifacts
