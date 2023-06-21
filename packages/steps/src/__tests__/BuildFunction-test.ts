@@ -197,5 +197,25 @@ describe(BuildFunction, () => {
       expect(step.inputs?.[1].value).toBe('def');
       expect(step.inputs?.[2].value).toBe(false);
     });
+    it('passes env to build step', () => {
+      const ctx = createGlobalContextMock();
+      const func = new BuildFunction({
+        id: 'test1',
+        name: 'Test function',
+        command: 'echo ${ inputs.input1 } ${ inputs.input2 }',
+      });
+      const step = func.createBuildStepFromFunctionCall(ctx, {
+        id: 'buildStep1',
+        workingDirectory: ctx.defaultWorkingDirectory,
+        env: {
+          ENV1: 'env1',
+          ENV2: 'env2',
+        },
+      });
+      expect(step.env).toMatchObject({
+        ENV1: 'env1',
+        ENV2: 'env2',
+      });
+    });
   });
 });

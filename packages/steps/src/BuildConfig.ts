@@ -9,6 +9,7 @@ import { BuildConfigError, BuildWorkflowError } from './errors.js';
 import { BuildRuntimePlatform } from './BuildRuntimePlatform.js';
 import { BuildFunction } from './BuildFunction.js';
 import { BuildStepInputValueType, BuildStepInputValueTypeName } from './BuildStepInput.js';
+import { BuildStepEnv } from './BuildStepEnv.js';
 
 export type BuildFunctions = Record<string, BuildFunctionConfig>;
 
@@ -48,6 +49,7 @@ export type BuildFunctionCallConfig = {
   name?: string;
   workingDirectory?: string;
   shell?: string;
+  env?: BuildStepEnv;
 };
 
 export type BuildStepInputs = Record<string, BuildStepInputValueType>;
@@ -147,6 +149,7 @@ const BuildFunctionCallSchema = Joi.object({
   name: Joi.string(),
   workingDirectory: Joi.string(),
   shell: Joi.string(),
+  env: Joi.object().pattern(Joi.string(), Joi.string().allow('')),
 }).rename('working_directory', 'workingDirectory');
 
 const BuildStepConfigSchema = Joi.any<BuildStepConfig>()

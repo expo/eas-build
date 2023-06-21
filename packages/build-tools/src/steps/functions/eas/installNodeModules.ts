@@ -1,4 +1,4 @@
-import { BuildFunction } from '@expo/steps';
+import { BuildFunction, BuildStepEnv } from '@expo/steps';
 import { BuildStepContext } from '@expo/steps/dist_esm/BuildStepContext';
 import spawn from '@expo/turtle-spawn';
 
@@ -15,15 +15,16 @@ export function createInstallNodeModulesBuildFunction(ctx: CustomBuildContext): 
     namespace: 'eas',
     id: 'install_node_modules',
     name: 'Install node modules',
-    fn: async (stepCtx) => {
-      await installNodeModules(stepCtx, ctx);
+    fn: async (stepCtx, { env }) => {
+      await installNodeModules(stepCtx, ctx, env);
     },
   });
 }
 
 export async function installNodeModules(
   stepCtx: BuildStepContext,
-  ctx: CustomBuildContext
+  ctx: CustomBuildContext,
+  env: BuildStepEnv
 ): Promise<void> {
   const { logger } = stepCtx;
   const packageManager = resolvePackageManager(ctx.projectTargetDirectory);
@@ -41,6 +42,6 @@ export async function installNodeModules(
   await spawn(packageManager, args, {
     cwd: packagerRunDir,
     logger: stepCtx.logger,
-    env: ctx.env,
+    env,
   });
 }

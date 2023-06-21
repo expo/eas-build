@@ -401,8 +401,11 @@ describe(BuildStep, () => {
     describe('fn', () => {
       it('executes the function passed to the step', async () => {
         const fnMock = jest.fn();
-        const env = { TEST1: 'abc' };
-        baseStepCtx.updateEnv(env);
+
+        const globalEnv = { TEST1: 'abc' };
+        const stepEnv = { TEST2: 'def' };
+
+        baseStepCtx.updateEnv(globalEnv);
 
         const id = 'test1';
         const displayName = BuildStep.getDisplayName({ id });
@@ -411,13 +414,53 @@ describe(BuildStep, () => {
           id,
           displayName,
           fn: fnMock,
+          env: stepEnv,
         });
 
         await step.executeAsync();
 
         expect(fnMock).toHaveBeenCalledWith(
           step.ctx,
-          expect.objectContaining({ inputs: expect.any(Object), outputs: expect.any(Object), env })
+          expect.objectContaining({
+            inputs: expect.any(Object),
+            outputs: expect.any(Object),
+            env: {
+              ...globalEnv,
+              ...stepEnv,
+            },
+          })
+        );
+      });
+
+      it('when executing the function passed to step, step envs override global envs', async () => {
+        const fnMock = jest.fn();
+
+        const globalEnv = { TEST1: 'abc' };
+        const stepEnv = { TEST1: 'def' };
+
+        baseStepCtx.updateEnv(globalEnv);
+
+        const id = 'test1';
+        const displayName = BuildStep.getDisplayName({ id });
+
+        const step = new BuildStep(baseStepCtx, {
+          id,
+          displayName,
+          fn: fnMock,
+          env: stepEnv,
+        });
+
+        await step.executeAsync();
+
+        expect(fnMock).toHaveBeenCalledWith(
+          step.ctx,
+          expect.objectContaining({
+            inputs: expect.any(Object),
+            outputs: expect.any(Object),
+            env: {
+              TEST1: 'def',
+            },
+          })
         );
       });
 
@@ -577,6 +620,37 @@ describe(BuildStep, () => {
       jest.mocked(logger.child).mockReturnValue(logger);
 
       const id = 'test1';
+      const command = 'echo "$TEST_ABC $TEST_DEF"';
+      const displayName = BuildStep.getDisplayName({ id, command });
+
+      (baseStepCtx as any).baseLogger = logger;
+
+      const step = new BuildStep(baseStepCtx, {
+        id,
+        displayName,
+        command,
+        env: {
+          TEST_DEF: 'dolor sit amet',
+        },
+      });
+      await step.executeAsync();
+      expect(lines.find((line) => line.match('lorem ipsum dolor sit amet'))).toBeTruthy();
+    });
+
+    it('when running a script step envs override gloabl envs', async () => {
+      baseStepCtx.updateEnv({ TEST_ABC: 'lorem ipsum' });
+      const logger = createMockLogger();
+      const lines: string[] = [];
+      jest.mocked(logger.info as any).mockImplementation((obj: object | string, line?: string) => {
+        if (typeof obj === 'string') {
+          lines.push(obj);
+        } else if (line) {
+          lines.push(line);
+        }
+      });
+      jest.mocked(logger.child).mockReturnValue(logger);
+
+      const id = 'test1';
       const command = 'echo $TEST_ABC';
       const displayName = BuildStep.getDisplayName({ id, command });
 
@@ -586,9 +660,13 @@ describe(BuildStep, () => {
         id,
         displayName,
         command,
+        env: {
+          TEST_ABC: 'dolor sit amet',
+        },
       });
       await step.executeAsync();
-      expect(lines.find((line) => line.match('lorem ipsum'))).toBeTruthy();
+      expect(lines.find((line) => line.match('dolor sit amet'))).toBeTruthy();
+      expect(lines.find((line) => line.match('lorem ipsum'))).toBeUndefined();
     });
 
     it('executes the command with internal environment variables', async () => {

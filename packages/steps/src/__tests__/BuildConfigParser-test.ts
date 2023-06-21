@@ -75,6 +75,7 @@ describe(BuildConfigParser, () => {
       expect(step1.command).toBe('echo "Hi!"');
       expect(step1.ctx.workingDirectory).toBe(ctx.defaultWorkingDirectory);
       expect(step1.shell).toBe(getDefaultShell());
+      expect(step1.env).toMatchObject({});
 
       // - run:
       //     name: Say HELLO
@@ -90,16 +91,24 @@ describe(BuildConfigParser, () => {
       expect(step2.command).toMatchSnapshot();
       expect(step2.ctx.workingDirectory).toBe(ctx.defaultWorkingDirectory);
       expect(step2.shell).toBe(getDefaultShell());
+      expect(step2.env).toMatchObject({});
 
       // - run:
       //     id: id_2137
       //     command: echo "Step with an ID"
+      //     env:
+      //       FOO: bar
+      //       BAR: baz
       const step3 = buildSteps[2];
       expect(step3.id).toBe('id_2137');
       expect(step3.name).toBeUndefined();
       expect(step3.command).toBe('echo "Step with an ID"');
       expect(step3.ctx.workingDirectory).toBe(ctx.defaultWorkingDirectory);
       expect(step3.shell).toBe(getDefaultShell());
+      expect(step3.env).toMatchObject({
+        FOO: 'bar',
+        BAR: 'baz',
+      });
 
       // - run:
       //     name: List files
@@ -113,6 +122,7 @@ describe(BuildConfigParser, () => {
         path.join(ctx.defaultWorkingDirectory, 'relative/path/to/files')
       );
       expect(step4.shell).toBe(getDefaultShell());
+      expect(step4.env).toMatchObject({});
 
       // - run:
       //     name: List files in another directory
@@ -124,6 +134,7 @@ describe(BuildConfigParser, () => {
       expect(step5.command).toBe('ls -la');
       expect(step5.ctx.workingDirectory).toBe('/home/dsokal');
       expect(step5.shell).toBe(getDefaultShell());
+      expect(step5.env).toMatchObject({});
 
       // - run:
       //     name: Use non-default shell
@@ -135,6 +146,7 @@ describe(BuildConfigParser, () => {
       expect(step6.command).toBe('echo 123');
       expect(step6.ctx.workingDirectory).toBe(ctx.defaultWorkingDirectory);
       expect(step6.shell).toBe('/nib/hsab');
+      expect(step6.env).toMatchObject({});
     });
 
     it('parses inputs', async () => {
@@ -241,6 +253,9 @@ describe(BuildConfigParser, () => {
       expect(buildSteps.length).toBe(6);
 
       // - say_hi:
+      //     env:
+      //       ENV1: value1
+      //       ENV2: value2
       //     inputs:
       //       name: Dominik
       const step1 = buildSteps[0];
@@ -252,6 +267,10 @@ describe(BuildConfigParser, () => {
       expect(step1.inputs?.[0].id).toBe('name');
       expect(step1.inputs?.[0].value).toBe('Dominik');
       expect(step1.inputs?.[0].allowedValueTypeName).toBe(BuildStepInputValueTypeName.STRING);
+      expect(step1.env).toMatchObject({
+        ENV1: 'value1',
+        ENV2: 'value2',
+      });
 
       // - say_hi:
       //     name: Hi, Szymon!
@@ -266,6 +285,7 @@ describe(BuildConfigParser, () => {
       expect(step2.inputs?.[0].id).toBe('name');
       expect(step2.inputs?.[0].value).toBe('Szymon');
       expect(step2.inputs?.[0].allowedValueTypeName).toBe(BuildStepInputValueTypeName.STRING);
+      expect(step2.env).toMatchObject({});
 
       // - say_hi_wojtek
       const step3 = buildSteps[2];
@@ -274,6 +294,7 @@ describe(BuildConfigParser, () => {
       expect(step3.command).toBe('echo "Hi, Wojtek!"');
       expect(step3.ctx.workingDirectory).toBe(ctx.defaultWorkingDirectory);
       expect(step3.shell).toBe(getDefaultShell());
+      expect(step3.env).toMatchObject({});
 
       // - random:
       //     id: random_number
@@ -285,6 +306,7 @@ describe(BuildConfigParser, () => {
       expect(step4.shell).toBe(getDefaultShell());
       expect(step4.outputs?.[0].id).toBe('value');
       expect(step4.outputs?.[0].required).toBe(true);
+      expect(step4.env).toMatchObject({});
 
       // - print:
       //     inputs:
@@ -298,6 +320,7 @@ describe(BuildConfigParser, () => {
       expect(step5.inputs?.[0].id).toBe('value');
       expect(step5.inputs?.[0].required).toBe(true);
       expect(step5.inputs?.[0].allowedValueTypeName).toBe(BuildStepInputValueTypeName.STRING);
+      expect(step5.env).toMatchObject({});
 
       // - say_hi_2:
       //     inputs:
@@ -333,6 +356,7 @@ describe(BuildConfigParser, () => {
       expect(step6.inputs?.[3].defaultValue).toBe(undefined);
       expect(step6.inputs?.[3].allowedValues).toEqual(undefined);
       expect(step6.inputs?.[3].allowedValueTypeName).toBe(BuildStepInputValueTypeName.NUMBER);
+      expect(step6.env).toMatchObject({});
 
       const { buildFunctions } = workflow;
       expect(Object.keys(buildFunctions).length).toBe(5);

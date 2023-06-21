@@ -13,6 +13,9 @@ build:
     - run:
         id: id_2137
         command: echo "Step with an ID"
+        env:
+          FOO: bar
+          BAR: baz
     - run:
         name: List files
         working_directory: relative/path/to/files

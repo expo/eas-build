@@ -13,9 +13,9 @@ export function createSetUpNpmrcBuildFunction(ctx: CustomBuildContext): BuildFun
     namespace: 'eas',
     id: 'use_npm_token',
     name: 'Use NPM_TOKEN',
-    fn: async (stepCtx) => {
+    fn: async (stepCtx, { env }) => {
       const { logger } = stepCtx;
-      if (ctx.env.NPM_TOKEN) {
+      if (env.NPM_TOKEN) {
         logger.info('We detected that you set the NPM_TOKEN environment variable');
         const projectNpmrcPath = path.join(ctx.projectTargetDirectory, '.npmrc');
         if (await fs.pathExists(projectNpmrcPath)) {
