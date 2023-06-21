@@ -1,10 +1,19 @@
+import { Platform } from '@expo/config';
 import { Job } from '@expo/eas-build-job';
 import { BuildFunction, BuildStepInput, BuildStepInputValueTypeName } from '@expo/steps';
+import spawn from '@expo/turtle-spawn';
 
-import { BuildContext } from '../../../context';
-import { prebuildAsync } from '../../../common/prebuild';
+import { CustomBuildContext } from '../../../customBuildContext';
+import { PackageManager, resolvePackageManager } from '../../../utils/packageManager';
 
-export function createPrebuildBuildFunction<T extends Job>(ctx: BuildContext<T>): BuildFunction {
+import { installNodeModules } from './installNodeModules';
+
+type PrebuildOptions = {
+  clean?: boolean;
+  skipDependencyUpdate?: string;
+};
+
+export function createPrebuildBuildFunction(ctx: CustomBuildContext): BuildFunction {
   return new BuildFunction({
     namespace: 'eas',
     id: 'prebuild',
@@ -12,8 +21,8 @@ export function createPrebuildBuildFunction<T extends Job>(ctx: BuildContext<T>)
     inputProviders: [
       BuildStepInput.createProvider({
         id: 'skip_dependency_update',
-        defaultValue: false,
-        allowedValueTypeName: BuildStepInputValueTypeName.BOOLEAN,
+        required: false,
+        allowedValueTypeName: BuildStepInputValueTypeName.STRING,
       }),
       BuildStepInput.createProvider({
         id: 'clean',
@@ -25,20 +34,89 @@ export function createPrebuildBuildFunction<T extends Job>(ctx: BuildContext<T>)
         required: false,
       }),
     ],
-    fn: async (stepsCtx, { inputs }) => {
+    fn: async (stepCtx, { inputs }) => {
+      const { logger } = stepCtx;
       // TODO: make sure we can pass Apple Team ID to prebuild when adding credentials for custom builds
       const extraEnvs: Record<string, string> = inputs.apple_team_id.value
         ? { APPLE_TEAM_ID: inputs.apple_team_id.value.toString() }
         : {};
-      await prebuildAsync(ctx, {
-        logger: stepsCtx.logger,
-        workingDir: stepsCtx.workingDirectory,
-        options: {
-          extraEnvs,
-          clean: !!inputs.clean.value,
-          skipDependencyUpdate: inputs.skip_dependency_update.value?.toString(),
-        },
+
+      const packageManager = resolvePackageManager(ctx.projectTargetDirectory);
+      const prebuildCommandArgs = getPrebuildCommandArgs(ctx.job, {
+        clean: inputs.clean.value as boolean,
+        skipDependencyUpdate: inputs.skip_dependency_update.value as string,
       });
+      const argsWithExpo = ['expo', ...prebuildCommandArgs];
+      const options = {
+        cwd: stepCtx.workingDirectory,
+        logger,
+        env: {
+          EXPO_IMAGE_UTILS_NO_SHARP: '1',
+          ...extraEnvs,
+          ...ctx.env,
+        },
+      };
+      if (packageManager === PackageManager.NPM) {
+        await spawn('npx', argsWithExpo, options);
+      } else if (packageManager === PackageManager.YARN) {
+        await spawn('yarn', argsWithExpo, options);
+      } else if (packageManager === PackageManager.PNPM) {
+        await spawn('pnpm', argsWithExpo, options);
+      } else {
+        throw new Error(`Unsupported package manager: ${packageManager}`);
+      }
+      await installNodeModules(stepCtx, ctx);
     },
   });
+}
+
+function getPrebuildCommandArgs(
+  job: Job,
+  { clean, skipDependencyUpdate }: PrebuildOptions
+): string[] {
+  if (job.experimental?.prebuildCommand) {
+    return sanitizeUserDefinedPrebuildCommand(job.experimental.prebuildCommand, job.platform, {
+      clean,
+      skipDependencyUpdate,
+    });
+  }
+  return [
+    'prebuild',
+    '--no-install',
+    '--platform',
+    job.platform,
+    ...(skipDependencyUpdate ? ['--skip-dependency-update', skipDependencyUpdate] : []),
+    ...(clean ? ['--clean'] : []),
+  ];
+}
+
+// TODO: deprecate prebuildCommand in eas.json
+function sanitizeUserDefinedPrebuildCommand(
+  userDefinedPrebuildCommand: string,
+  platform: Platform,
+  { clean, skipDependencyUpdate }: PrebuildOptions
+): string[] {
+  let prebuildCommand = userDefinedPrebuildCommand;
+  if (!prebuildCommand.match(/(?:--platform| -p)/)) {
+    prebuildCommand = `${prebuildCommand} --platform ${platform}`;
+  }
+  if (skipDependencyUpdate) {
+    prebuildCommand = `${prebuildCommand} --skip-dependency-update ${skipDependencyUpdate}`;
+  }
+  if (clean) {
+    prebuildCommand = `${prebuildCommand} --clean`;
+  }
+  const npxCommandPrefix = 'npx ';
+  const expoCommandPrefix = 'expo ';
+  const expoCliCommandPrefix = 'expo-cli ';
+  if (prebuildCommand.startsWith(npxCommandPrefix)) {
+    prebuildCommand = prebuildCommand.substring(npxCommandPrefix.length).trim();
+  }
+  if (prebuildCommand.startsWith(expoCommandPrefix)) {
+    prebuildCommand = prebuildCommand.substring(expoCommandPrefix.length).trim();
+  }
+  if (prebuildCommand.startsWith(expoCliCommandPrefix)) {
+    prebuildCommand = prebuildCommand.substring(expoCliCommandPrefix.length).trim();
+  }
+  return prebuildCommand.split(' ');
 }

@@ -1,19 +1,17 @@
 import path from 'path';
 
-import { Job } from '@expo/eas-build-job';
 import { BuildFunction, BuildStepInput } from '@expo/steps';
 import nullthrows from 'nullthrows';
 
-import { ArtifactType, BuildContext } from '../../../context';
+import { ArtifactType } from '../../../context';
+import { CustomBuildContext } from '../../../customBuildContext';
 
 enum BuildArtifactType {
   APPLICATION_ARCHIVE = 'application-archive',
   BUILD_ARTIFACT = 'build-artifact',
 }
 
-export function createUploadArtifactBuildFunction<T extends Job>(
-  ctx: BuildContext<T>
-): BuildFunction {
+export function createUploadArtifactBuildFunction(ctx: CustomBuildContext): BuildFunction {
   return new BuildFunction({
     namespace: 'utils',
     id: 'upload_artifact',
@@ -34,7 +32,7 @@ export function createUploadArtifactBuildFunction<T extends Job>(
         stepsCtx.workingDirectory,
         nullthrows(inputs.path.value).toString()
       );
-      await ctx.uploadArtifacts(artifactType, [filePath], stepsCtx.logger);
+      await ctx.runtimeApi.uploadArtifacts(artifactType, [filePath], stepsCtx.logger);
     },
   });
 }

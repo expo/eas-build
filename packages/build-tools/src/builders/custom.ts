@@ -22,7 +22,7 @@ export async function runCustomBuildAsync<T extends Job>(ctx: BuildContext<T>): 
   );
 
   const globalContext = new BuildStepGlobalContext(customBuildCtx, false);
-  const easFunctions = getEasFunctions(ctx);
+  const easFunctions = getEasFunctions(customBuildCtx, ctx);
   const parser = new BuildConfigParser(globalContext, {
     configPath,
     externalFunctions: easFunctions,
