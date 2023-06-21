@@ -25,10 +25,10 @@ build:
         inputs:
           credentials: ${ globalCtx.job.secrets.buildCredentials } # can pass other object or specify it inline
 
-    - utils/set_ios_build_number_and_app_version:
+    - utils/configure_ios_versions:
         inputs:
-          build_number: ${ globalCtx.job.secrets.version.buildNumber } # can pass other value or specify it inline
-          app_version: ${ globalCtx.job.secrets.version.appVersion } # can pass other value or specify it inline
+          build_number: ${ globalCtx.job.secrets.version.build_number } # can pass other value or specify it inline
+          version: ${ globalCtx.job.secrets.version.appVersion } # can pass other value or specify it inline
 
     - utils/generate_gymfile_from_template:
         inputs:

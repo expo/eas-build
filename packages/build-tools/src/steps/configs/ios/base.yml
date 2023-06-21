@@ -19,6 +19,8 @@ build:
         working_directory: ./ios
         command: pod install
 
+    - eas/configure_expo_updates_if_installed
+
     # configures credentials
     # prepares Xcode project
     # configures build number and app version
