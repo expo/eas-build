@@ -8,11 +8,14 @@ build:
         command: yarn install
 
     # reads Apple team id from job credentials
-    - eas/read_team_id
+    - utils/resolve_apple_team_id_from_credentials:
+        inputs:
+          credentials: ${ globalCtx.job.secrets.buildCredentials } # can pass other object or specify it inline
+
 
     - run:
         env:
-          APPLE_TEAM_ID: ${ eas/read_team_id.apple_team_id } # or other custom value
+          APPLE_TEAM_ID: ${ eas/read_team_id.apple_team_id } # or skip previous step and provide the value directlly
         name: Run expo prebuild
         command: npx expo prebuild --non-interactive --no-install --platform ios
 
