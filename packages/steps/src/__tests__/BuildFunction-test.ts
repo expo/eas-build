@@ -137,6 +137,16 @@ describe(BuildFunction, () => {
           defaultValue: 1,
           allowedValueTypeName: BuildStepInputValueTypeName.NUMBER,
         }),
+        BuildStepInput.createProvider({
+          id: 'input4',
+          defaultValue: { a: 1 },
+          allowedValueTypeName: BuildStepInputValueTypeName.JSON,
+        }),
+        BuildStepInput.createProvider({
+          id: 'input5',
+          defaultValue: '${ ctx.job.version.buildNumber }',
+          allowedValueTypeName: BuildStepInputValueTypeName.NUMBER,
+        }),
       ];
       const outputProviders: BuildStepOutputProvider[] = [
         BuildStepOutput.createProvider({ id: 'output1' }),
@@ -159,6 +169,8 @@ describe(BuildFunction, () => {
       });
       expect(func.inputProviders?.[0]).toBe(inputProviders[0]);
       expect(func.inputProviders?.[1]).toBe(inputProviders[1]);
+      expect(func.inputProviders?.[2]).toBe(inputProviders[2]);
+      expect(func.inputProviders?.[3]).toBe(inputProviders[3]);
       expect(func.outputProviders?.[0]).toBe(outputProviders[0]);
       expect(func.outputProviders?.[1]).toBe(outputProviders[1]);
       expect(step.inputs?.[0].id).toBe('input1');
@@ -177,6 +189,13 @@ describe(BuildFunction, () => {
           defaultValue: true,
           allowedValueTypeName: BuildStepInputValueTypeName.BOOLEAN,
         }),
+        BuildStepInput.createProvider({
+          id: 'input4',
+          defaultValue: {
+            a: 1,
+          },
+          allowedValueTypeName: BuildStepInputValueTypeName.JSON,
+        }),
       ];
       const func = new BuildFunction({
         id: 'test1',
@@ -190,12 +209,18 @@ describe(BuildFunction, () => {
           input1: 'abc',
           input2: 'def',
           input3: false,
+          input4: {
+            b: 2,
+          },
         },
         workingDirectory: ctx.defaultWorkingDirectory,
       });
       expect(step.inputs?.[0].value).toBe('abc');
       expect(step.inputs?.[1].value).toBe('def');
       expect(step.inputs?.[2].value).toBe(false);
+      expect(step.inputs?.[3].value).toMatchObject({
+        b: 2,
+      });
     });
     it('passes env to build step', () => {
       const ctx = createGlobalContextMock();

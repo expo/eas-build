@@ -55,6 +55,10 @@ export class BuildStepGlobalContext {
     return this.provider.env;
   }
 
+  public get staticContext(): any {
+    return this.provider.staticContext();
+  }
+
   public updateEnv(updatedEnv: BuildStepEnv): void {
     this.provider.updateEnv(updatedEnv);
   }

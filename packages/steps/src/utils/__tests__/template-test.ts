@@ -1,7 +1,9 @@
-import { BuildConfigError } from '../../errors.js';
+import { BuildConfigError, BuildStepRuntimeError } from '../../errors.js';
 import { getError } from '../../__tests__/utils/error.js';
 import {
   findOutputPaths,
+  getObjectValueForInterpolation,
+  interpolateWithGlobalContext,
   interpolateWithInputs,
   interpolateWithOutputs,
   parseOutputPath,
@@ -19,9 +21,27 @@ describe(interpolateWithOutputs, () => {
     const result = interpolateWithOutputs(
       'foo${ steps.abc123.foo }${ steps.abc123.bar }',
       (path) => {
-        if (path === 'abc123.foo') {
+        if (path === 'steps.abc123.foo') {
           return 'bar';
-        } else if (path === 'abc123.bar') {
+        } else if (path === 'steps.abc123.bar') {
+          return 'baz';
+        } else {
+          return 'x';
+        }
+      }
+    );
+    expect(result).toBe('foobarbaz');
+  });
+});
+
+describe(interpolateWithGlobalContext, () => {
+  test('interpolation', () => {
+    const result = interpolateWithGlobalContext(
+      'foo${ ctx.prop1.prop2.prop3.value4 }${ ctx.prop1.prop2.prop3.value5 }',
+      (path) => {
+        if (path === 'ctx.prop1.prop2.prop3.value4') {
+          return 'bar';
+        } else if (path === 'ctx.prop1.prop2.prop3.value5') {
           return 'baz';
         } else {
           return 'x';
@@ -53,7 +73,7 @@ describe(parseOutputPath, () => {
       parseOutputPath('abc');
     });
     const error2 = getError<BuildConfigError>(() => {
-      parseOutputPath('abc.def.ghi');
+      parseOutputPath('steps.def.ghi.jkl');
     });
     expect(error1).toBeInstanceOf(BuildConfigError);
     expect(error1.message).toMatch(/must consist of two components joined with a dot/);
@@ -61,10 +81,95 @@ describe(parseOutputPath, () => {
     expect(error2.message).toMatch(/must consist of two components joined with a dot/);
   });
   it('returns an object with step ID and output ID', () => {
-    const result = parseOutputPath('abc.def');
+    const result = parseOutputPath('steps.abc.def');
     expect(result).toMatchObject({
       stepId: 'abc',
       outputId: 'def',
     });
+  });
+});
+
+describe(getObjectValueForInterpolation, () => {
+  it('string property', () => {
+    const result = getObjectValueForInterpolation('ctx.foo.bar.baz', {
+      foo: {
+        bar: {
+          baz: 'qux',
+        },
+      },
+    });
+    expect(result).toBe('qux');
+  });
+
+  it('number property', () => {
+    const result = getObjectValueForInterpolation('ctx.foo.bar.baz[0]', {
+      foo: {
+        bar: {
+          baz: [1, 2, 3],
+        },
+      },
+    });
+    expect(result).toBe(1);
+  });
+
+  it('boolean property', () => {
+    const result = getObjectValueForInterpolation('ctx.foo.bar.baz[2].qux', {
+      foo: {
+        bar: {
+          baz: [
+            true,
+            false,
+            {
+              qux: true,
+            },
+          ],
+        },
+      },
+    });
+    expect(result).toBe(true);
+  });
+
+  it('invalid property 1', () => {
+    const error = getError<BuildConfigError>(() => {
+      getObjectValueForInterpolation('ctx.bar', {
+        foo: {
+          bar: {
+            baz: [
+              true,
+              false,
+              {
+                qux: true,
+              },
+            ],
+          },
+        },
+      });
+    });
+    expect(error).toBeInstanceOf(BuildStepRuntimeError);
+    expect(error.message).toMatch(
+      /Object field "ctx.bar" does not exist. Ensure you are using the correct field name./
+    );
+  });
+
+  it('invalid property 2', () => {
+    const error = getError<BuildConfigError>(() => {
+      getObjectValueForInterpolation('ctx.foo.bar.baz[14].qux', {
+        foo: {
+          bar: {
+            baz: [
+              true,
+              false,
+              {
+                qux: true,
+              },
+            ],
+          },
+        },
+      });
+    });
+    expect(error).toBeInstanceOf(BuildStepRuntimeError);
+    expect(error.message).toMatch(
+      /Object field "ctx.foo.bar.baz\[14\].qux" does not exist. Ensure you are using the correct field name./
+    );
   });
 });

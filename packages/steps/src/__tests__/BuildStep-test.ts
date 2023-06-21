@@ -198,7 +198,9 @@ describe(BuildStep, () => {
     let baseStepCtx: BuildStepGlobalContext;
 
     beforeEach(async () => {
-      baseStepCtx = createGlobalContextMock();
+      baseStepCtx = createGlobalContextMock({
+        runtimePlatform: BuildRuntimePlatform.LINUX,
+      });
       await fs.mkdir(baseStepCtx.defaultWorkingDirectory, { recursive: true });
       await fs.mkdir(baseStepCtx.stepsInternalBuildDirectory, { recursive: true });
     });
@@ -283,7 +285,7 @@ describe(BuildStep, () => {
 
       it('interpolates the inputs in command template', async () => {
         const id = 'test1';
-        const command = 'set-output foo2 ${ inputs.foo1 }';
+        const command = "set-output foo2 '${inputs.foo1}  ${inputs.foo2} ${inputs.foo3}'";
         const displayName = BuildStep.getDisplayName({ id, command });
 
         const step = new BuildStep(baseStepCtx, {
@@ -294,6 +296,21 @@ describe(BuildStep, () => {
               id: 'foo1',
               stepDisplayName: displayName,
               defaultValue: 'bar',
+            }),
+            new BuildStepInput(baseStepCtx, {
+              id: 'foo2',
+              stepDisplayName: displayName,
+              defaultValue: '${ ctx.runtimePlatform }',
+              allowedValueTypeName: BuildStepInputValueTypeName.STRING,
+            }),
+            new BuildStepInput(baseStepCtx, {
+              id: 'foo3',
+              stepDisplayName: displayName,
+              defaultValue: {
+                foo: 'bar',
+                baz: [1, 'aaa'],
+              },
+              allowedValueTypeName: BuildStepInputValueTypeName.JSON,
             }),
           ],
           outputs: [
@@ -306,7 +323,7 @@ describe(BuildStep, () => {
           command,
         });
         await step.executeAsync();
-        expect(step.getOutputValueByName('foo2')).toBe('bar');
+        expect(step.getOutputValueByName('foo2')).toBe('bar linux {"foo":"bar","baz":[1,"aaa"]}');
       });
 
       it('collects the outputs after calling the script', async () => {
@@ -493,6 +510,14 @@ describe(BuildStep, () => {
             stepDisplayName: displayName,
             defaultValue: 27,
             allowedValueTypeName: BuildStepInputValueTypeName.NUMBER,
+          }),
+          new BuildStepInput(baseStepCtx, {
+            id: 'foo5',
+            stepDisplayName: displayName,
+            defaultValue: {
+              foo: 'bar',
+            },
+            allowedValueTypeName: BuildStepInputValueTypeName.JSON,
           }),
         ];
         const outputs: BuildStepOutput[] = [

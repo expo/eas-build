@@ -1,7 +1,7 @@
 import assert from 'assert';
 
 import { BuildStep, BuildStepFunction } from '../BuildStep.js';
-import { BuildStepInput } from '../BuildStepInput.js';
+import { BuildStepInput, BuildStepInputValueTypeName } from '../BuildStepInput.js';
 import { BuildStepOutput } from '../BuildStepOutput.js';
 import { BuildWorkflow } from '../BuildWorkflow.js';
 import { BuildWorkflowValidator } from '../BuildWorkflowValidator.js';
@@ -150,6 +150,26 @@ describe(BuildWorkflowValidator, () => {
           id: 'id1',
           required: true,
         }),
+        BuildStepInput.createProvider({
+          id: 'id2',
+          allowedValueTypeName: BuildStepInputValueTypeName.NUMBER,
+        }),
+        BuildStepInput.createProvider({
+          id: 'id3',
+          allowedValueTypeName: BuildStepInputValueTypeName.JSON,
+        }),
+        BuildStepInput.createProvider({
+          id: 'id4',
+          allowedValueTypeName: BuildStepInputValueTypeName.NUMBER,
+        }),
+        BuildStepInput.createProvider({
+          id: 'id5',
+          allowedValueTypeName: BuildStepInputValueTypeName.NUMBER,
+        }),
+        BuildStepInput.createProvider({
+          id: 'id6',
+          allowedValueTypeName: BuildStepInputValueTypeName.NUMBER,
+        }),
       ],
       command: 'echo "hi"',
     });
@@ -160,6 +180,14 @@ describe(BuildWorkflowValidator, () => {
           id: 'step_id',
           callInputs: {
             id1: 123,
+            id2: {
+              a: 1,
+              b: 2,
+            },
+            id3: 'abc',
+            id4: '${ steps.step_id.output1 }',
+            id5: '${ ctx.job.version.buildNumber }',
+            id6: '${ wrong.aaa }',
           },
         }),
       ],
@@ -174,7 +202,16 @@ describe(BuildWorkflowValidator, () => {
     });
     expect(error).toBeInstanceOf(BuildWorkflowError);
     expect((error as BuildWorkflowError).errors[0].message).toBe(
-      'Input parameter "id1" for step "step_id" is set to "123" which is not of type "string".'
+      'Input parameter "id1" for step "step_id" is set to "123" which is not of type "string" or is not step or context refference.'
+    );
+    expect((error as BuildWorkflowError).errors[1].message).toBe(
+      'Input parameter "id2" for step "step_id" is set to "{"a":1,"b":2}" which is not of type "number" or is not step or context refference.'
+    );
+    expect((error as BuildWorkflowError).errors[2].message).toBe(
+      'Input parameter "id3" for step "step_id" is set to "abc" which is not of type "json" or is not step or context refference.'
+    );
+    expect((error as BuildWorkflowError).errors[3].message).toBe(
+      'Input parameter "id6" for step "step_id" is set to "${ wrong.aaa }" which is not of type "number" or is not step or context refference.'
     );
   });
   test('output from future step', async () => {

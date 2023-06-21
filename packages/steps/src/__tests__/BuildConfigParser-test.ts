@@ -165,6 +165,12 @@ describe(BuildConfigParser, () => {
       //     country: Poland
       //     boolean_value: true
       //     number_value: 123
+      //     json_value:
+      //       property1: value1
+      //       property2:
+      //         - value2
+      //         - value3:
+      //            property3: value4
       //   command: echo "Hi, ${ inputs.name }, ${ inputs.boolean_value }!"
       const step1 = buildSteps[0];
       expect(step1.id).toMatch(UUID_REGEX);
@@ -185,6 +191,12 @@ describe(BuildConfigParser, () => {
       expect(step1.inputs?.[3].id).toBe('number_value');
       expect(step1.inputs?.[3].value).toBe(123);
       expect(step1.inputs?.[3].allowedValueTypeName).toBe(BuildStepInputValueTypeName.NUMBER);
+      expect(step1.inputs?.[4].id).toBe('json_value');
+      expect(step1.inputs?.[4].value).toMatchObject({
+        property1: 'value1',
+        property2: ['value2', { value3: { property3: 'value4' } }],
+      });
+      expect(step1.inputs?.[4].allowedValueTypeName).toBe(BuildStepInputValueTypeName.JSON);
     });
 
     it('parses outputs', async () => {
@@ -258,6 +270,12 @@ describe(BuildConfigParser, () => {
       //       ENV2: value2
       //     inputs:
       //       name: Dominik
+      //       buildNumber: ${ ctx.job.version.buildNumber }
+      //        json_input:
+      //          property1: value1
+      //          property2:
+      //            - aaa
+      //            - bbb
       const step1 = buildSteps[0];
       expect(step1.id).toMatch(UUID_REGEX);
       expect(step1.name).toBe('Hi!');
@@ -267,6 +285,15 @@ describe(BuildConfigParser, () => {
       expect(step1.inputs?.[0].id).toBe('name');
       expect(step1.inputs?.[0].value).toBe('Dominik');
       expect(step1.inputs?.[0].allowedValueTypeName).toBe(BuildStepInputValueTypeName.STRING);
+      expect(step1.inputs?.[1].id).toBe('build_number');
+      expect(step1.inputs?.[1].rawValue).toBe('${ ctx.job.version.buildNumber }');
+      expect(step1.inputs?.[1].allowedValueTypeName).toBe(BuildStepInputValueTypeName.NUMBER);
+      expect(step1.inputs?.[2].id).toBe('json_input');
+      expect(step1.inputs?.[2].value).toMatchObject({
+        property1: 'value1',
+        property2: ['aaa', 'bbb'],
+      });
+      expect(step1.inputs?.[2].allowedValueTypeName).toBe(BuildStepInputValueTypeName.JSON);
       expect(step1.env).toMatchObject({
         ENV1: 'value1',
         ENV2: 'value2',
@@ -276,6 +303,7 @@ describe(BuildConfigParser, () => {
       //     name: Hi, Szymon!
       //     inputs:
       //       name: Szymon
+      //       build_number: 122
       const step2 = buildSteps[1];
       expect(step2.id).toMatch(UUID_REGEX);
       expect(step2.name).toBe('Hi, Szymon!');
@@ -285,6 +313,15 @@ describe(BuildConfigParser, () => {
       expect(step2.inputs?.[0].id).toBe('name');
       expect(step2.inputs?.[0].value).toBe('Szymon');
       expect(step2.inputs?.[0].allowedValueTypeName).toBe(BuildStepInputValueTypeName.STRING);
+      expect(step2.inputs?.[1].id).toBe('build_number');
+      expect(step2.inputs?.[1].value).toBe(122);
+      expect(step2.inputs?.[1].allowedValueTypeName).toBe(BuildStepInputValueTypeName.NUMBER);
+      expect(step2.inputs?.[2].id).toBe('json_input');
+      expect(step2.inputs?.[2].value).toMatchObject({
+        property1: 'value1',
+        property2: ['value2', { value3: { property3: 'value4' } }],
+      });
+      expect(step2.inputs?.[2].allowedValueTypeName).toBe(BuildStepInputValueTypeName.JSON);
       expect(step2.env).toMatchObject({});
 
       // - say_hi_wojtek
@@ -365,6 +402,16 @@ describe(BuildConfigParser, () => {
       //   name: Hi!
       //   inputs:
       //     - name
+      //     - name: build_number
+      //         type: number
+      //     - name: json_input
+      //         type: json
+      //         default_value:
+      //           property1: value1
+      //           property2:
+      //             - value2
+      //             - value3:
+      //                 property3: value4
       //   command: echo "Hi, ${ inputs.name }!"
       const function1 = buildFunctions.say_hi;
       expect(function1.id).toBe('say_hi');
@@ -372,6 +419,20 @@ describe(BuildConfigParser, () => {
       expect(function1.inputProviders?.[0](ctx, 'unknown-step').id).toBe('name');
       expect(function1.inputProviders?.[0](ctx, 'unknown-step').defaultValue).toBe(undefined);
       expect(function1.inputProviders?.[0](ctx, 'unknown-step').required).toBe(true);
+      expect(function1.inputProviders?.[1](ctx, 'unknown-step').id).toBe('build_number');
+      expect(function1.inputProviders?.[1](ctx, 'unknown-step').allowedValueTypeName).toBe(
+        BuildStepInputValueTypeName.NUMBER
+      );
+      expect(function1.inputProviders?.[1](ctx, 'unknown-step').defaultValue).toBe(undefined);
+      expect(function1.inputProviders?.[1](ctx, 'unknown-step').required).toBe(true);
+      expect(function1.inputProviders?.[2](ctx, 'unknown-step').id).toBe('json_input');
+      expect(function1.inputProviders?.[2](ctx, 'unknown-step').allowedValueTypeName).toBe(
+        BuildStepInputValueTypeName.JSON
+      );
+      expect(function1.inputProviders?.[2](ctx, 'unknown-step').defaultValue).toEqual({
+        property1: 'value1',
+        property2: ['value2', { value3: { property3: 'value4' } }],
+      });
       expect(function1.command).toBe('echo "Hi, ${ inputs.name }!"');
 
       // say_hi_wojtek:

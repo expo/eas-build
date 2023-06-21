@@ -202,7 +202,10 @@ export class BuildConfigParser {
           stepDisplayName,
           defaultValue: value,
           required: true,
-          allowedValueTypeName: typeof value as BuildStepInputValueTypeName,
+          allowedValueTypeName:
+            typeof value === 'object'
+              ? BuildStepInputValueTypeName.JSON
+              : (typeof value as BuildStepInputValueTypeName),
         })
     );
   }

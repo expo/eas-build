@@ -1,4 +1,6 @@
+import { STEP_OR_CONTEXT_REFERENCE_REGEX } from './BuildConfig.js';
 import { BuildStep } from './BuildStep.js';
+import { BuildStepInputValueTypeName } from './BuildStepInput.js';
 import { BuildWorkflow } from './BuildWorkflow.js';
 import { BuildConfigError, BuildWorkflowError } from './errors.js';
 import { duplicates } from './utils/expodash/duplicates.js';
@@ -47,10 +49,24 @@ export class BuildWorkflowValidator {
 
         if (
           currentStepInput.rawValue !== undefined &&
-          typeof currentStepInput.rawValue !== currentStepInput.allowedValueTypeName
+          !(
+            typeof currentStepInput.rawValue === currentStepInput.allowedValueTypeName ||
+            (typeof currentStepInput.rawValue === 'string' &&
+              STEP_OR_CONTEXT_REFERENCE_REGEX.exec(currentStepInput.rawValue)) ||
+            (typeof currentStepInput.rawValue === 'object' &&
+              currentStepInput.allowedValueTypeName === BuildStepInputValueTypeName.JSON)
+          )
         ) {
           const error = new BuildConfigError(
-            `Input parameter "${currentStepInput.id}" for step "${currentStep.displayName}" is set to "${currentStepInput.rawValue}" which is not of type "${currentStepInput.allowedValueTypeName}".`
+            `Input parameter "${currentStepInput.id}" for step "${
+              currentStep.displayName
+            }" is set to "${
+              typeof currentStepInput.rawValue === 'object'
+                ? JSON.stringify(currentStepInput.rawValue)
+                : currentStepInput.rawValue
+            }" which is not of type "${
+              currentStepInput.allowedValueTypeName
+            }" or is not step or context refference.`
           );
           errors.push(error);
         }

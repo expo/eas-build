@@ -33,6 +33,7 @@
   "devDependencies": {
     "@jest/globals": "^29.4.1",
     "@types/jest": "^29.4.0",
+    "@types/lodash": "^4.14.195",
     "@types/node": "^18.11.18",
     "chokidar-cli": "^3.0.0",
     "eslint-plugin-async-protect": "^3.0.0",
@@ -50,6 +51,7 @@
     "@expo/spawn-async": "^1.7.0",
     "arg": "^5.0.2",
     "joi": "^17.7.0",
+    "lodash": "^4.17.21",
     "this-file": "^2.0.3",
     "uuid": "^9.0.0",
     "yaml": "^2.2.1"

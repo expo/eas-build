@@ -82,6 +82,8 @@ export type BuildFunctionInputs = (
 )[];
 export type BuildFunctionOutputs = BuildStepOutputs;
 
+export const STEP_OR_CONTEXT_REFERENCE_REGEX = /\${\s*((steps|ctx)\.[\S]+)\s*}/;
+
 const BuildFunctionInputsSchema = Joi.array().items(
   Joi.alternatives().conditional(Joi.ref('.'), {
     is: Joi.string(),
@@ -96,19 +98,50 @@ const BuildFunctionInputsSchema = Joi.array().items(
       })
         .when('allowedValueType', {
           is: BuildStepInputValueTypeName.STRING,
-          then: Joi.string(),
+          then: Joi.string().allow(''),
         })
         .when('allowedValueType', {
           is: BuildStepInputValueTypeName.BOOLEAN,
-          then: Joi.boolean(),
+          then: Joi.alternatives(
+            Joi.boolean(),
+            Joi.string().pattern(
+              STEP_OR_CONTEXT_REFERENCE_REGEX,
+              'context or output reference regex pattern'
+            )
+          ).messages({
+            'alternatives.types':
+              '{{#label}} must be a boolean or reference to output or context value',
+          }),
         })
         .when('allowedValueType', {
           is: BuildStepInputValueTypeName.NUMBER,
-          then: Joi.number(),
+          then: Joi.alternatives(
+            Joi.number(),
+            Joi.string().pattern(
+              STEP_OR_CONTEXT_REFERENCE_REGEX,
+              'context or output reference regex pattern'
+            )
+          ).messages({
+            'alternatives.types':
+              '{{#label}} must be a number or reference to output or context value',
+          }),
+        })
+        .when('allowedValueType', {
+          is: BuildStepInputValueTypeName.JSON,
+          then: Joi.alternatives(
+            Joi.object(),
+            Joi.string().pattern(
+              STEP_OR_CONTEXT_REFERENCE_REGEX,
+              'context or output reference regex pattern'
+            )
+          ).messages({
+            'alternatives.types':
+              '{{#label}} must be a object or reference to output or context value',
+          }),
         }),
       allowedValues: Joi.when('allowedValueType', {
         is: BuildStepInputValueTypeName.STRING,
-        then: Joi.array().items(Joi.string()),
+        then: Joi.array().items(Joi.string().allow('')),
       })
         .when('allowedValueType', {
           is: BuildStepInputValueTypeName.BOOLEAN,
@@ -117,6 +150,10 @@ const BuildFunctionInputsSchema = Joi.array().items(
         .when('allowedValueType', {
           is: BuildStepInputValueTypeName.NUMBER,
           then: Joi.array().items(Joi.number()),
+        })
+        .when('allowedValueType', {
+          is: BuildStepInputValueTypeName.JSON,
+          then: Joi.array().items(Joi.object()),
         }),
       allowedValueType: Joi.string()
         .valid(...Object.values(BuildStepInputValueTypeName))
@@ -144,7 +181,7 @@ const BuildFunctionCallSchema = Joi.object({
   id: Joi.string(),
   inputs: Joi.object().pattern(
     Joi.string(),
-    Joi.alternatives().try(Joi.string(), Joi.boolean(), Joi.number())
+    Joi.alternatives().try(Joi.string().allow(''), Joi.boolean(), Joi.number(), Joi.object())
   ),
   name: Joi.string(),
   workingDirectory: Joi.string(),

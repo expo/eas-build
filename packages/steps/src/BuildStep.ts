@@ -20,7 +20,11 @@ import {
   saveScriptToTemporaryFileAsync,
 } from './BuildTemporaryFiles.js';
 import { spawnAsync } from './utils/shell/spawn.js';
-import { interpolateWithInputs } from './utils/template.js';
+import {
+  getObjectValueForInterpolation,
+  interpolateWithGlobalContext,
+  interpolateWithInputs,
+} from './utils/template.js';
 import { BuildStepRuntimeError } from './errors.js';
 import { BuildStepEnv } from './BuildStepEnv.js';
 import { BuildRuntimePlatform } from './BuildRuntimePlatform.js';
@@ -222,7 +226,7 @@ export class BuildStep {
     assert(this.command, 'Command must be defined.');
 
     try {
-      const command = this.interpolateInputsInCommand(this.command, this.inputs);
+      const command = this.interpolateInputsAndGlobalContextInCommand(this.command, this.inputs);
       this.ctx.logger.debug(`Interpolated inputs in the command template`);
 
       const outputsDir = await createTemporaryOutputsDirectoryAsync(this.ctx.global, this.id);
@@ -268,15 +272,32 @@ export class BuildStep {
     });
   }
 
-  private interpolateInputsInCommand(command: string, inputs?: BuildStepInput[]): string {
+  private interpolateInputsAndGlobalContextInCommand(
+    command: string,
+    inputs?: BuildStepInput[]
+  ): string {
     if (!inputs) {
       return command;
     }
     const vars = inputs.reduce((acc, input) => {
-      acc[input.id] = input.value?.toString() ?? '';
+      acc[input.id] =
+        typeof input.value === 'object'
+          ? JSON.stringify(input.value)
+          : input.value?.toString() ?? '';
       return acc;
     }, {} as Record<string, string>);
-    return interpolateWithInputs(command, vars);
+    const interpolatedWithGlobalContext = interpolateWithGlobalContext(command, (path) => {
+      return (
+        getObjectValueForInterpolation(path, {
+          projectSourceDirectory: this.ctx.global.projectSourceDirectory,
+          projectTargetDirectory: this.ctx.global.projectTargetDirectory,
+          defaultWorkingDirectory: this.ctx.global.defaultWorkingDirectory,
+          runtimePlatform: this.ctx.global.runtimePlatform,
+          ...this.ctx.global.staticContext,
+        })?.toString() ?? ''
+      );
+    });
+    return interpolateWithInputs(interpolatedWithGlobalContext, vars);
   }
 
   private async collectAndValidateOutputsAsync(outputsDir: string): Promise<void> {
