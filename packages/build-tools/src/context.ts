@@ -1,5 +1,6 @@
 import path from 'path';
 
+import fs from 'fs-extra';
 import {
   BuildPhase,
   BuildPhaseResult,
@@ -124,7 +125,11 @@ export class BuildContext<TJob extends Job> {
       ...options.env,
       ...job?.builderEnvironment?.env,
       ...environmentSecrets,
+      __EAS_BUILD_ENVS_DIR: this.buildEnvsDirectory,
     };
+    this._env.PATH = this._env.PATH
+      ? [this.buildExecutablesDirectory, this._env.PATH].join(':')
+      : this.buildExecutablesDirectory;
   }
 
   public get job(): TJob {
@@ -141,6 +146,19 @@ export class BuildContext<TJob extends Job> {
   }
   public get buildLogsDirectory(): string {
     return path.join(this.workingdir, 'logs');
+  }
+  /**
+   * Directory used to store executables used during regular (non-custom) builds.
+   */
+  public get buildExecutablesDirectory(): string {
+    return path.join(this.workingdir, 'bin');
+  }
+  /**
+   * Directory used to store env variables registered in the current build step.
+   * All values stored here will be available in the next build phase as env variables.
+   */
+  public get buildEnvsDirectory(): string {
+    return path.join(this.workingdir, 'env');
   }
   public get environmentSecretsDirectory(): string {
     return path.join(this.workingdir, 'environment-secrets');
@@ -181,12 +199,12 @@ export class BuildContext<TJob extends Job> {
         : this.buildPhaseHasWarnings
         ? BuildPhaseResult.WARNING
         : BuildPhaseResult.SUCCESS;
-      this.endCurrentBuildPhase({ result: buildPhaseResult, doNotMarkEnd, durationMs });
+      await this.endCurrentBuildPhaseAsync({ result: buildPhaseResult, doNotMarkEnd, durationMs });
       return result;
     } catch (err: any) {
       const durationMs = Date.now() - startTimestamp;
       const resolvedError = await this.handleBuildPhaseErrorAsync(err, buildPhase);
-      this.endCurrentBuildPhase({ result: BuildPhaseResult.FAIL, durationMs });
+      await this.endCurrentBuildPhaseAsync({ result: BuildPhaseResult.FAIL, durationMs });
       throw resolvedError;
     }
   }
@@ -215,7 +233,11 @@ export class BuildContext<TJob extends Job> {
     this._env = {
       ...env,
       ...this._env,
+      __EAS_BUILD_ENVS_DIR: this.buildEnvsDirectory,
     };
+    this._env.PATH = this._env.PATH
+      ? [this.buildExecutablesDirectory, this._env.PATH].join(':')
+      : this.buildExecutablesDirectory;
   }
 
   public updateJobInformation(job: TJob, metadata: Metadata): void {
@@ -274,7 +296,7 @@ export class BuildContext<TJob extends Job> {
     }
   }
 
-  private endCurrentBuildPhase({
+  private async endCurrentBuildPhaseAsync({
     result,
     doNotMarkEnd = false,
     durationMs,
@@ -282,10 +304,11 @@ export class BuildContext<TJob extends Job> {
     result: BuildPhaseResult;
     doNotMarkEnd?: boolean;
     durationMs: number;
-  }): void {
+  }): Promise<void> {
     if (!this.buildPhase) {
       return;
     }
+    await this.collectAndUpdateEnvVariablesAsync();
 
     this.reportBuildPhaseStats?.({ buildPhase: this.buildPhase, result, durationMs });
 
@@ -299,6 +322,29 @@ export class BuildContext<TJob extends Job> {
     this.buildPhase = undefined;
     this.buildPhaseSkipped = false;
     this.buildPhaseHasWarnings = false;
+  }
+
+  private async collectAndUpdateEnvVariablesAsync(): Promise<void> {
+    const filenames = await fs.readdir(this.buildEnvsDirectory);
+
+    const entries = await Promise.all(
+      filenames.map(async (basename) => {
+        const rawContents = await fs.readFile(
+          path.join(this.buildEnvsDirectory, basename),
+          'utf-8'
+        );
+        return [basename, rawContents];
+      })
+    );
+    await Promise.all(
+      filenames.map(async (basename) => {
+        await fs.remove(path.join(this.buildEnvsDirectory, basename));
+      })
+    );
+    this._env = {
+      ...this._env,
+      ...Object.fromEntries(entries),
+    };
   }
 
   private getEnvironmentSecrets(job: TJob): Record<string, string> {
