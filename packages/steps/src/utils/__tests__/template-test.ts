@@ -37,11 +37,11 @@ describe(interpolateWithOutputs, () => {
 describe(interpolateWithGlobalContext, () => {
   test('interpolation', () => {
     const result = interpolateWithGlobalContext(
-      'foo${ ctx.prop1.prop2.prop3.value4 }${ ctx.prop1.prop2.prop3.value5 }',
+      'foo${ eas.prop1.prop2.prop3.value4 }${ eas.prop1.prop2.prop3.value5 }',
       (path) => {
-        if (path === 'ctx.prop1.prop2.prop3.value4') {
+        if (path === 'eas.prop1.prop2.prop3.value4') {
           return 'bar';
-        } else if (path === 'ctx.prop1.prop2.prop3.value5') {
+        } else if (path === 'eas.prop1.prop2.prop3.value5') {
           return 'baz';
         } else {
           return 'x';
@@ -91,10 +91,12 @@ describe(parseOutputPath, () => {
 
 describe(getObjectValueForInterpolation, () => {
   it('string property', () => {
-    const result = getObjectValueForInterpolation('ctx.foo.bar.baz', {
-      foo: {
-        bar: {
-          baz: 'qux',
+    const result = getObjectValueForInterpolation('eas.foo.bar.baz', {
+      eas: {
+        foo: {
+          bar: {
+            baz: 'qux',
+          },
         },
       },
     });
@@ -102,10 +104,12 @@ describe(getObjectValueForInterpolation, () => {
   });
 
   it('number property', () => {
-    const result = getObjectValueForInterpolation('ctx.foo.bar.baz[0]', {
-      foo: {
-        bar: {
-          baz: [1, 2, 3],
+    const result = getObjectValueForInterpolation('eas.foo.bar.baz[0]', {
+      eas: {
+        foo: {
+          bar: {
+            baz: [1, 2, 3],
+          },
         },
       },
     });
@@ -113,16 +117,18 @@ describe(getObjectValueForInterpolation, () => {
   });
 
   it('boolean property', () => {
-    const result = getObjectValueForInterpolation('ctx.foo.bar.baz[2].qux', {
-      foo: {
-        bar: {
-          baz: [
-            true,
-            false,
-            {
-              qux: true,
-            },
-          ],
+    const result = getObjectValueForInterpolation('eas.foo.bar.baz[2].qux', {
+      eas: {
+        foo: {
+          bar: {
+            baz: [
+              true,
+              false,
+              {
+                qux: true,
+              },
+            ],
+          },
         },
       },
     });
@@ -131,45 +137,49 @@ describe(getObjectValueForInterpolation, () => {
 
   it('invalid property 1', () => {
     const error = getError<BuildConfigError>(() => {
-      getObjectValueForInterpolation('ctx.bar', {
-        foo: {
-          bar: {
-            baz: [
-              true,
-              false,
-              {
-                qux: true,
-              },
-            ],
+      getObjectValueForInterpolation('eas.bar', {
+        eas: {
+          foo: {
+            bar: {
+              baz: [
+                true,
+                false,
+                {
+                  qux: true,
+                },
+              ],
+            },
           },
         },
       });
     });
     expect(error).toBeInstanceOf(BuildStepRuntimeError);
     expect(error.message).toMatch(
-      /Object field "ctx.bar" does not exist. Ensure you are using the correct field name./
+      /Object field "eas.bar" does not exist. Ensure you are using the correct field name./
     );
   });
 
   it('invalid property 2', () => {
     const error = getError<BuildConfigError>(() => {
-      getObjectValueForInterpolation('ctx.foo.bar.baz[14].qux', {
-        foo: {
-          bar: {
-            baz: [
-              true,
-              false,
-              {
-                qux: true,
-              },
-            ],
+      getObjectValueForInterpolation('eas.foo.bar.baz[14].qux', {
+        eas: {
+          foo: {
+            bar: {
+              baz: [
+                true,
+                false,
+                {
+                  qux: true,
+                },
+              ],
+            },
           },
         },
       });
     });
     expect(error).toBeInstanceOf(BuildStepRuntimeError);
     expect(error.message).toMatch(
-      /Object field "ctx.foo.bar.baz\[14\].qux" does not exist. Ensure you are using the correct field name./
+      /Object field "eas.foo.bar.baz\[14\].qux" does not exist. Ensure you are using the correct field name./
     );
   });
 });

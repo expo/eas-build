@@ -10,7 +10,7 @@ functions:
         allowed_values: [Wojtek, Dominik, Szymon, Brent]
       - name: test
         type: number
-        default_value: ${ ctx.job.version.buildNumber }
+        default_value: ${ eas.job.version.buildNumber }
       - name: json
         type: json
         default_value:

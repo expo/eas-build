@@ -83,8 +83,10 @@ export class BuildStepGlobalContext {
     return interpolateWithGlobalContext(value, (path) => {
       return (
         getObjectValueForInterpolation(path, {
-          runtimePlatform: this.runtimePlatform,
-          ...this.staticContext,
+          eas: {
+            runtimePlatform: this.runtimePlatform,
+            ...this.staticContext,
+          },
         })?.toString() ?? ''
       );
     });

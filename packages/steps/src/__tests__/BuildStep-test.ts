@@ -300,7 +300,7 @@ describe(BuildStep, () => {
             new BuildStepInput(baseStepCtx, {
               id: 'foo2',
               stepDisplayName: displayName,
-              defaultValue: '${ ctx.runtimePlatform }',
+              defaultValue: '${ eas.runtimePlatform }',
               allowedValueTypeName: BuildStepInputValueTypeName.STRING,
             }),
             new BuildStepInput(baseStepCtx, {

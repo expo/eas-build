@@ -7,8 +7,8 @@ import { nullthrows } from './nullthrows.js';
 
 export const BUILD_STEP_INPUT_EXPRESSION_REGEXP = /\${\s*(inputs\.[\S]+)\s*}/;
 export const BUILD_STEP_OUTPUT_EXPRESSION_REGEXP = /\${\s*(steps\.[\S]+)\s*}/;
-export const BUILD_GLOBAL_CONTEXT_EXPRESSION_REGEXP = /\${\s*(ctx\.[\S]+)\s*}/;
-export const BUILD_STEP_OR_BUILD_GLOBAL_CONTEXT_REFERENCE_REGEX = /\${\s*((steps|ctx)\.[\S]+)\s*}/;
+export const BUILD_GLOBAL_CONTEXT_EXPRESSION_REGEXP = /\${\s*(eas\.[\S]+)\s*}/;
+export const BUILD_STEP_OR_BUILD_GLOBAL_CONTEXT_REFERENCE_REGEX = /\${\s*((steps|eas)\.[\S]+)\s*}/;
 
 export function interpolateWithInputs(
   templateString: string,
@@ -25,22 +25,20 @@ export function interpolateWithOutputs(
 }
 
 export function getObjectValueForInterpolation(
-  pathWithObjectName: string,
+  path: string,
   obj: Record<string, any>
 ): string | number | boolean | null {
-  const value = get(obj, pathWithObjectName.split('.').slice(1).join('.'));
+  const value = get(obj, path);
 
   if (value === undefined) {
     throw new BuildStepRuntimeError(
-      `Object field "${pathWithObjectName}" does not exist. Ensure you are using the correct field name.`
+      `Object field "${path}" does not exist. Ensure you are using the correct field name.`
     );
   }
 
   if (!isAllowedValueTypeForObjectInterpolation(value)) {
     throw new BuildStepRuntimeError(
-      `EAS context field "${pathWithObjectName}" is not of type ${Object.values(
-        BuildStepInputValueTypeName
-      ).join(
+      `EAS context field "${path}" is not of type ${Object.values(BuildStepInputValueTypeName).join(
         ', '
       )}, or undefined. It is of type "${typeof value}". We currently only support accessing string or undefined values from the EAS context.`
     );

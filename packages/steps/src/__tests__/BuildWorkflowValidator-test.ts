@@ -186,7 +186,7 @@ describe(BuildWorkflowValidator, () => {
             },
             id3: 'abc',
             id4: '${ steps.step_id.output1 }',
-            id5: '${ ctx.job.version.buildNumber }',
+            id5: '${ eas.job.version.buildNumber }',
             id6: '${ wrong.aaa }',
           },
         }),

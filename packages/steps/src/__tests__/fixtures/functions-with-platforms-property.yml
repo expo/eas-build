@@ -13,7 +13,7 @@ functions:
         type: string
       - name: test
         type: boolean
-        default_value: ${ ctx.job.platform }
+        default_value: ${ eas.job.platform }
       - name: test2
         type: json
         default_value:

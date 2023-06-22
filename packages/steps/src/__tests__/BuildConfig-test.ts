@@ -476,7 +476,7 @@ describe(validateConfig, () => {
                   test_boolean: {
                     inputs: {
                       boolean: true,
-                      boolean2: '${ ctx.job.booleanValue }',
+                      boolean2: '${ eas.job.booleanValue }',
                     },
                   },
                 },
@@ -492,7 +492,7 @@ describe(validateConfig, () => {
                   {
                     name: 'boolean2',
                     type: 'boolean',
-                    defaultValue: '${ ctx.job.booleanValue }',
+                    defaultValue: '${ eas.job.booleanValue }',
                   },
                 ],
                 command: 'echo "${ inputs.boolean }!"',
@@ -707,7 +707,7 @@ describe(validateConfig, () => {
                 },
                 {
                   name: 'i6',
-                  default_value: '${ ctx.job.version.buildNumber }',
+                  default_value: '${ eas.job.version.buildNumber }',
                   type: 'number',
                 },
                 {

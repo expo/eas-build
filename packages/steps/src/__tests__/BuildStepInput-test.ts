@@ -100,7 +100,7 @@ describe(BuildStepInput, () => {
     const i = new BuildStepInput(ctx, {
       id: 'foo',
       stepDisplayName: BuildStep.getDisplayName({ id: 'test1' }),
-      defaultValue: '${ ctx.runtimePlatform }',
+      defaultValue: '${ eas.runtimePlatform }',
     });
     expect(i.value).toEqual('linux');
   });
@@ -123,7 +123,7 @@ describe(BuildStepInput, () => {
     const i = new BuildStepInput(ctx, {
       id: 'foo',
       stepDisplayName: BuildStep.getDisplayName({ id: 'test1' }),
-      defaultValue: '${ ctx.foo.bar[3].baz }',
+      defaultValue: '${ eas.foo.bar[3].baz }',
       allowedValueTypeName: BuildStepInputValueTypeName.NUMBER,
     });
     expect(i.value).toEqual(42);
@@ -149,7 +149,7 @@ describe(BuildStepInput, () => {
     const i = new BuildStepInput(ctx, {
       id: 'foo',
       stepDisplayName: BuildStep.getDisplayName({ id: 'test1' }),
-      defaultValue: '${ ctx.foo.bar[3].baz.qux }',
+      defaultValue: '${ eas.foo.bar[3].baz.qux }',
       allowedValueTypeName: BuildStepInputValueTypeName.BOOLEAN,
     });
     expect(i.value).toEqual(false);
@@ -175,7 +175,7 @@ describe(BuildStepInput, () => {
     const i = new BuildStepInput(ctx, {
       id: 'foo',
       stepDisplayName: BuildStep.getDisplayName({ id: 'test1' }),
-      defaultValue: '${ ctx.foo }',
+      defaultValue: '${ eas.foo }',
       allowedValueTypeName: BuildStepInputValueTypeName.JSON,
     });
     expect(i.value).toMatchObject({ bar: [1, 2, 3, { baz: { qux: false } }] });
@@ -201,7 +201,7 @@ describe(BuildStepInput, () => {
     const i = new BuildStepInput(ctx, {
       id: 'foo',
       stepDisplayName: BuildStep.getDisplayName({ id: 'test1' }),
-      defaultValue: '${ ctx.foo.bar[3].baz.qux }',
+      defaultValue: '${ eas.foo.bar[3].baz.qux }',
       allowedValueTypeName: BuildStepInputValueTypeName.NUMBER,
     });
     expect(() => i.value).toThrowError(
@@ -229,7 +229,7 @@ describe(BuildStepInput, () => {
     const i = new BuildStepInput(ctx, {
       id: 'foo',
       stepDisplayName: BuildStep.getDisplayName({ id: 'test1' }),
-      defaultValue: '${ ctx.foo.bar[3].baz.qux }',
+      defaultValue: '${ eas.foo.bar[3].baz.qux }',
       allowedValueTypeName: BuildStepInputValueTypeName.BOOLEAN,
     });
     expect(() => i.value).toThrowError(
@@ -257,7 +257,7 @@ describe(BuildStepInput, () => {
     const i = new BuildStepInput(ctx, {
       id: 'foo',
       stepDisplayName: BuildStep.getDisplayName({ id: 'test1' }),
-      defaultValue: '${ ctx.foo.bar[3].baz.qux }',
+      defaultValue: '${ eas.foo.bar[3].baz.qux }',
       allowedValueTypeName: BuildStepInputValueTypeName.JSON,
     });
     expect(() => i.value).toThrowError(
@@ -318,7 +318,7 @@ describe(BuildStepInput, () => {
       stepDisplayName: BuildStep.getDisplayName({ id: 'test1' }),
       allowedValueTypeName: BuildStepInputValueTypeName.JSON,
     });
-    i.set('${ ctx.runtimePlatform }');
+    i.set('${ eas.runtimePlatform }');
     expect(() => {
       // eslint-disable-next-line @typescript-eslint/no-unused-expressions
       i.value;
@@ -335,7 +335,7 @@ describe(BuildStepInput, () => {
       stepDisplayName: BuildStep.getDisplayName({ id: 'test1' }),
       allowedValueTypeName: BuildStepInputValueTypeName.NUMBER,
     });
-    i.set('${ ctx.runtimePlatform }');
+    i.set('${ eas.runtimePlatform }');
     expect(() => {
       // eslint-disable-next-line @typescript-eslint/no-unused-expressions
       i.value;
@@ -352,7 +352,7 @@ describe(BuildStepInput, () => {
       stepDisplayName: BuildStep.getDisplayName({ id: 'test1' }),
       allowedValueTypeName: BuildStepInputValueTypeName.BOOLEAN,
     });
-    i.set('${ ctx.runtimePlatform }');
+    i.set('${ eas.runtimePlatform }');
     expect(() => {
       // eslint-disable-next-line @typescript-eslint/no-unused-expressions
       i.value;

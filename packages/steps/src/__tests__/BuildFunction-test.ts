@@ -144,7 +144,7 @@ describe(BuildFunction, () => {
         }),
         BuildStepInput.createProvider({
           id: 'input5',
-          defaultValue: '${ ctx.job.version.buildNumber }',
+          defaultValue: '${ eas.job.version.buildNumber }',
           allowedValueTypeName: BuildStepInputValueTypeName.NUMBER,
         }),
       ];

@@ -270,7 +270,7 @@ describe(BuildConfigParser, () => {
       //       ENV2: value2
       //     inputs:
       //       name: Dominik
-      //       buildNumber: ${ ctx.job.version.buildNumber }
+      //       buildNumber: ${ eas.job.version.buildNumber }
       //        json_input:
       //          property1: value1
       //          property2:
@@ -286,7 +286,7 @@ describe(BuildConfigParser, () => {
       expect(step1.inputs?.[0].value).toBe('Dominik');
       expect(step1.inputs?.[0].allowedValueTypeName).toBe(BuildStepInputValueTypeName.STRING);
       expect(step1.inputs?.[1].id).toBe('build_number');
-      expect(step1.inputs?.[1].rawValue).toBe('${ ctx.job.version.buildNumber }');
+      expect(step1.inputs?.[1].rawValue).toBe('${ eas.job.version.buildNumber }');
       expect(step1.inputs?.[1].allowedValueTypeName).toBe(BuildStepInputValueTypeName.NUMBER);
       expect(step1.inputs?.[2].id).toBe('json_input');
       expect(step1.inputs?.[2].value).toMatchObject({
