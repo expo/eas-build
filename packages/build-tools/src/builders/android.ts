@@ -16,12 +16,14 @@ import { restoreCredentials } from '../android/credentials';
 import { configureBuildGradle } from '../android/gradleConfig';
 import { setupAsync } from '../common/setup';
 import { prebuildAsync } from '../common/prebuild';
+import { prepareExecutableAsync } from '../utils/prepareBuildExecutable';
 
 import { runBuilderWithHooksAsync } from './common';
 import { runCustomBuildAsync } from './custom';
 
 export default async function androidBuilder(ctx: BuildContext<Android.Job>): Promise<Artifacts> {
   if (ctx.job.mode === BuildMode.BUILD) {
+    await prepareExecutableAsync(ctx);
     return await runBuilderWithHooksAsync(ctx, buildAsync);
   } else if (ctx.job.mode === BuildMode.RESIGN) {
     throw new Error('Not implemented');

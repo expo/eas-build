@@ -5,7 +5,8 @@
   "types": "dist/index.d.ts",
   "files": [
     "dist",
-    "templates"
+    "templates",
+    "bin"
   ],
   "scripts": {
     "start": "yarn watch",

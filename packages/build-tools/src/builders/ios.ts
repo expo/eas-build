@@ -16,12 +16,14 @@ import { downloadApplicationArchiveAsync } from '../ios/resign';
 import { resolveArtifactPath, resolveBuildConfiguration, resolveScheme } from '../ios/resolve';
 import { setupAsync } from '../common/setup';
 import { prebuildAsync } from '../common/prebuild';
+import { prepareExecutableAsync } from '../utils/prepareBuildExecutable';
 
 import { runBuilderWithHooksAsync } from './common';
 import { runCustomBuildAsync } from './custom';
 
 export default async function iosBuilder(ctx: BuildContext<Ios.Job>): Promise<Artifacts> {
   if (ctx.job.mode === BuildMode.BUILD) {
+    await prepareExecutableAsync(ctx);
     return await runBuilderWithHooksAsync(ctx, buildAsync);
   } else if (ctx.job.mode === BuildMode.RESIGN) {
     return await resignAsync(ctx);
