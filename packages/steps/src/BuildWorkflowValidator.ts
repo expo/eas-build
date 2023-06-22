@@ -1,4 +1,3 @@
-import { STEP_OR_CONTEXT_REFERENCE_REGEX } from './BuildConfig.js';
 import { BuildStep } from './BuildStep.js';
 import { BuildStepInputValueTypeName } from './BuildStepInput.js';
 import { BuildWorkflow } from './BuildWorkflow.js';
@@ -47,19 +46,14 @@ export class BuildWorkflowValidator {
           errors.push(error);
         }
 
-        const isStepOrContextReference =
-          typeof currentStepInput.rawValue === 'string' &&
-          STEP_OR_CONTEXT_REFERENCE_REGEX.exec(currentStepInput.rawValue);
-        const isJson =
-          typeof currentStepInput.rawValue === 'object' &&
-          currentStepInput.allowedValueTypeName === BuildStepInputValueTypeName.JSON;
+        const currentType =
+          typeof currentStepInput.rawValue === 'object'
+            ? BuildStepInputValueTypeName.JSON
+            : typeof currentStepInput.rawValue;
         if (
           currentStepInput.rawValue !== undefined &&
-          !(
-            typeof currentStepInput.rawValue === currentStepInput.allowedValueTypeName ||
-            isStepOrContextReference ||
-            isJson
-          )
+          !currentStepInput.isRawValueStepOrContextReference() &&
+          currentType !== currentStepInput.allowedValueTypeName
         ) {
           const error = new BuildConfigError(
             `Input parameter "${currentStepInput.id}" for step "${
@@ -70,7 +64,7 @@ export class BuildWorkflowValidator {
                 : currentStepInput.rawValue
             }" which is not of type "${
               currentStepInput.allowedValueTypeName
-            }" or is not step or context refference.`
+            }" or is not step or context reference.`
           );
           errors.push(error);
         }

@@ -8,6 +8,7 @@ import { nullthrows } from './nullthrows.js';
 export const BUILD_STEP_INPUT_EXPRESSION_REGEXP = /\${\s*(inputs\.[\S]+)\s*}/;
 export const BUILD_STEP_OUTPUT_EXPRESSION_REGEXP = /\${\s*(steps\.[\S]+)\s*}/;
 export const BUILD_GLOBAL_CONTEXT_EXPRESSION_REGEXP = /\${\s*(ctx\.[\S]+)\s*}/;
+export const BUILD_STEP_OR_BUILD_GLOBAL_CONTEXT_REFERENCE_REGEX = /\${\s*((steps|ctx)\.[\S]+)\s*}/;
 
 export function interpolateWithInputs(
   templateString: string,

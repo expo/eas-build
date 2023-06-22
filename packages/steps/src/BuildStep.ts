@@ -20,11 +20,7 @@ import {
   saveScriptToTemporaryFileAsync,
 } from './BuildTemporaryFiles.js';
 import { spawnAsync } from './utils/shell/spawn.js';
-import {
-  getObjectValueForInterpolation,
-  interpolateWithGlobalContext,
-  interpolateWithInputs,
-} from './utils/template.js';
+import { interpolateWithInputs } from './utils/template.js';
 import { BuildStepRuntimeError } from './errors.js';
 import { BuildStepEnv } from './BuildStepEnv.js';
 import { BuildRuntimePlatform } from './BuildRuntimePlatform.js';
@@ -286,17 +282,7 @@ export class BuildStep {
           : input.value?.toString() ?? '';
       return acc;
     }, {} as Record<string, string>);
-    const valueInterpolatedWithGlobalContext = interpolateWithGlobalContext(command, (path) => {
-      return (
-        getObjectValueForInterpolation(path, {
-          projectSourceDirectory: this.ctx.global.projectSourceDirectory,
-          projectTargetDirectory: this.ctx.global.projectTargetDirectory,
-          defaultWorkingDirectory: this.ctx.global.defaultWorkingDirectory,
-          runtimePlatform: this.ctx.global.runtimePlatform,
-          ...this.ctx.global.staticContext,
-        })?.toString() ?? ''
-      );
-    });
+    const valueInterpolatedWithGlobalContext = this.ctx.global.interpolate(command);
     return interpolateWithInputs(valueInterpolatedWithGlobalContext, vars);
   }
 

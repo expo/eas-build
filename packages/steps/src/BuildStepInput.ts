@@ -1,8 +1,7 @@
 import { BuildStepGlobalContext } from './BuildStepContext.js';
 import { BuildStepRuntimeError } from './errors.js';
 import {
-  getObjectValueForInterpolation,
-  interpolateWithGlobalContext,
+  BUILD_STEP_OR_BUILD_GLOBAL_CONTEXT_REFERENCE_REGEX,
   interpolateWithOutputs,
 } from './utils/template.js';
 
@@ -79,37 +78,21 @@ export class BuildStepInput {
       typeof rawValue === 'number' ||
       typeof rawValue === 'object';
     if (valueDoesNotRequireInterpolation) {
-      const isJsonValue =
-        typeof rawValue === 'object' &&
-        this.allowedValueTypeName === BuildStepInputValueTypeName.JSON;
-      if (
-        !(typeof rawValue == this.allowedValueTypeName || isJsonValue) &&
-        rawValue !== undefined
-      ) {
+      const currentTypeName =
+        typeof rawValue === 'object' ? BuildStepInputValueTypeName.JSON : typeof rawValue;
+      if (currentTypeName !== this.allowedValueTypeName && rawValue !== undefined) {
         throw new BuildStepRuntimeError(
           `Input parameter "${this.id}" for step "${this.stepDisplayName}" must be of type "${this.allowedValueTypeName}".`
         );
       }
       return rawValue;
     } else {
-      const valueInterpolatedWithGlobalContext = interpolateWithGlobalContext(rawValue, (path) => {
-        return (
-          getObjectValueForInterpolation(path, {
-            projectSourceDirectory: this.ctx.projectSourceDirectory,
-            projectTargetDirectory: this.ctx.projectTargetDirectory,
-            defaultWorkingDirectory: this.ctx.defaultWorkingDirectory,
-            runtimePlatform: this.ctx.runtimePlatform,
-            ...this.ctx.staticContext,
-          })?.toString() ?? ''
-        );
-      });
+      const valueInterpolatedWithGlobalContext = this.ctx.interpolate(rawValue);
       const valueInterpolatedWithOutputsAndGlobalContext = interpolateWithOutputs(
         valueInterpolatedWithGlobalContext,
         (path) => this.ctx.getStepOutputValue(path) ?? ''
       );
-      return this.parseInterpolatedInputValueToAllowedType(
-        valueInterpolatedWithOutputsAndGlobalContext
-      );
+      return this.parseInputValueToAllowedType(valueInterpolatedWithOutputsAndGlobalContext);
     }
   }
 
@@ -136,19 +119,26 @@ export class BuildStepInput {
     return this.allowedValues.includes(value);
   }
 
-  private parseInterpolatedInputValueToAllowedType(value: string): BuildStepInputValueType {
+  public isRawValueStepOrContextReference(): boolean {
+    return (
+      typeof this.rawValue === 'string' &&
+      !!BUILD_STEP_OR_BUILD_GLOBAL_CONTEXT_REFERENCE_REGEX.exec(this.rawValue)
+    );
+  }
+
+  private parseInputValueToAllowedType(value: string): BuildStepInputValueType {
     if (this.allowedValueTypeName === BuildStepInputValueTypeName.STRING) {
       return value;
     } else if (this.allowedValueTypeName === BuildStepInputValueTypeName.NUMBER) {
-      return this.parseInterpolatedInputValueToNumber(value);
+      return this.parseInputValueToNumber(value);
     } else if (this.allowedValueTypeName === BuildStepInputValueTypeName.BOOLEAN) {
-      return this.parseInterpolatedInputValueToBoolean(value);
+      return this.parseInputValueToBoolean(value);
     } else {
-      return this.parseInterpolatedInputValueToObject(value);
+      return this.parseInputValueToObject(value);
     }
   }
 
-  private parseInterpolatedInputValueToNumber(value: string): number {
+  private parseInputValueToNumber(value: string): number {
     const numberValue = Number(value);
     if (Number.isNaN(numberValue)) {
       throw new BuildStepRuntimeError(
@@ -158,7 +148,7 @@ export class BuildStepInput {
     return numberValue;
   }
 
-  private parseInterpolatedInputValueToBoolean(value: string): boolean {
+  private parseInputValueToBoolean(value: string): boolean {
     if (value === 'true') {
       return true;
     } else if (value === 'false') {
@@ -170,7 +160,7 @@ export class BuildStepInput {
     }
   }
 
-  private parseInterpolatedInputValueToObject(value: string): Record<string, any> {
+  private parseInputValueToObject(value: string): Record<string, any> {
     try {
       return JSON.parse(value);
     } catch (e: any) {

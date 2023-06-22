@@ -10,6 +10,7 @@ import { BuildRuntimePlatform } from './BuildRuntimePlatform.js';
 import { BuildFunction } from './BuildFunction.js';
 import { BuildStepInputValueType, BuildStepInputValueTypeName } from './BuildStepInput.js';
 import { BuildStepEnv } from './BuildStepEnv.js';
+import { BUILD_STEP_OR_BUILD_GLOBAL_CONTEXT_REFERENCE_REGEX } from './utils/template.js';
 
 export type BuildFunctions = Record<string, BuildFunctionConfig>;
 
@@ -82,8 +83,6 @@ export type BuildFunctionInputs = (
 )[];
 export type BuildFunctionOutputs = BuildStepOutputs;
 
-export const STEP_OR_CONTEXT_REFERENCE_REGEX = /\${\s*((steps|ctx)\.[\S]+)\s*}/;
-
 const BuildFunctionInputsSchema = Joi.array().items(
   Joi.alternatives().conditional(Joi.ref('.'), {
     is: Joi.string(),
@@ -105,7 +104,7 @@ const BuildFunctionInputsSchema = Joi.array().items(
           then: Joi.alternatives(
             Joi.boolean(),
             Joi.string().pattern(
-              STEP_OR_CONTEXT_REFERENCE_REGEX,
+              BUILD_STEP_OR_BUILD_GLOBAL_CONTEXT_REFERENCE_REGEX,
               'context or output reference regex pattern'
             )
           ).messages({
@@ -118,7 +117,7 @@ const BuildFunctionInputsSchema = Joi.array().items(
           then: Joi.alternatives(
             Joi.number(),
             Joi.string().pattern(
-              STEP_OR_CONTEXT_REFERENCE_REGEX,
+              BUILD_STEP_OR_BUILD_GLOBAL_CONTEXT_REFERENCE_REGEX,
               'context or output reference regex pattern'
             )
           ).messages({
@@ -131,7 +130,7 @@ const BuildFunctionInputsSchema = Joi.array().items(
           then: Joi.alternatives(
             Joi.object(),
             Joi.string().pattern(
-              STEP_OR_CONTEXT_REFERENCE_REGEX,
+              BUILD_STEP_OR_BUILD_GLOBAL_CONTEXT_REFERENCE_REGEX,
               'context or output reference regex pattern'
             )
           ).messages({
