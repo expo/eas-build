@@ -62,7 +62,8 @@ export async function maybeFindAndUploadBuildArtifacts(
         )
       )
     ).flat();
-    logger.info(`Uploading build artifacts: ${buildArtifacts.join(', ')}`);
+    logger.info(`Build artifacts: ${buildArtifacts.join(', ')}`);
+    logger.info('Uploading build artifacts...');
     await ctx.uploadArtifacts(ArtifactType.BUILD_ARTIFACTS, buildArtifacts, logger);
   } catch (err: any) {
     logger.error({ err }, 'Failed to upload build artifacts');
@@ -83,5 +84,6 @@ export async function uploadApplicationArchive(
 ): Promise<void> {
   const applicationArchives = await findArtifacts(rootDir, patternOrPath, logger);
   logger.info(`Application archives: ${applicationArchives.join(', ')}`);
+  logger.info('Uploading application archive...');
   await ctx.uploadArtifacts(ArtifactType.APPLICATION_ARCHIVE, applicationArchives, logger);
 }
