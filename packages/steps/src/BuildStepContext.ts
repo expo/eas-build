@@ -5,7 +5,11 @@ import { bunyan } from '@expo/logger';
 import { v4 as uuidv4 } from 'uuid';
 
 import { BuildStep } from './BuildStep.js';
-import { parseOutputPath } from './utils/template.js';
+import {
+  getObjectValueForInterpolation,
+  interpolateWithGlobalContext,
+  parseOutputPath,
+} from './utils/template.js';
 import { BuildStepRuntimeError } from './errors.js';
 import { BuildRuntimePlatform } from './BuildRuntimePlatform.js';
 import { BuildStepEnv } from './BuildStepEnv.js';
@@ -55,6 +59,10 @@ export class BuildStepGlobalContext {
     return this.provider.env;
   }
 
+  public get staticContext(): Record<string, any> {
+    return this.provider.staticContext();
+  }
+
   public updateEnv(updatedEnv: BuildStepEnv): void {
     this.provider.updateEnv(updatedEnv);
   }
@@ -69,6 +77,19 @@ export class BuildStepGlobalContext {
       throw new BuildStepRuntimeError(`Step "${stepId}" does not exist.`);
     }
     return this.stepById[stepId].getOutputValueByName(outputId);
+  }
+
+  public interpolate(value: string): string {
+    return interpolateWithGlobalContext(value, (path) => {
+      return (
+        getObjectValueForInterpolation(path, {
+          eas: {
+            runtimePlatform: this.runtimePlatform,
+            ...this.staticContext,
+          },
+        })?.toString() ?? ''
+      );
+    });
   }
 
   public stepCtx(options: { logger: bunyan; workingDirectory: string }): BuildStepContext {

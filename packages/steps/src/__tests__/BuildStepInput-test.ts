@@ -41,6 +41,17 @@ describe(BuildStepInput, () => {
     expect(i.value).toBe(42);
   });
 
+  test('basic case json', () => {
+    const ctx = createGlobalContextMock();
+    const i = new BuildStepInput(ctx, {
+      id: 'foo',
+      stepDisplayName: BuildStep.getDisplayName({ id: 'test1' }),
+      allowedValueTypeName: BuildStepInputValueTypeName.JSON,
+    });
+    i.set({ foo: 'bar' });
+    expect(i.value).toEqual({ foo: 'bar' });
+  });
+
   test('basic case undefined', () => {
     const ctx = createGlobalContextMock();
     const i = new BuildStepInput(ctx, {
@@ -73,6 +84,187 @@ describe(BuildStepInput, () => {
     expect(i.value).toBe(true);
   });
 
+  test('default value json', () => {
+    const ctx = createGlobalContextMock();
+    const i = new BuildStepInput(ctx, {
+      id: 'foo',
+      stepDisplayName: BuildStep.getDisplayName({ id: 'test1' }),
+      defaultValue: { foo: 'bar' },
+      allowedValueTypeName: BuildStepInputValueTypeName.JSON,
+    });
+    expect(i.value).toEqual({ foo: 'bar' });
+  });
+
+  test('context value string', () => {
+    const ctx = createGlobalContextMock();
+    const i = new BuildStepInput(ctx, {
+      id: 'foo',
+      stepDisplayName: BuildStep.getDisplayName({ id: 'test1' }),
+      defaultValue: '${ eas.runtimePlatform }',
+    });
+    expect(i.value).toEqual('linux');
+  });
+
+  test('context value number', () => {
+    const ctx = createGlobalContextMock({
+      staticContextContent: {
+        foo: {
+          bar: [
+            1,
+            2,
+            3,
+            {
+              baz: 42,
+            },
+          ],
+        },
+      },
+    });
+    const i = new BuildStepInput(ctx, {
+      id: 'foo',
+      stepDisplayName: BuildStep.getDisplayName({ id: 'test1' }),
+      defaultValue: '${ eas.foo.bar[3].baz }',
+      allowedValueTypeName: BuildStepInputValueTypeName.NUMBER,
+    });
+    expect(i.value).toEqual(42);
+  });
+
+  test('context value boolean', () => {
+    const ctx = createGlobalContextMock({
+      staticContextContent: {
+        foo: {
+          bar: [
+            1,
+            2,
+            3,
+            {
+              baz: {
+                qux: false,
+              },
+            },
+          ],
+        },
+      },
+    });
+    const i = new BuildStepInput(ctx, {
+      id: 'foo',
+      stepDisplayName: BuildStep.getDisplayName({ id: 'test1' }),
+      defaultValue: '${ eas.foo.bar[3].baz.qux }',
+      allowedValueTypeName: BuildStepInputValueTypeName.BOOLEAN,
+    });
+    expect(i.value).toEqual(false);
+  });
+
+  test('context value JSON', () => {
+    const ctx = createGlobalContextMock({
+      staticContextContent: {
+        foo: {
+          bar: [
+            1,
+            2,
+            3,
+            {
+              baz: {
+                qux: false,
+              },
+            },
+          ],
+        },
+      },
+    });
+    const i = new BuildStepInput(ctx, {
+      id: 'foo',
+      stepDisplayName: BuildStep.getDisplayName({ id: 'test1' }),
+      defaultValue: '${ eas.foo }',
+      allowedValueTypeName: BuildStepInputValueTypeName.JSON,
+    });
+    expect(i.value).toMatchObject({ bar: [1, 2, 3, { baz: { qux: false } }] });
+  });
+
+  test('invalid context value type number', () => {
+    const ctx = createGlobalContextMock({
+      staticContextContent: {
+        foo: {
+          bar: [
+            1,
+            2,
+            3,
+            {
+              baz: {
+                qux: 'ala ma kota',
+              },
+            },
+          ],
+        },
+      },
+    });
+    const i = new BuildStepInput(ctx, {
+      id: 'foo',
+      stepDisplayName: BuildStep.getDisplayName({ id: 'test1' }),
+      defaultValue: '${ eas.foo.bar[3].baz.qux }',
+      allowedValueTypeName: BuildStepInputValueTypeName.NUMBER,
+    });
+    expect(() => i.value).toThrowError(
+      'Input parameter "foo" for step "test1" must be of type "number".'
+    );
+  });
+
+  test('invalid context value type boolean', () => {
+    const ctx = createGlobalContextMock({
+      staticContextContent: {
+        foo: {
+          bar: [
+            1,
+            2,
+            3,
+            {
+              baz: {
+                qux: 123,
+              },
+            },
+          ],
+        },
+      },
+    });
+    const i = new BuildStepInput(ctx, {
+      id: 'foo',
+      stepDisplayName: BuildStep.getDisplayName({ id: 'test1' }),
+      defaultValue: '${ eas.foo.bar[3].baz.qux }',
+      allowedValueTypeName: BuildStepInputValueTypeName.BOOLEAN,
+    });
+    expect(() => i.value).toThrowError(
+      'Input parameter "foo" for step "test1" must be of type "boolean".'
+    );
+  });
+
+  test('invalid context value type JSON', () => {
+    const ctx = createGlobalContextMock({
+      staticContextContent: {
+        foo: {
+          bar: [
+            1,
+            2,
+            3,
+            {
+              baz: {
+                qux: 'ala ma kota',
+              },
+            },
+          ],
+        },
+      },
+    });
+    const i = new BuildStepInput(ctx, {
+      id: 'foo',
+      stepDisplayName: BuildStep.getDisplayName({ id: 'test1' }),
+      defaultValue: '${ eas.foo.bar[3].baz.qux }',
+      allowedValueTypeName: BuildStepInputValueTypeName.JSON,
+    });
+    expect(() => i.value).toThrowError(
+      'Input parameter "foo" for step "test1" must be of type "json".'
+    );
+  });
+
   test('default value number', () => {
     const ctx = createGlobalContextMock();
     const i = new BuildStepInput(ctx, {
@@ -101,7 +293,7 @@ describe(BuildStepInput, () => {
     );
   });
 
-  test('enforces correct value type when reading a value', () => {
+  test('enforces correct value type when reading a value - basic', () => {
     const ctx = createGlobalContextMock();
     const i = new BuildStepInput(ctx, {
       id: 'foo',
@@ -110,6 +302,57 @@ describe(BuildStepInput, () => {
       allowedValueTypeName: BuildStepInputValueTypeName.BOOLEAN,
     });
     i.set('bar');
+    expect(() => {
+      // eslint-disable-next-line @typescript-eslint/no-unused-expressions
+      i.value;
+    }).toThrowError(
+      new BuildStepRuntimeError('Input parameter "foo" for step "test1" must be of type "boolean".')
+    );
+  });
+
+  test('enforces correct value type when reading a value - reference json', () => {
+    const ctx = createGlobalContextMock();
+    const i = new BuildStepInput(ctx, {
+      id: 'foo',
+      required: true,
+      stepDisplayName: BuildStep.getDisplayName({ id: 'test1' }),
+      allowedValueTypeName: BuildStepInputValueTypeName.JSON,
+    });
+    i.set('${ eas.runtimePlatform }');
+    expect(() => {
+      // eslint-disable-next-line @typescript-eslint/no-unused-expressions
+      i.value;
+    }).toThrowError(
+      new BuildStepRuntimeError('Input parameter "foo" for step "test1" must be of type "json".')
+    );
+  });
+
+  test('enforces correct value type when reading a value - reference number', () => {
+    const ctx = createGlobalContextMock();
+    const i = new BuildStepInput(ctx, {
+      id: 'foo',
+      required: true,
+      stepDisplayName: BuildStep.getDisplayName({ id: 'test1' }),
+      allowedValueTypeName: BuildStepInputValueTypeName.NUMBER,
+    });
+    i.set('${ eas.runtimePlatform }');
+    expect(() => {
+      // eslint-disable-next-line @typescript-eslint/no-unused-expressions
+      i.value;
+    }).toThrowError(
+      new BuildStepRuntimeError('Input parameter "foo" for step "test1" must be of type "number".')
+    );
+  });
+
+  test('enforces correct value type when reading a value - reference boolean', () => {
+    const ctx = createGlobalContextMock();
+    const i = new BuildStepInput(ctx, {
+      id: 'foo',
+      required: true,
+      stepDisplayName: BuildStep.getDisplayName({ id: 'test1' }),
+      allowedValueTypeName: BuildStepInputValueTypeName.BOOLEAN,
+    });
+    i.set('${ eas.runtimePlatform }');
     expect(() => {
       // eslint-disable-next-line @typescript-eslint/no-unused-expressions
       i.value;

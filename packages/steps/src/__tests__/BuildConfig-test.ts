@@ -120,6 +120,9 @@ describe(readAndValidateBuildFunctionsConfigFileAsync, () => {
     expect(error.message).toMatch(
       /"functions.say_hi.inputs\[0\].allowedValues\[1\]" must be a boolean/
     );
+    expect(error.message).toMatch(
+      /"functions.say_hi.inputs\[1\].defaultValue" with value "\${ wrong.job.platform }" fails to match the context or output reference regex pattern/
+    );
   });
 });
 
@@ -473,6 +476,7 @@ describe(validateConfig, () => {
                   test_boolean: {
                     inputs: {
                       boolean: true,
+                      boolean2: '${ eas.job.booleanValue }',
                     },
                   },
                 },
@@ -484,6 +488,11 @@ describe(validateConfig, () => {
                   {
                     name: 'boolean',
                     type: 'boolean',
+                  },
+                  {
+                    name: 'boolean2',
+                    type: 'boolean',
+                    defaultValue: '${ eas.job.booleanValue }',
                   },
                 ],
                 command: 'echo "${ inputs.boolean }!"',
@@ -615,6 +624,16 @@ describe(validateConfig, () => {
                   default_value: true,
                   type: 'number',
                 },
+                {
+                  name: 'i6',
+                  default_value: 'abc',
+                  type: 'boolean',
+                },
+                {
+                  name: 'i7',
+                  default_value: true,
+                  type: 'json',
+                },
               ],
               command: 'echo "${ inputs.i1 } ${ inputs.i2 }"',
             },
@@ -635,9 +654,13 @@ describe(validateConfig, () => {
           /"functions.abc.inputs\[2\].allowedValues\[1\]" must be a string/
         );
         expect(error.message).toMatch(
-          /"functions.abc.inputs\[3\].allowedValueType" must be one of \[string, boolean, number\]/
+          /"functions.abc.inputs\[3\].allowedValueType" must be one of \[string, boolean, number, json\]/
         );
         expect(error.message).toMatch(/"functions.abc.inputs\[4\].defaultValue" must be a number/);
+        expect(error.message).toMatch(
+          /"functions.abc.inputs\[5\].defaultValue" with value "abc" fails to match the context or output reference regex pattern pattern/
+        );
+        expect(error.message).toMatch(/"functions.abc.inputs\[6\].defaultValue" must be a object/);
       });
       test('valid default and allowed values for function inputs', () => {
         const buildConfig = {
@@ -667,6 +690,30 @@ describe(validateConfig, () => {
                   default_value: 1,
                   type: 'number',
                   allowed_values: [1, 2],
+                },
+                {
+                  name: 'i5',
+                  default_value: {
+                    a: 1,
+                    b: {
+                      c: [2, 3],
+                      d: false,
+                      e: {
+                        f: 'hi',
+                      },
+                    },
+                  },
+                  type: 'json',
+                },
+                {
+                  name: 'i6',
+                  default_value: '${ eas.job.version.buildNumber }',
+                  type: 'number',
+                },
+                {
+                  name: 'i7',
+                  default_value: '${ steps.stepid.someBoolean }',
+                  type: 'boolean',
                 },
               ],
               command: 'echo "${ inputs.i1 } ${ inputs.i2 } ${ inputs.i3 }"',

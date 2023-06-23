@@ -7,10 +7,17 @@ build:
           ENV2: value2
         inputs:
           name: Dominik
+          build_number: ${ eas.job.version.buildNumber }
+          json_input:
+            property1: value1
+            property2:
+              - aaa
+              - bbb
     - say_hi:
         name: Hi, Szymon!
         inputs:
           name: Szymon
+          build_number: 122
     - say_hi_wojtek
     - random:
         id: random_number
@@ -27,6 +34,16 @@ functions:
     name: Hi!
     inputs:
       - name
+      - name: build_number
+        type: number
+      - name: json_input
+        type: json
+        default_value:
+          property1: value1
+          property2:
+            - value2
+            - value3:
+                property3: value4
     command: echo "Hi, ${ inputs.name }!"
   say_hi_wojtek:
     name: Hi, Wojtek!

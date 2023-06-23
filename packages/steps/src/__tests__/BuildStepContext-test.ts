@@ -53,7 +53,7 @@ describe(BuildStepGlobalContext, () => {
     it('throws an error if the step output references a non-existent step', () => {
       const ctx = createGlobalContextMock();
       const error = getError<BuildStepRuntimeError>(() => {
-        ctx.getStepOutputValue('abc.def');
+        ctx.getStepOutputValue('steps.abc.def');
       });
       expect(error).toBeInstanceOf(BuildStepRuntimeError);
       expect(error.message).toMatch(/Step "abc" does not exist/);
@@ -67,7 +67,7 @@ describe(BuildStepGlobalContext, () => {
       const step = instance(mockStep);
 
       ctx.registerStep(step);
-      expect(ctx.getStepOutputValue('abc.def')).toBe('ghi');
+      expect(ctx.getStepOutputValue('steps.abc.def')).toBe('ghi');
     });
   });
   describe(BuildStepGlobalContext.prototype.stepCtx, () => {

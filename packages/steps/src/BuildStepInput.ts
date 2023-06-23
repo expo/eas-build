@@ -1,13 +1,17 @@
 import { BuildStepGlobalContext } from './BuildStepContext.js';
 import { BuildStepRuntimeError } from './errors.js';
-import { interpolateWithOutputs } from './utils/template.js';
+import {
+  BUILD_STEP_OR_BUILD_GLOBAL_CONTEXT_REFERENCE_REGEX,
+  interpolateWithOutputs,
+} from './utils/template.js';
 
 export enum BuildStepInputValueTypeName {
   STRING = 'string',
   BOOLEAN = 'boolean',
   NUMBER = 'number',
+  JSON = 'json',
 }
-export type BuildStepInputValueType = string | boolean | number;
+export type BuildStepInputValueType = string | boolean | number | Record<string, any>;
 
 export type BuildStepInputById = Record<string, BuildStepInput>;
 export type BuildStepInputProvider = (
@@ -67,16 +71,28 @@ export class BuildStepInput {
         `Input parameter "${this.id}" for step "${this.stepDisplayName}" is required but it was not set.`
       );
     }
-    if (typeof rawValue !== this.allowedValueTypeName && rawValue !== undefined) {
-      throw new BuildStepRuntimeError(
-        `Input parameter "${this.id}" for step "${this.stepDisplayName}" must be of type "${this.allowedValueTypeName}".`
-      );
-    }
 
-    if (rawValue === undefined || typeof rawValue === 'boolean' || typeof rawValue === 'number') {
+    const valueDoesNotRequireInterpolation =
+      rawValue === undefined ||
+      typeof rawValue === 'boolean' ||
+      typeof rawValue === 'number' ||
+      typeof rawValue === 'object';
+    if (valueDoesNotRequireInterpolation) {
+      const currentTypeName =
+        typeof rawValue === 'object' ? BuildStepInputValueTypeName.JSON : typeof rawValue;
+      if (currentTypeName !== this.allowedValueTypeName && rawValue !== undefined) {
+        throw new BuildStepRuntimeError(
+          `Input parameter "${this.id}" for step "${this.stepDisplayName}" must be of type "${this.allowedValueTypeName}".`
+        );
+      }
       return rawValue;
     } else {
-      return interpolateWithOutputs(rawValue, (path) => this.ctx.getStepOutputValue(path) ?? '');
+      const valueInterpolatedWithGlobalContext = this.ctx.interpolate(rawValue);
+      const valueInterpolatedWithOutputsAndGlobalContext = interpolateWithOutputs(
+        valueInterpolatedWithGlobalContext,
+        (path) => this.ctx.getStepOutputValue(path) ?? ''
+      );
+      return this.parseInputValueToAllowedType(valueInterpolatedWithOutputsAndGlobalContext);
     }
   }
 
@@ -101,6 +117,60 @@ export class BuildStepInput {
       return true;
     }
     return this.allowedValues.includes(value);
+  }
+
+  public isRawValueStepOrContextReference(): boolean {
+    return (
+      typeof this.rawValue === 'string' &&
+      !!BUILD_STEP_OR_BUILD_GLOBAL_CONTEXT_REFERENCE_REGEX.exec(this.rawValue)
+    );
+  }
+
+  private parseInputValueToAllowedType(value: string): BuildStepInputValueType {
+    if (this.allowedValueTypeName === BuildStepInputValueTypeName.STRING) {
+      return value;
+    } else if (this.allowedValueTypeName === BuildStepInputValueTypeName.NUMBER) {
+      return this.parseInputValueToNumber(value);
+    } else if (this.allowedValueTypeName === BuildStepInputValueTypeName.BOOLEAN) {
+      return this.parseInputValueToBoolean(value);
+    } else {
+      return this.parseInputValueToObject(value);
+    }
+  }
+
+  private parseInputValueToNumber(value: string): number {
+    const numberValue = Number(value);
+    if (Number.isNaN(numberValue)) {
+      throw new BuildStepRuntimeError(
+        `Input parameter "${this.id}" for step "${this.stepDisplayName}" must be of type "${this.allowedValueTypeName}".`
+      );
+    }
+    return numberValue;
+  }
+
+  private parseInputValueToBoolean(value: string): boolean {
+    if (value === 'true') {
+      return true;
+    } else if (value === 'false') {
+      return false;
+    } else {
+      throw new BuildStepRuntimeError(
+        `Input parameter "${this.id}" for step "${this.stepDisplayName}" must be of type "${this.allowedValueTypeName}".`
+      );
+    }
+  }
+
+  private parseInputValueToObject(value: string): Record<string, any> {
+    try {
+      return JSON.parse(value);
+    } catch (e: any) {
+      throw new BuildStepRuntimeError(
+        `Input parameter "${this.id}" for step "${this.stepDisplayName}" must be of type "${this.allowedValueTypeName}".`,
+        {
+          cause: e,
+        }
+      );
+    }
   }
 }
 

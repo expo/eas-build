@@ -22,13 +22,14 @@ export class MockContextProvider implements ExternalBuildContextProvider {
     public readonly runtimePlatform: BuildRuntimePlatform,
     public readonly projectSourceDirectory: string,
     public readonly projectTargetDirectory: string,
-    public readonly defaultWorkingDirectory: string
+    public readonly defaultWorkingDirectory: string,
+    public readonly staticContextContent: Record<string, any> = {}
   ) {}
   public get env(): BuildStepEnv {
     return this._env;
   }
   public staticContext(): any {
-    return {};
+    return { ...this.staticContextContent };
   }
   public updateEnv(env: BuildStepEnv): void {
     this._env = env;
@@ -43,6 +44,7 @@ interface BuildContextParams {
   projectSourceDirectory?: string;
   projectTargetDirectory?: string;
   workingDirectory?: string;
+  staticContextContent?: Record<string, any>;
 }
 
 export function createStepContextMock({
@@ -53,6 +55,7 @@ export function createStepContextMock({
   projectSourceDirectory,
   projectTargetDirectory,
   workingDirectory,
+  staticContextContent,
 }: BuildContextParams = {}): BuildStepContext {
   const globalCtx = createGlobalContextMock({
     buildId,
@@ -62,6 +65,7 @@ export function createStepContextMock({
     projectSourceDirectory,
     projectTargetDirectory,
     workingDirectory,
+    staticContextContent,
   });
   return new BuildStepContext(globalCtx, {
     logger: logger ?? createMockLogger(),
@@ -76,6 +80,7 @@ export function createGlobalContextMock({
   projectSourceDirectory,
   projectTargetDirectory,
   workingDirectory,
+  staticContextContent,
 }: BuildContextParams = {}): BuildStepGlobalContext {
   const resolvedProjectTargetDirectory =
     projectTargetDirectory ?? path.join(os.tmpdir(), 'eas-build', uuidv4());
@@ -85,7 +90,8 @@ export function createGlobalContextMock({
       runtimePlatform ?? BuildRuntimePlatform.LINUX,
       projectSourceDirectory ?? '/non/existent/dir',
       resolvedProjectTargetDirectory,
-      workingDirectory ?? resolvedProjectTargetDirectory
+      workingDirectory ?? resolvedProjectTargetDirectory,
+      staticContextContent ?? {}
     ),
     skipCleanup ?? false
   );

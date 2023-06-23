@@ -222,7 +222,7 @@ export class BuildStep {
     assert(this.command, 'Command must be defined.');
 
     try {
-      const command = this.interpolateInputsInCommand(this.command, this.inputs);
+      const command = this.interpolateInputsAndGlobalContextInCommand(this.command, this.inputs);
       this.ctx.logger.debug(`Interpolated inputs in the command template`);
 
       const outputsDir = await createTemporaryOutputsDirectoryAsync(this.ctx.global, this.id);
@@ -268,15 +268,22 @@ export class BuildStep {
     });
   }
 
-  private interpolateInputsInCommand(command: string, inputs?: BuildStepInput[]): string {
+  private interpolateInputsAndGlobalContextInCommand(
+    command: string,
+    inputs?: BuildStepInput[]
+  ): string {
     if (!inputs) {
       return command;
     }
     const vars = inputs.reduce((acc, input) => {
-      acc[input.id] = input.value?.toString() ?? '';
+      acc[input.id] =
+        typeof input.value === 'object'
+          ? JSON.stringify(input.value)
+          : input.value?.toString() ?? '';
       return acc;
     }, {} as Record<string, string>);
-    return interpolateWithInputs(command, vars);
+    const valueInterpolatedWithGlobalContext = this.ctx.global.interpolate(command);
+    return interpolateWithInputs(valueInterpolatedWithGlobalContext, vars);
   }
 
   private async collectAndValidateOutputsAsync(outputsDir: string): Promise<void> {
