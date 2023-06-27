@@ -16,6 +16,7 @@ export enum Hook {
   ON_BUILD_SUCCESS = 'eas-build-on-success',
   ON_BUILD_ERROR = 'eas-build-on-error',
   ON_BUILD_COMPLETE = 'eas-build-on-complete',
+  ON_BUILD_CANCEL = 'eas-build-on-cancel',
 }
 
 export async function runHookIfPresent<TJob extends Job>(

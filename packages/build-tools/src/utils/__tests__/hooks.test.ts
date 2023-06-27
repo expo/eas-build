@@ -114,4 +114,40 @@ describe(runHookIfPresent, () => {
 
     expect(spawn).not.toBeCalled();
   });
+
+  it('runs ON_BUILD_CANCEL hook if present', async () => {
+    vol.fromJSON(
+      {
+        './package.json': JSON.stringify({
+          scripts: {
+            [Hook.ON_BUILD_CANCEL]: 'echo build_cancel',
+          },
+        }),
+      },
+      '/workingdir/build'
+    );
+
+    await runHookIfPresent(ctx, Hook.ON_BUILD_CANCEL);
+
+    expect(spawn).toBeCalledWith(
+      ctx.packageManager,
+      ['run', 'eas-build-on-cancel'],
+      expect.anything()
+    );
+  });
+
+  it('does not run ON_BUILD_CANCEL hook if not present', async () => {
+    vol.fromJSON(
+      {
+        './package.json': JSON.stringify({
+          scripts: {},
+        }),
+      },
+      '/workingdir/build'
+    );
+
+    await runHookIfPresent(ctx, Hook.ON_BUILD_CANCEL);
+
+    expect(spawn).not.toHaveBeenCalled();
+  });
 });
