@@ -12,3 +12,5 @@ export {
 } from './context';
 
 export { findAndUploadXcodeBuildLogsAsync } from './ios/xcodeBuildLogs';
+
+export { Hook, runHookIfPresent } from './utils/hooks';
