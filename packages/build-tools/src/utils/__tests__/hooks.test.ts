@@ -129,7 +129,11 @@ describe(runHookIfPresent, () => {
 
     await runHookIfPresent(ctx, Hook.ON_BUILD_CANCEL);
 
-    expect(spawn).toBeCalledWith(ctx.packageManager, ['run', 'eas-build-on-cancel'], expect.anything());
+    expect(spawn).toBeCalledWith(
+      ctx.packageManager,
+      ['run', 'eas-build-on-cancel'],
+      expect.anything()
+    );
   });
 
   it('does not run ON_BUILD_CANCEL hook if not present', async () => {
