@@ -14,12 +14,12 @@ build:
 
     - utils/inject_android_credentials:
         inputs:
-          credentials: ${ globalCtx.secrets.buildCredentials } # can pass other object or specify it inline
+          credentials: ${ eas.secrets.buildCredentials } # can pass other object or specify it inline
 
     - utils/configure_android_versions:
         inputs:
-          version_code: ${ globalCtx.job.secrets.version.versionCode } # can pass other value or specify it inline
-          version: ${ globalCtx.job.secrets.version.versionName } # can pass other value or specify it inline
+          version_code: ${ eas.job.secrets.version.versionCode } # can pass other value or specify it inline
+          version: ${ eas.job.secrets.version.versionName } # can pass other value or specify it inline
 
     - run:
         name: Build Android app

@@ -11,7 +11,7 @@ build:
     # reads Apple team id from job credentials
     - utils/resolve_apple_team_id_from_credentials:
         inputs:
-          credentials: ${ globalCtx.job.secrets.buildCredentials } # can pass other object or specify it inline
+          credentials: ${ eas.job.secrets.buildCredentials } # can pass other object or specify it inline
 
 
     - run:
@@ -27,12 +27,12 @@ build:
 
     - utils/configure_ios_credentials:
         inputs:
-          credentials: ${ globalCtx.job.secrets.buildCredentials } # can pass other object or specify it inline
+          credentials: ${ eas.job.secrets.buildCredentials } # can pass other object or specify it inline
 
     - utils/configure_ios_versions:
         inputs:
-          build_number: ${ globalCtx.job.secrets.version.build_number } # can pass other value or specify it inline
-          version: ${ globalCtx.job.secrets.version.appVersion } # can pass other value or specify it inline
+          build_number: ${ eas.job.secrets.version.build_number } # can pass other value or specify it inline
+          version: ${ eas.job.secrets.version.appVersion } # can pass other value or specify it inline
 
     - utils/generate_gymfile_from_template:
         inputs:
