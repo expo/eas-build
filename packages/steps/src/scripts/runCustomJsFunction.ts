@@ -46,7 +46,7 @@ async function runCustomJsFunctionAsync(): Promise<void> {
   }, {} as Record<string, BuildStepOutput>);
 
   const baseConfigDir = path.dirname(ctx.global.configPath);
-  const customJavascriptFunction = await require(path.resolve(
+  const { default: customJavascriptFunction } = await require(path.resolve(
     baseConfigDir,
     customJavascriptFunctionModulePath
   ));
