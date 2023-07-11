@@ -18,7 +18,7 @@ describe(BuildFunction, () => {
         new BuildFunction({
           id: 'test1',
         });
-      }).toThrowError(/Either command or fn must be defined/);
+      }).toThrowError(/Either command, fn or path must be defined/);
     });
 
     it('throws when neither command nor fn is set', () => {

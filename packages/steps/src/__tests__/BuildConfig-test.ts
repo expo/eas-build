@@ -552,7 +552,7 @@ describe(validateConfig, () => {
 
         expect(() => {
           validateConfig(BuildConfigSchema, buildConfig);
-        }).toThrowError(/".*\.say_hi\.command" is required/);
+        }).toThrowError(/".*\.say_hi" must contain at least one of \[command, path\]/);
       });
       test('"run" is not allowed for function name', () => {
         const buildConfig = {

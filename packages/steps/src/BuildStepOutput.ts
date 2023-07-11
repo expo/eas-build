@@ -16,6 +16,13 @@ interface BuildStepOutputParams extends BuildStepOutputProviderParams {
   stepDisplayName: string;
 }
 
+export interface BuildStepOutputJson {
+  id: string;
+  stepDisplayName: string;
+  required: boolean;
+  _value?: string;
+}
+
 export class BuildStepOutput {
   public readonly id: string;
   public readonly stepDisplayName: string;
@@ -54,6 +61,25 @@ export class BuildStepOutput {
     }
     this._value = value;
     return this;
+  }
+
+  public toJSON(): BuildStepOutputJson {
+    return {
+      id: this.id,
+      stepDisplayName: this.stepDisplayName,
+      required: this.required,
+      _value: this._value,
+    };
+  }
+
+  public static fromJSON(json: BuildStepOutputJson, ctx: BuildStepGlobalContext): BuildStepOutput {
+    const output = new BuildStepOutput(ctx, {
+      id: json.id,
+      stepDisplayName: json.stepDisplayName,
+      required: json.required,
+    });
+    output._value = json._value;
+    return output;
   }
 }
 

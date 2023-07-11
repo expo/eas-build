@@ -174,6 +174,7 @@ export class BuildConfigParser {
     outputs: outputsConfig,
     shell,
     command,
+    path,
     supportedRuntimePlatforms,
   }: BuildFunctionConfig & { id: string }): BuildFunction {
     const inputProviders =
@@ -187,6 +188,7 @@ export class BuildConfigParser {
       outputProviders,
       shell,
       command,
+      path,
       supportedRuntimePlatforms,
     });
   }

@@ -21,10 +21,29 @@ export interface ExternalBuildContextProvider {
   readonly runtimePlatform: BuildRuntimePlatform;
   readonly logger: bunyan;
 
-  readonly staticContext: any;
+  readonly staticContext: () => any;
 
   readonly env: BuildStepEnv;
   updateEnv(env: BuildStepEnv): void;
+}
+
+export interface BuildStepGlobalContextJson {
+  stepsInternalBuildDirectory: string;
+  projectSourceDirectory: string;
+  projectTargetDirectory: string;
+  defaultWorkingDirectory: string;
+  runtimePlatform: BuildRuntimePlatform;
+  // baseLogger: bunyan;
+  skipCleanup: boolean;
+  // stepById: Record<string, BuildStep>;
+  staticContext: any;
+  env: BuildStepEnv;
+  configPath: string;
+}
+
+export interface BuildStepContextJson {
+  workingDirectory: string;
+  global: BuildStepGlobalContextJson;
 }
 
 export class BuildStepGlobalContext {
@@ -36,7 +55,8 @@ export class BuildStepGlobalContext {
 
   constructor(
     private readonly provider: ExternalBuildContextProvider,
-    public readonly skipCleanup: boolean
+    public readonly skipCleanup: boolean,
+    public readonly configPath: string
   ) {
     this.stepsInternalBuildDirectory = path.join(os.tmpdir(), 'eas-build', uuidv4());
     this.runtimePlatform = provider.runtimePlatform;
@@ -95,6 +115,37 @@ export class BuildStepGlobalContext {
   public stepCtx(options: { logger: bunyan; workingDirectory: string }): BuildStepContext {
     return new BuildStepContext(this, options);
   }
+
+  public toJSON(): BuildStepGlobalContextJson {
+    return {
+      stepsInternalBuildDirectory: this.stepsInternalBuildDirectory,
+      runtimePlatform: this.runtimePlatform,
+      projectSourceDirectory: this.projectSourceDirectory,
+      projectTargetDirectory: this.projectTargetDirectory,
+      defaultWorkingDirectory: this.defaultWorkingDirectory,
+      skipCleanup: this.skipCleanup,
+      // stepById: this.stepById,
+      staticContext: this.staticContext,
+      env: this.env,
+      configPath: this.configPath,
+    };
+  }
+
+  public static fromJSON(json: BuildStepGlobalContextJson, logger: bunyan): BuildStepGlobalContext {
+    const provider: ExternalBuildContextProvider = {
+      projectSourceDirectory: json.projectSourceDirectory,
+      projectTargetDirectory: json.projectTargetDirectory,
+      defaultWorkingDirectory: json.defaultWorkingDirectory,
+      runtimePlatform: json.runtimePlatform,
+      logger,
+      staticContext: () => json.staticContext,
+      env: json.env,
+      updateEnv: () => {}, // TODO: figure out how to do this
+    };
+    const ctx = new BuildStepGlobalContext(provider, json.skipCleanup, json.configPath);
+    // ctx.stepById = json.stepById;
+    return ctx;
+  }
 }
 
 export class BuildStepContext {
@@ -117,5 +168,20 @@ export class BuildStepContext {
 
   public get global(): BuildStepGlobalContext {
     return this.ctx;
+  }
+
+  public toJSON(): BuildStepContextJson {
+    return {
+      workingDirectory: this.workingDirectory,
+      global: this.global.toJSON(),
+    };
+  }
+
+  public static fromJSON(json: BuildStepContextJson, logger: bunyan): BuildStepContext {
+    const ctx = BuildStepGlobalContext.fromJSON(json.global, logger);
+    return new BuildStepContext(ctx, {
+      logger,
+      workingDirectory: json.workingDirectory,
+    });
   }
 }

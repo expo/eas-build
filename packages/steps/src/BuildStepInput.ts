@@ -31,6 +31,16 @@ interface BuildStepInputParams extends BuildStepInputProviderParams {
   stepDisplayName: string;
 }
 
+export interface BuildStepInputJson {
+  id: string;
+  stepDisplayName: string;
+  allowedValues?: BuildStepInputValueType[];
+  defaultValue?: BuildStepInputValueType;
+  required?: boolean;
+  allowedValueTypeName?: BuildStepInputValueTypeName;
+  _value?: BuildStepInputValueType;
+}
+
 export class BuildStepInput {
   public readonly id: string;
   public readonly stepDisplayName: string;
@@ -124,6 +134,31 @@ export class BuildStepInput {
       typeof this.rawValue === 'string' &&
       !!BUILD_STEP_OR_BUILD_GLOBAL_CONTEXT_REFERENCE_REGEX.exec(this.rawValue)
     );
+  }
+
+  public toJSON(): BuildStepInputJson {
+    return {
+      id: this.id,
+      stepDisplayName: this.stepDisplayName,
+      defaultValue: this.defaultValue,
+      allowedValues: this.allowedValues,
+      required: this.required,
+      allowedValueTypeName: this.allowedValueTypeName,
+      _value: this._value,
+    };
+  }
+
+  public static fromJSON(json: BuildStepInputJson, ctx: BuildStepGlobalContext): BuildStepInput {
+    const input = new BuildStepInput(ctx, {
+      id: json.id,
+      stepDisplayName: json.stepDisplayName,
+      defaultValue: json.defaultValue,
+      allowedValues: json.allowedValues,
+      required: json.required,
+      allowedValueTypeName: json.allowedValueTypeName,
+    });
+    input._value = json._value;
+    return input;
   }
 
   private parseInputValueToAllowedType(value: string): BuildStepInputValueType {

@@ -47,7 +47,8 @@ async function runAsync(
       relativeProjectDirectory,
       relativeProjectDirectory
     ),
-    false
+    false,
+    configPath
   );
   const parser = new BuildConfigParser(ctx, { configPath });
   const workflow = await parser.parseAsync();
