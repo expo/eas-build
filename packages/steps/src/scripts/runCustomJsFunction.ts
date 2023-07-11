@@ -24,7 +24,6 @@ async function runCustomJsFunctionAsync(): Promise<void> {
       name: 'customJavscriptFunctionLogger',
       streams: [
         {
-          level: 'info',
           type: 'raw',
           stream: {
             write(rec: any) {
