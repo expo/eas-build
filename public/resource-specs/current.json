@@ -26,7 +26,7 @@
         },
         "apple-m2": {
             "name": "Apple M2",
-            "cpu": "M2 3.4GHz 12-Core ",
+            "cpu": "M2 3.4GHz 12-Core",
             "memory": "24 GB RAM",
             "description": "8 performance and 4 efficiency cores"
         },
