@@ -25,10 +25,44 @@ async function runCustomJsFunctionAsync(): Promise<void> {
       streams: [
         {
           type: 'raw',
+          level: 'info',
           stream: {
             write(rec: any) {
               if (rec.msg) {
                 console.log(rec.msg);
+              }
+            },
+          },
+        },
+        {
+          type: 'raw',
+          level: 'warn',
+          stream: {
+            write(rec: any) {
+              if (rec.msg) {
+                console.warn(rec.msg);
+              }
+            },
+          },
+        },
+        {
+          type: 'raw',
+          level: 'error',
+          stream: {
+            write(rec: any) {
+              if (rec.msg) {
+                console.error(rec.msg);
+              }
+            },
+          },
+        },
+        {
+          type: 'raw',
+          level: 'fatal',
+          stream: {
+            write(rec: any) {
+              if (rec.msg) {
+                console.error(rec.msg);
               }
             },
           },

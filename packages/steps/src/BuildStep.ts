@@ -174,7 +174,7 @@ export class BuildStep {
       if (this.command !== undefined) {
         await this.executeCommandAsync();
       } else {
-        await this.exectuteFnAsync();
+        await this.executeFnAsync();
       }
 
       this.ctx.logger.info(
@@ -255,7 +255,7 @@ export class BuildStep {
     }
   }
 
-  private async exectuteFnAsync(): Promise<void> {
+  private async executeFnAsync(): Promise<void> {
     assert(this.fn, 'Function (fn) must be defined');
 
     await this.fn(this.ctx, {
