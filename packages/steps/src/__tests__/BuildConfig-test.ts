@@ -552,7 +552,7 @@ describe(validateConfig, () => {
 
         expect(() => {
           validateConfig(BuildConfigSchema, buildConfig);
-        }).toThrowError(/".*\.say_hi\.command" is required/);
+        }).toThrowError(/".*\.say_hi" must contain at least one of \[command, path\]/);
       });
       test('"run" is not allowed for function name', () => {
         const buildConfig = {
@@ -743,6 +743,42 @@ describe(validateConfig, () => {
           validateConfig(BuildConfigSchema, buildConfig);
         }).not.toThrow();
       });
+    });
+
+    test('valid function with path to custom JS/TS function', () => {
+      const buildConfig = {
+        build: {
+          steps: ['abc'],
+        },
+        functions: {
+          abc: {
+            path: 'path/to/function',
+          },
+        },
+      };
+      expect(() => {
+        validateConfig(BuildConfigSchema, buildConfig);
+      }).not.toThrow();
+    });
+
+    test('invalid function with both command and path specified', () => {
+      const buildConfig = {
+        build: {
+          steps: ['abc'],
+        },
+        functions: {
+          abc: {
+            command: 'echo "abc"',
+            path: 'path/to/function.js',
+          },
+        },
+      };
+      const error = getError<Error>(() => {
+        validateConfig(BuildConfigSchema, buildConfig);
+      });
+      expect(error.message).toMatch(
+        /"functions.abc" contains a conflict between exclusive peers \[command, path\], "command" must not exist simultaneously with \[path\]/
+      );
     });
 
     test('invalid allowed platforms for function', () => {

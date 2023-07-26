@@ -121,7 +121,11 @@ export class BuildFunction {
       name: buildStepName,
       displayName: buildStepDisplayName,
       command: this.command,
-      fn: this.fn ?? createCustomFunctionCall(this.customFunctionModulePath),
+      fn:
+        this.fn ??
+        (this.customFunctionModulePath
+          ? createCustomFunctionCall(this.customFunctionModulePath)
+          : undefined),
       workingDirectory,
       inputs,
       outputs,

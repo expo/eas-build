@@ -7,6 +7,7 @@ import {
 } from '../BuildStepInput.js';
 
 import { createGlobalContextMock } from './utils/context.js';
+import { createMockLogger } from './utils/logger.js';
 
 describe(BuildStepInput, () => {
   test('basic case string', () => {
@@ -14,6 +15,8 @@ describe(BuildStepInput, () => {
     const i = new BuildStepInput(ctx, {
       id: 'foo',
       stepDisplayName: BuildStep.getDisplayName({ id: 'test1' }),
+      required: true,
+      allowedValueTypeName: BuildStepInputValueTypeName.STRING,
     });
     i.set('bar');
     expect(i.value).toBe('bar');
@@ -25,6 +28,7 @@ describe(BuildStepInput, () => {
       id: 'foo',
       stepDisplayName: BuildStep.getDisplayName({ id: 'test1' }),
       allowedValueTypeName: BuildStepInputValueTypeName.BOOLEAN,
+      required: true,
     });
     i.set(false);
     expect(i.value).toBe(false);
@@ -36,6 +40,7 @@ describe(BuildStepInput, () => {
       id: 'foo',
       stepDisplayName: BuildStep.getDisplayName({ id: 'test1' }),
       allowedValueTypeName: BuildStepInputValueTypeName.NUMBER,
+      required: true,
     });
     i.set(42);
     expect(i.value).toBe(42);
@@ -47,6 +52,7 @@ describe(BuildStepInput, () => {
       id: 'foo',
       stepDisplayName: BuildStep.getDisplayName({ id: 'test1' }),
       allowedValueTypeName: BuildStepInputValueTypeName.JSON,
+      required: true,
     });
     i.set({ foo: 'bar' });
     expect(i.value).toEqual({ foo: 'bar' });
@@ -58,6 +64,7 @@ describe(BuildStepInput, () => {
       id: 'foo',
       stepDisplayName: BuildStep.getDisplayName({ id: 'test1' }),
       required: false,
+      allowedValueTypeName: BuildStepInputValueTypeName.STRING,
     });
     i.set(undefined);
     expect(i.value).toBeUndefined();
@@ -69,6 +76,8 @@ describe(BuildStepInput, () => {
       id: 'foo',
       stepDisplayName: BuildStep.getDisplayName({ id: 'test1' }),
       defaultValue: 'baz',
+      allowedValueTypeName: BuildStepInputValueTypeName.STRING,
+      required: true,
     });
     expect(i.value).toBe('baz');
   });
@@ -80,6 +89,7 @@ describe(BuildStepInput, () => {
       stepDisplayName: BuildStep.getDisplayName({ id: 'test1' }),
       defaultValue: true,
       allowedValueTypeName: BuildStepInputValueTypeName.BOOLEAN,
+      required: true,
     });
     expect(i.value).toBe(true);
   });
@@ -91,6 +101,7 @@ describe(BuildStepInput, () => {
       stepDisplayName: BuildStep.getDisplayName({ id: 'test1' }),
       defaultValue: { foo: 'bar' },
       allowedValueTypeName: BuildStepInputValueTypeName.JSON,
+      required: true,
     });
     expect(i.value).toEqual({ foo: 'bar' });
   });
@@ -101,6 +112,8 @@ describe(BuildStepInput, () => {
       id: 'foo',
       stepDisplayName: BuildStep.getDisplayName({ id: 'test1' }),
       defaultValue: '${ eas.runtimePlatform }',
+      required: true,
+      allowedValueTypeName: BuildStepInputValueTypeName.STRING,
     });
     expect(i.value).toEqual('linux');
   });
@@ -120,11 +133,12 @@ describe(BuildStepInput, () => {
         },
       },
     });
-    const i = new BuildStepInput(ctx, {
+    const i = new BuildStepInput<BuildStepInputValueTypeName>(ctx, {
       id: 'foo',
       stepDisplayName: BuildStep.getDisplayName({ id: 'test1' }),
       defaultValue: '${ eas.foo.bar[3].baz }',
       allowedValueTypeName: BuildStepInputValueTypeName.NUMBER,
+      required: true,
     });
     expect(i.value).toEqual(42);
   });
@@ -146,11 +160,12 @@ describe(BuildStepInput, () => {
         },
       },
     });
-    const i = new BuildStepInput(ctx, {
+    const i = new BuildStepInput<BuildStepInputValueTypeName>(ctx, {
       id: 'foo',
       stepDisplayName: BuildStep.getDisplayName({ id: 'test1' }),
       defaultValue: '${ eas.foo.bar[3].baz.qux }',
       allowedValueTypeName: BuildStepInputValueTypeName.BOOLEAN,
+      required: true,
     });
     expect(i.value).toEqual(false);
   });
@@ -172,11 +187,12 @@ describe(BuildStepInput, () => {
         },
       },
     });
-    const i = new BuildStepInput(ctx, {
+    const i = new BuildStepInput<BuildStepInputValueTypeName>(ctx, {
       id: 'foo',
       stepDisplayName: BuildStep.getDisplayName({ id: 'test1' }),
       defaultValue: '${ eas.foo }',
       allowedValueTypeName: BuildStepInputValueTypeName.JSON,
+      required: true,
     });
     expect(i.value).toMatchObject({ bar: [1, 2, 3, { baz: { qux: false } }] });
   });
@@ -198,11 +214,12 @@ describe(BuildStepInput, () => {
         },
       },
     });
-    const i = new BuildStepInput(ctx, {
+    const i = new BuildStepInput<BuildStepInputValueTypeName>(ctx, {
       id: 'foo',
       stepDisplayName: BuildStep.getDisplayName({ id: 'test1' }),
       defaultValue: '${ eas.foo.bar[3].baz.qux }',
       allowedValueTypeName: BuildStepInputValueTypeName.NUMBER,
+      required: true,
     });
     expect(() => i.value).toThrowError(
       'Input parameter "foo" for step "test1" must be of type "number".'
@@ -226,10 +243,11 @@ describe(BuildStepInput, () => {
         },
       },
     });
-    const i = new BuildStepInput(ctx, {
+    const i = new BuildStepInput<BuildStepInputValueTypeName>(ctx, {
       id: 'foo',
       stepDisplayName: BuildStep.getDisplayName({ id: 'test1' }),
       defaultValue: '${ eas.foo.bar[3].baz.qux }',
+      required: true,
       allowedValueTypeName: BuildStepInputValueTypeName.BOOLEAN,
     });
     expect(() => i.value).toThrowError(
@@ -254,11 +272,12 @@ describe(BuildStepInput, () => {
         },
       },
     });
-    const i = new BuildStepInput(ctx, {
+    const i = new BuildStepInput<BuildStepInputValueTypeName>(ctx, {
       id: 'foo',
       stepDisplayName: BuildStep.getDisplayName({ id: 'test1' }),
       defaultValue: '${ eas.foo.bar[3].baz.qux }',
       allowedValueTypeName: BuildStepInputValueTypeName.JSON,
+      required: true,
     });
     expect(() => i.value).toThrowError(
       'Input parameter "foo" for step "test1" must be of type "json".'
@@ -272,6 +291,7 @@ describe(BuildStepInput, () => {
       stepDisplayName: BuildStep.getDisplayName({ id: 'test1' }),
       defaultValue: 42,
       allowedValueTypeName: BuildStepInputValueTypeName.NUMBER,
+      required: true,
     });
     expect(i.value).toBe(42);
   });
@@ -282,6 +302,7 @@ describe(BuildStepInput, () => {
       id: 'foo',
       stepDisplayName: BuildStep.getDisplayName({ id: 'test1' }),
       required: true,
+      allowedValueTypeName: BuildStepInputValueTypeName.STRING,
     });
     expect(() => {
       // eslint-disable-next-line @typescript-eslint/no-unused-expressions
@@ -295,7 +316,7 @@ describe(BuildStepInput, () => {
 
   test('enforces correct value type when reading a value - basic', () => {
     const ctx = createGlobalContextMock();
-    const i = new BuildStepInput(ctx, {
+    const i = new BuildStepInput<BuildStepInputValueTypeName>(ctx, {
       id: 'foo',
       stepDisplayName: BuildStep.getDisplayName({ id: 'test1' }),
       required: true,
@@ -312,7 +333,7 @@ describe(BuildStepInput, () => {
 
   test('enforces correct value type when reading a value - reference json', () => {
     const ctx = createGlobalContextMock();
-    const i = new BuildStepInput(ctx, {
+    const i = new BuildStepInput<BuildStepInputValueTypeName>(ctx, {
       id: 'foo',
       required: true,
       stepDisplayName: BuildStep.getDisplayName({ id: 'test1' }),
@@ -329,7 +350,7 @@ describe(BuildStepInput, () => {
 
   test('enforces correct value type when reading a value - reference number', () => {
     const ctx = createGlobalContextMock();
-    const i = new BuildStepInput(ctx, {
+    const i = new BuildStepInput<BuildStepInputValueTypeName>(ctx, {
       id: 'foo',
       required: true,
       stepDisplayName: BuildStep.getDisplayName({ id: 'test1' }),
@@ -346,7 +367,7 @@ describe(BuildStepInput, () => {
 
   test('enforces correct value type when reading a value - reference boolean', () => {
     const ctx = createGlobalContextMock();
-    const i = new BuildStepInput(ctx, {
+    const i = new BuildStepInput<BuildStepInputValueTypeName>(ctx, {
       id: 'foo',
       required: true,
       stepDisplayName: BuildStep.getDisplayName({ id: 'test1' }),
@@ -363,16 +384,64 @@ describe(BuildStepInput, () => {
 
   test('enforces required policy when setting value', () => {
     const ctx = createGlobalContextMock();
-    const i = new BuildStepInput(ctx, {
+    const i = new BuildStepInput<BuildStepInputValueTypeName>(ctx, {
       id: 'foo',
       stepDisplayName: BuildStep.getDisplayName({ id: 'test1' }),
       required: true,
+      allowedValueTypeName: BuildStepInputValueTypeName.STRING,
     });
     expect(() => {
       i.set(undefined);
     }).toThrowError(
       new BuildStepRuntimeError('Input parameter "foo" for step "test1" is required.')
     );
+  });
+
+  test('serializes correctly', () => {
+    const ctx = createGlobalContextMock();
+    const i = new BuildStepInput<BuildStepInputValueTypeName>(ctx, {
+      id: 'foo',
+      stepDisplayName: BuildStep.getDisplayName({ id: 'test1' }),
+      defaultValue: 'bar',
+      allowedValueTypeName: BuildStepInputValueTypeName.STRING,
+      required: true,
+      allowedValues: ['bar', 'baz'],
+    });
+    i.set('bar');
+    expect(i.serialize()).toEqual(
+      expect.objectContaining({
+        id: 'foo',
+        stepDisplayName: BuildStep.getDisplayName({ id: 'test1' }),
+        defaultValue: 'bar',
+        allowedValueTypeName: BuildStepInputValueTypeName.STRING,
+        allowedValues: ['bar', 'baz'],
+        required: true,
+        value: 'bar',
+      })
+    );
+  });
+
+  test('deserializes correctly', () => {
+    const ctx = createGlobalContextMock();
+    const serializedInput = {
+      id: 'foo',
+      stepDisplayName: BuildStep.getDisplayName({ id: 'test1' }),
+      defaultValue: 'bar',
+      allowedValueTypeName: BuildStepInputValueTypeName.STRING,
+      allowedValues: ['bar', 'baz'],
+      required: true,
+      value: 'bar',
+      ctx: ctx.serialize(),
+    };
+    const input = BuildStepInput.deserialize(serializedInput, createMockLogger());
+    expect(input).toBeInstanceOf(BuildStepInput);
+    expect(input.id).toBe('foo');
+    expect(input.stepDisplayName).toBe(BuildStep.getDisplayName({ id: 'test1' }));
+    expect(input.defaultValue).toBe('bar');
+    expect(input.allowedValueTypeName).toBe(BuildStepInputValueTypeName.STRING);
+    expect(input.allowedValues).toEqual(['bar', 'baz']);
+    expect(input.required).toBe(true);
+    expect(input.value).toBe('bar');
   });
 });
 
@@ -388,17 +457,22 @@ describe(makeBuildStepInputByIdMap, () => {
         id: 'foo1',
         stepDisplayName: BuildStep.getDisplayName({ id: 'test1' }),
         defaultValue: 'bar1',
+        required: true,
+        allowedValueTypeName: BuildStepInputValueTypeName.STRING,
       }),
       new BuildStepInput(ctx, {
         id: 'foo2',
         stepDisplayName: BuildStep.getDisplayName({ id: 'test1' }),
         defaultValue: 'bar2',
+        required: true,
+        allowedValueTypeName: BuildStepInputValueTypeName.STRING,
       }),
       new BuildStepInput(ctx, {
         id: 'foo3',
         stepDisplayName: BuildStep.getDisplayName({ id: 'test1' }),
         defaultValue: true,
         allowedValueTypeName: BuildStepInputValueTypeName.BOOLEAN,
+        required: true,
       }),
     ];
     const result = makeBuildStepInputByIdMap(inputs);

@@ -151,7 +151,7 @@ export class BuildWorkflowValidator {
 
       if (!(await fs.exists(buildFunction.customFunctionModulePath))) {
         const error = new BuildConfigError(
-          `Custom function module path "${buildFunction.customFunctionModulePath}" for function "${buildFunction.name}" does not exist.`
+          `Custom function module path "${buildFunction.customFunctionModulePath}" for function "${buildFunction.id}" does not exist.`
         );
         errors.push(error);
         continue;
@@ -159,7 +159,7 @@ export class BuildWorkflowValidator {
 
       if (!(await fs.exists(path.join(buildFunction.customFunctionModulePath, 'package.json')))) {
         const error = new BuildConfigError(
-          `Custom function module path "${buildFunction.customFunctionModulePath}" for function "${buildFunction.name}" does not contain a package.json file.`
+          `Custom function module path "${buildFunction.customFunctionModulePath}" for function "${buildFunction.id}" does not contain a package.json file.`
         );
         errors.push(error);
       }

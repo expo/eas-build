@@ -22,7 +22,8 @@ describe(BuildStepGlobalContext, () => {
           '/another/non/existent/path',
           '/working/dir/path'
         ),
-        false
+        false,
+        './fake.yml'
       );
       expect(ctx.stepsInternalBuildDirectory.startsWith(os.tmpdir())).toBe(true);
     });
@@ -38,7 +39,8 @@ describe(BuildStepGlobalContext, () => {
           '/another/non/existent/path',
           workingDirectory
         ),
-        false
+        false,
+        './fake.yml'
       );
       expect(ctx.defaultWorkingDirectory).toBe(workingDirectory);
     });
@@ -47,6 +49,66 @@ describe(BuildStepGlobalContext, () => {
     it('exists', () => {
       const ctx = createGlobalContextMock();
       expect(typeof ctx.registerStep).toBe('function');
+    });
+  });
+  describe(BuildStepGlobalContext.prototype.serialize, () => {
+    it('serializes global context', () => {
+      const ctx = createGlobalContextMock({
+        skipCleanup: true,
+        runtimePlatform: BuildRuntimePlatform.DARWIN,
+        projectSourceDirectory: '/a/b/c',
+        projectTargetDirectory: '/d/e/f',
+        workingDirectory: '/g/h/i',
+        staticContextContent: { a: 1 },
+        configPath: '/j/k/l',
+      });
+      expect(ctx.serialize()).toEqual(
+        expect.objectContaining({
+          stepById: {},
+          provider: {
+            projectSourceDirectory: '/a/b/c',
+            projectTargetDirectory: '/d/e/f',
+            defaultWorkingDirectory: '/g/h/i',
+            runtimePlatform: BuildRuntimePlatform.DARWIN,
+            staticContext: { a: 1 },
+            env: {},
+          },
+          skipCleanup: true,
+          configPath: '/j/k/l',
+        })
+      );
+    });
+  });
+  describe(BuildStepGlobalContext.deserialize, () => {
+    it('deserializes global context', () => {
+      const ctx = BuildStepGlobalContext.deserialize(
+        {
+          stepsInternalBuildDirectory: '/m/n/o',
+          stepById: {},
+          provider: {
+            projectSourceDirectory: '/a/b/c',
+            projectTargetDirectory: '/d/e/f',
+            defaultWorkingDirectory: '/g/h/i',
+            runtimePlatform: BuildRuntimePlatform.DARWIN,
+            staticContext: { a: 1 },
+            env: {},
+          },
+          skipCleanup: true,
+          configPath: '/j/k/l',
+        },
+        createMockLogger()
+      );
+      expect(ctx.stepsInternalBuildDirectory).toBe('/m/n/o');
+      expect(ctx.defaultWorkingDirectory).toBe('/g/h/i');
+      expect(ctx.runtimePlatform).toBe(BuildRuntimePlatform.DARWIN);
+      expect(ctx.skipCleanup).toBe(true);
+      expect(ctx.configPath).toBe('/j/k/l');
+      expect(ctx.projectSourceDirectory).toBe('/a/b/c');
+      expect(ctx.projectTargetDirectory).toBe('/d/e/f');
+      expect(ctx.staticContext).toEqual({ a: 1 });
+      expect(ctx.env).toEqual({});
+      expect(ctx.skipCleanup).toBe(true);
+      expect(ctx.configPath).toBe('/j/k/l');
     });
   });
   describe(BuildStepGlobalContext.prototype.getStepOutputValue, () => {

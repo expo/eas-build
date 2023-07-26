@@ -1,7 +1,5 @@
 import path from 'path';
-import assert from 'assert';
 
-import spawnAsync from '@expo/turtle-spawn';
 import { createContext } from 'this-file';
 
 import { BuildStepFunction } from '../BuildStep.js';
@@ -9,6 +7,8 @@ import { BuildStepEnv } from '../BuildStepEnv.js';
 import { SerializedBuildStepInput } from '../BuildStepInput.js';
 import { SerializedBuildStepOutput } from '../BuildStepOutput.js';
 import { SerializedBuildStepContext } from '../BuildStepContext.js';
+
+import { spawnAsync } from './shell/spawn.js';
 
 const thisFileCtx = createContext();
 
@@ -21,8 +21,7 @@ export interface SerializedCustomBuildFunctionArguments {
   ctx: SerializedBuildStepContext;
 }
 
-export function createCustomFunctionCall(customFunctionModulePath?: string): BuildStepFunction {
-  assert(customFunctionModulePath, 'customFunctionModulePath must be defined');
+export function createCustomFunctionCall(customFunctionModulePath: string): BuildStepFunction {
   return async (ctx, { env, inputs, outputs }) => {
     const serializedArguments: SerializedCustomBuildFunctionArguments = {
       env,
