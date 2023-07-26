@@ -215,7 +215,11 @@ export class BuildConfigParser {
   ): BuildStepInputProvider[] {
     return buildFunctionInputs.map((entry) => {
       return typeof entry === 'string'
-        ? BuildStepInput.createProvider({ id: entry })
+        ? BuildStepInput.createProvider({
+            id: entry,
+            required: true,
+            allowedValueTypeName: BuildStepInputValueTypeName.STRING,
+          })
         : BuildStepInput.createProvider({
             id: entry.name,
             required: entry.required ?? true,

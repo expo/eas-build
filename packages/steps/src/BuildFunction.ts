@@ -3,13 +3,13 @@ import assert from 'assert';
 import { BuildRuntimePlatform } from './BuildRuntimePlatform.js';
 import { BuildStep, BuildStepFunction } from './BuildStep.js';
 import { BuildStepGlobalContext } from './BuildStepContext.js';
-import { BuildStepInputProvider, BuildStepInputValueType } from './BuildStepInput.js';
+import { BuildStepInputProvider, BuildStepInputValueTypeWithRequired } from './BuildStepInput.js';
 import { BuildStepOutputProvider } from './BuildStepOutput.js';
 import { BuildStepEnv } from './BuildStepEnv.js';
 import { createCustomFunctionCall } from './utils/customFunction.js';
 
 export type BuildFunctionById = Record<string, BuildFunction>;
-export type BuildFunctionCallInputs = Record<string, BuildStepInputValueType>;
+export type BuildFunctionCallInputs = Record<string, BuildStepInputValueTypeWithRequired>;
 
 export class BuildFunction {
   public readonly namespace?: string;

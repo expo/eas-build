@@ -1,5 +1,5 @@
 import { Android, Job } from '@expo/eas-build-job';
-import { BuildFunction, BuildStepInput } from '@expo/steps';
+import { BuildFunction, BuildStepInput, BuildStepInputValueTypeName } from '@expo/steps';
 import nullthrows from 'nullthrows';
 
 import { BuildContext } from '../../../context';
@@ -14,6 +14,8 @@ export function createRunGradleBuildFunction<T extends Job>(ctx: BuildContext<T>
       BuildStepInput.createProvider({
         id: 'gradle_command',
         defaultValue: ':app:bundleRelease',
+        required: true,
+        allowedValueTypeName: BuildStepInputValueTypeName.STRING,
       }),
     ],
     fn: async (stepsCtx, { inputs }) => {

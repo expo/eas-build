@@ -1,6 +1,6 @@
 import path from 'path';
 
-import { BuildFunction, BuildStepInput } from '@expo/steps';
+import { BuildFunction, BuildStepInput, BuildStepInputValueTypeName } from '@expo/steps';
 import nullthrows from 'nullthrows';
 
 import { ArtifactType } from '../../../context';
@@ -21,8 +21,14 @@ export function createUploadArtifactBuildFunction(ctx: CustomBuildContext): Buil
         id: 'type',
         defaultValue: BuildArtifactType.APPLICATION_ARCHIVE,
         allowedValues: [BuildArtifactType.APPLICATION_ARCHIVE, BuildArtifactType.BUILD_ARTIFACT],
+        required: true,
+        allowedValueTypeName: BuildStepInputValueTypeName.STRING,
       }),
-      BuildStepInput.createProvider({ id: 'path', required: true }),
+      BuildStepInput.createProvider({
+        id: 'path',
+        required: true,
+        allowedValueTypeName: BuildStepInputValueTypeName.STRING,
+      }),
     ],
     fn: async (stepsCtx, { inputs }) => {
       const artifactType = validateAndConvertBuildArtifactType(

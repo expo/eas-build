@@ -28,6 +28,7 @@ export function createPrebuildBuildFunction(ctx: CustomBuildContext): BuildFunct
         id: 'clean',
         defaultValue: false,
         allowedValueTypeName: BuildStepInputValueTypeName.BOOLEAN,
+        required: true,
       }),
     ],
     fn: async (stepCtx, { inputs, env }) => {
