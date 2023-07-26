@@ -1,8 +1,8 @@
 import assert from 'assert';
 
 import { createLogger } from '@expo/logger';
-import cloneDeep from 'lodash.cloneDeep';
 import { SpawnPromise, SpawnResult } from '@expo/spawn-async';
+import cloneDeep from 'lodash.clonedeep';
 
 import { BuildStepOutput } from '../BuildStepOutput.js';
 import { BuildStepInput } from '../BuildStepInput.js';
