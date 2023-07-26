@@ -60,7 +60,7 @@ export class BuildStepOutput<R extends boolean = boolean> {
     return this._value as BuildStepOutputValueType<R>;
   }
 
-  public set(value: string | undefined): BuildStepOutput {
+  public set(value: BuildStepOutputValueType<R>): BuildStepOutput {
     if (this.required && value === undefined) {
       throw new BuildStepRuntimeError(
         `Output parameter "${this.id}" for step "${this.stepDisplayName}" is required.`
