@@ -33,6 +33,7 @@
   "devDependencies": {
     "@jest/globals": "^29.4.1",
     "@types/jest": "^29.4.0",
+    "@types/lodash.clonedeep": "^4.5.7",
     "@types/lodash.get": "^4.4.7",
     "@types/node": "^18.11.18",
     "chokidar-cli": "^3.0.0",
@@ -51,6 +52,7 @@
     "@expo/spawn-async": "^1.7.0",
     "arg": "^5.0.2",
     "joi": "^17.7.0",
+    "lodash.clonedeep": "^4.5.0",
     "lodash.get": "^4.4.2",
     "this-file": "^2.0.3",
     "uuid": "^9.0.0",

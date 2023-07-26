@@ -3,7 +3,6 @@ import fs from 'fs/promises';
 import path from 'path';
 
 import { v4 as uuidv4 } from 'uuid';
-import { bunyan } from '@expo/logger';
 
 import { BuildStepContext, BuildStepGlobalContext } from './BuildStepContext.js';
 import { BuildStepInput, BuildStepInputById, makeBuildStepInputByIdMap } from './BuildStepInput.js';
@@ -97,13 +96,12 @@ export class BuildStepOutputAccessor {
   }
 
   public static deserialize(
-    serialized: SerializedBuildStepOutputAccessor,
-    logger: bunyan
+    serialized: SerializedBuildStepOutputAccessor
   ): BuildStepOutputAccessor {
     const outputById = Object.fromEntries(
       Object.entries(serialized.outputById).map(([key, value]) => [
         key,
-        BuildStepOutput.deserialize(value, logger),
+        BuildStepOutput.deserialize(value),
       ])
     );
     return new BuildStepOutputAccessor(

@@ -1,6 +1,4 @@
-import { bunyan } from '@expo/logger';
-
-import { BuildStepGlobalContext, SerializedBuildStepGlobalContext } from './BuildStepContext.js';
+import { BuildStepGlobalContext } from './BuildStepContext.js';
 import { BuildStepRuntimeError } from './errors.js';
 
 export type BuildStepOutputById = Record<string, BuildStepOutput>;
@@ -28,7 +26,6 @@ export interface SerializedBuildStepOutput<R extends boolean = boolean> {
   stepDisplayName: string;
   required: R;
   value?: string;
-  ctx: SerializedBuildStepGlobalContext;
 }
 
 export class BuildStepOutput<R extends boolean = boolean> {
@@ -43,12 +40,17 @@ export class BuildStepOutput<R extends boolean = boolean> {
   }
 
   constructor(
-    private readonly ctx: BuildStepGlobalContext,
+    // @ts-expect-error ctx is not used in this class but let's keep it here for consistency
+    private readonly ctx: BuildStepGlobalContext | undefined,
     { id, stepDisplayName, required }: BuildStepOutputParams<R>
   ) {
     this.id = id;
     this.stepDisplayName = stepDisplayName;
     this.required = required;
+  }
+
+  public get rawValue(): string | undefined {
+    return this._value;
   }
 
   public get value(): BuildStepOutputValueType<R> {
@@ -76,22 +78,15 @@ export class BuildStepOutput<R extends boolean = boolean> {
       stepDisplayName: this.stepDisplayName,
       required: this.required,
       value: this._value,
-      ctx: this.ctx.serialize(),
     };
   }
 
-  public static deserialize(
-    serialized: SerializedBuildStepOutput,
-    logger: bunyan
-  ): BuildStepOutput {
-    const deserialized = new BuildStepOutput(
-      BuildStepGlobalContext.deserialize(serialized.ctx, logger),
-      {
-        id: serialized.id,
-        stepDisplayName: serialized.stepDisplayName,
-        required: serialized.required,
-      }
-    );
+  public static deserialize(serialized: SerializedBuildStepOutput): BuildStepOutput {
+    const deserialized = new BuildStepOutput(undefined, {
+      id: serialized.id,
+      stepDisplayName: serialized.stepDisplayName,
+      required: serialized.required,
+    });
     deserialized._value = serialized.value;
     return deserialized;
   }

@@ -1,6 +1,8 @@
 import assert from 'assert';
 
 import { createLogger } from '@expo/logger';
+import spawnAsync, { SpawnPromise, SpawnResult } from '@expo/turtle-spawn';
+import cloneDeep from 'lodash.cloneDeep';
 
 import { BuildStepOutput } from '../BuildStepOutput.js';
 import { BuildStepInput } from '../BuildStepInput.js';
@@ -68,10 +70,11 @@ async function runCustomJsFunctionAsync(): Promise<void> {
   const outputs = Object.fromEntries(
     Object.entries(serializedFunctionArguments.outputs).map(([id, output]) => [
       id,
-      BuildStepOutput.deserialize(output, logger),
+      BuildStepOutput.deserialize(output),
     ])
   );
   const env = serializedFunctionArguments.env;
+  const envBefore = cloneDeep(serializedFunctionArguments.env);
 
   let customModule: any;
   try {
@@ -84,6 +87,29 @@ async function runCustomJsFunctionAsync(): Promise<void> {
   const customJavascriptFunction: BuildStepFunction = customModule.default;
 
   await customJavascriptFunction(ctx, { inputs, outputs, env });
+
+  const promises: SpawnPromise<SpawnResult>[] = [];
+  for (const output of Object.values(outputs)) {
+    if (output.rawValue) {
+      assert(output.value, 'output.value is required');
+      promises.push(
+        spawnAsync('set-output', [output.id, output.value], {
+          env,
+        })
+      );
+    }
+  }
+  for (const envName of Object.keys(env)) {
+    const envValue = env[envName];
+    if (envValue !== envBefore[envName] && envValue) {
+      promises.push(
+        spawnAsync('set-env', [envName, envValue], {
+          env,
+        })
+      );
+    }
+  }
+  await Promise.all(promises);
 }
 
 void runCustomJsFunctionAsync();

@@ -157,7 +157,7 @@ export class BuildStepGlobalContext {
       serialized.configPath
     );
     for (const [id, stepOutputAccessor] of Object.entries(serialized.stepById)) {
-      ctx.stepById[id] = BuildStepOutputAccessor.deserialize(stepOutputAccessor, logger);
+      ctx.stepById[id] = BuildStepOutputAccessor.deserialize(stepOutputAccessor);
     }
     ctx.stepsInternalBuildDirectory = serialized.stepsInternalBuildDirectory;
 
