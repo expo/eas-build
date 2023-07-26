@@ -1,14 +1,15 @@
 import assert from 'assert';
 
 import { createLogger } from '@expo/logger';
-import spawnAsync, { SpawnPromise, SpawnResult } from '@expo/turtle-spawn';
 import cloneDeep from 'lodash.cloneDeep';
+import { SpawnPromise, SpawnResult } from '@expo/spawn-async';
 
 import { BuildStepOutput } from '../BuildStepOutput.js';
 import { BuildStepInput } from '../BuildStepInput.js';
 import { SerializedCustomBuildFunctionArguments } from '../utils/customFunction.js';
 import { BuildStepContext } from '../BuildStepContext.js';
 import { BuildStepFunction } from '../BuildStep.js';
+import { spawnAsync } from '../utils/shell/spawn.js';
 
 async function runCustomJsFunctionAsync(): Promise<void> {
   const customJavascriptFunctionModulePath = process.argv[2];
