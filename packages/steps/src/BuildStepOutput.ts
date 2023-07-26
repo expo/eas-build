@@ -9,27 +9,32 @@ export type BuildStepOutputProvider = (
   stepDisplayName: string
 ) => BuildStepOutput;
 
-interface BuildStepOutputProviderParams {
+interface BuildStepOutputProviderParams<R extends boolean = boolean> {
   id: string;
-  required?: boolean;
+  required: R;
 }
 
-interface BuildStepOutputParams extends BuildStepOutputProviderParams {
+interface BuildStepOutputParams<R extends boolean = boolean>
+  extends BuildStepOutputProviderParams<R> {
   stepDisplayName: string;
 }
 
-export interface SerializedBuildStepOutput {
+type BuildStepOutputValueType<R extends boolean = boolean> = R extends true
+  ? string
+  : string | undefined;
+
+export interface SerializedBuildStepOutput<R extends boolean = boolean> {
   id: string;
   stepDisplayName: string;
-  required: boolean;
+  required: R;
   value?: string;
   ctx: SerializedBuildStepGlobalContext;
 }
 
-export class BuildStepOutput {
+export class BuildStepOutput<R extends boolean = boolean> {
   public readonly id: string;
   public readonly stepDisplayName: string;
-  public readonly required: boolean;
+  public readonly required: R;
 
   private _value?: string;
 
@@ -39,20 +44,20 @@ export class BuildStepOutput {
 
   constructor(
     private readonly ctx: BuildStepGlobalContext,
-    { id, stepDisplayName, required = true }: BuildStepOutputParams
+    { id, stepDisplayName, required }: BuildStepOutputParams<R>
   ) {
     this.id = id;
     this.stepDisplayName = stepDisplayName;
     this.required = required;
   }
 
-  public get value(): string | undefined {
+  public get value(): BuildStepOutputValueType<R> {
     if (this.required && this._value === undefined) {
       throw new BuildStepRuntimeError(
         `Output parameter "${this.id}" for step "${this.stepDisplayName}" is required but it was not set.`
       );
     }
-    return this._value;
+    return this._value as BuildStepOutputValueType<R>;
   }
 
   public set(value: string | undefined): BuildStepOutput {
