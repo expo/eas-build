@@ -9,3 +9,7 @@ coverage:
         informational: true
         paths:
           - packages/steps
+
+ignore:
+  - packages/steps/**/__tests__/**/*.ts
+  - packages/steps/src/scripts/runCustomFunction.ts
