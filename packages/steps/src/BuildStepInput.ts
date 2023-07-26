@@ -1,4 +1,6 @@
-import { BuildStepGlobalContext } from './BuildStepContext.js';
+import { bunyan } from '@expo/logger';
+
+import { BuildStepGlobalContext, SerializedBuildStepGlobalContext } from './BuildStepContext.js';
 import { BuildStepRuntimeError } from './errors.js';
 import {
   BUILD_STEP_OR_BUILD_GLOBAL_CONTEXT_REFERENCE_REGEX,
@@ -29,6 +31,17 @@ interface BuildStepInputProviderParams {
 
 interface BuildStepInputParams extends BuildStepInputProviderParams {
   stepDisplayName: string;
+}
+
+export interface SerializedBuildStepInput {
+  id: string;
+  stepDisplayName: string;
+  defaultValue?: BuildStepInputValueType;
+  allowedValues?: BuildStepInputValueType[];
+  allowedValueTypeName: BuildStepInputValueTypeName;
+  required: boolean;
+  value?: BuildStepInputValueType;
+  ctx: SerializedBuildStepGlobalContext;
 }
 
 export class BuildStepInput {
@@ -124,6 +137,36 @@ export class BuildStepInput {
       typeof this.rawValue === 'string' &&
       !!BUILD_STEP_OR_BUILD_GLOBAL_CONTEXT_REFERENCE_REGEX.exec(this.rawValue)
     );
+  }
+
+  public serialize(): SerializedBuildStepInput {
+    return {
+      id: this.id,
+      stepDisplayName: this.stepDisplayName,
+      defaultValue: this.defaultValue,
+      allowedValues: this.allowedValues,
+      allowedValueTypeName: this.allowedValueTypeName,
+      required: this.required,
+      value: this._value,
+      ctx: this.ctx.serialize(),
+    };
+  }
+
+  public static deserialize(
+    serializedInput: SerializedBuildStepInput,
+    logger: bunyan
+  ): BuildStepInput {
+    const deserializedContext = BuildStepGlobalContext.deserialize(serializedInput.ctx, logger);
+    const input = new BuildStepInput(deserializedContext, {
+      id: serializedInput.id,
+      stepDisplayName: serializedInput.stepDisplayName,
+      defaultValue: serializedInput.defaultValue,
+      allowedValues: serializedInput.allowedValues,
+      allowedValueTypeName: serializedInput.allowedValueTypeName,
+      required: serializedInput.required,
+    });
+    input._value = serializedInput.value;
+    return input;
   }
 
   private parseInputValueToAllowedType(value: string): BuildStepInputValueType {

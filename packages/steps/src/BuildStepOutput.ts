@@ -1,4 +1,6 @@
-import { BuildStepGlobalContext } from './BuildStepContext.js';
+import { bunyan } from '@expo/logger';
+
+import { BuildStepGlobalContext, SerializedBuildStepGlobalContext } from './BuildStepContext.js';
 import { BuildStepRuntimeError } from './errors.js';
 
 export type BuildStepOutputById = Record<string, BuildStepOutput>;
@@ -16,6 +18,14 @@ interface BuildStepOutputParams extends BuildStepOutputProviderParams {
   stepDisplayName: string;
 }
 
+export interface SerializedBuildStepOutput {
+  id: string;
+  stepDisplayName: string;
+  required: boolean;
+  value?: string;
+  ctx: SerializedBuildStepGlobalContext;
+}
+
 export class BuildStepOutput {
   public readonly id: string;
   public readonly stepDisplayName: string;
@@ -28,7 +38,6 @@ export class BuildStepOutput {
   }
 
   constructor(
-    // @ts-expect-error ctx is not used in this class but let's keep it here for consistency
     private readonly ctx: BuildStepGlobalContext,
     { id, stepDisplayName, required = true }: BuildStepOutputParams
   ) {
@@ -54,6 +63,32 @@ export class BuildStepOutput {
     }
     this._value = value;
     return this;
+  }
+
+  public serialize(): SerializedBuildStepOutput {
+    return {
+      id: this.id,
+      stepDisplayName: this.stepDisplayName,
+      required: this.required,
+      value: this._value,
+      ctx: this.ctx.serialize(),
+    };
+  }
+
+  public static deserialize(
+    serialized: SerializedBuildStepOutput,
+    logger: bunyan
+  ): BuildStepOutput {
+    const deserialized = new BuildStepOutput(
+      BuildStepGlobalContext.deserialize(serialized.ctx, logger),
+      {
+        id: serialized.id,
+        stepDisplayName: serialized.stepDisplayName,
+        required: serialized.required,
+      }
+    );
+    deserialized._value = serialized.value;
+    return deserialized;
   }
 }
 

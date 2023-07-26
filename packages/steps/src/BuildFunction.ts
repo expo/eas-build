@@ -6,6 +6,7 @@ import { BuildStepGlobalContext } from './BuildStepContext.js';
 import { BuildStepInputProvider, BuildStepInputValueType } from './BuildStepInput.js';
 import { BuildStepOutputProvider } from './BuildStepOutput.js';
 import { BuildStepEnv } from './BuildStepEnv.js';
+import { createCustomFunctionCall } from './utils/customFunction.js';
 
 export type BuildFunctionById = Record<string, BuildFunction>;
 export type BuildFunctionCallInputs = Record<string, BuildStepInputValueType>;
@@ -18,6 +19,7 @@ export class BuildFunction {
   public readonly inputProviders?: BuildStepInputProvider[];
   public readonly outputProviders?: BuildStepOutputProvider[];
   public readonly command?: string;
+  public readonly customFunctionModulePath?: string;
   public readonly fn?: BuildStepFunction;
   public readonly shell?: string;
 
@@ -34,6 +36,7 @@ export class BuildFunction {
     outputProviders,
     command,
     fn,
+    path,
     shell,
   }: {
     namespace?: string;
@@ -43,11 +46,18 @@ export class BuildFunction {
     inputProviders?: BuildStepInputProvider[];
     outputProviders?: BuildStepOutputProvider[];
     command?: string;
+    path?: string;
     fn?: BuildStepFunction;
     shell?: string;
   }) {
-    assert(command !== undefined || fn !== undefined, 'Either command or fn must be defined.');
+    assert(
+      command !== undefined || fn !== undefined || path !== undefined,
+      'Either command, fn or path must be defined.'
+    );
+
     assert(!(command !== undefined && fn !== undefined), 'Command and fn cannot be both set.');
+    assert(!(command !== undefined && path !== undefined), 'Command and path cannot be both set.');
+    assert(!(fn !== undefined && path !== undefined), 'Fn and path cannot be both set.');
 
     this.namespace = namespace;
     this.id = id;
@@ -58,6 +68,7 @@ export class BuildFunction {
     this.command = command;
     this.fn = fn;
     this.shell = shell;
+    this.customFunctionModulePath = path;
   }
 
   public getFullId(): string {
@@ -104,7 +115,7 @@ export class BuildFunction {
       name: buildStepName,
       displayName: buildStepDisplayName,
       command: this.command,
-      fn: this.fn,
+      fn: this.fn ?? createCustomFunctionCall(this.customFunctionModulePath),
       workingDirectory,
       inputs,
       outputs,

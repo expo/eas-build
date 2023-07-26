@@ -68,7 +68,8 @@ export interface BuildFunctionConfig {
   name?: string;
   supportedRuntimePlatforms?: BuildRuntimePlatform[];
   shell?: string;
-  command: string;
+  command?: string;
+  path?: string;
 }
 
 export type BuildFunctionInputs = (
@@ -224,9 +225,13 @@ const BuildFunctionConfigSchema = Joi.object({
   supportedRuntimePlatforms: Joi.array().items(...Object.values(BuildRuntimePlatform)),
   inputs: BuildFunctionInputsSchema,
   outputs: BuildStepOutputsSchema,
-  command: Joi.string().required(),
+  command: Joi.string(),
+  path: Joi.string(),
   shell: Joi.string(),
-}).rename('supported_platforms', 'supportedRuntimePlatforms');
+})
+  .rename('supported_platforms', 'supportedRuntimePlatforms')
+  .xor('command', 'path')
+  .nand('command', 'path');
 
 export const BuildFunctionsConfigFileSchema = Joi.object<BuildFunctionsConfigFile>({
   configFilesToImport: Joi.array().items(Joi.string().pattern(/\.y(a)?ml$/)),
