@@ -36,7 +36,7 @@ export class BuildFunction {
     outputProviders,
     command,
     fn,
-    path,
+    customFunctionModulePath,
     shell,
   }: {
     namespace?: string;
@@ -46,18 +46,24 @@ export class BuildFunction {
     inputProviders?: BuildStepInputProvider[];
     outputProviders?: BuildStepOutputProvider[];
     command?: string;
-    path?: string;
+    customFunctionModulePath?: string;
     fn?: BuildStepFunction;
     shell?: string;
   }) {
     assert(
-      command !== undefined || fn !== undefined || path !== undefined,
+      command !== undefined || fn !== undefined || customFunctionModulePath !== undefined,
       'Either command, fn or path must be defined.'
     );
 
     assert(!(command !== undefined && fn !== undefined), 'Command and fn cannot be both set.');
-    assert(!(command !== undefined && path !== undefined), 'Command and path cannot be both set.');
-    assert(!(fn !== undefined && path !== undefined), 'Fn and path cannot be both set.');
+    assert(
+      !(command !== undefined && customFunctionModulePath !== undefined),
+      'Command and path cannot be both set.'
+    );
+    assert(
+      !(fn !== undefined && customFunctionModulePath !== undefined),
+      'Fn and path cannot be both set.'
+    );
 
     this.namespace = namespace;
     this.id = id;
@@ -68,7 +74,7 @@ export class BuildFunction {
     this.command = command;
     this.fn = fn;
     this.shell = shell;
-    this.customFunctionModulePath = path;
+    this.customFunctionModulePath = customFunctionModulePath;
   }
 
   public getFullId(): string {

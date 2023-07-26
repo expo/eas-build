@@ -21,10 +21,8 @@ export interface SerializedCustomBuildFunctionArguments {
   ctx: SerializedBuildStepContext;
 }
 
-export function createCustomFunctionCall(
-  relativeCustomFunctionModulePath?: string
-): BuildStepFunction {
-  assert(relativeCustomFunctionModulePath, 'relativeCustomFunctionModulePath must be defined');
+export function createCustomFunctionCall(customFunctionModulePath?: string): BuildStepFunction {
+  assert(customFunctionModulePath, 'customFunctionModulePath must be defined');
   return async (ctx, { env, inputs, outputs }) => {
     const serializedArguments: SerializedCustomBuildFunctionArguments = {
       env,
@@ -36,8 +34,6 @@ export function createCustomFunctionCall(
       ),
       ctx: ctx.serialize(),
     };
-    const baseConfigDir = path.dirname(ctx.global.configPath);
-    const customFunctionModulePath = path.resolve(baseConfigDir, relativeCustomFunctionModulePath);
     await spawnAsync(
       'node',
       [

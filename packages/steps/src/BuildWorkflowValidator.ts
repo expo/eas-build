@@ -1,3 +1,7 @@
+import path from 'path';
+
+import fs from 'fs-extra';
+
 import { BuildStep } from './BuildStep.js';
 import { BuildStepInputValueTypeName } from './BuildStepInput.js';
 import { BuildWorkflow } from './BuildWorkflow.js';
@@ -9,11 +13,12 @@ import { findOutputPaths } from './utils/template.js';
 export class BuildWorkflowValidator {
   constructor(private readonly workflow: BuildWorkflow) {}
 
-  public validate(): void {
+  public async validateAsync(): Promise<void> {
     const errors: BuildConfigError[] = [];
     errors.push(...this.validateUniqueStepIds());
     errors.push(...this.validateInputs());
     errors.push(...this.validateAllowedPlatforms());
+    errors.push(...(await this.validateCustomFunctionModulesAsync()));
     if (errors.length !== 0) {
       throw new BuildWorkflowError('Build workflow is invalid.', errors);
     }
@@ -130,6 +135,31 @@ export class BuildWorkflowValidator {
           )
             .map((p) => `"${p}"`)
             .join(', ')}.`
+        );
+        errors.push(error);
+      }
+    }
+    return errors;
+  }
+
+  private async validateCustomFunctionModulesAsync(): Promise<BuildConfigError[]> {
+    const errors: BuildConfigError[] = [];
+    for (const buildFunction of Object.values(this.workflow.buildFunctions)) {
+      if (!buildFunction.customFunctionModulePath) {
+        continue;
+      }
+
+      if (!(await fs.exists(buildFunction.customFunctionModulePath))) {
+        const error = new BuildConfigError(
+          `Custom function module path "${buildFunction.customFunctionModulePath}" for function "${buildFunction.name}" does not exist.`
+        );
+        errors.push(error);
+        continue;
+      }
+
+      if (!(await fs.exists(path.join(buildFunction.customFunctionModulePath, 'package.json')))) {
+        const error = new BuildConfigError(
+          `Custom function module path "${buildFunction.customFunctionModulePath}" for function "${buildFunction.name}" does not contain a package.json file.`
         );
         errors.push(error);
       }

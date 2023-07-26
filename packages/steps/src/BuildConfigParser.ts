@@ -1,4 +1,5 @@
 import assert from 'assert';
+import path from 'path';
 
 import {
   BuildConfig,
@@ -57,7 +58,7 @@ export class BuildConfigParser {
       this.createBuildStepFromConfig(stepConfig, buildFunctions)
     );
     const workflow = new BuildWorkflow(this.ctx, { buildSteps, buildFunctions });
-    new BuildWorkflowValidator(workflow).validate();
+    await new BuildWorkflowValidator(workflow).validateAsync();
     return workflow;
   }
 
@@ -173,12 +174,17 @@ export class BuildConfigParser {
     shell,
     command,
     supportedRuntimePlatforms,
-    path,
+    path: relativeCustomFunctionModulePath,
   }: BuildFunctionConfig & { id: string }): BuildFunction {
     const inputProviders =
       inputsConfig && this.createBuildStepInputProvidersFromBuildFunctionInputs(inputsConfig);
     const outputProviders =
       outputsConfig && this.createBuildStepOutputProvidersFromBuildFunctionOutputs(outputsConfig);
+    let customFunctionModulePath = relativeCustomFunctionModulePath;
+    if (relativeCustomFunctionModulePath) {
+      const baseConfigDir = path.dirname(this.ctx.configPath);
+      customFunctionModulePath = path.resolve(baseConfigDir, relativeCustomFunctionModulePath);
+    }
     return new BuildFunction({
       id,
       name,
@@ -186,7 +192,7 @@ export class BuildConfigParser {
       outputProviders,
       shell,
       command,
-      path,
+      customFunctionModulePath,
       supportedRuntimePlatforms,
     });
   }
