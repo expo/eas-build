@@ -9,6 +9,11 @@ import { BuildConfigError, BuildStepRuntimeError } from '../errors.js';
 import { getDefaultShell } from '../utils/shell/command.js';
 import { BuildRuntimePlatform } from '../BuildRuntimePlatform.js';
 import { BuildStepInputValueTypeName } from '../BuildStepInput.js';
+import {
+  INSTALL_DEPENDENCIES_AND_COMPILE_CUSTOM_FUNCTION_MODULES_ID,
+  INSTALL_DEPENDENCIES_AND_COMPILE_CUSTOM_FUNCTION_MODULES_NAME,
+  INSTALL_DEPENDENCIES_AND_COMPILE_CUSTOM_FUNCTION_MODULES_NAMESPACE,
+} from '../utils/customFunction.js';
 
 import { createGlobalContextMock } from './utils/context.js';
 import { getError, getErrorAsync } from './utils/error.js';
@@ -262,7 +267,16 @@ describe(BuildConfigParser, () => {
       const workflow = await parser.parseAsync();
 
       const { buildSteps } = workflow;
-      expect(buildSteps.length).toBe(7);
+      expect(buildSteps.length).toBe(8); // 7 steps + 1 step for installing custom function dependencies
+
+      // step to install custom function dependencies
+      const step0 = buildSteps[0];
+      expect(step0.id).toMatch(
+        `${INSTALL_DEPENDENCIES_AND_COMPILE_CUSTOM_FUNCTION_MODULES_NAMESPACE}/${INSTALL_DEPENDENCIES_AND_COMPILE_CUSTOM_FUNCTION_MODULES_ID}`
+      );
+      expect(step0.name).toBe(INSTALL_DEPENDENCIES_AND_COMPILE_CUSTOM_FUNCTION_MODULES_NAME);
+      expect(step0.command).toBeUndefined();
+      expect(step0.fn).not.toBeUndefined();
 
       // - say_hi:
       //     env:
@@ -276,7 +290,7 @@ describe(BuildConfigParser, () => {
       //          property2:
       //            - aaa
       //            - bbb
-      const step1 = buildSteps[0];
+      const step1 = buildSteps[1];
       expect(step1.id).toMatch(UUID_REGEX);
       expect(step1.name).toBe('Hi!');
       expect(step1.command).toBe('echo "Hi, ${ inputs.name }!"');
@@ -304,7 +318,7 @@ describe(BuildConfigParser, () => {
       //     inputs:
       //       name: Szymon
       //       build_number: 122
-      const step2 = buildSteps[1];
+      const step2 = buildSteps[2];
       expect(step2.id).toMatch(UUID_REGEX);
       expect(step2.name).toBe('Hi, Szymon!');
       expect(step2.command).toBe('echo "Hi, ${ inputs.name }!"');
@@ -325,7 +339,7 @@ describe(BuildConfigParser, () => {
       expect(step2.env).toMatchObject({});
 
       // - say_hi_wojtek
-      const step3 = buildSteps[2];
+      const step3 = buildSteps[3];
       expect(step3.id).toMatch(UUID_REGEX);
       expect(step3.name).toBe('Hi, Wojtek!');
       expect(step3.command).toBe('echo "Hi, Wojtek!"');
@@ -335,7 +349,7 @@ describe(BuildConfigParser, () => {
 
       // - random:
       //     id: random_number
-      const step4 = buildSteps[3];
+      const step4 = buildSteps[4];
       expect(step4.id).toMatch('random_number');
       expect(step4.name).toBe('Generate random number');
       expect(step4.command).toBe('set-output value 6');
@@ -348,7 +362,7 @@ describe(BuildConfigParser, () => {
       // - print:
       //     inputs:
       //       value: ${ steps.random_number.value }
-      const step5 = buildSteps[4];
+      const step5 = buildSteps[5];
       expect(step5.id).toMatch(UUID_REGEX);
       expect(step5.name).toBe(undefined);
       expect(step5.command).toBe('echo "${ inputs.value }"');
@@ -363,7 +377,7 @@ describe(BuildConfigParser, () => {
       //     inputs:
       //       greeting: Hello
       //       num: 123
-      const step6 = buildSteps[5];
+      const step6 = buildSteps[6];
       expect(step6.id).toMatch(UUID_REGEX);
       expect(step6.name).toBe('Hi!');
       expect(step6.command).toBe('echo "${ inputs.greeting }, ${ inputs.name }!"');
