@@ -6,12 +6,18 @@ import { instance, mock, verify, when } from 'ts-mockito';
 import { v4 as uuidv4 } from 'uuid';
 
 import { BuildStep, BuildStepFunction, BuildStepStatus } from '../BuildStep.js';
-import { BuildStepInput, BuildStepInputValueTypeName } from '../BuildStepInput.js';
+import {
+  BuildStepInput,
+  BuildStepInputById,
+  BuildStepInputValueTypeName,
+} from '../BuildStepInput.js';
 import { BuildStepGlobalContext, BuildStepContext } from '../BuildStepContext.js';
-import { BuildStepOutput } from '../BuildStepOutput.js';
+import { BuildStepOutput, BuildStepOutputById } from '../BuildStepOutput.js';
 import { BuildStepRuntimeError } from '../errors.js';
 import { nullthrows } from '../utils/nullthrows.js';
 import { BuildRuntimePlatform } from '../BuildRuntimePlatform.js';
+import { spawnAsync } from '../utils/shell/spawn.js';
+import { BuildStepEnv } from '../BuildStepEnv.js';
 
 import { createGlobalContextMock } from './utils/context.js';
 import { createMockLogger } from './utils/logger.js';
@@ -296,12 +302,15 @@ describe(BuildStep, () => {
               id: 'foo1',
               stepDisplayName: displayName,
               defaultValue: 'bar',
+              required: true,
+              allowedValueTypeName: BuildStepInputValueTypeName.STRING,
             }),
             new BuildStepInput(baseStepCtx, {
               id: 'foo2',
               stepDisplayName: displayName,
               defaultValue: '${ eas.runtimePlatform }',
               allowedValueTypeName: BuildStepInputValueTypeName.STRING,
+              required: true,
             }),
             new BuildStepInput(baseStepCtx, {
               id: 'foo3',
@@ -311,6 +320,7 @@ describe(BuildStep, () => {
                 baz: [1, 'aaa'],
               },
               allowedValueTypeName: BuildStepInputValueTypeName.JSON,
+              required: true,
             }),
           ],
           outputs: [
@@ -338,9 +348,66 @@ describe(BuildStep, () => {
             new BuildStepOutput(baseStepCtx, {
               id: 'abc',
               stepDisplayName: displayName,
+              required: true,
             }),
           ],
           command,
+        });
+        await step.executeAsync();
+        const abc = nullthrows(step.outputs).find((output) => output.id === 'abc');
+        expect(abc?.value).toBe('123');
+      });
+
+      it('collects the envs after calling the fn', async () => {
+        const id = 'test1';
+        const fn = jest.fn(
+          async (
+            ctx: BuildStepContext,
+            { env }: { inputs: BuildStepInputById; outputs: BuildStepOutputById; env: BuildStepEnv }
+          ) => {
+            await spawnAsync('set-env', ['ABC', '123'], {
+              cwd: ctx.workingDirectory,
+              env,
+            });
+          }
+        );
+        const displayName = BuildStep.getDisplayName({ id });
+
+        const step = new BuildStep(baseStepCtx, {
+          id,
+          displayName,
+          fn,
+        });
+        await step.executeAsync();
+        expect(baseStepCtx.env).toMatchObject({ ABC: '123' });
+      });
+
+      it('collects the outputs after calling the fn', async () => {
+        const id = 'test1';
+        const fn = jest.fn(
+          async (
+            ctx: BuildStepContext,
+            { env }: { inputs: BuildStepInputById; outputs: BuildStepOutputById; env: BuildStepEnv }
+          ) => {
+            await spawnAsync('set-output', ['abc', '123'], {
+              cwd: ctx.workingDirectory,
+              env,
+            });
+          }
+        );
+        const displayName = BuildStep.getDisplayName({ id });
+
+        const step = new BuildStep(baseStepCtx, {
+          id,
+          displayName,
+          outputs: [
+            new BuildStepOutput(baseStepCtx, {
+              id: 'abc',
+              stepDisplayName: displayName,
+              required: true,
+            }),
+          ],
+          fn,
         });
         await step.executeAsync();
         const abc = nullthrows(step.outputs).find((output) => output.id === 'abc');
@@ -359,6 +426,7 @@ describe(BuildStep, () => {
             new BuildStepOutput(baseStepCtx, {
               id: 'abc',
               stepDisplayName: displayName,
+              required: true,
             }),
           ],
           command,
@@ -441,10 +509,10 @@ describe(BuildStep, () => {
           expect.objectContaining({
             inputs: expect.any(Object),
             outputs: expect.any(Object),
-            env: {
+            env: expect.objectContaining({
               ...globalEnv,
               ...stepEnv,
-            },
+            }),
           })
         );
       });
@@ -474,9 +542,9 @@ describe(BuildStep, () => {
           expect.objectContaining({
             inputs: expect.any(Object),
             outputs: expect.any(Object),
-            env: {
+            env: expect.objectContaining({
               TEST1: 'def',
-            },
+            }),
           })
         );
       });
@@ -493,23 +561,29 @@ describe(BuildStep, () => {
             id: 'foo1',
             stepDisplayName: displayName,
             defaultValue: 'bar1',
+            required: true,
+            allowedValueTypeName: BuildStepInputValueTypeName.STRING,
           }),
           new BuildStepInput(baseStepCtx, {
             id: 'foo2',
             stepDisplayName: displayName,
             defaultValue: 'bar2',
+            allowedValueTypeName: BuildStepInputValueTypeName.STRING,
+            required: true,
           }),
           new BuildStepInput(baseStepCtx, {
             id: 'foo3',
             stepDisplayName: displayName,
             defaultValue: true,
             allowedValueTypeName: BuildStepInputValueTypeName.BOOLEAN,
+            required: true,
           }),
           new BuildStepInput(baseStepCtx, {
             id: 'foo4',
             stepDisplayName: displayName,
             defaultValue: 27,
             allowedValueTypeName: BuildStepInputValueTypeName.NUMBER,
+            required: true,
           }),
           new BuildStepInput(baseStepCtx, {
             id: 'foo5',
@@ -518,6 +592,7 @@ describe(BuildStep, () => {
               foo: 'bar',
             },
             allowedValueTypeName: BuildStepInputValueTypeName.JSON,
+            required: true,
           }),
         ];
         const outputs: BuildStepOutput[] = [
@@ -815,5 +890,82 @@ describe(BuildStep.prototype.canBeRunOnRuntimePlatform, () => {
       command,
     });
     expect(step.canBeRunOnRuntimePlatform()).toBe(false);
+  });
+});
+
+describe(BuildStep.prototype.serialize, () => {
+  let baseStepCtx: BuildStepGlobalContext;
+
+  beforeEach(async () => {
+    baseStepCtx = createGlobalContextMock({ runtimePlatform: BuildRuntimePlatform.LINUX });
+    await fs.mkdir(baseStepCtx.defaultWorkingDirectory, { recursive: true });
+    await fs.mkdir(baseStepCtx.stepsInternalBuildDirectory, { recursive: true });
+  });
+  afterEach(async () => {
+    await fs.rm(baseStepCtx.stepsInternalBuildDirectory, { recursive: true });
+  });
+
+  it('serializes correctly', async () => {
+    const id = 'test1';
+    const command = 'set-output abc 123';
+    const displayName = BuildStep.getDisplayName({ id, command });
+
+    const outputs = [
+      new BuildStepOutput(baseStepCtx, {
+        id: 'abc',
+        stepDisplayName: displayName,
+        required: true,
+      }),
+    ];
+
+    const step = new BuildStep(baseStepCtx, {
+      id,
+      displayName,
+      command,
+      outputs,
+    });
+    expect(step.serialize()).toMatchObject({
+      id,
+      displayName,
+      executed: false,
+      outputById: {
+        abc: outputs[0].serialize(),
+      },
+    });
+  });
+});
+
+describe(BuildStep.deserialize, () => {
+  let baseStepCtx: BuildStepGlobalContext;
+
+  beforeEach(async () => {
+    baseStepCtx = createGlobalContextMock({ runtimePlatform: BuildRuntimePlatform.LINUX });
+    await fs.mkdir(baseStepCtx.defaultWorkingDirectory, { recursive: true });
+    await fs.mkdir(baseStepCtx.stepsInternalBuildDirectory, { recursive: true });
+  });
+  afterEach(async () => {
+    await fs.rm(baseStepCtx.stepsInternalBuildDirectory, { recursive: true });
+  });
+
+  it('deserializes correctly', async () => {
+    const outputs = [
+      new BuildStepOutput(baseStepCtx, {
+        id: 'abc',
+        stepDisplayName: 'Test 1',
+        required: true,
+      }),
+    ];
+    outputs[0].set('123');
+    const step = BuildStep.deserialize({
+      id: 'test1',
+      displayName: 'Test 1',
+      executed: true,
+      outputById: {
+        abc: outputs[0].serialize(),
+      },
+    });
+    expect(step.id).toBe('test1');
+    expect(step.displayName).toBe('Test 1');
+    expect(step.getOutputValueByName('abc')).toBe('123');
   });
 });

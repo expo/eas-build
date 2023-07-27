@@ -28,6 +28,15 @@ build:
         inputs:
           greeting: Hello
           number: 123
+    - my_ts_fn:
+        inputs:
+          name: Dominik
+          num: 123
+          obj:
+            property1: value1
+            property2:
+              - aaa
+              - bbb
 
 functions:
   say_hi:
@@ -71,3 +80,16 @@ functions:
       - name: number
         type: number
     command: echo "${ inputs.greeting }, ${ inputs.name }!"
+  my_ts_fn:
+    name: My TS function
+    inputs:
+      - name: name
+      - name: num
+        type: number
+      - name: obj
+        type: json
+    outputs:
+      - name: name
+      - name: num
+      - name: obj
+    path: ./my-custom-ts-function

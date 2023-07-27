@@ -12,16 +12,16 @@ import { UUID_REGEX } from './utils/uuid.js';
 
 describe(BuildFunction, () => {
   describe('constructor', () => {
-    it('throws when neither command nor fn is set', () => {
+    it('throws when command fn and customFunctionModulePath is not set', () => {
       expect(() => {
         // eslint-disable-next-line no-new
         new BuildFunction({
           id: 'test1',
         });
-      }).toThrowError(/Either command or fn must be defined/);
+      }).toThrowError(/Either command, fn or path must be defined/);
     });
 
-    it('throws when neither command nor fn is set', () => {
+    it('throws when command and fn are both set', () => {
       expect(() => {
         // eslint-disable-next-line no-new
         new BuildFunction({
@@ -30,6 +30,28 @@ describe(BuildFunction, () => {
           fn: () => {},
         });
       }).toThrowError(/Command and fn cannot be both set/);
+    });
+
+    it('throws when command and customFunctionModulePath are both set', () => {
+      expect(() => {
+        // eslint-disable-next-line no-new
+        new BuildFunction({
+          id: 'test1',
+          command: 'echo 123',
+          customFunctionModulePath: 'test',
+        });
+      }).toThrowError(/Command and path cannot be both set/);
+    });
+
+    it('throws when fn and customFunctionModulePath are both set', () => {
+      expect(() => {
+        // eslint-disable-next-line no-new
+        new BuildFunction({
+          id: 'test1',
+          fn: () => {},
+          customFunctionModulePath: 'test',
+        });
+      }).toThrowError(/Fn and path cannot be both set/);
     });
   });
 
@@ -105,6 +127,21 @@ describe(BuildFunction, () => {
       expect(step.name).toBe('Test function');
       expect(step.fn).toBe(fn);
     });
+    it('works with custom JS/TS function', () => {
+      const ctx = createGlobalContextMock();
+      const buildFunction = new BuildFunction({
+        id: 'test1',
+        name: 'Test function',
+        customFunctionModulePath: './customFunctionTest',
+      });
+      const step = buildFunction.createBuildStepFromFunctionCall(ctx, {
+        workingDirectory: ctx.defaultWorkingDirectory,
+      });
+      expect(step).toBeInstanceOf(BuildStep);
+      expect(step.id).toMatch(UUID_REGEX);
+      expect(step.name).toBe('Test function');
+      expect(step.fn).toEqual(expect.any(Function));
+    });
     it('can override id and shell from function definition', () => {
       const ctx = createGlobalContextMock();
       const func = new BuildFunction({
@@ -130,27 +167,35 @@ describe(BuildFunction, () => {
           id: 'input1',
           defaultValue: true,
           allowedValueTypeName: BuildStepInputValueTypeName.BOOLEAN,
+          required: true,
         }),
-        BuildStepInput.createProvider({ id: 'input2' }),
+        BuildStepInput.createProvider({
+          id: 'input2',
+          required: true,
+          allowedValueTypeName: BuildStepInputValueTypeName.STRING,
+        }),
         BuildStepInput.createProvider({
           id: 'input3',
           defaultValue: 1,
           allowedValueTypeName: BuildStepInputValueTypeName.NUMBER,
+          required: true,
         }),
         BuildStepInput.createProvider({
           id: 'input4',
           defaultValue: { a: 1 },
           allowedValueTypeName: BuildStepInputValueTypeName.JSON,
+          required: true,
         }),
         BuildStepInput.createProvider({
           id: 'input5',
           defaultValue: '${ eas.job.version.buildNumber }',
           allowedValueTypeName: BuildStepInputValueTypeName.NUMBER,
+          required: true,
         }),
       ];
       const outputProviders: BuildStepOutputProvider[] = [
-        BuildStepOutput.createProvider({ id: 'output1' }),
-        BuildStepOutput.createProvider({ id: 'output2' }),
+        BuildStepOutput.createProvider({ id: 'output1', required: true }),
+        BuildStepOutput.createProvider({ id: 'output2', required: true }),
       ];
       const func = new BuildFunction({
         id: 'test1',
@@ -182,12 +227,23 @@ describe(BuildFunction, () => {
     it('passes values to build inputs', () => {
       const ctx = createGlobalContextMock();
       const inputProviders: BuildStepInputProvider[] = [
-        BuildStepInput.createProvider({ id: 'input1', defaultValue: 'xyz1' }),
-        BuildStepInput.createProvider({ id: 'input2', defaultValue: 'xyz2' }),
+        BuildStepInput.createProvider({
+          id: 'input1',
+          defaultValue: 'xyz1',
+          required: true,
+          allowedValueTypeName: BuildStepInputValueTypeName.STRING,
+        }),
+        BuildStepInput.createProvider({
+          id: 'input2',
+          defaultValue: 'xyz2',
+          required: true,
+          allowedValueTypeName: BuildStepInputValueTypeName.STRING,
+        }),
         BuildStepInput.createProvider({
           id: 'input3',
           defaultValue: true,
           allowedValueTypeName: BuildStepInputValueTypeName.BOOLEAN,
+          required: true,
         }),
         BuildStepInput.createProvider({
           id: 'input4',
@@ -195,6 +251,7 @@ describe(BuildFunction, () => {
             a: 1,
           },
           allowedValueTypeName: BuildStepInputValueTypeName.JSON,
+          required: true,
         }),
       ];
       const func = new BuildFunction({

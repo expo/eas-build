@@ -45,6 +45,7 @@ interface BuildContextParams {
   projectTargetDirectory?: string;
   workingDirectory?: string;
   staticContextContent?: Record<string, any>;
+  configPath?: string;
 }
 
 export function createStepContextMock({
@@ -81,6 +82,7 @@ export function createGlobalContextMock({
   projectTargetDirectory,
   workingDirectory,
   staticContextContent,
+  configPath,
 }: BuildContextParams = {}): BuildStepGlobalContext {
   const resolvedProjectTargetDirectory =
     projectTargetDirectory ?? path.join(os.tmpdir(), 'eas-build', uuidv4());
@@ -93,6 +95,7 @@ export function createGlobalContextMock({
       workingDirectory ?? resolvedProjectTargetDirectory,
       staticContextContent ?? {}
     ),
-    skipCleanup ?? false
+    skipCleanup ?? false,
+    configPath ?? './fake.yml'
   );
 }

@@ -10,7 +10,7 @@ import { BuildRuntimePlatform } from '../BuildRuntimePlatform.js';
 import { BuildFunction } from '../BuildFunction.js';
 
 import { createGlobalContextMock } from './utils/context.js';
-import { getError } from './utils/error.js';
+import { getErrorAsync } from './utils/error.js';
 
 describe(BuildWorkflowValidator, () => {
   test('non unique step ids', async () => {
@@ -47,8 +47,8 @@ describe(BuildWorkflowValidator, () => {
     });
 
     const validator = new BuildWorkflowValidator(workflow);
-    const error = getError<BuildWorkflowError>(() => {
-      validator.validate();
+    const error = await getErrorAsync<BuildWorkflowError>(async () => {
+      await validator.validateAsync();
     });
     expect(error).toBeInstanceOf(BuildWorkflowError);
     assert(error instanceof BuildWorkflowError);
@@ -75,13 +75,15 @@ describe(BuildWorkflowValidator, () => {
               required: true,
               defaultValue: '3',
               allowedValues: ['1', '2'],
+              allowedValueTypeName: BuildStepInputValueTypeName.STRING,
             }),
-            new BuildStepInput(ctx, {
+            new BuildStepInput<BuildStepInputValueTypeName>(ctx, {
               id: 'input2',
               stepDisplayName: displayName1,
               required: true,
               defaultValue: '3',
               allowedValues: [true, false],
+              allowedValueTypeName: BuildStepInputValueTypeName.STRING,
             }),
           ],
           command: command1,
@@ -91,8 +93,8 @@ describe(BuildWorkflowValidator, () => {
     });
 
     const validator = new BuildWorkflowValidator(workflow);
-    const error = getError<BuildWorkflowError>(() => {
-      validator.validate();
+    const error = await getErrorAsync<BuildWorkflowError>(async () => {
+      await validator.validateAsync();
     });
     expect(error).toBeInstanceOf(BuildWorkflowError);
     assert(error instanceof BuildWorkflowError);
@@ -114,6 +116,7 @@ describe(BuildWorkflowValidator, () => {
         BuildStepInput.createProvider({
           id: 'id1',
           required: true,
+          allowedValueTypeName: BuildStepInputValueTypeName.STRING,
         }),
       ],
       command: 'echo "hi"',
@@ -132,8 +135,8 @@ describe(BuildWorkflowValidator, () => {
     });
 
     const validator = new BuildWorkflowValidator(workflow);
-    const error = getError<BuildWorkflowError>(() => {
-      validator.validate();
+    const error = await getErrorAsync<BuildWorkflowError>(async () => {
+      await validator.validateAsync();
     });
     expect(error).toBeInstanceOf(BuildWorkflowError);
     expect((error as BuildWorkflowError).errors[0].message).toBe(
@@ -149,26 +152,32 @@ describe(BuildWorkflowValidator, () => {
         BuildStepInput.createProvider({
           id: 'id1',
           required: true,
+          allowedValueTypeName: BuildStepInputValueTypeName.STRING,
         }),
         BuildStepInput.createProvider({
           id: 'id2',
           allowedValueTypeName: BuildStepInputValueTypeName.NUMBER,
+          required: true,
         }),
         BuildStepInput.createProvider({
           id: 'id3',
           allowedValueTypeName: BuildStepInputValueTypeName.JSON,
+          required: true,
         }),
         BuildStepInput.createProvider({
           id: 'id4',
           allowedValueTypeName: BuildStepInputValueTypeName.NUMBER,
+          required: true,
         }),
         BuildStepInput.createProvider({
           id: 'id5',
           allowedValueTypeName: BuildStepInputValueTypeName.NUMBER,
+          required: true,
         }),
         BuildStepInput.createProvider({
           id: 'id6',
           allowedValueTypeName: BuildStepInputValueTypeName.NUMBER,
+          required: true,
         }),
       ],
       command: 'echo "hi"',
@@ -197,8 +206,8 @@ describe(BuildWorkflowValidator, () => {
     });
 
     const validator = new BuildWorkflowValidator(workflow);
-    const error = getError<BuildWorkflowError>(() => {
-      validator.validate();
+    const error = await getErrorAsync<BuildWorkflowError>(async () => {
+      await validator.validateAsync();
     });
     expect(error).toBeInstanceOf(BuildWorkflowError);
     expect((error as BuildWorkflowError).errors[0].message).toBe(
@@ -236,6 +245,7 @@ describe(BuildWorkflowValidator, () => {
               stepDisplayName: displayName1,
               required: true,
               defaultValue: '${ steps.test2.output1 }',
+              allowedValueTypeName: BuildStepInputValueTypeName.STRING,
             }),
           ],
           command: command1,
@@ -257,8 +267,8 @@ describe(BuildWorkflowValidator, () => {
     });
 
     const validator = new BuildWorkflowValidator(workflow);
-    const error = getError<BuildWorkflowError>(() => {
-      validator.validate();
+    const error = await getErrorAsync<BuildWorkflowError>(async () => {
+      await validator.validateAsync();
     });
     expect(error).toBeInstanceOf(BuildWorkflowError);
     assert(error instanceof BuildWorkflowError);
@@ -285,6 +295,7 @@ describe(BuildWorkflowValidator, () => {
               stepDisplayName: displayName,
               required: true,
               defaultValue: '${ steps.test1.output1 }',
+              allowedValueTypeName: BuildStepInputValueTypeName.STRING,
             }),
           ],
           command,
@@ -294,8 +305,8 @@ describe(BuildWorkflowValidator, () => {
     });
 
     const validator = new BuildWorkflowValidator(workflow);
-    const error = getError<BuildWorkflowError>(() => {
-      validator.validate();
+    const error = await getErrorAsync<BuildWorkflowError>(async () => {
+      await validator.validateAsync();
     });
     expect(error).toBeInstanceOf(BuildWorkflowError);
     assert(error instanceof BuildWorkflowError);
@@ -342,6 +353,7 @@ describe(BuildWorkflowValidator, () => {
               stepDisplayName: displayName2,
               required: true,
               defaultValue: '${ steps.test1.output1 }',
+              allowedValueTypeName: BuildStepInputValueTypeName.STRING,
             }),
           ],
           command: command2,
@@ -355,6 +367,7 @@ describe(BuildWorkflowValidator, () => {
               stepDisplayName: displayName3,
               required: true,
               defaultValue: '${ steps.test2.output2 }',
+              allowedValueTypeName: BuildStepInputValueTypeName.STRING,
             }),
           ],
           command: command3,
@@ -364,8 +377,8 @@ describe(BuildWorkflowValidator, () => {
     });
 
     const validator = new BuildWorkflowValidator(workflow);
-    const error = getError<BuildWorkflowError>(() => {
-      validator.validate();
+    const error = await getErrorAsync<BuildWorkflowError>(async () => {
+      await validator.validateAsync();
     });
     expect(error).toBeInstanceOf(BuildWorkflowError);
     assert(error instanceof BuildWorkflowError);
@@ -375,7 +388,7 @@ describe(BuildWorkflowValidator, () => {
       'Input parameter "input2" for step "test3" uses an expression that references an undefined output parameter "output2" from step "test2".'
     );
   });
-  test('multiple config errors', () => {
+  test('multiple config errors', async () => {
     const id1 = 'test1';
     const command1 = 'set-output output1 123';
     const displayName1 = BuildStep.getDisplayName({ id: id1, command: command1 });
@@ -412,6 +425,7 @@ describe(BuildWorkflowValidator, () => {
               stepDisplayName: displayName2,
               required: true,
               defaultValue: '${ steps.test4.output1 }',
+              allowedValueTypeName: BuildStepInputValueTypeName.STRING,
             }),
           ],
           command: command2,
@@ -425,6 +439,7 @@ describe(BuildWorkflowValidator, () => {
               stepDisplayName: displayName3,
               required: true,
               defaultValue: '${ steps.test2.output2 }',
+              allowedValueTypeName: BuildStepInputValueTypeName.STRING,
             }),
           ],
           command: 'echo ${ inputs.input2 }',
@@ -434,8 +449,8 @@ describe(BuildWorkflowValidator, () => {
     });
 
     const validator = new BuildWorkflowValidator(workflow);
-    const error = getError<BuildWorkflowError>(() => {
-      validator.validate();
+    const error = await getErrorAsync<BuildWorkflowError>(async () => {
+      await validator.validateAsync();
     });
     expect(error).toBeInstanceOf(BuildWorkflowError);
     assert(error instanceof BuildWorkflowError);
@@ -468,8 +483,8 @@ describe(BuildWorkflowValidator, () => {
     });
 
     const validator = new BuildWorkflowValidator(workflow);
-    const error = getError<BuildWorkflowError>(() => {
-      validator.validate();
+    const error = await getErrorAsync<BuildWorkflowError>(async () => {
+      await validator.validateAsync();
     });
     expect(error).toBeInstanceOf(BuildWorkflowError);
     assert(error instanceof BuildWorkflowError);
@@ -477,6 +492,31 @@ describe(BuildWorkflowValidator, () => {
     expect(error.errors[0]).toBeInstanceOf(BuildConfigError);
     expect(error.errors[0].message).toBe(
       `Step "${displayName}" is not allowed on platform "${BuildRuntimePlatform.LINUX}". Allowed platforms for this step are: "${BuildRuntimePlatform.DARWIN}".`
+    );
+  });
+
+  test('non-existing custom function module', async () => {
+    const ctx = createGlobalContextMock({ runtimePlatform: BuildRuntimePlatform.LINUX });
+    const workflow = new BuildWorkflow(ctx, {
+      buildSteps: [],
+      buildFunctions: {
+        test: new BuildFunction({
+          id: 'test',
+          customFunctionModulePath: '/non/existent/module',
+        }),
+      },
+    });
+
+    const validator = new BuildWorkflowValidator(workflow);
+    const error = await getErrorAsync<BuildWorkflowError>(async () => {
+      await validator.validateAsync();
+    });
+    assert(error instanceof BuildWorkflowError);
+    expect(error).toBeInstanceOf(BuildWorkflowError);
+    expect(error.errors.length).toBe(1);
+    expect(error.errors[0]).toBeInstanceOf(BuildConfigError);
+    expect(error.errors[0].message).toBe(
+      `Custom function module path "/non/existent/module" for function "test" does not exist.`
     );
   });
 });

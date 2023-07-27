@@ -1,4 +1,5 @@
 import assert from 'assert';
+import path from 'path';
 
 import {
   BuildConfig,
@@ -33,21 +34,19 @@ import { duplicates } from './utils/expodash/duplicates.js';
 import { uniq } from './utils/expodash/uniq.js';
 
 export class BuildConfigParser {
-  private readonly configPath: string;
   private readonly externalFunctions?: BuildFunction[];
 
   constructor(
     private readonly ctx: BuildStepGlobalContext,
-    { configPath, externalFunctions }: { configPath: string; externalFunctions?: BuildFunction[] }
+    { externalFunctions }: { externalFunctions?: BuildFunction[] }
   ) {
     this.validateExternalFunctions(externalFunctions);
 
-    this.configPath = configPath;
     this.externalFunctions = externalFunctions;
   }
 
   public async parseAsync(): Promise<BuildWorkflow> {
-    const config = await readAndValidateBuildConfigAsync(this.configPath, {
+    const config = await readAndValidateBuildConfigAsync(this.ctx.configPath, {
       externalFunctionIds: this.getExternalFunctionFullIds(),
     });
     const configBuildFunctions = this.createBuildFunctionsFromConfig(config.functions);
@@ -59,7 +58,7 @@ export class BuildConfigParser {
       this.createBuildStepFromConfig(stepConfig, buildFunctions)
     );
     const workflow = new BuildWorkflow(this.ctx, { buildSteps, buildFunctions });
-    new BuildWorkflowValidator(workflow).validate();
+    await new BuildWorkflowValidator(workflow).validateAsync();
     return workflow;
   }
 
@@ -175,11 +174,17 @@ export class BuildConfigParser {
     shell,
     command,
     supportedRuntimePlatforms,
+    path: relativeCustomFunctionModulePath,
   }: BuildFunctionConfig & { id: string }): BuildFunction {
     const inputProviders =
       inputsConfig && this.createBuildStepInputProvidersFromBuildFunctionInputs(inputsConfig);
     const outputProviders =
       outputsConfig && this.createBuildStepOutputProvidersFromBuildFunctionOutputs(outputsConfig);
+    let customFunctionModulePath = relativeCustomFunctionModulePath;
+    if (relativeCustomFunctionModulePath) {
+      const baseConfigDir = path.dirname(this.ctx.configPath);
+      customFunctionModulePath = path.resolve(baseConfigDir, relativeCustomFunctionModulePath);
+    }
     return new BuildFunction({
       id,
       name,
@@ -187,6 +192,7 @@ export class BuildConfigParser {
       outputProviders,
       shell,
       command,
+      customFunctionModulePath,
       supportedRuntimePlatforms,
     });
   }
@@ -215,7 +221,11 @@ export class BuildConfigParser {
   ): BuildStepInputProvider[] {
     return buildFunctionInputs.map((entry) => {
       return typeof entry === 'string'
-        ? BuildStepInput.createProvider({ id: entry })
+        ? BuildStepInput.createProvider({
+            id: entry,
+            required: true,
+            allowedValueTypeName: BuildStepInputValueTypeName.STRING,
+          })
         : BuildStepInput.createProvider({
             id: entry.name,
             required: entry.required ?? true,

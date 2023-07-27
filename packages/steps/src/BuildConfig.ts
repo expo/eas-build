@@ -8,7 +8,11 @@ import YAML from 'yaml';
 import { BuildConfigError, BuildWorkflowError } from './errors.js';
 import { BuildRuntimePlatform } from './BuildRuntimePlatform.js';
 import { BuildFunction } from './BuildFunction.js';
-import { BuildStepInputValueType, BuildStepInputValueTypeName } from './BuildStepInput.js';
+import {
+  BuildStepInputValueTypeWithRequired,
+  BuildStepInputValueTypeName,
+  BuildStepInputValueType,
+} from './BuildStepInput.js';
 import { BuildStepEnv } from './BuildStepEnv.js';
 import { BUILD_STEP_OR_BUILD_GLOBAL_CONTEXT_REFERENCE_REGEX } from './utils/template.js';
 
@@ -53,7 +57,7 @@ export type BuildFunctionCallConfig = {
   env?: BuildStepEnv;
 };
 
-export type BuildStepInputs = Record<string, BuildStepInputValueType>;
+export type BuildStepInputs = Record<string, BuildStepInputValueTypeWithRequired>;
 export type BuildStepOutputs = (
   | string
   | {
@@ -68,7 +72,8 @@ export interface BuildFunctionConfig {
   name?: string;
   supportedRuntimePlatforms?: BuildRuntimePlatform[];
   shell?: string;
-  command: string;
+  command?: string;
+  path?: string;
 }
 
 export type BuildFunctionInputs = (
@@ -224,9 +229,13 @@ const BuildFunctionConfigSchema = Joi.object({
   supportedRuntimePlatforms: Joi.array().items(...Object.values(BuildRuntimePlatform)),
   inputs: BuildFunctionInputsSchema,
   outputs: BuildStepOutputsSchema,
-  command: Joi.string().required(),
+  command: Joi.string(),
+  path: Joi.string(),
   shell: Joi.string(),
-}).rename('supported_platforms', 'supportedRuntimePlatforms');
+})
+  .rename('supported_platforms', 'supportedRuntimePlatforms')
+  .xor('command', 'path')
+  .nand('command', 'path');
 
 export const BuildFunctionsConfigFileSchema = Joi.object<BuildFunctionsConfigFile>({
   configFilesToImport: Joi.array().items(Joi.string().pattern(/\.y(a)?ml$/)),

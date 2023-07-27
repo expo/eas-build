@@ -9,6 +9,7 @@ import { BuildStepInput, BuildStepInputById, makeBuildStepInputByIdMap } from '.
 import {
   BuildStepOutput,
   BuildStepOutputById,
+  SerializedBuildStepOutput,
   makeBuildStepOutputByIdMap,
 } from './BuildStepOutput.js';
 import { BIN_PATH } from './utils/shell/bin.js';
@@ -52,7 +53,67 @@ export type BuildStepFunction = (
 const UUID_REGEX =
   /^[0-9a-fA-F]{8}\b-[0-9a-fA-F]{4}\b-[0-9a-fA-F]{4}\b-[0-9a-fA-F]{4}\b-[0-9a-fA-F]{12}$/;
 
-export class BuildStep {
+export interface SerializedBuildStepOutputAccessor {
+  id: string;
+  executed: boolean;
+  outputById: Record<string, SerializedBuildStepOutput>;
+  displayName: string;
+}
+
+export class BuildStepOutputAccessor {
+  constructor(
+    public readonly id: string,
+    public readonly displayName: string,
+    protected readonly executed: boolean,
+    protected readonly outputById: BuildStepOutputById
+  ) {}
+
+  public getOutputValueByName(name: string): string | undefined {
+    if (!this.executed) {
+      throw new BuildStepRuntimeError(
+        `Failed getting output "${name}" from step "${this.displayName}". The step has not been executed yet.`
+      );
+    }
+    if (!this.hasOutputParameter(name)) {
+      throw new BuildStepRuntimeError(`Step "${this.displayName}" does not have output "${name}".`);
+    }
+    return this.outputById[name].value;
+  }
+
+  public hasOutputParameter(name: string): boolean {
+    return name in this.outputById;
+  }
+
+  public serialize(): SerializedBuildStepOutputAccessor {
+    return {
+      id: this.id,
+      executed: this.executed,
+      outputById: Object.fromEntries(
+        Object.entries(this.outputById).map(([key, value]) => [key, value.serialize()])
+      ),
+      displayName: this.displayName,
+    };
+  }
+
+  public static deserialize(
+    serialized: SerializedBuildStepOutputAccessor
+  ): BuildStepOutputAccessor {
+    const outputById = Object.fromEntries(
+      Object.entries(serialized.outputById).map(([key, value]) => [
+        key,
+        BuildStepOutput.deserialize(value),
+      ])
+    );
+    return new BuildStepOutputAccessor(
+      serialized.id,
+      serialized.displayName,
+      serialized.executed,
+      outputById
+    );
+  }
+}
+
+export class BuildStep extends BuildStepOutputAccessor {
   public readonly id: string;
   public readonly name?: string;
   public readonly displayName: string;
@@ -68,8 +129,8 @@ export class BuildStep {
 
   private readonly internalId: string;
   private readonly inputById: BuildStepInputById;
-  private readonly outputById: BuildStepOutputById;
-  private executed = false;
+  protected readonly outputById: BuildStepOutputById;
+  protected executed = false;
 
   public static getNewId(userDefinedId?: string): string {
     return userDefinedId ?? uuidv4();
@@ -132,6 +193,8 @@ export class BuildStep {
   ) {
     assert(command !== undefined || fn !== undefined, 'Either command or fn must be defined.');
     assert(!(command !== undefined && fn !== undefined), 'Command and fn cannot be both set.');
+    const outputById = makeBuildStepOutputByIdMap(outputs);
+    super(id, displayName, false, outputById);
 
     this.id = id;
     this.name = name;
@@ -140,7 +203,7 @@ export class BuildStep {
     this.inputs = inputs;
     this.outputs = outputs;
     this.inputById = makeBuildStepInputByIdMap(inputs);
-    this.outputById = makeBuildStepOutputByIdMap(outputs);
+    this.outputById = outputById;
     this.fn = fn;
     this.command = command;
     this.shell = shell ?? getDefaultShell();
@@ -258,14 +321,29 @@ export class BuildStep {
   private async exectuteFnAsync(): Promise<void> {
     assert(this.fn, 'Function (fn) must be defined');
 
-    await this.fn(this.ctx, {
-      inputs: this.inputById,
-      outputs: this.outputById,
-      env: {
-        ...this.ctx.global.env,
-        ...this.env,
-      },
-    });
+    try {
+      const outputsDir = await createTemporaryOutputsDirectoryAsync(this.ctx.global, this.id);
+      this.ctx.logger.debug(`Created temporary directory for step outputs: ${outputsDir}`);
+
+      const envsDir = await createTemporaryEnvsDirectoryAsync(this.ctx.global, this.id);
+      this.ctx.logger.debug(
+        `Created temporary directory for step environment variables: ${outputsDir}`
+      );
+
+      await this.fn(this.ctx, {
+        inputs: this.inputById,
+        outputs: this.outputById,
+        env: this.getScriptEnv({ outputsDir, envsDir }),
+      });
+
+      this.ctx.logger.debug(`Script completed successfully`);
+
+      await this.collectAndValidateOutputsAsync(outputsDir);
+      await this.collectAndUpdateEnvsAsync(envsDir);
+      this.ctx.logger.debug('Finished collecting output paramters');
+    } finally {
+      await cleanUpStepTemporaryDirectoriesAsync(this.ctx.global, this.id);
+    }
   }
 
   private interpolateInputsAndGlobalContextInCommand(
