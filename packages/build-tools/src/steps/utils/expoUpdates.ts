@@ -16,7 +16,7 @@ import {
   androidSetRuntimeVersionNativelyAsync,
 } from './android/expoUpdates';
 
-export async function configureExpoUpdatesIfInstalledAsync({
+export async function configureEASUpdateIfInstalledAsync({
   job,
   workingDirectory,
   logger,
@@ -46,7 +46,7 @@ export async function configureExpoUpdatesIfInstalledAsync({
   if (isEASUpdateConfigured(appConfig, logger)) {
     const channel = jobOrInputChannel ?? (await getChannelAsync(job, workingDirectory));
     if (channel) {
-      await configureEASExpoUpdatesAsync(job, logger, channel, workingDirectory);
+      await configureEASUpdate(job, logger, channel, workingDirectory);
     } else {
       if (job.releaseChannel !== undefined) {
         logger.warn(
@@ -83,7 +83,7 @@ export function isEASUpdateConfigured(appConfig: ExpoConfig, logger: bunyan): bo
   }
 }
 
-async function configureEASExpoUpdatesAsync(
+async function configureEASUpdate(
   job: Job,
   logger: bunyan,
   channel: string,

@@ -5,13 +5,13 @@ import { Job } from '@expo/eas-build-job';
 import semver from 'semver';
 
 import { readAppConfig } from '../../../utils/appConfig';
-import { configureExpoUpdatesIfInstalledAsync } from '../../utils/expoUpdates';
+import { configureEASUpdateIfInstalledAsync } from '../../utils/expoUpdates';
 
-export function configureExpoUpdatesIfInstalledFunction(): BuildFunction {
+export function configureEASUpdateIfInstalledFunction(): BuildFunction {
   return new BuildFunction({
     namespace: 'eas',
-    id: 'configure_expo_updates_if_installed',
-    name: 'Configure Expo Updates if installed',
+    id: 'configure_eas_update_if_installed',
+    name: 'Configure EAS Update if installed',
     inputProviders: [
       BuildStepInput.createProvider({
         id: 'runtime_version',
@@ -45,7 +45,7 @@ export function configureExpoUpdatesIfInstalledFunction(): BuildFunction {
         );
       }
 
-      await configureExpoUpdatesIfInstalledAsync({
+      await configureEASUpdateIfInstalledAsync({
         job,
         workingDirectory: stepCtx.workingDirectory,
         logger: stepCtx.logger,
