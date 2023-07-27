@@ -27,7 +27,7 @@ async function runCustomJsFunctionAsync(): Promise<void> {
   }
 
   const logger = createLogger({
-    name: 'customJavscriptFunctionLogger',
+    name: 'customFunctionLogger',
     streams: [
       {
         type: 'raw',
@@ -35,6 +35,11 @@ async function runCustomJsFunctionAsync(): Promise<void> {
           write: (rec: any) => {
             if (rec) {
               switch (rec.level) {
+                case 20: // Debug level
+                  if (rec.msg) {
+                    console.debug(rec.msg);
+                  }
+                  break;
                 case 30: // Info level
                   if (rec.msg) {
                     console.log(rec.msg);
@@ -81,7 +86,7 @@ async function runCustomJsFunctionAsync(): Promise<void> {
   try {
     customModule = await require(customJavascriptFunctionModulePath);
   } catch (e) {
-    console.error('Failed to load custom javascript function module');
+    console.error('Failed to load custom function module');
     throw e;
   }
 

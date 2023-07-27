@@ -64,6 +64,7 @@ describe(BuildStepGlobalContext, () => {
       });
       expect(ctx.serialize()).toEqual(
         expect.objectContaining({
+          stepsInternalBuildDirectory: ctx.stepsInternalBuildDirectory,
           stepById: {},
           provider: {
             projectSourceDirectory: '/a/b/c',
