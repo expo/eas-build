@@ -46,6 +46,7 @@ export interface BuilderEnvironment {
   image?: string;
   node?: string;
   yarn?: string;
+  pnpm?: string;
   expoCli?: string;
   bundler?: string;
   fastlane?: string;
@@ -57,6 +58,7 @@ const BuilderEnvironmentSchema = Joi.object({
   image: Joi.string(),
   node: Joi.string(),
   yarn: Joi.string(),
+  pnpm: Joi.string(),
   expoCli: Joi.string(),
   bundler: Joi.string(),
   fastlane: Joi.string(),
