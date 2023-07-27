@@ -12,6 +12,7 @@ import { createRunGradleBuildFunction } from './functions/utils/runGradle';
 import { createPrebuildBuildFunction } from './functions/eas/prebuild';
 import { createBuildReactNativeAppBuildFunction } from './functions/eas/buildReactNativeApp';
 import { createFindAndUploadBuildArtifactsBuildFunction } from './functions/eas/findAndUploadBuildArtifacts';
+import { configureExpoUpdatesIfInstalledFunction } from './functions/eas/configureExpoUpdatesIfInstalled';
 
 export function getEasFunctions(
   ctx: CustomBuildContext,
@@ -26,5 +27,6 @@ export function getEasFunctions(
     createRunGradleBuildFunction(oldCtx),
     createBuildReactNativeAppBuildFunction(oldCtx),
     createFindAndUploadBuildArtifactsBuildFunction(ctx),
+    configureExpoUpdatesIfInstalledFunction(),
   ];
 }
