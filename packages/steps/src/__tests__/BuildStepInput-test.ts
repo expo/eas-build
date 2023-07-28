@@ -344,7 +344,7 @@ describe(BuildStepInput, () => {
       // eslint-disable-next-line @typescript-eslint/no-unused-expressions
       i.value;
     }).toThrowError(
-      new BuildStepRuntimeError('Input parameter "foo" for step "test1" must be of type "json".')
+      'Input parameter "foo" for step "test1" must be of type "json".'
     );
   });
 
