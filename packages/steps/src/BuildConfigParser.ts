@@ -32,12 +32,6 @@ import { BuildWorkflowValidator } from './BuildWorkflowValidator.js';
 import { BuildStepRuntimeError } from './errors.js';
 import { duplicates } from './utils/expodash/duplicates.js';
 import { uniq } from './utils/expodash/uniq.js';
-import {
-  INSTALL_DEPENDENCIES_AND_COMPILE_CUSTOM_FUNCTION_MODULES_ID,
-  INSTALL_DEPENDENCIES_AND_COMPILE_CUSTOM_FUNCTION_MODULES_NAME,
-  INSTALL_DEPENDENCIES_AND_COMPILE_CUSTOM_FUNCTION_MODULES_NAMESPACE,
-  createBuildFunctionToInstallDependenciesAndCompileCustomFunctionModules,
-} from './utils/customFunction.js';
 
 export class BuildConfigParser {
   private readonly externalFunctions?: BuildFunction[];
@@ -65,12 +59,6 @@ export class BuildConfigParser {
     );
     const workflow = new BuildWorkflow(this.ctx, { buildSteps, buildFunctions });
     await new BuildWorkflowValidator(workflow).validateAsync();
-
-    const maybeInstallDependenciesAndCompileCustomFunctionModulesStep =
-      this.maybeCreateInstallDependenciesAndCompileCustomFunctionModulesStep(workflow);
-    if (maybeInstallDependenciesAndCompileCustomFunctionModulesStep) {
-      workflow.buildSteps.unshift(maybeInstallDependenciesAndCompileCustomFunctionModulesStep);
-    }
     return workflow;
   }
 
@@ -313,33 +301,5 @@ export class BuildConfigParser {
     }
     const ids = this.externalFunctions.map((f) => f.getFullId());
     return uniq(ids);
-  }
-
-  private maybeCreateInstallDependenciesAndCompileCustomFunctionModulesStep(
-    workflow: BuildWorkflow
-  ): BuildStep | undefined {
-    const customFunctions: BuildFunction[] = [];
-    for (const buildFunction of Object.values(workflow.buildFunctions)) {
-      if (buildFunction.customFunctionModulePath) {
-        customFunctions.push(buildFunction);
-      }
-    }
-
-    if (customFunctions.length === 0) {
-      return undefined;
-    }
-
-    const installDependenciesAndCompileCustomFunctionModulesFunctionBuildFunction =
-      createBuildFunctionToInstallDependenciesAndCompileCustomFunctionModules(customFunctions);
-
-    return installDependenciesAndCompileCustomFunctionModulesFunctionBuildFunction.createBuildStepFromFunctionCall(
-      this.ctx,
-      {
-        id: `${INSTALL_DEPENDENCIES_AND_COMPILE_CUSTOM_FUNCTION_MODULES_NAMESPACE}/${INSTALL_DEPENDENCIES_AND_COMPILE_CUSTOM_FUNCTION_MODULES_ID}`,
-        name: INSTALL_DEPENDENCIES_AND_COMPILE_CUSTOM_FUNCTION_MODULES_NAME,
-        callInputs: {},
-        workingDirectory: this.ctx.defaultWorkingDirectory,
-      }
-    );
   }
 }
