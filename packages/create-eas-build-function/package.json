@@ -1,6 +1,6 @@
 {
   "name": "create-eas-build-function",
-  "version": "0.0.2",
+  "version": "0.0.3",
   "bin": {
     "create-eas-build-function": "./build/index.js"
   },

@@ -22,7 +22,7 @@ export type Options = {
 
 export async function createAsync(inputPath: string, options: Options): Promise<void> {
   let resolvedTemplate: string;
-  if (options.template) {
+  if (options.template === true) {
     resolvedTemplate = await promptTemplateAsync();
   } else {
     resolvedTemplate = options.template ?? 'typescript';
