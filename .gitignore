@@ -11,5 +11,6 @@ yarn-error.log
 
 dist
 dist_*
+packages/*/build/
 
 coverage
