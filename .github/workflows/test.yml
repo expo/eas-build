@@ -18,6 +18,8 @@ jobs:
         uses: actions/setup-node@v1
         with:
           node-version: ${{ matrix.node }}
+      - name: Setup ncc
+        run: npm install -g @vercel/ncc
       - run: yarn install --frozen-lockfile --check-files
       - run: yarn build
       - run: yarn test
