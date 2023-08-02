@@ -45,7 +45,6 @@ export interface SerializedBuildStepGlobalContext {
   stepById: Record<string, SerializedBuildStepOutputAccessor>;
   provider: SerializedExternalBuildContextProvider;
   skipCleanup: boolean;
-  configPath: string;
 }
 
 export class BuildStepGlobalContext {
@@ -57,8 +56,7 @@ export class BuildStepGlobalContext {
 
   constructor(
     private readonly provider: ExternalBuildContextProvider,
-    public readonly skipCleanup: boolean,
-    public readonly configPath: string
+    public readonly skipCleanup: boolean
   ) {
     this.stepsInternalBuildDirectory = path.join(os.tmpdir(), 'eas-build', uuidv4());
     this.runtimePlatform = provider.runtimePlatform;
@@ -133,7 +131,6 @@ export class BuildStepGlobalContext {
         env: this.provider.env,
       },
       skipCleanup: this.skipCleanup,
-      configPath: this.configPath,
     };
   }
 
@@ -151,11 +148,7 @@ export class BuildStepGlobalContext {
       env: serialized.provider.env,
       updateEnv: () => {},
     };
-    const ctx = new BuildStepGlobalContext(
-      deserializedProvider,
-      serialized.skipCleanup,
-      serialized.configPath
-    );
+    const ctx = new BuildStepGlobalContext(deserializedProvider, serialized.skipCleanup);
     for (const [id, stepOutputAccessor] of Object.entries(serialized.stepById)) {
       ctx.stepById[id] = BuildStepOutputAccessor.deserialize(stepOutputAccessor);
     }

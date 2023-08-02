@@ -22,8 +22,7 @@ describe(BuildStepGlobalContext, () => {
           '/another/non/existent/path',
           '/working/dir/path'
         ),
-        false,
-        './fake.yml'
+        false
       );
       expect(ctx.stepsInternalBuildDirectory.startsWith(os.tmpdir())).toBe(true);
     });
@@ -39,8 +38,7 @@ describe(BuildStepGlobalContext, () => {
           '/another/non/existent/path',
           workingDirectory
         ),
-        false,
-        './fake.yml'
+        false
       );
       expect(ctx.defaultWorkingDirectory).toBe(workingDirectory);
     });
@@ -60,7 +58,6 @@ describe(BuildStepGlobalContext, () => {
         projectTargetDirectory: '/d/e/f',
         workingDirectory: '/g/h/i',
         staticContextContent: { a: 1 },
-        configPath: '/j/k/l',
       });
       expect(ctx.serialize()).toEqual(
         expect.objectContaining({
@@ -75,7 +72,6 @@ describe(BuildStepGlobalContext, () => {
             env: {},
           },
           skipCleanup: true,
-          configPath: '/j/k/l',
         })
       );
     });
@@ -95,7 +91,6 @@ describe(BuildStepGlobalContext, () => {
             env: {},
           },
           skipCleanup: true,
-          configPath: '/j/k/l',
         },
         createMockLogger()
       );
@@ -103,13 +98,11 @@ describe(BuildStepGlobalContext, () => {
       expect(ctx.defaultWorkingDirectory).toBe('/g/h/i');
       expect(ctx.runtimePlatform).toBe(BuildRuntimePlatform.DARWIN);
       expect(ctx.skipCleanup).toBe(true);
-      expect(ctx.configPath).toBe('/j/k/l');
       expect(ctx.projectSourceDirectory).toBe('/a/b/c');
       expect(ctx.projectTargetDirectory).toBe('/d/e/f');
       expect(ctx.staticContext).toEqual({ a: 1 });
       expect(ctx.env).toEqual({});
       expect(ctx.skipCleanup).toBe(true);
-      expect(ctx.configPath).toBe('/j/k/l');
     });
   });
   describe(BuildStepGlobalContext.prototype.getStepOutputValue, () => {

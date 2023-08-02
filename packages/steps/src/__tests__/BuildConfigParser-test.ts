@@ -19,10 +19,11 @@ const __dirname = url.fileURLToPath(new URL('.', import.meta.url));
 describe(BuildConfigParser, () => {
   describe('constructor', () => {
     it('throws if provided external functions with duplicated IDs', () => {
-      const ctx = createGlobalContextMock({ configPath: './fake.yml' });
+      const ctx = createGlobalContextMock();
       const error = getError<BuildStepRuntimeError>(() => {
         // eslint-disable-next-line no-new
         new BuildConfigParser(ctx, {
+          configPath: './fake.yml',
           externalFunctions: [
             new BuildFunction({ id: 'abc', command: 'echo 123' }),
             new BuildFunction({ id: 'abc', command: 'echo 456' }),
@@ -34,12 +35,11 @@ describe(BuildConfigParser, () => {
     });
 
     it(`doesn't throw if provided external functions don't have duplicated IDs`, () => {
-      const ctx = createGlobalContextMock({
-        configPath: path.join('./fake.yml'),
-      });
+      const ctx = createGlobalContextMock();
       expect(() => {
         // eslint-disable-next-line no-new
         new BuildConfigParser(ctx, {
+          configPath: './fake.yml',
           externalFunctions: [
             new BuildFunction({ namespace: 'a', id: 'abc', command: 'echo 123' }),
             new BuildFunction({ namespace: 'b', id: 'abc', command: 'echo 456' }),
@@ -51,19 +51,19 @@ describe(BuildConfigParser, () => {
 
   describe(BuildConfigParser.prototype.parseAsync, () => {
     it('returns a BuildWorkflow object', async () => {
-      const ctx = createGlobalContextMock({
+      const ctx = createGlobalContextMock();
+      const parser = new BuildConfigParser(ctx, {
         configPath: path.join(__dirname, './fixtures/build.yml'),
       });
-      const parser = new BuildConfigParser(ctx, {});
       const result = await parser.parseAsync();
       expect(result).toBeInstanceOf(BuildWorkflow);
     });
 
     it('parses steps from the build workflow', async () => {
-      const ctx = createGlobalContextMock({
+      const ctx = createGlobalContextMock();
+      const parser = new BuildConfigParser(ctx, {
         configPath: path.join(__dirname, './fixtures/build.yml'),
       });
-      const parser = new BuildConfigParser(ctx, {});
       const workflow = await parser.parseAsync();
       const buildSteps = workflow.buildSteps;
       expect(buildSteps.length).toBe(6);
@@ -150,10 +150,10 @@ describe(BuildConfigParser, () => {
     });
 
     it('parses inputs', async () => {
-      const ctx = createGlobalContextMock({
+      const ctx = createGlobalContextMock();
+      const parser = new BuildConfigParser(ctx, {
         configPath: path.join(__dirname, './fixtures/inputs.yml'),
       });
-      const parser = new BuildConfigParser(ctx, {});
       const workflow = await parser.parseAsync();
       const buildSteps = workflow.buildSteps;
       expect(buildSteps.length).toBe(1);
@@ -200,10 +200,10 @@ describe(BuildConfigParser, () => {
     });
 
     it('parses outputs', async () => {
-      const ctx = createGlobalContextMock({
+      const ctx = createGlobalContextMock();
+      const parser = new BuildConfigParser(ctx, {
         configPath: path.join(__dirname, './fixtures/outputs.yml'),
       });
-      const parser = new BuildConfigParser(ctx, {});
       const workflow = await parser.parseAsync();
       const buildSteps = workflow.buildSteps;
       expect(buildSteps.length).toBe(2);
@@ -255,10 +255,10 @@ describe(BuildConfigParser, () => {
     });
 
     it('parses functions and function calls', async () => {
-      const ctx = createGlobalContextMock({
+      const ctx = createGlobalContextMock();
+      const parser = new BuildConfigParser(ctx, {
         configPath: path.join(__dirname, './fixtures/functions.yml'),
       });
-      const parser = new BuildConfigParser(ctx, {});
       const workflow = await parser.parseAsync();
 
       const { buildSteps } = workflow;
@@ -532,10 +532,10 @@ describe(BuildConfigParser, () => {
     });
 
     it('throws if calling non-existent external functions', async () => {
-      const ctx = createGlobalContextMock({
+      const ctx = createGlobalContextMock();
+      const parser = new BuildConfigParser(ctx, {
         configPath: path.join(__dirname, './fixtures/external-functions.yml'),
       });
-      const parser = new BuildConfigParser(ctx, {});
       const error = await getErrorAsync<BuildConfigError>(async () => {
         await parser.parseAsync();
       });
@@ -546,9 +546,7 @@ describe(BuildConfigParser, () => {
     });
 
     it('works with external functions', async () => {
-      const ctx = createGlobalContextMock({
-        configPath: path.join(__dirname, './fixtures/external-functions.yml'),
-      });
+      const ctx = createGlobalContextMock();
 
       const downloadProjectFn: BuildStepFunction = (ctx) => {
         ctx.logger.info('Downloading project...');
@@ -559,6 +557,7 @@ describe(BuildConfigParser, () => {
       };
 
       const parser = new BuildConfigParser(ctx, {
+        configPath: path.join(__dirname, './fixtures/external-functions.yml'),
         externalFunctions: [
           new BuildFunction({
             namespace: 'eas',
