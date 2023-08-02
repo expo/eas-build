@@ -24,12 +24,12 @@
     "templates"
   ],
   "scripts": {
-    "prepack": "yarn run clean && yarn run build:prod",
+    "prepack": "yarn run clean && yarn run build",
     "lint": "eslint .",
     "test": "echo 'No tests yet.'",
-    "watch": "yarn run build -w",
-    "build": "ncc build ./src/index.ts -o build/",
-    "build:prod": "ncc build ./src/index.ts -o build/ --minify --no-cache --no-source-map-register",
+    "watch": "yarn run build:dev -w",
+    "build:dev": "ncc build ./src/index.ts -o build/",
+    "build": "ncc build ./src/index.ts -o build/ --minify --no-cache --no-source-map-register",
     "clean": "rimraf ./build/"
   },
   "devDependencies": {
