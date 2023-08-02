@@ -1,0 +1,27 @@
+// Build integration with EAS
+
+import java.nio.file.Paths
+
+def versionCode = "<%- VERSION_CODE %>"
+def versionName = "<%- VERSION_NAME %>"
+
+android {
+  defaultConfig {
+    if (versionCode) {
+      versionCode = Integer.parseInt(versionCode)
+    }
+    if (versionName) {
+      versionName = versionName
+    }
+  }
+  applicationVariants.all { variant ->
+    variant.outputs.each { output ->
+      if (versionCode) {
+        output.versionCodeOverride = Integer.parseInt(versionCode)
+      }
+      if (versionName) {
+        output.versionNameOverride = versionName
+      }
+    }
+  }
+}

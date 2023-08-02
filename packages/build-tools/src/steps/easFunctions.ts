@@ -14,6 +14,7 @@ import { createBuildReactNativeAppBuildFunction } from './functions/eas/buildRea
 import { createFindAndUploadBuildArtifactsBuildFunction } from './functions/eas/findAndUploadBuildArtifacts';
 import { configureEASUpdateIfInstalledFunction } from './functions/eas/configureExpoUpdatesIfInstalled';
 import { injectAndroidCredentialsFunction } from './functions/utils/injectAndroidCredentials';
+import { configureAndroidVersionFunction } from './functions/utils/configureAndroidVersion';
 
 export function getEasFunctions(
   ctx: CustomBuildContext,
@@ -30,5 +31,6 @@ export function getEasFunctions(
     createFindAndUploadBuildArtifactsBuildFunction(ctx),
     configureEASUpdateIfInstalledFunction(),
     injectAndroidCredentialsFunction(),
+    configureAndroidVersionFunction(),
   ];
 }
