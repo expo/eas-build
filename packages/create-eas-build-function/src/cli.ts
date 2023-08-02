@@ -33,7 +33,6 @@ async function run(): Promise<void> {
       `Creates EAS Build custom function module`,
       chalk`npx create-eas-build-function {cyan <path>} [options]`,
       [
-        `-y, --yes             Use the default options for creating a project`,
         `    --no-install      Skip installing npm packages`,
         chalk`-t, --template {gray [pkg]}  NPM template to use: typescript, javascript. Default: typescript`,
         `-v, --version         Version number`,
