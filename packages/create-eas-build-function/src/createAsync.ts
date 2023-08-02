@@ -35,8 +35,9 @@ export async function createAsync(inputPath: string, options: Options): Promise<
     () => extractAndPrepareTemplateFunctionModuleAsync(projectRoot, resolvedTemplate),
     {
       pending: chalk.bold('Locating project files...'),
-      success: 'Successfully extracted project files.',
-      error: (error) => `Something went wrong when extracting the project files: ${error.message}`,
+      success: 'Successfully extracted custom build function template files.',
+      error: (error) =>
+        `Something went wrong when extracting the custom build function template files: ${error.message}`,
     }
   );
 
@@ -114,6 +115,4 @@ export function logProjectReady({ cdPath }: { cdPath: string }): void {
     Log.log();
     Log.log(`- ${chalk.bold('cd ' + cdPath)}`);
   }
-
-  // TODO: link to docs about how to create a function
 }
