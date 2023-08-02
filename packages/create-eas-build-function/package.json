@@ -32,6 +32,9 @@
     "build": "ncc build ./src/index.ts -o build/ --minify --no-cache --no-source-map-register",
     "clean": "rimraf ./build/"
   },
+  "dependencies": {
+    "@expo/steps": "1.0.30"
+  },
   "devDependencies": {
     "@expo/package-manager": "^1.0.2",
     "@jest/globals": "^29.6.2",
