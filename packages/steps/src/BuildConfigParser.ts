@@ -1,5 +1,4 @@
 import assert from 'assert';
-import path from 'path';
 
 import {
   BuildConfig,
@@ -34,19 +33,21 @@ import { duplicates } from './utils/expodash/duplicates.js';
 import { uniq } from './utils/expodash/uniq.js';
 
 export class BuildConfigParser {
+  private readonly configPath: string;
   private readonly externalFunctions?: BuildFunction[];
 
   constructor(
     private readonly ctx: BuildStepGlobalContext,
-    { externalFunctions }: { externalFunctions?: BuildFunction[] }
+    { configPath, externalFunctions }: { configPath: string; externalFunctions?: BuildFunction[] }
   ) {
     this.validateExternalFunctions(externalFunctions);
 
+    this.configPath = configPath;
     this.externalFunctions = externalFunctions;
   }
 
   public async parseAsync(): Promise<BuildWorkflow> {
-    const config = await readAndValidateBuildConfigAsync(this.ctx.configPath, {
+    const config = await readAndValidateBuildConfigAsync(this.configPath, {
       externalFunctionIds: this.getExternalFunctionFullIds(),
     });
     const configBuildFunctions = this.createBuildFunctionsFromConfig(config.functions);
@@ -174,17 +175,12 @@ export class BuildConfigParser {
     shell,
     command,
     supportedRuntimePlatforms,
-    path: relativeCustomFunctionModulePath,
+    path: customFunctionModulePath,
   }: BuildFunctionConfig & { id: string }): BuildFunction {
     const inputProviders =
       inputsConfig && this.createBuildStepInputProvidersFromBuildFunctionInputs(inputsConfig);
     const outputProviders =
       outputsConfig && this.createBuildStepOutputProvidersFromBuildFunctionOutputs(outputsConfig);
-    let customFunctionModulePath = relativeCustomFunctionModulePath;
-    if (relativeCustomFunctionModulePath) {
-      const baseConfigDir = path.dirname(this.ctx.configPath);
-      customFunctionModulePath = path.resolve(baseConfigDir, relativeCustomFunctionModulePath);
-    }
     return new BuildFunction({
       id,
       name,

@@ -270,6 +270,16 @@ export async function readAndValidateBuildConfigAsync(
   const rawConfig = await readRawBuildConfigAsync(configPath);
 
   const config = validateConfig(BuildConfigSchema, rawConfig);
+  for (const functionName in config.functions) {
+    const customFunctionPath = config.functions[functionName].path;
+    if (customFunctionPath) {
+      config.functions[functionName].path = maybeResolveCustomFunctionRelativePath(
+        path.dirname(configPath),
+        customFunctionPath
+      );
+    }
+  }
+
   const importedFunctions = await importFunctionsAsync(configPath, config.configFilesToImport);
   mergeConfigWithImportedFunctions(config, importedFunctions);
   validateAllFunctionsExist(config, params);
@@ -302,13 +312,17 @@ async function importFunctionsAsync(
     visitedFiles.add(childConfigPath);
     try {
       const childConfig = await readAndValidateBuildFunctionsConfigFileAsync(childConfigPath);
+      const childDir = path.dirname(childConfigPath);
       for (const functionName in childConfig.functions) {
         if (!(functionName in importedFunctions)) {
-          importedFunctions[functionName] = childConfig.functions[functionName];
+          const f = childConfig.functions[functionName];
+          if (f.path) {
+            f.path = maybeResolveCustomFunctionRelativePath(childDir, f.path);
+          }
+          importedFunctions[functionName] = f;
         }
       }
       if (childConfig.configFilesToImport) {
-        const childDir = path.dirname(childConfigPath);
         configFilesToVisit.push(
           ...childConfig.configFilesToImport.map((relativePath) =>
             path.resolve(childDir, relativePath)
@@ -425,4 +439,11 @@ export function validateAllFunctionsExist(
       `Calling non-existent functions: ${nonExistentFunctions.map((f) => `"${f}"`).join(', ')}.`
     );
   }
+}
+
+function maybeResolveCustomFunctionRelativePath(dir: string, customFunctionPath: string): string {
+  if (!path.isAbsolute(customFunctionPath)) {
+    return path.resolve(dir, customFunctionPath);
+  }
+  return customFunctionPath;
 }
