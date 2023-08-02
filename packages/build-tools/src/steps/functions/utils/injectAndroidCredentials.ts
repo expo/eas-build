@@ -34,7 +34,7 @@ export function injectAndroidCredentialsFunction(): BuildFunction {
         id: 'credentials',
         required: true,
         allowedValueTypeName: BuildStepInputValueTypeName.JSON,
-        defaultValue: '${ ctx.job.secrets.buildCredentials }',
+        defaultValue: '${ eas.job.secrets.buildCredentials }',
       }),
     ],
     fn: async (stepCtx, { inputs }) => {

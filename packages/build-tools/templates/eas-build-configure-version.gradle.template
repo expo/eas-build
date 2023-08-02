@@ -2,25 +2,25 @@
 
 import java.nio.file.Paths
 
-def versionCode = "<%- VERSION_CODE %>"
-def versionName = "<%- VERSION_NAME %>"
+def versionCodeVal = "<%- VERSION_CODE %>"
+def versionNameVal = "<%- VERSION_NAME %>"
 
 android {
   defaultConfig {
-    if (versionCode) {
-      versionCode = Integer.parseInt(versionCode)
+    if (versionCodeVal) {
+      versionCode = Integer.parseInt(versionCodeVal)
     }
-    if (versionName) {
-      versionName = versionName
+    if (versionNameVal) {
+      versionName = versionNameVal
     }
   }
   applicationVariants.all { variant ->
     variant.outputs.each { output ->
-      if (versionCode) {
-        output.versionCodeOverride = Integer.parseInt(versionCode)
+      if (versionCodeVal) {
+        output.versionCodeOverride = Integer.parseInt(versionCodeVal)
       }
-      if (versionName) {
-        output.versionNameOverride = versionName
+      if (versionNameVal) {
+        output.versionNameOverride = versionNameVal
       }
     }
   }

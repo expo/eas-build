@@ -27,6 +27,7 @@ export async function injectCredentialsGradleConfig(
   await deleteEasBuildInjectCredentialsGradle(workingDir);
   await createEasBuildInjectCredentialsGradle(workingDir);
   await addApplyInjectCredentialsConfigToBuildGradle(workingDir);
+  logger.info('Signing config injected');
 }
 
 export async function injectConfigureVersionGradleConfig(
@@ -35,19 +36,22 @@ export async function injectConfigureVersionGradleConfig(
   { versionCode, versionName }: { versionCode: number; versionName: string }
 ): Promise<void> {
   logger.info('Injecting version config into build.gradle');
+  logger.info(`Version code: ${versionCode}`);
+  logger.info(`Version name: ${versionName}`);
   await deleteEasBuildConfigureVersionGradle(workingDir);
   await createEasBuildConfigureVersionGradle(workingDir, { versionCode, versionName });
   await addApplyConfigureVersionConfigToBuildGradle(workingDir);
+  logger.info('Version config injected');
 }
 
 async function deleteEasBuildInjectCredentialsGradle(workingDir: string): Promise<void> {
-  const easBuildGradlePath = getEasBuildInjectCredentialsGradlePath(workingDir);
-  await fs.remove(easBuildGradlePath);
+  const targetPath = getEasBuildInjectCredentialsGradlePath(workingDir);
+  await fs.remove(targetPath);
 }
 
 async function deleteEasBuildConfigureVersionGradle(workingDir: string): Promise<void> {
-  const easBuildGradlePath = getEasBuildInjectCredentialsGradlePath(workingDir);
-  await fs.remove(easBuildGradlePath);
+  const targetPath = getEasBuildConfigureVersionGradlePath(workingDir);
+  await fs.remove(targetPath);
 }
 
 function getEasBuildInjectCredentialsGradlePath(workingDir: string): string {
@@ -59,23 +63,22 @@ function getEasBuildConfigureVersionGradlePath(workingDir: string): string {
 }
 
 async function createEasBuildInjectCredentialsGradle(workingDir: string): Promise<void> {
-  const easBuildGradlePath = getEasBuildInjectCredentialsGradlePath(workingDir);
-  await fs.copy(EAS_BUILD_INJECT_CREDENTIALS_GRADLE_TEMPLATE_PATH, easBuildGradlePath);
+  const targetPath = getEasBuildInjectCredentialsGradlePath(workingDir);
+  await fs.copy(EAS_BUILD_INJECT_CREDENTIALS_GRADLE_TEMPLATE_PATH, targetPath);
 }
 
 async function createEasBuildConfigureVersionGradle(
   workingDir: string,
   { versionCode, versionName }: { versionCode: number; versionName: string }
 ): Promise<void> {
-  const easBuildGradlePath = getEasBuildConfigureVersionGradlePath(workingDir);
-  await fs.copy(EAS_BUILD_CONFIGURE_VERSION_GRADLE_TEMPLATE_PATH, easBuildGradlePath);
+  const targetPath = getEasBuildConfigureVersionGradlePath(workingDir);
   await templateFile(
     EAS_BUILD_CONFIGURE_VERSION_GRADLE_TEMPLATE_PATH,
     {
       VERSION_CODE: versionCode,
       VERSION_NAME: versionName,
     },
-    easBuildGradlePath,
+    targetPath,
     {
       mustache: false,
     }

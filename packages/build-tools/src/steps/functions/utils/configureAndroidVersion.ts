@@ -13,13 +13,13 @@ export function configureAndroidVersionFunction(): BuildFunction {
         id: 'version_name',
         required: true,
         allowedValueTypeName: BuildStepInputValueTypeName.STRING,
-        defaultValue: '${ ctx.job.secrets.buildCredentials }',
+        defaultValue: '${ eas.job.version.versionName }',
       }),
       BuildStepInput.createProvider({
         id: 'version_code',
         required: true,
         allowedValueTypeName: BuildStepInputValueTypeName.NUMBER,
-        defaultValue: '${ ctx.job.secrets.buildCredentials }',
+        defaultValue: '${ eas.job.version.versionCode }',
       }),
     ],
     fn: async (stepCtx, { inputs }) => {
