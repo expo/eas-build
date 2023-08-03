@@ -1,6 +1,9 @@
 import path from 'path';
+import os from 'os';
+import fs from 'fs/promises';
 
 import { createContext } from 'this-file';
+import { v4 as uuidv4 } from 'uuid';
 
 import { BuildStepInput, BuildStepInputValueTypeName } from '../../BuildStepInput.js';
 import { BuildStepOutput } from '../../BuildStepOutput.js';
@@ -16,8 +19,11 @@ import { createCustomFunctionCall } from '../../utils/customFunction.js';
 describe('runCustomFunction', () => {
   test('can run custom function', async () => {
     const dirname = createContext().dirname;
+    const projectSourceDirectory = path.join(os.tmpdir(), 'eas-build', uuidv4());
+    await fs.mkdir(projectSourceDirectory, { recursive: true });
     const ctx = createStepContextMock({
       workingDirectory: path.resolve(dirname, '../../__tests__/fixtures'),
+      projectSourceDirectory,
     });
     const outputs = {
       name: new BuildStepOutput(ctx.global, {
