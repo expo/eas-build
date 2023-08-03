@@ -1,6 +1,7 @@
 import path from 'path';
 
 import { createContext } from 'this-file';
+import fs from 'fs-extra';
 
 import { BuildStepFunction } from '../BuildStep.js';
 import { BuildStepEnv } from '../BuildStepEnv.js';
@@ -21,8 +22,18 @@ export interface SerializedCustomBuildFunctionArguments {
   ctx: SerializedBuildStepContext;
 }
 
-export function createCustomFunctionCall(customFunctionModulePath: string): BuildStepFunction {
+export function createCustomFunctionCall(rawCustomFunctionModulePath: string): BuildStepFunction {
   return async (ctx, { env, inputs, outputs }) => {
+    let customFunctionModulePath = rawCustomFunctionModulePath;
+    if (!(await fs.exists(ctx.global.projectSourceDirectory))) {
+      const relative = path.relative(
+        path.resolve(ctx.global.projectSourceDirectory),
+        customFunctionModulePath
+      );
+      customFunctionModulePath = path.resolve(
+        path.join(ctx.global.projectTargetDirectory, relative)
+      );
+    }
     const serializedArguments: SerializedCustomBuildFunctionArguments = {
       env,
       inputs: Object.fromEntries(
@@ -33,18 +44,22 @@ export function createCustomFunctionCall(customFunctionModulePath: string): Buil
       ),
       ctx: ctx.serialize(),
     };
-    await spawnAsync(
-      'node',
-      [
-        path.join(SCRIPTS_PATH, 'runCustomFunction.cjs'),
-        customFunctionModulePath,
-        JSON.stringify(serializedArguments),
-      ],
-      {
-        logger: ctx.logger,
-        cwd: ctx.workingDirectory,
-        env,
-      }
-    );
+    try {
+      await spawnAsync(
+        'node',
+        [
+          path.join(SCRIPTS_PATH, 'runCustomFunction.cjs'),
+          customFunctionModulePath,
+          JSON.stringify(serializedArguments),
+        ],
+        {
+          logger: ctx.logger,
+          cwd: ctx.workingDirectory,
+          env,
+        }
+      );
+    } catch {
+      throw new Error(`Custom function exited with non-zero exit code.`);
+    }
   };
 }
