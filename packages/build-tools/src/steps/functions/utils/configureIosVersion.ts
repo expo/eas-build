@@ -1,3 +1,5 @@
+import assert from 'assert';
+
 import { BuildFunction, BuildStepInput, BuildStepInputValueTypeName } from '@expo/steps';
 import { Ios } from '@expo/eas-build-job';
 import semver from 'semver';
@@ -51,6 +53,7 @@ export function configureIosVersionFunction(): BuildFunction {
       const credentialsManager = new IosCredentialsManager(value);
       const credentials = await credentialsManager.prepare(stepCtx.logger);
 
+      assert(stepCtx.global.staticContext.job, 'Job is not defined');
       const job = stepCtx.global.staticContext.job as Ios.Job;
 
       const buildNumber = inputs.build_number.value as string;

@@ -1,5 +1,3 @@
-import path from 'path';
-
 import { Ios, Platform } from '@expo/eas-build-job';
 import { BuildFunction } from '@expo/steps';
 
@@ -63,7 +61,7 @@ export function createFindAndUploadBuildArtifactsBuildFunction(
             return;
           }
           const xcodeBuildLogsPath = await findXcodeBuildLogsPathAsync(
-            path.resolve(ctx.projectTargetDirectory, '../logs')
+            stepCtx.global.buildLogsDirectory
           );
           if (xcodeBuildLogsPath) {
             await ctx.runtimeApi.uploadArtifacts(

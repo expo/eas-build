@@ -18,6 +18,8 @@ import { runGradleFunction } from './functions/utils/runGradle';
 import { resolveAppleTeamIdFromCredentialsFunction } from './functions/utils/resolveAppleTeamIdFromCredentials';
 import { configureIosCredentialsFunction } from './functions/utils/configureIosCredentials';
 import { configureIosVersionFunction } from './functions/utils/configureIosVersion';
+import { generateGymfileFromTemplateFunction } from './functions/utils/generateGymfileFromTemplate';
+import { runFastlaneFunction } from './functions/utils/runFastlane';
 
 export function getEasFunctions(
   ctx: CustomBuildContext,
@@ -38,5 +40,7 @@ export function getEasFunctions(
     resolveAppleTeamIdFromCredentialsFunction(),
     configureIosCredentialsFunction(),
     configureIosVersionFunction(),
+    generateGymfileFromTemplateFunction(),
+    runFastlaneFunction(),
   ];
 }

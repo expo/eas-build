@@ -3,7 +3,10 @@ import assert from 'assert';
 import { Ios } from '@expo/eas-build-job';
 import { IOSConfig } from '@expo/config-plugins';
 
-export function resolveScheme(job: Ios.Job, { workingDir }: { workingDir: string }): string {
+export function resolveScheme(workingDir: string, job: Ios.Job, scheme?: string): string {
+  if (scheme) {
+    return scheme;
+  }
   if (job.scheme) {
     return job.scheme;
   }
