@@ -1,11 +1,11 @@
 {
   "name": "create-eas-build-function",
-  "version": "0.0.4",
+  "version": "0.0.5",
   "bin": {
     "create-eas-build-function": "./build/index.js"
   },
   "main": "build",
-  "description": "Create custom function modules for EAS Build's custom builds.",
+  "description": "Create functions for use in EAS Build custom builds.",
   "license": "BSD-3-Clause",
   "keywords": [
     "expo",
