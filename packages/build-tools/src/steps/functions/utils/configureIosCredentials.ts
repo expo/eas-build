@@ -1,18 +1,16 @@
-import {
-  BuildFunction,
-  BuildStepInput,
-  BuildStepInputValueTypeName,
-  BuildStepOutput,
-} from '@expo/steps';
+import { BuildFunction, BuildStepInput, BuildStepInputValueTypeName } from '@expo/steps';
+import { Ios } from '@expo/eas-build-job';
 
 import IosCredentialsManager from '../../utils/ios/credentials/manager';
 import { IosBuildCredentialsSchema } from '../../utils/ios/credentials/credentials';
+import { configureCredentialsAsync } from '../../utils/ios/configure';
+import { resolveBuildConfiguration } from '../../utils/ios/resolve';
 
-export function resolveAppleTeamIdFromCredentialsFunction(): BuildFunction {
+export function configureIosCredentialsFunction(): BuildFunction {
   return new BuildFunction({
     namespace: 'utils',
-    id: 'resolve_apple_team_id_from_credentials',
-    name: 'Resolve Apple team ID from credentials',
+    id: 'configure_ios_credentials',
+    name: 'Configure iOS credentials',
     inputProviders: [
       BuildStepInput.createProvider({
         id: 'credentials',
@@ -20,14 +18,13 @@ export function resolveAppleTeamIdFromCredentialsFunction(): BuildFunction {
         allowedValueTypeName: BuildStepInputValueTypeName.JSON,
         defaultValue: '${ eas.job.secrets.buildCredentials }',
       }),
-    ],
-    outputProviders: [
-      BuildStepOutput.createProvider({
-        id: 'apple_team_id',
-        required: true,
+      BuildStepInput.createProvider({
+        id: 'build_configuration',
+        required: false,
+        allowedValueTypeName: BuildStepInputValueTypeName.STRING,
       }),
     ],
-    fn: async (stepCtx, { inputs, outputs }) => {
+    fn: async (stepCtx, { inputs }) => {
       const rawCredentialsInput = inputs.credentials.value as Record<string, any>;
       const { value, error } = IosBuildCredentialsSchema.validate(rawCredentialsInput, {
         stripUnknown: true,
@@ -41,8 +38,15 @@ export function resolveAppleTeamIdFromCredentialsFunction(): BuildFunction {
       const credentialsManager = new IosCredentialsManager(value);
       const credentials = await credentialsManager.prepare(stepCtx.logger);
 
-      stepCtx.logger.info(`Using Apple Team ID: ${credentials.teamId}`);
-      outputs.apple_team_id.set(credentials.teamId);
+      const job = stepCtx.global.staticContext.job as Ios.Job;
+
+      await configureCredentialsAsync(stepCtx.logger, stepCtx.workingDirectory, {
+        credentials,
+        buildConfiguration: resolveBuildConfiguration(
+          job,
+          inputs.build_configuration.value as string | undefined
+        ),
+      });
     },
   });
 }

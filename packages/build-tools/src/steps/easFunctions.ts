@@ -16,6 +16,8 @@ import { injectAndroidCredentialsFunction } from './functions/utils/injectAndroi
 import { configureAndroidVersionFunction } from './functions/utils/configureAndroidVersion';
 import { runGradleFunction } from './functions/utils/runGradle';
 import { resolveAppleTeamIdFromCredentialsFunction } from './functions/utils/resolveAppleTeamIdFromCredentials';
+import { configureIosCredentialsFunction } from './functions/utils/configureIosCredentials';
+import { configureIosVersionFunction } from './functions/utils/configureIosVersion';
 
 export function getEasFunctions(
   ctx: CustomBuildContext,
@@ -34,5 +36,7 @@ export function getEasFunctions(
     configureAndroidVersionFunction(),
     runGradleFunction(),
     resolveAppleTeamIdFromCredentialsFunction(),
+    configureIosCredentialsFunction(),
+    configureIosVersionFunction(),
   ];
 }

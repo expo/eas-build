@@ -12,8 +12,10 @@ export function resolveScheme(job: Ios.Job, { workingDir }: { workingDir: string
   return schemes[0];
 }
 
-export function resolveBuildConfiguration(job: Ios.Job): string {
-  if (job.buildConfiguration) {
+export function resolveBuildConfiguration(job: Ios.Job, buildConfiguration?: string): string {
+  if (buildConfiguration) {
+    return buildConfiguration;
+  } else if (job.buildConfiguration) {
     return job.buildConfiguration;
   } else if (job.developmentClient) {
     return 'Debug';
