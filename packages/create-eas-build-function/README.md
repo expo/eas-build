@@ -1,12 +1,11 @@
 <p align="center">
   <a href="https://docs.expo.dev/build/introduction/">
-    <img alt="create-expo-app" src="./.gh-assets/banner.svg">
-    <h1 align="center">Create EAS Build custom function module</h1>
+    <h1 align="center">Create EAS Build Function</h1>
   </a>
 </p>
 
 <p align="center">
-  <b>The fastest way to create the custom function module for EAS Build custom builds</b>
+  <b>The fastest way to create the function module for EAS Build custom builds</b>
 </p>
 
 ```sh
