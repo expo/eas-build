@@ -11,10 +11,11 @@ import { createInstallNodeModulesBuildFunction } from './functions/eas/installNo
 import { createPrebuildBuildFunction } from './functions/eas/prebuild';
 import { createBuildReactNativeAppBuildFunction } from './functions/eas/buildReactNativeApp';
 import { createFindAndUploadBuildArtifactsBuildFunction } from './functions/eas/findAndUploadBuildArtifacts';
-import { configureEASUpdateIfInstalledFunction } from './functions/eas/configureExpoUpdatesIfInstalled';
+import { configureEASUpdateIfInstalledFunction } from './functions/eas/configureEASUpdateIfInstalled';
 import { injectAndroidCredentialsFunction } from './functions/utils/injectAndroidCredentials';
 import { configureAndroidVersionFunction } from './functions/utils/configureAndroidVersion';
 import { runGradleFunction } from './functions/utils/runGradle';
+import { resolveAppleTeamIdFromCredentialsFunction } from './functions/utils/resolveAppleTeamIdFromCredentials';
 
 export function getEasFunctions(
   ctx: CustomBuildContext,
@@ -32,5 +33,6 @@ export function getEasFunctions(
     injectAndroidCredentialsFunction(),
     configureAndroidVersionFunction(),
     runGradleFunction(),
+    resolveAppleTeamIdFromCredentialsFunction(),
   ];
 }

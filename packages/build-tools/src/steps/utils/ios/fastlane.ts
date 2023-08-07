@@ -3,10 +3,10 @@ import path from 'path';
 import fs from 'fs-extra';
 import { bunyan } from '@expo/logger';
 import { Env } from '@expo/eas-build-job';
+import spawn, { SpawnResult } from '@expo/turtle-spawn';
 
 import { createGymfileForSimulatorBuild } from '../../../ios/gymfile';
 import { XcodeBuildLogger } from '../../../ios/xcpretty';
-import { runFastlane } from '../../../ios/fastlane';
 
 import { isTVOS } from './tvos';
 
@@ -78,4 +78,31 @@ export async function runFastlaneGym({
   } finally {
     await buildLogger.flush();
   }
+}
+
+export async function runFastlane(
+  fastlaneArgs: string[],
+  {
+    logger,
+    env,
+    cwd,
+  }: {
+    logger?: bunyan;
+    env?: Record<string, string>;
+    cwd?: string;
+  } = {}
+): Promise<SpawnResult> {
+  const fastlaneEnvVars = {
+    FASTLANE_DISABLE_COLORS: '1',
+    FASTLANE_SKIP_UPDATE_CHECK: '1',
+    SKIP_SLOW_FASTLANE_WARNING: 'true',
+    FASTLANE_HIDE_TIMESTAMP: 'true',
+    LC_ALL: 'en_US.UTF-8',
+    ...(env ?? process.env),
+  };
+  return await spawn('fastlane', fastlaneArgs, {
+    env: fastlaneEnvVars,
+    logger,
+    cwd,
+  });
 }
