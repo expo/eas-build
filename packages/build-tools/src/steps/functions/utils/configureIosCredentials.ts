@@ -47,6 +47,8 @@ export function configureIosCredentialsFunction(): BuildFunction {
           inputs.build_configuration.value as string | undefined
         ),
       });
+
+      stepCtx.logger.info('Successfully configured iOS credentials');
     },
   });
 }

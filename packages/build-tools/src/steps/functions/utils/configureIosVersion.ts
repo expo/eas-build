@@ -1,5 +1,6 @@
 import { BuildFunction, BuildStepInput, BuildStepInputValueTypeName } from '@expo/steps';
 import { Ios } from '@expo/eas-build-job';
+import semver from 'semver';
 
 import { IosBuildCredentialsSchema } from '../../utils/ios/credentials/credentials';
 import IosCredentialsManager from '../../utils/ios/credentials/manager';
@@ -26,7 +27,7 @@ export function configureIosVersionFunction(): BuildFunction {
       BuildStepInput.createProvider({
         id: 'build_number',
         required: true,
-        allowedValueTypeName: BuildStepInputValueTypeName.NUMBER,
+        allowedValueTypeName: BuildStepInputValueTypeName.STRING,
         defaultValue: '${ eas.job.version.buildNumber }',
       }),
       BuildStepInput.createProvider({
@@ -52,12 +53,24 @@ export function configureIosVersionFunction(): BuildFunction {
 
       const job = stepCtx.global.staticContext.job as Ios.Job;
 
+      const buildNumber = inputs.build_number.value as string;
+      const appVersion = inputs.app_version.value as string;
+      if (!semver.valid(appVersion)) {
+        throw new Error(
+          `App verrsion provided by the "app_version" input is not a valid semver version: ${appVersion}`
+        );
+      }
+
+      stepCtx.logger.info('Setting iOS version...');
+      stepCtx.logger.info(`Build number: ${buildNumber}`);
+      stepCtx.logger.info(`App version: ${appVersion}`);
+
       await updateVersionsAsync(
         stepCtx.logger,
         stepCtx.workingDirectory,
         {
-          buildNumber: inputs.build_number.value?.toString(),
-          appVersion: inputs.app_version.value as string,
+          buildNumber,
+          appVersion,
         },
         {
           targetNames: Object.keys(credentials.targetProvisioningProfiles),
