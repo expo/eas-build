@@ -23,6 +23,7 @@ export class MockContextProvider implements ExternalBuildContextProvider {
     public readonly projectSourceDirectory: string,
     public readonly projectTargetDirectory: string,
     public readonly defaultWorkingDirectory: string,
+    public readonly buildLogsDirectory: string,
     public readonly staticContextContent: Record<string, any> = {}
   ) {}
   public get env(): BuildStepEnv {
@@ -91,6 +92,7 @@ export function createGlobalContextMock({
       projectSourceDirectory ?? '/non/existent/dir',
       resolvedProjectTargetDirectory,
       workingDirectory ?? resolvedProjectTargetDirectory,
+      '/non/existent/dir',
       staticContextContent ?? {}
     ),
     skipCleanup ?? false
