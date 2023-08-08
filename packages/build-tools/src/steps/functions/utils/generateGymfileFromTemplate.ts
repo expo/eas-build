@@ -21,8 +21,8 @@ const DEFAULT_CREDENTIALS_TEMPLATE = `
     clean(<%- CLEAN %>)
 
     scheme("<%- SCHEME %>")
-    <% if (SCHEME_BUILD_CONFIGURATION) { %>
-    configuration("<%- SCHEME_BUILD_CONFIGURATION %>")
+    <% if (BUILD_CONFIGURATION) { %>
+    configuration("<%- BUILD_CONFIGURATION %>")
     <% } %>
 
     export_options({
@@ -47,8 +47,8 @@ const DEFAULT_SIMULATOR_TEMPLATE = `
     clean(<%- CLEAN %>)
 
     scheme("<%- SCHEME %>")
-    <% if (SCHEME_BUILD_CONFIGURATION) { %>
-    configuration("<%- SCHEME_BUILD_CONFIGURATION %>")
+    <% if (BUILD_CONFIGURATION) { %>
+    configuration("<%- BUILD_CONFIGURATION %>")
     <% } %>
 
     derived_data_path("<%- DERIVED_DATA_PATH %>")
@@ -179,7 +179,7 @@ export function generateGymfileFromTemplateFunction(): BuildFunction {
         outputFile: gymfilePath,
         vars: {
           SCHEME: scheme,
-          SCHEME_BUILD_CONFIGURATION: buildConfiguration,
+          BUILD_CONFIGURATION: buildConfiguration,
           OUTPUT_DIRECTORY: './build',
           CLEAN: String(inputs.clean.value),
           LOGS_DIRECTORY: stepCtx.global.buildLogsDirectory,
