@@ -14,6 +14,7 @@ import { createFindAndUploadBuildArtifactsBuildFunction } from './functions/eas/
 import { configureEASUpdateIfInstalledFunction } from './functions/eas/configureExpoUpdatesIfInstalled';
 import { injectAndroidCredentialsFunction } from './functions/utils/injectAndroidCredentials';
 import { configureAndroidVersionFunction } from './functions/utils/configureAndroidVersion';
+import { runGradleFunction } from './functions/utils/runGradle';
 
 export function getEasFunctions(
   ctx: CustomBuildContext,
@@ -30,5 +31,6 @@ export function getEasFunctions(
     configureEASUpdateIfInstalledFunction(),
     injectAndroidCredentialsFunction(),
     configureAndroidVersionFunction(),
+    runGradleFunction(),
   ];
 }
