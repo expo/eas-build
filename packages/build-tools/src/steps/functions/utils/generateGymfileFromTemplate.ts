@@ -140,7 +140,7 @@ export function generateGymfileFromTemplateFunction(): BuildFunction {
         job,
         inputs.scheme.value as string | undefined
       );
-      const entitlements = await readEntitlementsAsync(
+      const entitlements = await maybeReadEntitlementsAsync(
         stepCtx.logger,
         stepCtx.workingDirectory,
         scheme,
@@ -203,7 +203,7 @@ export function generateGymfileFromTemplateFunction(): BuildFunction {
   });
 }
 
-async function readEntitlementsAsync(
+async function maybeReadEntitlementsAsync(
   logger: bunyan,
   workingDir: string,
   scheme: string,

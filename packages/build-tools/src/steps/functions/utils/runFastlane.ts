@@ -6,7 +6,7 @@ export function runFastlaneFunction(): BuildFunction {
   return new BuildFunction({
     namespace: 'utils',
     id: 'run_fastlane',
-    name: 'Run Fastlane',
+    name: 'Run fastlane',
     fn: async (stepCtx, { env }) => {
       await runFastlaneGym({
         workingDir: stepCtx.workingDirectory,
