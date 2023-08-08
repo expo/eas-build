@@ -1,6 +1,6 @@
 {
   "name": "eas-cli-local-build-plugin",
-  "version": "1.0.34",
+  "version": "1.0.35",
   "description": "Tool for running EAS compatible builds on a local machine.",
   "main": "dist/main.js",
   "files": [
