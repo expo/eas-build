@@ -16,6 +16,7 @@ export async function prepareWorkingdirAsync(): Promise<string> {
   }
   await fs.mkdirp(path.join(workingdir, 'artifacts'));
   await fs.mkdirp(path.join(workingdir, 'build'));
+  await fs.mkdirp(path.join(workingdir, 'temporary-custom-build'));
   await fs.mkdirp(path.join(workingdir, 'custom-build'));
   await fs.mkdirp(path.join(workingdir, 'env'));
   await fs.mkdirp(path.join(workingdir, 'bin'));
