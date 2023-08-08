@@ -351,7 +351,7 @@ export class BuildStep extends BuildStepOutputAccessor {
     inputs?: BuildStepInput[]
   ): string {
     if (!inputs) {
-      return command;
+      return this.ctx.global.interpolate(command);
     }
     const vars = inputs.reduce((acc, input) => {
       acc[input.id] =
