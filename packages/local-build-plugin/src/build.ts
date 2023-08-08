@@ -5,7 +5,6 @@ import pickBy from 'lodash/pickBy';
 import fs from 'fs-extra';
 import chalk from 'chalk';
 import { Artifacts, SkipNativeBuildError } from '@expo/build-tools';
-import nullthrows from 'nullthrows';
 
 import { buildAndroidAsync } from './android';
 import config from './config';
@@ -58,11 +57,11 @@ export async function buildAsync(job: Job, metadata: Metadata): Promise<void> {
     if (!config.skipNativeBuild) {
       console.log();
       console.log(chalk.green('Build successful'));
-      console.log(
-        chalk.green(
-          `You can find the build artifacts in ${nullthrows(artifacts.APPLICATION_ARCHIVE)}`
-        )
-      );
+      if (artifacts.APPLICATION_ARCHIVE) {
+        console.log(
+          chalk.green(`You can find the build artifacts in ${artifacts.APPLICATION_ARCHIVE}`)
+        );
+      }
     }
   } catch (e: any) {
     if (e instanceof SkipNativeBuildError) {
