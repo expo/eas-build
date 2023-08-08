@@ -11,10 +11,15 @@ import { createInstallNodeModulesBuildFunction } from './functions/eas/installNo
 import { createPrebuildBuildFunction } from './functions/eas/prebuild';
 import { createBuildReactNativeAppBuildFunction } from './functions/eas/buildReactNativeApp';
 import { createFindAndUploadBuildArtifactsBuildFunction } from './functions/eas/findAndUploadBuildArtifacts';
-import { configureEASUpdateIfInstalledFunction } from './functions/eas/configureExpoUpdatesIfInstalled';
+import { configureEASUpdateIfInstalledFunction } from './functions/eas/configureEASUpdateIfInstalled';
 import { injectAndroidCredentialsFunction } from './functions/utils/injectAndroidCredentials';
 import { configureAndroidVersionFunction } from './functions/utils/configureAndroidVersion';
 import { runGradleFunction } from './functions/utils/runGradle';
+import { resolveAppleTeamIdFromCredentialsFunction } from './functions/utils/resolveAppleTeamIdFromCredentials';
+import { configureIosCredentialsFunction } from './functions/utils/configureIosCredentials';
+import { configureIosVersionFunction } from './functions/utils/configureIosVersion';
+import { generateGymfileFromTemplateFunction } from './functions/utils/generateGymfileFromTemplate';
+import { runFastlaneFunction } from './functions/utils/runFastlane';
 
 export function getEasFunctions(
   ctx: CustomBuildContext,
@@ -32,5 +37,10 @@ export function getEasFunctions(
     injectAndroidCredentialsFunction(),
     configureAndroidVersionFunction(),
     runGradleFunction(),
+    resolveAppleTeamIdFromCredentialsFunction(),
+    configureIosCredentialsFunction(),
+    configureIosVersionFunction(),
+    generateGymfileFromTemplateFunction(),
+    runFastlaneFunction(),
   ];
 }

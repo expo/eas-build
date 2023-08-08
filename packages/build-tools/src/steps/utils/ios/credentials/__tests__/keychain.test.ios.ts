@@ -1,12 +1,10 @@
 import os from 'os';
 import path from 'path';
 
-import { Ios } from '@expo/eas-build-job';
 import { createLogger } from '@expo/logger';
 import fs from 'fs-extra';
 import { v4 as uuid } from 'uuid';
 
-import { BuildContext } from '../../../context';
 import Keychain from '../keychain';
 
 import { distributionCertificate } from './fixtures';
@@ -15,11 +13,9 @@ const mockLogger = createLogger({ name: 'mock-logger' });
 
 jest.setTimeout(60 * 1000);
 
-let ctx: BuildContext<Ios.Job>;
-
 describe('Keychain class', () => {
   describe('ensureCertificateImported method', () => {
-    let keychain: Keychain<Ios.Job>;
+    let keychain: Keychain;
     const certificatePath = path.join(os.tmpdir(), `cert-${uuid()}.p12`);
 
     beforeAll(async () => {
@@ -34,20 +30,12 @@ describe('Keychain class', () => {
     });
 
     beforeEach(async () => {
-      ctx = new BuildContext({ projectRootDirectory: '.' } as Ios.Job, {
-        workingdir: '/workingdir',
-        logBuffer: { getLogs: () => [], getPhaseLogs: () => [] },
-        logger: mockLogger,
-        env: {},
-        runGlobalExpoCliCommand: jest.fn(),
-        uploadArtifacts: jest.fn(),
-      });
-      keychain = new Keychain(ctx);
-      await keychain.create();
+      keychain = new Keychain();
+      await keychain.create(mockLogger);
     });
 
     afterEach(async () => {
-      await keychain.destroy();
+      await keychain.destroy(mockLogger);
     });
 
     it("should throw an error if the certificate hasn't been imported", async () => {
@@ -60,7 +48,11 @@ describe('Keychain class', () => {
     });
 
     it("shouldn't throw any error if the certificate has been imported successfully", async () => {
-      await keychain.importCertificate(certificatePath, distributionCertificate.password);
+      await keychain.importCertificate(
+        mockLogger,
+        certificatePath,
+        distributionCertificate.password
+      );
       await expect(
         keychain.ensureCertificateImported(
           distributionCertificate.teamId,

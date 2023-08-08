@@ -22,6 +22,7 @@ interface SerializedExternalBuildContextProvider {
   projectSourceDirectory: string;
   projectTargetDirectory: string;
   defaultWorkingDirectory: string;
+  buildLogsDirectory: string;
   runtimePlatform: BuildRuntimePlatform;
   staticContext: Record<string, any>;
   env: BuildStepEnv;
@@ -31,6 +32,7 @@ export interface ExternalBuildContextProvider {
   readonly projectSourceDirectory: string;
   readonly projectTargetDirectory: string;
   readonly defaultWorkingDirectory: string;
+  readonly buildLogsDirectory: string;
   readonly runtimePlatform: BuildRuntimePlatform;
   readonly logger: bunyan;
 
@@ -73,6 +75,10 @@ export class BuildStepGlobalContext {
 
   public get defaultWorkingDirectory(): string {
     return this.provider.defaultWorkingDirectory;
+  }
+
+  public get buildLogsDirectory(): string {
+    return this.provider.buildLogsDirectory;
   }
 
   public get env(): BuildStepEnv {
@@ -126,6 +132,7 @@ export class BuildStepGlobalContext {
         projectSourceDirectory: this.provider.projectSourceDirectory,
         projectTargetDirectory: this.provider.projectTargetDirectory,
         defaultWorkingDirectory: this.provider.defaultWorkingDirectory,
+        buildLogsDirectory: this.provider.buildLogsDirectory,
         runtimePlatform: this.provider.runtimePlatform,
         staticContext: this.provider.staticContext(),
         env: this.provider.env,
@@ -142,6 +149,7 @@ export class BuildStepGlobalContext {
       projectSourceDirectory: serialized.provider.projectSourceDirectory,
       projectTargetDirectory: serialized.provider.projectTargetDirectory,
       defaultWorkingDirectory: serialized.provider.defaultWorkingDirectory,
+      buildLogsDirectory: serialized.provider.buildLogsDirectory,
       runtimePlatform: serialized.provider.runtimePlatform,
       logger,
       staticContext: () => serialized.provider.staticContext,

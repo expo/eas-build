@@ -31,6 +31,11 @@ export class CustomBuildContext implements ExternalBuildContextProvider {
    */
   public readonly defaultWorkingDirectory: string;
 
+  /*
+   * Directory where build logs will be stored unless configure otherwise.
+   */
+  public readonly buildLogsDirectory: string;
+
   public readonly logger: bunyan;
   public readonly runtimeApi: BuilderRuntimeApi;
   public readonly job: Job;
@@ -45,6 +50,7 @@ export class CustomBuildContext implements ExternalBuildContextProvider {
     this.projectSourceDirectory = path.join(buildCtx.workingdir, 'temporary-custom-build');
     this.projectTargetDirectory = path.join(buildCtx.workingdir, 'build');
     this.defaultWorkingDirectory = buildCtx.getReactNativeProjectDirectory();
+    this.buildLogsDirectory = path.join(buildCtx.workingdir, 'logs');
     this.runtimeApi = {
       uploadArtifacts: (...args) => buildCtx['uploadArtifacts'](...args),
     };

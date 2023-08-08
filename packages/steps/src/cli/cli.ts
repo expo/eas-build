@@ -21,7 +21,8 @@ export class CliContextProvider implements ExternalBuildContextProvider {
     public readonly runtimePlatform: BuildRuntimePlatform,
     public readonly projectSourceDirectory: string,
     public readonly projectTargetDirectory: string,
-    public readonly defaultWorkingDirectory: string
+    public readonly defaultWorkingDirectory: string,
+    public readonly buildLogsDirectory: string
   ) {}
   public get env(): BuildStepEnv {
     return this._env;
@@ -43,6 +44,7 @@ async function runAsync(
     new CliContextProvider(
       logger,
       runtimePlatform,
+      relativeProjectDirectory,
       relativeProjectDirectory,
       relativeProjectDirectory,
       relativeProjectDirectory
