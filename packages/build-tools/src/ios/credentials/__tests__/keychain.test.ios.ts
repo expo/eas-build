@@ -4,6 +4,7 @@ import path from 'path';
 import { Ios } from '@expo/eas-build-job';
 import { createLogger } from '@expo/logger';
 import fs from 'fs-extra';
+import { v4 as uuid } from 'uuid';
 
 import { BuildContext } from '../../../context';
 import Keychain from '../keychain';
@@ -19,7 +20,7 @@ let ctx: BuildContext<Ios.Job>;
 describe('Keychain class', () => {
   describe('ensureCertificateImported method', () => {
     let keychain: Keychain<Ios.Job>;
-    const certificatePath = path.join(os.tmpdir(), 'cert.p12');
+    const certificatePath = path.join(os.tmpdir(), `cert-${uuid()}.p12`);
 
     beforeAll(async () => {
       await fs.writeFile(

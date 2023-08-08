@@ -3,6 +3,7 @@ import path from 'path';
 
 import { createLogger } from '@expo/logger';
 import fs from 'fs-extra';
+import { v4 as uuid } from 'uuid';
 
 import Keychain from '../keychain';
 
@@ -15,7 +16,7 @@ jest.setTimeout(60 * 1000);
 describe('Keychain class', () => {
   describe('ensureCertificateImported method', () => {
     let keychain: Keychain;
-    const certificatePath = path.join(os.tmpdir(), 'cert.p12');
+    const certificatePath = path.join(os.tmpdir(), `cert-${uuid()}.p12`);
 
     beforeAll(async () => {
       await fs.writeFile(
