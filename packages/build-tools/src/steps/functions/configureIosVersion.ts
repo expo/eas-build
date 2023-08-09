@@ -28,15 +28,13 @@ export function configureIosVersionFunction(): BuildFunction {
       }),
       BuildStepInput.createProvider({
         id: 'build_number',
-        required: true,
+        required: false,
         allowedValueTypeName: BuildStepInputValueTypeName.STRING,
-        defaultValue: '${ eas.job.version.buildNumber }',
       }),
       BuildStepInput.createProvider({
         id: 'app_version',
-        required: true,
+        required: false,
         allowedValueTypeName: BuildStepInputValueTypeName.STRING,
-        defaultValue: '${ eas.job.version.appVersion }',
       }),
     ],
     fn: async (stepCtx, { inputs }) => {
@@ -56,9 +54,11 @@ export function configureIosVersionFunction(): BuildFunction {
       assert(stepCtx.global.staticContext.job, 'Job is not defined');
       const job = stepCtx.global.staticContext.job as Ios.Job;
 
-      const buildNumber = inputs.build_number.value as string;
-      const appVersion = inputs.app_version.value as string;
-      if (!semver.valid(appVersion)) {
+      const buildNumber =
+        (inputs.build_number.value as string | undefined) ?? job.version?.buildNumber;
+      const appVersion =
+        (inputs.app_version.value as string | undefined) ?? job.version?.appVersion;
+      if (appVersion && !semver.valid(appVersion)) {
         throw new Error(
           `App verrsion provided by the "app_version" input is not a valid semver version: ${appVersion}`
         );
