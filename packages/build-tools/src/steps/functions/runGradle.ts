@@ -3,11 +3,11 @@ import assert from 'assert';
 
 import { BuildFunction, BuildStepInput, BuildStepInputValueTypeName } from '@expo/steps';
 
-import { resolveGradleCommand, runGradleCommand } from '../../utils/android/gradle';
+import { resolveGradleCommand, runGradleCommand } from '../utils/android/gradle';
 
 export function runGradleFunction(): BuildFunction {
   return new BuildFunction({
-    namespace: 'utils',
+    namespace: 'eas',
     id: 'run_gradle',
     name: 'Run gradle',
     inputProviders: [

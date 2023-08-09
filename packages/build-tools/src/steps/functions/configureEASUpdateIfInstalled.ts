@@ -4,14 +4,14 @@ import { BuildFunction, BuildStepInput, BuildStepInputValueTypeName } from '@exp
 import { Job } from '@expo/eas-build-job';
 import semver from 'semver';
 
-import { readAppConfig } from '../../../utils/appConfig';
-import { configureEASUpdateIfInstalledAsync } from '../../utils/expoUpdates';
+import { configureEASUpdateIfInstalledAsync } from '../utils/expoUpdates';
+import { readAppConfig } from '../../utils/appConfig';
 
 export function configureEASUpdateIfInstalledFunction(): BuildFunction {
   return new BuildFunction({
     namespace: 'eas',
-    id: 'configure_eas_update_if_installed',
-    name: 'Configure EAS Update if installed',
+    id: 'configure_eas_update',
+    name: 'Configure EAS Update',
     inputProviders: [
       BuildStepInput.createProvider({
         id: 'runtime_version',

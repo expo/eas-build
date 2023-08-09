@@ -3,8 +3,8 @@ import path from 'path';
 import { BuildFunction, BuildStepInput, BuildStepInputValueTypeName } from '@expo/steps';
 import nullthrows from 'nullthrows';
 
-import { ArtifactType } from '../../../context';
-import { CustomBuildContext } from '../../../customBuildContext';
+import { ArtifactType } from '../../context';
+import { CustomBuildContext } from '../../customBuildContext';
 
 enum BuildArtifactType {
   APPLICATION_ARCHIVE = 'application-archive',
@@ -13,7 +13,7 @@ enum BuildArtifactType {
 
 export function createUploadArtifactBuildFunction(ctx: CustomBuildContext): BuildFunction {
   return new BuildFunction({
-    namespace: 'utils',
+    namespace: 'eas',
     id: 'upload_artifact',
     name: 'Upload artifact',
     inputProviders: [

@@ -33,7 +33,9 @@ export async function configureEASUpdateIfInstalledAsync({
   appConfig: ExpoConfig;
 }): Promise<void> {
   if (!(await isExpoUpdatesInstalledAsync(workingDirectory))) {
-    logger.info('Expo Updates is not installed, skipping configuring Expo Updates.');
+    throw new Error(
+      `Cannot configure Expo Updates because the expo-updates package is not installed.`
+    );
   }
 
   const runtimeVersion =
@@ -41,7 +43,7 @@ export async function configureEASUpdateIfInstalledAsync({
     job.version?.runtimeVersion ??
     getRuntimeVersionNullable(appConfig, job.platform);
 
-  const jobOrInputChannel = inputs.runtimeVersion ?? job.updates?.channel;
+  const jobOrInputChannel = inputs.channel ?? job.updates?.channel;
 
   if (isEASUpdateConfigured(appConfig, logger)) {
     const channel = jobOrInputChannel ?? (await getChannelAsync(job, workingDirectory));
