@@ -20,15 +20,19 @@ describe(configureEASUpdateIfInstalledAsync, () => {
   it('aborts if expo-updates is not installed', async () => {
     (isExpoUpdatesInstalledAsync as jest.Mock).mockReturnValue(false);
 
-    await configureEASUpdateIfInstalledAsync({
-      job: { platform: Platform.IOS } as unknown as Job,
-      workingDirectory: '/app',
-      logger: createLogger({
-        name: 'test',
-      }),
-      appConfig: {} as unknown as ExpoConfig,
-      inputs: {},
-    });
+    await expect(
+      configureEASUpdateIfInstalledAsync({
+        job: { platform: Platform.IOS } as unknown as Job,
+        workingDirectory: '/app',
+        logger: createLogger({
+          name: 'test',
+        }),
+        appConfig: {} as unknown as ExpoConfig,
+        inputs: {},
+      })
+    ).rejects.toThrowError(
+      'Cannot configure Expo Updates because the expo-updates package is not installed.'
+    );
 
     expect(androidSetChannelNativelyAsync).not.toBeCalled();
     expect(iosSetChannelNativelyAsync).not.toBeCalled();
