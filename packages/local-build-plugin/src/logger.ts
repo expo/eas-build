@@ -14,6 +14,7 @@ interface Log {
   marker?: string;
   phase: string;
   source: 'stdout' | 'stderr';
+  buildStepDisplayName?: string;
 }
 const MAX_LINES_IN_BUFFER = 100;
 
@@ -85,6 +86,9 @@ class PrettyStream extends Writable {
       'pid',
       'hostname',
       'name',
+      'buildStepInternalId',
+      'buildStepId',
+      'buildStepDisplayName',
     ]);
     if (Object.keys(extraProperties).length !== 0) {
       const str = JSON.stringify(extraProperties, null, 2);
@@ -98,7 +102,7 @@ class PrettyStream extends Writable {
   }
 
   private formatMessage(log: Log): string {
-    const phase = log.phase;
+    const phase = this.getPhaseName(log);
     switch (log.level) {
       case bunyan.DEBUG:
         return `[${phase}] ${chalk.gray(log.msg)}`;
@@ -115,6 +119,12 @@ class PrettyStream extends Writable {
       default:
         return log.msg;
     }
+  }
+
+  private getPhaseName(log: Log): string {
+    return log.phase === 'CUSTOM' && log.buildStepDisplayName
+      ? log.buildStepDisplayName
+      : log.phase;
   }
 }
 
