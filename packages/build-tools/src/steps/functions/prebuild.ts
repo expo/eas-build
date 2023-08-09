@@ -1,43 +1,45 @@
+import assert from 'assert';
+
 import { Platform } from '@expo/config';
 import { Job } from '@expo/eas-build-job';
 import { BuildFunction, BuildStepInput, BuildStepInputValueTypeName } from '@expo/steps';
 import spawn from '@expo/turtle-spawn';
 
-import { CustomBuildContext } from '../../../customBuildContext';
-import { PackageManager, resolvePackageManager } from '../../../utils/packageManager';
+import { PackageManager, resolvePackageManager } from '../../utils/packageManager';
 
 import { installNodeModules } from './installNodeModules';
 
 type PrebuildOptions = {
   clean?: boolean;
-  skipDependencyUpdate?: string;
 };
 
-export function createPrebuildBuildFunction(ctx: CustomBuildContext): BuildFunction {
+export function createPrebuildBuildFunction(): BuildFunction {
   return new BuildFunction({
     namespace: 'eas',
     id: 'prebuild',
     name: 'Prebuild',
     inputProviders: [
       BuildStepInput.createProvider({
-        id: 'skip_dependency_update',
-        required: false,
-        allowedValueTypeName: BuildStepInputValueTypeName.STRING,
-      }),
-      BuildStepInput.createProvider({
         id: 'clean',
         defaultValue: false,
         allowedValueTypeName: BuildStepInputValueTypeName.BOOLEAN,
         required: true,
       }),
+      BuildStepInput.createProvider({
+        id: 'apple_team_id',
+        allowedValueTypeName: BuildStepInputValueTypeName.STRING,
+        required: false,
+      }),
     ],
     fn: async (stepCtx, { inputs, env }) => {
       const { logger } = stepCtx;
-      // TODO: make sure we can pass Apple Team ID to prebuild when adding credentials for custom builds
-      const packageManager = resolvePackageManager(ctx.projectTargetDirectory);
-      const prebuildCommandArgs = getPrebuildCommandArgs(ctx.job, {
+      const appleTeamId = inputs.apple_team_id.value as string | undefined;
+      const packageManager = resolvePackageManager(stepCtx.global.projectTargetDirectory);
+
+      assert(stepCtx.global.staticContext.job, 'Job is not defined');
+      const job = stepCtx.global.staticContext.job as Job;
+      const prebuildCommandArgs = getPrebuildCommandArgs(job, {
         clean: inputs.clean.value as boolean,
-        skipDependencyUpdate: inputs.skip_dependency_update.value as string,
       });
       const argsWithExpo = ['expo', ...prebuildCommandArgs];
       const options = {
@@ -46,6 +48,7 @@ export function createPrebuildBuildFunction(ctx: CustomBuildContext): BuildFunct
         env: {
           EXPO_IMAGE_UTILS_NO_SHARP: '1',
           ...env,
+          ...(appleTeamId ? { APPLE_TEAM_ID: appleTeamId } : {}),
         },
       };
       if (packageManager === PackageManager.NPM) {
@@ -57,43 +60,29 @@ export function createPrebuildBuildFunction(ctx: CustomBuildContext): BuildFunct
       } else {
         throw new Error(`Unsupported package manager: ${packageManager}`);
       }
-      await installNodeModules(stepCtx, ctx, env);
+      await installNodeModules(stepCtx, env);
     },
   });
 }
 
-function getPrebuildCommandArgs(
-  job: Job,
-  { clean, skipDependencyUpdate }: PrebuildOptions
-): string[] {
+function getPrebuildCommandArgs(job: Job, { clean }: PrebuildOptions): string[] {
   if (job.experimental?.prebuildCommand) {
     return sanitizeUserDefinedPrebuildCommand(job.experimental.prebuildCommand, job.platform, {
       clean,
-      skipDependencyUpdate,
     });
   }
-  return [
-    'prebuild',
-    '--no-install',
-    '--platform',
-    job.platform,
-    ...(skipDependencyUpdate ? ['--skip-dependency-update', skipDependencyUpdate] : []),
-    ...(clean ? ['--clean'] : []),
-  ];
+  return ['prebuild', '--no-install', '--platform', job.platform, ...(clean ? ['--clean'] : [])];
 }
 
 // TODO: deprecate prebuildCommand in eas.json
 function sanitizeUserDefinedPrebuildCommand(
   userDefinedPrebuildCommand: string,
   platform: Platform,
-  { clean, skipDependencyUpdate }: PrebuildOptions
+  { clean }: PrebuildOptions
 ): string[] {
   let prebuildCommand = userDefinedPrebuildCommand;
   if (!prebuildCommand.match(/(?:--platform| -p)/)) {
     prebuildCommand = `${prebuildCommand} --platform ${platform}`;
-  }
-  if (skipDependencyUpdate) {
-    prebuildCommand = `${prebuildCommand} --skip-dependency-update ${skipDependencyUpdate}`;
   }
   if (clean) {
     prebuildCommand = `${prebuildCommand} --clean`;

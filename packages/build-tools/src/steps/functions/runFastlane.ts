@@ -1,10 +1,10 @@
 import { BuildFunction } from '@expo/steps';
 
-import { runFastlaneGym } from '../../utils/ios/fastlane';
+import { runFastlaneGym } from '../utils/ios/fastlane';
 
 export function runFastlaneFunction(): BuildFunction {
   return new BuildFunction({
-    namespace: 'utils',
+    namespace: 'eas',
     id: 'run_fastlane',
     name: 'Run fastlane',
     fn: async (stepCtx, { env }) => {

@@ -5,12 +5,12 @@ import {
   BuildStepOutput,
 } from '@expo/steps';
 
-import IosCredentialsManager from '../../utils/ios/credentials/manager';
-import { IosBuildCredentialsSchema } from '../../utils/ios/credentials/credentials';
+import IosCredentialsManager from '../utils/ios/credentials/manager';
+import { IosBuildCredentialsSchema } from '../utils/ios/credentials/credentials';
 
 export function resolveAppleTeamIdFromCredentialsFunction(): BuildFunction {
   return new BuildFunction({
-    namespace: 'utils',
+    namespace: 'eas',
     id: 'resolve_apple_team_id_from_credentials',
     name: 'Resolve Apple team ID from credentials',
     inputProviders: [

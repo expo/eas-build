@@ -1,10 +1,10 @@
 import { Ios, Platform } from '@expo/eas-build-job';
 import { BuildFunction } from '@expo/steps';
 
-import { ArtifactType } from '../../../context';
-import { findArtifacts } from '../../../utils/artifacts';
-import { findXcodeBuildLogsPathAsync } from '../../../ios/xcodeBuildLogs';
-import { CustomBuildContext } from '../../../customBuildContext';
+import { ArtifactType } from '../../context';
+import { findArtifacts } from '../../utils/artifacts';
+import { findXcodeBuildLogsPathAsync } from '../../ios/xcodeBuildLogs';
+import { CustomBuildContext } from '../../customBuildContext';
 
 export function createFindAndUploadBuildArtifactsBuildFunction(
   ctx: CustomBuildContext

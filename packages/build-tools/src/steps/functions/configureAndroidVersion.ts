@@ -1,11 +1,11 @@
 import { BuildFunction, BuildStepInput, BuildStepInputValueTypeName } from '@expo/steps';
 import semver from 'semver';
 
-import { injectConfigureVersionGradleConfig } from '../../utils/android/gradleConfig';
+import { injectConfigureVersionGradleConfig } from '../utils/android/gradleConfig';
 
 export function configureAndroidVersionFunction(): BuildFunction {
   return new BuildFunction({
-    namespace: 'utils',
+    namespace: 'eas',
     id: 'configure_android_version',
     name: 'Configure Android version',
     inputProviders: [

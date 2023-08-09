@@ -11,10 +11,10 @@ import { bunyan } from '@expo/logger';
 import templateFile from '@expo/template-file';
 import { v4 as uuid } from 'uuid';
 
-import { IosBuildCredentialsSchema } from '../../utils/ios/credentials/credentials';
-import IosCredentialsManager, { Credentials } from '../../utils/ios/credentials/manager';
-import { resolveBuildConfiguration, resolveScheme } from '../../utils/ios/resolve';
-import { isTVOS } from '../../utils/ios/tvos';
+import { IosBuildCredentialsSchema } from '../utils/ios/credentials/credentials';
+import IosCredentialsManager, { Credentials } from '../utils/ios/credentials/manager';
+import { resolveBuildConfiguration, resolveScheme } from '../utils/ios/resolve';
+import { isTVOS } from '../utils/ios/tvos';
 
 const DEFAULT_CREDENTIALS_TEMPLATE = `
     suppress_xcode_output(true)
@@ -62,7 +62,7 @@ const DEFAULT_SIMULATOR_TEMPLATE = `
 
 export function generateGymfileFromTemplateFunction(): BuildFunction {
   return new BuildFunction({
-    namespace: 'utils',
+    namespace: 'eas',
     id: 'generate_gymfile_from_template',
     name: 'Generate Gymfile from template',
     inputProviders: [

@@ -11,7 +11,7 @@ import fs from 'fs-extra';
 import Joi from 'joi';
 import { Android } from '@expo/eas-build-job';
 
-import { injectCredentialsGradleConfig } from '../../utils/android/gradleConfig';
+import { injectCredentialsGradleConfig } from '../utils/android/gradleConfig';
 
 const KeystoreSchema = Joi.object({
   dataBase64: Joi.string().required(),
@@ -26,7 +26,7 @@ const AndroidBuildCredentialsSchema = Joi.object<{ keystore: Android.Keystore }>
 
 export function injectAndroidCredentialsFunction(): BuildFunction {
   return new BuildFunction({
-    namespace: 'utils',
+    namespace: 'eas',
     id: 'inject_android_credentials',
     name: 'Inject Android credentials',
     inputProviders: [
