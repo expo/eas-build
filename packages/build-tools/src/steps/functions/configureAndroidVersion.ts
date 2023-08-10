@@ -1,5 +1,8 @@
+import assert from 'assert';
+
 import { BuildFunction, BuildStepInput, BuildStepInputValueTypeName } from '@expo/steps';
 import semver from 'semver';
+import { Android } from '@expo/eas-build-job';
 
 import { injectConfigureVersionGradleConfig } from '../utils/android/gradleConfig';
 
@@ -11,21 +14,24 @@ export function configureAndroidVersionFunction(): BuildFunction {
     inputProviders: [
       BuildStepInput.createProvider({
         id: 'version_name',
-        required: true,
+        required: false,
         allowedValueTypeName: BuildStepInputValueTypeName.STRING,
-        defaultValue: '${ eas.job.version.versionName }',
       }),
       BuildStepInput.createProvider({
         id: 'version_code',
-        required: true,
-        allowedValueTypeName: BuildStepInputValueTypeName.NUMBER,
-        defaultValue: '${ eas.job.version.versionCode }',
+        required: false,
+        allowedValueTypeName: BuildStepInputValueTypeName.STRING,
       }),
     ],
     fn: async (stepCtx, { inputs }) => {
-      const versionCode = inputs.version_code.value as number;
-      const versionName = inputs.version_name.value as string;
-      if (!semver.valid(versionName)) {
+      assert(stepCtx.global.staticContext.job, 'Job is not defined');
+      const job = stepCtx.global.staticContext.job as Android.Job;
+
+      const versionCode =
+        (inputs.version_code.value as string | undefined) ?? job.version?.versionCode;
+      const versionName =
+        (inputs.version_name.value as string | undefined) ?? job.version?.versionName;
+      if (versionName && !semver.valid(versionName)) {
         throw new Error(
           `Version name provided by the "version_name" input is not a valid semver version: ${versionName}`
         );

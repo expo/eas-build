@@ -33,11 +33,15 @@ export async function injectCredentialsGradleConfig(
 export async function injectConfigureVersionGradleConfig(
   logger: bunyan,
   workingDir: string,
-  { versionCode, versionName }: { versionCode: number; versionName: string }
+  { versionCode, versionName }: { versionCode?: string; versionName?: string }
 ): Promise<void> {
   logger.info('Injecting version config into build.gradle');
-  logger.info(`Version code: ${versionCode}`);
-  logger.info(`Version name: ${versionName}`);
+  if (versionCode) {
+    logger.info(`Version code: ${versionCode}`);
+  }
+  if (versionName) {
+    logger.info(`Version name: ${versionName}`);
+  }
   await deleteEasBuildConfigureVersionGradle(workingDir);
   await createEasBuildConfigureVersionGradle(workingDir, { versionCode, versionName });
   await addApplyConfigureVersionConfigToBuildGradle(workingDir);
@@ -69,7 +73,7 @@ async function createEasBuildInjectCredentialsGradle(workingDir: string): Promis
 
 async function createEasBuildConfigureVersionGradle(
   workingDir: string,
-  { versionCode, versionName }: { versionCode: number; versionName: string }
+  { versionCode, versionName }: { versionCode?: string; versionName?: string }
 ): Promise<void> {
   const targetPath = getEasBuildConfigureVersionGradlePath(workingDir);
   await templateFile(
