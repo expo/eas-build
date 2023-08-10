@@ -16,6 +16,8 @@ jobs:
           registry-url: 'https://registry.npmjs.org/'
           scope: 'expo'
           node-version: 18
+      - name: Setup ncc
+        run: npm install -g @vercel/ncc
       - name: Install dependencies
         run: yarn install --frozen-lockfile --check-files
       - name: Build
