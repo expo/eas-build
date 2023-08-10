@@ -65,8 +65,12 @@ export function configureIosVersionFunction(): BuildFunction {
       }
 
       stepCtx.logger.info('Setting iOS version...');
-      stepCtx.logger.info(`Build number: ${buildNumber}`);
-      stepCtx.logger.info(`App version: ${appVersion}`);
+      if (buildNumber) {
+        stepCtx.logger.info(`Build number: ${buildNumber}`);
+      }
+      if (appVersion) {
+        stepCtx.logger.info(`App version: ${appVersion}`);
+      }
 
       await updateVersionsAsync(
         stepCtx.logger,

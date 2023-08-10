@@ -36,8 +36,12 @@ export async function injectConfigureVersionGradleConfig(
   { versionCode, versionName }: { versionCode?: string; versionName?: string }
 ): Promise<void> {
   logger.info('Injecting version config into build.gradle');
-  logger.info(`Version code: ${versionCode}`);
-  logger.info(`Version name: ${versionName}`);
+  if (versionCode) {
+    logger.info(`Version code: ${versionCode}`);
+  }
+  if (versionName) {
+    logger.info(`Version name: ${versionName}`);
+  }
   await deleteEasBuildConfigureVersionGradle(workingDir);
   await createEasBuildConfigureVersionGradle(workingDir, { versionCode, versionName });
   await addApplyConfigureVersionConfigToBuildGradle(workingDir);
