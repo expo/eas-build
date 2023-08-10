@@ -33,7 +33,7 @@
     "clean": "rimraf ./build/"
   },
   "dependencies": {
-    "@expo/steps": "1.0.30"
+    "@expo/steps": "1.0.34"
   },
   "devDependencies": {
     "@expo/package-manager": "^1.0.2",
