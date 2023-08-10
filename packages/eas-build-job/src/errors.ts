@@ -2,6 +2,7 @@ import { BuildPhase } from './logs';
 
 export enum ErrorCode {
   UNKNOWN_ERROR = 'UNKNOWN_ERROR',
+  UNKNOWN_CUSTOM_BUILD_ERROR = 'UNKNOWN_CUSTOM_BUILD_ERROR',
   SERVER_ERROR = 'SERVER_ERROR',
   UNKNOWN_FASTLANE_ERROR = 'EAS_BUILD_UNKNOWN_FASTLANE_ERROR',
   UNKNOWN_GRADLE_ERROR = 'EAS_BUILD_UNKNOWN_GRADLE_ERROR',
@@ -65,6 +66,18 @@ export class UnknownBuildError extends BuildError {
   constructor() {
     const errorCode = ErrorCode.UNKNOWN_ERROR;
     const message = 'Unknown error. See logs for more information.';
+    super(message, {
+      errorCode,
+      userFacingMessage: message,
+      userFacingErrorCode: errorCode,
+    });
+  }
+}
+
+export class UnknownCustomBuildError extends BuildError {
+  constructor() {
+    const errorCode = ErrorCode.UNKNOWN_CUSTOM_BUILD_ERROR;
+    const message = 'Unknown custom build error. See logs for more information.';
     super(message, {
       errorCode,
       userFacingMessage: message,
