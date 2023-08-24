@@ -22,6 +22,7 @@ describe('MetadataSchema', () => {
       runWithNoWaitFlag: true,
       buildMode: 'build',
       customWorkflowName: 'blah blah',
+      developmentClient: true,
     };
     const { value, error } = MetadataSchema.validate(metadata, {
       stripUnknown: true,
@@ -51,6 +52,7 @@ describe('MetadataSchema', () => {
       runWithNoWaitFlag: true,
       buildMode: 'resign',
       customWorkflowName: 'blah blah',
+      developmentClient: true,
     };
     const { error } = MetadataSchema.validate(metadata, {
       stripUnknown: true,

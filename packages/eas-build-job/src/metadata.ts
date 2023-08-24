@@ -144,6 +144,11 @@ export type Metadata = {
    * Workflow name available for custom builds.
    */
   customWorkflowName?: string;
+
+  /**
+   * Indicates whether this is (likely, we can't be 100% sure) development client build.
+   */
+  developmentClient?: boolean;
 };
 
 export const MetadataSchema = Joi.object({
@@ -174,6 +179,7 @@ export const MetadataSchema = Joi.object({
   runWithNoWaitFlag: Joi.boolean(),
   buildMode: Joi.string().valid('build', 'resign', 'custom'),
   customWorkflowName: Joi.string(),
+  developmentClient: Joi.boolean(),
 });
 
 export function sanitizeMetadata(metadata: object): Metadata {
