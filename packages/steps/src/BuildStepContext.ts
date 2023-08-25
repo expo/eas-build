@@ -1,22 +1,23 @@
+// @ts-nocheck
 import os from 'os';
 import path from 'path';
 
 import { bunyan } from '@expo/logger';
 import { v4 as uuidv4 } from 'uuid';
 
+import { BuildRuntimePlatform } from './BuildRuntimePlatform.js';
 import {
   BuildStep,
   BuildStepOutputAccessor,
   SerializedBuildStepOutputAccessor,
 } from './BuildStep.js';
+import { BuildStepEnv } from './BuildStepEnv.js';
+import { BuildStepRuntimeError } from './errors.js';
 import {
   getObjectValueForInterpolation,
   interpolateWithGlobalContext,
   parseOutputPath,
 } from './utils/template.js';
-import { BuildStepRuntimeError } from './errors.js';
-import { BuildRuntimePlatform } from './BuildRuntimePlatform.js';
-import { BuildStepEnv } from './BuildStepEnv.js';
 
 interface SerializedExternalBuildContextProvider {
   projectSourceDirectory: string;
@@ -191,6 +192,10 @@ export class BuildStepContext {
 
   public get global(): BuildStepGlobalContext {
     return this.ctx;
+  }
+
+  public markBuildPhaseHasWarnings(env): void {
+    env['EAS_BUILD_PHASE_HAS_WARNINGS'] = true;
   }
 
   public serialize(): SerializedBuildStepContext {

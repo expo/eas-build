@@ -40,6 +40,8 @@ export enum BuildStepLogMarker {
   END_STEP = 'end-step',
 }
 
+const EAS_BUILD_PHASE_HAS_WARNINGS = 'EAS_BUILD_PHASE_HAS_WARNINGS';
+
 export type BuildStepFunction = (
   ctx: BuildStepContext,
   {
@@ -240,11 +242,14 @@ export class BuildStep extends BuildStepOutputAccessor {
         await this.exectuteFnAsync();
       }
 
+      if (this.status === BuildStepStatus.IN_PROGRESS) {
+        this.status = BuildStepStatus.SUCCESS;
+      }
+
       this.ctx.logger.info(
-        { marker: BuildStepLogMarker.END_STEP, result: BuildStepStatus.SUCCESS },
+        { marker: BuildStepLogMarker.END_STEP, result: this.status },
         `Finished build step "${this.displayName}" successfully`
       );
-      this.status = BuildStepStatus.SUCCESS;
     } catch (err) {
       this.ctx.logger.error({ err });
       this.ctx.logger.error(
@@ -411,9 +416,16 @@ export class BuildStep extends BuildStepOutputAccessor {
         return [basename, rawContents];
       })
     );
+
+    const envs = Object.fromEntries(entries);
+
+    if (envs[EAS_BUILD_PHASE_HAS_WARNINGS] === 'true') {
+      this.status = BuildStepStatus.WARNING;
+    }
+
     this.ctx.global.updateEnv({
       ...this.ctx.global.env,
-      ...Object.fromEntries(entries),
+      ...envs,
     });
   }
 

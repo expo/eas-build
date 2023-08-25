@@ -1,0 +1,5 @@
+#!/usr/bin/env bash
+
+set -eo pipefail
+
+set-env EAS_BUILD_PHASE_HAS_WARNINGS true

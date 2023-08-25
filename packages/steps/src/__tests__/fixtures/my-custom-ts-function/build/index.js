@@ -9,7 +9,7 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     });
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-function myTsFunction(ctx, { inputs, outputs, env, }) {
+function myTsFunctionAsync(ctx, { inputs, outputs, env, }) {
     return __awaiter(this, void 0, void 0, function* () {
         ctx.logger.info('Running my custom TS function');
         ctx.logger.info(`Hello, ${inputs.name.value}!}`);
@@ -21,6 +21,9 @@ function myTsFunction(ctx, { inputs, outputs, env, }) {
         ctx.logger.info('Running a command');
         ctx.logger.debug('Debugging a command');
         ctx.logger.fatal('Fatal error from my custom TS function');
+        if (inputs.isWarning.value) {
+            yield ctx.markBuildPhaseHasWarnings(env);
+        }
         ctx.logger.info('Setting outputs');
         outputs.name.set('Brent');
         outputs.num.set('123');
@@ -29,4 +32,4 @@ function myTsFunction(ctx, { inputs, outputs, env, }) {
         env['MY_ENV_VAR'] = 'my-value';
     });
 }
-exports.default = myTsFunction;
+exports.default = myTsFunctionAsync;

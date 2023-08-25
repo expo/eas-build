@@ -481,6 +481,20 @@ describe(BuildStep, () => {
         expect(error).toBeInstanceOf(BuildStepRuntimeError);
         expect(error.message).toMatch(/Some required outputs have not been set: "abc"/);
       });
+
+      it('sets step status to warning when `mark-warning` is used', async () => {
+        const id = 'test1';
+        const command = 'mark-warning';
+        const displayName = BuildStep.getDisplayName({ id, command });
+
+        const step = new BuildStep(baseStepCtx, {
+          id,
+          displayName,
+          command,
+        });
+        await step.executeAsync();
+        expect(step.status).toBe(BuildStepStatus.WARNING);
+      });
     });
 
     describe('fn', () => {

@@ -1,15 +1,16 @@
 import {
   BuildStepContext,
+  BuildStepEnv,
   BuildStepInput,
   BuildStepInputValueTypeName,
   BuildStepOutput,
-  BuildStepEnv,
 } from '@expo/steps';
 
 interface MyTsFunctionInputs {
   name: BuildStepInput<BuildStepInputValueTypeName.STRING, true>;
   num: BuildStepInput<BuildStepInputValueTypeName.NUMBER, true>;
   obj: BuildStepInput<BuildStepInputValueTypeName.JSON, true>;
+  isWarning: BuildStepInput<BuildStepInputValueTypeName.BOOLEAN, false>;
 }
 
 interface MyTsFunctionOutputs {
@@ -40,6 +41,10 @@ async function myTsFunctionAsync(
   ctx.logger.info('Running a command');
   ctx.logger.debug('Debugging a command');
   ctx.logger.fatal('Fatal error from my custom TS function');
+
+  if (inputs.isWarning.value) {
+    ctx.markBuildPhaseHasWarnings(env);
+  }
 
   ctx.logger.info('Setting outputs');
   outputs.name.set('Brent');
