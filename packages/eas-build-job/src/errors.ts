@@ -13,6 +13,7 @@ export interface ExternalBuildError {
   errorCode: string;
   message: string;
   docsUrl?: string;
+  buildPhase?: BuildPhase;
 }
 
 interface BuildErrorDetails {
@@ -46,6 +47,7 @@ export class BuildError extends Error {
       errorCode: this.userFacingErrorCode,
       message: this.userFacingMessage,
       docsUrl: this.docsUrl,
+      buildPhase: this.buildPhase,
     };
   }
 }
