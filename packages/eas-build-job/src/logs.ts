@@ -54,6 +54,57 @@ export enum BuildPhase {
   CUSTOM = 'CUSTOM',
 }
 
+export const buildPhaseDisplayName: Record<BuildPhase, string> = {
+  [BuildPhase.UNKNOWN]: 'Unknown build phase',
+  [BuildPhase.QUEUE]: 'Waiting to start',
+  [BuildPhase.SPIN_UP_BUILDER]: 'Spin up build environment',
+  [BuildPhase.SET_UP_BUILD_ENVIRONMENT]: 'Set up build environment',
+  [BuildPhase.BUILDER_INFO]: 'Builder environment info',
+  [BuildPhase.START_BUILD]: 'Start build',
+  [BuildPhase.INSTALL_CUSTOM_TOOLS]: 'Install custom tools',
+  [BuildPhase.PREPARE_PROJECT]: 'Prepare project',
+  [BuildPhase.RESTORE_CACHE]: 'Restore cache',
+  [BuildPhase.INSTALL_DEPENDENCIES]: 'Install dependencies',
+  [BuildPhase.EAS_BUILD_INTERNAL]: 'Resolve build configuration',
+  [BuildPhase.PREBUILD]: 'Prebuild',
+  [BuildPhase.PREPARE_CREDENTIALS]: 'Prepare credentials',
+  [BuildPhase.CONFIGURE_EXPO_UPDATES]: 'Configure expo-updates',
+  [BuildPhase.SAVE_CACHE]: 'Save cache',
+  [BuildPhase.UPLOAD_ARTIFACTS]: 'Upload artifacts',
+  [BuildPhase.UPLOAD_APPLICATION_ARCHIVE]: 'Upload application archive',
+  [BuildPhase.UPLOAD_BUILD_ARTIFACTS]: 'Upload build artifacts',
+  [BuildPhase.PREPARE_ARTIFACTS]: 'Prepare artifacts',
+  [BuildPhase.CLEAN_UP_CREDENTIALS]: 'Clean up credentials',
+  [BuildPhase.COMPLETE_BUILD]: 'Complete build',
+  [BuildPhase.FAIL_BUILD]: 'Fail build',
+  [BuildPhase.READ_APP_CONFIG]: 'Read app config',
+  [BuildPhase.READ_PACKAGE_JSON]: 'Read package.json',
+  [BuildPhase.RUN_EXPO_DOCTOR]: 'Run expo doctor',
+  [BuildPhase.DOWNLOAD_APPLICATION_ARCHIVE]: 'Download application archive',
+
+  // ANDROID
+  [BuildPhase.FIX_GRADLEW]: 'Fix gradlew',
+  [BuildPhase.RUN_GRADLEW]: 'Run gradlew',
+
+  // IOS
+  [BuildPhase.INSTALL_PODS]: 'Install pods',
+  [BuildPhase.CONFIGURE_XCODE_PROJECT]: 'Configure Xcode project',
+  [BuildPhase.RUN_FASTLANE]: 'Run fastlane',
+
+  // HOOKS
+  [BuildPhase.PRE_INSTALL_HOOK]: 'Pre-install hook',
+  [BuildPhase.POST_INSTALL_HOOK]: 'Post-install hook',
+  [BuildPhase.PRE_UPLOAD_ARTIFACTS_HOOK]: 'Pre-upload-artifacts hook',
+  [BuildPhase.ON_BUILD_SUCCESS_HOOK]: 'Build success hook',
+  [BuildPhase.ON_BUILD_ERROR_HOOK]: 'Build error hook',
+  [BuildPhase.ON_BUILD_COMPLETE_HOOK]: 'Build complete hook',
+  [BuildPhase.ON_BUILD_CANCEL_HOOK]: 'Build cancel hook',
+
+  // CUSTOM
+  [BuildPhase.CUSTOM]: 'Unknown build phase',
+  [BuildPhase.PARSE_CUSTOM_WORKFLOW_CONFIG]: 'Parse custom build config',
+};
+
 export enum BuildPhaseResult {
   SUCCESS = 'success',
   FAIL = 'failed',
