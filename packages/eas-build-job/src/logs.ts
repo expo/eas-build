@@ -105,6 +105,57 @@ export const buildPhaseDisplayName: Record<BuildPhase, string> = {
   [BuildPhase.PARSE_CUSTOM_WORKFLOW_CONFIG]: 'Parse custom build config',
 };
 
+export const buildPhaseWebsiteId: Record<BuildPhase, string> = {
+  [BuildPhase.UNKNOWN]: 'unknown',
+  [BuildPhase.QUEUE]: 'waiting-to-start',
+  [BuildPhase.SPIN_UP_BUILDER]: 'spin-up-build-environment',
+  [BuildPhase.SET_UP_BUILD_ENVIRONMENT]: 'set-up-build-environment',
+  [BuildPhase.BUILDER_INFO]: 'builder-environment-info',
+  [BuildPhase.START_BUILD]: 'start-build',
+  [BuildPhase.INSTALL_CUSTOM_TOOLS]: 'install-custom-tools',
+  [BuildPhase.PREPARE_PROJECT]: 'prepare-project',
+  [BuildPhase.RESTORE_CACHE]: 'restore-cache',
+  [BuildPhase.INSTALL_DEPENDENCIES]: 'install-dependencies',
+  [BuildPhase.EAS_BUILD_INTERNAL]: 'resolve-build-configuration',
+  [BuildPhase.PREBUILD]: 'prebuild',
+  [BuildPhase.PREPARE_CREDENTIALS]: 'prepare-credentials',
+  [BuildPhase.CONFIGURE_EXPO_UPDATES]: 'configure-expo-updates',
+  [BuildPhase.SAVE_CACHE]: 'save-cache',
+  [BuildPhase.UPLOAD_ARTIFACTS]: 'upload-artifacts',
+  [BuildPhase.UPLOAD_APPLICATION_ARCHIVE]: 'upload-application-archive',
+  [BuildPhase.UPLOAD_BUILD_ARTIFACTS]: 'upload-build-artifacts',
+  [BuildPhase.PREPARE_ARTIFACTS]: 'prepare-artifacts',
+  [BuildPhase.CLEAN_UP_CREDENTIALS]: 'clean-up-credentials',
+  [BuildPhase.COMPLETE_BUILD]: 'complete-build',
+  [BuildPhase.FAIL_BUILD]: 'fail-build',
+  [BuildPhase.READ_APP_CONFIG]: 'read-app-config',
+  [BuildPhase.READ_PACKAGE_JSON]: 'read-package-json',
+  [BuildPhase.RUN_EXPO_DOCTOR]: 'run-expo-doctor',
+  [BuildPhase.DOWNLOAD_APPLICATION_ARCHIVE]: 'download-application-archive',
+
+  // ANDROID
+  [BuildPhase.FIX_GRADLEW]: 'fix-gradlew',
+  [BuildPhase.RUN_GRADLEW]: 'run-gradlew',
+
+  // IOS
+  [BuildPhase.INSTALL_PODS]: 'install-pods',
+  [BuildPhase.CONFIGURE_XCODE_PROJECT]: 'configure-xcode-project',
+  [BuildPhase.RUN_FASTLANE]: 'run-fastlane',
+
+  // HOOKS
+  [BuildPhase.PRE_INSTALL_HOOK]: 'pre-install-hook',
+  [BuildPhase.POST_INSTALL_HOOK]: 'post-install-hook',
+  [BuildPhase.PRE_UPLOAD_ARTIFACTS_HOOK]: 'pre-upload-artifacts-hook',
+  [BuildPhase.ON_BUILD_SUCCESS_HOOK]: 'build-success-hook',
+  [BuildPhase.ON_BUILD_ERROR_HOOK]: 'build-error-hook',
+  [BuildPhase.ON_BUILD_COMPLETE_HOOK]: 'build-complete-hook',
+  [BuildPhase.ON_BUILD_CANCEL_HOOK]: 'build-cancel-hook',
+
+  // CUSTOM
+  [BuildPhase.CUSTOM]: 'custom',
+  [BuildPhase.PARSE_CUSTOM_WORKFLOW_CONFIG]: 'parse-custom-workflow-config',
+};
+
 export enum BuildPhaseResult {
   SUCCESS = 'success',
   FAIL = 'failed',
