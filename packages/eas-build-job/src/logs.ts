@@ -156,6 +156,8 @@ export const buildPhaseWebsiteId: Record<BuildPhase, string> = {
   [BuildPhase.PARSE_CUSTOM_WORKFLOW_CONFIG]: 'parse-custom-workflow-config',
 };
 
+export const XCODE_LOGS_BUILD_PHASE_WEBSITE_ID = 'xcode-logs';
+
 export enum BuildPhaseResult {
   SUCCESS = 'success',
   FAIL = 'failed',
