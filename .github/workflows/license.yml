@@ -2,6 +2,11 @@ name: License
 on:
   schedule:
     - cron: '0 0 1 1-12/3 *' # Run every three months
+  push:
+    branches:
+      - main
+    paths:
+      - .github/workflows/license.yml
 
 jobs:
   test:
