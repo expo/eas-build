@@ -1,7 +1,8 @@
 name: License
 on:
-  schedule:
-    - cron: '0 0 1 1-12/3 *' # Run every three months
+  push:
+    branches:
+      - '@szdziedzic/fix-licence-bump-workflow'
 
 jobs:
   test:
