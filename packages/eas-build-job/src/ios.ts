@@ -46,6 +46,7 @@ export interface BuilderEnvironment {
   image?: string;
   node?: string;
   yarn?: string;
+  bun?: string;
   pnpm?: string;
   expoCli?: string;
   bundler?: string;

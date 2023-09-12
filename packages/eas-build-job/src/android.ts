@@ -39,6 +39,7 @@ export interface BuilderEnvironment {
   node?: string;
   pnpm?: string;
   yarn?: string;
+  bun?: string;
   expoCli?: string;
   ndk?: string;
   env?: Env;
