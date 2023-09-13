@@ -39,6 +39,7 @@ describe('Android.JobSchema', () => {
         node: '1.2.3',
         yarn: '2.3.4',
         ndk: '4.5.6',
+        bun: '1.0.0',
         env: {
           SOME_ENV: '123',
         },
@@ -89,6 +90,7 @@ describe('Android.JobSchema', () => {
         node: '1.2.3',
         yarn: '2.3.4',
         ndk: '4.5.6',
+        bun: '1.0.0',
         env: {
           SOME_ENV: '123',
         },
