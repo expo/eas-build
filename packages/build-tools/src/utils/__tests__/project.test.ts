@@ -62,6 +62,22 @@ describe(runExpoCliCommand, () => {
       expect(spawn).toHaveBeenCalledWith('pnpm', ['expo', 'doctor'], expect.any(Object));
     });
 
+    it('spawns expo via "bun" when package manager is bun', () => {
+      const mockExpoConfig = mock<ExpoConfig>();
+      when(mockExpoConfig.sdkVersion).thenReturn('46.0.0');
+      const expoConfig = instance(mockExpoConfig);
+
+      const mockCtx = mock<BuildContext<Android.Job>>();
+      when(mockCtx.packageManager).thenReturn(PackageManager.BUN);
+      when(mockCtx.appConfig).thenReturn(expoConfig);
+      when(mockCtx.runGlobalExpoCliCommand).thenReturn(jest.fn());
+      const ctx = instance(mockCtx);
+
+      void runExpoCliCommand(ctx, ['doctor'], {}, { npmVersionAtLeast7: true });
+      expect(ctx.runGlobalExpoCliCommand).not.toHaveBeenCalled();
+      expect(spawn).toHaveBeenCalledWith('bun', ['expo', 'doctor'], expect.any(Object));
+    });
+
     it('calls ctx.runGlobalExpoCliCommand if forceUseGlobalExpoCli = true', () => {
       const mockExpoConfig = mock<ExpoConfig>();
       when(mockExpoConfig.sdkVersion).thenReturn('46.0.0');

@@ -6,6 +6,7 @@ export enum PackageManager {
   YARN = 'yarn',
   NPM = 'npm',
   PNPM = 'pnpm',
+  BUN = 'bun',
 }
 
 export function resolvePackageManager(directory: string): PackageManager {
@@ -15,6 +16,8 @@ export function resolvePackageManager(directory: string): PackageManager {
       return PackageManager.NPM;
     } else if (manager === 'pnpm') {
       return PackageManager.PNPM;
+    } else if (manager === 'bun') {
+      return PackageManager.BUN;
     } else {
       return PackageManager.YARN;
     }

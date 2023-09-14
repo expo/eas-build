@@ -36,6 +36,8 @@ export function runExpoCliCommand<TJob extends Job>(
       return spawn('yarn', argsWithExpo, options);
     } else if (ctx.packageManager === PackageManager.PNPM) {
       return spawn('pnpm', argsWithExpo, options);
+    } else if (ctx.packageManager === PackageManager.BUN) {
+      return spawn('bun', argsWithExpo, options);
     } else {
       throw new Error(`Unsupported package manager: ${ctx.packageManager}`);
     }
