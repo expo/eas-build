@@ -41,6 +41,7 @@
     "@types/jest": "^29.5.3",
     "@types/node": "^18.11.18",
     "@types/prompts": "^2.4.4",
+    "@vercel/ncc": "^0.38.0",
     "chalk": "4.1.2",
     "fs-extra": "^11.1.1",
     "ora": "^6.3.1",

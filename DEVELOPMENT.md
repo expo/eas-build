@@ -6,7 +6,6 @@
 
 - Install eas-cli (either from npm or use locally cloned repository)
 - Run `yarn && yarn start` in root of the repository
-- Run `npm i -g @vercel/ncc` (compiles the package with dependencies into one file, needed for running tests)
 - Run `yarn build` in the root of the repository (this allows using interdependencies in packages)
 - Test your changes by running build with flag `--local`
 
