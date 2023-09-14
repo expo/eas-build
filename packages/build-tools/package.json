@@ -26,7 +26,7 @@
     "@expo/downloader": "1.0.37",
     "@expo/eas-build-job": "1.0.43",
     "@expo/logger": "1.0.37",
-    "@expo/package-manager": "^1.0.2",
+    "@expo/package-manager": "1.1.1",
     "@expo/plist": "^0.0.20",
     "@expo/steps": "1.0.37",
     "@expo/template-file": "1.0.37",
