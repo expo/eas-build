@@ -57,6 +57,8 @@ export function createPrebuildBuildFunction(): BuildFunction {
         await spawn('yarn', argsWithExpo, options);
       } else if (packageManager === PackageManager.PNPM) {
         await spawn('pnpm', argsWithExpo, options);
+      } else if (packageManager === PackageManager.BUN) {
+        await spawn('bun', argsWithExpo, options);
       } else {
         throw new Error(`Unsupported package manager: ${packageManager}`);
       }

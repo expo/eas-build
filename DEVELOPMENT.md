@@ -6,6 +6,7 @@
 
 - Install eas-cli (either from npm or use locally cloned repository)
 - Run `yarn && yarn start` in root of the repository
+- Run `yarn build` in the root of the repository (this allows using interdependencies in packages)
 - Test your changes by running build with flag `--local`
 
 You can use the script below to simplify the development process. `./path/to/script build --local`
