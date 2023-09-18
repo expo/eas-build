@@ -21,6 +21,7 @@ import { PackageManager, resolvePackageManager } from './utils/packageManager';
 import { resolveBuildPhaseErrorAsync } from './buildErrors/detectError';
 import { readAppConfig } from './utils/appConfig';
 import { createTemporaryEnvironmentSecretFile } from './utils/environmentSecrets';
+import { readAppConfigUsingExpoConfigCommandAsync } from './utils/project';
 
 export enum ArtifactType {
   APPLICATION_ARCHIVE = 'APPLICATION_ARCHIVE',
@@ -166,16 +167,6 @@ export class BuildContext<TJob extends Job> {
   public get packageManager(): PackageManager {
     return resolvePackageManager(this.getReactNativeProjectDirectory());
   }
-  public get appConfig(): ExpoConfig {
-    if (!this._appConfig) {
-      this._appConfig = readAppConfig(
-        this.getReactNativeProjectDirectory(),
-        this.env,
-        this.logger
-      ).exp;
-    }
-    return this._appConfig;
-  }
 
   public async runBuildPhase<T>(
     buildPhase: BuildPhase,
@@ -248,6 +239,15 @@ export class BuildContext<TJob extends Job> {
     }
     this._job = { ...job, triggeredBy: this._job.triggeredBy };
     this._metadata = metadata;
+  }
+
+  public async getAppConfig(): Promise<ExpoConfig> {
+    if (!this._appConfig) {
+      this._appConfig =
+        (await readAppConfigUsingExpoConfigCommandAsync(this)) ??
+        readAppConfig(this.getReactNativeProjectDirectory(), this.env, this.logger).exp;
+    }
+    return this._appConfig;
   }
 
   private async handleBuildPhaseErrorAsync(

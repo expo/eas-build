@@ -143,7 +143,8 @@ export async function configureExpoUpdatesIfInstalledAsync(ctx: BuildContext<Job
   }
 
   const appConfigRuntimeVersion =
-    ctx.job.version?.runtimeVersion ?? getRuntimeVersionNullable(ctx.appConfig, ctx.job.platform);
+    ctx.job.version?.runtimeVersion ??
+    getRuntimeVersionNullable(await ctx.getAppConfig(), ctx.job.platform);
   if (ctx.metadata?.runtimeVersion && ctx.metadata?.runtimeVersion !== appConfigRuntimeVersion) {
     ctx.markBuildPhaseHasWarnings();
     ctx.logger.warn(
@@ -154,7 +155,7 @@ export async function configureExpoUpdatesIfInstalledAsync(ctx: BuildContext<Job
     );
   }
 
-  if (isEASUpdateConfigured(ctx)) {
+  if (await isEASUpdateConfigured(ctx)) {
     if (ctx.job.updates?.channel !== undefined) {
       await configureEASExpoUpdatesAsync(ctx);
     } else {
@@ -212,8 +213,8 @@ export async function getRuntimeVersionAsync(ctx: BuildContext<Job>): Promise<st
   }
 }
 
-export function isEASUpdateConfigured(ctx: BuildContext<Job>): boolean {
-  const rawUrl = ctx.appConfig.updates?.url;
+export async function isEASUpdateConfigured(ctx: BuildContext<Job>): Promise<boolean> {
+  const rawUrl = (await ctx.getAppConfig()).updates?.url;
   if (!rawUrl) {
     return false;
   }

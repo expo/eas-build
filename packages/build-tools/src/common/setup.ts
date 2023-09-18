@@ -63,7 +63,7 @@ export async function setupAsync<TJob extends Job>(ctx: BuildContext<TJob>): Pro
   }
 
   await ctx.runBuildPhase(BuildPhase.READ_APP_CONFIG, async () => {
-    const appConfig = ctx.appConfig;
+    const appConfig = await ctx.getAppConfig();
     ctx.logger.info('Using app configuration:');
     ctx.logger.info(JSON.stringify(appConfig, null, 2));
     await validateAppConfigAsync(ctx, appConfig);
@@ -96,7 +96,7 @@ async function runExpoDoctor<TJob extends Job>(ctx: BuildContext<TJob>): Promise
   const isAtLeastNpm7 = await isAtLeastNpm7Async();
   try {
     let promise: SpawnPromise<SpawnResult>;
-    if (!shouldUseGlobalExpoCli(ctx)) {
+    if (!(await shouldUseGlobalExpoCli(ctx))) {
       const argsPrefix = isAtLeastNpm7 ? ['-y'] : [];
       promise = spawn('npx', [...argsPrefix, 'expo-doctor'], {
         cwd: ctx.getReactNativeProjectDirectory(),

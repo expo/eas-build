@@ -4,9 +4,10 @@ import { Job } from '@expo/eas-build-job';
 import spawn, { SpawnOptions, SpawnPromise, SpawnResult } from '@expo/turtle-spawn';
 import fs from 'fs-extra';
 import semver from 'semver';
+import { ExpoConfig } from '@expo/config';
 
 import { BuildContext } from '../context';
-import { findPackagerRootDir, PackageManager } from '../utils/packageManager';
+import { findPackagerRootDir, isAtLeastNpm7Async, PackageManager } from '../utils/packageManager';
 
 /**
  * check if .yarnrc.yml exists in the project dir or in the workspace root dir
@@ -17,7 +18,7 @@ export async function isUsingYarn2(projectDir: string): Promise<boolean> {
   return (await fs.pathExists(yarnrcPath)) || (await fs.pathExists(yarnrcRootPath));
 }
 
-export function runExpoCliCommand<TJob extends Job>(
+export async function runExpoCliCommand<TJob extends Job>(
   ctx: BuildContext<TJob>,
   args: string[],
   options: SpawnOptions,
@@ -25,8 +26,8 @@ export function runExpoCliCommand<TJob extends Job>(
     forceUseGlobalExpoCli = false,
     npmVersionAtLeast7,
   }: { forceUseGlobalExpoCli?: boolean; npmVersionAtLeast7: boolean }
-): SpawnPromise<SpawnResult> {
-  if (shouldUseGlobalExpoCli(ctx, forceUseGlobalExpoCli)) {
+): Promise<SpawnPromise<SpawnResult>> {
+  if (await shouldUseGlobalExpoCli(ctx, forceUseGlobalExpoCli)) {
     return ctx.runGlobalExpoCliCommand(args, options, npmVersionAtLeast7);
   } else {
     const argsWithExpo = ['expo', ...args];
@@ -44,15 +45,38 @@ export function runExpoCliCommand<TJob extends Job>(
   }
 }
 
-export function shouldUseGlobalExpoCli<TJob extends Job>(
+export async function readAppConfigUsingExpoConfigCommandAsync<TJob extends Job>(
+  ctx: BuildContext<TJob>
+): Promise<ExpoConfig | null> {
+  try {
+    const { stdout } = await runExpoCliCommand(
+      ctx,
+      ['config', '--type', 'public', '--json'],
+      {
+        cwd: ctx.getReactNativeProjectDirectory(),
+        logger: ctx.logger,
+        env: ctx.env,
+      },
+      {
+        npmVersionAtLeast7: await isAtLeastNpm7Async(),
+      }
+    );
+    return JSON.parse(stdout) as ExpoConfig;
+  } catch {
+    return null;
+  }
+}
+
+export async function shouldUseGlobalExpoCli<TJob extends Job>(
   ctx: BuildContext<TJob>,
   forceUseGlobalExpoCli = false
-): boolean {
+): Promise<boolean> {
+  const config = await ctx.getAppConfig();
   return (
     forceUseGlobalExpoCli ||
     ctx.env.EXPO_USE_LOCAL_CLI === '0' ||
-    !ctx.appConfig.sdkVersion ||
-    semver.satisfies(ctx.appConfig.sdkVersion, '<46')
+    !config.sdkVersion ||
+    semver.satisfies(config.sdkVersion, '<46')
   );
 }
 

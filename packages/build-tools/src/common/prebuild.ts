@@ -31,14 +31,16 @@ export async function prebuildAsync<TJob extends Job>(
     },
   };
 
-  const prebuildCommandArgs = getPrebuildCommandArgs(ctx);
+  const prebuildCommandArgs = await getPrebuildCommandArgs(ctx);
   await runExpoCliCommand(ctx, prebuildCommandArgs, spawnOptions, {
     npmVersionAtLeast7: await isAtLeastNpm7Async(),
   });
   await installDependenciesAsync(ctx, { logger, workingDir: resolvePackagerDir(ctx) });
 }
 
-function getPrebuildCommandArgs<TJob extends Job>(ctx: BuildContext<TJob>): string[] {
+async function getPrebuildCommandArgs<TJob extends Job>(
+  ctx: BuildContext<TJob>
+): Promise<string[]> {
   let prebuildCommand =
     ctx.job.experimental?.prebuildCommand ??
     `prebuild --non-interactive --no-install --platform ${ctx.job.platform}`;
@@ -57,7 +59,7 @@ function getPrebuildCommandArgs<TJob extends Job>(ctx: BuildContext<TJob>): stri
   if (prebuildCommand.startsWith(expoCliCommandPrefix)) {
     prebuildCommand = prebuildCommand.substring(expoCliCommandPrefix.length).trim();
   }
-  if (!shouldUseGlobalExpoCli(ctx)) {
+  if (!(await shouldUseGlobalExpoCli(ctx))) {
     prebuildCommand = prebuildCommand.replace(' --non-interactive', '');
   }
   return prebuildCommand.split(' ');
