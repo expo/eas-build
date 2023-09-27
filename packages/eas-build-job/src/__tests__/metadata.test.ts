@@ -23,6 +23,7 @@ describe('MetadataSchema', () => {
       buildMode: 'build',
       customWorkflowName: 'blah blah',
       developmentClient: true,
+      requiredPackageManager: 'yarn',
     };
     const { value, error } = MetadataSchema.validate(metadata, {
       stripUnknown: true,
@@ -53,6 +54,7 @@ describe('MetadataSchema', () => {
       buildMode: 'resign',
       customWorkflowName: 'blah blah',
       developmentClient: true,
+      requiredPackageManager: 'yarn',
     };
     const { error } = MetadataSchema.validate(metadata, {
       stripUnknown: true,

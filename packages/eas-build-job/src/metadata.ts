@@ -149,6 +149,11 @@ export type Metadata = {
    * Indicates whether this is (likely, we can't be 100% sure) development client build.
    */
   developmentClient?: boolean;
+
+  /**
+   * Which package manager will be used for the build. Determined based on lockfiles in the project directory.
+   */
+  requiredPackageManager?: 'npm' | 'pnpm' | 'yarn' | 'bun';
 };
 
 export const MetadataSchema = Joi.object({
@@ -180,6 +185,7 @@ export const MetadataSchema = Joi.object({
   buildMode: Joi.string().valid('build', 'resign', 'custom'),
   customWorkflowName: Joi.string(),
   developmentClient: Joi.boolean(),
+  requiredPackageManager: Joi.string().valid('npm', 'pnpm', 'yarn', 'bun'),
 });
 
 export function sanitizeMetadata(metadata: object): Metadata {
