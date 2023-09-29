@@ -74,6 +74,7 @@ export type Metadata = {
   /**
    * Distribution type
    * Indicates whether this is a build for store, internal distribution, or simulator (iOS).
+   * simulator is deprecated, use simulator flag instead
    */
   distribution?: 'store' | 'internal' | 'simulator';
 
@@ -154,6 +155,11 @@ export type Metadata = {
    * Which package manager will be used for the build. Determined based on lockfiles in the project directory.
    */
   requiredPackageManager?: 'npm' | 'pnpm' | 'yarn' | 'bun';
+
+  /**
+   * Indicates if this is an iOS build for a simulator
+   */
+  simulator?: boolean;
 };
 
 export const MetadataSchema = Joi.object({
@@ -186,6 +192,7 @@ export const MetadataSchema = Joi.object({
   customWorkflowName: Joi.string(),
   developmentClient: Joi.boolean(),
   requiredPackageManager: Joi.string().valid('npm', 'pnpm', 'yarn', 'bun'),
+  simulator: Joi.boolean(),
 });
 
 export function sanitizeMetadata(metadata: object): Metadata {
