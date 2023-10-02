@@ -24,6 +24,7 @@ describe('MetadataSchema', () => {
       customWorkflowName: 'blah blah',
       developmentClient: true,
       requiredPackageManager: 'yarn',
+      simulator: true,
     };
     const { value, error } = MetadataSchema.validate(metadata, {
       stripUnknown: true,
@@ -55,6 +56,7 @@ describe('MetadataSchema', () => {
       customWorkflowName: 'blah blah',
       developmentClient: true,
       requiredPackageManager: 'yarn',
+      simulator: false,
     };
     const { error } = MetadataSchema.validate(metadata, {
       stripUnknown: true,
