@@ -25,8 +25,8 @@ export async function buildAsync(job: Job, metadata: Metadata): Promise<void> {
     const unfilteredEnv: Record<string, string | undefined> = {
       ...process.env,
       ...job.builderEnvironment?.env,
-      // We don't use Node.js mirror locally
-      NVM_NODEJS_ORG_MIRROR: undefined,
+      // We don't use Node.js mirror locally, but a user might
+      NVM_NODEJS_ORG_MIRROR: process.env.NVM_NODEJS_ORG_MIRROR,
       EAS_BUILD: '1',
       EAS_BUILD_RUNNER: 'local-build-plugin',
       EAS_BUILD_PLATFORM: job.platform,
