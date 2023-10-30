@@ -18,7 +18,7 @@ export async function installDependenciesAsync<TJob extends Job>(
   } else if (ctx.packageManager === PackageManager.YARN) {
     const isYarn2 = await isUsingYarn2(ctx.getReactNativeProjectDirectory());
     if (isYarn2) {
-      args = ['install', '--no-immutable'];
+      args = ['install', '--no-immutable', '--inline-builds'];
     }
   }
   logger.info(`Running "${ctx.packageManager} ${args.join(' ')}" in ${workingDir} directory`);

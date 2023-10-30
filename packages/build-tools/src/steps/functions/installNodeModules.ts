@@ -33,7 +33,7 @@ export async function installNodeModules(
   } else if (packageManager === PackageManager.YARN) {
     const isYarn2 = await isUsingYarn2(stepCtx.workingDirectory);
     if (isYarn2) {
-      args = ['install', '--no-immutable'];
+      args = ['install', '--no-immutable', '--inline-builds'];
     }
   }
   logger.info(`Running "${packageManager} ${args.join(' ')}" in ${packagerRunDir} directory`);
