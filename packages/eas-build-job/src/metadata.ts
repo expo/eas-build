@@ -165,6 +165,11 @@ export type Metadata = {
    * Image selected by user for the build. If user didn't select any image and wants to use default for the given RN and SDK version it will undefined.
    */
   selectedImage?: string;
+
+  /**
+   * Custom node version selected by user for the build. If user didn't select any node version and wants to use default it will be undefined.
+   */
+  customNodeVersion?: string;
 };
 
 export const MetadataSchema = Joi.object({
@@ -199,6 +204,7 @@ export const MetadataSchema = Joi.object({
   requiredPackageManager: Joi.string().valid('npm', 'pnpm', 'yarn', 'bun'),
   simulator: Joi.boolean(),
   selectedImage: Joi.string(),
+  customNodeVersion: Joi.string(),
 });
 
 export function sanitizeMetadata(metadata: object): Metadata {
