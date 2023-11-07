@@ -160,6 +160,11 @@ export type Metadata = {
    * Indicates if this is an iOS build for a simulator
    */
   simulator?: boolean;
+
+  /**
+   * Image selected by user for the build. If user didn't select any image and wants to use default for the given RN and SDK version it will undefined.
+   */
+  selectedImage?: string;
 };
 
 export const MetadataSchema = Joi.object({
@@ -193,6 +198,7 @@ export const MetadataSchema = Joi.object({
   developmentClient: Joi.boolean(),
   requiredPackageManager: Joi.string().valid('npm', 'pnpm', 'yarn', 'bun'),
   simulator: Joi.boolean(),
+  selectedImage: Joi.string(),
 });
 
 export function sanitizeMetadata(metadata: object): Metadata {

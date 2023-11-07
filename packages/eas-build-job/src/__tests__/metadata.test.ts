@@ -25,6 +25,7 @@ describe('MetadataSchema', () => {
       developmentClient: true,
       requiredPackageManager: 'yarn',
       simulator: true,
+      selectedImage: 'default',
     };
     const { value, error } = MetadataSchema.validate(metadata, {
       stripUnknown: true,
@@ -57,6 +58,7 @@ describe('MetadataSchema', () => {
       developmentClient: true,
       requiredPackageManager: 'yarn',
       simulator: false,
+      selectedImage: 'default',
     };
     const { error } = MetadataSchema.validate(metadata, {
       stripUnknown: true,
