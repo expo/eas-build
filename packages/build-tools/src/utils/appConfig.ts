@@ -1,6 +1,7 @@
 import { getConfig, ProjectConfig } from '@expo/config';
 import { Env } from '@expo/eas-build-job';
 import { bunyan, LoggerLevel } from '@expo/logger';
+import { load } from '@expo/env';
 
 export function readAppConfig(projectDir: string, env: Env, logger: bunyan): ProjectConfig {
   const originalProcessEnv: NodeJS.ProcessEnv = process.env;
@@ -11,7 +12,7 @@ export function readAppConfig(projectDir: string, env: Env, logger: bunyan): Pro
 
   const stdoutStore: { text: string; level: LoggerLevel }[] = [];
   try {
-    process.env = { ...env };
+    process.env = { ...env, ...load(projectDir) };
     process.exit = () => {
       throw new Error('Failed to evaluate app config file');
     };
