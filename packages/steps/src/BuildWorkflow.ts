@@ -17,19 +17,20 @@ export class BuildWorkflow {
 
   public async executeAsync(): Promise<void> {
     let maybeError: Error | null = null;
-    let hasAnyPreviousStepsFailed = false;
+    let hasAnyPreviousStepFailed = false;
     for (const step of this.buildSteps) {
-      if (step.shouldExecuteStep(hasAnyPreviousStepsFailed)) {
+      if (step.shouldExecuteStep(hasAnyPreviousStepFailed)) {
         try {
           await step.executeAsync();
         } catch (err: any) {
           maybeError = err;
-          hasAnyPreviousStepsFailed = true;
+          hasAnyPreviousStepFailed = true;
         }
       } else {
         step.skip();
       }
     }
+
     if (maybeError) {
       throw maybeError;
     }

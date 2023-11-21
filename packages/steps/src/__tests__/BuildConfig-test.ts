@@ -301,7 +301,7 @@ describe(validateConfig, () => {
           expect(() => {
             validateConfig(BuildConfigSchema, buildConfig);
           }).toThrowError(
-            /"build.steps\[0\].run.if" with value "error" fails to match the step if condition regex pattern/
+            /"build.steps\[0\].run.if" with value "error" fails to match the allowed "if" condition values regex pattern/
           );
         });
         test('valid command', () => {
@@ -537,7 +537,7 @@ describe(validateConfig, () => {
           expect(() => {
             validateConfig(BuildConfigSchema, buildConfig);
           }).toThrowError(
-            /"build.steps\[0\].say_hi.if" with value "error" fails to match the step if condition regex pattern/
+            /"build.steps\[0\].say_hi.if" with value "error" fails to match the allowed "if" condition values regex pattern/
           );
         });
         test('call with inputs boolean', () => {

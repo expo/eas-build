@@ -195,7 +195,10 @@ const BuildFunctionCallSchema = Joi.object({
   workingDirectory: Joi.string(),
   shell: Joi.string(),
   env: Joi.object().pattern(Joi.string(), Joi.string().allow('')),
-  if: Joi.string().pattern(BUILD_STEP_IF_CONDITION_EXPRESSION_REGEXP, 'step if condition regex'),
+  if: Joi.string().pattern(
+    BUILD_STEP_IF_CONDITION_EXPRESSION_REGEXP,
+    'allowed "if" condition values regex'
+  ),
 }).rename('working_directory', 'workingDirectory');
 
 const BuildStepConfigSchema = Joi.any<BuildStepConfig>()
