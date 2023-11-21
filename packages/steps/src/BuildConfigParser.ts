@@ -28,7 +28,7 @@ import { BuildStepGlobalContext } from './BuildStepContext.js';
 import { BuildStepOutput, BuildStepOutputProvider } from './BuildStepOutput.js';
 import { BuildWorkflow } from './BuildWorkflow.js';
 import { BuildWorkflowValidator } from './BuildWorkflowValidator.js';
-import { BuildStepRuntimeError } from './errors.js';
+import { BuildConfigError } from './errors.js';
 import { duplicates } from './utils/expodash/duplicates.js';
 import { uniq } from './utils/expodash/uniq.js';
 
@@ -73,8 +73,12 @@ export class BuildConfigParser {
       return this.createBuildStepFromBuildStepBareCommandRun(buildStepConfig);
     } else if (isBuildStepBareFunctionCall(buildStepConfig)) {
       return this.createBuildStepFromBuildStepBareFunctionCall(buildFunctions, buildStepConfig);
-    } else {
+    } else if (buildStepConfig !== null) {
       return this.createBuildStepFromBuildStepFunctionCall(buildFunctions, buildStepConfig);
+    } else {
+      throw new BuildConfigError(
+        'Invalid build step configuration detected. Build step cannot be empty.'
+      );
     }
   }
 
@@ -284,7 +288,7 @@ export class BuildConfigParser {
     if (duplicatedExternalFunctionIds.length === 0) {
       return;
     }
-    throw new BuildStepRuntimeError(
+    throw new BuildConfigError(
       `Provided external functions with duplicated IDs: ${duplicatedExternalFunctionIds
         .map((id) => `"${id}"`)
         .join(', ')}`
