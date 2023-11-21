@@ -15,7 +15,6 @@ export function readAppConfig({
   logger: bunyan;
   sdkVersion?: string;
 }): ProjectConfig {
-  const originalProcessEnv: NodeJS.ProcessEnv = process.env;
   const originalProcessExit = process.exit;
   const originalProcessCwd = process.cwd;
   const originalStdoutWrite = process.stdout.write;
@@ -24,8 +23,11 @@ export function readAppConfig({
   const stdoutStore: { text: string; level: LoggerLevel }[] = [];
   const shouldLoadEnvVarsFromDotenvFile = sdkVersion && semver.satisfies(sdkVersion, '>=49');
   const envVarsFromDotenvFile = shouldLoadEnvVarsFromDotenvFile ? load(projectDir) : {};
+  const newEnvsToUse = { ...envVarsFromDotenvFile, ...env };
   try {
-    process.env = { ...env, ...envVarsFromDotenvFile };
+    for (const [key, value] of Object.entries(newEnvsToUse)) {
+      process.env[key] = value;
+    }
     process.exit = () => {
       throw new Error('Failed to evaluate app config file');
     };
@@ -50,7 +52,9 @@ export function readAppConfig({
     });
     throw err;
   } finally {
-    process.env = originalProcessEnv;
+    for (const [key] of Object.entries(newEnvsToUse)) {
+      delete process.env[key];
+    }
     process.exit = originalProcessExit;
     process.cwd = originalProcessCwd;
     process.stdout.write = originalStdoutWrite;
