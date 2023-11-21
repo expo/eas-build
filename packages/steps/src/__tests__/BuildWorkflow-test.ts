@@ -131,7 +131,7 @@ describe(BuildWorkflow, () => {
       verify(mockBuildStep3.executeAsync()).once();
     });
 
-    it('throws always the fist error', async () => {
+    it('throws always the first error', async () => {
       const mockBuildStep1 = mock<BuildStep>();
       const mockBuildStep2 = mock<BuildStep>();
       const mockBuildStep3 = mock<BuildStep>();
