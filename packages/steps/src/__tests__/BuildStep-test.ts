@@ -971,3 +971,77 @@ describe(BuildStep.deserialize, () => {
     expect(step.getOutputValueByName('abc')).toBe('123');
   });
 });
+
+describe(BuildStep.prototype.shouldExecuteStep, () => {
+  it('returns true when if condition is always and previous steps failed', () => {
+    const ctx = createGlobalContextMock();
+    const step = new BuildStep(ctx, {
+      id: 'test1',
+      displayName: 'Test 1',
+      command: 'echo 123',
+      ifCondition: '${ always() }',
+    });
+    const hasAnyPreviousStepsFailed = true;
+    expect(step.shouldExecuteStep(hasAnyPreviousStepsFailed)).toBe(true);
+  });
+
+  it('returns true when if condition is always and previous steps have not failed', () => {
+    const ctx = createGlobalContextMock();
+    const step = new BuildStep(ctx, {
+      id: 'test1',
+      displayName: 'Test 1',
+      command: 'echo 123',
+      ifCondition: '${ always() }',
+    });
+    const hasAnyPreviousStepsFailed = false;
+    expect(step.shouldExecuteStep(hasAnyPreviousStepsFailed)).toBe(true);
+  });
+
+  it('returns false when if condition is success and previous steps failed', () => {
+    const ctx = createGlobalContextMock();
+    const step = new BuildStep(ctx, {
+      id: 'test1',
+      displayName: 'Test 1',
+      command: 'echo 123',
+      ifCondition: '${ success() }',
+    });
+    const hasAnyPreviousStepsFailed = true;
+    expect(step.shouldExecuteStep(hasAnyPreviousStepsFailed)).toBe(false);
+  });
+
+  it('returns true when if condition is success and previous steps have not failed', () => {
+    const ctx = createGlobalContextMock();
+    const step = new BuildStep(ctx, {
+      id: 'test1',
+      displayName: 'Test 1',
+      command: 'echo 123',
+      ifCondition: '${ success() }',
+    });
+    const hasAnyPreviousStepsFailed = false;
+    expect(step.shouldExecuteStep(hasAnyPreviousStepsFailed)).toBe(true);
+  });
+
+  it('returns true when if condition is failure and previous steps failed', () => {
+    const ctx = createGlobalContextMock();
+    const step = new BuildStep(ctx, {
+      id: 'test1',
+      displayName: 'Test 1',
+      command: 'echo 123',
+      ifCondition: '${ failure() }',
+    });
+    const hasAnyPreviousStepsFailed = true;
+    expect(step.shouldExecuteStep(hasAnyPreviousStepsFailed)).toBe(true);
+  });
+
+  it('returns false when if condition is failure and previous steps have not failed', () => {
+    const ctx = createGlobalContextMock();
+    const step = new BuildStep(ctx, {
+      id: 'test1',
+      displayName: 'Test 1',
+      command: 'echo 123',
+      ifCondition: '${ failure() }',
+    });
+    const hasAnyPreviousStepsFailed = false;
+    expect(step.shouldExecuteStep(hasAnyPreviousStepsFailed)).toBe(false);
+  });
+});

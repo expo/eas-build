@@ -299,5 +299,19 @@ describe(BuildFunction, () => {
         ENV2: 'env2',
       });
     });
+    it('passes ifCondition to build step', () => {
+      const ctx = createGlobalContextMock();
+      const func = new BuildFunction({
+        id: 'test1',
+        name: 'Test function',
+        command: 'echo test',
+      });
+      const step = func.createBuildStepFromFunctionCall(ctx, {
+        id: 'buildStep1',
+        workingDirectory: ctx.defaultWorkingDirectory,
+        ifCondition: '${ always() }',
+      });
+      expect(step.ifCondition).toBe('${ always() }');
+    });
   });
 });

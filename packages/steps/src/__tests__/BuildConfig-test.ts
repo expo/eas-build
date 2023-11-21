@@ -42,6 +42,8 @@ describe(readAndValidateBuildConfigAsync, () => {
     expect(config.build.steps[0].run).toBe('echo "Hi!"');
     assert(isBuildStepCommandRun(config.build.steps[2]));
     expect(config.build.steps[2].run.env).toMatchObject({ FOO: 'bar', BAR: 'baz' });
+    assert(isBuildStepCommandRun(config.build.steps[5]));
+    expect(config.build.steps[5].run.if).toBe('${ always() }');
   });
   test('valid custom build config with imports', async () => {
     const config = await readAndValidateBuildConfigAsync(
@@ -282,6 +284,26 @@ describe(validateConfig, () => {
             validateConfig(BuildConfigSchema, buildConfig);
           }).toThrowError(/"build.steps\[0\].run.env.ENV1" must be a string/);
         });
+        test('invalid if statement', () => {
+          const buildConfig = {
+            build: {
+              steps: [
+                {
+                  run: {
+                    command: 'echo 123',
+                    if: 'error',
+                  },
+                },
+              ],
+            },
+          };
+
+          expect(() => {
+            validateConfig(BuildConfigSchema, buildConfig);
+          }).toThrowError(
+            /"build.steps\[0\].run.if" with value "error" fails to match the allowed "if" condition values regex pattern/
+          );
+        });
         test('valid command', () => {
           const buildConfig = {
             build: {
@@ -293,6 +315,7 @@ describe(validateConfig, () => {
                       FOO: 'bar',
                       BAZ: 'baz',
                     },
+                    if: '${ always() }',
                   },
                 },
               ],
@@ -418,6 +441,31 @@ describe(validateConfig, () => {
             validateConfig(BuildConfigSchema, buildConfig);
           }).not.toThrowError();
         });
+        test('call with if statement', () => {
+          const buildConfig = {
+            build: {
+              steps: [
+                {
+                  say_hi: {
+                    if: '${ success() }',
+                    inputs: {
+                      name: 'Dominik',
+                    },
+                  },
+                },
+              ],
+            },
+            functions: {
+              say_hi: {
+                command: 'echo "Hi, ${ inputs.name }!"',
+              },
+            },
+          };
+
+          expect(() => {
+            validateConfig(BuildConfigSchema, buildConfig);
+          }).not.toThrowError();
+        });
         test('invalid env type', () => {
           const buildConfig = {
             build: {
@@ -467,6 +515,30 @@ describe(validateConfig, () => {
           expect(() => {
             validateConfig(BuildConfigSchema, buildConfig);
           }).toThrowError(/"build.steps\[0\].say_hi.env.ENV1" must be a string/);
+        });
+        test('invalid if statement', () => {
+          const buildConfig = {
+            build: {
+              steps: [
+                {
+                  say_hi: {
+                    if: 'error',
+                  },
+                },
+              ],
+            },
+            functions: {
+              say_hi: {
+                command: 'echo "Hi!"',
+              },
+            },
+          };
+
+          expect(() => {
+            validateConfig(BuildConfigSchema, buildConfig);
+          }).toThrowError(
+            /"build.steps\[0\].say_hi.if" with value "error" fails to match the allowed "if" condition values regex pattern/
+          );
         });
         test('call with inputs boolean', () => {
           const buildConfig = {

@@ -25,6 +25,7 @@ build:
         working_directory: /home/dsokal
         command: ls -la
     - run:
+        if: ${ always() }
         name: Use non-default shell
         shell: /nib/hsab
         command: echo 123
