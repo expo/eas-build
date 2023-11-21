@@ -130,5 +130,31 @@ describe(BuildWorkflow, () => {
       verify(mockBuildStep2.executeAsync()).once();
       verify(mockBuildStep3.executeAsync()).once();
     });
+
+    it('throws always the fist error', async () => {
+      const mockBuildStep1 = mock<BuildStep>();
+      const mockBuildStep2 = mock<BuildStep>();
+      const mockBuildStep3 = mock<BuildStep>();
+      when(mockBuildStep3.shouldExecuteStep(anything())).thenReturn(true);
+      when(mockBuildStep2.shouldExecuteStep(anything())).thenReturn(true);
+      when(mockBuildStep1.shouldExecuteStep(anything())).thenReturn(true);
+      when(mockBuildStep1.executeAsync()).thenReject(new Error('Step 1 failed'));
+      when(mockBuildStep2.executeAsync()).thenReject(new Error('Step 2 failed'));
+      when(mockBuildStep3.executeAsync()).thenReject(new Error('Step 3 failed'));
+
+      const buildSteps: BuildStep[] = [
+        instance(mockBuildStep1),
+        instance(mockBuildStep2),
+        instance(mockBuildStep3),
+      ];
+
+      const ctx = createGlobalContextMock();
+      const workflow = new BuildWorkflow(ctx, { buildSteps, buildFunctions: {} });
+      await expect(workflow.executeAsync()).rejects.toThrowError('Step 1 failed');
+
+      verify(mockBuildStep1.executeAsync()).once();
+      verify(mockBuildStep2.executeAsync()).once();
+      verify(mockBuildStep3.executeAsync()).once();
+    });
   });
 });
