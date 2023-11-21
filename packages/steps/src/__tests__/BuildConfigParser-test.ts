@@ -30,7 +30,7 @@ describe(BuildConfigParser, () => {
           ],
         });
       });
-      expect(error).toBeInstanceOf(BuildStepRuntimeError);
+      expect(error).toBeInstanceOf(BuildConfigError);
       expect(error.message).toMatch(/Provided external functions with duplicated IDs/);
     });
 

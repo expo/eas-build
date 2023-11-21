@@ -391,15 +391,15 @@ export function mergeConfigWithImportedFunctions(
 }
 
 export function isBuildStepCommandRun(step: BuildStepConfig): step is BuildStepCommandRun {
-  return step !== null && typeof step === 'object' && typeof step.run === 'object';
+  return Boolean(step) && typeof step === 'object' && typeof step.run === 'object';
 }
 
 export function isBuildStepBareCommandRun(step: BuildStepConfig): step is BuildStepBareCommandRun {
-  return step !== null && typeof step === 'object' && typeof step.run === 'string';
+  return Boolean(step) && typeof step === 'object' && typeof step.run === 'string';
 }
 
 export function isBuildStepFunctionCall(step: BuildStepConfig): step is BuildStepFunctionCall {
-  return step !== null && typeof step === 'object' && !('run' in step);
+  return Boolean(step) && typeof step === 'object' && !('run' in step);
 }
 
 export function isBuildStepBareFunctionCall(
