@@ -21,7 +21,10 @@ import {
   saveScriptToTemporaryFileAsync,
 } from './BuildTemporaryFiles.js';
 import { spawnAsync } from './utils/shell/spawn.js';
-import { interpolateWithInputs } from './utils/template.js';
+import {
+  getSelectedStatusCheckFromIfStatementTemplate,
+  interpolateWithInputs,
+} from './utils/template.js';
 import { BuildStepRuntimeError } from './errors.js';
 import { BuildStepEnv } from './BuildStepEnv.js';
 import { BuildRuntimePlatform } from './BuildRuntimePlatform.js';
@@ -125,6 +128,7 @@ export class BuildStep extends BuildStepOutputAccessor {
   public readonly shell: string;
   public readonly ctx: BuildStepContext;
   public readonly env: BuildStepEnv;
+  public readonly ifCondition?: string;
   public status: BuildStepStatus;
 
   private readonly internalId: string;
@@ -177,6 +181,7 @@ export class BuildStep extends BuildStepOutputAccessor {
       shell,
       supportedRuntimePlatforms: maybeSupportedRuntimePlatforms,
       env,
+      ifCondition,
     }: {
       id: string;
       name?: string;
@@ -189,6 +194,7 @@ export class BuildStep extends BuildStepOutputAccessor {
       shell?: string;
       supportedRuntimePlatforms?: BuildRuntimePlatform[];
       env?: BuildStepEnv;
+      ifCondition?: string;
     }
   ) {
     assert(command !== undefined || fn !== undefined, 'Either command or fn must be defined.');
@@ -207,6 +213,7 @@ export class BuildStep extends BuildStepOutputAccessor {
     this.fn = fn;
     this.command = command;
     this.shell = shell ?? getDefaultShell();
+    this.ifCondition = ifCondition;
     this.status = BuildStepStatus.NEW;
 
     this.internalId = uuidv4();
@@ -278,6 +285,31 @@ export class BuildStep extends BuildStepOutputAccessor {
     return (
       !this.supportedRuntimePlatforms ||
       this.supportedRuntimePlatforms.includes(this.ctx.global.runtimePlatform)
+    );
+  }
+
+  public shouldExecuteStep(hasAnyPreviousStepsFailed: boolean): boolean {
+    const defaultStatusCheck = 'success';
+    const statusCheck = this.ifCondition
+      ? getSelectedStatusCheckFromIfStatementTemplate(this.ifCondition)
+      : defaultStatusCheck;
+
+    switch (statusCheck) {
+      case 'success':
+        return !hasAnyPreviousStepsFailed;
+      case 'failure':
+        return hasAnyPreviousStepsFailed;
+      case 'always':
+        return true;
+    }
+  }
+
+  public skip(): void {
+    this.status = BuildStepStatus.CANCELED;
+    this.ctx.logger.info({ marker: BuildStepLogMarker.START_STEP });
+    this.ctx.logger.info(
+      { marker: BuildStepLogMarker.END_STEP, result: BuildStepStatus.CANCELED },
+      `Skipped build step "${this.displayName}"`
     );
   }
 

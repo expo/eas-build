@@ -16,8 +16,22 @@ export class BuildWorkflow {
   }
 
   public async executeAsync(): Promise<void> {
+    let maybeError: Error | null = null;
+    let hasAnyPreviousStepsFailed = false;
     for (const step of this.buildSteps) {
-      await step.executeAsync();
+      if (step.shouldExecuteStep(hasAnyPreviousStepsFailed)) {
+        try {
+          await step.executeAsync();
+        } catch (err: any) {
+          maybeError = err;
+          hasAnyPreviousStepsFailed = true;
+        }
+      } else {
+        step.skip();
+      }
+    }
+    if (maybeError) {
+      throw maybeError;
     }
   }
 }

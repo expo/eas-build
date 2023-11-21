@@ -137,6 +137,7 @@ describe(BuildConfigParser, () => {
       expect(step5.env).toMatchObject({});
 
       // - run:
+      //     if: ${ always() }
       //     name: Use non-default shell
       //     shell: /nib/hsab
       //     command: echo 123
@@ -147,6 +148,7 @@ describe(BuildConfigParser, () => {
       expect(step6.ctx.workingDirectory).toBe(ctx.defaultWorkingDirectory);
       expect(step6.shell).toBe('/nib/hsab');
       expect(step6.env).toMatchObject({});
+      expect(step6.ifCondition).toBe('${ always() }');
     });
 
     it('parses inputs', async () => {

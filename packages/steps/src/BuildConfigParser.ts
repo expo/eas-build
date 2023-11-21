@@ -88,6 +88,7 @@ export class BuildConfigParser {
       shell,
       command,
       env,
+      if: ifCondition,
     } = run;
     const id = BuildStep.getNewId(maybeId);
     const displayName = BuildStep.getDisplayName({ id, name, command });
@@ -105,6 +106,7 @@ export class BuildConfigParser {
       shell,
       command,
       env,
+      ifCondition,
     });
   }
 
@@ -147,6 +149,7 @@ export class BuildConfigParser {
       workingDirectory: buildFunctionCallConfig.workingDirectory,
       shell: buildFunctionCallConfig.shell,
       env: buildFunctionCallConfig.env,
+      ifCondition: buildFunctionCallConfig.if,
     });
   }
 

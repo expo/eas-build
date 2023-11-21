@@ -9,6 +9,7 @@ export const BUILD_STEP_INPUT_EXPRESSION_REGEXP = /\${\s*(inputs\.[\S]+)\s*}/;
 export const BUILD_STEP_OUTPUT_EXPRESSION_REGEXP = /\${\s*(steps\.[\S]+)\s*}/;
 export const BUILD_GLOBAL_CONTEXT_EXPRESSION_REGEXP = /\${\s*(eas\.[\S]+)\s*}/;
 export const BUILD_STEP_OR_BUILD_GLOBAL_CONTEXT_REFERENCE_REGEX = /\${\s*((steps|eas)\.[\S]+)\s*}/;
+export const BUILD_STEP_IF_CONDITION_EXPRESSION_REGEXP = /\${\s*((always|success|failure)\(\))\s*}/;
 
 export function interpolateWithInputs(
   templateString: string,
@@ -22,6 +23,25 @@ export function interpolateWithOutputs(
   fn: (path: string) => string
 ): string {
   return interpolate(templateString, BUILD_STEP_OUTPUT_EXPRESSION_REGEXP, fn);
+}
+
+/**
+ * Returns the selected status check from the if statement template.
+ * Example: `${ success() }` -> `success`
+ */
+// TODO @szdziedzic: add support for cancelled
+export function getSelectedStatusCheckFromIfStatementTemplate(
+  ifCondition: string
+): 'success' | 'failure' | 'always' {
+  const matched = ifCondition.match(new RegExp(BUILD_STEP_IF_CONDITION_EXPRESSION_REGEXP, 'g'));
+  if (!matched) {
+    // this should never happen because of regex pattern validation
+    throw new BuildConfigError(`Invalid if condition template.`);
+  }
+  const [, , selectedStatusCheck] = nullthrows(
+    matched[0].match(BUILD_STEP_IF_CONDITION_EXPRESSION_REGEXP)
+  );
+  return selectedStatusCheck as 'success' | 'failure' | 'always';
 }
 
 export function getObjectValueForInterpolation(

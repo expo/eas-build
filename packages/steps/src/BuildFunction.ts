@@ -90,6 +90,7 @@ export class BuildFunction {
       workingDirectory,
       shell,
       env,
+      ifCondition,
     }: {
       id?: string;
       name?: string;
@@ -97,6 +98,7 @@ export class BuildFunction {
       workingDirectory?: string;
       shell?: string;
       env?: BuildStepEnv;
+      ifCondition?: string;
     } = {}
   ): BuildStep {
     const buildStepId = BuildStep.getNewId(id);
@@ -132,6 +134,7 @@ export class BuildFunction {
       shell,
       supportedRuntimePlatforms: this.supportedRuntimePlatforms,
       env,
+      ifCondition,
     });
   }
 }

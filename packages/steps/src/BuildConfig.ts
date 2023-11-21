@@ -14,7 +14,10 @@ import {
   BuildStepInputValueType,
 } from './BuildStepInput.js';
 import { BuildStepEnv } from './BuildStepEnv.js';
-import { BUILD_STEP_OR_BUILD_GLOBAL_CONTEXT_REFERENCE_REGEX } from './utils/template.js';
+import {
+  BUILD_STEP_IF_CONDITION_EXPRESSION_REGEXP,
+  BUILD_STEP_OR_BUILD_GLOBAL_CONTEXT_REFERENCE_REGEX,
+} from './utils/template.js';
 
 export type BuildFunctions = Record<string, BuildFunctionConfig>;
 
@@ -55,6 +58,7 @@ export type BuildFunctionCallConfig = {
   workingDirectory?: string;
   shell?: string;
   env?: BuildStepEnv;
+  if?: string;
 };
 
 export type BuildStepInputs = Record<string, BuildStepInputValueTypeWithRequired>;
@@ -191,6 +195,7 @@ const BuildFunctionCallSchema = Joi.object({
   workingDirectory: Joi.string(),
   shell: Joi.string(),
   env: Joi.object().pattern(Joi.string(), Joi.string().allow('')),
+  if: Joi.string().pattern(BUILD_STEP_IF_CONDITION_EXPRESSION_REGEXP, 'step if condition regex'),
 }).rename('working_directory', 'workingDirectory');
 
 const BuildStepConfigSchema = Joi.any<BuildStepConfig>()
