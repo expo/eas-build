@@ -32,7 +32,7 @@ import { BuildRuntimePlatform } from './BuildRuntimePlatform.js';
 export enum BuildStepStatus {
   NEW = 'new',
   IN_PROGRESS = 'in-progress',
-  CANCELED = 'canceled',
+  SKIPPED = 'skipped',
   FAIL = 'fail',
   WARNING = 'warning',
   SUCCESS = 'success',
@@ -305,10 +305,14 @@ export class BuildStep extends BuildStepOutputAccessor {
   }
 
   public skip(): void {
-    this.status = BuildStepStatus.CANCELED;
-    this.ctx.logger.info({ marker: BuildStepLogMarker.START_STEP });
+    this.status = BuildStepStatus.SKIPPED;
     this.ctx.logger.info(
-      { marker: BuildStepLogMarker.END_STEP, result: BuildStepStatus.CANCELED },
+      { marker: BuildStepLogMarker.START_STEP },
+      'Executing build step "${this.displayName}"'
+    );
+    this.ctx.logger.info(`Skipped build step "${this.displayName}"`);
+    this.ctx.logger.info(
+      { marker: BuildStepLogMarker.END_STEP, result: BuildStepStatus.SKIPPED },
       `Skipped build step "${this.displayName}"`
     );
   }
