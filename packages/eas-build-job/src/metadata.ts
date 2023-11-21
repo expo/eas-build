@@ -137,11 +137,6 @@ export type Metadata = {
   runWithNoWaitFlag?: boolean;
 
   /**
-   * Build mode
-   */
-  buildMode?: 'build' | 'resign' | 'custom';
-
-  /**
    * Workflow name available for custom builds.
    */
   customWorkflowName?: string;
@@ -198,7 +193,6 @@ export const MetadataSchema = Joi.object({
   message: Joi.string().max(1024),
   runFromCI: Joi.boolean(),
   runWithNoWaitFlag: Joi.boolean(),
-  buildMode: Joi.string().valid('build', 'resign', 'custom'),
   customWorkflowName: Joi.string(),
   developmentClient: Joi.boolean(),
   requiredPackageManager: Joi.string().valid('npm', 'pnpm', 'yarn', 'bun'),
