@@ -1,6 +1,6 @@
 import path from 'path';
 
-import { BuildPhase, Env, Job, Platform } from '@expo/eas-build-job';
+import { BuildPhase, Env, Job, Metadata, Platform } from '@expo/eas-build-job';
 import { bunyan } from '@expo/logger';
 import { ExternalBuildContextProvider, BuildRuntimePlatform } from '@expo/steps';
 
@@ -39,12 +39,14 @@ export class CustomBuildContext implements ExternalBuildContextProvider {
   public readonly logger: bunyan;
   public readonly runtimeApi: BuilderRuntimeApi;
   public readonly job: Job;
+  public readonly metadata?: Metadata;
 
   private _env: Env;
 
   constructor(buildCtx: BuildContext<Job>) {
     this._env = buildCtx.env;
     this.job = buildCtx.job;
+    this.metadata = buildCtx.metadata;
 
     this.logger = buildCtx.logger.child({ phase: BuildPhase.CUSTOM });
     this.projectSourceDirectory = path.join(buildCtx.workingdir, 'temporary-custom-build');
@@ -67,6 +69,7 @@ export class CustomBuildContext implements ExternalBuildContextProvider {
   public staticContext(): any {
     return {
       job: this.job,
+      metadata: this.metadata,
     };
   }
 

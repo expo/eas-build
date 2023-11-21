@@ -168,11 +168,12 @@ export class BuildContext<TJob extends Job> {
   }
   public get appConfig(): ExpoConfig {
     if (!this._appConfig) {
-      this._appConfig = readAppConfig(
-        this.getReactNativeProjectDirectory(),
-        this.env,
-        this.logger
-      ).exp;
+      this._appConfig = readAppConfig({
+        projectDir: this.getReactNativeProjectDirectory(),
+        env: this.env,
+        logger: this.logger,
+        sdkVersion: this.metadata?.sdkVersion,
+      }).exp;
     }
     return this._appConfig;
   }
