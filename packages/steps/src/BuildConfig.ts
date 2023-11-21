@@ -194,6 +194,7 @@ const BuildFunctionCallSchema = Joi.object({
 }).rename('working_directory', 'workingDirectory');
 
 const BuildStepConfigSchema = Joi.any<BuildStepConfig>()
+  .invalid(null)
   .when(
     Joi.object().pattern(
       Joi.string().disallow('run').required(),
@@ -390,15 +391,15 @@ export function mergeConfigWithImportedFunctions(
 }
 
 export function isBuildStepCommandRun(step: BuildStepConfig): step is BuildStepCommandRun {
-  return typeof step === 'object' && typeof step.run === 'object';
+  return Boolean(step) && typeof step === 'object' && typeof step.run === 'object';
 }
 
 export function isBuildStepBareCommandRun(step: BuildStepConfig): step is BuildStepBareCommandRun {
-  return typeof step === 'object' && typeof step.run === 'string';
+  return Boolean(step) && typeof step === 'object' && typeof step.run === 'string';
 }
 
 export function isBuildStepFunctionCall(step: BuildStepConfig): step is BuildStepFunctionCall {
-  return typeof step === 'object' && !('run' in step);
+  return Boolean(step) && typeof step === 'object' && !('run' in step);
 }
 
 export function isBuildStepBareFunctionCall(
@@ -415,7 +416,7 @@ export function validateAllFunctionsExist(
   for (const step of config.build.steps) {
     if (typeof step === 'string') {
       calledFunctionsSet.add(step);
-    } else if (!('run' in step)) {
+    } else if (step !== null && !('run' in step)) {
       const keys = Object.keys(step);
       assert(
         keys.length === 1,
