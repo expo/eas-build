@@ -23,7 +23,7 @@ export class BuildWorkflow {
         try {
           await step.executeAsync();
         } catch (err: any) {
-          maybeError = err;
+          maybeError = maybeError ?? err;
           hasAnyPreviousStepFailed = true;
         }
       } else {
