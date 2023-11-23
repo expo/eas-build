@@ -21,6 +21,8 @@ import { installDependenciesAsync, resolvePackagerDir } from './installDependenc
 import { configureEnvFromBuildProfileAsync, runEasBuildInternalAsync } from './easBuildInternal';
 
 const MAX_EXPO_DOCTOR_TIMEOUT_MS = 30 * 1000;
+const INSTALL_DEPENDENCIES_WARN_TIMEOUT_MS = 15 * 60 * 1000;
+const INSTALL_DEPENDENCIES_KILL_TIMEOUT_MS = 30 * 60 * 1000;
 
 class DoctorTimeoutError extends Error {}
 
@@ -50,10 +52,30 @@ export async function setupAsync<TJob extends Job>(ctx: BuildContext<TJob>): Pro
   });
 
   await ctx.runBuildPhase(BuildPhase.INSTALL_DEPENDENCIES, async () => {
+    const warnTimeout = setTimeout(() => {
+      ctx.logger.warn(
+        '"Install dependencies" phase takes longer then expected. Consider evaluating your package.json file for possible issues with dependencies'
+      );
+    }, INSTALL_DEPENDENCIES_WARN_TIMEOUT_MS);
+    const killTimeout = setTimeout(() => {
+      ctx.logger.error(
+        '"Install dependencies" phase takes a very long time. Most likely an unexpected error happened with your dependencies which caused the process to hang and it will be terminated. Please evaluate your package.json file'
+      );
+      throw new UserFacingError(
+        'EAS_BUILD_INSTALL_DEPENDENCIES_TIMEOUT',
+        `"Install dependencies" phase takes a very long time. Most likely an unexpected error happened with your dependencies which caused the process to hang and it will be terminated. Please evaluate your package.json file`
+      );
+    }, INSTALL_DEPENDENCIES_KILL_TIMEOUT_MS);
     await installDependenciesAsync(ctx, {
       logger: ctx.logger,
       workingDir: resolvePackagerDir(ctx),
     });
+    if (warnTimeout) {
+      clearTimeout(warnTimeout);
+    }
+    if (killTimeout) {
+      clearTimeout(killTimeout);
+    }
   });
 
   if (ctx.job.triggeredBy === BuildTrigger.GIT_BASED_INTEGRATION) {
