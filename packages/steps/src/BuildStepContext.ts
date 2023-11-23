@@ -53,7 +53,6 @@ export class BuildStepGlobalContext {
   public stepsInternalBuildDirectory: string;
   public readonly runtimePlatform: BuildRuntimePlatform;
   public readonly baseLogger: bunyan;
-  private didCheckOut = false;
 
   private stepById: Record<string, BuildStepOutputAccessor> = {};
 
@@ -75,7 +74,7 @@ export class BuildStepGlobalContext {
   }
 
   public get defaultWorkingDirectory(): string {
-    return this.didCheckOut ? this.provider.defaultWorkingDirectory : this.projectTargetDirectory;
+    return this.provider.defaultWorkingDirectory;
   }
 
   public get buildLogsDirectory(): string {
@@ -121,10 +120,6 @@ export class BuildStepGlobalContext {
 
   public stepCtx(options: { logger: bunyan; workingDirectory: string }): BuildStepContext {
     return new BuildStepContext(this, options);
-  }
-
-  public markAsCheckedOut(): void {
-    this.didCheckOut = true;
   }
 
   public serialize(): SerializedBuildStepGlobalContext {
