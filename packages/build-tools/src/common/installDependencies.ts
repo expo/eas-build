@@ -2,7 +2,7 @@ import path from 'path';
 
 import { Job } from '@expo/eas-build-job';
 import { bunyan } from '@expo/logger';
-import spawn from '@expo/turtle-spawn';
+import spawn, { SpawnPromise, SpawnResult } from '@expo/turtle-spawn';
 
 import { BuildContext } from '../context';
 import { PackageManager, findPackagerRootDir } from '../utils/packageManager';
@@ -11,7 +11,7 @@ import { isUsingYarn2 } from '../utils/project';
 export async function installDependenciesAsync<TJob extends Job>(
   ctx: BuildContext<TJob>,
   { logger, workingDir }: { logger: bunyan; workingDir: string }
-): Promise<void> {
+): Promise<{ spawnPromise: SpawnPromise<SpawnResult> }> {
   let args = ['install'];
   if (ctx.packageManager === PackageManager.PNPM) {
     args = ['install', '--no-frozen-lockfile'];
@@ -22,11 +22,13 @@ export async function installDependenciesAsync<TJob extends Job>(
     }
   }
   logger.info(`Running "${ctx.packageManager} ${args.join(' ')}" in ${workingDir} directory`);
-  await spawn(ctx.packageManager, args, {
-    cwd: workingDir,
-    logger,
-    env: ctx.env,
-  });
+  return {
+    spawnPromise: spawn(ctx.packageManager, args, {
+      cwd: workingDir,
+      logger,
+      env: ctx.env,
+    }),
+  };
 }
 
 export function resolvePackagerDir(ctx: BuildContext<Job>): string {
