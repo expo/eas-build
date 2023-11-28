@@ -9,7 +9,7 @@ interface SpawnOutput {
   stderr?: Readable | null;
 }
 
-interface PipeOptions {
+export interface PipeOptions {
   mode?: PipeMode;
   lineTransformer?: LineTransformer;
   infoCallbackFn?: () => void;
