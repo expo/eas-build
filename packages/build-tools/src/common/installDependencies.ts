@@ -1,8 +1,7 @@
 import path from 'path';
 
 import { Job } from '@expo/eas-build-job';
-import { bunyan } from '@expo/logger';
-import spawn, { SpawnPromise, SpawnResult } from '@expo/turtle-spawn';
+import spawn, { SpawnPromise, SpawnResult, SpawnOptions } from '@expo/turtle-spawn';
 
 import { BuildContext } from '../context';
 import { PackageManager, findPackagerRootDir } from '../utils/packageManager';
@@ -10,11 +9,7 @@ import { isUsingYarn2 } from '../utils/project';
 
 export async function installDependenciesAsync<TJob extends Job>(
   ctx: BuildContext<TJob>,
-  {
-    logger,
-    loggerInfoCallbackFn,
-    workingDir,
-  }: { logger: bunyan; loggerInfoCallbackFn?: () => void; workingDir: string }
+  { logger, loggerInfoCallbackFn, workingDir }: SpawnOptions
 ): Promise<{ spawnPromise: SpawnPromise<SpawnResult> }> {
   let args = ['install'];
   if (ctx.packageManager === PackageManager.PNPM) {
