@@ -47,9 +47,7 @@ function pipeSpawnOutput(
       stdout,
       (line) => {
         stdoutLogger.info(line);
-        if (infoCallbackFn) {
-          infoCallbackFn();
-        }
+        infoCallbackFn?.();
       },
       lineTransformer
     );
@@ -64,9 +62,7 @@ function pipeSpawnOutput(
       stderr,
       (line) => {
         stderrLogger.info(line);
-        if (infoCallbackFn) {
-          infoCallbackFn();
-        }
+        infoCallbackFn?.();
       },
       lineTransformer
     );
