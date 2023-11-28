@@ -7,6 +7,7 @@ import spawnAsync, {
 
 type SpawnOptions = SpawnAsyncOptions & {
   logger?: bunyan;
+  loggerInfoCallbackFn?: () => void;
   lineTransformer?: (line: string) => string | null;
   mode?: PipeMode;
 };
@@ -19,13 +20,13 @@ function spawn(
     cwd: process.cwd(),
   }
 ): SpawnPromise<SpawnResult> {
-  const { logger, ...options } = _options;
+  const { logger, loggerInfoCallbackFn, ...options } = _options;
   if (logger) {
     options.stdio = 'pipe';
   }
   const promise = spawnAsync(command, args, options);
   if (logger && promise.child) {
-    pipeSpawnOutput(logger, promise.child, options);
+    pipeSpawnOutput(logger, promise.child, options, loggerInfoCallbackFn);
   }
   return promise;
 }
