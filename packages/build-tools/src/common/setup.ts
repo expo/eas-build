@@ -148,20 +148,28 @@ async function runInstallDependenciesAsync<TJob extends Job>(
     const installDependenciesSpawnPromise = (
       await installDependenciesAsync(ctx, {
         logger: ctx.logger,
+        loggerInfoCallbackFn: () => {
+          if (warnTimeout) {
+            warnTimeout.refresh();
+          }
+          if (killTimeout) {
+            killTimeout.refresh();
+          }
+        },
         workingDir: resolvePackagerDir(ctx),
       })
     ).spawnPromise;
 
     warnTimeout = setTimeout(() => {
       ctx.logger.warn(
-        '"Install dependencies" phase takes longer then expected. Consider evaluating your package.json file for possible issues with dependencies'
+        '"Install dependencies" phase takes longer then expected and it did not produce any logs in the past 15 minutes. Consider evaluating your package.json file for possible issues with dependencies'
       );
     }, INSTALL_DEPENDENCIES_WARN_TIMEOUT_MS);
 
     killTimeout = setTimeout(async () => {
       killTimedOut = true;
       ctx.logger.error(
-        '"Install dependencies" phase takes a very long time. Most likely an unexpected error happened with your dependencies which caused the process to hang and it will be terminated'
+        '"Install dependencies" phase takes a very long time and it did not produce any logs in the past 30 minutes. Most likely an unexpected error happened with your dependencies which caused the process to hang and it will be terminated'
       );
       const ppid = nullthrows(installDependenciesSpawnPromise.child.pid);
       const pids = await getParentAndDescendantProcessPidsAsync(ppid);
@@ -177,7 +185,7 @@ async function runInstallDependenciesAsync<TJob extends Job>(
   } catch (err: any) {
     if (killTimedOut) {
       throw new InstallDependenciesTimeoutError(
-        '"Install dependencies" phase took over 30 minutes. Please evaluate your package.json file'
+        '"Install dependencies" phase was inactive for over 30 minutes. Please evaluate your package.json file'
       );
     }
     throw err;

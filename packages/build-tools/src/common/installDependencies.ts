@@ -10,7 +10,11 @@ import { isUsingYarn2 } from '../utils/project';
 
 export async function installDependenciesAsync<TJob extends Job>(
   ctx: BuildContext<TJob>,
-  { logger, workingDir }: { logger: bunyan; workingDir: string }
+  {
+    logger,
+    loggerInfoCallbackFn,
+    workingDir,
+  }: { logger: bunyan; loggerInfoCallbackFn?: () => void; workingDir: string }
 ): Promise<{ spawnPromise: SpawnPromise<SpawnResult> }> {
   let args = ['install'];
   if (ctx.packageManager === PackageManager.PNPM) {
@@ -26,6 +30,7 @@ export async function installDependenciesAsync<TJob extends Job>(
     spawnPromise: spawn(ctx.packageManager, args, {
       cwd: workingDir,
       logger,
+      loggerInfoCallbackFn,
       env: ctx.env,
     }),
   };
