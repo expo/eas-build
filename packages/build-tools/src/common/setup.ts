@@ -148,7 +148,7 @@ async function runInstallDependenciesAsync<TJob extends Job>(
     const installDependenciesSpawnPromise = (
       await installDependenciesAsync(ctx, {
         logger: ctx.logger,
-        loggerInfoCallbackFn: () => {
+        infoCallbackFn: () => {
           if (warnTimeout) {
             warnTimeout.refresh();
           }
@@ -156,7 +156,7 @@ async function runInstallDependenciesAsync<TJob extends Job>(
             killTimeout.refresh();
           }
         },
-        workingDir: resolvePackagerDir(ctx),
+        cwd: resolvePackagerDir(ctx),
       })
     ).spawnPromise;
 

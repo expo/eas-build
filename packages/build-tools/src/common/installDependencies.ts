@@ -9,7 +9,7 @@ import { isUsingYarn2 } from '../utils/project';
 
 export async function installDependenciesAsync<TJob extends Job>(
   ctx: BuildContext<TJob>,
-  { logger, loggerInfoCallbackFn, workingDir }: SpawnOptions
+  { logger, infoCallbackFn, cwd }: SpawnOptions
 ): Promise<{ spawnPromise: SpawnPromise<SpawnResult> }> {
   let args = ['install'];
   if (ctx.packageManager === PackageManager.PNPM) {
@@ -20,12 +20,12 @@ export async function installDependenciesAsync<TJob extends Job>(
       args = ['install', '--no-immutable', '--inline-builds'];
     }
   }
-  logger.info(`Running "${ctx.packageManager} ${args.join(' ')}" in ${workingDir} directory`);
+  logger?.info(`Running "${ctx.packageManager} ${args.join(' ')}" in ${cwd} directory`);
   return {
     spawnPromise: spawn(ctx.packageManager, args, {
-      cwd: workingDir,
+      cwd,
       logger,
-      loggerInfoCallbackFn,
+      infoCallbackFn,
       env: ctx.env,
     }),
   };

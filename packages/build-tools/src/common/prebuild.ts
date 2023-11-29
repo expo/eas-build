@@ -38,7 +38,7 @@ export async function prebuildAsync<TJob extends Job>(
   const installDependenciesSpawnPromise = (
     await installDependenciesAsync(ctx, {
       logger,
-      workingDir: resolvePackagerDir(ctx),
+      cwd: resolvePackagerDir(ctx),
     })
   ).spawnPromise;
   await installDependenciesSpawnPromise;
