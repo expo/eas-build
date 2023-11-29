@@ -1,8 +1,8 @@
 import assert from 'assert';
 
-import { createLogger } from '@expo/logger';
-import { Ios, Workflow, ArchiveSourceType, Platform } from '@expo/eas-build-job';
+import { ArchiveSourceType, Ios, Platform, Workflow } from '@expo/eas-build-job';
 import { BuildMode, BuildTrigger } from '@expo/eas-build-job/dist/common';
+import { createLogger } from '@expo/logger';
 
 import { distributionCertificate, provisioningProfile } from '../__tests__/fixtures';
 import IosCredentialsManager from '../manager';

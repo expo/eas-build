@@ -51,6 +51,37 @@ describe('Android.JobSchema', () => {
     expect(error).toBeFalsy();
   });
 
+  test('valid generic job with metadataLocation', () => {
+    const genericJob = {
+      secrets,
+      platform: Platform.ANDROID,
+      type: Workflow.GENERIC,
+      projectArchive: {
+        type: ArchiveSourceType.GCS,
+        bucketKey: 'path/to/file',
+        metadataLocation: 'path/to/metadata',
+      },
+      gradleCommand: ':app:bundleRelease',
+      applicationArchivePath: 'android/app/build/outputs/bundle/release/app-release.aab',
+      projectRootDirectory: '.',
+      releaseChannel: 'default',
+      builderEnvironment: {
+        image: 'default',
+        node: '1.2.3',
+        yarn: '2.3.4',
+        ndk: '4.5.6',
+        bun: '1.0.0',
+        env: {
+          SOME_ENV: '123',
+        },
+      },
+    };
+
+    const { value, error } = Android.JobSchema.validate(genericJob, joiOptions);
+    expect(value).toMatchObject(genericJob);
+    expect(error).toBeFalsy();
+  });
+
   test('invalid generic job', () => {
     const genericJob = {
       secrets,

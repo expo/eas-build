@@ -1,7 +1,7 @@
 import Joi from 'joi';
 
-import * as Ios from '../ios';
 import { ArchiveSourceType, BuildMode, Platform, Workflow } from '../common';
+import * as Ios from '../ios';
 
 const joiOptions: Joi.ValidationOptions = {
   stripUnknown: true,
@@ -74,6 +74,27 @@ describe('Ios.JobSchema', () => {
 
     const { value, error } = Ios.JobSchema.validate(genericJob, joiOptions);
     expect(value).toMatchObject(genericJob);
+    expect(error).toBeFalsy();
+  });
+
+  test('valid custom build job with metadataLocation', () => {
+    const customBuildJob = {
+      mode: BuildMode.CUSTOM,
+      type: Workflow.UNKNOWN,
+      platform: Platform.IOS,
+      projectArchive: {
+        type: ArchiveSourceType.GCS,
+        bucketKey: 'path/to/file',
+        metadataLocation: 'path/to/metadata',
+      },
+      projectRootDirectory: '.',
+      customBuildConfig: {
+        path: 'production.ios.yml',
+      },
+    };
+
+    const { value, error } = Ios.JobSchema.validate(customBuildJob, joiOptions);
+    expect(value).toMatchObject(customBuildJob);
     expect(error).toBeFalsy();
   });
 
