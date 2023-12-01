@@ -1,15 +1,14 @@
-import { pipeSpawnOutput, bunyan, PipeMode } from '@expo/logger';
+import { pipeSpawnOutput, bunyan, PipeOptions } from '@expo/logger';
 import spawnAsync, {
   SpawnResult,
   SpawnPromise,
   SpawnOptions as SpawnAsyncOptions,
 } from '@expo/spawn-async';
 
-type SpawnOptions = SpawnAsyncOptions & {
-  logger?: bunyan;
-  lineTransformer?: (line: string) => string | null;
-  mode?: PipeMode;
-};
+type SpawnOptions = SpawnAsyncOptions &
+  PipeOptions & {
+    logger?: bunyan;
+  };
 
 function spawn(
   command: string,
