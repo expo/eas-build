@@ -21,8 +21,11 @@ import { installDependenciesAsync, resolvePackagerDir } from './installDependenc
 import { configureEnvFromBuildProfileAsync, runEasBuildInternalAsync } from './easBuildInternal';
 
 const MAX_EXPO_DOCTOR_TIMEOUT_MS = 30 * 1000;
+const INSTALL_DEPENDENCIES_WARN_TIMEOUT_MS = 15 * 60 * 1000;
+const INSTALL_DEPENDENCIES_KILL_TIMEOUT_MS = 30 * 60 * 1000;
 
 class DoctorTimeoutError extends Error {}
+class InstallDependenciesTimeoutError extends Error {}
 
 export async function setupAsync<TJob extends Job>(ctx: BuildContext<TJob>): Promise<void> {
   const packageJson = await ctx.runBuildPhase(BuildPhase.PREPARE_PROJECT, async () => {
@@ -50,10 +53,7 @@ export async function setupAsync<TJob extends Job>(ctx: BuildContext<TJob>): Pro
   });
 
   await ctx.runBuildPhase(BuildPhase.INSTALL_DEPENDENCIES, async () => {
-    await installDependenciesAsync(ctx, {
-      logger: ctx.logger,
-      workingDir: resolvePackagerDir(ctx),
-    });
+    await runInstallDependenciesAsync(ctx);
   });
 
   if (ctx.job.triggeredBy === BuildTrigger.GIT_BASED_INTEGRATION) {
@@ -134,6 +134,67 @@ async function runExpoDoctor<TJob extends Job>(ctx: BuildContext<TJob>): Promise
   } finally {
     if (timeout) {
       clearTimeout(timeout);
+    }
+  }
+}
+
+async function runInstallDependenciesAsync<TJob extends Job>(
+  ctx: BuildContext<TJob>
+): Promise<void> {
+  let warnTimeout: NodeJS.Timeout | undefined;
+  let killTimeout: NodeJS.Timeout | undefined;
+  let killTimedOut: boolean = false;
+  try {
+    const installDependenciesSpawnPromise = (
+      await installDependenciesAsync(ctx, {
+        logger: ctx.logger,
+        infoCallbackFn: () => {
+          if (warnTimeout) {
+            warnTimeout.refresh();
+          }
+          if (killTimeout) {
+            killTimeout.refresh();
+          }
+        },
+        cwd: resolvePackagerDir(ctx),
+      })
+    ).spawnPromise;
+
+    warnTimeout = setTimeout(() => {
+      ctx.logger.warn(
+        '"Install dependencies" phase takes longer then expected and it did not produce any logs in the past 15 minutes. Consider evaluating your package.json file for possible issues with dependencies'
+      );
+    }, INSTALL_DEPENDENCIES_WARN_TIMEOUT_MS);
+
+    killTimeout = setTimeout(async () => {
+      killTimedOut = true;
+      ctx.logger.error(
+        '"Install dependencies" phase takes a very long time and it did not produce any logs in the past 30 minutes. Most likely an unexpected error happened with your dependencies which caused the process to hang and it will be terminated'
+      );
+      const ppid = nullthrows(installDependenciesSpawnPromise.child.pid);
+      const pids = await getParentAndDescendantProcessPidsAsync(ppid);
+      pids.forEach((pid) => {
+        process.kill(pid);
+      });
+      ctx.reportError?.('"Install dependencies" phase takes a very long time', undefined, {
+        extras: { buildId: ctx.env.EAS_BUILD_ID },
+      });
+    }, INSTALL_DEPENDENCIES_KILL_TIMEOUT_MS);
+
+    await installDependenciesSpawnPromise;
+  } catch (err: any) {
+    if (killTimedOut) {
+      throw new InstallDependenciesTimeoutError(
+        '"Install dependencies" phase was inactive for over 30 minutes. Please evaluate your package.json file'
+      );
+    }
+    throw err;
+  } finally {
+    if (warnTimeout) {
+      clearTimeout(warnTimeout);
+    }
+    if (killTimeout) {
+      clearTimeout(killTimeout);
     }
   }
 }

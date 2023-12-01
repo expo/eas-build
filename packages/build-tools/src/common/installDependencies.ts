@@ -1,8 +1,7 @@
 import path from 'path';
 
 import { Job } from '@expo/eas-build-job';
-import { bunyan } from '@expo/logger';
-import spawn from '@expo/turtle-spawn';
+import spawn, { SpawnPromise, SpawnResult, SpawnOptions } from '@expo/turtle-spawn';
 
 import { BuildContext } from '../context';
 import { PackageManager, findPackagerRootDir } from '../utils/packageManager';
@@ -10,8 +9,8 @@ import { isUsingYarn2 } from '../utils/project';
 
 export async function installDependenciesAsync<TJob extends Job>(
   ctx: BuildContext<TJob>,
-  { logger, workingDir }: { logger: bunyan; workingDir: string }
-): Promise<void> {
+  { logger, infoCallbackFn, cwd }: SpawnOptions
+): Promise<{ spawnPromise: SpawnPromise<SpawnResult> }> {
   let args = ['install'];
   if (ctx.packageManager === PackageManager.PNPM) {
     args = ['install', '--no-frozen-lockfile'];
@@ -21,12 +20,15 @@ export async function installDependenciesAsync<TJob extends Job>(
       args = ['install', '--no-immutable', '--inline-builds'];
     }
   }
-  logger.info(`Running "${ctx.packageManager} ${args.join(' ')}" in ${workingDir} directory`);
-  await spawn(ctx.packageManager, args, {
-    cwd: workingDir,
-    logger,
-    env: ctx.env,
-  });
+  logger?.info(`Running "${ctx.packageManager} ${args.join(' ')}" in ${cwd} directory`);
+  return {
+    spawnPromise: spawn(ctx.packageManager, args, {
+      cwd,
+      logger,
+      infoCallbackFn,
+      env: ctx.env,
+    }),
+  };
 }
 
 export function resolvePackagerDir(ctx: BuildContext<Job>): string {
