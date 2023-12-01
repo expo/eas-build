@@ -9,9 +9,10 @@ interface SpawnOutput {
   stderr?: Readable | null;
 }
 
-interface PipeOptions {
+export interface PipeOptions {
   mode?: PipeMode;
   lineTransformer?: LineTransformer;
+  infoCallbackFn?: () => void;
 }
 
 function pipe(stream: Readable, loggerFn: LineLogger, lineTransformer?: LineTransformer): void {
@@ -38,7 +39,7 @@ export enum PipeMode {
 function pipeSpawnOutput(
   logger: bunyan,
   { stdout, stderr }: SpawnOutput = {},
-  { mode = PipeMode.COMBINED, lineTransformer }: PipeOptions = {}
+  { mode = PipeMode.COMBINED, lineTransformer, infoCallbackFn }: PipeOptions = {}
 ): void {
   if (stdout && [PipeMode.COMBINED, PipeMode.COMBINED_AS_STDOUT].includes(mode)) {
     const stdoutLogger = logger.child({ source: 'stdout' });
@@ -46,6 +47,7 @@ function pipeSpawnOutput(
       stdout,
       (line) => {
         stdoutLogger.info(line);
+        infoCallbackFn?.();
       },
       lineTransformer
     );
@@ -60,6 +62,7 @@ function pipeSpawnOutput(
       stderr,
       (line) => {
         stderrLogger.info(line);
+        infoCallbackFn?.();
       },
       lineTransformer
     );
