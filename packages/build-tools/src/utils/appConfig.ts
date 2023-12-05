@@ -26,9 +26,7 @@ export function readAppConfig({
   const envVarsFromDotenvFile = shouldLoadEnvVarsFromDotenvFile ? load(projectDir) : {};
   const newEnvsToUse = { ...env, ...envVarsFromDotenvFile };
   try {
-    for (const [key, value] of Object.entries(newEnvsToUse)) {
-      process.env[key] = value;
-    }
+    process.env = newEnvsToUse;
     process.exit = () => {
       throw new Error('Failed to evaluate app config file');
     };
@@ -53,12 +51,7 @@ export function readAppConfig({
     });
     throw err;
   } finally {
-    for (const [key] of Object.entries(newEnvsToUse)) {
-      delete process.env[key];
-    }
-    for (const [key, value] of Object.entries(originalProcessEnv)) {
-      process.env[key] = value;
-    }
+    process.env = originalProcessEnv;
     process.exit = originalProcessExit;
     process.cwd = originalProcessCwd;
     process.stdout.write = originalStdoutWrite;
