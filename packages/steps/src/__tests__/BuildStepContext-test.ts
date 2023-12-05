@@ -29,19 +29,38 @@ describe(BuildStepGlobalContext, () => {
     });
   });
   describe('workingDirectory', () => {
-    it('can use the defaultWorkingDirectory returned by BuildContextProvider', () => {
+    it('if not checked out uses project target dir as default working dir', () => {
       const workingDirectory = '/path/to/working/dir';
+      const projectTargetDirectory = '/another/non/existent/path';
       const ctx = new BuildStepGlobalContext(
         new MockContextProvider(
           createMockLogger(),
           BuildRuntimePlatform.LINUX,
           '/non/existent/path',
-          '/another/non/existent/path',
+          projectTargetDirectory,
           workingDirectory,
           '/non/existent/path'
         ),
         false
       );
+      expect(ctx.defaultWorkingDirectory).toBe(projectTargetDirectory);
+    });
+
+    it('if checked out uses default working dir as default working dir', () => {
+      const workingDirectory = '/path/to/working/dir';
+      const projectTargetDirectory = '/another/non/existent/path';
+      const ctx = new BuildStepGlobalContext(
+        new MockContextProvider(
+          createMockLogger(),
+          BuildRuntimePlatform.LINUX,
+          '/non/existent/path',
+          projectTargetDirectory,
+          workingDirectory,
+          '/non/existent/path'
+        ),
+        false
+      );
+      ctx.markAsCheckedOut();
       expect(ctx.defaultWorkingDirectory).toBe(workingDirectory);
     });
   });
@@ -98,6 +117,7 @@ describe(BuildStepGlobalContext, () => {
         },
         createMockLogger()
       );
+      ctx.markAsCheckedOut();
       expect(ctx.stepsInternalBuildDirectory).toBe('/m/n/o');
       expect(ctx.defaultWorkingDirectory).toBe('/g/h/i');
       expect(ctx.runtimePlatform).toBe(BuildRuntimePlatform.DARWIN);
