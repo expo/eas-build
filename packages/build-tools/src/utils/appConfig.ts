@@ -1,17 +1,34 @@
 import { getConfig, ProjectConfig } from '@expo/config';
 import { Env } from '@expo/eas-build-job';
 import { bunyan, LoggerLevel } from '@expo/logger';
+import { load } from '@expo/env';
+import semver from 'semver';
 
-export function readAppConfig(projectDir: string, env: Env, logger: bunyan): ProjectConfig {
-  const originalProcessEnv: NodeJS.ProcessEnv = process.env;
+export function readAppConfig({
+  projectDir,
+  env,
+  logger,
+  sdkVersion,
+}: {
+  projectDir: string;
+  env: Env;
+  logger: bunyan;
+  sdkVersion?: string;
+}): ProjectConfig {
   const originalProcessExit = process.exit;
   const originalProcessCwd = process.cwd;
   const originalStdoutWrite = process.stdout.write;
   const originalStderrWrite = process.stderr.write;
+  const originalProcessEnv = process.env;
 
   const stdoutStore: { text: string; level: LoggerLevel }[] = [];
+  const shouldLoadEnvVarsFromDotenvFile = sdkVersion && semver.satisfies(sdkVersion, '>=49');
+  const envVarsFromDotenvFile = shouldLoadEnvVarsFromDotenvFile ? load(projectDir) : {};
+  const newEnvsToUse = { ...env, ...envVarsFromDotenvFile };
   try {
-    process.env = { ...env };
+    for (const [key, value] of Object.entries(newEnvsToUse)) {
+      process.env[key] = value;
+    }
     process.exit = () => {
       throw new Error('Failed to evaluate app config file');
     };
@@ -36,7 +53,12 @@ export function readAppConfig(projectDir: string, env: Env, logger: bunyan): Pro
     });
     throw err;
   } finally {
-    process.env = originalProcessEnv;
+    for (const [key] of Object.entries(newEnvsToUse)) {
+      delete process.env[key];
+    }
+    for (const [key, value] of Object.entries(originalProcessEnv)) {
+      process.env[key] = value;
+    }
     process.exit = originalProcessExit;
     process.cwd = originalProcessCwd;
     process.stdout.write = originalStdoutWrite;

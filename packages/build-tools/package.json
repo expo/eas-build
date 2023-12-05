@@ -25,6 +25,7 @@
     "@expo/config-plugins": "^7.2.4",
     "@expo/downloader": "1.0.37",
     "@expo/eas-build-job": "1.0.50",
+    "@expo/env": "^0.0.5",
     "@expo/logger": "1.0.52",
     "@expo/package-manager": "1.1.2",
     "@expo/plist": "^0.0.20",
