@@ -19,11 +19,12 @@ export function readAppConfig({
   const originalProcessCwd = process.cwd;
   const originalStdoutWrite = process.stdout.write;
   const originalStderrWrite = process.stderr.write;
+  const originalProcessEnv = process.env;
 
   const stdoutStore: { text: string; level: LoggerLevel }[] = [];
   const shouldLoadEnvVarsFromDotenvFile = sdkVersion && semver.satisfies(sdkVersion, '>=49');
   const envVarsFromDotenvFile = shouldLoadEnvVarsFromDotenvFile ? load(projectDir) : {};
-  const newEnvsToUse = { ...envVarsFromDotenvFile, ...env };
+  const newEnvsToUse = { ...env, ...envVarsFromDotenvFile };
   try {
     for (const [key, value] of Object.entries(newEnvsToUse)) {
       process.env[key] = value;
@@ -54,6 +55,9 @@ export function readAppConfig({
   } finally {
     for (const [key] of Object.entries(newEnvsToUse)) {
       delete process.env[key];
+    }
+    for (const [key, value] of Object.entries(originalProcessEnv)) {
+      process.env[key] = value;
     }
     process.exit = originalProcessExit;
     process.cwd = originalProcessCwd;
