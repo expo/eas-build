@@ -22,7 +22,7 @@ describe('runCustomFunction', () => {
     const projectSourceDirectory = path.join(os.tmpdir(), 'eas-build', uuidv4());
     await fs.mkdir(projectSourceDirectory, { recursive: true });
     const ctx = createStepContextMock({
-      workingDirectory: path.resolve(dirname, '../../__tests__/fixtures'),
+      projectTargetDirectory: path.resolve(dirname, '../../__tests__/fixtures'),
       projectSourceDirectory,
     });
     const outputs = {

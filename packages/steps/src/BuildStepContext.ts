@@ -119,7 +119,7 @@ export class BuildStepGlobalContext {
     });
   }
 
-  public stepCtx(options: { logger: bunyan; workingDirectory: string }): BuildStepContext {
+  public stepCtx(options: { logger: bunyan; relativeWorkingDirectory?: string }): BuildStepContext {
     return new BuildStepContext(this, options);
   }
 
@@ -172,35 +172,41 @@ export class BuildStepGlobalContext {
 }
 
 export interface SerializedBuildStepContext {
-  workingDirectory: string;
+  relativeWorkingDirectory?: string;
   global: SerializedBuildStepGlobalContext;
 }
 
 export class BuildStepContext {
   public readonly logger: bunyan;
-  public readonly workingDirectory: string;
+  public readonly relativeWorkingDirectory?: string;
 
   constructor(
     private readonly ctx: BuildStepGlobalContext,
     {
       logger,
-      workingDirectory,
+      relativeWorkingDirectory,
     }: {
       logger: bunyan;
-      workingDirectory: string;
+      relativeWorkingDirectory?: string;
     }
   ) {
     this.logger = logger ?? ctx.baseLogger;
-    this.workingDirectory = workingDirectory ?? ctx.defaultWorkingDirectory;
+    this.relativeWorkingDirectory = relativeWorkingDirectory;
   }
 
   public get global(): BuildStepGlobalContext {
     return this.ctx;
   }
 
+  public get workingDirectory(): string {
+    return this.relativeWorkingDirectory
+      ? path.resolve(this.ctx.defaultWorkingDirectory, this.relativeWorkingDirectory)
+      : this.ctx.defaultWorkingDirectory;
+  }
+
   public serialize(): SerializedBuildStepContext {
     return {
-      workingDirectory: this.workingDirectory,
+      relativeWorkingDirectory: this.relativeWorkingDirectory,
       global: this.ctx.serialize(),
     };
   }
@@ -212,7 +218,7 @@ export class BuildStepContext {
     const deserializedGlobal = BuildStepGlobalContext.deserialize(serialized.global, logger);
     return new BuildStepContext(deserializedGlobal, {
       logger,
-      workingDirectory: serialized.workingDirectory,
+      relativeWorkingDirectory: serialized.relativeWorkingDirectory,
     });
   }
 }

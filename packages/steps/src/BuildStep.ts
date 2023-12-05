@@ -223,11 +223,7 @@ export class BuildStep extends BuildStepOutputAccessor {
       buildStepId: this.id,
       buildStepDisplayName: this.displayName,
     });
-    const workingDirectory =
-      maybeWorkingDirectory !== undefined
-        ? path.resolve(ctx.defaultWorkingDirectory, maybeWorkingDirectory)
-        : ctx.defaultWorkingDirectory;
-    this.ctx = ctx.stepCtx({ logger, workingDirectory });
+    this.ctx = ctx.stepCtx({ logger, relativeWorkingDirectory: maybeWorkingDirectory });
     this.env = env ?? {};
 
     ctx.registerStep(this);

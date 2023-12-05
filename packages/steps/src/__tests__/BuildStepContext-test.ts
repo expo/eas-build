@@ -77,7 +77,7 @@ describe(BuildStepGlobalContext, () => {
         runtimePlatform: BuildRuntimePlatform.DARWIN,
         projectSourceDirectory: '/a/b/c',
         projectTargetDirectory: '/d/e/f',
-        workingDirectory: '/g/h/i',
+        relativeWorkingDirectory: 'i',
         staticContextContent: { a: 1 },
       });
       expect(ctx.serialize()).toEqual(
@@ -87,7 +87,7 @@ describe(BuildStepGlobalContext, () => {
           provider: {
             projectSourceDirectory: '/a/b/c',
             projectTargetDirectory: '/d/e/f',
-            defaultWorkingDirectory: '/g/h/i',
+            defaultWorkingDirectory: '/d/e/f/i',
             buildLogsDirectory: '/non/existent/dir',
             runtimePlatform: BuildRuntimePlatform.DARWIN,
             staticContext: { a: 1 },
@@ -154,9 +154,7 @@ describe(BuildStepGlobalContext, () => {
   describe(BuildStepGlobalContext.prototype.stepCtx, () => {
     it('returns a BuildStepContext object', () => {
       const ctx = createGlobalContextMock();
-      expect(
-        ctx.stepCtx({ logger: ctx.baseLogger, workingDirectory: ctx.defaultWorkingDirectory })
-      ).toBeInstanceOf(BuildStepContext);
+      expect(ctx.stepCtx({ logger: ctx.baseLogger })).toBeInstanceOf(BuildStepContext);
     });
     it('can override logger', () => {
       const logger1 = createMockLogger();
@@ -164,7 +162,6 @@ describe(BuildStepGlobalContext, () => {
       const ctx = createGlobalContextMock({ logger: logger1 });
       const childCtx = ctx.stepCtx({
         logger: logger2,
-        workingDirectory: ctx.defaultWorkingDirectory,
       });
       expect(ctx.baseLogger).toBe(logger1);
       expect(childCtx.logger).toBe(logger2);
@@ -173,7 +170,7 @@ describe(BuildStepGlobalContext, () => {
       const workingDirectoryOverride = '/d/e/f';
       const ctx = createGlobalContextMock();
       const childCtx = ctx.stepCtx({
-        workingDirectory: workingDirectoryOverride,
+        relativeWorkingDirectory: workingDirectoryOverride,
         logger: ctx.baseLogger,
       });
       expect(ctx.defaultWorkingDirectory).not.toBe(childCtx.workingDirectory);
