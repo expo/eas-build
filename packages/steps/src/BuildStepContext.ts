@@ -53,6 +53,7 @@ export class BuildStepGlobalContext {
   public stepsInternalBuildDirectory: string;
   public readonly runtimePlatform: BuildRuntimePlatform;
   public readonly baseLogger: bunyan;
+  private didCheckOut = false;
 
   private stepById: Record<string, BuildStepOutputAccessor> = {};
 
@@ -74,7 +75,7 @@ export class BuildStepGlobalContext {
   }
 
   public get defaultWorkingDirectory(): string {
-    return this.provider.defaultWorkingDirectory;
+    return this.didCheckOut ? this.provider.defaultWorkingDirectory : this.projectTargetDirectory;
   }
 
   public get buildLogsDirectory(): string {
@@ -118,8 +119,15 @@ export class BuildStepGlobalContext {
     });
   }
 
-  public stepCtx(options: { logger: bunyan; workingDirectory: string }): BuildStepContext {
+  public stepCtx(options: { logger: bunyan; relativeWorkingDirectory?: string }): BuildStepContext {
     return new BuildStepContext(this, options);
+  }
+
+  public markAsCheckedOut(logger: bunyan): void {
+    this.didCheckOut = true;
+    logger.info(
+      `Changing default working directory to ${this.defaultWorkingDirectory} (was ${this.projectTargetDirectory})`
+    );
   }
 
   public serialize(): SerializedBuildStepGlobalContext {
@@ -167,35 +175,41 @@ export class BuildStepGlobalContext {
 }
 
 export interface SerializedBuildStepContext {
-  workingDirectory: string;
+  relativeWorkingDirectory?: string;
   global: SerializedBuildStepGlobalContext;
 }
 
 export class BuildStepContext {
   public readonly logger: bunyan;
-  public readonly workingDirectory: string;
+  public readonly relativeWorkingDirectory?: string;
 
   constructor(
     private readonly ctx: BuildStepGlobalContext,
     {
       logger,
-      workingDirectory,
+      relativeWorkingDirectory,
     }: {
       logger: bunyan;
-      workingDirectory: string;
+      relativeWorkingDirectory?: string;
     }
   ) {
     this.logger = logger ?? ctx.baseLogger;
-    this.workingDirectory = workingDirectory ?? ctx.defaultWorkingDirectory;
+    this.relativeWorkingDirectory = relativeWorkingDirectory;
   }
 
   public get global(): BuildStepGlobalContext {
     return this.ctx;
   }
 
+  public get workingDirectory(): string {
+    return this.relativeWorkingDirectory
+      ? path.resolve(this.ctx.defaultWorkingDirectory, this.relativeWorkingDirectory)
+      : this.ctx.defaultWorkingDirectory;
+  }
+
   public serialize(): SerializedBuildStepContext {
     return {
-      workingDirectory: this.workingDirectory,
+      relativeWorkingDirectory: this.relativeWorkingDirectory,
       global: this.ctx.serialize(),
     };
   }
@@ -207,7 +221,7 @@ export class BuildStepContext {
     const deserializedGlobal = BuildStepGlobalContext.deserialize(serialized.global, logger);
     return new BuildStepContext(deserializedGlobal, {
       logger,
-      workingDirectory: serialized.workingDirectory,
+      relativeWorkingDirectory: serialized.relativeWorkingDirectory,
     });
   }
 }

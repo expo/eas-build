@@ -44,7 +44,7 @@ interface BuildContextParams {
   runtimePlatform?: BuildRuntimePlatform;
   projectSourceDirectory?: string;
   projectTargetDirectory?: string;
-  workingDirectory?: string;
+  relativeWorkingDirectory?: string;
   staticContextContent?: Record<string, any>;
 }
 
@@ -55,7 +55,7 @@ export function createStepContextMock({
   runtimePlatform,
   projectSourceDirectory,
   projectTargetDirectory,
-  workingDirectory,
+  relativeWorkingDirectory,
   staticContextContent,
 }: BuildContextParams = {}): BuildStepContext {
   const globalCtx = createGlobalContextMock({
@@ -65,12 +65,12 @@ export function createStepContextMock({
     runtimePlatform,
     projectSourceDirectory,
     projectTargetDirectory,
-    workingDirectory,
+    relativeWorkingDirectory,
     staticContextContent,
   });
   return new BuildStepContext(globalCtx, {
     logger: logger ?? createMockLogger(),
-    workingDirectory: workingDirectory ?? globalCtx.projectTargetDirectory,
+    relativeWorkingDirectory,
   });
 }
 
@@ -80,7 +80,7 @@ export function createGlobalContextMock({
   runtimePlatform,
   projectSourceDirectory,
   projectTargetDirectory,
-  workingDirectory,
+  relativeWorkingDirectory,
   staticContextContent,
 }: BuildContextParams = {}): BuildStepGlobalContext {
   const resolvedProjectTargetDirectory =
@@ -91,7 +91,9 @@ export function createGlobalContextMock({
       runtimePlatform ?? BuildRuntimePlatform.LINUX,
       projectSourceDirectory ?? '/non/existent/dir',
       resolvedProjectTargetDirectory,
-      workingDirectory ?? resolvedProjectTargetDirectory,
+      relativeWorkingDirectory
+        ? path.resolve(resolvedProjectTargetDirectory, relativeWorkingDirectory)
+        : resolvedProjectTargetDirectory,
       '/non/existent/dir',
       staticContextContent ?? {}
     ),

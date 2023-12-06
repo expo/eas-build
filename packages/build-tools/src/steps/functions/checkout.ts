@@ -15,6 +15,7 @@ export function createCheckoutBuildFunction(): BuildFunction {
           overwrite: true,
         }
       );
+      stepsCtx.global.markAsCheckedOut(stepsCtx.logger);
     },
   });
 }

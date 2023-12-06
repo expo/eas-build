@@ -145,7 +145,11 @@ describe(BuildStep, () => {
     });
 
     it('creates child build context with correct changed working directory', () => {
-      const ctx = createGlobalContextMock({ workingDirectory: '/a/b/c' });
+      const ctx = createGlobalContextMock({
+        projectTargetDirectory: '/a/b',
+        relativeWorkingDirectory: 'c',
+      });
+      ctx.markAsCheckedOut(ctx.baseLogger);
 
       const id = 'test1';
       const command = 'ls -la';
@@ -161,7 +165,11 @@ describe(BuildStep, () => {
     });
 
     it('creates child build context with unchanged working directory', () => {
-      const ctx = createGlobalContextMock({ workingDirectory: '/a/b/c' });
+      const ctx = createGlobalContextMock({
+        projectTargetDirectory: '/a/b',
+        relativeWorkingDirectory: 'c',
+      });
+      ctx.markAsCheckedOut(ctx.baseLogger);
 
       const id = 'test1';
       const command = 'ls -la';
