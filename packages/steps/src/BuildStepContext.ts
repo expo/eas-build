@@ -123,8 +123,11 @@ export class BuildStepGlobalContext {
     return new BuildStepContext(this, options);
   }
 
-  public markAsCheckedOut(): void {
+  public markAsCheckedOut(logger: bunyan): void {
     this.didCheckOut = true;
+    logger.info(
+      `Changing default working directory to ${this.defaultWorkingDirectory} (was ${this.projectTargetDirectory})`
+    );
   }
 
   public serialize(): SerializedBuildStepGlobalContext {

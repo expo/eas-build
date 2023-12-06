@@ -60,7 +60,7 @@ describe(BuildStepGlobalContext, () => {
         ),
         false
       );
-      ctx.markAsCheckedOut();
+      ctx.markAsCheckedOut(ctx.baseLogger);
       expect(ctx.defaultWorkingDirectory).toBe(workingDirectory);
     });
   });
@@ -117,7 +117,7 @@ describe(BuildStepGlobalContext, () => {
         },
         createMockLogger()
       );
-      ctx.markAsCheckedOut();
+      ctx.markAsCheckedOut(ctx.baseLogger);
       expect(ctx.stepsInternalBuildDirectory).toBe('/m/n/o');
       expect(ctx.defaultWorkingDirectory).toBe('/g/h/i');
       expect(ctx.runtimePlatform).toBe(BuildRuntimePlatform.DARWIN);
