@@ -1,12 +1,15 @@
+import fs from 'fs/promises';
+import path from 'path';
+
 import { BuildStaticContext } from '@expo/eas-build-job';
 
-import { BuildStepRuntimeError } from '../errors.js';
 import { BuildStep } from '../BuildStep.js';
 import {
   BuildStepInput,
   BuildStepInputValueTypeName,
   makeBuildStepInputByIdMap,
 } from '../BuildStepInput.js';
+import { BuildStepRuntimeError } from '../errors.js';
 
 import { createGlobalContextMock } from './utils/context.js';
 import { createMockLogger } from './utils/logger.js';
@@ -291,6 +294,89 @@ describe(BuildStepInput, () => {
     expect(() => i.value).toThrowError(
       'Input parameter "foo" for step "test1" must be of type "boolean".'
     );
+  });
+
+  describe('function call', () => {
+    const ctx = createGlobalContextMock({
+      relativeWorkingDirectory: '/tmp/workingDir',
+      projectSourceDirectory: '/tmp/projectDir',
+    });
+
+    beforeEach(async () => {
+      await fs.mkdir(ctx.defaultWorkingDirectory, { recursive: true });
+      await fs.mkdir(ctx.projectSourceDirectory, { recursive: true });
+    });
+    afterEach(async () => {
+      await fs.rm(ctx.defaultWorkingDirectory, { recursive: true });
+      await fs.rm(ctx.projectSourceDirectory, { recursive: true });
+    });
+
+    test('hashFiles', async () => {
+      await fs.mkdir(path.join(ctx.defaultWorkingDirectory, 'directoryToHash'), {
+        recursive: true,
+      });
+      await fs.mkdir(path.join(ctx.defaultWorkingDirectory, 'directoryToSkip'), {
+        recursive: true,
+      });
+
+      await Promise.all([
+        fs.writeFile(path.join(ctx.defaultWorkingDirectory, 'filesToHash.ts'), 'lorem ipsum'),
+        fs.writeFile(
+          path.join(ctx.defaultWorkingDirectory, 'directoryToHash', 'file1'),
+          'lorem ipsum'
+        ),
+        fs.writeFile(
+          path.join(ctx.defaultWorkingDirectory, 'directoryToHash', 'file2'),
+          'lorem ipsum'
+        ),
+        fs.writeFile(
+          path.join(ctx.defaultWorkingDirectory, 'directoryToSkip', 'file3'),
+          'lorem ipsum'
+        ),
+      ]);
+
+      const i = new BuildStepInput<BuildStepInputValueTypeName>(ctx, {
+        id: 'foo',
+        stepDisplayName: BuildStep.getDisplayName({ id: 'test1' }),
+        defaultValue: 'foo-${ hashFiles("./filesToHash.ts", "./directoryToHash/*") }-bar',
+        required: true,
+        allowedValueTypeName: BuildStepInputValueTypeName.STRING,
+      });
+      await i.prepareValueAsync();
+
+      const hash1 = i.value;
+
+      await fs.writeFile(path.join(ctx.defaultWorkingDirectory, 'filesToHash.ts'), 'lorem ipsum 2');
+
+      await i.prepareValueAsync();
+
+      const hash2 = i.value;
+
+      await fs.writeFile(
+        path.join(ctx.defaultWorkingDirectory, 'directoryToHash', 'file1'),
+        'lorem ipsum 1'
+      );
+
+      await i.prepareValueAsync();
+      const hash3 = i.value;
+
+      await fs.writeFile(
+        path.join(ctx.defaultWorkingDirectory, 'directoryToSkip', 'file2'),
+        'lorem ipsum 2'
+      );
+      await i.prepareValueAsync();
+
+      const hash4 = i.value;
+
+      expect(hash1).toMatch(/^foo-.+-bar$/);
+      expect(hash2).toMatch(/^foo-.+-bar$/);
+      expect(hash3).toMatch(/^foo-.+-bar$/);
+      expect(hash4).toMatch(/^foo-.+-bar$/);
+
+      expect(hash1).not.toBe(hash2);
+      expect(hash2).not.toBe(hash3);
+      expect(hash3).toBe(hash4);
+    });
   });
 
   test('invalid context value type JSON', () => {

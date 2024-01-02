@@ -32,6 +32,7 @@
   "license": "BUSL-1.1",
   "devDependencies": {
     "@jest/globals": "^29.7.0",
+    "@types/glob": "^8.1.0",
     "@types/jest": "^29.5.11",
     "@types/lodash.clonedeep": "^4.5.9",
     "@types/lodash.get": "^4.4.9",

@@ -3,9 +3,13 @@ import assert from 'assert';
 import { bunyan } from '@expo/logger';
 
 import { BuildStepGlobalContext, SerializedBuildStepGlobalContext } from './BuildStepContext.js';
-import { BuildStepRuntimeError } from './errors.js';
+import { BuildConfigError, BuildStepRuntimeError } from './errors.js';
+import callInputFunctionAsync from './inputFunctions.js';
 import {
+  BUILD_STEP_FUNCTION_EXPRESSION_REGEXP,
   BUILD_STEP_OR_BUILD_GLOBAL_CONTEXT_REFERENCE_REGEX,
+  iterateWithFunctions,
+  interpolateWithFunctionsAsync,
   interpolateWithOutputs,
 } from './utils/template.js';
 
@@ -79,6 +83,7 @@ export class BuildStepInput<
   public readonly required: R;
 
   private _value?: BuildStepInputValueType<T>;
+  private _computedValue?: BuildStepInputValueType<T>;
 
   public static createProvider(params: BuildStepInputProviderParams): BuildStepInputProvider {
     return (ctx, stepDisplayName) => new BuildStepInput(ctx, { ...params, stepDisplayName });
@@ -103,18 +108,61 @@ export class BuildStepInput<
     this.allowedValueTypeName = allowedValueTypeName;
   }
 
-  public get value(): BuildStepInputValueTypeWithRequired<T, R> {
+  public isFunctionCall(): boolean {
+    return this.rawValue?.toString().match(BUILD_STEP_FUNCTION_EXPRESSION_REGEXP) !== null;
+  }
+
+  private requiresInterpolation(rawValue: any): rawValue is string {
+    return typeof rawValue === 'string';
+  }
+
+  public validateFunctions(
+    fn: (error: string | null, f: string | null, args: string[]) => any
+  ): BuildConfigError[] {
     const rawValue = this._value ?? this.defaultValue;
+    const errors = [];
+    if (this.requiresInterpolation(rawValue) && this.isFunctionCall()) {
+      try {
+        iterateWithFunctions(rawValue, (fun, args) => {
+          const error = fn(null, fun, args);
+          if (error) {
+            errors.push(error);
+          }
+        });
+      } catch (e) {
+        if (e instanceof BuildConfigError) {
+          errors.push(fn(e.message, null, []));
+        } else {
+          throw e;
+        }
+      }
+    }
+    return errors;
+  }
+
+  public async prepareValueAsync(): Promise<void> {
+    const rawValue = this._value ?? this.defaultValue;
+    if (this.requiresInterpolation(rawValue) && this.isFunctionCall()) {
+      this._computedValue = (await interpolateWithFunctionsAsync(
+        rawValue,
+        (fn: string, args: string[]) => {
+          return callInputFunctionAsync(fn, args, this.ctx);
+        }
+      )) as BuildStepInputValueType<T>;
+    }
+  }
+
+  public get value(): BuildStepInputValueTypeWithRequired<T, R> {
+    const rawValue = this._computedValue ?? this._value ?? this.defaultValue;
     if (this.required && rawValue === undefined) {
       throw new BuildStepRuntimeError(
         `Input parameter "${this.id}" for step "${this.stepDisplayName}" is required but it was not set.`
       );
     }
 
-    const valueDoesNotRequireInterpolation =
-      rawValue === undefined || typeof rawValue === 'boolean' || typeof rawValue === 'number';
     let returnValue;
-    if (valueDoesNotRequireInterpolation) {
+
+    if (!this.requiresInterpolation(rawValue)) {
       if (typeof rawValue !== this.allowedValueTypeName && rawValue !== undefined) {
         throw new BuildStepRuntimeError(
           `Input parameter "${this.id}" for step "${this.stepDisplayName}" must be of type "${this.allowedValueTypeName}".`

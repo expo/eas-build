@@ -6,6 +6,7 @@ import {
   interpolateWithGlobalContext,
   interpolateWithInputs,
   interpolateWithOutputs,
+  interpolateWithFunctionsAsync,
   parseOutputPath,
 } from '../template.js';
 
@@ -31,6 +32,40 @@ describe(interpolateWithOutputs, () => {
       }
     );
     expect(result).toBe('foobarbaz');
+  });
+});
+
+describe(interpolateWithFunctionsAsync, () => {
+  test('interpolation', async () => {
+    const nonArgs = await interpolateWithFunctionsAsync('foo${ noArgs() }bar', async (fn, args) => {
+      if (fn === 'noArgs' && args.length === 0) {
+        return 'ok';
+      }
+      return '${fn} | ${args.join(", ")}';
+    });
+    const oneArg = await interpolateWithFunctionsAsync(
+      'foo${ oneArg("src") }bar',
+      async (fn, args) => {
+        if (fn === 'oneArg' && args[0] === 'src') {
+          return 'ok';
+        }
+        return '${fn} | ${args.join(", ")}';
+      }
+    );
+
+    const manyArgs = await interpolateWithFunctionsAsync(
+      'foo${ manyArgs("src", "hello") }bar',
+      async (fn, args) => {
+        if (fn === 'manyArgs' && args[0] === 'src' && args[1] === 'hello') {
+          return 'ok';
+        }
+        return '${fn} | ${args.join(", ")}';
+      }
+    );
+
+    expect(nonArgs).toBe('foookbar');
+    expect(oneArg).toBe('foookbar');
+    expect(manyArgs).toBe('foookbar');
   });
 });
 

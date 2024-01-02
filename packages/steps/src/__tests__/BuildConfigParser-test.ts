@@ -3,13 +3,13 @@ import url from 'url';
 
 import { BuildConfigParser } from '../BuildConfigParser.js';
 import { BuildFunction } from '../BuildFunction.js';
+import { BuildFunctionGroup } from '../BuildFunctionGroup.js';
+import { BuildRuntimePlatform } from '../BuildRuntimePlatform.js';
 import { BuildStepFunction } from '../BuildStep.js';
+import { BuildStepInputValueTypeName } from '../BuildStepInput.js';
 import { BuildWorkflow } from '../BuildWorkflow.js';
 import { BuildConfigError, BuildStepRuntimeError } from '../errors.js';
 import { getDefaultShell } from '../utils/shell/command.js';
-import { BuildRuntimePlatform } from '../BuildRuntimePlatform.js';
-import { BuildStepInputValueTypeName } from '../BuildStepInput.js';
-import { BuildFunctionGroup } from '../BuildFunctionGroup.js';
 
 import { createGlobalContextMock } from './utils/context.js';
 import { getError, getErrorAsync } from './utils/error.js';
@@ -100,6 +100,14 @@ describe(BuildConfigParser, () => {
     it('returns a BuildWorkflow object', async () => {
       const ctx = createGlobalContextMock();
       const parser = new BuildConfigParser(ctx, {
+        externalFunctions: [
+          new BuildFunction({
+            namespace: 'eas',
+            id: 'save-cache',
+            name: 'Cache',
+            command: 'cache',
+          }),
+        ],
         configPath: path.join(__dirname, './fixtures/build.yml'),
       });
       const result = await parser.parseAsync();
@@ -109,11 +117,19 @@ describe(BuildConfigParser, () => {
     it('parses steps from the build workflow', async () => {
       const ctx = createGlobalContextMock();
       const parser = new BuildConfigParser(ctx, {
+        externalFunctions: [
+          new BuildFunction({
+            namespace: 'eas',
+            id: 'save-cache',
+            name: 'Cache',
+            command: 'cache',
+          }),
+        ],
         configPath: path.join(__dirname, './fixtures/build.yml'),
       });
       const workflow = await parser.parseAsync();
       const buildSteps = workflow.buildSteps;
-      expect(buildSteps.length).toBe(6);
+      expect(buildSteps.length).toBe(7);
 
       // - run: echo "Hi!"
       const step1 = buildSteps[0];
@@ -246,6 +262,8 @@ describe(BuildConfigParser, () => {
         property2: ['value2', { value3: { property3: 'value4' } }],
       });
       expect(step1.inputs?.[4].allowedValueTypeName).toBe(BuildStepInputValueTypeName.JSON);
+      expect(step1.inputs?.[5].id).toBe('function_value');
+      expect(step1.inputs?.[5].value).toBe("${ hashFiles('**/*.js') }");
     });
 
     it('parses outputs', async () => {

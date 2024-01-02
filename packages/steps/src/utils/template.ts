@@ -8,6 +8,7 @@ import { nullthrows } from './nullthrows.js';
 
 export const BUILD_STEP_INPUT_EXPRESSION_REGEXP = /\${\s*(inputs\.[\S]+)\s*}/;
 export const BUILD_STEP_OUTPUT_EXPRESSION_REGEXP = /\${\s*(steps\.[\S]+)\s*}/;
+export const BUILD_STEP_FUNCTION_EXPRESSION_REGEXP = /\${\s*(?<fun>\w+)\((?<args>.*)\)\s*}/;
 export const BUILD_GLOBAL_CONTEXT_EXPRESSION_REGEXP = /\${\s*(eas\.[\S]+)\s*}/;
 export const BUILD_STEP_OR_BUILD_GLOBAL_CONTEXT_REFERENCE_REGEX = /\${\s*((steps|eas)\.[\S]+)\s*}/;
 
@@ -16,6 +17,112 @@ export function interpolateWithInputs(
   inputs: Record<string, string>
 ): string {
   return interpolate(templateString, BUILD_STEP_INPUT_EXPRESSION_REGEXP, inputs);
+}
+
+export function templateFunctionsAndArgsIterator(templateString: string): Iterable<any> {
+  return {
+    [Symbol.iterator]() {
+      const regex = new RegExp(BUILD_STEP_FUNCTION_EXPRESSION_REGEXP, 'g');
+      let functionCallMatch;
+      return {
+        next() {
+          while ((functionCallMatch = regex.exec(templateString))) {
+            if (functionCallMatch?.groups) {
+              const templateFunction = functionCallMatch.groups['fun'];
+              try {
+                const args = JSON.parse(`[${functionCallMatch.groups['args']}]`.replace(/'/g, '"'));
+                return { done: false, value: { templateFunction, args, functionCallMatch } };
+              } catch (e) {
+                if (e instanceof SyntaxError) {
+                  throw new BuildConfigError(`contains syntax error in "${templateString}"`);
+                }
+                throw e;
+              }
+            }
+          }
+          return { done: true, value: null };
+        },
+      };
+    },
+  };
+}
+
+export function iterateWithFunctions(
+  templateString: string,
+  fn: (fn: string, args: string[]) => any
+): void {
+  const iterator = templateFunctionsAndArgsIterator(templateString);
+  for (const { templateFunction, args } of iterator) {
+    fn(templateFunction, args);
+  }
+}
+
+export async function interpolateWithFunctionsAsync(
+  templateString: string,
+  fn: (fn: string, args: string[]) => Promise<string>
+): Promise<string> {
+  let result = templateString;
+
+  const iterator = templateFunctionsAndArgsIterator(templateString);
+
+  for (const { templateFunction, args, functionCallMatch } of iterator) {
+    const value = await fn(templateFunction, args);
+    result = result.replace(functionCallMatch[0], value);
+  }
+  return result;
+}
+
+export function templateFunctionsAndArgsIterator(templateString: string): Iterable<any> {
+  return {
+    [Symbol.iterator]() {
+      const regex = new RegExp(BUILD_STEP_FUNCTION_EXPRESSION_REGEXP, 'g');
+      let functionCallMatch;
+      return {
+        next() {
+          while ((functionCallMatch = regex.exec(templateString))) {
+            if (functionCallMatch?.groups) {
+              const templateFunction = functionCallMatch.groups['fun'];
+              try {
+                const args = JSON.parse(`[${functionCallMatch.groups['args']}]`.replace(/'/g, '"'));
+                return { done: false, value: { templateFunction, args, functionCallMatch } };
+              } catch (e) {
+                if (e instanceof SyntaxError) {
+                  throw new BuildConfigError(`contains syntax error in "${templateString}"`);
+                }
+                throw e;
+              }
+            }
+          }
+          return { done: true, value: null };
+        },
+      };
+    },
+  };
+}
+
+export function iterateWithFunctions(
+  templateString: string,
+  fn: (fn: string, args: string[]) => any
+): void {
+  const iterator = templateFunctionsAndArgsIterator(templateString);
+  for (const { templateFunction, args } of iterator) {
+    fn(templateFunction, args);
+  }
+}
+
+export async function interpolateWithFunctionsAsync(
+  templateString: string,
+  fn: (fn: string, args: string[]) => Promise<string>
+): Promise<string> {
+  let result = templateString;
+
+  const iterator = templateFunctionsAndArgsIterator(templateString);
+
+  for (const { templateFunction, args, functionCallMatch } of iterator) {
+    const value = await fn(templateFunction, args);
+    result = result.replace(functionCallMatch[0], value);
+  }
+  return result;
 }
 
 export function interpolateWithOutputs<InterpolableType extends string | object>(

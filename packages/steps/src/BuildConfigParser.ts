@@ -19,12 +19,12 @@ import {
 } from './BuildConfig.js';
 import { BuildFunction, BuildFunctionById } from './BuildFunction.js';
 import { BuildStep } from './BuildStep.js';
+import { BuildStepGlobalContext } from './BuildStepContext.js';
 import {
   BuildStepInput,
   BuildStepInputProvider,
   BuildStepInputValueTypeName,
 } from './BuildStepInput.js';
-import { BuildStepGlobalContext } from './BuildStepContext.js';
 import { BuildStepOutput, BuildStepOutputProvider } from './BuildStepOutput.js';
 import { BuildWorkflow } from './BuildWorkflow.js';
 import { BuildWorkflowValidator } from './BuildWorkflowValidator.js';

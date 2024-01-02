@@ -3,6 +3,10 @@ import path from 'path';
 import url from 'url';
 
 import {
+  BuildConfig,
+  BuildConfigSchema,
+  BuildFunctions,
+  BuildFunctionsConfigFileSchema,
   BuildStepBareCommandRun,
   BuildStepBareFunctionOrFunctionGroupCall,
   BuildStepCommandRun,
@@ -11,16 +15,12 @@ import {
   isBuildStepBareFunctionOrFunctionGroupCall,
   isBuildStepCommandRun,
   isBuildStepFunctionCall,
-  readRawBuildConfigAsync,
-  readAndValidateBuildConfigAsync,
-  validateConfig,
-  BuildFunctionsConfigFileSchema,
-  BuildConfigSchema,
-  validateAllFunctionsExist,
-  BuildConfig,
   mergeConfigWithImportedFunctions,
-  BuildFunctions,
+  readAndValidateBuildConfigAsync,
   readAndValidateBuildFunctionsConfigFileAsync,
+  readRawBuildConfigAsync,
+  validateAllFunctionsExist,
+  validateConfig,
 } from '../BuildConfig.js';
 import { BuildConfigError, BuildConfigYAMLError } from '../errors.js';
 
@@ -33,7 +33,7 @@ describe(readAndValidateBuildConfigAsync, () => {
     const config = await readAndValidateBuildConfigAsync(
       path.join(__dirname, './fixtures/build.yml'),
       {
-        externalFunctionIds: [],
+        externalFunctionIds: ['eas/save-cache'],
       }
     );
     expect(typeof config).toBe('object');
@@ -44,6 +44,10 @@ describe(readAndValidateBuildConfigAsync, () => {
     expect(config.build.steps[2].run.env).toMatchObject({ FOO: 'bar', BAR: 'baz' });
     assert(isBuildStepCommandRun(config.build.steps[5]));
     expect(config.build.steps[5].run.if).toBe('${ always() }');
+    assert(isBuildStepFunctionCall(config.build.steps[6]));
+    expect(config.build.steps[6]).toMatchObject({
+      'eas/save-cache': { inputs: { key: 'cache-key', paths: ['src'] } },
+    });
   });
   test('valid custom build config with imports', async () => {
     const config = await readAndValidateBuildConfigAsync(

@@ -14,4 +14,5 @@ build:
               - value2
               - value3:
                   property3: value4
+          function_value: ${ hashFiles('**/*.js') }
         command: echo "Hi, ${ inputs.name }, ${ inputs.boolean_value }!"
