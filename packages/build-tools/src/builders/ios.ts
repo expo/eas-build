@@ -66,7 +66,10 @@ async function buildAsync(ctx: BuildContext<Ios.Job>): Promise<void> {
     });
 
     await ctx.runBuildPhase(BuildPhase.RESTORE_CACHE, async () => {
-      await ctx.cacheManager?.restoreCache(ctx);
+      await ctx.cacheManager?.restoreCache(
+        { global: ctx, logger: ctx.logger, workingdir: ctx.workingdir },
+        ctx.job.cache
+      );
     });
 
     await ctx.runBuildPhase(BuildPhase.INSTALL_PODS, async () => {
@@ -128,7 +131,10 @@ async function buildAsync(ctx: BuildContext<Ios.Job>): Promise<void> {
   });
 
   await ctx.runBuildPhase(BuildPhase.SAVE_CACHE, async () => {
-    await ctx.cacheManager?.saveCache(ctx);
+    await ctx.cacheManager?.saveCache(
+      { global: ctx, logger: ctx.logger, workingdir: ctx.workingdir },
+      ctx.job.cache
+    );
   });
 
   await ctx.runBuildPhase(BuildPhase.UPLOAD_APPLICATION_ARCHIVE, async () => {

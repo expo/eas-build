@@ -8,6 +8,7 @@ import { createSetUpNpmrcBuildFunction } from './functions/useNpmToken';
 import { createInstallNodeModulesBuildFunction } from './functions/installNodeModules';
 import { createPrebuildBuildFunction } from './functions/prebuild';
 import { createFindAndUploadBuildArtifactsBuildFunction } from './functions/findAndUploadBuildArtifacts';
+import { createSaveCacheBuildFunction, createRestoreCacheBuildFunction } from './functions/cache';
 import { configureEASUpdateIfInstalledFunction } from './functions/configureEASUpdateIfInstalled';
 import { injectAndroidCredentialsFunction } from './functions/injectAndroidCredentials';
 import { configureAndroidVersionFunction } from './functions/configureAndroidVersion';
@@ -33,7 +34,9 @@ export function getEasFunctions(ctx: CustomBuildContext): BuildFunction[] {
     createSetUpNpmrcBuildFunction(),
     createInstallNodeModulesBuildFunction(),
     createPrebuildBuildFunction(),
-
+    createFindAndUploadBuildArtifactsBuildFunction(ctx),
+    createSaveCacheBuildFunction(),
+    createRestoreCacheBuildFunction(),
     configureEASUpdateIfInstalledFunction(),
     injectAndroidCredentialsFunction(),
     configureAndroidVersionFunction(),

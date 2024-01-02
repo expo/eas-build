@@ -5,12 +5,12 @@ import { BuildStaticContext } from '@expo/eas-build-job';
 import { bunyan } from '@expo/logger';
 import { v4 as uuidv4 } from 'uuid';
 
-import {
-  ExternalBuildContextProvider,
-  BuildStepGlobalContext,
-  BuildStepContext,
-} from '../../BuildStepContext.js';
 import { BuildRuntimePlatform } from '../../BuildRuntimePlatform.js';
+import {
+  BuildStepContext,
+  BuildStepGlobalContext,
+  ExternalBuildContextProvider,
+} from '../../BuildStepContext.js';
 import { BuildStepEnv } from '../../BuildStepEnv.js';
 
 import { createMockLogger } from './logger.js';
@@ -25,6 +25,8 @@ export class MockContextProvider implements ExternalBuildContextProvider {
     public readonly projectTargetDirectory: string,
     public readonly defaultWorkingDirectory: string,
     public readonly buildLogsDirectory: string,
+    public readonly buildDirectory: string,
+    public readonly projectRootDirectory: string,
     public readonly staticContextContent: BuildStaticContext
   ) {}
   public get env(): BuildStepEnv {
@@ -46,6 +48,8 @@ interface BuildContextParams {
   projectSourceDirectory?: string;
   projectTargetDirectory?: string;
   relativeWorkingDirectory?: string;
+  projectRootDirectory?: string;
+  buildDirectory?: string;
   staticContextContent?: BuildStaticContext;
 }
 
@@ -83,6 +87,8 @@ export function createGlobalContextMock({
   projectTargetDirectory,
   relativeWorkingDirectory,
   staticContextContent,
+  projectRootDirectory,
+  buildDirectory,
 }: BuildContextParams = {}): BuildStepGlobalContext {
   const resolvedProjectTargetDirectory =
     projectTargetDirectory ?? path.join(os.tmpdir(), 'eas-build', uuidv4());
@@ -96,6 +102,8 @@ export function createGlobalContextMock({
         ? path.resolve(resolvedProjectTargetDirectory, relativeWorkingDirectory)
         : resolvedProjectTargetDirectory,
       '/non/existent/dir',
+      buildDirectory ?? resolvedProjectTargetDirectory,
+      projectRootDirectory ?? '/non/existent/dir',
       staticContextContent ?? ({} as BuildStaticContext)
     ),
     skipCleanup ?? false

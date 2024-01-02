@@ -1,28 +1,31 @@
 import path from 'path';
 
-import fs from 'fs-extra';
+import { ExpoConfig } from '@expo/config';
 import {
   ManagedArtifactType,
   BuildPhase,
   BuildPhaseResult,
   BuildPhaseStats,
+  Env,
+  EnvironmentSecretType,
   Job,
   LogMarker,
-  Env,
-  errors,
   Metadata,
-  EnvironmentSecretType,
+  errors,
   GenericArtifactType,
   isGenericArtifact,
 } from '@expo/eas-build-job';
-import { ExpoConfig } from '@expo/config';
-import { bunyan } from '@expo/logger';
 import { BuildTrigger } from '@expo/eas-build-job/dist/common';
+import { bunyan } from '@expo/logger';
+import { CacheManager } from '@expo/steps';
+import { SpawnOptions, SpawnPromise, SpawnResult } from '@expo/turtle-spawn';
+import fs from 'fs-extra';
 
-import { PackageManager, resolvePackageManager } from './utils/packageManager';
 import { resolveBuildPhaseErrorAsync } from './buildErrors/detectError';
 import { readAppConfig } from './utils/appConfig';
 import { createTemporaryEnvironmentSecretFile } from './utils/environmentSecrets';
+import { PackageManager, resolvePackageManager } from './utils/packageManager';
+export { CacheManager } from '@expo/steps';
 
 export type Artifacts = Partial<Record<ManagedArtifactType, string>>;
 
@@ -113,6 +116,10 @@ export class BuildContext<TJob extends Job = Job> {
     this._env.PATH = this._env.PATH
       ? [this.buildExecutablesDirectory, this._env.PATH].join(':')
       : this.buildExecutablesDirectory;
+  }
+
+  get projectRootDirectory(): string | undefined {
+    return this.job.projectRootDirectory;
   }
 
   public get job(): TJob {
