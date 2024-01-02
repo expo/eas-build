@@ -11,6 +11,7 @@ if [[ "$npm_lifecycle_event" == "prepack" ]]; then
   echo 'Removing "dist_commonjs" and "dist_esm" folders...'
   rm -rf dist_commonjs dist_esm
 fi
+rm -rf dist_commonjs dist_esm
 
 echo 'Compiling TypeScript to JavaScript...'
 node_modules/.bin/tsc --project tsconfig.build.json
