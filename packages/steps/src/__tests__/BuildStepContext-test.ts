@@ -23,6 +23,8 @@ describe(BuildStepGlobalContext, () => {
           '/another/non/existent/path',
           '/working/dir/path',
           '/non/existent/path',
+          '/non/existent/path',
+          '/non/existent/path',
           {} as unknown as BuildStaticContext
         ),
         false
@@ -42,6 +44,8 @@ describe(BuildStepGlobalContext, () => {
           projectTargetDirectory,
           workingDirectory,
           '/non/existent/path',
+          '/non/existent/path',
+          '/non/existent/path',
           {} as unknown as BuildStaticContext
         ),
         false
@@ -59,6 +63,8 @@ describe(BuildStepGlobalContext, () => {
           '/non/existent/path',
           projectTargetDirectory,
           workingDirectory,
+          '/non/existent/path',
+          '/non/existent/path',
           '/non/existent/path',
           {} as unknown as BuildStaticContext
         ),
@@ -82,6 +88,8 @@ describe(BuildStepGlobalContext, () => {
         projectSourceDirectory: '/a/b/c',
         projectTargetDirectory: '/d/e/f',
         relativeWorkingDirectory: 'i',
+        projectRootDirectory: '/a/b/c',
+        buildDirectory: '/d/e/f',
         staticContextContent: { a: 1 } as unknown as BuildStaticContext,
       });
       expect(ctx.serialize()).toEqual(
@@ -93,6 +101,8 @@ describe(BuildStepGlobalContext, () => {
             projectTargetDirectory: '/d/e/f',
             defaultWorkingDirectory: '/d/e/f/i',
             buildLogsDirectory: '/non/existent/dir',
+            projectRootDirectory: '/a/b/c',
+            buildDirectory: '/d/e/f',
             runtimePlatform: BuildRuntimePlatform.DARWIN,
             staticContext: { a: 1 },
             env: {},
@@ -113,6 +123,8 @@ describe(BuildStepGlobalContext, () => {
             projectTargetDirectory: '/d/e/f',
             defaultWorkingDirectory: '/g/h/i',
             buildLogsDirectory: '/j/k/l',
+            projectRootDirectory: '/a/b/c',
+            buildDirectory: '/d/e/f',
             runtimePlatform: BuildRuntimePlatform.DARWIN,
             staticContext: { a: 1 } as unknown as BuildStaticContext,
             env: {},
@@ -128,6 +140,8 @@ describe(BuildStepGlobalContext, () => {
       expect(ctx.skipCleanup).toBe(true);
       expect(ctx.projectSourceDirectory).toBe('/a/b/c');
       expect(ctx.projectTargetDirectory).toBe('/d/e/f');
+      expect(ctx.projectRootDirectory).toBe('/a/b/c');
+      expect(ctx.buildDirectory).toBe('/d/e/f');
       expect(ctx.buildLogsDirectory).toBe('/j/k/l');
       expect(ctx.staticContext).toEqual({ a: 1 });
       expect(ctx.env).toEqual({});

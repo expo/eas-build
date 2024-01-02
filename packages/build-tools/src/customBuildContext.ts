@@ -10,7 +10,7 @@ import {
   Platform,
 } from '@expo/eas-build-job';
 import { bunyan } from '@expo/logger';
-import { ExternalBuildContextProvider, BuildRuntimePlatform } from '@expo/steps';
+import { ExternalBuildContextProvider, BuildRuntimePlatform, CacheManager } from '@expo/steps';
 
 import { ArtifactToUpload, BuildContext } from './context';
 
@@ -48,6 +48,9 @@ export class CustomBuildContext implements ExternalBuildContextProvider {
   public readonly runtimeApi: BuilderRuntimeApi;
   public job: Job;
   public metadata?: Metadata;
+  public readonly cacheManager?: CacheManager;
+  public readonly buildDirectory: string;
+  public readonly projectRootDirectory: string;
 
   private _env: Env;
 
@@ -64,6 +67,9 @@ export class CustomBuildContext implements ExternalBuildContextProvider {
     this.runtimeApi = {
       uploadArtifact: (...args) => buildCtx['uploadArtifact'](...args),
     };
+    this.cacheManager = buildCtx.cacheManager;
+    this.buildDirectory = buildCtx.buildDirectory;
+    this.projectRootDirectory = buildCtx.projectRootDirectory ?? '.';
   }
 
   public get runtimePlatform(): BuildRuntimePlatform {
