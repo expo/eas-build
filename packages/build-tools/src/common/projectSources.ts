@@ -12,8 +12,8 @@ export async function prepareProjectSourcesAsync<TJob extends Job>(
   ctx: BuildContext<TJob>,
   destinationDirectory = ctx.buildDirectory
 ): Promise<void> {
-  if ([ArchiveSourceType.S3, ArchiveSourceType.GCS].includes(ctx.job.projectArchive.type)) {
-    throw new Error('GCS and S3 project sources should be resolved earlier to url');
+  if (ctx.job.projectArchive.type === ArchiveSourceType.GCS) {
+    throw new Error('GCS project sources should be resolved earlier to url');
   } else if (ctx.job.projectArchive.type === ArchiveSourceType.PATH) {
     await prepareProjectSourcesLocallyAsync(ctx, ctx.job.projectArchive.path, destinationDirectory); // used in eas build --local
   } else if (ctx.job.projectArchive.type === ArchiveSourceType.URL) {

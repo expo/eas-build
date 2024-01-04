@@ -21,7 +21,6 @@ export enum Platform {
 
 export enum ArchiveSourceType {
   NONE = 'NONE',
-  S3 = 'S3',
   URL = 'URL',
   PATH = 'PATH',
   GCS = 'GCS',
@@ -35,7 +34,6 @@ export enum BuildTrigger {
 
 export type ArchiveSource =
   | { type: ArchiveSourceType.NONE }
-  | { type: ArchiveSourceType.S3; bucketKey: string }
   | { type: ArchiveSourceType.GCS; bucketKey: string }
   | { type: ArchiveSourceType.URL; url: string }
   | { type: ArchiveSourceType.PATH; path: string }
@@ -60,12 +58,6 @@ export const ArchiveSourceSchema = Joi.object<ArchiveSource>({
   .when(Joi.object({ type: ArchiveSourceType.GCS }).unknown(), {
     then: Joi.object({
       type: Joi.string().valid(ArchiveSourceType.GCS).required(),
-      bucketKey: Joi.string().required(),
-    }),
-  })
-  .when(Joi.object({ type: ArchiveSourceType.S3 }).unknown(), {
-    then: Joi.object({
-      type: Joi.string().valid(ArchiveSourceType.S3).required(),
       bucketKey: Joi.string().required(),
     }),
   })
