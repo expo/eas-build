@@ -1,15 +1,10 @@
 import path from 'path';
 
+import { ManagedArtifactType } from '@expo/eas-build-job';
 import { BuildFunction, BuildStepInput, BuildStepInputValueTypeName } from '@expo/steps';
 import nullthrows from 'nullthrows';
 
-import { ArtifactType } from '../../context';
 import { CustomBuildContext } from '../../customBuildContext';
-
-enum BuildArtifactType {
-  APPLICATION_ARCHIVE = 'application-archive',
-  BUILD_ARTIFACT = 'build-artifact',
-}
 
 export function createUploadArtifactBuildFunction(ctx: CustomBuildContext): BuildFunction {
   return new BuildFunction({
@@ -19,8 +14,11 @@ export function createUploadArtifactBuildFunction(ctx: CustomBuildContext): Buil
     inputProviders: [
       BuildStepInput.createProvider({
         id: 'type',
-        defaultValue: BuildArtifactType.APPLICATION_ARCHIVE,
-        allowedValues: [BuildArtifactType.APPLICATION_ARCHIVE, BuildArtifactType.BUILD_ARTIFACT],
+        defaultValue: ManagedArtifactType.APPLICATION_ARCHIVE,
+        allowedValues: [
+          ManagedArtifactType.APPLICATION_ARCHIVE,
+          ManagedArtifactType.BUILD_ARTIFACTS,
+        ],
         required: true,
         allowedValueTypeName: BuildStepInputValueTypeName.STRING,
       }),
@@ -31,28 +29,17 @@ export function createUploadArtifactBuildFunction(ctx: CustomBuildContext): Buil
       }),
     ],
     fn: async (stepsCtx, { inputs }) => {
-      const artifactType = validateAndConvertBuildArtifactType(
-        nullthrows(inputs.type.value).toString()
-      );
       const filePath = path.resolve(
         stepsCtx.workingDirectory,
         nullthrows(inputs.path.value).toString()
       );
-      await ctx.runtimeApi.uploadArtifacts(artifactType, [filePath], stepsCtx.logger);
+      const artifactType = inputs.type.value as ManagedArtifactType;
+
+      await ctx.runtimeApi.uploadArtifacts({
+        type: artifactType,
+        paths: [filePath],
+        logger: stepsCtx.logger,
+      });
     },
   });
-}
-
-function validateAndConvertBuildArtifactType(input: string): ArtifactType {
-  const allowedValues: string[] = Object.values(BuildArtifactType);
-  if (!allowedValues.includes(input)) {
-    throw new Error(
-      `"${input}" is not allowed artifact type, allowed values: ${allowedValues
-        .map((i) => `"${i}"`)
-        .join(', ')}`
-    );
-  }
-  return input === BuildArtifactType.APPLICATION_ARCHIVE
-    ? ArtifactType.APPLICATION_ARCHIVE
-    : ArtifactType.BUILD_ARTIFACTS;
 }

@@ -1,7 +1,6 @@
-import { Ios, Platform } from '@expo/eas-build-job';
+import { ManagedArtifactType, Ios, Platform } from '@expo/eas-build-job';
 import { BuildFunction } from '@expo/steps';
 
-import { ArtifactType } from '../../context';
 import { findArtifacts } from '../../utils/artifacts';
 import { findXcodeBuildLogsPathAsync } from '../../ios/xcodeBuildLogs';
 import { CustomBuildContext } from '../../customBuildContext';
@@ -42,18 +41,18 @@ export function createFindAndUploadBuildArtifactsBuildFunction(
 
       logger.info('Uploading...');
       const [archiveUpload, artifactsUpload, xcodeBuildLogsUpload] = await Promise.allSettled([
-        ctx.runtimeApi.uploadArtifacts(
-          ArtifactType.APPLICATION_ARCHIVE,
-          applicationArchives,
-          logger
-        ),
+        ctx.runtimeApi.uploadArtifacts({
+          type: ManagedArtifactType.APPLICATION_ARCHIVE,
+          paths: applicationArchives,
+          logger,
+        }),
         (async () => {
           if (buildArtifacts.length > 0) {
-            await ctx.runtimeApi.uploadArtifacts(
-              ArtifactType.BUILD_ARTIFACTS,
-              buildArtifacts,
-              logger
-            );
+            await ctx.runtimeApi.uploadArtifacts({
+              type: ManagedArtifactType.BUILD_ARTIFACTS,
+              paths: buildArtifacts,
+              logger,
+            });
           }
         })(),
         (async () => {
@@ -64,11 +63,11 @@ export function createFindAndUploadBuildArtifactsBuildFunction(
             stepCtx.global.buildLogsDirectory
           );
           if (xcodeBuildLogsPath) {
-            await ctx.runtimeApi.uploadArtifacts(
-              ArtifactType.XCODE_BUILD_LOGS,
-              [xcodeBuildLogsPath],
-              logger
-            );
+            await ctx.runtimeApi.uploadArtifacts({
+              type: ManagedArtifactType.XCODE_BUILD_LOGS,
+              paths: [xcodeBuildLogsPath],
+              logger,
+            });
           }
         })(),
       ]);

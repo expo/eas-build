@@ -3,9 +3,9 @@ import path from 'path';
 import fs from 'fs-extra';
 import fg from 'fast-glob';
 import { bunyan } from '@expo/logger';
-import { Job } from '@expo/eas-build-job';
+import { ManagedArtifactType, Job } from '@expo/eas-build-job';
 
-import { ArtifactType, BuildContext } from '../context';
+import { BuildContext } from '../context';
 
 export async function findArtifacts(
   rootDir: string,
@@ -64,7 +64,7 @@ export async function maybeFindAndUploadBuildArtifacts(
     ).flat();
     logger.info(`Build artifacts: ${buildArtifacts.join(', ')}`);
     logger.info('Uploading build artifacts...');
-    await ctx.uploadArtifacts(ArtifactType.BUILD_ARTIFACTS, buildArtifacts, logger);
+    await ctx.uploadArtifacts(ManagedArtifactType.BUILD_ARTIFACTS, buildArtifacts, logger);
   } catch (err: any) {
     logger.error({ err }, 'Failed to upload build artifacts');
   }
@@ -85,5 +85,5 @@ export async function uploadApplicationArchive(
   const applicationArchives = await findArtifacts(rootDir, patternOrPath, logger);
   logger.info(`Application archives: ${applicationArchives.join(', ')}`);
   logger.info('Uploading application archive...');
-  await ctx.uploadArtifacts(ArtifactType.APPLICATION_ARCHIVE, applicationArchives, logger);
+  await ctx.uploadArtifacts(ManagedArtifactType.APPLICATION_ARCHIVE, applicationArchives, logger);
 }

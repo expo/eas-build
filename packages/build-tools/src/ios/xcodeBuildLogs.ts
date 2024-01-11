@@ -1,11 +1,11 @@
 import os from 'os';
 import path from 'path';
 
-import { Ios } from '@expo/eas-build-job';
+import { ManagedArtifactType, Ios } from '@expo/eas-build-job';
 import fg from 'fast-glob';
 import { bunyan } from '@expo/logger';
 
-import { ArtifactType, BuildContext } from '../context';
+import { BuildContext } from '../context';
 
 export async function findAndUploadXcodeBuildLogsAsync(
   ctx: BuildContext<Ios.Job>,
@@ -14,7 +14,7 @@ export async function findAndUploadXcodeBuildLogsAsync(
   try {
     const xcodeBuildLogsPath = await findXcodeBuildLogsPathAsync(ctx.buildLogsDirectory);
     if (xcodeBuildLogsPath) {
-      await ctx.uploadArtifacts(ArtifactType.XCODE_BUILD_LOGS, [xcodeBuildLogsPath], logger);
+      await ctx.uploadArtifacts(ManagedArtifactType.XCODE_BUILD_LOGS, [xcodeBuildLogsPath], logger);
     }
   } catch (err: any) {
     logger.debug({ err }, 'Failed to upload Xcode build logs');
