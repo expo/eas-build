@@ -385,13 +385,16 @@ export class BuildStep extends BuildStepOutputAccessor {
     if (!inputs) {
       return this.ctx.global.interpolate(command);
     }
-    const vars = inputs.reduce((acc, input) => {
-      acc[input.id] =
-        typeof input.value === 'object'
-          ? JSON.stringify(input.value)
-          : input.value?.toString() ?? '';
-      return acc;
-    }, {} as Record<string, string>);
+    const vars = inputs.reduce(
+      (acc, input) => {
+        acc[input.id] =
+          typeof input.value === 'object'
+            ? JSON.stringify(input.value)
+            : input.value?.toString() ?? '';
+        return acc;
+      },
+      {} as Record<string, string>
+    );
     const valueInterpolatedWithGlobalContext = this.ctx.global.interpolate(command);
     return interpolateWithInputs(valueInterpolatedWithGlobalContext, vars);
   }

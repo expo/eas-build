@@ -4,7 +4,10 @@ import escapeRegExp from 'lodash/escapeRegExp';
 import { ErrorContext, ErrorHandler } from './errors.types';
 
 export class TrackedBuildError extends Error {
-  constructor(public errorCode: string, public message: string) {
+  constructor(
+    public errorCode: string,
+    public message: string
+  ) {
     super(message);
   }
 }

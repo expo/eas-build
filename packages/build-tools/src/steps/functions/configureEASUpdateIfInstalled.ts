@@ -31,10 +31,13 @@ export function configureEASUpdateIfInstalledFunction(): BuildFunction {
 
       const appConfig = readAppConfig({
         projectDir: stepCtx.workingDirectory,
-        env: Object.keys(env).reduce((acc, key) => {
-          acc[key] = env[key] ?? '';
-          return acc;
-        }, {} as Record<string, string>),
+        env: Object.keys(env).reduce(
+          (acc, key) => {
+            acc[key] = env[key] ?? '';
+            return acc;
+          },
+          {} as Record<string, string>
+        ),
         logger: stepCtx.logger,
         sdkVersion: metadata?.sdkVersion,
       }).exp;
