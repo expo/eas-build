@@ -15,11 +15,7 @@ export interface PrebuildOptions {
 
 export async function prebuildAsync<TJob extends Job>(
   ctx: BuildContext<TJob>,
-  {
-    logger,
-    workingDir,
-    options,
-  }: { logger: bunyan; workingDir: string; options?: PrebuildOptions },
+  { logger, workingDir, options }: { logger: bunyan; workingDir: string; options?: PrebuildOptions }
 ): Promise<void> {
   const customExpoCliVersion = ctx.job.builderEnvironment?.expoCli;
   const shouldDisableSharp =

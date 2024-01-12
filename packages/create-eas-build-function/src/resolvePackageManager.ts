@@ -50,7 +50,7 @@ export function isPackageManagerAvailable(manager: PackageManagerName): boolean 
 export async function installDependenciesAsync(
   projectRoot: string,
   packageManager: PackageManagerName,
-  flags: { silent: boolean } = { silent: false },
+  flags: { silent: boolean } = { silent: false }
 ): Promise<void> {
   const options = { cwd: projectRoot, silent: flags.silent };
   if (packageManager === 'yarn') {

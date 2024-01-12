@@ -34,7 +34,7 @@ export async function configureEASUpdateIfInstalledAsync({
 }): Promise<void> {
   if (!(await isExpoUpdatesInstalledAsync(workingDirectory))) {
     throw new Error(
-      `Cannot configure Expo Updates because the expo-updates package is not installed.`,
+      `Cannot configure Expo Updates because the expo-updates package is not installed.`
     );
   }
 
@@ -52,11 +52,11 @@ export async function configureEASUpdateIfInstalledAsync({
     } else {
       if (job.releaseChannel !== undefined) {
         logger.warn(
-          `This build is configured with EAS Update however has a Classic Updates releaseChannel set instead of having an EAS Update channel.`,
+          `This build is configured with EAS Update however has a Classic Updates releaseChannel set instead of having an EAS Update channel.`
         );
       } else {
         logger.warn(
-          `This build is configured to query EAS Update for updates, however no channel is set.`,
+          `This build is configured to query EAS Update for updates, however no channel is set.`
         );
       }
     }
@@ -89,7 +89,7 @@ async function configureEASUpdate(
   job: Job,
   logger: bunyan,
   channel: string,
-  workingDirectory: string,
+  workingDirectory: string
 ): Promise<void> {
   const newUpdateRequestHeaders: Record<string, string> = {
     'expo-channel-name': channel,
@@ -98,8 +98,8 @@ async function configureEASUpdate(
   const configFile = job.platform === Platform.ANDROID ? 'AndroidManifest.xml' : 'Expo.plist';
   logger.info(
     `Setting the update request headers in '${configFile}' to '${JSON.stringify(
-      newUpdateRequestHeaders,
-    )}'`,
+      newUpdateRequestHeaders
+    )}'`
   );
 
   switch (job.platform) {
@@ -132,7 +132,7 @@ async function getChannelAsync(job: Job, workingDirectory: string): Promise<stri
 async function setRuntimeVersionNativelyAsync(
   job: Job,
   runtimeVersion: string,
-  workingDirectory: string,
+  workingDirectory: string
 ): Promise<void> {
   switch (job.platform) {
     case Platform.ANDROID: {

@@ -25,7 +25,7 @@ export async function prepareWorkingdirAsync(): Promise<string> {
       await fs.remove(workingdir);
     } else {
       console.error(
-        chalk.yellow("EAS_LOCAL_BUILD_SKIP_CLEANUP is set, working dir won't be removed."),
+        chalk.yellow("EAS_LOCAL_BUILD_SKIP_CLEANUP is set, working dir won't be removed.")
       );
     }
   });

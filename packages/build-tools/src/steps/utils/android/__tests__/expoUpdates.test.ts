@@ -26,10 +26,10 @@ describe(androidSetChannelNativelyAsync, () => {
       {
         'android/app/src/main/AndroidManifest.xml': originalFs.readFileSync(
           path.join(__dirname, 'fixtures/NoMetadataAndroidManifest.xml'),
-          'utf-8',
+          'utf-8'
         ),
       },
-      '/app',
+      '/app'
     );
 
     await androidSetChannelNativelyAsync(channel, '/app');
@@ -37,7 +37,7 @@ describe(androidSetChannelNativelyAsync, () => {
     const newAndroidManifest = await AndroidConfig.Manifest.readAndroidManifestAsync(manifestPath);
     const newValue = AndroidConfig.Manifest.getMainApplicationMetaDataValue(
       newAndroidManifest,
-      AndroidMetadataName.UPDATES_CONFIGURATION_REQUEST_HEADERS_KEY,
+      AndroidMetadataName.UPDATES_CONFIGURATION_REQUEST_HEADERS_KEY
     );
     expect(newValue).toBeDefined();
     expect(JSON.parse(newValue!)).toEqual({ 'expo-channel-name': channel });
@@ -50,10 +50,10 @@ describe(androidGetNativelyDefinedChannelAsync, () => {
       {
         'android/app/src/main/AndroidManifest.xml': originalFs.readFileSync(
           path.join(__dirname, 'fixtures/AndroidManifestWithChannel.xml'),
-          'utf-8',
+          'utf-8'
         ),
       },
-      '/app',
+      '/app'
     );
 
     await expect(androidGetNativelyDefinedChannelAsync('/app')).resolves.toBe('staging-123');
@@ -66,10 +66,10 @@ describe(androidSetRuntimeVersionNativelyAsync, () => {
       {
         'android/app/src/main/AndroidManifest.xml': originalFs.readFileSync(
           path.join(__dirname, 'fixtures/NoMetadataAndroidManifest.xml'),
-          'utf-8',
+          'utf-8'
         ),
       },
-      '/app',
+      '/app'
     );
 
     await androidSetRuntimeVersionNativelyAsync('1.2.3', '/app');
@@ -77,7 +77,7 @@ describe(androidSetRuntimeVersionNativelyAsync, () => {
     const newAndroidManifest = await AndroidConfig.Manifest.readAndroidManifestAsync(manifestPath);
     const newValue = AndroidConfig.Manifest.getMainApplicationMetaDataValue(
       newAndroidManifest,
-      AndroidMetadataName.RUNTIME_VERSION,
+      AndroidMetadataName.RUNTIME_VERSION
     );
     expect(newValue).toBe('1.2.3');
   });
@@ -86,10 +86,10 @@ describe(androidSetRuntimeVersionNativelyAsync, () => {
       {
         'android/app/src/main/AndroidManifest.xml': originalFs.readFileSync(
           path.join(__dirname, 'fixtures/AndroidManifestWithRuntimeVersion.xml'),
-          'utf-8',
+          'utf-8'
         ),
       },
-      '/app',
+      '/app'
     );
 
     await androidSetRuntimeVersionNativelyAsync('1.2.3', '/app');
@@ -97,7 +97,7 @@ describe(androidSetRuntimeVersionNativelyAsync, () => {
     const newAndroidManifest = await AndroidConfig.Manifest.readAndroidManifestAsync(manifestPath);
     const newValue = AndroidConfig.Manifest.getMainApplicationMetaDataValue(
       newAndroidManifest,
-      AndroidMetadataName.RUNTIME_VERSION,
+      AndroidMetadataName.RUNTIME_VERSION
     );
     expect(newValue).toBe('1.2.3');
   });

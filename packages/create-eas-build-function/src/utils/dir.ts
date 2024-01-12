@@ -24,6 +24,6 @@ const tolerableFiles = [
 
 export function getConflictsForDirectory(projectRoot: string): string[] {
   return readdirSync(projectRoot).filter(
-    (file: string) => !(file.endsWith('.iml') || tolerableFiles.includes(file)),
+    (file: string) => !(file.endsWith('.iml') || tolerableFiles.includes(file))
   );
 }

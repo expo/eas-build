@@ -5,7 +5,7 @@ async function templateFile(
   templateFilePath: string,
   envs: Record<string, string | number | any>,
   outputFilePath?: string,
-  { mustache = true }: { mustache?: boolean } = {},
+  { mustache = true }: { mustache?: boolean } = {}
 ): Promise<string | void> {
   const templateString = await fs.readFile(templateFilePath, 'utf8');
   const compiledTemplate = _.template(
@@ -15,7 +15,7 @@ async function templateFile(
           // mustache
           interpolate: /{{([\s\S]+?)}}/g,
         }
-      : undefined,
+      : undefined
   );
   const outputFileContents = compiledTemplate(envs);
 

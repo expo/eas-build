@@ -26,7 +26,7 @@ describe('downloadFile', () => {
 
   it('should throw error when 4xx', async () => {
     await expect(
-      downloadFile(missingFileInS3Bucket, tmpPathLocation, { timeout: 2000 }),
+      downloadFile(missingFileInS3Bucket, tmpPathLocation, { timeout: 2000 })
     ).rejects.toThrow();
   });
 
@@ -34,13 +34,13 @@ describe('downloadFile', () => {
     await expect(
       downloadFile('https://amazonawswueytfgweuyfgvuwefvuweyvf.com', tmpPathLocation, {
         timeout: 2000,
-      }),
+      })
     ).rejects.toThrow();
   });
 
   it('should throw error when timeout is reached', async () => {
     await expect(
-      downloadFile(fileInPublicS3Bucket, tmpPathLocation, { timeout: 1 }),
+      downloadFile(fileInPublicS3Bucket, tmpPathLocation, { timeout: 1 })
     ).rejects.toThrow();
   });
 

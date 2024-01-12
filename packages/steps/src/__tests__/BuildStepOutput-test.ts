@@ -28,8 +28,8 @@ describe(BuildStepOutput, () => {
       o.value;
     }).toThrowError(
       new BuildStepRuntimeError(
-        'Output parameter "foo" for step "test1" is required but it was not set.',
-      ),
+        'Output parameter "foo" for step "test1" is required but it was not set.'
+      )
     );
   });
 
@@ -43,7 +43,7 @@ describe(BuildStepOutput, () => {
     expect(() => {
       i.set(undefined);
     }).toThrowError(
-      new BuildStepRuntimeError('Output parameter "foo" for step "test1" is required.'),
+      new BuildStepRuntimeError('Output parameter "foo" for step "test1" is required.')
     );
   });
 

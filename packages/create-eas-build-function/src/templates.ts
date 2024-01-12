@@ -48,7 +48,7 @@ export async function promptTemplateAsync(): Promise<'typescript' | 'javascript'
  */
 export async function extractAndPrepareTemplateFunctionModuleAsync(
   projectRoot: string,
-  resolvedTemplate: string,
+  resolvedTemplate: string
 ): Promise<string> {
   await copyTemplateAsync(resolvedTemplate, {
     cwd: projectRoot,
@@ -61,7 +61,7 @@ export async function copyTemplateAsync(
   resolvedTemplate: string,
   props: {
     cwd: string;
-  },
+  }
 ): Promise<void> {
   const modulePath = path.resolve(__dirname, '../templates', resolvedTemplate);
   try {

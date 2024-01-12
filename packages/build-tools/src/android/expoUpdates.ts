@@ -14,10 +14,10 @@ export enum AndroidMetadataName {
 
 export async function androidSetRuntimeVersionNativelyAsync(
   ctx: BuildContext<Job>,
-  runtimeVersion: string,
+  runtimeVersion: string
 ): Promise<void> {
   const manifestPath = await AndroidConfig.Paths.getAndroidManifestAsync(
-    ctx.getReactNativeProjectDirectory(),
+    ctx.getReactNativeProjectDirectory()
   );
 
   if (!(await fs.pathExists(manifestPath))) {
@@ -30,7 +30,7 @@ export async function androidSetRuntimeVersionNativelyAsync(
     mainApp,
     AndroidMetadataName.RUNTIME_VERSION,
     runtimeVersion,
-    'value',
+    'value'
   );
   await AndroidConfig.Manifest.writeAndroidManifestAsync(manifestPath, androidManifest);
 }
@@ -39,7 +39,7 @@ export async function androidSetChannelNativelyAsync(ctx: BuildContext<Job>): Pr
   assert(ctx.job.updates?.channel, 'updates.channel must be defined');
 
   const manifestPath = await AndroidConfig.Paths.getAndroidManifestAsync(
-    ctx.getReactNativeProjectDirectory(),
+    ctx.getReactNativeProjectDirectory()
   );
 
   if (!(await fs.pathExists(manifestPath))) {
@@ -50,7 +50,7 @@ export async function androidSetChannelNativelyAsync(ctx: BuildContext<Job>): Pr
   const mainApp = AndroidConfig.Manifest.getMainApplicationOrThrow(androidManifest);
   const stringifiedUpdatesRequestHeaders = AndroidConfig.Manifest.getMainApplicationMetaDataValue(
     androidManifest,
-    AndroidMetadataName.UPDATES_CONFIGURATION_REQUEST_HEADERS_KEY,
+    AndroidMetadataName.UPDATES_CONFIGURATION_REQUEST_HEADERS_KEY
   );
   AndroidConfig.Manifest.addMetaDataItemToMainApplication(
     mainApp,
@@ -59,16 +59,16 @@ export async function androidSetChannelNativelyAsync(ctx: BuildContext<Job>): Pr
       ...JSON.parse(stringifiedUpdatesRequestHeaders ?? '{}'),
       'expo-channel-name': ctx.job.updates.channel,
     }),
-    'value',
+    'value'
   );
   await AndroidConfig.Manifest.writeAndroidManifestAsync(manifestPath, androidManifest);
 }
 
 export async function androidGetNativelyDefinedChannelAsync(
-  ctx: BuildContext<Job>,
+  ctx: BuildContext<Job>
 ): Promise<string | null> {
   const manifestPath = await AndroidConfig.Paths.getAndroidManifestAsync(
-    ctx.getReactNativeProjectDirectory(),
+    ctx.getReactNativeProjectDirectory()
   );
 
   if (!(await fs.pathExists(manifestPath))) {
@@ -78,27 +78,27 @@ export async function androidGetNativelyDefinedChannelAsync(
   const androidManifest = await AndroidConfig.Manifest.readAndroidManifestAsync(manifestPath);
   const stringifiedUpdatesRequestHeaders = AndroidConfig.Manifest.getMainApplicationMetaDataValue(
     androidManifest,
-    AndroidMetadataName.UPDATES_CONFIGURATION_REQUEST_HEADERS_KEY,
+    AndroidMetadataName.UPDATES_CONFIGURATION_REQUEST_HEADERS_KEY
   );
   try {
     const updatesRequestHeaders = JSON.parse(stringifiedUpdatesRequestHeaders ?? '{}');
     return updatesRequestHeaders['expo-channel-name'] ?? null;
   } catch (err: any) {
     throw new Error(
-      `Failed to parse ${AndroidMetadataName.UPDATES_CONFIGURATION_REQUEST_HEADERS_KEY} from AndroidManifest.xml: ${err.message}`,
+      `Failed to parse ${AndroidMetadataName.UPDATES_CONFIGURATION_REQUEST_HEADERS_KEY} from AndroidManifest.xml: ${err.message}`
     );
   }
 }
 
 export async function androidSetClassicReleaseChannelNativelyAsync(
-  ctx: BuildContext<Job>,
+  ctx: BuildContext<Job>
 ): Promise<void> {
   const { releaseChannel } = ctx.job;
   assert(releaseChannel, 'releaseChannel must be defined');
   const escapedReleaseChannel = XML.escapeAndroidString(releaseChannel);
 
   const manifestPath = await AndroidConfig.Paths.getAndroidManifestAsync(
-    ctx.getReactNativeProjectDirectory(),
+    ctx.getReactNativeProjectDirectory()
   );
   if (!(await fs.pathExists(manifestPath))) {
     throw new Error(`Couldn't find Android manifest at ${manifestPath}`);
@@ -106,7 +106,7 @@ export async function androidSetClassicReleaseChannelNativelyAsync(
 
   // Store the release channel in a string resource to ensure it is interpreted as a string
   const stringResourcePath = await AndroidConfig.Strings.getProjectStringsXMLPathAsync(
-    ctx.getReactNativeProjectDirectory(),
+    ctx.getReactNativeProjectDirectory()
   );
   const stringResourceObject = await AndroidConfig.Resources.readResourcesXMLAsync({
     path: stringResourcePath,
@@ -119,7 +119,7 @@ export async function androidSetClassicReleaseChannelNativelyAsync(
   });
   const newStringResourceObject = AndroidConfig.Strings.setStringItem(
     [releaseChannelResourceItem],
-    stringResourceObject,
+    stringResourceObject
   );
   await XML.writeXMLAsync({ path: stringResourcePath, xml: newStringResourceObject });
 
@@ -129,16 +129,16 @@ export async function androidSetClassicReleaseChannelNativelyAsync(
     mainApp,
     AndroidMetadataName.RELEASE_CHANNEL,
     `@string/${resourceName}`,
-    'value',
+    'value'
   );
   await AndroidConfig.Manifest.writeAndroidManifestAsync(manifestPath, androidManifest);
 }
 
 export async function androidGetNativelyDefinedClassicReleaseChannelAsync(
-  ctx: BuildContext<Job>,
+  ctx: BuildContext<Job>
 ): Promise<string | null> {
   const manifestPath = await AndroidConfig.Paths.getAndroidManifestAsync(
-    ctx.getReactNativeProjectDirectory(),
+    ctx.getReactNativeProjectDirectory()
   );
   if (!(await fs.pathExists(manifestPath))) {
     return null;
@@ -147,15 +147,15 @@ export async function androidGetNativelyDefinedClassicReleaseChannelAsync(
   const androidManifest = await AndroidConfig.Manifest.readAndroidManifestAsync(manifestPath);
   return AndroidConfig.Manifest.getMainApplicationMetaDataValue(
     androidManifest,
-    AndroidMetadataName.RELEASE_CHANNEL,
+    AndroidMetadataName.RELEASE_CHANNEL
   );
 }
 
 export async function androidGetNativelyDefinedRuntimeVersionAsync(
-  ctx: BuildContext<Job>,
+  ctx: BuildContext<Job>
 ): Promise<string | null> {
   const manifestPath = await AndroidConfig.Paths.getAndroidManifestAsync(
-    ctx.getReactNativeProjectDirectory(),
+    ctx.getReactNativeProjectDirectory()
   );
   if (!(await fs.pathExists(manifestPath))) {
     return null;
@@ -164,6 +164,6 @@ export async function androidGetNativelyDefinedRuntimeVersionAsync(
   const androidManifest = await AndroidConfig.Manifest.readAndroidManifestAsync(manifestPath);
   return AndroidConfig.Manifest.getMainApplicationMetaDataValue(
     androidManifest,
-    AndroidMetadataName.RUNTIME_VERSION,
+    AndroidMetadataName.RUNTIME_VERSION
   );
 }

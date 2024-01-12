@@ -17,7 +17,7 @@ export const userErrorHandlers: ErrorHandler<UserFacingError>[] = [
         `Your project requires a newer version of CocoaPods. You can update it in the build profile in eas.json by either:
 - changing the current version under key "cocoapods"
 - switching to an image that supports that version under key "image"`,
-        'https://docs.expo.dev/build-reference/eas-json/',
+        'https://docs.expo.dev/build-reference/eas-json/'
       ),
   },
   {
@@ -30,7 +30,7 @@ export const userErrorHandlers: ErrorHandler<UserFacingError>[] = [
       new UserFacingError(
         'EAS_BUILD_UNSUPPORTED_BUNDLER_VERSION_ERROR',
         `Your project requires a different version of the Ruby "bundler" program than the version installed in this EAS Build environment. You can specify which version of "bundler" to install by specifying the version under "build"→[buildProfileName]→"ios"→"bundler" in eas.json.`,
-        'https://docs.expo.dev/build-reference/eas-json/',
+        'https://docs.expo.dev/build-reference/eas-json/'
       ),
   },
   {
@@ -42,7 +42,7 @@ export const userErrorHandlers: ErrorHandler<UserFacingError>[] = [
     createError: () =>
       new UserFacingError(
         'EAS_BUILD_INVALID_KEYSTORE_FORMAT_ERROR',
-        'The keystore used in this build is malformed or it has an unsupported type. Make sure you provided the correct file.',
+        'The keystore used in this build is malformed or it has an unsupported type. Make sure you provided the correct file.'
       ),
   },
   {
@@ -54,7 +54,7 @@ export const userErrorHandlers: ErrorHandler<UserFacingError>[] = [
     createError: () =>
       new UserFacingError(
         'EAS_BUILD_INVALID_KEYSTORE_ALIAS_ERROR',
-        'The alias specified for this keystore does not exist. Make sure you specified the correct value.',
+        'The alias specified for this keystore does not exist. Make sure you specified the correct value.'
       ),
   },
   {
@@ -70,7 +70,7 @@ export const userErrorHandlers: ErrorHandler<UserFacingError>[] = [
       new UserFacingError(
         'EAS_BUILD_MISSING_GOOGLE_SERVICES_JSON_ERROR',
         '"google-services.json" is missing, make sure that the file exists. Remember that EAS Build only uploads the files tracked by git. Use EAS secrets to provide EAS Build with the file.',
-        'https://docs.expo.dev/build-reference/variables/#how-to-upload-a-secret-file-and',
+        'https://docs.expo.dev/build-reference/variables/#how-to-upload-a-secret-file-and'
       ),
   },
   {
@@ -85,7 +85,7 @@ export const userErrorHandlers: ErrorHandler<UserFacingError>[] = [
       new UserFacingError(
         'EAS_BUILD_MISSING_GOOGLE_SERVICES_JSON_ERROR',
         '"google-services.json" is missing, make sure that the file exists. Remember that EAS Build only uploads the files tracked by git. Use EAS secrets to provide EAS Build with the file.',
-        'https://docs.expo.dev/build-reference/variables/#how-to-upload-a-secret-file-and',
+        'https://docs.expo.dev/build-reference/variables/#how-to-upload-a-secret-file-and'
       ),
   },
   {
@@ -98,7 +98,7 @@ export const userErrorHandlers: ErrorHandler<UserFacingError>[] = [
       new UserFacingError(
         'EAS_BUILD_MISSING_GOOGLE_SERVICES_PLIST_ERROR',
         '"GoogleService-Info.plist" is missing, make sure that the file exists. Remember that EAS Build only uploads the files tracked by git. Use EAS secrets to provide EAS Build with the file.',
-        'https://docs.expo.dev/build-reference/variables/#how-to-upload-a-secret-file-and',
+        'https://docs.expo.dev/build-reference/variables/#how-to-upload-a-secret-file-and'
       ),
   },
   {
@@ -121,7 +121,7 @@ ${
     ? 'You can use the expo-build-properties config plugin (https://docs.expo.dev/versions/latest/sdk/build-properties/) to override the default native build properties and set a different minimum deployment target.'
     : 'You need to manually update the minimum deployment target in your project to resolve this issue.'
 }
-`,
+`
       );
     },
   },
@@ -147,7 +147,7 @@ ${
 You are seeing this error because either:
   - Some of the pods used in your project depend on different versions of the same pod. See logs for more information.
   - If you are caching Podfile.lock using "cache" field in eas.json, then versions there might not match required values in Podspecs of some installed libraries. To fix this, you can re-run build command with "--clear-cache" option, or select "Clear cache and retry build" on the build page.
-`,
+`
       );
     },
   },
@@ -166,7 +166,7 @@ You are seeing this error because either:
           `Some of your peer dependencies are not compatible. The recommended approach is to fix your dependencies by resolving any conflicts listed by "npm install". As a temporary workaround you can:
 - Add ".npmrc" file with "legacy-peer-deps=true" and commit that to your repo.
 - Delete package-lock.json and use yarn instead. It does not enforce peer dependencies.
-- Downgrade to older version of npm on EAS Build, by adding "npm install -g npm@version" in "eas-build-pre-install" script in package.json.`,
+- Downgrade to older version of npm on EAS Build, by adding "npm install -g npm@version" in "eas-build-pre-install" script in package.json.`
         );
       }
       return undefined;
@@ -184,7 +184,7 @@ You are seeing this error because either:
           `Checksum for package "${matchResult[1]}" does not match value in registry. To fix that:
 - run "yarn cache clean"
 - remove yarn.lock (or only the section for that package)
-- run "yarn install --force"`,
+- run "yarn install --force"`
         );
       }
       return undefined;
@@ -205,7 +205,7 @@ You are seeing this error because either:
       if (matchResult) {
         return new UserFacingError(
           'EAS_BUILD_YARN_MULTIPLE_INSTANCES_ERROR',
-          `One of project dependencies is starting new install process while the main one is still in progress, which might result in corrupted packages. Most likely the reason for error is "prepare" script in git-referenced dependency of your project. Learn more: https://github.com/yarnpkg/yarn/issues/7212#issuecomment-493720324`,
+          `One of project dependencies is starting new install process while the main one is still in progress, which might result in corrupted packages. Most likely the reason for error is "prepare" script in git-referenced dependency of your project. Learn more: https://github.com/yarnpkg/yarn/issues/7212#issuecomment-493720324`
         );
       }
       return undefined;
@@ -234,13 +234,13 @@ You are seeing this error because either:
             'XCODE_RESOURCE_BUNDLE_CODE_SIGNING_ERROR',
             `Starting from Xcode 14, resource bundles are signed by default, which requires setting the development team for each resource bundle target.
 To resolve this issue, downgrade to an older Xcode version using the "image" field in eas.json, or upgrade to SDK 46 or higher.`,
-            'https://docs.expo.dev/build-reference/infrastructure/#ios-build-server-configurations',
+            'https://docs.expo.dev/build-reference/infrastructure/#ios-build-server-configurations'
           )
         : new UserFacingError(
             'XCODE_RESOURCE_BUNDLE_CODE_SIGNING_ERROR',
             `Starting from Xcode 14, resource bundles are signed by default, which requires setting the development team for each resource bundle target.
 To resolve this issue, downgrade to an older Xcode version using the "image" field in eas.json, or turn off signing resource bundles in your Podfile: https://expo.fyi/r/disable-bundle-resource-signing`,
-            'https://docs.expo.dev/build-reference/infrastructure/#ios-build-server-configurations',
+            'https://docs.expo.dev/build-reference/infrastructure/#ios-build-server-configurations'
           ),
   },
   {
@@ -250,7 +250,7 @@ To resolve this issue, downgrade to an older Xcode version using the "image" fie
     createError: () =>
       new UserFacingError(
         errors.ErrorCode.UNKNOWN_GRADLE_ERROR,
-        'Gradle build failed with unknown error. See logs for the "Run gradlew" phase for more information.',
+        'Gradle build failed with unknown error. See logs for the "Run gradlew" phase for more information.'
       ),
   },
   {
@@ -260,7 +260,7 @@ To resolve this issue, downgrade to an older Xcode version using the "image" fie
     createError: () =>
       new UserFacingError(
         errors.ErrorCode.UNKNOWN_FASTLANE_ERROR,
-        `The "Run fastlane" step failed with an unknown error. Refer to "Xcode Logs" below for additional, more detailed logs.`,
+        `The "Run fastlane" step failed with an unknown error. Refer to "Xcode Logs" below for additional, more detailed logs.`
       ),
   },
 ];

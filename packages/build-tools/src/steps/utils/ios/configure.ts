@@ -17,13 +17,13 @@ export async function configureCredentialsAsync(
   }: {
     credentials: Credentials;
     buildConfiguration: string;
-  },
+  }
 ): Promise<void> {
   const targetNames = Object.keys(credentials.targetProvisioningProfiles);
   for (const targetName of targetNames) {
     const profile = credentials.targetProvisioningProfiles[targetName];
     logger.info(
-      `Assigning provisioning profile '${profile.name}' (Apple Team ID: ${profile.teamId}) to target '${targetName}'`,
+      `Assigning provisioning profile '${profile.name}' (Apple Team ID: ${profile.teamId}) to target '${targetName}'`
     );
     IOSConfig.ProvisioningProfile.setProvisioningProfileForPbxproj(workingDir, {
       targetName,
@@ -50,7 +50,7 @@ export async function updateVersionsAsync(
   }: {
     targetNames: string[];
     buildConfiguration: string;
-  },
+  }
 ): Promise<void> {
   const project = IOSConfig.XcodeUtils.getPbxproj(workingDir);
   const iosDir = path.join(workingDir, 'ios');
@@ -66,7 +66,7 @@ export async function updateVersionsAsync(
       const evaluatedInfoPlistPath = trimQuotes(
         evaluateTemplateString(infoPlist, {
           SRCROOT: iosDir,
-        }),
+        })
       );
       const absolutePath = path.isAbsolute(evaluatedInfoPlistPath)
         ? evaluatedInfoPlistPath

@@ -57,14 +57,14 @@ function adjustOOMScore(spawnPromise: SpawnPromise<SpawnResult>, logger: bunyan)
             // can start killing processes when there is still enough memory left.
             const oomScoreOverride = 800;
             await fs.writeFile(`/proc/${pid}/oom_score_adj`, `${oomScoreOverride}\n`);
-          }),
+          })
         );
       } catch (err: any) {
         logger.debug({ err, stderr: err?.stderr }, 'Failed to override oom_score_adj');
       }
     },
     // Wait 20 seconds to make sure all child processes are started
-    20000,
+    20000
   );
 }
 

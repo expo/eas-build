@@ -49,7 +49,7 @@ export type BuildStepFunction = (
     inputs,
     outputs,
     env,
-  }: { inputs: BuildStepInputById; outputs: BuildStepOutputById; env: BuildStepEnv },
+  }: { inputs: BuildStepInputById; outputs: BuildStepOutputById; env: BuildStepEnv }
 ) => unknown;
 
 // TODO: move to a place common with tests
@@ -68,13 +68,13 @@ export class BuildStepOutputAccessor {
     public readonly id: string,
     public readonly displayName: string,
     protected readonly executed: boolean,
-    protected readonly outputById: BuildStepOutputById,
+    protected readonly outputById: BuildStepOutputById
   ) {}
 
   public getOutputValueByName(name: string): string | undefined {
     if (!this.executed) {
       throw new BuildStepRuntimeError(
-        `Failed getting output "${name}" from step "${this.displayName}". The step has not been executed yet.`,
+        `Failed getting output "${name}" from step "${this.displayName}". The step has not been executed yet.`
       );
     }
     if (!this.hasOutputParameter(name)) {
@@ -92,26 +92,26 @@ export class BuildStepOutputAccessor {
       id: this.id,
       executed: this.executed,
       outputById: Object.fromEntries(
-        Object.entries(this.outputById).map(([key, value]) => [key, value.serialize()]),
+        Object.entries(this.outputById).map(([key, value]) => [key, value.serialize()])
       ),
       displayName: this.displayName,
     };
   }
 
   public static deserialize(
-    serialized: SerializedBuildStepOutputAccessor,
+    serialized: SerializedBuildStepOutputAccessor
   ): BuildStepOutputAccessor {
     const outputById = Object.fromEntries(
       Object.entries(serialized.outputById).map(([key, value]) => [
         key,
         BuildStepOutput.deserialize(value),
-      ]),
+      ])
     );
     return new BuildStepOutputAccessor(
       serialized.id,
       serialized.displayName,
       serialized.executed,
-      outputById,
+      outputById
     );
   }
 }
@@ -195,7 +195,7 @@ export class BuildStep extends BuildStepOutputAccessor {
       supportedRuntimePlatforms?: BuildRuntimePlatform[];
       env?: BuildStepEnv;
       ifCondition?: string;
-    },
+    }
   ) {
     assert(command !== undefined || fn !== undefined, 'Either command or fn must be defined.');
     assert(!(command !== undefined && fn !== undefined), 'Command and fn cannot be both set.');
@@ -233,7 +233,7 @@ export class BuildStep extends BuildStepOutputAccessor {
     try {
       this.ctx.logger.info(
         { marker: BuildStepLogMarker.START_STEP },
-        `Executing build step "${this.displayName}"`,
+        `Executing build step "${this.displayName}"`
       );
       this.status = BuildStepStatus.IN_PROGRESS;
 
@@ -245,14 +245,14 @@ export class BuildStep extends BuildStepOutputAccessor {
 
       this.ctx.logger.info(
         { marker: BuildStepLogMarker.END_STEP, result: BuildStepStatus.SUCCESS },
-        `Finished build step "${this.displayName}" successfully`,
+        `Finished build step "${this.displayName}" successfully`
       );
       this.status = BuildStepStatus.SUCCESS;
     } catch (err) {
       this.ctx.logger.error({ err });
       this.ctx.logger.error(
         { marker: BuildStepLogMarker.END_STEP, result: BuildStepStatus.FAIL },
-        `Build step "${this.displayName}" failed`,
+        `Build step "${this.displayName}" failed`
       );
       this.status = BuildStepStatus.FAIL;
       throw err;
@@ -268,7 +268,7 @@ export class BuildStep extends BuildStepOutputAccessor {
   public getOutputValueByName(name: string): string | undefined {
     if (!this.executed) {
       throw new BuildStepRuntimeError(
-        `Failed getting output "${name}" from step "${this.displayName}". The step has not been executed yet.`,
+        `Failed getting output "${name}" from step "${this.displayName}". The step has not been executed yet.`
       );
     }
     if (!this.hasOutputParameter(name)) {
@@ -304,12 +304,12 @@ export class BuildStep extends BuildStepOutputAccessor {
     this.status = BuildStepStatus.SKIPPED;
     this.ctx.logger.info(
       { marker: BuildStepLogMarker.START_STEP },
-      'Executing build step "${this.displayName}"',
+      'Executing build step "${this.displayName}"'
     );
     this.ctx.logger.info(`Skipped build step "${this.displayName}"`);
     this.ctx.logger.info(
       { marker: BuildStepLogMarker.END_STEP, result: BuildStepStatus.SKIPPED },
-      `Skipped build step "${this.displayName}"`,
+      `Skipped build step "${this.displayName}"`
     );
   }
 
@@ -325,7 +325,7 @@ export class BuildStep extends BuildStepOutputAccessor {
 
       const envsDir = await createTemporaryEnvsDirectoryAsync(this.ctx.global, this.id);
       this.ctx.logger.debug(
-        `Created temporary directory for step environment variables: ${outputsDir}`,
+        `Created temporary directory for step environment variables: ${outputsDir}`
       );
 
       const scriptPath = await saveScriptToTemporaryFileAsync(this.ctx.global, this.id, command);
@@ -333,7 +333,7 @@ export class BuildStep extends BuildStepOutputAccessor {
 
       const { command: shellCommand, args } = getShellCommandAndArgs(this.shell, scriptPath);
       this.ctx.logger.debug(
-        `Executing script: ${shellCommand}${args !== undefined ? ` ${args.join(' ')}` : ''}`,
+        `Executing script: ${shellCommand}${args !== undefined ? ` ${args.join(' ')}` : ''}`
       );
       await spawnAsync(shellCommand, args ?? [], {
         cwd: this.ctx.workingDirectory,
@@ -359,7 +359,7 @@ export class BuildStep extends BuildStepOutputAccessor {
 
       const envsDir = await createTemporaryEnvsDirectoryAsync(this.ctx.global, this.id);
       this.ctx.logger.debug(
-        `Created temporary directory for step environment variables: ${outputsDir}`,
+        `Created temporary directory for step environment variables: ${outputsDir}`
       );
 
       await this.fn(this.ctx, {
@@ -380,21 +380,18 @@ export class BuildStep extends BuildStepOutputAccessor {
 
   private interpolateInputsAndGlobalContextInCommand(
     command: string,
-    inputs?: BuildStepInput[],
+    inputs?: BuildStepInput[]
   ): string {
     if (!inputs) {
       return this.ctx.global.interpolate(command);
     }
-    const vars = inputs.reduce(
-      (acc, input) => {
-        acc[input.id] =
-          typeof input.value === 'object'
-            ? JSON.stringify(input.value)
-            : input.value?.toString() ?? '';
-        return acc;
-      },
-      {} as Record<string, string>,
-    );
+    const vars = inputs.reduce((acc, input) => {
+      acc[input.id] =
+        typeof input.value === 'object'
+          ? JSON.stringify(input.value)
+          : input.value?.toString() ?? '';
+      return acc;
+    }, {} as Record<string, string>);
     const valueInterpolatedWithGlobalContext = this.ctx.global.interpolate(command);
     return interpolateWithInputs(valueInterpolatedWithGlobalContext, vars);
   }
@@ -444,7 +441,7 @@ export class BuildStep extends BuildStepOutputAccessor {
       filenames.map(async (basename) => {
         const rawContents = await fs.readFile(path.join(envsDir, basename), 'utf-8');
         return [basename, rawContents];
-      }),
+      })
     );
     this.ctx.global.updateEnv({
       ...this.ctx.global.env,

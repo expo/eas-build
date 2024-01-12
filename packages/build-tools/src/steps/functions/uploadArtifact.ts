@@ -32,11 +32,11 @@ export function createUploadArtifactBuildFunction(ctx: CustomBuildContext): Buil
     ],
     fn: async (stepsCtx, { inputs }) => {
       const artifactType = validateAndConvertBuildArtifactType(
-        nullthrows(inputs.type.value).toString(),
+        nullthrows(inputs.type.value).toString()
       );
       const filePath = path.resolve(
         stepsCtx.workingDirectory,
-        nullthrows(inputs.path.value).toString(),
+        nullthrows(inputs.path.value).toString()
       );
       await ctx.runtimeApi.uploadArtifacts(artifactType, [filePath], stepsCtx.logger);
     },
@@ -49,7 +49,7 @@ function validateAndConvertBuildArtifactType(input: string): ArtifactType {
     throw new Error(
       `"${input}" is not allowed artifact type, allowed values: ${allowedValues
         .map((i) => `"${i}"`)
-        .join(', ')}`,
+        .join(', ')}`
     );
   }
   return input === BuildArtifactType.APPLICATION_ARCHIVE

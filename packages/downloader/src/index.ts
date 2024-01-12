@@ -9,7 +9,7 @@ const pipeline = promisify(stream.pipeline);
 async function downloadFile(
   srcUrl: string,
   outputPath: string,
-  { retry, timeout }: { retry?: number; timeout?: number },
+  { retry, timeout }: { retry?: number; timeout?: number }
 ): Promise<void> {
   let attemptCount = 0;
   for (;;) {

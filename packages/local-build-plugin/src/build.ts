@@ -61,7 +61,7 @@ export async function buildAsync(job: Job, metadata: Metadata): Promise<void> {
       console.log(chalk.green('Build successful'));
       if (artifacts.APPLICATION_ARCHIVE) {
         console.log(
-          chalk.green(`You can find the build artifacts in ${artifacts.APPLICATION_ARCHIVE}`),
+          chalk.green(`You can find the build artifacts in ${artifacts.APPLICATION_ARCHIVE}`)
         );
       }
     }

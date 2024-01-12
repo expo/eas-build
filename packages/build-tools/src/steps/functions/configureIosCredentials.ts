@@ -47,7 +47,7 @@ export function configureIosCredentialsFunction(): BuildFunction {
         credentials,
         buildConfiguration: resolveBuildConfiguration(
           job,
-          inputs.build_configuration.value as string | undefined,
+          inputs.build_configuration.value as string | undefined
         ),
       });
 

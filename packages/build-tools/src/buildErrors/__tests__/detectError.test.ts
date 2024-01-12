@@ -17,7 +17,7 @@ describe(resolveBuildPhaseErrorAsync, () => {
         phase: BuildPhase.INSTALL_DEPENDENCIES,
         env: {},
       },
-      '/fake/path',
+      '/fake/path'
     );
     expect(err.errorCode).toBe('NPM_CORRUPTED_PACKAGE');
     expect(err.userFacingErrorCode).toBe(errors.ErrorCode.UNKNOWN_ERROR);
@@ -35,7 +35,7 @@ describe(resolveBuildPhaseErrorAsync, () => {
         phase: BuildPhase.RUN_FASTLANE,
         env: {},
       },
-      '/fake/path',
+      '/fake/path'
     );
     expect(err.errorCode).toBe('EAS_BUILD_UNSUPPORTED_BUNDLER_VERSION_ERROR');
     expect(err.userFacingErrorCode).toBe('EAS_BUILD_UNSUPPORTED_BUNDLER_VERSION_ERROR');
@@ -53,7 +53,7 @@ describe(resolveBuildPhaseErrorAsync, () => {
         phase: BuildPhase.INSTALL_DEPENDENCIES, // it should be in RUN_FASTLANE
         env: {},
       },
-      '/fake/path',
+      '/fake/path'
     );
     expect(err.errorCode).toBe(errors.ErrorCode.UNKNOWN_ERROR);
     expect(err.userFacingErrorCode).toBe(errors.ErrorCode.UNKNOWN_ERROR);
@@ -73,7 +73,7 @@ describe(resolveBuildPhaseErrorAsync, () => {
         phase: BuildPhase.INSTALL_DEPENDENCIES,
         env: mockEnv,
       },
-      '/fake/path',
+      '/fake/path'
     );
     expect(err.errorCode).toBe('NPM_CACHE_ERROR');
     expect(err.userFacingErrorCode).toBe(errors.ErrorCode.UNKNOWN_ERROR);
@@ -93,7 +93,7 @@ describe(resolveBuildPhaseErrorAsync, () => {
         phase: BuildPhase.INSTALL_DEPENDENCIES,
         env: {},
       },
-      '/fake/path',
+      '/fake/path'
     );
     expect(err.errorCode).toBe(errors.ErrorCode.UNKNOWN_ERROR);
     expect(err.userFacingErrorCode).toBe(errors.ErrorCode.UNKNOWN_ERROR);
@@ -109,7 +109,7 @@ describe(resolveBuildPhaseErrorAsync, () => {
         phase: BuildPhase.RUN_FASTLANE,
         env: {},
       },
-      path.resolve('./src/buildErrors/__tests__/fixtures'),
+      path.resolve('./src/buildErrors/__tests__/fixtures')
     );
     expect(err.errorCode).toBe('XCODE_RESOURCE_BUNDLE_CODE_SIGNING_ERROR');
     expect(err.userFacingErrorCode).toBe('XCODE_RESOURCE_BUNDLE_CODE_SIGNING_ERROR');
@@ -127,7 +127,7 @@ describe(resolveBuildPhaseErrorAsync, () => {
         phase: BuildPhase.INSTALL_PODS,
         env: {},
       },
-      '/fake/path',
+      '/fake/path'
     );
     expect(err.errorCode).toBe('EAS_BUILD_HIGHER_MINIMUM_DEPLOYMENT_TARGET_ERROR');
     expect(err.userFacingErrorCode).toBe('EAS_BUILD_HIGHER_MINIMUM_DEPLOYMENT_TARGET_ERROR');

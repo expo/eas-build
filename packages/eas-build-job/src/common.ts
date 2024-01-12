@@ -100,7 +100,7 @@ export const EnvironmentSecretsSchema = Joi.array().items(
     type: Joi.string()
       .valid(...Object.values(EnvironmentSecretType))
       .required(),
-  }),
+  })
 );
 
 export interface Cache {

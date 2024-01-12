@@ -25,7 +25,7 @@ describe('Keychain class', () => {
     beforeAll(async () => {
       await fs.writeFile(
         certificatePath,
-        Buffer.from(distributionCertificate.dataBase64, 'base64'),
+        Buffer.from(distributionCertificate.dataBase64, 'base64')
       );
     });
 
@@ -54,8 +54,8 @@ describe('Keychain class', () => {
       await expect(
         keychain.ensureCertificateImported(
           distributionCertificate.teamId,
-          distributionCertificate.fingerprint,
-        ),
+          distributionCertificate.fingerprint
+        )
       ).rejects.toThrowError(/hasn't been imported successfully/);
     });
 
@@ -64,8 +64,8 @@ describe('Keychain class', () => {
       await expect(
         keychain.ensureCertificateImported(
           distributionCertificate.teamId,
-          distributionCertificate.fingerprint,
-        ),
+          distributionCertificate.fingerprint
+        )
       ).resolves.not.toThrow();
     });
   });

@@ -38,7 +38,7 @@ export async function createAsync(inputPath: string, options: Options): Promise<
       success: 'Successfully extracted custom build function template files.',
       error: (error) =>
         `Something went wrong when extracting the custom build function template files: ${error.message}`,
-    },
+    }
   );
 
   await setupDependenciesAsync(projectRoot, options);
@@ -58,7 +58,7 @@ async function resolveProjectRootArgAsync(inputPath: string): Promise<string> {
 
 async function setupDependenciesAsync(
   projectRoot: string,
-  props: Pick<Options, 'install'>,
+  props: Pick<Options, 'install'>
 ): Promise<void> {
   // Install dependencies
   const shouldInstall = props.install;
@@ -76,13 +76,13 @@ async function setupDependenciesAsync(
 
 async function installNodeDependenciesAsync(
   projectRoot: string,
-  packageManager: PackageManagerName,
+  packageManager: PackageManagerName
 ): Promise<void> {
   try {
     await installDependenciesAsync(projectRoot, packageManager, { silent: false });
   } catch (error: any) {
     Log.error(
-      `Something went wrong installing JavaScript dependencies. Check your ${packageManager} logs. Continuing to create the app.`,
+      `Something went wrong installing JavaScript dependencies. Check your ${packageManager} logs. Continuing to create the app.`
     );
     Log.exception(error);
   }
@@ -98,7 +98,7 @@ function getChangeDirectoryPath(projectRoot: string): string {
 
 function logNodeInstallWarning(cdPath: string, packageManager: PackageManagerName): void {
   Log.log(
-    `\n⚠️  Before you start to work on your function, make sure you have modules installed:\n`,
+    `\n⚠️  Before you start to work on your function, make sure you have modules installed:\n`
   );
   Log.log(`  cd ${cdPath || '.'}${path.sep}`);
   Log.log(`  ${packageManager} install`);

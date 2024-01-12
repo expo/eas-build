@@ -18,7 +18,7 @@ const EasBuildInternalResultSchema = Joi.object<{ job: object; metadata: object 
 });
 
 export async function runEasBuildInternalAsync<TJob extends Job>(
-  ctx: BuildContext<TJob>,
+  ctx: BuildContext<TJob>
 ): Promise<void> {
   const { cmd, args, extraEnv } = await resolveEasCommandPrefixAndEnvAsync();
   const { buildProfile } = ctx.job;
@@ -36,7 +36,7 @@ export async function runEasBuildInternalAsync<TJob extends Job>(
       },
       logger: ctx.logger,
       mode: PipeMode.STDERR_ONLY_AS_STDOUT,
-    },
+    }
   );
   const stdout = result.stdout.toString();
   const parsed = JSON.parse(stdout);
@@ -45,7 +45,7 @@ export async function runEasBuildInternalAsync<TJob extends Job>(
 }
 
 export async function configureEnvFromBuildProfileAsync<TJob extends Job>(
-  ctx: BuildContext<TJob>,
+  ctx: BuildContext<TJob>
 ): Promise<void> {
   const { cmd, args, extraEnv } = await resolveEasCommandPrefixAndEnvAsync();
   const { buildProfile } = ctx.job;
@@ -68,7 +68,7 @@ export async function configureEnvFromBuildProfileAsync<TJob extends Job>(
       {
         cwd: ctx.getReactNativeProjectDirectory(),
         env: { ...ctx.env, ...extraEnv },
-      },
+      }
     );
   } catch (err: any) {
     ctx.logger.error(`Failed to the read build profile ${buildProfile} from eas.json.`);
@@ -110,7 +110,7 @@ async function resolveEasCommandPrefixAndEnvAsync(): Promise<{
 
 function validateEasBuildInternalResult<TJob extends Job>(
   ctx: BuildContext<TJob>,
-  result: any,
+  result: any
 ): { job: TJob; metadata: Metadata } {
   const { value, error } = EasBuildInternalResultSchema.validate(result, {
     stripUnknown: true,

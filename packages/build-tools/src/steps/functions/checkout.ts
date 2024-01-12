@@ -13,7 +13,7 @@ export function createCheckoutBuildFunction(): BuildFunction {
         stepsCtx.global.projectTargetDirectory,
         {
           overwrite: true,
-        },
+        }
       );
       stepsCtx.global.markAsCheckedOut(stepsCtx.logger);
     },

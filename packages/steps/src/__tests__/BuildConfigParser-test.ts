@@ -119,7 +119,7 @@ describe(BuildConfigParser, () => {
       expect(step4.name).toBe('List files');
       expect(step4.command).toBe('ls -la');
       expect(step4.ctx.workingDirectory).toBe(
-        path.join(ctx.defaultWorkingDirectory, 'relative/path/to/files'),
+        path.join(ctx.defaultWorkingDirectory, 'relative/path/to/files')
       );
       expect(step4.shell).toBe(getDefaultShell());
       expect(step4.env).toMatchObject({});
@@ -423,13 +423,13 @@ describe(BuildConfigParser, () => {
       expect(function1.inputProviders?.[0](ctx, 'unknown-step').required).toBe(true);
       expect(function1.inputProviders?.[1](ctx, 'unknown-step').id).toBe('build_number');
       expect(function1.inputProviders?.[1](ctx, 'unknown-step').allowedValueTypeName).toBe(
-        BuildStepInputValueTypeName.NUMBER,
+        BuildStepInputValueTypeName.NUMBER
       );
       expect(function1.inputProviders?.[1](ctx, 'unknown-step').defaultValue).toBe(undefined);
       expect(function1.inputProviders?.[1](ctx, 'unknown-step').required).toBe(true);
       expect(function1.inputProviders?.[2](ctx, 'unknown-step').id).toBe('json_input');
       expect(function1.inputProviders?.[2](ctx, 'unknown-step').allowedValueTypeName).toBe(
-        BuildStepInputValueTypeName.JSON,
+        BuildStepInputValueTypeName.JSON
       );
       expect(function1.inputProviders?.[2](ctx, 'unknown-step').defaultValue).toEqual({
         property1: 'value1',
@@ -494,7 +494,7 @@ describe(BuildConfigParser, () => {
         'Hello',
       ]);
       expect(function5.inputProviders?.[2](ctx, 'unknown-step').allowedValueTypeName).toBe(
-        BuildStepInputValueTypeName.BOOLEAN,
+        BuildStepInputValueTypeName.BOOLEAN
       );
       expect(function5.inputProviders?.[2](ctx, 'unknown-step').id).toBe('test');
       expect(function5.inputProviders?.[2](ctx, 'unknown-step').required).toBe(true);
@@ -504,7 +504,7 @@ describe(BuildConfigParser, () => {
         true,
       ]);
       expect(function5.inputProviders?.[3](ctx, 'unknown-step').allowedValueTypeName).toBe(
-        BuildStepInputValueTypeName.NUMBER,
+        BuildStepInputValueTypeName.NUMBER
       );
       expect(function5.inputProviders?.[3](ctx, 'unknown-step').id).toBe('number');
       expect(function5.inputProviders?.[3](ctx, 'unknown-step').required).toBe(true);
@@ -543,7 +543,7 @@ describe(BuildConfigParser, () => {
       });
       expect(error).toBeInstanceOf(BuildConfigError);
       expect(error.message).toBe(
-        'Calling non-existent functions: "eas/download_project", "eas/build_project".',
+        'Calling non-existent functions: "eas/download_project", "eas/build_project".'
       );
     });
 

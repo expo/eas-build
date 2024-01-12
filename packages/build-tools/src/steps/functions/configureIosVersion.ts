@@ -60,7 +60,7 @@ export function configureIosVersionFunction(): BuildFunction {
         (inputs.app_version.value as string | undefined) ?? job.version?.appVersion;
       if (appVersion && !semver.valid(appVersion)) {
         throw new Error(
-          `App verrsion provided by the "app_version" input is not a valid semver version: ${appVersion}`,
+          `App verrsion provided by the "app_version" input is not a valid semver version: ${appVersion}`
         );
       }
 
@@ -83,9 +83,9 @@ export function configureIosVersionFunction(): BuildFunction {
           targetNames: Object.keys(credentials.targetProvisioningProfiles),
           buildConfiguration: resolveBuildConfiguration(
             job,
-            inputs.build_configuration.value as string | undefined,
+            inputs.build_configuration.value as string | undefined
           ),
-        },
+        }
       );
     },
   });

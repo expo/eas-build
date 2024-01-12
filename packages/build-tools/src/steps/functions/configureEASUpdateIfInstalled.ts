@@ -31,13 +31,10 @@ export function configureEASUpdateIfInstalledFunction(): BuildFunction {
 
       const appConfig = readAppConfig({
         projectDir: stepCtx.workingDirectory,
-        env: Object.keys(env).reduce(
-          (acc, key) => {
-            acc[key] = env[key] ?? '';
-            return acc;
-          },
-          {} as Record<string, string>,
-        ),
+        env: Object.keys(env).reduce((acc, key) => {
+          acc[key] = env[key] ?? '';
+          return acc;
+        }, {} as Record<string, string>),
         logger: stepCtx.logger,
         sdkVersion: metadata?.sdkVersion,
       }).exp;
@@ -46,7 +43,7 @@ export function configureEASUpdateIfInstalledFunction(): BuildFunction {
       const runtimeVersionInput = inputs.runtime_version.value as string | undefined;
       if (runtimeVersionInput && !semver.valid(runtimeVersionInput)) {
         throw new Error(
-          `Runtime version provided by the "runtime_version" input is not a valid semver version: ${releaseChannelInput}`,
+          `Runtime version provided by the "runtime_version" input is not a valid semver version: ${releaseChannelInput}`
         );
       }
 

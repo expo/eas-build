@@ -33,14 +33,14 @@ describe(iosSetChannelNativelyAsync, () => {
         'ios/testapp.xcodeproj/project.pbxproj': 'placeholder',
         'ios/testapp/AppDelegate.m': 'placeholder',
       },
-      '/app',
+      '/app'
     );
 
     await iosSetChannelNativelyAsync(channel, '/app');
 
     const newExpoPlist = await fs.readFile(expoPlistPath, 'utf8');
     expect(
-      plist.parse(newExpoPlist)[IosMetadataName.UPDATES_CONFIGURATION_REQUEST_HEADERS_KEY],
+      plist.parse(newExpoPlist)[IosMetadataName.UPDATES_CONFIGURATION_REQUEST_HEADERS_KEY]
     ).toEqual({ 'expo-channel-name': channel });
   });
 });
@@ -67,7 +67,7 @@ describe(iosGetNativelyDefinedChannelAsync, () => {
         'ios/testapp.xcodeproj/project.pbxproj': 'placeholder',
         'ios/testapp/AppDelegate.m': 'placeholder',
       },
-      '/app',
+      '/app'
     );
 
     await expect(iosGetNativelyDefinedChannelAsync('/app')).resolves.toBe('staging-123');
@@ -82,7 +82,7 @@ describe(iosSetRuntimeVersionNativelyAsync, () => {
         'ios/testapp.xcodeproj/project.pbxproj': 'placeholder',
         'ios/testapp/AppDelegate.m': 'placeholder',
       },
-      '/app',
+      '/app'
     );
 
     await iosSetRuntimeVersionNativelyAsync('1.2.3', '/app');
@@ -107,7 +107,7 @@ describe(iosSetRuntimeVersionNativelyAsync, () => {
         'ios/testapp.xcodeproj/project.pbxproj': 'placeholder',
         'ios/testapp/AppDelegate.m': 'placeholder',
       },
-      '/app',
+      '/app'
     );
 
     await iosSetRuntimeVersionNativelyAsync('1.2.3', '/app');

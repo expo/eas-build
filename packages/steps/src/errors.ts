@@ -7,7 +7,7 @@ abstract class UserError extends Error {
     extra?: {
       metadata?: object;
       cause?: Error;
-    },
+    }
   ) {
     super(message);
     this.metadata = extra?.cause ?? {};
@@ -30,7 +30,7 @@ export class BuildWorkflowError extends UserError {
     extra?: {
       metadata?: object;
       cause?: Error;
-    },
+    }
   ) {
     super(message, extra);
   }

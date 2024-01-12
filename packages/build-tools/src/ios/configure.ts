@@ -18,7 +18,7 @@ async function configureXcodeProject(
   }: {
     credentials: Credentials;
     buildConfiguration: string;
-  },
+  }
 ): Promise<void> {
   ctx.logger.info('Configuring Xcode project');
   await configureCredentialsAsync(ctx, {
@@ -26,7 +26,6 @@ async function configureXcodeProject(
     buildConfiguration,
   });
   const { version } = ctx.job;
-  // eslint-disable-next-line @typescript-eslint/prefer-nullish-coalescing
   if (version?.appVersion || version?.buildNumber) {
     await updateVersionsAsync(ctx, {
       targetNames: Object.keys(credentials.targetProvisioningProfiles),
@@ -43,13 +42,13 @@ async function configureCredentialsAsync(
   }: {
     credentials: Credentials;
     buildConfiguration: string;
-  },
+  }
 ): Promise<void> {
   const targetNames = Object.keys(credentials.targetProvisioningProfiles);
   for (const targetName of targetNames) {
     const profile = credentials.targetProvisioningProfiles[targetName];
     ctx.logger.info(
-      `Assigning provisioning profile '${profile.name}' (Apple Team ID: ${profile.teamId}) to target '${targetName}'`,
+      `Assigning provisioning profile '${profile.name}' (Apple Team ID: ${profile.teamId}) to target '${targetName}'`
     );
     IOSConfig.ProvisioningProfile.setProvisioningProfileForPbxproj(
       ctx.getReactNativeProjectDirectory(),
@@ -58,7 +57,7 @@ async function configureCredentialsAsync(
         profileName: profile.name,
         appleTeamId: profile.teamId,
         buildConfiguration,
-      },
+      }
     );
   }
 }
@@ -71,7 +70,7 @@ async function updateVersionsAsync(
   }: {
     targetNames: string[];
     buildConfiguration: string;
-  },
+  }
 ): Promise<void> {
   const project = IOSConfig.XcodeUtils.getPbxproj(ctx.getReactNativeProjectDirectory());
   const iosDir = path.join(ctx.getReactNativeProjectDirectory(), 'ios');
@@ -87,7 +86,7 @@ async function updateVersionsAsync(
       const evaluatedInfoPlistPath = trimQuotes(
         evaluateTemplateString(infoPlist, {
           SRCROOT: iosDir,
-        }),
+        })
       );
       const absolutePath = path.isAbsolute(evaluatedInfoPlistPath)
         ? evaluatedInfoPlistPath

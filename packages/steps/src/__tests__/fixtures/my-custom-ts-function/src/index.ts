@@ -28,7 +28,7 @@ async function myTsFunctionAsync(
     inputs: MyTsFunctionInputs;
     outputs: MyTsFunctionOutputs;
     env: BuildStepEnv;
-  },
+  }
 ): Promise<void> {
   ctx.logger.info('Running my custom TS function');
   ctx.logger.info(`Hello, ${inputs.name.value}!}`);

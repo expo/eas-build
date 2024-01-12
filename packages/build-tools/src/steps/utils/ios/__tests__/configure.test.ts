@@ -18,11 +18,11 @@ describe(configureCredentialsAsync, () => {
       {
         'ios/testapp.xcodeproj/project.pbxproj': originalFs.readFileSync(
           path.join(__dirname, 'fixtures/simple-project.pbxproj'),
-          'utf-8',
+          'utf-8'
         ),
         'ios/testapp/AppDelegate.m': 'placeholder',
       },
-      '/app',
+      '/app'
     );
     const options = {
       credentials: {
@@ -48,7 +48,7 @@ describe(configureCredentialsAsync, () => {
     };
     await configureCredentialsAsync({ info: jest.fn() } as any, '/app', options);
     expect(
-      vol.readFileSync('/app/ios/testapp.xcodeproj/project.pbxproj', 'utf-8'),
+      vol.readFileSync('/app/ios/testapp.xcodeproj/project.pbxproj', 'utf-8')
     ).toMatchSnapshot();
   });
   it('configures credentials for multi target project', async () => {
@@ -56,11 +56,11 @@ describe(configureCredentialsAsync, () => {
       {
         'ios/testapp.xcodeproj/project.pbxproj': originalFs.readFileSync(
           path.join(__dirname, 'fixtures/multitarget-project.pbxproj'),
-          'utf-8',
+          'utf-8'
         ),
         'ios/testapp/AppDelegate.m': 'placeholder',
       },
-      '/app',
+      '/app'
     );
     const options = {
       credentials: {
@@ -97,7 +97,7 @@ describe(configureCredentialsAsync, () => {
     };
     await configureCredentialsAsync({ info: jest.fn() } as any, '/app', options);
     expect(
-      vol.readFileSync('/app/ios/testapp.xcodeproj/project.pbxproj', 'utf-8'),
+      vol.readFileSync('/app/ios/testapp.xcodeproj/project.pbxproj', 'utf-8')
     ).toMatchSnapshot();
   });
 });
@@ -108,15 +108,15 @@ describe(updateVersionsAsync, () => {
       {
         'ios/testapp/Info.plist': originalFs.readFileSync(
           path.join(__dirname, 'fixtures/Info.plist'),
-          'utf-8',
+          'utf-8'
         ),
         'ios/testapp.xcodeproj/project.pbxproj': originalFs.readFileSync(
           path.join(__dirname, 'fixtures/simple-project.pbxproj'),
-          'utf-8',
+          'utf-8'
         ),
         'ios/testapp/AppDelegate.m': 'placeholder',
       },
-      '/app',
+      '/app'
     );
     const options = {
       credentials: {
@@ -146,13 +146,13 @@ describe(updateVersionsAsync, () => {
       { info: jest.fn() } as any,
       '/app',
       { appVersion: '1.2.3', buildNumber: '1.2.4' },
-      { ...options, targetNames: Object.keys(options.credentials.targetProvisioningProfiles) },
+      { ...options, targetNames: Object.keys(options.credentials.targetProvisioningProfiles) }
     );
     expect(
-      vol.readFileSync('/app/ios/testapp.xcodeproj/project.pbxproj', 'utf-8'),
+      vol.readFileSync('/app/ios/testapp.xcodeproj/project.pbxproj', 'utf-8')
     ).toMatchSnapshot();
     expect(vol.readFileSync('/app/ios/testapp/Info.plist', 'utf-8')).toMatchSnapshot(
-      'Info.plist application target',
+      'Info.plist application target'
     );
   });
   it('configures credentials and versions for multi target project', async () => {
@@ -160,19 +160,19 @@ describe(updateVersionsAsync, () => {
       {
         'ios/multitarget/Info.plist': originalFs.readFileSync(
           path.join(__dirname, 'fixtures/Info.plist'),
-          'utf-8',
+          'utf-8'
         ),
         'ios/shareextension/Info.plist': originalFs.readFileSync(
           path.join(__dirname, 'fixtures/Info.plist'),
-          'utf-8',
+          'utf-8'
         ),
         'ios/testapp.xcodeproj/project.pbxproj': originalFs.readFileSync(
           path.join(__dirname, 'fixtures/multitarget-project.pbxproj'),
-          'utf-8',
+          'utf-8'
         ),
         'ios/testapp/AppDelegate.m': 'placeholder',
       },
-      '/app',
+      '/app'
     );
     const options = {
       credentials: {
@@ -213,16 +213,16 @@ describe(updateVersionsAsync, () => {
       { info: jest.fn() } as any,
       '/app',
       { appVersion: '1.2.3', buildNumber: '1.2.4' },
-      { ...options, targetNames: Object.keys(options.credentials.targetProvisioningProfiles) },
+      { ...options, targetNames: Object.keys(options.credentials.targetProvisioningProfiles) }
     );
     expect(
-      vol.readFileSync('/app/ios/testapp.xcodeproj/project.pbxproj', 'utf-8'),
+      vol.readFileSync('/app/ios/testapp.xcodeproj/project.pbxproj', 'utf-8')
     ).toMatchSnapshot();
     expect(vol.readFileSync('/app/ios/shareextension/Info.plist', 'utf-8')).toMatchSnapshot(
-      'Info.plist application target',
+      'Info.plist application target'
     );
     expect(vol.readFileSync('/app/ios/multitarget/Info.plist', 'utf-8')).toMatchSnapshot(
-      'Info.plist extension',
+      'Info.plist extension'
     );
   });
 });

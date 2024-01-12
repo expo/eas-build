@@ -10,7 +10,7 @@ import { BuildContext } from '../context';
 async function restoreCredentials(ctx: BuildContext<Android.Job>): Promise<void> {
   const { buildCredentials } = nullthrows(
     ctx.job.secrets,
-    'Secrets must be defined for non-custom builds',
+    'Secrets must be defined for non-custom builds'
   );
   if (!buildCredentials) {
     // TODO: sentry (should be detected earlier)
@@ -31,7 +31,7 @@ async function restoreCredentials(ctx: BuildContext<Android.Job>): Promise<void>
   };
   await fs.writeFile(
     path.join(ctx.buildDirectory, 'credentials.json'),
-    JSON.stringify(credentialsJson),
+    JSON.stringify(credentialsJson)
   );
 }
 

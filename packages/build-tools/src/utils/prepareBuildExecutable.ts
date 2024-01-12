@@ -8,6 +8,6 @@ import { BuildContext } from '../context';
 export async function prepareExecutableAsync(ctx: BuildContext<Job>): Promise<void> {
   await fs.copy(
     path.join(__dirname, '../../bin/set-env'),
-    path.join(ctx.buildExecutablesDirectory, 'set-env'),
+    path.join(ctx.buildExecutablesDirectory, 'set-env')
   );
 }

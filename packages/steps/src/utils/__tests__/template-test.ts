@@ -28,7 +28,7 @@ describe(interpolateWithOutputs, () => {
         } else {
           return 'x';
         }
-      },
+      }
     );
     expect(result).toBe('foobarbaz');
   });
@@ -46,7 +46,7 @@ describe(interpolateWithGlobalContext, () => {
         } else {
           return 'x';
         }
-      },
+      }
     );
     expect(result).toBe('foobarbaz');
   });
@@ -155,7 +155,7 @@ describe(getObjectValueForInterpolation, () => {
     });
     expect(error).toBeInstanceOf(BuildStepRuntimeError);
     expect(error.message).toMatch(
-      /Object field "eas.bar" does not exist. Ensure you are using the correct field name./,
+      /Object field "eas.bar" does not exist. Ensure you are using the correct field name./
     );
   });
 
@@ -179,7 +179,7 @@ describe(getObjectValueForInterpolation, () => {
     });
     expect(error).toBeInstanceOf(BuildStepRuntimeError);
     expect(error.message).toMatch(
-      /Object field "eas.foo.bar.baz\[14\].qux" does not exist. Ensure you are using the correct field name./,
+      /Object field "eas.foo.bar.baz\[14\].qux" does not exist. Ensure you are using the correct field name./
     );
   });
 });

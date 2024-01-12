@@ -165,7 +165,7 @@ describe('Ios.JobSchema', () => {
 
     const { value, error } = Ios.JobSchema.validate(managedJob, joiOptions);
     expect(error?.message).toBe(
-      '"projectArchive.url" must be a valid uri. "projectRootDirectory" must be a string',
+      '"projectArchive.url" must be a valid uri. "projectRootDirectory" must be a string'
     );
     expect(value).not.toMatchObject(managedJob);
   });
@@ -210,7 +210,7 @@ describe('Ios.JobSchema', () => {
 
     const { error } = Ios.JobSchema.validate(managedJob, joiOptions);
     expect(error?.message).toBe(
-      '"value" contains a conflict between optional exclusive peers [releaseChannel, updates.channel]',
+      '"value" contains a conflict between optional exclusive peers [releaseChannel, updates.channel]'
     );
   });
 });

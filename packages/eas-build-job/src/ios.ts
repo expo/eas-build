@@ -32,7 +32,7 @@ export interface TargetCredentials {
 
 const BuildCredentialsSchema = Joi.object().pattern(
   Joi.string().required(),
-  TargetCredentialsSchema,
+  TargetCredentialsSchema
 );
 
 type Target = string;

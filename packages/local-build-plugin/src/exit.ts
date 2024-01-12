@@ -18,7 +18,7 @@ export function listenForInterrupts(): void {
       await Promise.allSettled(
         handlers.map((handler) => {
           return handler();
-        }),
+        })
       );
     } finally {
       handlerInProgress = false;

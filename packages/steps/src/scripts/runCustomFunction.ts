@@ -71,13 +71,13 @@ async function runCustomJsFunctionAsync(): Promise<void> {
     Object.entries(serializedFunctionArguments.inputs).map(([id, input]) => [
       id,
       BuildStepInput.deserialize(input, logger),
-    ]),
+    ])
   );
   const outputs = Object.fromEntries(
     Object.entries(serializedFunctionArguments.outputs).map(([id, output]) => [
       id,
       BuildStepOutput.deserialize(output),
-    ]),
+    ])
   );
   const env = serializedFunctionArguments.env;
   const envBefore = cloneDeep(serializedFunctionArguments.env);
@@ -101,7 +101,7 @@ async function runCustomJsFunctionAsync(): Promise<void> {
       promises.push(
         spawnAsync('set-output', [output.id, output.value], {
           env,
-        }),
+        })
       );
     }
   }
@@ -111,7 +111,7 @@ async function runCustomJsFunctionAsync(): Promise<void> {
       promises.push(
         spawnAsync('set-env', [envName, envValue], {
           env,
-        }),
+        })
       );
     }
   }

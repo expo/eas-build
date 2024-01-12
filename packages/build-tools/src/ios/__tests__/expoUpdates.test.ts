@@ -37,7 +37,7 @@ describe(iosSetClassicReleaseChannelNativelyAsync, () => {
         'ios/testapp.xcodeproj/project.pbxproj': 'placeholder',
         'ios/testapp/AppDelegate.m': 'placeholder',
       },
-      '/app',
+      '/app'
     );
 
     const ctx = {
@@ -60,7 +60,7 @@ describe(iosSetChannelNativelyAsync, () => {
         'ios/testapp.xcodeproj/project.pbxproj': 'placeholder',
         'ios/testapp/AppDelegate.m': 'placeholder',
       },
-      '/app',
+      '/app'
     );
 
     const ctx = {
@@ -72,7 +72,7 @@ describe(iosSetChannelNativelyAsync, () => {
 
     const newExpoPlist = await fs.readFile(expoPlistPath, 'utf8');
     expect(
-      plist.parse(newExpoPlist)[IosMetadataName.UPDATES_CONFIGURATION_REQUEST_HEADERS_KEY],
+      plist.parse(newExpoPlist)[IosMetadataName.UPDATES_CONFIGURATION_REQUEST_HEADERS_KEY]
     ).toEqual({ 'expo-channel-name': channel });
   });
 });
@@ -99,7 +99,7 @@ describe(iosGetNativelyDefinedChannelAsync, () => {
         'ios/testapp.xcodeproj/project.pbxproj': 'placeholder',
         'ios/testapp/AppDelegate.m': 'placeholder',
       },
-      '/app',
+      '/app'
     );
 
     const ctx = {
@@ -128,7 +128,7 @@ describe(iosGetNativelyDefinedClassicReleaseChannelAsync, () => {
         'ios/testapp.xcodeproj/project.pbxproj': 'placeholder',
         'ios/testapp/AppDelegate.m': 'placeholder',
       },
-      '/app',
+      '/app'
     );
 
     const ctx = {
@@ -136,7 +136,7 @@ describe(iosGetNativelyDefinedClassicReleaseChannelAsync, () => {
       logger: { info: () => {} },
     };
     const nativelyDefinedReleaseChannel = await iosGetNativelyDefinedClassicReleaseChannelAsync(
-      ctx as any,
+      ctx as any
     );
 
     expect(nativelyDefinedReleaseChannel).toBe('examplechannel');
@@ -161,7 +161,7 @@ describe(iosGetNativelyDefinedRuntimeVersionAsync, () => {
         'ios/testapp.xcodeproj/project.pbxproj': 'placeholder',
         'ios/testapp/AppDelegate.m': 'placeholder',
       },
-      '/app',
+      '/app'
     );
 
     const ctx = {
@@ -170,7 +170,7 @@ describe(iosGetNativelyDefinedRuntimeVersionAsync, () => {
     };
 
     const nativelyDefinedRuntimeVersion = await iosGetNativelyDefinedRuntimeVersionAsync(
-      ctx as any,
+      ctx as any
     );
     expect(nativelyDefinedRuntimeVersion).toBe('4.5.6');
   });
@@ -184,7 +184,7 @@ describe(iosSetRuntimeVersionNativelyAsync, () => {
         'ios/testapp.xcodeproj/project.pbxproj': 'placeholder',
         'ios/testapp/AppDelegate.m': 'placeholder',
       },
-      '/app',
+      '/app'
     );
     const ctx = {
       getReactNativeProjectDirectory: () => '/app',
@@ -213,7 +213,7 @@ describe(iosSetRuntimeVersionNativelyAsync, () => {
         'ios/testapp.xcodeproj/project.pbxproj': 'placeholder',
         'ios/testapp/AppDelegate.m': 'placeholder',
       },
-      '/app',
+      '/app'
     );
     const ctx = {
       getReactNativeProjectDirectory: () => '/app',

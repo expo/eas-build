@@ -111,7 +111,7 @@ async function runExpoDoctor<TJob extends Job>(ctx: BuildContext<TJob>): Promise
           logger: ctx.logger,
           env: ctx.env,
         },
-        isAtLeastNpm7,
+        isAtLeastNpm7
       );
     }
     timeout = setTimeout(async () => {
@@ -139,7 +139,7 @@ async function runExpoDoctor<TJob extends Job>(ctx: BuildContext<TJob>): Promise
 }
 
 async function runInstallDependenciesAsync<TJob extends Job>(
-  ctx: BuildContext<TJob>,
+  ctx: BuildContext<TJob>
 ): Promise<void> {
   let warnTimeout: NodeJS.Timeout | undefined;
   let killTimeout: NodeJS.Timeout | undefined;
@@ -162,14 +162,14 @@ async function runInstallDependenciesAsync<TJob extends Job>(
 
     warnTimeout = setTimeout(() => {
       ctx.logger.warn(
-        '"Install dependencies" phase takes longer then expected and it did not produce any logs in the past 15 minutes. Consider evaluating your package.json file for possible issues with dependencies',
+        '"Install dependencies" phase takes longer then expected and it did not produce any logs in the past 15 minutes. Consider evaluating your package.json file for possible issues with dependencies'
       );
     }, INSTALL_DEPENDENCIES_WARN_TIMEOUT_MS);
 
     killTimeout = setTimeout(async () => {
       killTimedOut = true;
       ctx.logger.error(
-        '"Install dependencies" phase takes a very long time and it did not produce any logs in the past 30 minutes. Most likely an unexpected error happened with your dependencies which caused the process to hang and it will be terminated',
+        '"Install dependencies" phase takes a very long time and it did not produce any logs in the past 30 minutes. Most likely an unexpected error happened with your dependencies which caused the process to hang and it will be terminated'
       );
       const ppid = nullthrows(installDependenciesSpawnPromise.child.pid);
       const pids = await getParentAndDescendantProcessPidsAsync(ppid);
@@ -185,7 +185,7 @@ async function runInstallDependenciesAsync<TJob extends Job>(
   } catch (err: any) {
     if (killTimedOut) {
       throw new InstallDependenciesTimeoutError(
-        '"Install dependencies" phase was inactive for over 30 minutes. Please evaluate your package.json file',
+        '"Install dependencies" phase was inactive for over 30 minutes. Please evaluate your package.json file'
       );
     }
     throw err;
@@ -201,7 +201,7 @@ async function runInstallDependenciesAsync<TJob extends Job>(
 
 async function validateAppConfigAsync(
   ctx: BuildContext<Job>,
-  appConfig: ExpoConfig,
+  appConfig: ExpoConfig
 ): Promise<void> {
   if (
     appConfig?.extra?.eas?.projectId &&
@@ -224,7 +224,7 @@ async function validateAppConfigAsync(
     }
     throw new UserFacingError(
       'EAS_BUILD_PROJECT_ID_MISMATCH',
-      `The value of the "extra.eas.projectId" field (${appConfig.extra.eas.projectId}) in the app config does not match the current project id (${ctx.env.EAS_BUILD_PROJECT_ID}). ${extraMessage}Learn more: https://expo.fyi/eas-config-mismatch.`,
+      `The value of the "extra.eas.projectId" field (${appConfig.extra.eas.projectId}) in the app config does not match the current project id (${ctx.env.EAS_BUILD_PROJECT_ID}). ${extraMessage}Learn more: https://expo.fyi/eas-config-mismatch.`
     );
   } else if (ctx.env.EAS_BUILD_PROJECT_ID && !appConfig?.extra?.eas?.projectId) {
     ctx.logger.error(`The "extra.eas.projectId" field is missing from your app config.`);

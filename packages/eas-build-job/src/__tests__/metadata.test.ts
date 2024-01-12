@@ -66,7 +66,7 @@ describe('MetadataSchema', () => {
       abortEarly: false,
     });
     expect(error?.message).toEqual(
-      '"credentialsSource" must be one of [local, remote]. "gitCommitHash" length must be 40 characters long. "gitCommitHash" must only contain hexadecimal characters. "gitCommitMessage" length must be less than or equal to 4096 characters long. "message" length must be less than or equal to 1024 characters long',
+      '"credentialsSource" must be one of [local, remote]. "gitCommitHash" length must be 40 characters long. "gitCommitHash" must only contain hexadecimal characters. "gitCommitMessage" length must be less than or equal to 4096 characters long. "message" length must be less than or equal to 1024 characters long'
     );
   });
 });

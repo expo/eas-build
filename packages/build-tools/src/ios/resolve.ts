@@ -10,7 +10,7 @@ export function resolveScheme(ctx: BuildContext<Ios.Job>): string {
     return ctx.job.scheme;
   }
   const schemes = IOSConfig.BuildScheme.getSchemesFromXcodeproj(
-    ctx.getReactNativeProjectDirectory(),
+    ctx.getReactNativeProjectDirectory()
   );
   assert(schemes.length === 1, 'Ejected project should have exactly one scheme');
   return schemes[0];

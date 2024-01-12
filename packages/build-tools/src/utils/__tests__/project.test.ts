@@ -93,12 +93,12 @@ describe(runExpoCliCommand, () => {
         ctx,
         ['doctor'],
         {},
-        { npmVersionAtLeast7: true, forceUseGlobalExpoCli: true },
+        { npmVersionAtLeast7: true, forceUseGlobalExpoCli: true }
       );
       expect(ctx.runGlobalExpoCliCommand).toHaveBeenCalledWith(
         ['doctor'],
         expect.any(Object),
-        true,
+        true
       );
       expect(spawn).not.toHaveBeenCalled();
     });
@@ -121,7 +121,7 @@ describe(runExpoCliCommand, () => {
       expect(ctx.runGlobalExpoCliCommand).toHaveBeenCalledWith(
         ['doctor'],
         expect.any(Object),
-        true,
+        true
       );
       expect(spawn).not.toHaveBeenCalled();
     });
@@ -143,7 +143,7 @@ describe(runExpoCliCommand, () => {
       expect(ctx.runGlobalExpoCliCommand).toHaveBeenCalledWith(
         ['doctor'],
         expect.any(Object),
-        true,
+        true
       );
       expect(spawn).not.toHaveBeenCalled();
     });

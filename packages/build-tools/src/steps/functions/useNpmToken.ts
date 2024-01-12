@@ -31,8 +31,8 @@ export function createSetUpNpmrcBuildFunction(): BuildFunction {
           logger.info(
             `.npmrc found at ${path.relative(
               stepCtx.global.projectTargetDirectory,
-              projectNpmrcPath,
-            )}`,
+              projectNpmrcPath
+            )}`
           );
         }
       }

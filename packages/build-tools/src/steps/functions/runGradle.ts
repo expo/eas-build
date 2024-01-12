@@ -21,7 +21,7 @@ export function runGradleFunction(): BuildFunction {
       assert(stepCtx.global.staticContext.job, 'Job is required');
       const command = resolveGradleCommand(
         stepCtx.global.staticContext.job,
-        inputs.command.value as string | undefined,
+        inputs.command.value as string | undefined
       );
       await runGradleCommand({
         logger: stepCtx.logger,

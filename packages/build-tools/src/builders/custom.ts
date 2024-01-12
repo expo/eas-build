@@ -14,11 +14,11 @@ export async function runCustomBuildAsync<T extends Job>(ctx: BuildContext<T>): 
   await prepareProjectSourcesAsync(ctx, customBuildCtx.projectSourceDirectory);
   const relativeConfigPath = nullthrows(
     ctx.job.customBuildConfig?.path,
-    'Custom build config must be defined for custom builds',
+    'Custom build config must be defined for custom builds'
   );
   const configPath = path.join(
     ctx.getReactNativeProjectDirectory(customBuildCtx.projectSourceDirectory),
-    relativeConfigPath,
+    relativeConfigPath
   );
 
   const globalContext = new BuildStepGlobalContext(customBuildCtx, false);

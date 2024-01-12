@@ -44,7 +44,7 @@ async function addApplyToBuildGradle(projectRoot: string): Promise<void> {
 
   await fs.writeFile(
     buildGradlePath,
-    `${buildGradleContents.trim()}\n${APPLY_EAS_BUILD_GRADLE_LINE}\n`,
+    `${buildGradleContents.trim()}\n${APPLY_EAS_BUILD_GRADLE_LINE}\n`
   );
 }
 

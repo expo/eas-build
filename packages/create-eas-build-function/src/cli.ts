@@ -49,7 +49,7 @@ async function run(): Promise<void> {
     {bold  npm:} {cyan npx create-eas-build-function}
     {bold yarn:} {cyan yarn create eas-custom-function-module}
     {bold pnpm:} {cyan pnpm create eas-custom-function-module}
-    `,
+    `
     );
   }
 

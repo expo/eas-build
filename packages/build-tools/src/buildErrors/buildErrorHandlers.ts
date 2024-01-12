@@ -4,10 +4,7 @@ import escapeRegExp from 'lodash/escapeRegExp';
 import { ErrorContext, ErrorHandler } from './errors.types';
 
 export class TrackedBuildError extends Error {
-  constructor(
-    public errorCode: string,
-    public message: string,
-  ) {
+  constructor(public errorCode: string, public message: string) {
     super(message);
   }
 }
@@ -54,7 +51,7 @@ export const buildErrorHandlers: ErrorHandler<TrackedBuildError>[] = [
     createError: () =>
       new TrackedBuildError(
         'EXPO_CLI_INPUT_REQUIRED_ERROR',
-        `expo-cli: Input required in non-interactive mode.`,
+        `expo-cli: Input required in non-interactive mode.`
       ),
   },
   {
@@ -65,7 +62,7 @@ export const buildErrorHandlers: ErrorHandler<TrackedBuildError>[] = [
     createError: () =>
       new TrackedBuildError(
         'EXPO_CLI_EMPTY_GOOGLE_SERVICES_PLIST_ERROR',
-        `expo-cli: Empty GoogleService-Info.plist.`,
+        `expo-cli: Empty GoogleService-Info.plist.`
       ),
   },
   {
@@ -76,7 +73,7 @@ export const buildErrorHandlers: ErrorHandler<TrackedBuildError>[] = [
     createError: () =>
       new TrackedBuildError(
         'EXPO_CLI_NOT_DEFINED_GOOGLE_SERVICES_PLIST_ERROR',
-        `expo-cli: Path to GoogleService-Info.plist is not defined.`,
+        `expo-cli: Path to GoogleService-Info.plist is not defined.`
       ),
   },
   {
@@ -123,7 +120,7 @@ export const buildErrorHandlers: ErrorHandler<TrackedBuildError>[] = [
     createError: () =>
       new TrackedBuildError(
         'SWIFT_POD_INCOMPATIBLE_DEPENDENCY',
-        'pod: Swift pod depends on a pod that does not define modules.',
+        'pod: Swift pod depends on a pod that does not define modules.'
       ),
   },
   {
@@ -136,7 +133,7 @@ export const buildErrorHandlers: ErrorHandler<TrackedBuildError>[] = [
     createError: (match: RegExpMatchArray) =>
       new TrackedBuildError(
         'COCOAPODS_CACHE_INCOMPATIBLE_REPO_ERROR',
-        `cocoapods: Missing podspec ${match[1]}.`,
+        `cocoapods: Missing podspec ${match[1]}.`
       ),
   },
   {
@@ -172,7 +169,7 @@ export const buildErrorHandlers: ErrorHandler<TrackedBuildError>[] = [
     createError: () =>
       new TrackedBuildError(
         'COCOAPODS_CACHE_INSTALLING_POD_ERROR',
-        `cocoapods: error installing a pod using internal cache instance`,
+        `cocoapods: error installing a pod using internal cache instance`
       ),
   },
   {
@@ -183,7 +180,7 @@ export const buildErrorHandlers: ErrorHandler<TrackedBuildError>[] = [
     createError: () =>
       new TrackedBuildError(
         'COCOAPODS_CACHE_NO_PODSPEC_EXISTS_AT_PATH_ERROR',
-        `cocoapods: error fetching a podspec through internal cache instance`,
+        `cocoapods: error fetching a podspec through internal cache instance`
       ),
   },
   {
@@ -208,7 +205,7 @@ export const buildErrorHandlers: ErrorHandler<TrackedBuildError>[] = [
     createError: () =>
       new TrackedBuildError(
         'YARN_INSTALL_TROUBLE_WITH_NETWORK_CONNECTION',
-        'yarn: There appears to be trouble with your network connection',
+        'yarn: There appears to be trouble with your network connection'
       ),
   },
   {
@@ -229,7 +226,7 @@ export const buildErrorHandlers: ErrorHandler<TrackedBuildError>[] = [
     createError: () =>
       new TrackedBuildError(
         'REQUIRE_EXPLICIT_EXPORTED_ANDROID_12',
-        'Apps targeting Android 12 and higher are required to specify an explicit value for `android:exported`.',
+        'Apps targeting Android 12 and higher are required to specify an explicit value for `android:exported`.'
       ),
   },
   {
@@ -251,7 +248,7 @@ export const buildErrorHandlers: ErrorHandler<TrackedBuildError>[] = [
     createError: () =>
       new TrackedBuildError(
         'GRADLE_MALFORMED_GOOGLE_SERVICES_JSON',
-        'gradle: Malformed google-services.json.',
+        'gradle: Malformed google-services.json.'
       ),
   },
   {
@@ -264,7 +261,7 @@ export const buildErrorHandlers: ErrorHandler<TrackedBuildError>[] = [
     createError: () =>
       new TrackedBuildError(
         'GRADLE_MALFORMED_GOOGLE_SERVICES_JSON',
-        'gradle: Missing project_info object.',
+        'gradle: Missing project_info object.'
       ),
   },
   {
@@ -277,7 +274,7 @@ export const buildErrorHandlers: ErrorHandler<TrackedBuildError>[] = [
     createError: () =>
       new TrackedBuildError(
         'GRADLE_BUILD_BUNDLER_ERROR',
-        "gradle: ':app:bundleReleaseJsAndAssets' failed.",
+        "gradle: ':app:bundleReleaseJsAndAssets' failed."
       ),
   },
   {
@@ -311,7 +308,7 @@ export const buildErrorHandlers: ErrorHandler<TrackedBuildError>[] = [
     createError: () =>
       new TrackedBuildError(
         'MISSING_ICLOUD_CONTAINER_ENVIRONMENT',
-        'fastlane: Missing iCloudContainerEnvironment in exportOptionsPlist.',
+        'fastlane: Missing iCloudContainerEnvironment in exportOptionsPlist.'
       ),
   },
   {
@@ -324,7 +321,7 @@ export const buildErrorHandlers: ErrorHandler<TrackedBuildError>[] = [
     createError: () =>
       new TrackedBuildError(
         'XCODE_BUILD_UPDATES_PHASE_SCRIPT',
-        'fastlane: Generating app.manifest for expo-updates failed.',
+        'fastlane: Generating app.manifest for expo-updates failed.'
       ),
   },
   {
@@ -336,7 +333,7 @@ export const buildErrorHandlers: ErrorHandler<TrackedBuildError>[] = [
     createError: () =>
       new TrackedBuildError(
         'FLIPPER_FOLLY_COMPILE_ERROR',
-        'fastlane: Flipper-Folly compile error.',
+        'fastlane: Flipper-Folly compile error.'
       ),
   },
   {
@@ -349,7 +346,7 @@ export const buildErrorHandlers: ErrorHandler<TrackedBuildError>[] = [
     createError: () =>
       new TrackedBuildError(
         'XCODE_BUILD_BUNDLER_ERROR',
-        'fastlane: Bundle React Native code and images failed.',
+        'fastlane: Bundle React Native code and images failed.'
       ),
   },
 ];

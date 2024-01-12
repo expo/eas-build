@@ -29,7 +29,7 @@ export enum DistributionType {
 
 const PROVISIONING_PROFILES_DIRECTORY = path.join(
   os.homedir(),
-  'Library/MobileDevice/Provisioning Profiles',
+  'Library/MobileDevice/Provisioning Profiles'
 );
 
 export default class ProvisioningProfile {
@@ -48,7 +48,7 @@ export default class ProvisioningProfile {
     private readonly profile: Buffer,
     private readonly keychainPath: string,
     private readonly target: string,
-    private readonly certificateCommonName: string,
+    private readonly certificateCommonName: string
   ) {
     this.profilePath = path.join(PROVISIONING_PROFILES_DIRECTORY, `${uuid()}.mobileprovision`);
   }
@@ -78,7 +78,7 @@ export default class ProvisioningProfile {
     if (devCertFingerprint !== fingerprint) {
       throw new errors.CredentialsDistCertMismatchError(
         `Provisioning profile and distribution certificate don't match.
-Profile's certificate fingerprint = ${devCertFingerprint}, distribution certificate fingerprint = ${fingerprint}`,
+Profile's certificate fingerprint = ${devCertFingerprint}, distribution certificate fingerprint = ${fingerprint}`
       );
     }
   }
@@ -91,7 +91,7 @@ Profile's certificate fingerprint = ${devCertFingerprint}, distribution certific
         ['cms', '-D', '-k', this.keychainPath, '-i', this.profilePath],
         {
           stdio: 'pipe',
-        },
+        }
       );
     } catch (err: any) {
       throw new Error(err.stderr.trim());

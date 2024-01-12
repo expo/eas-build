@@ -15,29 +15,29 @@ export enum BuildStepInputValueTypeName {
 }
 
 export type BuildStepInputValueType<
-  T extends BuildStepInputValueTypeName = BuildStepInputValueTypeName,
+  T extends BuildStepInputValueTypeName = BuildStepInputValueTypeName
 > = T extends BuildStepInputValueTypeName.STRING
   ? string
   : T extends BuildStepInputValueTypeName.BOOLEAN
-    ? boolean
-    : T extends BuildStepInputValueTypeName.NUMBER
-      ? number
-      : Record<string, any>;
+  ? boolean
+  : T extends BuildStepInputValueTypeName.NUMBER
+  ? number
+  : Record<string, any>;
 
 export type BuildStepInputValueTypeWithRequired<
   T extends BuildStepInputValueTypeName = BuildStepInputValueTypeName,
-  R extends boolean = boolean,
+  R extends boolean = boolean
 > = R extends true ? BuildStepInputValueType<T> : BuildStepInputValueType<T> | undefined;
 
 export type BuildStepInputById = Record<string, BuildStepInput>;
 export type BuildStepInputProvider = (
   ctx: BuildStepGlobalContext,
-  stepId: string,
+  stepId: string
 ) => BuildStepInput;
 
 interface BuildStepInputProviderParams<
   T extends BuildStepInputValueTypeName = BuildStepInputValueTypeName,
-  R extends boolean = boolean,
+  R extends boolean = boolean
 > {
   id: string;
   allowedValues?: BuildStepInputValueType<T>[];
@@ -53,7 +53,7 @@ interface BuildStepInputParams<T extends BuildStepInputValueTypeName, R extends 
 
 export interface SerializedBuildStepInput<
   T extends BuildStepInputValueTypeName = BuildStepInputValueTypeName,
-  R extends boolean = boolean,
+  R extends boolean = boolean
 > {
   id: string;
   stepDisplayName: string;
@@ -67,7 +67,7 @@ export interface SerializedBuildStepInput<
 
 export class BuildStepInput<
   T extends BuildStepInputValueTypeName = BuildStepInputValueTypeName,
-  R extends boolean = boolean,
+  R extends boolean = boolean
 > {
   public readonly id: string;
   public readonly stepDisplayName: string;
@@ -91,7 +91,7 @@ export class BuildStepInput<
       defaultValue,
       required,
       allowedValueTypeName,
-    }: BuildStepInputParams<T, R>,
+    }: BuildStepInputParams<T, R>
   ) {
     this.id = id;
     this.stepDisplayName = stepDisplayName;
@@ -105,7 +105,7 @@ export class BuildStepInput<
     const rawValue = this._value ?? this.defaultValue;
     if (this.required && rawValue === undefined) {
       throw new BuildStepRuntimeError(
-        `Input parameter "${this.id}" for step "${this.stepDisplayName}" is required but it was not set.`,
+        `Input parameter "${this.id}" for step "${this.stepDisplayName}" is required but it was not set.`
       );
     }
 
@@ -119,7 +119,7 @@ export class BuildStepInput<
         typeof rawValue === 'object' ? BuildStepInputValueTypeName.JSON : typeof rawValue;
       if (currentTypeName !== this.allowedValueTypeName && rawValue !== undefined) {
         throw new BuildStepRuntimeError(
-          `Input parameter "${this.id}" for step "${this.stepDisplayName}" must be of type "${this.allowedValueTypeName}".`,
+          `Input parameter "${this.id}" for step "${this.stepDisplayName}" must be of type "${this.allowedValueTypeName}".`
         );
       }
       return rawValue as BuildStepInputValueTypeWithRequired<T, R>;
@@ -127,7 +127,7 @@ export class BuildStepInput<
       const valueInterpolatedWithGlobalContext = this.ctx.interpolate(rawValue);
       const valueInterpolatedWithOutputsAndGlobalContext = interpolateWithOutputs(
         valueInterpolatedWithGlobalContext,
-        (path) => this.ctx.getStepOutputValue(path) ?? '',
+        (path) => this.ctx.getStepOutputValue(path) ?? ''
       );
       return this.parseInputValueToAllowedType(valueInterpolatedWithOutputsAndGlobalContext);
     }
@@ -140,7 +140,7 @@ export class BuildStepInput<
   public set(value: BuildStepInputValueType<T> | undefined): BuildStepInput {
     if (this.required && value === undefined) {
       throw new BuildStepRuntimeError(
-        `Input parameter "${this.id}" for step "${this.stepDisplayName}" is required.`,
+        `Input parameter "${this.id}" for step "${this.stepDisplayName}" is required.`
       );
     }
 
@@ -178,7 +178,7 @@ export class BuildStepInput<
 
   public static deserialize(
     serializedInput: SerializedBuildStepInput,
-    logger: bunyan,
+    logger: bunyan
   ): BuildStepInput {
     const deserializedContext = BuildStepGlobalContext.deserialize(serializedInput.ctx, logger);
     const input = new BuildStepInput(deserializedContext, {
@@ -209,7 +209,7 @@ export class BuildStepInput<
     const numberValue = Number(value);
     if (Number.isNaN(numberValue)) {
       throw new BuildStepRuntimeError(
-        `Input parameter "${this.id}" for step "${this.stepDisplayName}" must be of type "${this.allowedValueTypeName}".`,
+        `Input parameter "${this.id}" for step "${this.stepDisplayName}" must be of type "${this.allowedValueTypeName}".`
       );
     }
     return numberValue;
@@ -222,7 +222,7 @@ export class BuildStepInput<
       return false;
     } else {
       throw new BuildStepRuntimeError(
-        `Input parameter "${this.id}" for step "${this.stepDisplayName}" must be of type "${this.allowedValueTypeName}".`,
+        `Input parameter "${this.id}" for step "${this.stepDisplayName}" must be of type "${this.allowedValueTypeName}".`
       );
     }
   }
@@ -235,7 +235,7 @@ export class BuildStepInput<
         `Input parameter "${this.id}" for step "${this.stepDisplayName}" must be of type "${this.allowedValueTypeName}".`,
         {
           cause: e,
-        },
+        }
       );
     }
   }

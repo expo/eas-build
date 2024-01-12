@@ -28,19 +28,19 @@ export function createCustomFunctionCall(rawCustomFunctionModulePath: string): B
     if (!(await fs.exists(ctx.global.projectSourceDirectory))) {
       const relative = path.relative(
         path.resolve(ctx.global.projectSourceDirectory),
-        customFunctionModulePath,
+        customFunctionModulePath
       );
       customFunctionModulePath = path.resolve(
-        path.join(ctx.global.projectTargetDirectory, relative),
+        path.join(ctx.global.projectTargetDirectory, relative)
       );
     }
     const serializedArguments: SerializedCustomBuildFunctionArguments = {
       env,
       inputs: Object.fromEntries(
-        Object.entries(inputs).map(([id, input]) => [id, input.serialize()]),
+        Object.entries(inputs).map(([id, input]) => [id, input.serialize()])
       ),
       outputs: Object.fromEntries(
-        Object.entries(outputs).map(([id, output]) => [id, output.serialize()]),
+        Object.entries(outputs).map(([id, output]) => [id, output.serialize()])
       ),
       ctx: ctx.serialize(),
     };
@@ -56,7 +56,7 @@ export function createCustomFunctionCall(rawCustomFunctionModulePath: string): B
           logger: ctx.logger,
           cwd: ctx.workingDirectory,
           env,
-        },
+        }
       );
     } catch {
       throw new Error(`Custom function exited with non-zero exit code.`);

@@ -1,7 +1,7 @@
 export class NoErrorThrownError extends Error {}
 
 export const getErrorAsync = async <TError = any>(
-  call: () => unknown,
+  call: () => unknown
 ): Promise<TError | NoErrorThrownError> => {
   try {
     await call();
