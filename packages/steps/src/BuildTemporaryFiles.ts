@@ -8,7 +8,7 @@ import { BuildStepGlobalContext } from './BuildStepContext.js';
 export async function saveScriptToTemporaryFileAsync(
   ctx: BuildStepGlobalContext,
   stepId: string,
-  scriptContents: string
+  scriptContents: string,
 ): Promise<string> {
   const scriptsDir = getTemporaryScriptsDirPath(ctx, stepId);
   await fs.mkdir(scriptsDir, { recursive: true });
@@ -19,7 +19,7 @@ export async function saveScriptToTemporaryFileAsync(
 
 export async function createTemporaryOutputsDirectoryAsync(
   ctx: BuildStepGlobalContext,
-  stepId: string
+  stepId: string,
 ): Promise<string> {
   const directory = getTemporaryOutputsDirPath(ctx, stepId);
   await fs.mkdir(directory, { recursive: true });
@@ -28,7 +28,7 @@ export async function createTemporaryOutputsDirectoryAsync(
 
 export async function createTemporaryEnvsDirectoryAsync(
   ctx: BuildStepGlobalContext,
-  stepId: string
+  stepId: string,
 ): Promise<string> {
   const directory = getTemporaryEnvsDirPath(ctx, stepId);
   await fs.mkdir(directory, { recursive: true });
@@ -37,7 +37,7 @@ export async function createTemporaryEnvsDirectoryAsync(
 
 export async function cleanUpStepTemporaryDirectoriesAsync(
   ctx: BuildStepGlobalContext,
-  stepId: string
+  stepId: string,
 ): Promise<void> {
   if (ctx.skipCleanup) {
     return;

@@ -20,7 +20,7 @@ export async function isTVOS(ctx: BuildContext<Ios.Job>): Promise<boolean> {
 
   const targetName = await IOSConfig.BuildScheme.getApplicationTargetNameForSchemeAsync(
     ctx.getReactNativeProjectDirectory(),
-    scheme
+    scheme,
   );
 
   const buildConfiguration = resolveBuildConfiguration(ctx);

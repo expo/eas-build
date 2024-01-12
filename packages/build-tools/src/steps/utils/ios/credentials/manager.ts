@@ -45,7 +45,7 @@ export default class IosCredentialsManager {
       const provisioningProfile = await this.prepareTargetCredentials(
         logger,
         target,
-        this.buildCredentials[target]
+        this.buildCredentials[target],
       );
       this.provisioningProfiles.push(provisioningProfile);
       targetProvisioningProfiles[target] = provisioningProfile.data;
@@ -84,7 +84,7 @@ export default class IosCredentialsManager {
   private async prepareTargetCredentials(
     logger: bunyan,
     target: string,
-    targetCredentials: Ios.TargetCredentials
+    targetCredentials: Ios.TargetCredentials,
   ): Promise<ProvisioningProfile> {
     try {
       assert(this.keychain, 'Keychain should be initialized');
@@ -94,26 +94,26 @@ export default class IosCredentialsManager {
 
       logger.info('Getting distribution certificate fingerprint and common name');
       const certificateFingerprint = distributionCertificateUtils.getFingerprint(
-        targetCredentials.distributionCertificate
+        targetCredentials.distributionCertificate,
       );
       const certificateCommonName = distributionCertificateUtils.getCommonName(
-        targetCredentials.distributionCertificate
+        targetCredentials.distributionCertificate,
       );
       logger.info(
-        `Fingerprint = "${certificateFingerprint}", common name = ${certificateCommonName}`
+        `Fingerprint = "${certificateFingerprint}", common name = ${certificateCommonName}`,
       );
 
       logger.info(`Writing distribution certificate to ${distCertPath}`);
       await fs.writeFile(
         distCertPath,
-        Buffer.from(targetCredentials.distributionCertificate.dataBase64, 'base64')
+        Buffer.from(targetCredentials.distributionCertificate.dataBase64, 'base64'),
       );
 
       logger.info('Importing distribution certificate into the keychain');
       await this.keychain.importCertificate(
         logger,
         distCertPath,
-        targetCredentials.distributionCertificate.password
+        targetCredentials.distributionCertificate.password,
       );
 
       logger.info('Initializing provisioning profile');
@@ -121,14 +121,14 @@ export default class IosCredentialsManager {
         Buffer.from(targetCredentials.provisioningProfileBase64, 'base64'),
         this.keychain.data.path,
         target,
-        certificateCommonName
+        certificateCommonName,
       );
       await provisioningProfile.init(logger);
 
       logger.info('Validating whether distribution certificate has been imported successfully');
       await this.keychain.ensureCertificateImported(
         provisioningProfile.data.teamId,
-        certificateFingerprint
+        certificateFingerprint,
       );
 
       logger.info('Verifying whether the distribution certificate and provisioning profile match');

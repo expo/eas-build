@@ -8,7 +8,7 @@ import { Credentials } from './credentials/manager';
 const ARCHIVE_TEMPLATE_FILE_PATH = path.join(__dirname, '../../templates/Gymfile.archive.template');
 const SIMULATOR_TEMPLATE_FILE_PATH = path.join(
   __dirname,
-  '../../templates/Gymfile.simulator.template'
+  '../../templates/Gymfile.simulator.template',
 );
 
 interface ArchiveBuildOptions {

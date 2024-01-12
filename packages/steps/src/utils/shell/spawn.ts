@@ -18,7 +18,7 @@ export function spawnAsync(
   allOptions: SpawnOptions = {
     stdio: 'inherit',
     cwd: process.cwd(),
-  }
+  },
 ): SpawnPromise<SpawnResult> {
   const { logger, ...options } = allOptions;
   if (logger) {

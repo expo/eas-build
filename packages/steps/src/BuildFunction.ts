@@ -52,17 +52,17 @@ export class BuildFunction {
   }) {
     assert(
       command !== undefined || fn !== undefined || customFunctionModulePath !== undefined,
-      'Either command, fn or path must be defined.'
+      'Either command, fn or path must be defined.',
     );
 
     assert(!(command !== undefined && fn !== undefined), 'Command and fn cannot be both set.');
     assert(
       !(command !== undefined && customFunctionModulePath !== undefined),
-      'Command and path cannot be both set.'
+      'Command and path cannot be both set.',
     );
     assert(
       !(fn !== undefined && customFunctionModulePath !== undefined),
-      'Fn and path cannot be both set.'
+      'Fn and path cannot be both set.',
     );
 
     this.namespace = namespace;
@@ -99,7 +99,7 @@ export class BuildFunction {
       shell?: string;
       env?: BuildStepEnv;
       ifCondition?: string;
-    } = {}
+    } = {},
   ): BuildStep {
     const buildStepId = BuildStep.getNewId(id);
     const buildStepName = name ?? this.name;

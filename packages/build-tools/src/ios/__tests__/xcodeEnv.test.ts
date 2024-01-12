@@ -20,7 +20,7 @@ describe(deleteXcodeEnvLocalIfExistsAsync, () => {
         'ios/.xcode.env': '# lorem ipsum',
         'ios/.xcode.env.local': '# lorem ipsum',
       },
-      '/app'
+      '/app',
     );
 
     const mockCtx = mock<BuildContext<Ios.Job>>();

@@ -48,7 +48,7 @@ async function buildAsync(ctx: BuildContext<Ios.Job>): Promise<void> {
       if (hasNativeCode) {
         ctx.markBuildPhaseSkipped();
         ctx.logger.info(
-          'Skipped running "expo prebuild" because the "ios" directory already exists. Learn more about the build process: https://docs.expo.dev/build-reference/ios-builds/'
+          'Skipped running "expo prebuild" because the "ios" directory already exists. Learn more about the build process: https://docs.expo.dev/build-reference/ios-builds/',
         );
         return;
       }
@@ -120,20 +120,20 @@ async function buildAsync(ctx: BuildContext<Ios.Job>): Promise<void> {
 
 async function readEntitlementsAsync(
   ctx: BuildContext<Ios.Job>,
-  { scheme, buildConfiguration }: { scheme: string; buildConfiguration: string }
+  { scheme, buildConfiguration }: { scheme: string; buildConfiguration: string },
 ): Promise<object | null> {
   try {
     const applicationTargetName =
       await IOSConfig.BuildScheme.getApplicationTargetNameForSchemeAsync(
         ctx.getReactNativeProjectDirectory(),
-        scheme
+        scheme,
       );
     const entitlementsPath = IOSConfig.Entitlements.getEntitlementsPath(
       ctx.getReactNativeProjectDirectory(),
       {
         buildConfiguration,
         targetName: applicationTargetName,
-      }
+      },
     );
     if (!entitlementsPath) {
       return null;
@@ -152,7 +152,7 @@ async function resignAsync(ctx: BuildContext<Ios.Job>): Promise<Artifacts> {
     BuildPhase.DOWNLOAD_APPLICATION_ARCHIVE,
     async () => {
       return await downloadApplicationArchiveAsync(ctx);
-    }
+    },
   );
 
   const credentialsManager = new CredentialsManager(ctx);
@@ -178,7 +178,7 @@ async function resignAsync(ctx: BuildContext<Ios.Job>): Promise<Artifacts> {
     await ctx.uploadArtifacts(
       ArtifactType.APPLICATION_ARCHIVE,
       [applicationArchivePath],
-      ctx.logger
+      ctx.logger,
     );
   });
 

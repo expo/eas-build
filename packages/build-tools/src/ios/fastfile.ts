@@ -38,6 +38,6 @@ export async function createFastfileForResigningBuild({
       KEYCHAIN_PATH: keychainPath,
     },
     outputFile,
-    { mustache: false }
+    { mustache: false },
   );
 }

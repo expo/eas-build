@@ -17,7 +17,7 @@ export function getDefaultShell(platform: NodeJS.Platform = os.platform()): stri
 
 export function getShellCommandAndArgs(
   shell: string,
-  script?: string
+  script?: string,
 ): { command: string; args?: string[] } {
   const splits = shell.split(' ');
   const command = splits[0];

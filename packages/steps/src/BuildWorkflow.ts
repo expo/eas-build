@@ -9,7 +9,7 @@ export class BuildWorkflow {
   constructor(
     // @ts-expect-error ctx is not used in this class but let's keep it here for consistency
     private readonly ctx: BuildStepGlobalContext,
-    { buildSteps, buildFunctions }: { buildSteps: BuildStep[]; buildFunctions: BuildFunctionById }
+    { buildSteps, buildFunctions }: { buildSteps: BuildStep[]; buildFunctions: BuildFunctionById },
   ) {
     this.buildSteps = buildSteps;
     this.buildFunctions = buildFunctions;

@@ -11,7 +11,7 @@ import { runGlobalExpoCliCommandAsync } from './expoCli';
 
 export async function buildAndroidAsync(
   job: Android.Job,
-  { workingdir, env: baseEnv, metadata }: BuildParams
+  { workingdir, env: baseEnv, metadata }: BuildParams,
 ): Promise<Artifacts> {
   const versionName = job.version?.versionName;
   const versionCode = job.version?.versionCode;

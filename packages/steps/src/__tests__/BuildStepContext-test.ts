@@ -21,9 +21,9 @@ describe(BuildStepGlobalContext, () => {
           '/non/existent/path',
           '/another/non/existent/path',
           '/working/dir/path',
-          '/non/existent/path'
+          '/non/existent/path',
         ),
-        false
+        false,
       );
       expect(ctx.stepsInternalBuildDirectory.startsWith(os.tmpdir())).toBe(true);
     });
@@ -39,9 +39,9 @@ describe(BuildStepGlobalContext, () => {
           '/non/existent/path',
           projectTargetDirectory,
           workingDirectory,
-          '/non/existent/path'
+          '/non/existent/path',
         ),
-        false
+        false,
       );
       expect(ctx.defaultWorkingDirectory).toBe(projectTargetDirectory);
     });
@@ -56,9 +56,9 @@ describe(BuildStepGlobalContext, () => {
           '/non/existent/path',
           projectTargetDirectory,
           workingDirectory,
-          '/non/existent/path'
+          '/non/existent/path',
         ),
-        false
+        false,
       );
       ctx.markAsCheckedOut(ctx.baseLogger);
       expect(ctx.defaultWorkingDirectory).toBe(workingDirectory);
@@ -94,7 +94,7 @@ describe(BuildStepGlobalContext, () => {
             env: {},
           },
           skipCleanup: true,
-        })
+        }),
       );
     });
   });
@@ -115,7 +115,7 @@ describe(BuildStepGlobalContext, () => {
           },
           skipCleanup: true,
         },
-        createMockLogger()
+        createMockLogger(),
       );
       ctx.markAsCheckedOut(ctx.baseLogger);
       expect(ctx.stepsInternalBuildDirectory).toBe('/m/n/o');

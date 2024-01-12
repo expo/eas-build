@@ -10,7 +10,7 @@ export enum IosMetadataName {
 
 export async function iosSetChannelNativelyAsync(
   channel: string,
-  workingDirectory: string
+  workingDirectory: string,
 ): Promise<void> {
   const expoPlistPath = IOSConfig.Paths.getExpoPlistPath(workingDirectory);
 
@@ -34,7 +34,7 @@ export async function iosSetChannelNativelyAsync(
 
 export async function iosSetRuntimeVersionNativelyAsync(
   runtimeVersion: string,
-  workingDirectory: string
+  workingDirectory: string,
 ): Promise<void> {
   const expoPlistPath = IOSConfig.Paths.getExpoPlistPath(workingDirectory);
 
@@ -51,7 +51,7 @@ export async function iosSetRuntimeVersionNativelyAsync(
 }
 
 export async function iosGetNativelyDefinedChannelAsync(
-  workingDirectory: string
+  workingDirectory: string,
 ): Promise<string | null> {
   const expoPlistPath = IOSConfig.Paths.getExpoPlistPath(workingDirectory);
 
@@ -68,7 +68,7 @@ export async function iosGetNativelyDefinedChannelAsync(
     return updatesRequestHeaders['expo-channel-name'] ?? null;
   } catch (err: any) {
     throw new Error(
-      `Failed to parse ${IosMetadataName.UPDATES_CONFIGURATION_REQUEST_HEADERS_KEY} from Expo.plist: ${err.message}`
+      `Failed to parse ${IosMetadataName.UPDATES_CONFIGURATION_REQUEST_HEADERS_KEY} from Expo.plist: ${err.message}`,
     );
   }
 }

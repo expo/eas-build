@@ -222,7 +222,7 @@ describe(BuildStepInput, () => {
       required: true,
     });
     expect(() => i.value).toThrowError(
-      'Input parameter "foo" for step "test1" must be of type "number".'
+      'Input parameter "foo" for step "test1" must be of type "number".',
     );
   });
 
@@ -251,7 +251,7 @@ describe(BuildStepInput, () => {
       allowedValueTypeName: BuildStepInputValueTypeName.BOOLEAN,
     });
     expect(() => i.value).toThrowError(
-      'Input parameter "foo" for step "test1" must be of type "boolean".'
+      'Input parameter "foo" for step "test1" must be of type "boolean".',
     );
   });
 
@@ -280,7 +280,7 @@ describe(BuildStepInput, () => {
       required: true,
     });
     expect(() => i.value).toThrowError(
-      'Input parameter "foo" for step "test1" must be of type "json".'
+      'Input parameter "foo" for step "test1" must be of type "json".',
     );
   });
 
@@ -309,8 +309,8 @@ describe(BuildStepInput, () => {
       i.value;
     }).toThrowError(
       new BuildStepRuntimeError(
-        'Input parameter "foo" for step "test1" is required but it was not set.'
-      )
+        'Input parameter "foo" for step "test1" is required but it was not set.',
+      ),
     );
   });
 
@@ -327,7 +327,9 @@ describe(BuildStepInput, () => {
       // eslint-disable-next-line @typescript-eslint/no-unused-expressions
       i.value;
     }).toThrowError(
-      new BuildStepRuntimeError('Input parameter "foo" for step "test1" must be of type "boolean".')
+      new BuildStepRuntimeError(
+        'Input parameter "foo" for step "test1" must be of type "boolean".',
+      ),
     );
   });
 
@@ -359,7 +361,7 @@ describe(BuildStepInput, () => {
       // eslint-disable-next-line @typescript-eslint/no-unused-expressions
       i.value;
     }).toThrowError(
-      new BuildStepRuntimeError('Input parameter "foo" for step "test1" must be of type "number".')
+      new BuildStepRuntimeError('Input parameter "foo" for step "test1" must be of type "number".'),
     );
   });
 
@@ -376,7 +378,9 @@ describe(BuildStepInput, () => {
       // eslint-disable-next-line @typescript-eslint/no-unused-expressions
       i.value;
     }).toThrowError(
-      new BuildStepRuntimeError('Input parameter "foo" for step "test1" must be of type "boolean".')
+      new BuildStepRuntimeError(
+        'Input parameter "foo" for step "test1" must be of type "boolean".',
+      ),
     );
   });
 
@@ -391,7 +395,7 @@ describe(BuildStepInput, () => {
     expect(() => {
       i.set(undefined);
     }).toThrowError(
-      new BuildStepRuntimeError('Input parameter "foo" for step "test1" is required.')
+      new BuildStepRuntimeError('Input parameter "foo" for step "test1" is required.'),
     );
   });
 
@@ -415,7 +419,7 @@ describe(BuildStepInput, () => {
         allowedValues: ['bar', 'baz'],
         required: true,
         value: 'bar',
-      })
+      }),
     );
   });
 

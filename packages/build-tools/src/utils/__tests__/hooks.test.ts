@@ -47,7 +47,7 @@ describe(runHookIfPresent, () => {
           },
         }),
       },
-      '/workingdir/build'
+      '/workingdir/build',
     );
 
     await runHookIfPresent(ctx, Hook.PRE_INSTALL);
@@ -67,7 +67,7 @@ describe(runHookIfPresent, () => {
         }),
         './yarn.lock': 'fakelockfile',
       },
-      '/workingdir/build'
+      '/workingdir/build',
     );
 
     await runHookIfPresent(ctx, Hook.PRE_INSTALL);
@@ -88,7 +88,7 @@ describe(runHookIfPresent, () => {
         './yarn.lock': 'fakelockfile',
         './.yarnrc.yml': 'fakeyarn2config',
       },
-      '/workingdir/build'
+      '/workingdir/build',
     );
 
     await runHookIfPresent(ctx, Hook.PRE_INSTALL);
@@ -107,7 +107,7 @@ describe(runHookIfPresent, () => {
           },
         }),
       },
-      '/workingdir/build'
+      '/workingdir/build',
     );
 
     await runHookIfPresent(ctx, Hook.PRE_INSTALL);
@@ -124,7 +124,7 @@ describe(runHookIfPresent, () => {
           },
         }),
       },
-      '/workingdir/build'
+      '/workingdir/build',
     );
 
     await runHookIfPresent(ctx, Hook.ON_BUILD_CANCEL);
@@ -132,7 +132,7 @@ describe(runHookIfPresent, () => {
     expect(spawn).toBeCalledWith(
       ctx.packageManager,
       ['run', 'eas-build-on-cancel'],
-      expect.anything()
+      expect.anything(),
     );
   });
 
@@ -143,7 +143,7 @@ describe(runHookIfPresent, () => {
           scripts: {},
         }),
       },
-      '/workingdir/build'
+      '/workingdir/build',
     );
 
     await runHookIfPresent(ctx, Hook.ON_BUILD_CANCEL);

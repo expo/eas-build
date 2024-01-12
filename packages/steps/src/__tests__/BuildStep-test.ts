@@ -43,12 +43,12 @@ describe(BuildStep, () => {
     });
     it('returns the first line of the command if name is undefined and id is a uuid', () => {
       expect(BuildStep.getDisplayName({ id: uuidv4(), command: 'echo 123\necho 456' })).toBe(
-        'echo 123'
+        'echo 123',
       );
     });
     it('returns the first non-comment line of the command', async () => {
       expect(
-        BuildStep.getDisplayName({ id: uuidv4(), command: '# list files\nls -la\necho 123' })
+        BuildStep.getDisplayName({ id: uuidv4(), command: '# list files\nls -la\necho 123' }),
       ).toBe('ls -la');
     });
     it('returns the uuid id if neither name nor command is defined', () => {
@@ -202,7 +202,7 @@ describe(BuildStep, () => {
           buildStepInternalId: expect.stringMatching(UUID_REGEX),
           buildStepId: 'test1',
           buildStepDisplayName: 'Test step',
-        })
+        }),
       );
       expect(step.ctx.logger).not.toBe(ctx.baseLogger);
     });
@@ -269,15 +269,15 @@ describe(BuildStep, () => {
         await Promise.all([
           fs.writeFile(
             path.join(baseStepCtx.defaultWorkingDirectory, 'expo-abc123'),
-            'lorem ipsum'
+            'lorem ipsum',
           ),
           fs.writeFile(
             path.join(baseStepCtx.defaultWorkingDirectory, 'expo-def456'),
-            'lorem ipsum'
+            'lorem ipsum',
           ),
           fs.writeFile(
             path.join(baseStepCtx.defaultWorkingDirectory, 'expo-ghi789'),
-            'lorem ipsum'
+            'lorem ipsum',
           ),
         ]);
 
@@ -371,13 +371,15 @@ describe(BuildStep, () => {
         const fn = jest.fn(
           async (
             ctx: BuildStepContext,
-            { env }: { inputs: BuildStepInputById; outputs: BuildStepOutputById; env: BuildStepEnv }
+            {
+              env,
+            }: { inputs: BuildStepInputById; outputs: BuildStepOutputById; env: BuildStepEnv },
           ) => {
             await spawnAsync('set-env', ['ABC', '123'], {
               cwd: ctx.workingDirectory,
               env,
             });
-          }
+          },
         );
         const displayName = BuildStep.getDisplayName({ id });
 
@@ -395,13 +397,15 @@ describe(BuildStep, () => {
         const fn = jest.fn(
           async (
             ctx: BuildStepContext,
-            { env }: { inputs: BuildStepInputById; outputs: BuildStepOutputById; env: BuildStepEnv }
+            {
+              env,
+            }: { inputs: BuildStepInputById; outputs: BuildStepOutputById; env: BuildStepEnv },
           ) => {
             await spawnAsync('set-output', ['abc', '123'], {
               cwd: ctx.workingDirectory,
               env,
             });
-          }
+          },
         );
         const displayName = BuildStep.getDisplayName({ id });
 
@@ -521,7 +525,7 @@ describe(BuildStep, () => {
               ...globalEnv,
               ...stepEnv,
             }),
-          })
+          }),
         );
       });
 
@@ -553,7 +557,7 @@ describe(BuildStep, () => {
             env: expect.objectContaining({
               TEST1: 'def',
             }),
-          })
+          }),
         );
       });
 
@@ -613,7 +617,7 @@ describe(BuildStep, () => {
 
         const fn: BuildStepFunction = (_ctx, { inputs, outputs }) => {
           outputs.abc.set(
-            `${inputs.foo1.value} ${inputs.foo2.value} ${inputs.foo3.value} ${inputs.foo4.value}`
+            `${inputs.foo1.value} ${inputs.foo2.value} ${inputs.foo3.value} ${inputs.foo4.value}`,
           );
         };
 
@@ -803,13 +807,15 @@ describe(BuildStep, () => {
       await step.executeAsync();
       expect(
         lines.find((line) =>
-          line.startsWith(path.join(baseStepCtx.stepsInternalBuildDirectory, 'steps/test1/envs'))
-        )
+          line.startsWith(path.join(baseStepCtx.stepsInternalBuildDirectory, 'steps/test1/envs')),
+        ),
       ).toBeTruthy();
       expect(
         lines.find((line) =>
-          line.startsWith(path.join(baseStepCtx.stepsInternalBuildDirectory, 'steps/test1/outputs'))
-        )
+          line.startsWith(
+            path.join(baseStepCtx.stepsInternalBuildDirectory, 'steps/test1/outputs'),
+          ),
+        ),
       ).toBeTruthy();
       expect(lines.find((line) => line.match(baseStepCtx.defaultWorkingDirectory))).toBeTruthy();
     });

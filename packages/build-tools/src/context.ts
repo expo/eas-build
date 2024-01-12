@@ -55,13 +55,13 @@ export interface BuildContextOptions {
   runGlobalExpoCliCommand: (
     args: string[],
     options: SpawnOptions,
-    npmVersionAtLeast7: boolean
+    npmVersionAtLeast7: boolean,
   ) => SpawnPromise<SpawnResult>;
   uploadArtifacts: (type: ArtifactType, paths: string[], logger: bunyan) => Promise<string | null>;
   reportError?: (
     msg: string,
     err?: Error,
-    options?: { tags?: Record<string, string>; extras?: Record<string, string> }
+    options?: { tags?: Record<string, string>; extras?: Record<string, string> },
   ) => void;
   reportBuildPhaseStats?: (stats: BuildPhaseStats) => void;
   skipNativeBuild?: boolean;
@@ -81,12 +81,12 @@ export class BuildContext<TJob extends Job> {
   public readonly runGlobalExpoCliCommand: (
     args: string[],
     options: SpawnOptions,
-    npmVersionAtLeast7: boolean
+    npmVersionAtLeast7: boolean,
   ) => SpawnPromise<SpawnResult>;
   public readonly reportError?: (
     msg: string,
     err?: Error,
-    options?: { tags?: Record<string, string>; extras?: Record<string, string> }
+    options?: { tags?: Record<string, string>; extras?: Record<string, string> },
   ) => void;
   public readonly skipNativeBuild?: boolean;
   public artifacts: Artifacts = {};
@@ -98,7 +98,7 @@ export class BuildContext<TJob extends Job> {
   private readonly _uploadArtifacts: (
     type: ArtifactType,
     paths: string[],
-    logger: bunyan
+    logger: bunyan,
   ) => Promise<string | null>;
   private buildPhase?: BuildPhase;
   private buildPhaseSkipped = false;
@@ -187,7 +187,7 @@ export class BuildContext<TJob extends Job> {
     }: {
       doNotMarkStart?: boolean;
       doNotMarkEnd?: boolean;
-    } = {}
+    } = {},
   ): Promise<T> {
     let startTimestamp = Date.now();
     try {
@@ -198,8 +198,8 @@ export class BuildContext<TJob extends Job> {
       const buildPhaseResult: BuildPhaseResult = this.buildPhaseSkipped
         ? BuildPhaseResult.SKIPPED
         : this.buildPhaseHasWarnings
-        ? BuildPhaseResult.WARNING
-        : BuildPhaseResult.SUCCESS;
+          ? BuildPhaseResult.WARNING
+          : BuildPhaseResult.SUCCESS;
       await this.endCurrentBuildPhaseAsync({ result: buildPhaseResult, doNotMarkEnd, durationMs });
       return result;
     } catch (err: any) {
@@ -228,7 +228,7 @@ export class BuildContext<TJob extends Job> {
   public updateEnv(env: Env): void {
     if (this._job.triggeredBy !== BuildTrigger.GIT_BASED_INTEGRATION) {
       throw new Error(
-        'Updating environment variables is only allowed when build was triggered by a git-based integration.'
+        'Updating environment variables is only allowed when build was triggered by a git-based integration.',
       );
     }
     this._env = {
@@ -244,7 +244,7 @@ export class BuildContext<TJob extends Job> {
   public updateJobInformation(job: TJob, metadata: Metadata): void {
     if (this._job.triggeredBy !== BuildTrigger.GIT_BASED_INTEGRATION) {
       throw new Error(
-        'Updating job information is only allowed when build was triggered by a git-based integration.'
+        'Updating job information is only allowed when build was triggered by a git-based integration.',
       );
     }
     this._job = { ...job, triggeredBy: this._job.triggeredBy };
@@ -253,7 +253,7 @@ export class BuildContext<TJob extends Job> {
 
   private async handleBuildPhaseErrorAsync(
     err: any,
-    buildPhase: BuildPhase
+    buildPhase: BuildPhase,
   ): Promise<errors.BuildError> {
     const buildError = await resolveBuildPhaseErrorAsync(
       err,
@@ -263,7 +263,7 @@ export class BuildContext<TJob extends Job> {
         phase: buildPhase,
         env: this.env,
       },
-      this.buildLogsDirectory
+      this.buildLogsDirectory,
     );
     if (buildError.errorCode === errors.ErrorCode.UNKNOWN_ERROR) {
       // leaving message empty, website will display err.stack which already includes err.message
@@ -285,7 +285,7 @@ export class BuildContext<TJob extends Job> {
       } else {
         this.logger.info(
           { marker: LogMarker.END_PHASE, result: BuildPhaseResult.UNKNOWN },
-          `End phase: ${this.buildPhase}`
+          `End phase: ${this.buildPhase}`,
         );
         this.logger = this.defaultLogger;
       }
@@ -316,7 +316,7 @@ export class BuildContext<TJob extends Job> {
     if (!doNotMarkEnd) {
       this.logger.info(
         { marker: LogMarker.END_PHASE, result, durationMs },
-        `End phase: ${this.buildPhase}`
+        `End phase: ${this.buildPhase}`,
       );
     }
     this.logger = this.defaultLogger;
@@ -332,15 +332,15 @@ export class BuildContext<TJob extends Job> {
       filenames.map(async (basename) => {
         const rawContents = await fs.readFile(
           path.join(this.buildEnvsDirectory, basename),
-          'utf-8'
+          'utf-8',
         );
         return [basename, rawContents];
-      })
+      }),
     );
     await Promise.all(
       filenames.map(async (basename) => {
         await fs.remove(path.join(this.buildEnvsDirectory, basename));
-      })
+      }),
     );
     this._env = {
       ...this._env,
@@ -360,7 +360,7 @@ export class BuildContext<TJob extends Job> {
       } else {
         environmentSecrets[name] = createTemporaryEnvironmentSecretFile(
           this.environmentSecretsDirectory,
-          value
+          value,
         );
       }
     }

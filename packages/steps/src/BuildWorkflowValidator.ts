@@ -31,7 +31,7 @@ export class BuildWorkflowValidator {
       return [];
     } else {
       const error = new BuildConfigError(
-        `Duplicated step IDs: ${duplicatedStepIds.map((i) => `"${i}"`).join(', ')}`
+        `Duplicated step IDs: ${duplicatedStepIds.map((i) => `"${i}"`).join(', ')}`,
       );
       return [error];
     }
@@ -46,7 +46,7 @@ export class BuildWorkflowValidator {
       for (const currentStepInput of currentStep.inputs ?? []) {
         if (currentStepInput.required && currentStepInput.rawValue === undefined) {
           const error = new BuildConfigError(
-            `Input parameter "${currentStepInput.id}" for step "${currentStep.displayName}" is required but it was not set.`
+            `Input parameter "${currentStepInput.id}" for step "${currentStep.displayName}" is required but it was not set.`,
           );
           errors.push(error);
         }
@@ -69,7 +69,7 @@ export class BuildWorkflowValidator {
                 : currentStepInput.rawValue
             }" which is not of type "${
               currentStepInput.allowedValueTypeName
-            }" or is not step or context reference.`
+            }" or is not step or context reference.`,
           );
           errors.push(error);
         }
@@ -85,7 +85,7 @@ export class BuildWorkflowValidator {
               currentStepInput.value
             }" which is not one of the allowed values: ${nullthrows(currentStepInput.allowedValues)
               .map((i) => `"${i}"`)
-              .join(', ')}.`
+              .join(', ')}.`,
           );
           errors.push(error);
         }
@@ -97,19 +97,19 @@ export class BuildWorkflowValidator {
           if (!(referencedStepId in visitedStepByStepId)) {
             if (allStepIds.has(referencedStepId)) {
               const error = new BuildConfigError(
-                `Input parameter "${currentStepInput.id}" for step "${currentStep.displayName}" uses an expression that references an output parameter from the future step "${referencedStepId}".`
+                `Input parameter "${currentStepInput.id}" for step "${currentStep.displayName}" uses an expression that references an output parameter from the future step "${referencedStepId}".`,
               );
               errors.push(error);
             } else {
               const error = new BuildConfigError(
-                `Input parameter "${currentStepInput.id}" for step "${currentStep.displayName}" uses an expression that references an output parameter from a non-existent step "${referencedStepId}".`
+                `Input parameter "${currentStepInput.id}" for step "${currentStep.displayName}" uses an expression that references an output parameter from a non-existent step "${referencedStepId}".`,
               );
               errors.push(error);
             }
           } else {
             if (!visitedStepByStepId[referencedStepId].hasOutputParameter(referencedStepOutputId)) {
               const error = new BuildConfigError(
-                `Input parameter "${currentStepInput.id}" for step "${currentStep.displayName}" uses an expression that references an undefined output parameter "${referencedStepOutputId}" from step "${referencedStepId}".`
+                `Input parameter "${currentStepInput.id}" for step "${currentStep.displayName}" uses an expression that references an undefined output parameter "${referencedStepOutputId}" from step "${referencedStepId}".`,
               );
               errors.push(error);
             }
@@ -131,10 +131,10 @@ export class BuildWorkflowValidator {
             step.ctx.global.runtimePlatform
           }". Allowed platforms for this step are: ${nullthrows(
             step.supportedRuntimePlatforms,
-            `step.supportedRuntimePlatforms can't be falsy if canBeRunOnRuntimePlatform() is false`
+            `step.supportedRuntimePlatforms can't be falsy if canBeRunOnRuntimePlatform() is false`,
           )
             .map((p) => `"${p}"`)
-            .join(', ')}.`
+            .join(', ')}.`,
         );
         errors.push(error);
       }
@@ -151,7 +151,7 @@ export class BuildWorkflowValidator {
 
       if (!(await fs.exists(buildFunction.customFunctionModulePath))) {
         const error = new BuildConfigError(
-          `Custom function module path "${buildFunction.customFunctionModulePath}" for function "${buildFunction.id}" does not exist.`
+          `Custom function module path "${buildFunction.customFunctionModulePath}" for function "${buildFunction.id}" does not exist.`,
         );
         errors.push(error);
         continue;
@@ -159,7 +159,7 @@ export class BuildWorkflowValidator {
 
       if (!(await fs.exists(path.join(buildFunction.customFunctionModulePath, 'package.json')))) {
         const error = new BuildConfigError(
-          `Custom function module path "${buildFunction.customFunctionModulePath}" for function "${buildFunction.id}" does not contain a package.json file.`
+          `Custom function module path "${buildFunction.customFunctionModulePath}" for function "${buildFunction.id}" does not contain a package.json file.`,
         );
         errors.push(error);
       }

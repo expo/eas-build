@@ -101,10 +101,10 @@ describe(BuildWorkflowValidator, () => {
     expect(error.errors.length).toBe(2);
     expect(error.errors[0]).toBeInstanceOf(BuildConfigError);
     expect(error.errors[0].message).toBe(
-      'Input parameter "input1" for step "test1" is set to "3" which is not one of the allowed values: "1", "2".'
+      'Input parameter "input1" for step "test1" is set to "3" which is not one of the allowed values: "1", "2".',
     );
     expect(error.errors[1].message).toBe(
-      'Input parameter "input2" for step "test1" is set to "3" which is not one of the allowed values: "true", "false".'
+      'Input parameter "input2" for step "test1" is set to "3" which is not one of the allowed values: "true", "false".',
     );
   });
   test('required function input without default value and value passed to step', async () => {
@@ -140,7 +140,7 @@ describe(BuildWorkflowValidator, () => {
     });
     expect(error).toBeInstanceOf(BuildWorkflowError);
     expect((error as BuildWorkflowError).errors[0].message).toBe(
-      'Input parameter "id1" for step "step_id" is required but it was not set.'
+      'Input parameter "id1" for step "step_id" is required but it was not set.',
     );
   });
   test('invalid input type passed to step', async () => {
@@ -211,16 +211,16 @@ describe(BuildWorkflowValidator, () => {
     });
     expect(error).toBeInstanceOf(BuildWorkflowError);
     expect((error as BuildWorkflowError).errors[0].message).toBe(
-      'Input parameter "id1" for step "step_id" is set to "123" which is not of type "string" or is not step or context reference.'
+      'Input parameter "id1" for step "step_id" is set to "123" which is not of type "string" or is not step or context reference.',
     );
     expect((error as BuildWorkflowError).errors[1].message).toBe(
-      'Input parameter "id2" for step "step_id" is set to "{"a":1,"b":2}" which is not of type "number" or is not step or context reference.'
+      'Input parameter "id2" for step "step_id" is set to "{"a":1,"b":2}" which is not of type "number" or is not step or context reference.',
     );
     expect((error as BuildWorkflowError).errors[2].message).toBe(
-      'Input parameter "id3" for step "step_id" is set to "abc" which is not of type "json" or is not step or context reference.'
+      'Input parameter "id3" for step "step_id" is set to "abc" which is not of type "json" or is not step or context reference.',
     );
     expect((error as BuildWorkflowError).errors[3].message).toBe(
-      'Input parameter "id6" for step "step_id" is set to "${ wrong.aaa }" which is not of type "number" or is not step or context reference.'
+      'Input parameter "id6" for step "step_id" is set to "${ wrong.aaa }" which is not of type "number" or is not step or context reference.',
     );
   });
   test('output from future step', async () => {
@@ -275,7 +275,7 @@ describe(BuildWorkflowValidator, () => {
     expect(error.errors.length).toBe(1);
     expect(error.errors[0]).toBeInstanceOf(BuildConfigError);
     expect(error.errors[0].message).toBe(
-      'Input parameter "input1" for step "test1" uses an expression that references an output parameter from the future step "test2".'
+      'Input parameter "input1" for step "test1" uses an expression that references an output parameter from the future step "test2".',
     );
   });
   test('output from non-existent step', async () => {
@@ -313,7 +313,7 @@ describe(BuildWorkflowValidator, () => {
     expect(error.errors.length).toBe(1);
     expect(error.errors[0]).toBeInstanceOf(BuildConfigError);
     expect(error.errors[0].message).toBe(
-      'Input parameter "input1" for step "test2" uses an expression that references an output parameter from a non-existent step "test1".'
+      'Input parameter "input1" for step "test2" uses an expression that references an output parameter from a non-existent step "test1".',
     );
   });
   test('undefined output', async () => {
@@ -385,7 +385,7 @@ describe(BuildWorkflowValidator, () => {
     expect(error.errors.length).toBe(1);
     expect(error.errors[0]).toBeInstanceOf(BuildConfigError);
     expect(error.errors[0].message).toBe(
-      'Input parameter "input2" for step "test3" uses an expression that references an undefined output parameter "output2" from step "test2".'
+      'Input parameter "input2" for step "test3" uses an expression that references an undefined output parameter "output2" from step "test2".',
     );
   });
   test('multiple config errors', async () => {
@@ -457,11 +457,11 @@ describe(BuildWorkflowValidator, () => {
     expect(error.errors.length).toBe(2);
     expect(error.errors[0]).toBeInstanceOf(BuildConfigError);
     expect(error.errors[0].message).toBe(
-      'Input parameter "input1" for step "test2" uses an expression that references an output parameter from a non-existent step "test4".'
+      'Input parameter "input1" for step "test2" uses an expression that references an output parameter from a non-existent step "test4".',
     );
     expect(error.errors[1]).toBeInstanceOf(BuildConfigError);
     expect(error.errors[1].message).toBe(
-      'Input parameter "input2" for step "test3" uses an expression that references an undefined output parameter "output2" from step "test2".'
+      'Input parameter "input2" for step "test3" uses an expression that references an undefined output parameter "output2" from step "test2".',
     );
   });
   test('unallowed platform for build step', async () => {
@@ -491,7 +491,7 @@ describe(BuildWorkflowValidator, () => {
     expect(error.errors.length).toBe(1);
     expect(error.errors[0]).toBeInstanceOf(BuildConfigError);
     expect(error.errors[0].message).toBe(
-      `Step "${displayName}" is not allowed on platform "${BuildRuntimePlatform.LINUX}". Allowed platforms for this step are: "${BuildRuntimePlatform.DARWIN}".`
+      `Step "${displayName}" is not allowed on platform "${BuildRuntimePlatform.LINUX}". Allowed platforms for this step are: "${BuildRuntimePlatform.DARWIN}".`,
     );
   });
 
@@ -516,7 +516,7 @@ describe(BuildWorkflowValidator, () => {
     expect(error.errors.length).toBe(1);
     expect(error.errors[0]).toBeInstanceOf(BuildConfigError);
     expect(error.errors[0].message).toBe(
-      `Custom function module path "/non/existent/module" for function "test" does not exist.`
+      `Custom function module path "/non/existent/module" for function "test" does not exist.`,
     );
   });
 });

@@ -22,7 +22,7 @@ export enum Hook {
 export async function runHookIfPresent<TJob extends Job>(
   ctx: BuildContext<TJob>,
   hook: Hook,
-  { extraEnvs }: { extraEnvs?: Record<string, string> } = {}
+  { extraEnvs }: { extraEnvs?: Record<string, string> } = {},
 ): Promise<void> {
   const projectDir = ctx.getReactNativeProjectDirectory();
   const packageJson = readPackageJson(projectDir);

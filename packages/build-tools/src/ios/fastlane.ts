@@ -26,7 +26,7 @@ export async function runFastlaneGym<TJob extends Ios.Job>(
     buildConfiguration?: string;
     credentials: Credentials | null;
     entitlements: object | null;
-  }
+  },
 ): Promise<void> {
   await ensureGymfileExists(ctx, {
     scheme,
@@ -53,7 +53,7 @@ export async function runFastlaneGym<TJob extends Ios.Job>(
 
 export async function runFastlaneResign<TJob extends Ios.Job>(
   ctx: BuildContext<TJob>,
-  { credentials, ipaPath }: { credentials: Credentials; ipaPath: string }
+  { credentials, ipaPath }: { credentials: Credentials; ipaPath: string },
 ): Promise<void> {
   const { certificateCommonName } = credentials.applicationTargetProvisioningProfile.data;
 
@@ -85,7 +85,7 @@ export async function runFastlane(
     logger?: bunyan;
     env?: Record<string, string>;
     cwd?: string;
-  } = {}
+  } = {},
 ): Promise<SpawnResult> {
   const fastlaneEnvVars = {
     FASTLANE_DISABLE_COLORS: '1',
@@ -116,7 +116,7 @@ async function ensureGymfileExists<TJob extends Ios.Job>(
     credentials: Credentials | null;
     logsDirectory: string;
     entitlements: object | null;
-  }
+  },
 ): Promise<void> {
   const gymfilePath = path.join(ctx.getReactNativeProjectDirectory(), 'ios/Gymfile');
 

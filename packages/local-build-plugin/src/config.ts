@@ -14,7 +14,7 @@ const envArtifactPath = process.env.EAS_LOCAL_BUILD_ARTIFACT_PATH;
 
 if (envLoggerLevel && !['debug', 'info', 'warn', 'error'].includes(envLoggerLevel)) {
   throw new Error(
-    'Invalid value for EAS_LOCAL_BUILD_LOGGER_LEVEL, one of info, warn, or error is expected'
+    'Invalid value for EAS_LOCAL_BUILD_LOGGER_LEVEL, one of info, warn, or error is expected',
   );
 }
 

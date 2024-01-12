@@ -19,11 +19,11 @@ describe(configureXcodeProject, () => {
       {
         'ios/testapp.xcodeproj/project.pbxproj': originalFs.readFileSync(
           path.join(__dirname, 'fixtures/simple-project.pbxproj'),
-          'utf-8'
+          'utf-8',
         ),
         'ios/testapp/AppDelegate.m': 'placeholder',
       },
-      '/app'
+      '/app',
     );
     const options = {
       credentials: {
@@ -54,7 +54,7 @@ describe(configureXcodeProject, () => {
     };
     await configureXcodeProject(ctx as any, options);
     expect(
-      vol.readFileSync('/app/ios/testapp.xcodeproj/project.pbxproj', 'utf-8')
+      vol.readFileSync('/app/ios/testapp.xcodeproj/project.pbxproj', 'utf-8'),
     ).toMatchSnapshot();
   });
   it('configures credentials for multi target project', async () => {
@@ -62,11 +62,11 @@ describe(configureXcodeProject, () => {
       {
         'ios/testapp.xcodeproj/project.pbxproj': originalFs.readFileSync(
           path.join(__dirname, 'fixtures/multitarget-project.pbxproj'),
-          'utf-8'
+          'utf-8',
         ),
         'ios/testapp/AppDelegate.m': 'placeholder',
       },
-      '/app'
+      '/app',
     );
     const options = {
       credentials: {
@@ -108,7 +108,7 @@ describe(configureXcodeProject, () => {
     };
     await configureXcodeProject(ctx as any, options);
     expect(
-      vol.readFileSync('/app/ios/testapp.xcodeproj/project.pbxproj', 'utf-8')
+      vol.readFileSync('/app/ios/testapp.xcodeproj/project.pbxproj', 'utf-8'),
     ).toMatchSnapshot();
   });
   it('configures credentials and versions for a simple project', async () => {
@@ -116,15 +116,15 @@ describe(configureXcodeProject, () => {
       {
         'ios/testapp/Info.plist': originalFs.readFileSync(
           path.join(__dirname, 'fixtures/Info.plist'),
-          'utf-8'
+          'utf-8',
         ),
         'ios/testapp.xcodeproj/project.pbxproj': originalFs.readFileSync(
           path.join(__dirname, 'fixtures/simple-project.pbxproj'),
-          'utf-8'
+          'utf-8',
         ),
         'ios/testapp/AppDelegate.m': 'placeholder',
       },
-      '/app'
+      '/app',
     );
     const options = {
       credentials: {
@@ -160,10 +160,10 @@ describe(configureXcodeProject, () => {
     };
     await configureXcodeProject(ctx as any, options);
     expect(
-      vol.readFileSync('/app/ios/testapp.xcodeproj/project.pbxproj', 'utf-8')
+      vol.readFileSync('/app/ios/testapp.xcodeproj/project.pbxproj', 'utf-8'),
     ).toMatchSnapshot();
     expect(vol.readFileSync('/app/ios/testapp/Info.plist', 'utf-8')).toMatchSnapshot(
-      'Info.plist application target'
+      'Info.plist application target',
     );
   });
   it('configures credentials and versions for multi target project', async () => {
@@ -171,19 +171,19 @@ describe(configureXcodeProject, () => {
       {
         'ios/multitarget/Info.plist': originalFs.readFileSync(
           path.join(__dirname, 'fixtures/Info.plist'),
-          'utf-8'
+          'utf-8',
         ),
         'ios/shareextension/Info.plist': originalFs.readFileSync(
           path.join(__dirname, 'fixtures/Info.plist'),
-          'utf-8'
+          'utf-8',
         ),
         'ios/testapp.xcodeproj/project.pbxproj': originalFs.readFileSync(
           path.join(__dirname, 'fixtures/multitarget-project.pbxproj'),
-          'utf-8'
+          'utf-8',
         ),
         'ios/testapp/AppDelegate.m': 'placeholder',
       },
-      '/app'
+      '/app',
     );
     const options = {
       credentials: {
@@ -230,13 +230,13 @@ describe(configureXcodeProject, () => {
     };
     await configureXcodeProject(ctx as any, options);
     expect(
-      vol.readFileSync('/app/ios/testapp.xcodeproj/project.pbxproj', 'utf-8')
+      vol.readFileSync('/app/ios/testapp.xcodeproj/project.pbxproj', 'utf-8'),
     ).toMatchSnapshot();
     expect(vol.readFileSync('/app/ios/shareextension/Info.plist', 'utf-8')).toMatchSnapshot(
-      'Info.plist application target'
+      'Info.plist application target',
     );
     expect(vol.readFileSync('/app/ios/multitarget/Info.plist', 'utf-8')).toMatchSnapshot(
-      'Info.plist extension'
+      'Info.plist extension',
     );
   });
 });

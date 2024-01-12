@@ -11,5 +11,5 @@ export const TargetCredentialsSchema = Joi.object<Ios.TargetCredentials>().keys(
 
 export const IosBuildCredentialsSchema = Joi.object<Ios.BuildCredentials>().pattern(
   Joi.string().required(),
-  TargetCredentialsSchema
+  TargetCredentialsSchema,
 );

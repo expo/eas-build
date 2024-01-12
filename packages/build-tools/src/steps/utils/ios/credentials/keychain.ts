@@ -41,7 +41,7 @@ export default class Keychain {
   public async importCertificate(
     logger: bunyan,
     certPath: string,
-    certPassword: string
+    certPassword: string,
   ): Promise<void> {
     if (!this.created) {
       throw new Error('You must create a keychain first.');
@@ -62,7 +62,7 @@ export default class Keychain {
     const identities = await this.findIdentitiesByTeamId(teamId);
     if (!identities.includes(fingerprint)) {
       throw new Error(
-        `Distribution certificate with fingerprint ${fingerprint} hasn't been imported successfully`
+        `Distribution certificate with fingerprint ${fingerprint} hasn't been imported successfully`,
       );
     }
   }
@@ -90,10 +90,10 @@ export default class Keychain {
   public async cleanUpKeychains(logger: bunyan): Promise<void> {
     const { stdout } = await spawn('security', ['list-keychains'], { stdio: 'pipe' });
     const keychainList = (/"(.*)"/g.exec(stdout) ?? ([] as string[])).map((i) =>
-      i.slice(1, i.length - 1)
+      i.slice(1, i.length - 1),
     );
     const turtleKeychainList = keychainList.filter((keychain) =>
-      /turtle-v2-[\w-]+\.keychain$/.exec(keychain)
+      /turtle-v2-[\w-]+\.keychain$/.exec(keychain),
     );
     for (const turtleKeychainPath of turtleKeychainList) {
       await this.destroy(logger, turtleKeychainPath);
@@ -106,7 +106,7 @@ export default class Keychain {
       ['find-identity', '-v', '-s', `(${teamId})`, this.keychainPath],
       {
         stdio: 'pipe',
-      }
+      },
     );
     return output.join('');
   }

@@ -15,7 +15,10 @@ export class XcodeBuildLogger {
   private logReaderPromise?: SpawnPromise<SpawnResult>;
   private logsPath?: string;
 
-  constructor(private readonly logger: bunyan, private readonly projectRoot: string) {}
+  constructor(
+    private readonly logger: bunyan,
+    private readonly projectRoot: string,
+  ) {}
 
   public async watchLogFiles(logsDirectory: string): Promise<void> {
     while (!this.flushing) {
@@ -77,7 +80,7 @@ export class XcodeBuildLogger {
     try {
       const logFile = await fs.readFile(logsPath, 'utf-8');
       const match = logFile.match(
-        /Welcome to Metro!\s* Fast - Scalable - Integrated\s*([\s\S]*)Run CLI with --verbose flag for more details.\nCommand PhaseScriptExecution failed with a nonzero exit code/
+        /Welcome to Metro!\s* Fast - Scalable - Integrated\s*([\s\S]*)Run CLI with --verbose flag for more details.\nCommand PhaseScriptExecution failed with a nonzero exit code/,
       );
       if (match) {
         this.logger.info(match[1]);

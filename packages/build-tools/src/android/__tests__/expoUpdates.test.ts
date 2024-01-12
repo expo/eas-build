@@ -29,10 +29,10 @@ describe(androidSetClassicReleaseChannelNativelyAsync, () => {
       {
         'android/app/src/main/AndroidManifest.xml': originalFs.readFileSync(
           path.join(__dirname, 'fixtures/NoMetadataAndroidManifest.xml'),
-          'utf-8'
+          'utf-8',
         ),
       },
-      '/app'
+      '/app',
     );
 
     const releaseChannel = 'blah';
@@ -48,12 +48,12 @@ describe(androidSetClassicReleaseChannelNativelyAsync, () => {
     expect(
       AndroidConfig.Manifest.getMainApplicationMetaDataValue(
         newAndroidManifest,
-        AndroidMetadataName.RELEASE_CHANNEL
-      )
+        AndroidMetadataName.RELEASE_CHANNEL,
+      ),
     ).toBe('@string/release_channel');
 
     const stringResourcePath = await AndroidConfig.Strings.getProjectStringsXMLPathAsync(
-      ctx.getReactNativeProjectDirectory()
+      ctx.getReactNativeProjectDirectory(),
     );
     const stringResourceObject = await AndroidConfig.Resources.readResourcesXMLAsync({
       path: stringResourcePath,
@@ -68,10 +68,10 @@ describe(androidSetChannelNativelyAsync, () => {
       {
         'android/app/src/main/AndroidManifest.xml': originalFs.readFileSync(
           path.join(__dirname, 'fixtures/NoMetadataAndroidManifest.xml'),
-          'utf-8'
+          'utf-8',
         ),
       },
-      '/app'
+      '/app',
     );
     const ctx = {
       getReactNativeProjectDirectory: () => '/app',
@@ -84,7 +84,7 @@ describe(androidSetChannelNativelyAsync, () => {
     const newAndroidManifest = await AndroidConfig.Manifest.readAndroidManifestAsync(manifestPath);
     const newValue = AndroidConfig.Manifest.getMainApplicationMetaDataValue(
       newAndroidManifest,
-      AndroidMetadataName.UPDATES_CONFIGURATION_REQUEST_HEADERS_KEY
+      AndroidMetadataName.UPDATES_CONFIGURATION_REQUEST_HEADERS_KEY,
     );
     expect(newValue).toBeDefined();
     expect(JSON.parse(newValue!)).toEqual({ 'expo-channel-name': channel });
@@ -97,10 +97,10 @@ describe(androidGetNativelyDefinedChannelAsync, () => {
       {
         'android/app/src/main/AndroidManifest.xml': originalFs.readFileSync(
           path.join(__dirname, 'fixtures/AndroidManifestWithChannel.xml'),
-          'utf-8'
+          'utf-8',
         ),
       },
-      '/app'
+      '/app',
     );
     const ctx = {
       getReactNativeProjectDirectory: () => '/app',
@@ -117,10 +117,10 @@ describe(androidGetNativelyDefinedClassicReleaseChannelAsync, () => {
       {
         'android/app/src/main/AndroidManifest.xml': originalFs.readFileSync(
           path.join(__dirname, 'fixtures/AndroidManifestWithClassicReleaseChannel.xml'),
-          'utf-8'
+          'utf-8',
         ),
       },
-      '/app'
+      '/app',
     );
     const ctx = {
       getReactNativeProjectDirectory: () => '/app',
@@ -129,7 +129,7 @@ describe(androidGetNativelyDefinedClassicReleaseChannelAsync, () => {
     };
 
     const nativelyDefinedReleaseChannel = await androidGetNativelyDefinedClassicReleaseChannelAsync(
-      ctx as any
+      ctx as any,
     );
     expect(nativelyDefinedReleaseChannel).toBe('example_channel');
   });
@@ -141,10 +141,10 @@ describe(androidGetNativelyDefinedRuntimeVersionAsync, () => {
       {
         'android/app/src/main/AndroidManifest.xml': originalFs.readFileSync(
           path.join(__dirname, 'fixtures/AndroidManifestWithRuntimeVersion.xml'),
-          'utf-8'
+          'utf-8',
         ),
       },
-      '/app'
+      '/app',
     );
     const ctx = {
       getReactNativeProjectDirectory: () => '/app',
@@ -153,7 +153,7 @@ describe(androidGetNativelyDefinedRuntimeVersionAsync, () => {
     };
 
     const nativelyDefinedRuntimeVersion = await androidGetNativelyDefinedRuntimeVersionAsync(
-      ctx as any
+      ctx as any,
     );
     expect(nativelyDefinedRuntimeVersion).toBe('exampleruntimeversion');
   });
@@ -165,10 +165,10 @@ describe(androidSetRuntimeVersionNativelyAsync, () => {
       {
         'android/app/src/main/AndroidManifest.xml': originalFs.readFileSync(
           path.join(__dirname, 'fixtures/NoMetadataAndroidManifest.xml'),
-          'utf-8'
+          'utf-8',
         ),
       },
-      '/app'
+      '/app',
     );
     const ctx = {
       getReactNativeProjectDirectory: () => '/app',
@@ -181,7 +181,7 @@ describe(androidSetRuntimeVersionNativelyAsync, () => {
     const newAndroidManifest = await AndroidConfig.Manifest.readAndroidManifestAsync(manifestPath);
     const newValue = AndroidConfig.Manifest.getMainApplicationMetaDataValue(
       newAndroidManifest,
-      AndroidMetadataName.RUNTIME_VERSION
+      AndroidMetadataName.RUNTIME_VERSION,
     );
     expect(newValue).toBe('1.2.3');
   });
@@ -190,10 +190,10 @@ describe(androidSetRuntimeVersionNativelyAsync, () => {
       {
         'android/app/src/main/AndroidManifest.xml': originalFs.readFileSync(
           path.join(__dirname, 'fixtures/AndroidManifestWithRuntimeVersion.xml'),
-          'utf-8'
+          'utf-8',
         ),
       },
-      '/app'
+      '/app',
     );
     const ctx = {
       getReactNativeProjectDirectory: () => '/app',
@@ -206,7 +206,7 @@ describe(androidSetRuntimeVersionNativelyAsync, () => {
     const newAndroidManifest = await AndroidConfig.Manifest.readAndroidManifestAsync(manifestPath);
     const newValue = AndroidConfig.Manifest.getMainApplicationMetaDataValue(
       newAndroidManifest,
-      AndroidMetadataName.RUNTIME_VERSION
+      AndroidMetadataName.RUNTIME_VERSION,
     );
     expect(newValue).toBe('1.2.3');
   });

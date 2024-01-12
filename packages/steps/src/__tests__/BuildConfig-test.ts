@@ -34,7 +34,7 @@ describe(readAndValidateBuildConfigAsync, () => {
       path.join(__dirname, './fixtures/build.yml'),
       {
         externalFunctionIds: [],
-      }
+      },
     );
     expect(typeof config).toBe('object');
     expect(config.build.name).toBe('Foobar');
@@ -50,7 +50,7 @@ describe(readAndValidateBuildConfigAsync, () => {
       path.join(__dirname, './fixtures/build-with-import.yml'),
       {
         externalFunctionIds: [],
-      }
+      },
     );
     expect(typeof config).toBe('object');
     expect(config.build.name).toBe('Import!');
@@ -74,7 +74,7 @@ describe(readAndValidateBuildConfigAsync, () => {
       path.join(__dirname, './fixtures/build-with-import-cycle.yml'),
       {
         externalFunctionIds: [],
-      }
+      },
     );
     expect(typeof config).toBe('object');
     expect(config.build.name).toBe('Import!');
@@ -87,7 +87,7 @@ describe(readAndValidateBuildConfigAsync, () => {
       path.join(__dirname, './fixtures/build-with-import.yml'),
       {
         externalFunctionIds: [],
-      }
+      },
     );
     expect(typeof config).toBe('object');
     expect(config.functions?.say_hi_wojtek).toBeDefined();
@@ -99,7 +99,7 @@ describe(readAndValidateBuildConfigAsync, () => {
 describe(readAndValidateBuildFunctionsConfigFileAsync, () => {
   test('valid functions config', async () => {
     const config = await readAndValidateBuildFunctionsConfigFileAsync(
-      path.join(__dirname, './fixtures/functions-file-1.yml')
+      path.join(__dirname, './fixtures/functions-file-1.yml'),
     );
     expect(typeof config).toBe('object');
     expect(config.configFilesToImport?.[0]).toBe('functions-file-2.yml');
@@ -107,7 +107,7 @@ describe(readAndValidateBuildFunctionsConfigFileAsync, () => {
   });
   test('valid functions with platform property config', async () => {
     const config = await readAndValidateBuildFunctionsConfigFileAsync(
-      path.join(__dirname, './fixtures/functions-with-platforms-property.yml')
+      path.join(__dirname, './fixtures/functions-with-platforms-property.yml'),
     );
     expect(typeof config).toBe('object');
     expect(config.functions?.say_hi_linux_and_darwin).toBeDefined();
@@ -115,15 +115,15 @@ describe(readAndValidateBuildFunctionsConfigFileAsync, () => {
   test('invalid functions config', async () => {
     const error = await getErrorAsync<BuildConfigError>(async () => {
       return await readAndValidateBuildFunctionsConfigFileAsync(
-        path.join(__dirname, './fixtures/invalid-functions.yml')
+        path.join(__dirname, './fixtures/invalid-functions.yml'),
       );
     });
     expect(error).toBeInstanceOf(BuildConfigError);
     expect(error.message).toMatch(
-      /"functions.say_hi.inputs\[0\].allowedValues\[1\]" must be a boolean/
+      /"functions.say_hi.inputs\[0\].allowedValues\[1\]" must be a boolean/,
     );
     expect(error.message).toMatch(
-      /"functions.say_hi.inputs\[1\].defaultValue" with value "\${ wrong.job.platform }" fails to match the context or output reference regex pattern/
+      /"functions.say_hi.inputs\[1\].defaultValue" with value "\${ wrong.job.platform }" fails to match the context or output reference regex pattern/,
     );
   });
 });
@@ -131,7 +131,7 @@ describe(readAndValidateBuildFunctionsConfigFileAsync, () => {
 describe(readRawBuildConfigAsync, () => {
   test('non-existent file', async () => {
     await expect(readRawBuildConfigAsync('/fake/path/a.yml')).rejects.toThrowError(
-      /no such file or directory/
+      /no such file or directory/,
     );
   });
   test('invalid yaml file', async () => {
@@ -171,10 +171,10 @@ describe(validateConfig, () => {
           validateConfig(BuildConfigSchema, buildConfig);
         });
         expect(error.message).toMatch(
-          /"configFilesToImport\[0\]" with value ".*" fails to match the required pattern/
+          /"configFilesToImport\[0\]" with value ".*" fails to match the required pattern/,
         );
         expect(error.message).toMatch(
-          /"configFilesToImport\[1\]" with value ".*" fails to match the required pattern/
+          /"configFilesToImport\[1\]" with value ".*" fails to match the required pattern/,
         );
       });
       test('yaml files', () => {
@@ -301,7 +301,7 @@ describe(validateConfig, () => {
           expect(() => {
             validateConfig(BuildConfigSchema, buildConfig);
           }).toThrowError(
-            /"build.steps\[0\].run.if" with value "error" fails to match the allowed "if" condition values regex pattern/
+            /"build.steps\[0\].run.if" with value "error" fails to match the allowed "if" condition values regex pattern/,
           );
         });
         test('valid command', () => {
@@ -537,7 +537,7 @@ describe(validateConfig, () => {
           expect(() => {
             validateConfig(BuildConfigSchema, buildConfig);
           }).toThrowError(
-            /"build.steps\[0\].say_hi.if" with value "error" fails to match the allowed "if" condition values regex pattern/
+            /"build.steps\[0\].say_hi.if" with value "error" fails to match the allowed "if" condition values regex pattern/,
           );
         });
         test('call with inputs boolean', () => {
@@ -717,20 +717,20 @@ describe(validateConfig, () => {
         });
         expect(error.message).toMatch(/"functions.abc.inputs\[0\].defaultValue" must be a string/);
         expect(error.message).toMatch(
-          /"functions.abc.inputs\[1\].defaultValue" must be one of allowed values/
+          /"functions.abc.inputs\[1\].defaultValue" must be one of allowed values/,
         );
         expect(error.message).toMatch(
-          /"functions.abc.inputs\[2\].allowedValues\[0\]" must be a string/
+          /"functions.abc.inputs\[2\].allowedValues\[0\]" must be a string/,
         );
         expect(error.message).toMatch(
-          /"functions.abc.inputs\[2\].allowedValues\[1\]" must be a string/
+          /"functions.abc.inputs\[2\].allowedValues\[1\]" must be a string/,
         );
         expect(error.message).toMatch(
-          /"functions.abc.inputs\[3\].allowedValueType" must be one of \[string, boolean, number, json\]/
+          /"functions.abc.inputs\[3\].allowedValueType" must be one of \[string, boolean, number, json\]/,
         );
         expect(error.message).toMatch(/"functions.abc.inputs\[4\].defaultValue" must be a number/);
         expect(error.message).toMatch(
-          /"functions.abc.inputs\[5\].defaultValue" with value "abc" fails to match the context or output reference regex pattern pattern/
+          /"functions.abc.inputs\[5\].defaultValue" with value "abc" fails to match the context or output reference regex pattern pattern/,
         );
         expect(error.message).toMatch(/"functions.abc.inputs\[6\].defaultValue" must be a object/);
       });
@@ -849,7 +849,7 @@ describe(validateConfig, () => {
         validateConfig(BuildConfigSchema, buildConfig);
       });
       expect(error.message).toMatch(
-        /"functions.abc" contains a conflict between exclusive peers \[command, path\], "command" must not exist simultaneously with \[path\]/
+        /"functions.abc" contains a conflict between exclusive peers \[command, path\], "command" must not exist simultaneously with \[path\]/,
       );
     });
 
@@ -1022,7 +1022,7 @@ describe(isBuildStepCommandRun, () => {
     'returns false',
     (i) => {
       expect(isBuildStepCommandRun(i)).toBe(false);
-    }
+    },
   );
   it('returns true', () => {
     expect(isBuildStepCommandRun(buildStepCommandRun)).toBe(true);
@@ -1034,7 +1034,7 @@ describe(isBuildStepBareCommandRun, () => {
     'returns false',
     (i) => {
       expect(isBuildStepBareCommandRun(i)).toBe(false);
-    }
+    },
   );
   it('returns true', () => {
     expect(isBuildStepBareCommandRun(buildStepBareCommandRun)).toBe(true);
@@ -1046,7 +1046,7 @@ describe(isBuildStepFunctionCall, () => {
     'returns false',
     (i) => {
       expect(isBuildStepFunctionCall(i)).toBe(false);
-    }
+    },
   );
   it('returns true', () => {
     expect(isBuildStepFunctionCall(buildStepFunctionCall)).toBe(true);
@@ -1058,7 +1058,7 @@ describe(isBuildStepBareFunctionCall, () => {
     'returns false',
     (i) => {
       expect(isBuildStepBareFunctionCall(i)).toBe(false);
-    }
+    },
   );
   it('returns true', () => {
     expect(isBuildStepBareFunctionCall(buildStepBareFunctionCall)).toBe(true);

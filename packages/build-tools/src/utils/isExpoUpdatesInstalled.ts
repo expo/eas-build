@@ -3,7 +3,7 @@ import path from 'path';
 import fs from 'fs-extra';
 
 export default async function isExpoUpdatesInstalledAsync(
-  reactNativeProjectDirectory: string
+  reactNativeProjectDirectory: string,
 ): Promise<boolean> {
   const packageJsonPath = path.join(reactNativeProjectDirectory, 'package.json');
   const packageJson = JSON.parse(await fs.readFile(packageJsonPath, 'utf8'));

@@ -15,7 +15,7 @@ export enum IosMetadataName {
 
 export async function iosSetRuntimeVersionNativelyAsync(
   ctx: BuildContext<Job>,
-  runtimeVersion: string
+  runtimeVersion: string,
 ): Promise<void> {
   const expoPlistPath = IOSConfig.Paths.getExpoPlistPath(ctx.getReactNativeProjectDirectory());
 
@@ -55,7 +55,7 @@ export async function iosSetChannelNativelyAsync(ctx: BuildContext<Job>): Promis
 }
 
 export async function iosGetNativelyDefinedChannelAsync(
-  ctx: BuildContext<Job>
+  ctx: BuildContext<Job>,
 ): Promise<string | null> {
   const expoPlistPath = IOSConfig.Paths.getExpoPlistPath(ctx.getReactNativeProjectDirectory());
 
@@ -72,13 +72,13 @@ export async function iosGetNativelyDefinedChannelAsync(
     return updatesRequestHeaders['expo-channel-name'] ?? null;
   } catch (err: any) {
     throw new Error(
-      `Failed to parse ${IosMetadataName.UPDATES_CONFIGURATION_REQUEST_HEADERS_KEY} from Expo.plist: ${err.message}`
+      `Failed to parse ${IosMetadataName.UPDATES_CONFIGURATION_REQUEST_HEADERS_KEY} from Expo.plist: ${err.message}`,
     );
   }
 }
 
 export async function iosSetClassicReleaseChannelNativelyAsync(
-  ctx: BuildContext<Job>
+  ctx: BuildContext<Job>,
 ): Promise<void> {
   assert(ctx.job.releaseChannel, 'releaseChannel must be defined');
 
@@ -97,7 +97,7 @@ export async function iosSetClassicReleaseChannelNativelyAsync(
 }
 
 export async function iosGetNativelyDefinedClassicReleaseChannelAsync(
-  ctx: BuildContext<Job>
+  ctx: BuildContext<Job>,
 ): Promise<string | null> {
   const expoPlistPath = IOSConfig.Paths.getExpoPlistPath(ctx.getReactNativeProjectDirectory());
   if (!(await fs.pathExists(expoPlistPath))) {
@@ -112,7 +112,7 @@ export async function iosGetNativelyDefinedClassicReleaseChannelAsync(
 }
 
 export async function iosGetNativelyDefinedRuntimeVersionAsync(
-  ctx: BuildContext<Job>
+  ctx: BuildContext<Job>,
 ): Promise<string | null> {
   const expoPlistPath = IOSConfig.Paths.getExpoPlistPath(ctx.getReactNativeProjectDirectory());
   if (!(await fs.pathExists(expoPlistPath))) {

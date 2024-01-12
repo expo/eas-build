@@ -114,8 +114,8 @@ const BuildFunctionInputsSchema = Joi.array().items(
             Joi.boolean(),
             Joi.string().pattern(
               BUILD_STEP_OR_BUILD_GLOBAL_CONTEXT_REFERENCE_REGEX,
-              'context or output reference regex pattern'
-            )
+              'context or output reference regex pattern',
+            ),
           ).messages({
             'alternatives.types':
               '{{#label}} must be a boolean or reference to output or context value',
@@ -127,8 +127,8 @@ const BuildFunctionInputsSchema = Joi.array().items(
             Joi.number(),
             Joi.string().pattern(
               BUILD_STEP_OR_BUILD_GLOBAL_CONTEXT_REFERENCE_REGEX,
-              'context or output reference regex pattern'
-            )
+              'context or output reference regex pattern',
+            ),
           ).messages({
             'alternatives.types':
               '{{#label}} must be a number or reference to output or context value',
@@ -140,8 +140,8 @@ const BuildFunctionInputsSchema = Joi.array().items(
             Joi.object(),
             Joi.string().pattern(
               BUILD_STEP_OR_BUILD_GLOBAL_CONTEXT_REFERENCE_REGEX,
-              'context or output reference regex pattern'
-            )
+              'context or output reference regex pattern',
+            ),
           ).messages({
             'alternatives.types':
               '{{#label}} must be a object or reference to output or context value',
@@ -172,7 +172,7 @@ const BuildFunctionInputsSchema = Joi.array().items(
       .rename('default_value', 'defaultValue')
       .rename('type', 'allowedValueType')
       .required(),
-  })
+  }),
 );
 
 const BuildStepOutputsSchema = Joi.array().items(
@@ -181,15 +181,15 @@ const BuildStepOutputsSchema = Joi.array().items(
     Joi.object({
       name: Joi.string().required(),
       required: Joi.boolean(),
-    }).required()
-  )
+    }).required(),
+  ),
 );
 
 const BuildFunctionCallSchema = Joi.object({
   id: Joi.string(),
   inputs: Joi.object().pattern(
     Joi.string(),
-    Joi.alternatives().try(Joi.string().allow(''), Joi.boolean(), Joi.number(), Joi.object())
+    Joi.alternatives().try(Joi.string().allow(''), Joi.boolean(), Joi.number(), Joi.object()),
   ),
   name: Joi.string(),
   workingDirectory: Joi.string(),
@@ -197,7 +197,7 @@ const BuildFunctionCallSchema = Joi.object({
   env: Joi.object().pattern(Joi.string(), Joi.string().allow('')),
   if: Joi.string().pattern(
     BUILD_STEP_IF_CONDITION_EXPRESSION_REGEXP,
-    'allowed "if" condition values regex'
+    'allowed "if" condition values regex',
   ),
 }).rename('working_directory', 'workingDirectory');
 
@@ -206,15 +206,15 @@ const BuildStepConfigSchema = Joi.any<BuildStepConfig>()
   .when(
     Joi.object().pattern(
       Joi.string().disallow('run').required(),
-      Joi.object().unknown().required()
+      Joi.object().unknown().required(),
     ),
     {
       then: Joi.object().pattern(
         Joi.string().disallow('run').min(1).required(),
         BuildFunctionCallSchema.required(),
-        { matches: Joi.array().length(1) }
+        { matches: Joi.array().length(1) },
       ),
-    }
+    },
   )
   .when(Joi.object({ run: Joi.object().unknown().required() }), {
     then: Joi.object({
@@ -254,7 +254,7 @@ export const BuildFunctionsConfigFileSchema = Joi.object<BuildFunctionsConfigFil
       .min(1)
       .required()
       .disallow('run'),
-    BuildFunctionConfigSchema.required()
+    BuildFunctionConfigSchema.required(),
   ),
 })
   .rename('import', 'configFilesToImport')
@@ -274,7 +274,7 @@ interface BuildConfigValidationParams {
 
 export async function readAndValidateBuildConfigAsync(
   configPath: string,
-  params: BuildConfigValidationParams = {}
+  params: BuildConfigValidationParams = {},
 ): Promise<BuildConfig> {
   const rawConfig = await readRawBuildConfigAsync(configPath);
 
@@ -284,7 +284,7 @@ export async function readAndValidateBuildConfigAsync(
     if (customFunctionPath) {
       config.functions[functionName].path = maybeResolveCustomFunctionRelativePath(
         path.dirname(configPath),
-        customFunctionPath
+        customFunctionPath,
       );
     }
   }
@@ -297,7 +297,7 @@ export async function readAndValidateBuildConfigAsync(
 
 async function importFunctionsAsync(
   baseConfigPath: string,
-  configPathsToImport?: string[]
+  configPathsToImport?: string[],
 ): Promise<BuildFunctions> {
   if (!configPathsToImport) {
     return {};
@@ -310,7 +310,7 @@ async function importFunctionsAsync(
   // this is a set of visited files identified by ABSOLUTE paths
   const visitedFiles = new Set<string>([baseConfigPath]);
   const configFilesToVisit = (configPathsToImport ?? []).map((childConfigRelativePath) =>
-    path.resolve(baseConfigDir, childConfigRelativePath)
+    path.resolve(baseConfigDir, childConfigRelativePath),
   );
   while (configFilesToVisit.length > 0) {
     const childConfigPath = configFilesToVisit.shift();
@@ -334,8 +334,8 @@ async function importFunctionsAsync(
       if (childConfig.configFilesToImport) {
         configFilesToVisit.push(
           ...childConfig.configFilesToImport.map((relativePath) =>
-            path.resolve(childDir, relativePath)
-          )
+            path.resolve(childDir, relativePath),
+          ),
         );
       }
     } catch (err) {
@@ -353,7 +353,7 @@ async function importFunctionsAsync(
 }
 
 export async function readAndValidateBuildFunctionsConfigFileAsync(
-  configPath: string
+  configPath: string,
 ): Promise<BuildFunctionsConfigFile> {
   const rawConfig = await readRawBuildConfigAsync(configPath);
   return validateConfig(BuildFunctionsConfigFileSchema, rawConfig);
@@ -367,7 +367,7 @@ export async function readRawBuildConfigAsync(configPath: string): Promise<any> 
 export function validateConfig<T>(
   schema: Joi.ObjectSchema<T>,
   config: object,
-  configFilePath?: string
+  configFilePath?: string,
 ): T {
   const { error, value } = schema.validate(config, {
     allowUnknown: false,
@@ -385,7 +385,7 @@ export function validateConfig<T>(
 
 export function mergeConfigWithImportedFunctions(
   config: BuildConfig,
-  importedFunctions: BuildFunctions
+  importedFunctions: BuildFunctions,
 ): void {
   if (Object.keys(importedFunctions).length === 0) {
     return;
@@ -411,14 +411,14 @@ export function isBuildStepFunctionCall(step: BuildStepConfig): step is BuildSte
 }
 
 export function isBuildStepBareFunctionCall(
-  step: BuildStepConfig
+  step: BuildStepConfig,
 ): step is BuildStepBareFunctionCall {
   return typeof step === 'string';
 }
 
 export function validateAllFunctionsExist(
   config: BuildConfig,
-  { externalFunctionIds = [], skipNamespacedFunctionsCheck }: BuildConfigValidationParams
+  { externalFunctionIds = [], skipNamespacedFunctionsCheck }: BuildConfigValidationParams,
 ): void {
   const calledFunctionsSet = new Set<string>();
   for (const step of config.build.steps) {
@@ -428,7 +428,7 @@ export function validateAllFunctionsExist(
       const keys = Object.keys(step);
       assert(
         keys.length === 1,
-        'There must be at most one function call in the step (enforced by joi).'
+        'There must be at most one function call in the step (enforced by joi).',
       );
       calledFunctionsSet.add(keys[0]);
     }
@@ -445,7 +445,7 @@ export function validateAllFunctionsExist(
   });
   if (nonExistentFunctions.length > 0) {
     throw new BuildConfigError(
-      `Calling non-existent functions: ${nonExistentFunctions.map((f) => `"${f}"`).join(', ')}.`
+      `Calling non-existent functions: ${nonExistentFunctions.map((f) => `"${f}"`).join(', ')}.`,
     );
   }
 }

@@ -53,7 +53,11 @@ export class BuildError extends Error {
 }
 
 export class UserFacingError extends Error {
-  constructor(public errorCode: string, public message: string, public docsUrl?: string) {
+  constructor(
+    public errorCode: string,
+    public message: string,
+    public docsUrl?: string,
+  ) {
     super(message);
   }
 }
@@ -64,7 +68,7 @@ export class UnknownError extends UserFacingError {
       ErrorCode.UNKNOWN_ERROR,
       buildPhase
         ? `Unknown error. See logs of the ${buildPhaseDisplayName[buildPhase]} build phase for more information.`
-        : 'Unknown error. See logs for more information.'
+        : 'Unknown error. See logs for more information.',
     );
   }
 }

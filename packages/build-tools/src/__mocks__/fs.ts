@@ -11,7 +11,7 @@ const fsRealpath = fs.realpath;
 const fsRm = (
   path: string,
   options: object,
-  callback: (err: NodeJS.ErrnoException | null) => void
+  callback: (err: NodeJS.ErrnoException | null) => void,
 ): void => {
   fs.promises
     .rm(path, options)

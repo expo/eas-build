@@ -27,7 +27,7 @@ describe('ProvisioningProfile class', () => {
         Buffer.from(provisioningProfile.dataBase64, 'base64'),
         keychain.data.path,
         'testapp',
-        'Abc 123'
+        'Abc 123',
       );
       try {
         await pp.init(mockLogger);
@@ -44,7 +44,7 @@ describe('ProvisioningProfile class', () => {
         Buffer.from(provisioningProfile.dataBase64, 'base64'),
         keychain.data.path,
         'testapp',
-        'Abc 123'
+        'Abc 123',
       );
 
       try {

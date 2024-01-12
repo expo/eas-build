@@ -41,7 +41,7 @@ const validators: Validator[] = [
             : versionFromJob;
           if (sanitizedVersion !== sanitizedVersionFromJob) {
             warn(
-              'Node.js version in your eas.json does not match the Node.js currently installed in your system'
+              'Node.js version in your eas.json does not match the Node.js currently installed in your system',
             );
           }
         }
@@ -61,7 +61,7 @@ const validators: Validator[] = [
         const version = (await spawnAsync('yarn', ['--version'], { stdio: 'pipe' })).stdout.trim();
         if (versionFromJob !== version) {
           warn(
-            'Yarn version in your eas.json does not match the yarn currently installed in your system'
+            'Yarn version in your eas.json does not match the yarn currently installed in your system',
           );
         }
       } catch {
@@ -74,7 +74,7 @@ const validators: Validator[] = [
     async checkAsync(_) {
       if (!process.env.ANDROID_NDK_HOME) {
         warn(
-          'ANDROID_NDK_HOME environment variable was not specified, continuing build without NDK'
+          'ANDROID_NDK_HOME environment variable was not specified, continuing build without NDK',
         );
         return;
       }
@@ -111,7 +111,7 @@ const validators: Validator[] = [
         const versionFromJob = job.platform === Platform.IOS && job.builderEnvironment?.cocoapods;
         if (versionFromJob && versionFromJob !== version) {
           warn(
-            'Cocoapods version in your eas.json does not match the version currently installed in your system'
+            'Cocoapods version in your eas.json does not match the version currently installed in your system',
           );
         }
       } catch (err) {

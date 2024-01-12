@@ -73,7 +73,7 @@ describe('runCustomFunction', () => {
       const currentPath = process.env.PATH;
       const newPath = currentPath ? `${BIN_PATH}:${currentPath}` : BIN_PATH;
       const fn = createCustomFunctionCall(
-        path.resolve(dirname, '../../__tests__/fixtures/my-custom-ts-function')
+        path.resolve(dirname, '../../__tests__/fixtures/my-custom-ts-function'),
       );
       const promise = fn(ctx, {
         env: {

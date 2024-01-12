@@ -9,7 +9,7 @@ import { isUsingYarn2 } from '../utils/project';
 
 export async function installDependenciesAsync<TJob extends Job>(
   ctx: BuildContext<TJob>,
-  { logger, infoCallbackFn, cwd }: SpawnOptions
+  { logger, infoCallbackFn, cwd }: SpawnOptions,
 ): Promise<{ spawnPromise: SpawnPromise<SpawnResult> }> {
   let args = ['install'];
   if (ctx.packageManager === PackageManager.PNPM) {
@@ -36,10 +36,10 @@ export function resolvePackagerDir(ctx: BuildContext<Job>): string {
   if (packagerRunDir !== ctx.getReactNativeProjectDirectory()) {
     const relativeReactNativeProjectDirectory = path.relative(
       ctx.buildDirectory,
-      ctx.getReactNativeProjectDirectory()
+      ctx.getReactNativeProjectDirectory(),
     );
     ctx.logger.info(
-      `We detected that '${relativeReactNativeProjectDirectory}' is a ${ctx.packageManager} workspace`
+      `We detected that '${relativeReactNativeProjectDirectory}' is a ${ctx.packageManager} workspace`,
     );
   }
   return packagerRunDir;

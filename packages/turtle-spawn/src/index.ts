@@ -16,7 +16,7 @@ function spawn(
   _options: SpawnOptions = {
     stdio: 'inherit',
     cwd: process.cwd(),
-  }
+  },
 ): SpawnPromise<SpawnResult> {
   const { logger, ...options } = _options;
   if (logger) {

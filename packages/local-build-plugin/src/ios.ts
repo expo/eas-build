@@ -11,7 +11,7 @@ import config from './config';
 
 export async function buildIosAsync(
   job: Ios.Job,
-  { workingdir, env: baseEnv, metadata }: BuildParams
+  { workingdir, env: baseEnv, metadata }: BuildParams,
 ): Promise<Artifacts> {
   const buildNumber = job.version?.buildNumber;
   const appVersion = job.version?.appVersion;

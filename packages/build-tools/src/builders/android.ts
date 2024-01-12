@@ -48,7 +48,7 @@ async function buildAsync(ctx: BuildContext<Android.Job>): Promise<void> {
     if (hasNativeCode) {
       ctx.markBuildPhaseSkipped();
       ctx.logger.info(
-        'Skipped running "expo prebuild" because the "android" directory already exists. Learn more about the build process: https://docs.expo.dev/build-reference/android-builds/'
+        'Skipped running "expo prebuild" because the "android" directory already exists. Learn more about the build process: https://docs.expo.dev/build-reference/android-builds/',
       );
       return;
     }

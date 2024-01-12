@@ -10,7 +10,7 @@ import { BuildContext } from '../context';
 
 export async function prepareProjectSourcesAsync<TJob extends Job>(
   ctx: BuildContext<TJob>,
-  destinationDirectory = ctx.buildDirectory
+  destinationDirectory = ctx.buildDirectory,
 ): Promise<void> {
   if (ctx.job.projectArchive.type === ArchiveSourceType.GCS) {
     throw new Error('GCS project sources should be resolved earlier to url');
@@ -20,14 +20,14 @@ export async function prepareProjectSourcesAsync<TJob extends Job>(
     await downloadAndUnpackProjectFromTarGzAsync(
       ctx,
       ctx.job.projectArchive.url,
-      destinationDirectory
+      destinationDirectory,
     );
   } else if (ctx.job.projectArchive.type === ArchiveSourceType.GIT) {
     await shallowCloneRepositoryAsync(
       ctx,
       ctx.job.projectArchive.repositoryUrl,
       ctx.job.projectArchive.gitRef,
-      destinationDirectory
+      destinationDirectory,
     );
   }
 }
@@ -36,7 +36,7 @@ async function shallowCloneRepositoryAsync<TJob extends Job>(
   ctx: BuildContext<TJob>,
   projectRepoUrl: string,
   gitRef: string,
-  destinationDirectory: string
+  destinationDirectory: string,
 ): Promise<void> {
   try {
     await spawn('git', ['init'], { cwd: destinationDirectory });
@@ -70,7 +70,7 @@ function getSanitizedGitUrl(maybeGitUrl: string): string | null {
 export async function downloadAndUnpackProjectFromTarGzAsync<TJob extends Job>(
   ctx: BuildContext<TJob>,
   projectArchiveUrl: string,
-  destinationDirectory: string
+  destinationDirectory: string,
 ): Promise<void> {
   const projectTarball = path.join(ctx.workingdir, 'project.tar.gz');
   try {
@@ -92,7 +92,7 @@ export async function downloadAndUnpackProjectFromTarGzAsync<TJob extends Job>(
 async function prepareProjectSourcesLocallyAsync<TJob extends Job>(
   ctx: BuildContext<TJob>,
   projectArchivePath: string,
-  destinationDirectory: string
+  destinationDirectory: string,
 ): Promise<void> {
   const projectTarball = path.join(ctx.workingdir, 'project.tar.gz');
   await fs.copy(projectArchivePath, projectTarball);

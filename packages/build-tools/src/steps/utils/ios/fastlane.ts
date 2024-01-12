@@ -40,7 +40,7 @@ export async function runFastlane(
     logger?: bunyan;
     env?: Record<string, string>;
     cwd?: string;
-  } = {}
+  } = {},
 ): Promise<SpawnResult> {
   const fastlaneEnvVars = {
     FASTLANE_DISABLE_COLORS: '1',

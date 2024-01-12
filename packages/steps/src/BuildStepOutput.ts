@@ -4,7 +4,7 @@ import { BuildStepRuntimeError } from './errors.js';
 export type BuildStepOutputById = Record<string, BuildStepOutput>;
 export type BuildStepOutputProvider = (
   ctx: BuildStepGlobalContext,
-  stepDisplayName: string
+  stepDisplayName: string,
 ) => BuildStepOutput;
 
 interface BuildStepOutputProviderParams<R extends boolean = boolean> {
@@ -42,7 +42,7 @@ export class BuildStepOutput<R extends boolean = boolean> {
   constructor(
     // @ts-expect-error ctx is not used in this class but let's keep it here for consistency
     private readonly ctx: BuildStepGlobalContext | undefined,
-    { id, stepDisplayName, required }: BuildStepOutputParams<R>
+    { id, stepDisplayName, required }: BuildStepOutputParams<R>,
   ) {
     this.id = id;
     this.stepDisplayName = stepDisplayName;
@@ -56,7 +56,7 @@ export class BuildStepOutput<R extends boolean = boolean> {
   public get value(): BuildStepOutputValueType<R> {
     if (this.required && this._value === undefined) {
       throw new BuildStepRuntimeError(
-        `Output parameter "${this.id}" for step "${this.stepDisplayName}" is required but it was not set.`
+        `Output parameter "${this.id}" for step "${this.stepDisplayName}" is required but it was not set.`,
       );
     }
     return this._value as BuildStepOutputValueType<R>;
@@ -65,7 +65,7 @@ export class BuildStepOutput<R extends boolean = boolean> {
   public set(value: BuildStepOutputValueType<R>): BuildStepOutput {
     if (this.required && value === undefined) {
       throw new BuildStepRuntimeError(
-        `Output parameter "${this.id}" for step "${this.stepDisplayName}" is required.`
+        `Output parameter "${this.id}" for step "${this.stepDisplayName}" is required.`,
       );
     }
     this._value = value;

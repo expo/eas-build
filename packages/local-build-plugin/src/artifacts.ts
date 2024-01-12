@@ -17,10 +17,10 @@ export async function prepareArtifacts(artifactPaths: string[], logger?: bunyan)
   } else {
     const parentDir = artifactPaths.reduce(
       (acc, item) => getCommonParentDir(acc, item),
-      artifactPaths[0]
+      artifactPaths[0],
     );
     const relativePathsToArchive = artifactPaths.map((absolute) =>
-      path.relative(parentDir, absolute)
+      path.relative(parentDir, absolute),
     );
 
     const archivePath = path.join(config.workingdir, 'artifacts.tar.gz');
@@ -30,7 +30,7 @@ export async function prepareArtifacts(artifactPaths: string[], logger?: bunyan)
         file: archivePath,
         cwd: parentDir,
       },
-      relativePathsToArchive
+      relativePathsToArchive,
     );
     suffix = '.tar.gz';
     localPath = archivePath;

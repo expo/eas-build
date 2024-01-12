@@ -10,7 +10,7 @@ import { ArtifactType, BuildContext } from '../context';
 export async function findArtifacts(
   rootDir: string,
   patternOrPath: string,
-  buildLogger: bunyan
+  buildLogger: bunyan,
 ): Promise<string[]> {
   const files = await fg(patternOrPath, { cwd: rootDir, onlyFiles: false });
   if (files.length === 0) {
@@ -36,20 +36,20 @@ async function logMissingFileError(artifactPath: string, buildLogger: bunyan): P
   const dirContent = await fs.readdir(currentPath);
   if (dirContent.length === 0) {
     buildLogger.error(
-      `There is no such file or directory "${artifactPath}". Directory "${currentPath}" is empty.`
+      `There is no such file or directory "${artifactPath}". Directory "${currentPath}" is empty.`,
     );
   } else {
     buildLogger.error(
       `There is no such file or directory "${artifactPath}". Directory "${currentPath}" contains [${dirContent.join(
-        ', '
-      )}].`
+        ', ',
+      )}].`,
     );
   }
 }
 
 export async function maybeFindAndUploadBuildArtifacts(
   ctx: BuildContext<Job>,
-  { logger }: { logger: bunyan }
+  { logger }: { logger: bunyan },
 ): Promise<void> {
   if (!ctx.job.buildArtifactPaths || ctx.job.buildArtifactPaths.length === 0) {
     return;
@@ -58,8 +58,8 @@ export async function maybeFindAndUploadBuildArtifacts(
     const buildArtifacts = (
       await Promise.all(
         ctx.job.buildArtifactPaths.map((path) =>
-          findArtifacts(ctx.getReactNativeProjectDirectory(), path, logger)
-        )
+          findArtifacts(ctx.getReactNativeProjectDirectory(), path, logger),
+        ),
       )
     ).flat();
     logger.info(`Build artifacts: ${buildArtifacts.join(', ')}`);
@@ -80,7 +80,7 @@ export async function uploadApplicationArchive(
     logger: bunyan;
     patternOrPath: string;
     rootDir: string;
-  }
+  },
 ): Promise<void> {
   const applicationArchives = await findArtifacts(rootDir, patternOrPath, logger);
   logger.info(`Application archives: ${applicationArchives.join(', ')}`);

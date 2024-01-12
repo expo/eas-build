@@ -67,7 +67,7 @@ describe('Android.JobSchema', () => {
 
     const { value, error } = Android.JobSchema.validate(genericJob, joiOptions);
     expect(error?.message).toBe(
-      '"projectArchive.url" must be a valid uri. "gradleCommand" must be a string'
+      '"projectArchive.url" must be a valid uri. "gradleCommand" must be a string',
     );
     expect(value).not.toMatchObject(genericJob);
   });
@@ -119,7 +119,7 @@ describe('Android.JobSchema', () => {
 
     const { value, error } = Android.JobSchema.validate(managedJob, joiOptions);
     expect(error?.message).toBe(
-      '"projectArchive.url" must be a valid uri. "username" must be a string'
+      '"projectArchive.url" must be a valid uri. "username" must be a string',
     );
     expect(value).not.toMatchObject(managedJob);
   });
@@ -162,7 +162,7 @@ describe('Android.JobSchema', () => {
 
     const { error } = Android.JobSchema.validate(managedJob, joiOptions);
     expect(error?.message).toBe(
-      '"value" contains a conflict between optional exclusive peers [releaseChannel, updates.channel]'
+      '"value" contains a conflict between optional exclusive peers [releaseChannel, updates.channel]',
     );
   });
 

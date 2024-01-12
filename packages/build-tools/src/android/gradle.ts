@@ -10,7 +10,7 @@ import { BuildContext } from '../context';
 import { getParentAndDescendantProcessPidsAsync } from '../utils/processes';
 
 export async function ensureLFLineEndingsInGradlewScript<TJob extends Job>(
-  ctx: BuildContext<TJob>
+  ctx: BuildContext<TJob>,
 ): Promise<void> {
   const gradlewPath = path.join(ctx.getReactNativeProjectDirectory(), 'android', 'gradlew');
   const gradlewContent = await fs.readFile(gradlewPath, 'utf8');
@@ -26,7 +26,7 @@ export async function runGradleCommand(
     logger,
     gradleCommand,
     androidDir,
-  }: { logger: bunyan; gradleCommand: string; androidDir: string }
+  }: { logger: bunyan; gradleCommand: string; androidDir: string },
 ): Promise<void> {
   logger.info(`Running 'gradlew ${gradleCommand}' in ${androidDir}`);
   const spawnPromise = spawn('bash', ['-c', `sh gradlew ${gradleCommand}`], {
@@ -68,14 +68,14 @@ function adjustOOMScore(spawnPromise: SpawnPromise<SpawnResult>, logger: bunyan)
             // can start killing processes when there is still enough memory left.
             const oomScoreOverride = 800;
             await fs.writeFile(`/proc/${pid}/oom_score_adj`, `${oomScoreOverride}\n`);
-          })
+          }),
         );
       } catch (err: any) {
         logger.debug({ err, stderr: err?.stderr }, 'Failed to override oom_score_adj');
       }
     },
     // Wait 20 seconds to make sure all child processes are started
-    20000
+    20000,
   );
 }
 

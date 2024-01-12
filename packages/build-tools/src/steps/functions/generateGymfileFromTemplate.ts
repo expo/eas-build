@@ -133,18 +133,18 @@ export function generateGymfileFromTemplateFunction(): BuildFunction {
       const job = stepCtx.global.staticContext.job as Ios.Job;
       const buildConfiguration = resolveBuildConfiguration(
         job,
-        inputs.build_configuration.value as string | undefined
+        inputs.build_configuration.value as string | undefined,
       );
       const scheme = resolveScheme(
         stepCtx.workingDirectory,
         job,
-        inputs.scheme.value as string | undefined
+        inputs.scheme.value as string | undefined,
       );
       const entitlements = await maybeReadEntitlementsAsync(
         stepCtx.logger,
         stepCtx.workingDirectory,
         scheme,
-        buildConfiguration
+        buildConfiguration,
       );
 
       const templatePath = await saveTemplateToTemporaryFileAsync(template);
@@ -207,7 +207,7 @@ async function maybeReadEntitlementsAsync(
   logger: bunyan,
   workingDir: string,
   scheme: string,
-  buildConfiguration: string
+  buildConfiguration: string,
 ): Promise<object | null> {
   try {
     const applicationTargetName =

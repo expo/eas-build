@@ -7,7 +7,7 @@ import { findXcodeBuildLogsPathAsync } from '../../ios/xcodeBuildLogs';
 import { CustomBuildContext } from '../../customBuildContext';
 
 export function createFindAndUploadBuildArtifactsBuildFunction(
-  ctx: CustomBuildContext
+  ctx: CustomBuildContext,
 ): BuildFunction {
   return new BuildFunction({
     namespace: 'eas',
@@ -22,18 +22,18 @@ export function createFindAndUploadBuildArtifactsBuildFunction(
       const applicationArchives = await findArtifacts(
         stepCtx.workingDirectory,
         applicationArchivePatternOrPath,
-        logger
+        logger,
       );
       logger.info(
         `Application archive${
           applicationArchives.length > 1 ? 's' : ''
-        }: ${applicationArchives.join(', ')}`
+        }: ${applicationArchives.join(', ')}`,
       );
       const buildArtifacts = (
         await Promise.all(
           (ctx.job.buildArtifactPaths ?? []).map((path) =>
-            findArtifacts(ctx.projectTargetDirectory, path, logger)
-          )
+            findArtifacts(ctx.projectTargetDirectory, path, logger),
+          ),
         )
       ).flat();
       if (buildArtifacts.length > 0) {
@@ -45,14 +45,14 @@ export function createFindAndUploadBuildArtifactsBuildFunction(
         ctx.runtimeApi.uploadArtifacts(
           ArtifactType.APPLICATION_ARCHIVE,
           applicationArchives,
-          logger
+          logger,
         ),
         (async () => {
           if (buildArtifacts.length > 0) {
             await ctx.runtimeApi.uploadArtifacts(
               ArtifactType.BUILD_ARTIFACTS,
               buildArtifacts,
-              logger
+              logger,
             );
           }
         })(),
@@ -61,13 +61,13 @@ export function createFindAndUploadBuildArtifactsBuildFunction(
             return;
           }
           const xcodeBuildLogsPath = await findXcodeBuildLogsPathAsync(
-            stepCtx.global.buildLogsDirectory
+            stepCtx.global.buildLogsDirectory,
           );
           if (xcodeBuildLogsPath) {
             await ctx.runtimeApi.uploadArtifacts(
               ArtifactType.XCODE_BUILD_LOGS,
               [xcodeBuildLogsPath],
-              logger
+              logger,
             );
           }
         })(),

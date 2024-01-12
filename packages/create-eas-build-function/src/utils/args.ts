@@ -16,7 +16,7 @@ import { replaceValue } from './array';
  */
 export function assertWithOptionsArgs(
   schema: arg.Spec,
-  options: arg.Options
+  options: arg.Options,
 ): arg.Result<arg.Spec> {
   try {
     return arg(schema, options);
@@ -42,7 +42,7 @@ export function printHelp(info: string, usage: string, options: string, extra: s
     {bold Options}
       ${options.split('\n').join('\n    ')}
   ` + extra,
-    0
+    0,
   );
 }
 
@@ -57,7 +57,7 @@ export function printHelp(info: string, usage: string, options: string, extra: s
 export function resolveStringOrBooleanArgsAsync(
   args: string[],
   rawMap: arg.Spec,
-  extraArgs: arg.Spec
+  extraArgs: arg.Spec,
 ): {
   args: Record<string, string | true | undefined>;
   projectRoot: string;
@@ -77,7 +77,7 @@ export function resolveStringOrBooleanArgsAsync(
 
 export function _resolveStringOrBooleanArgs(
   multiTypeArgs: Spec,
-  args: string[]
+  args: string[],
 ): {
   args: Record<string, string | true | undefined>;
   projectRoot: string;

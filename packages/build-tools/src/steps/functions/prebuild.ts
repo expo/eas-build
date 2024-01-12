@@ -80,7 +80,7 @@ function getPrebuildCommandArgs(job: Job, { clean }: PrebuildOptions): string[] 
 function sanitizeUserDefinedPrebuildCommand(
   userDefinedPrebuildCommand: string,
   platform: Platform,
-  { clean }: PrebuildOptions
+  { clean }: PrebuildOptions,
 ): string[] {
   let prebuildCommand = userDefinedPrebuildCommand;
   if (!prebuildCommand.match(/(?:--platform| -p)/)) {

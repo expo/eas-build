@@ -8,7 +8,7 @@ export function withSectionLog<T>(
     pending: string;
     success: string;
     error: (errror: Error) => string;
-  }
+  },
 ): Promise<T> {
   const spinner = ora({
     text: message.pending,
@@ -26,6 +26,6 @@ export function withSectionLog<T>(
     (error) => {
       spinner.fail(message.error(error));
       throw error;
-    }
+    },
   );
 }

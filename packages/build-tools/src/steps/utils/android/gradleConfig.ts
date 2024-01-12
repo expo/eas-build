@@ -7,11 +7,11 @@ import templateFile from '@expo/template-file';
 
 const EAS_BUILD_INJECT_CREDENTIALS_GRADLE_TEMPLATE_PATH = path.join(
   __dirname,
-  '../../../../templates/eas-build-inject-android-credentials.gradle'
+  '../../../../templates/eas-build-inject-android-credentials.gradle',
 );
 const EAS_BUILD_CONFIGURE_VERSION_GRADLE_TEMPLATE_PATH = path.join(
   __dirname,
-  '../../../../templates/eas-build-configure-version.gradle.template'
+  '../../../../templates/eas-build-configure-version.gradle.template',
 );
 
 const APPLY_EAS_BUILD_INJECT_CREDENTIALS_GRADLE_LINE =
@@ -21,7 +21,7 @@ const APPLY_EAS_BUILD_CONFIGURE_VERSION_GRADLE_LINE =
 
 export async function injectCredentialsGradleConfig(
   logger: bunyan,
-  workingDir: string
+  workingDir: string,
 ): Promise<void> {
   logger.info('Injecting signing config into build.gradle');
   await deleteEasBuildInjectCredentialsGradle(workingDir);
@@ -33,7 +33,7 @@ export async function injectCredentialsGradleConfig(
 export async function injectConfigureVersionGradleConfig(
   logger: bunyan,
   workingDir: string,
-  { versionCode, versionName }: { versionCode?: string; versionName?: string }
+  { versionCode, versionName }: { versionCode?: string; versionName?: string },
 ): Promise<void> {
   logger.info('Injecting version config into build.gradle');
   if (versionCode) {
@@ -73,7 +73,7 @@ async function createEasBuildInjectCredentialsGradle(workingDir: string): Promis
 
 async function createEasBuildConfigureVersionGradle(
   workingDir: string,
-  { versionCode, versionName }: { versionCode?: string; versionName?: string }
+  { versionCode, versionName }: { versionCode?: string; versionName?: string },
 ): Promise<void> {
   const targetPath = getEasBuildConfigureVersionGradlePath(workingDir);
   await templateFile(
@@ -85,7 +85,7 @@ async function createEasBuildConfigureVersionGradle(
     targetPath,
     {
       mustache: false,
-    }
+    },
   );
 }
 
@@ -99,7 +99,7 @@ async function addApplyInjectCredentialsConfigToBuildGradle(projectRoot: string)
 
   await fs.writeFile(
     buildGradlePath,
-    `${buildGradleContents.trim()}\n${APPLY_EAS_BUILD_INJECT_CREDENTIALS_GRADLE_LINE}\n`
+    `${buildGradleContents.trim()}\n${APPLY_EAS_BUILD_INJECT_CREDENTIALS_GRADLE_LINE}\n`,
   );
 }
 
@@ -113,7 +113,7 @@ async function addApplyConfigureVersionConfigToBuildGradle(projectRoot: string):
 
   await fs.writeFile(
     buildGradlePath,
-    `${buildGradleContents.trim()}\n${APPLY_EAS_BUILD_CONFIGURE_VERSION_GRADLE_LINE}\n`
+    `${buildGradleContents.trim()}\n${APPLY_EAS_BUILD_CONFIGURE_VERSION_GRADLE_LINE}\n`,
   );
 }
 

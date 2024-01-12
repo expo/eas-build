@@ -82,7 +82,7 @@ describe(findPackagerRootDir, () => {
           name: 'react-native-project',
         }),
       },
-      '/repo'
+      '/repo',
     );
 
     const rootDir = findPackagerRootDir('/repo/react-native-project');
@@ -105,12 +105,12 @@ describe(findPackagerRootDir, () => {
             name: 'react-native-project',
           }),
         },
-        '/repo'
+        '/repo',
       );
 
       const rootDir = findPackagerRootDir('/repo/react-native-project');
       expect(rootDir).toBe('/repo/react-native-project');
-    }
+    },
   );
 
   it(
@@ -127,12 +127,12 @@ describe(findPackagerRootDir, () => {
             name: 'react-native-project',
           }),
         },
-        '/repo'
+        '/repo',
       );
 
       const rootDir = findPackagerRootDir('/repo/react-native-project');
       expect(rootDir).toBe('/repo/react-native-project');
-    }
+    },
   );
 
   it(`returns the current dir if it's not a workspace (package.json does not exist in root dir) `, async () => {
@@ -145,7 +145,7 @@ describe(findPackagerRootDir, () => {
           name: 'react-native-project',
         }),
       },
-      '/repo'
+      '/repo',
     );
 
     const rootDir = findPackagerRootDir('/repo/react-native-project');

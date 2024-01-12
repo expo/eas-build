@@ -7,7 +7,7 @@ import { Hook, runHookIfPresent } from '../utils/hooks';
 
 export async function runBuilderWithHooksAsync<T extends Job>(
   ctx: BuildContext<T>,
-  builderAsync: (ctx: BuildContext<T>) => Promise<void>
+  builderAsync: (ctx: BuildContext<T>) => Promise<void>,
 ): Promise<Artifacts> {
   try {
     let buildSuccess = true;

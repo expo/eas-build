@@ -34,7 +34,7 @@ describe(findArtifacts, () => {
     const paths = await findArtifacts(
       '/dir1/dir2/dir3/dir4/',
       'file{,-release}.aab',
-      loggerMock as any
+      loggerMock as any,
     );
     expect(loggerMock.error).toHaveBeenCalledTimes(0);
     expect(paths.length).toBe(2);
@@ -50,11 +50,11 @@ describe(findArtifacts, () => {
       }),
     };
     await expect(
-      findArtifacts('/dir1/dir2/dir3/dir4/', 'file', loggerMock as any)
+      findArtifacts('/dir1/dir2/dir3/dir4/', 'file', loggerMock as any),
     ).rejects.toThrow();
     expect(loggerMock.error).toHaveBeenCalledTimes(1);
     expect(errMsg).toEqual(
-      'There is no such file or directory "/dir1/dir2/dir3/dir4/file". Directory "/dir1/dir2/dir3" is empty.'
+      'There is no such file or directory "/dir1/dir2/dir3/dir4/file". Directory "/dir1/dir2/dir3" is empty.',
     );
   });
 
@@ -70,11 +70,11 @@ describe(findArtifacts, () => {
       }),
     };
     await expect(
-      findArtifacts('/dir1/dir2/dir3/dir4/', 'file', loggerMock as any)
+      findArtifacts('/dir1/dir2/dir3/dir4/', 'file', loggerMock as any),
     ).rejects.toThrow();
     expect(loggerMock.error).toHaveBeenCalledTimes(1);
     expect(errMsg).toEqual(
-      'There is no such file or directory "/dir1/dir2/dir3/dir4/file". Directory "/dir1/dir2/dir3" contains [otherdir1, otherdir2, otherfile1].'
+      'There is no such file or directory "/dir1/dir2/dir3/dir4/file". Directory "/dir1/dir2/dir3" contains [otherdir1, otherdir2, otherfile1].',
     );
   });
 
@@ -88,7 +88,7 @@ describe(findArtifacts, () => {
       }),
     };
     await expect(
-      findArtifacts('/dir1/dir2/dir3/dir4/', 'file', loggerMock as any)
+      findArtifacts('/dir1/dir2/dir3/dir4/', 'file', loggerMock as any),
     ).rejects.toThrow();
     expect(loggerMock.error).toHaveBeenCalledTimes(1);
     expect(errMsg).toEqual('There is no such file or directory "/dir1/dir2/dir3/dir4/file".');

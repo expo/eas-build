@@ -59,7 +59,7 @@ export class BuildStepGlobalContext {
 
   constructor(
     private readonly provider: ExternalBuildContextProvider,
-    public readonly skipCleanup: boolean
+    public readonly skipCleanup: boolean,
   ) {
     this.stepsInternalBuildDirectory = path.join(os.tmpdir(), 'eas-build', uuidv4());
     this.runtimePlatform = provider.runtimePlatform;
@@ -126,7 +126,7 @@ export class BuildStepGlobalContext {
   public markAsCheckedOut(logger: bunyan): void {
     this.didCheckOut = true;
     logger.info(
-      `Changing default working directory to ${this.defaultWorkingDirectory} (was ${this.projectTargetDirectory})`
+      `Changing default working directory to ${this.defaultWorkingDirectory} (was ${this.projectTargetDirectory})`,
     );
   }
 
@@ -134,7 +134,7 @@ export class BuildStepGlobalContext {
     return {
       stepsInternalBuildDirectory: this.stepsInternalBuildDirectory,
       stepById: Object.fromEntries(
-        Object.entries(this.stepById).map(([id, step]) => [id, step.serialize()])
+        Object.entries(this.stepById).map(([id, step]) => [id, step.serialize()]),
       ),
       provider: {
         projectSourceDirectory: this.provider.projectSourceDirectory,
@@ -151,7 +151,7 @@ export class BuildStepGlobalContext {
 
   public static deserialize(
     serialized: SerializedBuildStepGlobalContext,
-    logger: bunyan
+    logger: bunyan,
   ): BuildStepGlobalContext {
     const deserializedProvider: ExternalBuildContextProvider = {
       projectSourceDirectory: serialized.provider.projectSourceDirectory,
@@ -191,7 +191,7 @@ export class BuildStepContext {
     }: {
       logger: bunyan;
       relativeWorkingDirectory?: string;
-    }
+    },
   ) {
     this.logger = logger ?? ctx.baseLogger;
     this.relativeWorkingDirectory = relativeWorkingDirectory;
@@ -216,7 +216,7 @@ export class BuildStepContext {
 
   public static deserialize(
     serialized: SerializedBuildStepContext,
-    logger: bunyan
+    logger: bunyan,
   ): BuildStepContext {
     const deserializedGlobal = BuildStepGlobalContext.deserialize(serialized.global, logger);
     return new BuildStepContext(deserializedGlobal, {

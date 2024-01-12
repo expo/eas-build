@@ -22,7 +22,7 @@ export function createInstallNodeModulesBuildFunction(): BuildFunction {
 
 export async function installNodeModules(
   stepCtx: BuildStepContext,
-  env: BuildStepEnv
+  env: BuildStepEnv,
 ): Promise<void> {
   const { logger } = stepCtx;
   const packageManager = resolvePackageManager(stepCtx.global.projectTargetDirectory);

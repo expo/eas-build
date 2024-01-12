@@ -13,7 +13,7 @@ export function getCommonName({ dataBase64, password }: Ios.DistributionCertific
   const certData = getCertData(dataBase64, password);
   const { attributes } = certData.subject;
   const commonNameAttribute = attributes.find(
-    ({ name }: { name?: string }) => name === 'commonName'
+    ({ name }: { name?: string }) => name === 'commonName',
   );
   return Buffer.from(commonNameAttribute.value, 'ascii').toString();
 }

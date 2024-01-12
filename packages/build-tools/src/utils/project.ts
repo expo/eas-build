@@ -24,7 +24,7 @@ export function runExpoCliCommand<TJob extends Job>(
   {
     forceUseGlobalExpoCli = false,
     npmVersionAtLeast7,
-  }: { forceUseGlobalExpoCli?: boolean; npmVersionAtLeast7: boolean }
+  }: { forceUseGlobalExpoCli?: boolean; npmVersionAtLeast7: boolean },
 ): SpawnPromise<SpawnResult> {
   if (shouldUseGlobalExpoCli(ctx, forceUseGlobalExpoCli)) {
     return ctx.runGlobalExpoCliCommand(args, options, npmVersionAtLeast7);
@@ -46,7 +46,7 @@ export function runExpoCliCommand<TJob extends Job>(
 
 export function shouldUseGlobalExpoCli<TJob extends Job>(
   ctx: BuildContext<TJob>,
-  forceUseGlobalExpoCli = false
+  forceUseGlobalExpoCli = false,
 ): boolean {
   return (
     forceUseGlobalExpoCli ||

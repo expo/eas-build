@@ -25,7 +25,7 @@ import isExpoUpdatesInstalledAsync from './isExpoUpdatesInstalled';
 
 export async function setRuntimeVersionNativelyAsync(
   ctx: BuildContext<Job>,
-  runtimeVersion: string
+  runtimeVersion: string,
 ): Promise<void> {
   switch (ctx.job.platform) {
     case Platform.ANDROID: {
@@ -53,8 +53,8 @@ export async function setChannelNativelyAsync(ctx: BuildContext<Job>): Promise<v
   const configFile = ctx.job.platform === Platform.ANDROID ? 'AndroidManifest.xml' : 'Expo.plist';
   ctx.logger.info(
     `Setting the update request headers in '${configFile}' to '${JSON.stringify(
-      newUpdateRequestHeaders
-    )}'`
+      newUpdateRequestHeaders,
+    )}'`,
   );
 
   switch (ctx.job.platform) {
@@ -98,7 +98,7 @@ export async function setClassicReleaseChannelNativelyAsync(ctx: BuildContext<Jo
  * Used for classic Expo Updates
  */
 export async function getNativelyDefinedClassicReleaseChannelAsync(
-  ctx: BuildContext<Job>
+  ctx: BuildContext<Job>,
 ): Promise<string | null> {
   switch (ctx.job.platform) {
     case Platform.ANDROID: {
@@ -124,7 +124,7 @@ export async function configureClassicExpoUpdatesAsync(ctx: BuildContext<Job>): 
     const releaseChannel = await getNativelyDefinedClassicReleaseChannelAsync(ctx);
     if (releaseChannel) {
       ctx.logger.info(
-        `Using the release channel pre-configured in native project (${releaseChannel})`
+        `Using the release channel pre-configured in native project (${releaseChannel})`,
       );
       ctx.logger.warn('Please add the "releaseChannel" field to your build profile (eas.json)');
     } else {
@@ -147,10 +147,10 @@ export async function configureExpoUpdatesIfInstalledAsync(ctx: BuildContext<Job
   if (ctx.metadata?.runtimeVersion && ctx.metadata?.runtimeVersion !== appConfigRuntimeVersion) {
     ctx.markBuildPhaseHasWarnings();
     ctx.logger.warn(
-      `Runtime version from the app config evaluated on your local machine (${ctx.metadata.runtimeVersion}) does not match the one resolved here (${appConfigRuntimeVersion}).`
+      `Runtime version from the app config evaluated on your local machine (${ctx.metadata.runtimeVersion}) does not match the one resolved here (${appConfigRuntimeVersion}).`,
     );
     ctx.logger.warn(
-      "If you're using conditional app configs, e.g. depending on an environment variable, make sure to set the variable in eas.json or configure it with EAS Secret."
+      "If you're using conditional app configs, e.g. depending on an environment variable, make sure to set the variable in eas.json or configure it with EAS Secret.",
     );
   }
 
@@ -166,11 +166,11 @@ export async function configureExpoUpdatesIfInstalledAsync(ctx: BuildContext<Job
       } else {
         if (ctx.job.releaseChannel !== undefined) {
           ctx.logger.warn(
-            `This build is configured with EAS Update however has a Classic Updates releaseChannel set instead of having an EAS Update channel.`
+            `This build is configured with EAS Update however has a Classic Updates releaseChannel set instead of having an EAS Update channel.`,
           );
         } else {
           ctx.logger.warn(
-            `This build is configured to query EAS Update for updates, however no channel is set in eas.json.`
+            `This build is configured to query EAS Update for updates, however no channel is set in eas.json.`,
           );
         }
         ctx.markBuildPhaseHasWarnings();

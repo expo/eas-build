@@ -9,7 +9,7 @@ import { buildErrorHandlers } from './buildErrorHandlers';
 
 async function maybeReadXcodeBuildLogs(
   phase: BuildPhase,
-  buildLogsDirectory: string
+  buildLogsDirectory: string,
 ): Promise<string | undefined> {
   if (phase !== BuildPhase.RUN_FASTLANE) {
     return;
@@ -32,7 +32,7 @@ function resolveError<TError extends Error>(
   errorHandlers: ErrorHandler<TError>[],
   logLines: string[],
   errorContext: ErrorContext,
-  xcodeBuildLogs?: string
+  xcodeBuildLogs?: string,
 ): TError | undefined {
   const { job, phase } = errorContext;
   const { platform } = job;
@@ -43,7 +43,7 @@ function resolveError<TError extends Error>(
       (handler) =>
         (handler.phase === XCODE_BUILD_PHASE && phase === BuildPhase.RUN_FASTLANE) ||
         handler.phase === phase ||
-        !handler.phase
+        !handler.phase,
     );
 
   for (const handler of handlers) {
@@ -66,7 +66,7 @@ export async function resolveBuildPhaseErrorAsync(
   error: any,
   logLines: string[],
   errorContext: ErrorContext,
-  buildLogsDirectory: string
+  buildLogsDirectory: string,
 ): Promise<errors.BuildError> {
   const { phase } = errorContext;
   if (error instanceof errors.BuildError) {

@@ -30,7 +30,7 @@ export enum DistributionType {
 
 const PROVISIONING_PROFILES_DIRECTORY = path.join(
   os.homedir(),
-  'Library/MobileDevice/Provisioning Profiles'
+  'Library/MobileDevice/Provisioning Profiles',
 );
 
 export default class ProvisioningProfile<TJob extends Ios.Job> {
@@ -50,7 +50,7 @@ export default class ProvisioningProfile<TJob extends Ios.Job> {
     private readonly profile: Buffer,
     private readonly keychainPath: string,
     private readonly target: string,
-    private readonly certificateCommonName: string
+    private readonly certificateCommonName: string,
   ) {
     this.profilePath = path.join(PROVISIONING_PROFILES_DIRECTORY, `${uuid()}.mobileprovision`);
   }
@@ -69,7 +69,7 @@ export default class ProvisioningProfile<TJob extends Ios.Job> {
   public async destroy(): Promise<void> {
     if (!this.profilePath) {
       this.ctx.logger.warn(
-        "There is nothing to destroy, a provisioning profile hasn't been created yet."
+        "There is nothing to destroy, a provisioning profile hasn't been created yet.",
       );
       return;
     }
@@ -82,7 +82,7 @@ export default class ProvisioningProfile<TJob extends Ios.Job> {
     if (devCertFingerprint !== fingerprint) {
       throw new errors.CredentialsDistCertMismatchError(
         `Provisioning profile and distribution certificate don't match.
-Profile's certificate fingerprint = ${devCertFingerprint}, distribution certificate fingerprint = ${fingerprint}`
+Profile's certificate fingerprint = ${devCertFingerprint}, distribution certificate fingerprint = ${fingerprint}`,
       );
     }
   }
@@ -95,7 +95,7 @@ Profile's certificate fingerprint = ${devCertFingerprint}, distribution certific
         ['cms', '-D', '-k', this.keychainPath, '-i', this.profilePath],
         {
           stdio: 'pipe',
-        }
+        },
       );
     } catch (err: any) {
       throw new Error(err.stderr.trim());

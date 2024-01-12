@@ -34,7 +34,7 @@ async function createNpmrcIfNotExistsAsync(ctx: BuildContext<Job>, logger: bunya
 async function logIfNpmrcExistsAsync(ctx: BuildContext<Job>, logger: bunyan): Promise<void> {
   const projectNpmrcPath = path.join(
     findPackagerRootDir(ctx.getReactNativeProjectDirectory()),
-    '.npmrc'
+    '.npmrc',
   );
   if (await fs.pathExists(projectNpmrcPath)) {
     logger.info(`.npmrc found at ${path.relative(ctx.buildDirectory, projectNpmrcPath)}`);

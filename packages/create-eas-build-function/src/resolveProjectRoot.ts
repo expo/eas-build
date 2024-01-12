@@ -41,7 +41,7 @@ export function assertValidName(folderName: string): void {
   if (isForbidden) {
     Log.exit(
       chalk`{red Cannot create an app named {bold "${folderName}"} because it would conflict with a dependency of the same name.}`,
-      1
+      1,
     );
   }
 }

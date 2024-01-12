@@ -5,7 +5,7 @@ const EXPO_CLI_VERSION = '6.0.5';
 export function runGlobalExpoCliCommandAsync(
   expoCliArgs: string[],
   options: SpawnOptions,
-  npmVersionAtLeast7: boolean
+  npmVersionAtLeast7: boolean,
 ): SpawnPromise<SpawnResult> {
   if (process.env.EXPO_CLI_PATH) {
     const expoCliBinPath = process.env.EXPO_CLI_PATH;

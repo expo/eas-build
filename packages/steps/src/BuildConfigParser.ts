@@ -38,7 +38,7 @@ export class BuildConfigParser {
 
   constructor(
     private readonly ctx: BuildStepGlobalContext,
-    { configPath, externalFunctions }: { configPath: string; externalFunctions?: BuildFunction[] }
+    { configPath, externalFunctions }: { configPath: string; externalFunctions?: BuildFunction[] },
   ) {
     this.validateExternalFunctions(externalFunctions);
 
@@ -53,10 +53,10 @@ export class BuildConfigParser {
     const configBuildFunctions = this.createBuildFunctionsFromConfig(config.functions);
     const buildFunctions = this.mergeBuildFunctionsWithExternal(
       configBuildFunctions,
-      this.externalFunctions
+      this.externalFunctions,
     );
     const buildSteps = config.build.steps.map((stepConfig) =>
-      this.createBuildStepFromConfig(stepConfig, buildFunctions)
+      this.createBuildStepFromConfig(stepConfig, buildFunctions),
     );
     const workflow = new BuildWorkflow(this.ctx, { buildSteps, buildFunctions });
     await new BuildWorkflowValidator(workflow).validateAsync();
@@ -65,7 +65,7 @@ export class BuildConfigParser {
 
   private createBuildStepFromConfig(
     buildStepConfig: BuildStepConfig,
-    buildFunctions: BuildFunctionById
+    buildFunctions: BuildFunctionById,
   ): BuildStep {
     if (isBuildStepCommandRun(buildStepConfig)) {
       return this.createBuildStepFromBuildStepCommandRun(buildStepConfig);
@@ -77,7 +77,7 @@ export class BuildConfigParser {
       return this.createBuildStepFromBuildStepFunctionCall(buildFunctions, buildStepConfig);
     } else {
       throw new BuildConfigError(
-        'Invalid build step configuration detected. Build step cannot be empty.'
+        'Invalid build step configuration detected. Build step cannot be empty.',
       );
     }
   }
@@ -128,7 +128,7 @@ export class BuildConfigParser {
 
   private createBuildStepFromBuildStepBareFunctionCall(
     buildFunctions: BuildFunctionById,
-    functionId: BuildStepBareFunctionCall
+    functionId: BuildStepBareFunctionCall,
   ): BuildStep {
     const buildFunction = buildFunctions[functionId];
     return buildFunction.createBuildStepFromFunctionCall(this.ctx);
@@ -136,12 +136,12 @@ export class BuildConfigParser {
 
   private createBuildStepFromBuildStepFunctionCall(
     buildFunctions: BuildFunctionById,
-    buildStepFunctionCall: BuildStepFunctionCall
+    buildStepFunctionCall: BuildStepFunctionCall,
   ): BuildStep {
     const keys = Object.keys(buildStepFunctionCall);
     assert(
       keys.length === 1,
-      'There must be at most one function call in the step (enforced by joi).'
+      'There must be at most one function call in the step (enforced by joi).',
     );
     const functionId = keys[0];
     const buildFunctionCallConfig = buildStepFunctionCall[functionId];
@@ -158,7 +158,7 @@ export class BuildConfigParser {
   }
 
   private createBuildFunctionsFromConfig(
-    buildFunctionsConfig: BuildConfig['functions']
+    buildFunctionsConfig: BuildConfig['functions'],
   ): BuildFunctionById {
     if (!buildFunctionsConfig) {
       return {};
@@ -202,7 +202,7 @@ export class BuildConfigParser {
 
   private createBuildStepInputsFromDefinition(
     buildStepInputs: BuildStepInputs,
-    stepDisplayName: string
+    stepDisplayName: string,
   ): BuildStepInput[] {
     return Object.entries(buildStepInputs).map(
       ([key, value]) =>
@@ -215,12 +215,12 @@ export class BuildConfigParser {
             typeof value === 'object'
               ? BuildStepInputValueTypeName.JSON
               : (typeof value as BuildStepInputValueTypeName),
-        })
+        }),
     );
   }
 
   private createBuildStepInputProvidersFromBuildFunctionInputs(
-    buildFunctionInputs: BuildFunctionInputs
+    buildFunctionInputs: BuildFunctionInputs,
   ): BuildStepInputProvider[] {
     return buildFunctionInputs.map((entry) => {
       return typeof entry === 'string'
@@ -241,7 +241,7 @@ export class BuildConfigParser {
 
   private createBuildStepOutputsFromDefinition(
     buildStepOutputs: BuildStepOutputs,
-    stepDisplayName: string
+    stepDisplayName: string,
   ): BuildStepOutput[] {
     return buildStepOutputs.map((entry) =>
       typeof entry === 'string'
@@ -250,23 +250,23 @@ export class BuildConfigParser {
             id: entry.name,
             stepDisplayName,
             required: entry.required ?? true,
-          })
+          }),
     );
   }
 
   private createBuildStepOutputProvidersFromBuildFunctionOutputs(
-    buildFunctionOutputs: BuildFunctionOutputs
+    buildFunctionOutputs: BuildFunctionOutputs,
   ): BuildStepOutputProvider[] {
     return buildFunctionOutputs.map((entry) =>
       typeof entry === 'string'
         ? BuildStepOutput.createProvider({ id: entry, required: true })
-        : BuildStepOutput.createProvider({ id: entry.name, required: entry.required ?? true })
+        : BuildStepOutput.createProvider({ id: entry.name, required: entry.required ?? true }),
     );
   }
 
   private mergeBuildFunctionsWithExternal(
     configFunctions: BuildFunctionById,
-    externalFunctions?: BuildFunction[]
+    externalFunctions?: BuildFunction[],
   ): BuildFunctionById {
     const result: BuildFunctionById = { ...configFunctions };
     if (externalFunctions === undefined) {
@@ -294,7 +294,7 @@ export class BuildConfigParser {
     throw new BuildConfigError(
       `Provided external functions with duplicated IDs: ${duplicatedExternalFunctionIds
         .map((id) => `"${id}"`)
-        .join(', ')}`
+        .join(', ')}`,
     );
   }
 

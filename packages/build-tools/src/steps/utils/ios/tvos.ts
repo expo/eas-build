@@ -13,7 +13,7 @@ export async function isTVOS({
 
   const targetName = await IOSConfig.BuildScheme.getApplicationTargetNameForSchemeAsync(
     workingDir,
-    scheme
+    scheme,
   );
 
   const xcBuildConfiguration = IOSConfig.Target.getXCBuildConfigurationFromPbxproj(project, {
