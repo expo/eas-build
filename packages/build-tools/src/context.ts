@@ -12,6 +12,8 @@ import {
   errors,
   Metadata,
   EnvironmentSecretType,
+  GenericArtifactType,
+  isGenericArtifact,
 } from '@expo/eas-build-job';
 import { ExpoConfig } from '@expo/config';
 import { bunyan } from '@expo/logger';
@@ -35,10 +37,16 @@ export interface LogBuffer {
   getPhaseLogs(buildPhase: string): string[];
 }
 
-export type ArtifactToUpload = {
-  type: ManagedArtifactType;
-  paths: string[];
-};
+export type ArtifactToUpload =
+  | {
+      type: ManagedArtifactType;
+      paths: string[];
+    }
+  | {
+      type: GenericArtifactType;
+      key: string;
+      paths: string[];
+    };
 
 export interface BuildContextOptions {
   workingdir: string;
@@ -219,7 +227,7 @@ export class BuildContext<TJob extends Job> {
     logger: bunyan;
   }): Promise<void> {
     const bucketKey = await this._uploadArtifact({ artifact, logger });
-    if (bucketKey) {
+    if (bucketKey && !isGenericArtifact(artifact)) {
       this.artifacts[artifact.type] = bucketKey;
     }
   }

@@ -1,6 +1,6 @@
 import path from 'path';
 
-import { ManagedArtifactType } from '@expo/eas-build-job';
+import { GenericArtifactType, ManagedArtifactType } from '@expo/eas-build-job';
 import { BuildFunction, BuildStepInput, BuildStepInputValueTypeName } from '@expo/steps';
 import nullthrows from 'nullthrows';
 
@@ -18,8 +18,15 @@ export function createUploadArtifactBuildFunction(ctx: CustomBuildContext): Buil
         allowedValues: [
           ManagedArtifactType.APPLICATION_ARCHIVE,
           ManagedArtifactType.BUILD_ARTIFACTS,
+          ...Object.values(GenericArtifactType),
         ],
         required: true,
+        allowedValueTypeName: BuildStepInputValueTypeName.STRING,
+      }),
+      BuildStepInput.createProvider({
+        id: 'key',
+        defaultValue: '',
+        required: false,
         allowedValueTypeName: BuildStepInputValueTypeName.STRING,
       }),
       BuildStepInput.createProvider({
@@ -33,13 +40,15 @@ export function createUploadArtifactBuildFunction(ctx: CustomBuildContext): Buil
         stepsCtx.workingDirectory,
         nullthrows(inputs.path.value).toString()
       );
-      const artifactType = inputs.type.value as ManagedArtifactType;
+
+      const artifact = {
+        type: inputs.type.value as ManagedArtifactType | GenericArtifactType,
+        paths: [filePath],
+        key: inputs.key.value as string,
+      };
 
       await ctx.runtimeApi.uploadArtifact({
-        artifact: {
-          type: artifactType,
-          paths: [filePath],
-        },
+        artifact,
         logger: stepsCtx.logger,
       });
     },
