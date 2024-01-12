@@ -8,13 +8,13 @@ on:
 jobs:
   test:
     runs-on: macos-latest
-    name: Test with Node 18 on macOS
+    name: Test with Node 20 on macOS
     steps:
       - uses: actions/checkout@v2
       - name: Setup node
         uses: actions/setup-node@v1
         with:
-          node-version: 18
+          node-version: 20
       - name: Setup ncc
         run: npm install -g @vercel/ncc
       - run: yarn install --frozen-lockfile --check-files

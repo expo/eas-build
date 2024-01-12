@@ -39,7 +39,7 @@
     "@expo/package-manager": "^1.0.2",
     "@jest/globals": "^29.6.2",
     "@types/jest": "^29.5.3",
-    "@types/node": "^18.11.18",
+    "@types/node": "20.11.0",
     "@types/prompts": "^2.4.4",
     "@vercel/ncc": "^0.38.0",
     "chalk": "4.1.2",
@@ -54,7 +54,7 @@
     "access": "public"
   },
   "volta": {
-    "node": "18.13.0",
-    "yarn": "1.22.19"
+    "node": "20.11.0",
+    "yarn": "1.22.21"
   }
 }

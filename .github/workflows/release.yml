@@ -15,7 +15,7 @@ jobs:
         with:
           registry-url: 'https://registry.npmjs.org/'
           scope: 'expo'
-          node-version: 18
+          node-version: 20
       - name: Setup ncc
         run: npm install -g @vercel/ncc
       - name: Install dependencies

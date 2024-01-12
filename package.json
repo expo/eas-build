@@ -12,10 +12,10 @@
     "release": "./scripts/release.sh"
   },
   "engines": {
-    "node": ">=14.0.0"
+    "node": ">=16.0.0"
   },
   "devDependencies": {
-    "@types/node": "^18.11.18",
+    "@types/node": "20.11.0",
     "eslint": "^8.46.0",
     "eslint-config-universe": "^11.3.0",
     "eslint-plugin-import": "^2.28.0",
@@ -28,7 +28,7 @@
     "packages/*"
   ],
   "volta": {
-    "node": "18.13.0",
-    "yarn": "1.22.19"
+    "node": "20.11.0",
+    "yarn": "1.22.21"
   }
 }
