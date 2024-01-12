@@ -2,7 +2,15 @@ import * as Builders from './builders';
 
 export { Builders };
 
-export { Artifacts, BuildContext, CacheManager, LogBuffer, SkipNativeBuildError } from './context';
+export {
+  ArtifactToUpload,
+  Artifacts,
+  BuildContext,
+  BuildContextOptions,
+  CacheManager,
+  LogBuffer,
+  SkipNativeBuildError,
+} from './context';
 
 export { PackageManager } from './utils/packageManager';
 

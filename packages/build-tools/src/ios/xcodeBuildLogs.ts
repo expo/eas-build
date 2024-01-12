@@ -14,7 +14,11 @@ export async function findAndUploadXcodeBuildLogsAsync(
   try {
     const xcodeBuildLogsPath = await findXcodeBuildLogsPathAsync(ctx.buildLogsDirectory);
     if (xcodeBuildLogsPath) {
-      await ctx.uploadArtifacts(ManagedArtifactType.XCODE_BUILD_LOGS, [xcodeBuildLogsPath], logger);
+      await ctx.uploadArtifacts({
+        type: ManagedArtifactType.XCODE_BUILD_LOGS,
+        paths: [xcodeBuildLogsPath],
+        logger,
+      });
     }
   } catch (err: any) {
     logger.debug({ err }, 'Failed to upload Xcode build logs');

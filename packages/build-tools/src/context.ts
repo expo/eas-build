@@ -35,6 +35,12 @@ export interface LogBuffer {
   getPhaseLogs(buildPhase: string): string[];
 }
 
+export type ArtifactToUpload = {
+  type: ManagedArtifactType;
+  paths: string[];
+  logger: bunyan;
+};
+
 export interface BuildContextOptions {
   workingdir: string;
   logger: bunyan;
@@ -49,11 +55,7 @@ export interface BuildContextOptions {
     options: SpawnOptions,
     npmVersionAtLeast7: boolean
   ) => SpawnPromise<SpawnResult>;
-  uploadArtifacts: (
-    type: ManagedArtifactType,
-    paths: string[],
-    logger: bunyan
-  ) => Promise<string | null>;
+  uploadArtifacts: (artifact: ArtifactToUpload) => Promise<string | null>;
   reportError?: (
     msg: string,
     err?: Error,
@@ -91,11 +93,7 @@ export class BuildContext<TJob extends Job> {
   private _job: TJob;
   private _metadata?: Metadata;
   private readonly defaultLogger: bunyan;
-  private readonly _uploadArtifacts: (
-    type: ManagedArtifactType,
-    paths: string[],
-    logger: bunyan
-  ) => Promise<string | null>;
+  private readonly _uploadArtifacts: BuildContextOptions['uploadArtifacts'];
   private buildPhase?: BuildPhase;
   private buildPhaseSkipped = false;
   private buildPhaseHasWarnings = false;
@@ -214,14 +212,10 @@ export class BuildContext<TJob extends Job> {
     this.buildPhaseHasWarnings = true;
   }
 
-  public async uploadArtifacts(
-    type: ManagedArtifactType,
-    paths: string[],
-    logger: bunyan
-  ): Promise<void> {
-    const url = await this._uploadArtifacts(type, paths, logger);
-    if (url) {
-      this.artifacts[type] = url;
+  public async uploadArtifacts(artifact: ArtifactToUpload): Promise<void> {
+    const bucketKey = await this._uploadArtifacts(artifact);
+    if (bucketKey) {
+      this.artifacts[artifact.type] = bucketKey;
     }
   }
 
