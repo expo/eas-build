@@ -1,6 +1,5 @@
-import { bunyan } from '@expo/logger';
-import { Android, BuildPhase, Env } from '@expo/eas-build-job';
-import { Builders, BuildContext, ArtifactType, Artifacts } from '@expo/build-tools';
+import { Android, ManagedArtifactType, BuildPhase, Env } from '@expo/eas-build-job';
+import { Builders, BuildContext, Artifacts, ArtifactToUpload } from '@expo/build-tools';
 import omit from 'lodash/omit';
 
 import logger, { logBuffer } from './logger';
@@ -25,11 +24,11 @@ export async function buildAndroidAsync(
     logger,
     logBuffer,
     runGlobalExpoCliCommand: runGlobalExpoCliCommandAsync,
-    uploadArtifacts: async (type: ArtifactType, paths: string[], logger?: bunyan) => {
-      if (type !== ArtifactType.APPLICATION_ARCHIVE) {
+    uploadArtifacts: async (artifact: ArtifactToUpload) => {
+      if (artifact.type !== ManagedArtifactType.APPLICATION_ARCHIVE) {
         return null;
       } else {
-        return await prepareArtifacts(paths, logger);
+        return await prepareArtifacts(artifact.paths, artifact.logger);
       }
     },
     env,

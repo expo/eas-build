@@ -17,3 +17,4 @@ export { Job, sanitizeJob } from './job';
 export { Metadata, sanitizeMetadata } from './metadata';
 export * from './logs';
 export * as errors from './errors';
+export * from './artifacts';

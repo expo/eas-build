@@ -3,9 +3,10 @@ import * as Builders from './builders';
 export { Builders };
 
 export {
+  ArtifactToUpload,
   Artifacts,
-  ArtifactType,
   BuildContext,
+  BuildContextOptions,
   CacheManager,
   LogBuffer,
   SkipNativeBuildError,

@@ -1,10 +1,10 @@
 import plist from '@expo/plist';
 import { IOSConfig } from '@expo/config-plugins';
-import { BuildMode, BuildPhase, Ios, Workflow } from '@expo/eas-build-job';
+import { ManagedArtifactType, BuildMode, BuildPhase, Ios, Workflow } from '@expo/eas-build-job';
 import fs from 'fs-extra';
 import nullthrows from 'nullthrows';
 
-import { Artifacts, ArtifactType, BuildContext } from '../context';
+import { Artifacts, BuildContext } from '../context';
 import { configureExpoUpdatesIfInstalledAsync } from '../utils/expoUpdates';
 import { uploadApplicationArchive } from '../utils/artifacts';
 import { Hook, runHookIfPresent } from '../utils/hooks';
@@ -175,11 +175,11 @@ async function resignAsync(ctx: BuildContext<Ios.Job>): Promise<Artifacts> {
 
   await ctx.runBuildPhase(BuildPhase.UPLOAD_APPLICATION_ARCHIVE, async () => {
     ctx.logger.info(`Application archive: ${applicationArchivePath}`);
-    await ctx.uploadArtifacts(
-      ArtifactType.APPLICATION_ARCHIVE,
-      [applicationArchivePath],
-      ctx.logger
-    );
+    await ctx.uploadArtifacts({
+      type: ManagedArtifactType.APPLICATION_ARCHIVE,
+      paths: [applicationArchivePath],
+      logger: ctx.logger,
+    });
   });
 
   if (!ctx.artifacts.APPLICATION_ARCHIVE) {

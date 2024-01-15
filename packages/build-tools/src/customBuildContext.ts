@@ -4,7 +4,7 @@ import { BuildPhase, Env, Job, Metadata, Platform } from '@expo/eas-build-job';
 import { bunyan } from '@expo/logger';
 import { ExternalBuildContextProvider, BuildRuntimePlatform } from '@expo/steps';
 
-import { ArtifactType, BuildContext } from './context';
+import { ArtifactToUpload, BuildContext } from './context';
 
 const platformToBuildRuntimePlatform: Record<Platform, BuildRuntimePlatform> = {
   [Platform.ANDROID]: BuildRuntimePlatform.LINUX,
@@ -12,7 +12,7 @@ const platformToBuildRuntimePlatform: Record<Platform, BuildRuntimePlatform> = {
 };
 
 export interface BuilderRuntimeApi {
-  uploadArtifacts: (type: ArtifactType, paths: string[], logger: bunyan) => Promise<void>;
+  uploadArtifacts: (artifact: ArtifactToUpload) => Promise<void>;
 }
 
 export class CustomBuildContext implements ExternalBuildContextProvider {
@@ -54,7 +54,7 @@ export class CustomBuildContext implements ExternalBuildContextProvider {
     this.defaultWorkingDirectory = buildCtx.getReactNativeProjectDirectory();
     this.buildLogsDirectory = path.join(buildCtx.workingdir, 'logs');
     this.runtimeApi = {
-      uploadArtifacts: (...args) => buildCtx['uploadArtifacts'](...args),
+      uploadArtifacts: (artifact) => buildCtx['uploadArtifacts'](artifact),
     };
   }
 
