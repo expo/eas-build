@@ -261,7 +261,7 @@ To resolve this issue, downgrade to an older Xcode version using the "image" fie
     createError: () =>
       new UserFacingError(
         errors.ErrorCode.UNKNOWN_FASTLANE_RESIGN_ERROR,
-        `The "Run fastlane" step failed with an unknown error. Verify if bundle indentifier of original build and bundle indentifier assosiacted with your new credentials match.`
+        `The "Run fastlane" step failed with an unknown error. Inspect the logs above to verify if the bundle identifier associated with your new provisioning profile matches the bundle identifier of the build you want to resign.`
       ),
   },
   {
