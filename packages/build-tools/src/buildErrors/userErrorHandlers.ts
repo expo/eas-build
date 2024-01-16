@@ -1,4 +1,4 @@
-import { BuildPhase, errors, Platform, Workflow } from '@expo/eas-build-job';
+import { BuildMode, BuildPhase, errors, Platform, Workflow } from '@expo/eas-build-job';
 
 import { ErrorHandler, XCODE_BUILD_PHASE } from './errors.types';
 
@@ -251,6 +251,17 @@ To resolve this issue, downgrade to an older Xcode version using the "image" fie
       new UserFacingError(
         errors.ErrorCode.UNKNOWN_GRADLE_ERROR,
         'Gradle build failed with unknown error. See logs for the "Run gradlew" phase for more information.'
+      ),
+  },
+  {
+    platform: Platform.IOS,
+    phase: BuildPhase.RUN_FASTLANE,
+    mode: BuildMode.RESIGN,
+    regexp: /.*/,
+    createError: () =>
+      new UserFacingError(
+        errors.ErrorCode.UNKNOWN_FASTLANE_RESIGN_ERROR,
+        `The "Run fastlane" step failed with an unknown error. Verify if bundle indentifier of original build and bundle indentifier assosiacted with your new credentials match.`
       ),
   },
   {

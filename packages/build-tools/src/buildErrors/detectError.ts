@@ -35,7 +35,7 @@ function resolveError<TError extends Error>(
   xcodeBuildLogs?: string
 ): TError | undefined {
   const { job, phase } = errorContext;
-  const { platform } = job;
+  const { platform, mode } = job;
   const logs = logLines.join('\n');
   const handlers = errorHandlers
     .filter((handler) => handler.platform === platform || !handler.platform)
@@ -44,7 +44,8 @@ function resolveError<TError extends Error>(
         (handler.phase === XCODE_BUILD_PHASE && phase === BuildPhase.RUN_FASTLANE) ||
         handler.phase === phase ||
         !handler.phase
-    );
+    )
+    .filter((handler) => handler.mode === mode || !handler.mode);
 
   for (const handler of handlers) {
     const regexp =
