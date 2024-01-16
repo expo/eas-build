@@ -35,9 +35,11 @@ export function createUploadArtifactBuildFunction(ctx: CustomBuildContext): Buil
       );
       const artifactType = inputs.type.value as ManagedArtifactType;
 
-      await ctx.runtimeApi.uploadArtifacts({
-        type: artifactType,
-        paths: [filePath],
+      await ctx.runtimeApi.uploadArtifact({
+        artifact: {
+          type: artifactType,
+          paths: [filePath],
+        },
         logger: stepsCtx.logger,
       });
     },

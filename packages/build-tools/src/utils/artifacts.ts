@@ -64,9 +64,11 @@ export async function maybeFindAndUploadBuildArtifacts(
     ).flat();
     logger.info(`Build artifacts: ${buildArtifacts.join(', ')}`);
     logger.info('Uploading build artifacts...');
-    await ctx.uploadArtifacts({
-      type: ManagedArtifactType.BUILD_ARTIFACTS,
-      paths: buildArtifacts,
+    await ctx.uploadArtifact({
+      artifact: {
+        type: ManagedArtifactType.BUILD_ARTIFACTS,
+        paths: buildArtifacts,
+      },
       logger,
     });
   } catch (err: any) {
@@ -89,9 +91,11 @@ export async function uploadApplicationArchive(
   const applicationArchives = await findArtifacts(rootDir, patternOrPath, logger);
   logger.info(`Application archives: ${applicationArchives.join(', ')}`);
   logger.info('Uploading application archive...');
-  await ctx.uploadArtifacts({
-    type: ManagedArtifactType.APPLICATION_ARCHIVE,
-    paths: applicationArchives,
+  await ctx.uploadArtifact({
+    artifact: {
+      type: ManagedArtifactType.APPLICATION_ARCHIVE,
+      paths: applicationArchives,
+    },
     logger,
   });
 }

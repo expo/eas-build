@@ -41,16 +41,20 @@ export function createFindAndUploadBuildArtifactsBuildFunction(
 
       logger.info('Uploading...');
       const [archiveUpload, artifactsUpload, xcodeBuildLogsUpload] = await Promise.allSettled([
-        ctx.runtimeApi.uploadArtifacts({
-          type: ManagedArtifactType.APPLICATION_ARCHIVE,
-          paths: applicationArchives,
+        ctx.runtimeApi.uploadArtifact({
+          artifact: {
+            type: ManagedArtifactType.APPLICATION_ARCHIVE,
+            paths: applicationArchives,
+          },
           logger,
         }),
         (async () => {
           if (buildArtifacts.length > 0) {
-            await ctx.runtimeApi.uploadArtifacts({
-              type: ManagedArtifactType.BUILD_ARTIFACTS,
-              paths: buildArtifacts,
+            await ctx.runtimeApi.uploadArtifact({
+              artifact: {
+                type: ManagedArtifactType.BUILD_ARTIFACTS,
+                paths: buildArtifacts,
+              },
               logger,
             });
           }
@@ -63,9 +67,11 @@ export function createFindAndUploadBuildArtifactsBuildFunction(
             stepCtx.global.buildLogsDirectory
           );
           if (xcodeBuildLogsPath) {
-            await ctx.runtimeApi.uploadArtifacts({
-              type: ManagedArtifactType.XCODE_BUILD_LOGS,
-              paths: [xcodeBuildLogsPath],
+            await ctx.runtimeApi.uploadArtifact({
+              artifact: {
+                type: ManagedArtifactType.XCODE_BUILD_LOGS,
+                paths: [xcodeBuildLogsPath],
+              },
               logger,
             });
           }

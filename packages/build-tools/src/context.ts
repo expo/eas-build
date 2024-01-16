@@ -38,7 +38,6 @@ export interface LogBuffer {
 export type ArtifactToUpload = {
   type: ManagedArtifactType;
   paths: string[];
-  logger: bunyan;
 };
 
 export interface BuildContextOptions {
@@ -55,7 +54,7 @@ export interface BuildContextOptions {
     options: SpawnOptions,
     npmVersionAtLeast7: boolean
   ) => SpawnPromise<SpawnResult>;
-  uploadArtifacts: (artifact: ArtifactToUpload) => Promise<string | null>;
+  uploadArtifact: (spec: { artifact: ArtifactToUpload; logger: bunyan }) => Promise<string | null>;
   reportError?: (
     msg: string,
     err?: Error,
@@ -93,7 +92,7 @@ export class BuildContext<TJob extends Job> {
   private _job: TJob;
   private _metadata?: Metadata;
   private readonly defaultLogger: bunyan;
-  private readonly _uploadArtifacts: BuildContextOptions['uploadArtifacts'];
+  private readonly _uploadArtifact: BuildContextOptions['uploadArtifact'];
   private buildPhase?: BuildPhase;
   private buildPhaseSkipped = false;
   private buildPhaseHasWarnings = false;
@@ -107,7 +106,7 @@ export class BuildContext<TJob extends Job> {
     this.logBuffer = options.logBuffer;
     this.cacheManager = options.cacheManager;
     this.runGlobalExpoCliCommand = options.runGlobalExpoCliCommand;
-    this._uploadArtifacts = options.uploadArtifacts;
+    this._uploadArtifact = options.uploadArtifact;
     this.reportError = options.reportError;
     this._job = job;
     this._metadata = options.metadata;
@@ -212,8 +211,14 @@ export class BuildContext<TJob extends Job> {
     this.buildPhaseHasWarnings = true;
   }
 
-  public async uploadArtifacts(artifact: ArtifactToUpload): Promise<void> {
-    const bucketKey = await this._uploadArtifacts(artifact);
+  public async uploadArtifact({
+    artifact,
+    logger,
+  }: {
+    artifact: ArtifactToUpload;
+    logger: bunyan;
+  }): Promise<void> {
+    const bucketKey = await this._uploadArtifact({ artifact, logger });
     if (bucketKey) {
       this.artifacts[artifact.type] = bucketKey;
     }
