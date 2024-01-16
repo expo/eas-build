@@ -69,7 +69,7 @@ describe(IosCredentialsManager, () => {
         logger: mockLogger,
         env: {},
         runGlobalExpoCliCommand: jest.fn(),
-        uploadArtifacts: jest.fn(),
+        uploadArtifact: jest.fn(),
       });
       const manager = new IosCredentialsManager(ctx);
       const credentials = await manager.prepare();

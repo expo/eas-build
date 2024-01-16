@@ -1,5 +1,5 @@
 import { Ios, BuildPhase, Env, ManagedArtifactType } from '@expo/eas-build-job';
-import { ArtifactToUpload, Builders, BuildContext, Artifacts } from '@expo/build-tools';
+import { Builders, BuildContext, Artifacts } from '@expo/build-tools';
 import omit from 'lodash/omit';
 
 import { runGlobalExpoCliCommandAsync } from './expoCli';
@@ -24,11 +24,11 @@ export async function buildIosAsync(
     logger,
     logBuffer,
     runGlobalExpoCliCommand: runGlobalExpoCliCommandAsync,
-    uploadArtifacts: async ({ type, paths, logger }: ArtifactToUpload) => {
-      if (type !== ManagedArtifactType.APPLICATION_ARCHIVE) {
+    uploadArtifact: async ({ artifact, logger }) => {
+      if (artifact.type !== ManagedArtifactType.APPLICATION_ARCHIVE) {
         return null;
       } else {
-        return await prepareArtifacts(paths, logger);
+        return await prepareArtifacts(artifact.paths, logger);
       }
     },
     env,

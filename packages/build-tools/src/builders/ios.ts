@@ -175,9 +175,11 @@ async function resignAsync(ctx: BuildContext<Ios.Job>): Promise<Artifacts> {
 
   await ctx.runBuildPhase(BuildPhase.UPLOAD_APPLICATION_ARCHIVE, async () => {
     ctx.logger.info(`Application archive: ${applicationArchivePath}`);
-    await ctx.uploadArtifacts({
-      type: ManagedArtifactType.APPLICATION_ARCHIVE,
-      paths: [applicationArchivePath],
+    await ctx.uploadArtifact({
+      artifact: {
+        type: ManagedArtifactType.APPLICATION_ARCHIVE,
+        paths: [applicationArchivePath],
+      },
       logger: ctx.logger,
     });
   });

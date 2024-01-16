@@ -1,5 +1,5 @@
 import { Android, ManagedArtifactType, BuildPhase, Env } from '@expo/eas-build-job';
-import { Builders, BuildContext, Artifacts, ArtifactToUpload } from '@expo/build-tools';
+import { Builders, BuildContext, Artifacts } from '@expo/build-tools';
 import omit from 'lodash/omit';
 
 import logger, { logBuffer } from './logger';
@@ -24,11 +24,11 @@ export async function buildAndroidAsync(
     logger,
     logBuffer,
     runGlobalExpoCliCommand: runGlobalExpoCliCommandAsync,
-    uploadArtifacts: async (artifact: ArtifactToUpload) => {
+    uploadArtifact: async ({ artifact, logger }) => {
       if (artifact.type !== ManagedArtifactType.APPLICATION_ARCHIVE) {
         return null;
       } else {
-        return await prepareArtifacts(artifact.paths, artifact.logger);
+        return await prepareArtifacts(artifact.paths, logger);
       }
     },
     env,
