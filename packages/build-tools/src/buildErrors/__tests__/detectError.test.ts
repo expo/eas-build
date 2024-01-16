@@ -1,6 +1,6 @@
 import path from 'path';
 
-import { BuildPhase, errors, Job, Platform } from '@expo/eas-build-job';
+import { BuildMode, BuildPhase, errors, Job, Platform } from '@expo/eas-build-job';
 
 import { resolveBuildPhaseErrorAsync } from '../detectError';
 
@@ -131,5 +131,55 @@ describe(resolveBuildPhaseErrorAsync, () => {
     );
     expect(err.errorCode).toBe('EAS_BUILD_HIGHER_MINIMUM_DEPLOYMENT_TARGET_ERROR');
     expect(err.userFacingErrorCode).toBe('EAS_BUILD_HIGHER_MINIMUM_DEPLOYMENT_TARGET_ERROR');
+  });
+
+  it('detects provisioning profile mismatch error correctly', async () => {
+    const fakeError = new Error();
+    const err = await resolveBuildPhaseErrorAsync(
+      fakeError,
+      [
+        `No provisioning profile for application: '_floatsignTemp/Payload/EcoBatteryPREVIEW.app' with bundle identifier 'com.ecobattery.ecobattery-preview'`,
+      ],
+      {
+        job: { platform: Platform.IOS, mode: BuildMode.RESIGN } as Job,
+        phase: BuildPhase.RUN_FASTLANE,
+        env: {},
+      },
+      '/fake/path'
+    );
+    expect(err.errorCode).toBe('EAS_BUILD_RESIGN_PROVISIONING_PROFILE_MISMATCH_ERROR');
+    expect(err.userFacingErrorCode).toBe('EAS_BUILD_RESIGN_PROVISIONING_PROFILE_MISMATCH_ERROR');
+  });
+
+  it('detects generic "Run Fastlane" error for resign correctly', async () => {
+    const fakeError = new Error();
+    const err = await resolveBuildPhaseErrorAsync(
+      fakeError,
+      [`other error`],
+      {
+        job: { platform: Platform.IOS, mode: BuildMode.RESIGN } as Job,
+        phase: BuildPhase.RUN_FASTLANE,
+        env: {},
+      },
+      '/fake/path'
+    );
+    expect(err.errorCode).toBe('EAS_BUILD_UNKNOWN_FASTLANE_RESIGN_ERROR');
+    expect(err.userFacingErrorCode).toBe('EAS_BUILD_UNKNOWN_FASTLANE_RESIGN_ERROR');
+  });
+
+  it('detects build error in "Run Fastlane" phase correctly', async () => {
+    const fakeError = new Error();
+    const err = await resolveBuildPhaseErrorAsync(
+      fakeError,
+      [`some build error`],
+      {
+        job: { platform: Platform.IOS, mode: BuildMode.BUILD } as Job,
+        phase: BuildPhase.RUN_FASTLANE,
+        env: {},
+      },
+      '/fake/path'
+    );
+    expect(err.errorCode).toBe('EAS_BUILD_UNKNOWN_FASTLANE_ERROR');
+    expect(err.userFacingErrorCode).toBe('EAS_BUILD_UNKNOWN_FASTLANE_ERROR');
   });
 });

@@ -1,4 +1,4 @@
-import { BuildPhase, errors, Platform, Workflow } from '@expo/eas-build-job';
+import { BuildMode, BuildPhase, errors, Platform, Workflow } from '@expo/eas-build-job';
 
 import { ErrorHandler, XCODE_BUILD_PHASE } from './errors.types';
 
@@ -251,6 +251,28 @@ To resolve this issue, downgrade to an older Xcode version using the "image" fie
       new UserFacingError(
         errors.ErrorCode.UNKNOWN_GRADLE_ERROR,
         'Gradle build failed with unknown error. See logs for the "Run gradlew" phase for more information.'
+      ),
+  },
+  {
+    platform: Platform.IOS,
+    phase: BuildPhase.RUN_FASTLANE,
+    mode: BuildMode.RESIGN,
+    regexp: /No provisioning profile for application: '(.+)' with bundle identifier '(.+)'/,
+    createError: () =>
+      new UserFacingError(
+        'EAS_BUILD_RESIGN_PROVISIONING_PROFILE_MISMATCH_ERROR',
+        `The bundle identifier in provisioning profile used to resign the app does not match the bundle identifier of the app selected to be resigned. See logs above for more information.`
+      ),
+  },
+  {
+    platform: Platform.IOS,
+    phase: BuildPhase.RUN_FASTLANE,
+    mode: BuildMode.RESIGN,
+    regexp: /.*/,
+    createError: () =>
+      new UserFacingError(
+        errors.ErrorCode.UNKNOWN_FASTLANE_RESIGN_ERROR,
+        `The "Run fastlane" step failed with an unknown error.`
       ),
   },
   {
