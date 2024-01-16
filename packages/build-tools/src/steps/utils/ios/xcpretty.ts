@@ -15,7 +15,10 @@ export class XcodeBuildLogger {
   private logReaderPromise?: SpawnPromise<SpawnResult>;
   private logsPath?: string;
 
-  constructor(private readonly logger: bunyan, private readonly projectRoot: string) {}
+  constructor(
+    private readonly logger: bunyan,
+    private readonly projectRoot: string
+  ) {}
 
   public async watchLogFiles(logsDirectory: string): Promise<void> {
     while (!this.flushing) {

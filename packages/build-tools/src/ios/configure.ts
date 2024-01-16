@@ -26,6 +26,7 @@ async function configureXcodeProject(
     buildConfiguration,
   });
   const { version } = ctx.job;
+  // eslint-disable-next-line @typescript-eslint/prefer-nullish-coalescing
   if (version?.appVersion || version?.buildNumber) {
     await updateVersionsAsync(ctx, {
       targetNames: Object.keys(credentials.targetProvisioningProfiles),

@@ -15,18 +15,18 @@ export enum BuildStepInputValueTypeName {
 }
 
 export type BuildStepInputValueType<
-  T extends BuildStepInputValueTypeName = BuildStepInputValueTypeName
+  T extends BuildStepInputValueTypeName = BuildStepInputValueTypeName,
 > = T extends BuildStepInputValueTypeName.STRING
   ? string
   : T extends BuildStepInputValueTypeName.BOOLEAN
-  ? boolean
-  : T extends BuildStepInputValueTypeName.NUMBER
-  ? number
-  : Record<string, any>;
+    ? boolean
+    : T extends BuildStepInputValueTypeName.NUMBER
+      ? number
+      : Record<string, any>;
 
 export type BuildStepInputValueTypeWithRequired<
   T extends BuildStepInputValueTypeName = BuildStepInputValueTypeName,
-  R extends boolean = boolean
+  R extends boolean = boolean,
 > = R extends true ? BuildStepInputValueType<T> : BuildStepInputValueType<T> | undefined;
 
 export type BuildStepInputById = Record<string, BuildStepInput>;
@@ -37,7 +37,7 @@ export type BuildStepInputProvider = (
 
 interface BuildStepInputProviderParams<
   T extends BuildStepInputValueTypeName = BuildStepInputValueTypeName,
-  R extends boolean = boolean
+  R extends boolean = boolean,
 > {
   id: string;
   allowedValues?: BuildStepInputValueType<T>[];
@@ -53,7 +53,7 @@ interface BuildStepInputParams<T extends BuildStepInputValueTypeName, R extends 
 
 export interface SerializedBuildStepInput<
   T extends BuildStepInputValueTypeName = BuildStepInputValueTypeName,
-  R extends boolean = boolean
+  R extends boolean = boolean,
 > {
   id: string;
   stepDisplayName: string;
@@ -67,7 +67,7 @@ export interface SerializedBuildStepInput<
 
 export class BuildStepInput<
   T extends BuildStepInputValueTypeName = BuildStepInputValueTypeName,
-  R extends boolean = boolean
+  R extends boolean = boolean,
 > {
   public readonly id: string;
   public readonly stepDisplayName: string;

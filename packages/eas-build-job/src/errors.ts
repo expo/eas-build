@@ -53,7 +53,11 @@ export class BuildError extends Error {
 }
 
 export class UserFacingError extends Error {
-  constructor(public errorCode: string, public message: string, public docsUrl?: string) {
+  constructor(
+    public errorCode: string,
+    public message: string,
+    public docsUrl?: string
+  ) {
     super(message);
   }
 }
