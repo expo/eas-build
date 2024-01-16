@@ -191,8 +191,8 @@ export class BuildContext<TJob extends Job> {
       const buildPhaseResult: BuildPhaseResult = this.buildPhaseSkipped
         ? BuildPhaseResult.SKIPPED
         : this.buildPhaseHasWarnings
-        ? BuildPhaseResult.WARNING
-        : BuildPhaseResult.SUCCESS;
+          ? BuildPhaseResult.WARNING
+          : BuildPhaseResult.SUCCESS;
       await this.endCurrentBuildPhaseAsync({ result: buildPhaseResult, doNotMarkEnd, durationMs });
       return result;
     } catch (err: any) {
