@@ -1,6 +1,6 @@
 {
   "name": "@expo/template-file",
-  "version": "1.0.37",
+  "version": "1.0.57",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "files": [
