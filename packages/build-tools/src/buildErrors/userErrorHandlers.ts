@@ -257,11 +257,22 @@ To resolve this issue, downgrade to an older Xcode version using the "image" fie
     platform: Platform.IOS,
     phase: BuildPhase.RUN_FASTLANE,
     mode: BuildMode.RESIGN,
+    regexp: /No provisioning profile for application: '(.+)' with bundle identifier '(.+)'/,
+    createError: () =>
+      new UserFacingError(
+        'EAS_BUILD_RESIGN_PROVISIONING_PROFILE_MISMATCH_ERROR',
+        `The bundle identifier in provisioning profile used to resign the app does not match the bundle identifier of the app selected to be resigned. See logs above for more information.`
+      ),
+  },
+  {
+    platform: Platform.IOS,
+    phase: BuildPhase.RUN_FASTLANE,
+    mode: BuildMode.RESIGN,
     regexp: /.*/,
     createError: () =>
       new UserFacingError(
         errors.ErrorCode.UNKNOWN_FASTLANE_RESIGN_ERROR,
-        `The "Run fastlane" step failed with an unknown error. Inspect the logs above to verify if the bundle identifier associated with your new provisioning profile matches the bundle identifier of the build you want to resign.`
+        `The "Run fastlane" step failed with an unknown error.`
       ),
   },
   {

@@ -133,13 +133,29 @@ describe(resolveBuildPhaseErrorAsync, () => {
     expect(err.userFacingErrorCode).toBe('EAS_BUILD_HIGHER_MINIMUM_DEPLOYMENT_TARGET_ERROR');
   });
 
-  it('detects resign error in "Run Fastlane" phase correctly', async () => {
+  it('detects provisioning profile mismatch error correctly', async () => {
     const fakeError = new Error();
     const err = await resolveBuildPhaseErrorAsync(
       fakeError,
       [
         `No provisioning profile for application: '_floatsignTemp/Payload/EcoBatteryPREVIEW.app' with bundle identifier 'com.ecobattery.ecobattery-preview'`,
       ],
+      {
+        job: { platform: Platform.IOS, mode: BuildMode.RESIGN } as Job,
+        phase: BuildPhase.RUN_FASTLANE,
+        env: {},
+      },
+      '/fake/path'
+    );
+    expect(err.errorCode).toBe('EAS_BUILD_RESIGN_PROVISIONING_PROFILE_MISMATCH_ERROR');
+    expect(err.userFacingErrorCode).toBe('EAS_BUILD_RESIGN_PROVISIONING_PROFILE_MISMATCH_ERROR');
+  });
+
+  it('detects generic "Run Fastlane" error for resign correctly', async () => {
+    const fakeError = new Error();
+    const err = await resolveBuildPhaseErrorAsync(
+      fakeError,
+      [`other error`],
       {
         job: { platform: Platform.IOS, mode: BuildMode.RESIGN } as Job,
         phase: BuildPhase.RUN_FASTLANE,
