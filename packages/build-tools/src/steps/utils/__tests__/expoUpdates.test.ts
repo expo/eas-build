@@ -3,13 +3,17 @@ import { createLogger } from '@expo/logger';
 import { ExpoConfig } from '@expo/config';
 
 import { configureEASUpdateIfInstalledAsync } from '../expoUpdates';
-import isExpoUpdatesInstalledAsync from '../../../utils/isExpoUpdatesInstalled';
+import getExpoUpdatesPackageVersionIfInstalledAsync from '../../../utils/getExpoUpdatesPackageVersionIfInstalledAsync';
 import { androidSetChannelNativelyAsync } from '../android/expoUpdates';
 import { iosSetChannelNativelyAsync } from '../ios/expoUpdates';
+import { androidSetClassicReleaseChannelNativelyAsync } from '../../../android/expoUpdates';
+import { iosSetClassicReleaseChannelNativelyAsync } from '../../../ios/expoUpdates';
 
-jest.mock('../../../utils/isExpoUpdatesInstalled', () => jest.fn());
+jest.mock('../../../utils/getExpoUpdatesPackageVersionIfInstalledAsync');
 jest.mock('../ios/expoUpdates');
+jest.mock('../../../ios/expoUpdates');
 jest.mock('../android/expoUpdates');
+jest.mock('../../../android/expoUpdates');
 jest.mock('fs');
 
 describe(configureEASUpdateIfInstalledAsync, () => {
@@ -18,7 +22,7 @@ describe(configureEASUpdateIfInstalledAsync, () => {
   });
 
   it('aborts if expo-updates is not installed', async () => {
-    (isExpoUpdatesInstalledAsync as jest.Mock).mockReturnValue(false);
+    jest.mocked(getExpoUpdatesPackageVersionIfInstalledAsync).mockResolvedValue(null);
 
     await expect(
       configureEASUpdateIfInstalledAsync({
@@ -35,12 +39,14 @@ describe(configureEASUpdateIfInstalledAsync, () => {
     );
 
     expect(androidSetChannelNativelyAsync).not.toBeCalled();
+    expect(androidSetClassicReleaseChannelNativelyAsync).not.toBeCalled();
     expect(iosSetChannelNativelyAsync).not.toBeCalled();
-    expect(isExpoUpdatesInstalledAsync).toBeCalledTimes(1);
+    expect(iosSetClassicReleaseChannelNativelyAsync).not.toBeCalled();
+    expect(getExpoUpdatesPackageVersionIfInstalledAsync).toBeCalledTimes(1);
   });
 
   it('aborts if updates.url (app config) is set but updates.channel (eas.json) is not', async () => {
-    (isExpoUpdatesInstalledAsync as jest.Mock).mockReturnValue(true);
+    jest.mocked(getExpoUpdatesPackageVersionIfInstalledAsync).mockResolvedValue('0.18.0');
 
     await configureEASUpdateIfInstalledAsync({
       job: { platform: Platform.IOS } as unknown as Job,
@@ -57,12 +63,14 @@ describe(configureEASUpdateIfInstalledAsync, () => {
     });
 
     expect(androidSetChannelNativelyAsync).not.toBeCalled();
+    expect(androidSetClassicReleaseChannelNativelyAsync).not.toBeCalled();
     expect(iosSetChannelNativelyAsync).not.toBeCalled();
-    expect(isExpoUpdatesInstalledAsync).toBeCalledTimes(1);
+    expect(iosSetClassicReleaseChannelNativelyAsync).not.toBeCalled();
+    expect(getExpoUpdatesPackageVersionIfInstalledAsync).toBeCalledTimes(1);
   });
 
   it('configures for EAS if updates.channel (eas.json) and updates.url (app config) are set', async () => {
-    (isExpoUpdatesInstalledAsync as jest.Mock).mockReturnValue(true);
+    jest.mocked(getExpoUpdatesPackageVersionIfInstalledAsync).mockResolvedValue('0.18.0');
 
     await configureEASUpdateIfInstalledAsync({
       job: {
@@ -84,12 +92,14 @@ describe(configureEASUpdateIfInstalledAsync, () => {
     });
 
     expect(androidSetChannelNativelyAsync).not.toBeCalled();
+    expect(androidSetClassicReleaseChannelNativelyAsync).not.toBeCalled();
     expect(iosSetChannelNativelyAsync).toBeCalledTimes(1);
-    expect(isExpoUpdatesInstalledAsync).toBeCalledTimes(1);
+    expect(iosSetClassicReleaseChannelNativelyAsync).not.toBeCalled();
+    expect(getExpoUpdatesPackageVersionIfInstalledAsync).toBeCalledTimes(1);
   });
 
   it('configures for EAS if the updates.channel and releaseChannel are both set', async () => {
-    (isExpoUpdatesInstalledAsync as jest.Mock).mockReturnValue(true);
+    jest.mocked(getExpoUpdatesPackageVersionIfInstalledAsync).mockResolvedValue('0.18.0');
 
     await configureEASUpdateIfInstalledAsync({
       job: {
@@ -110,27 +120,9 @@ describe(configureEASUpdateIfInstalledAsync, () => {
     });
 
     expect(androidSetChannelNativelyAsync).not.toBeCalled();
+    expect(androidSetClassicReleaseChannelNativelyAsync).not.toBeCalled();
     expect(iosSetChannelNativelyAsync).toBeCalledTimes(1);
-    expect(isExpoUpdatesInstalledAsync).toBeCalledTimes(1);
-  });
-
-  it('configures for classic updates if the updates.channel and releaseChannel fields (eas.json) are not set, and updates.url (app config) is not set', async () => {
-    (isExpoUpdatesInstalledAsync as jest.Mock).mockReturnValue(true);
-
-    await configureEASUpdateIfInstalledAsync({
-      job: { platform: Platform.IOS } as unknown as Job,
-      workingDirectory: '/app',
-      logger: createLogger({
-        name: 'test',
-      }),
-      appConfig: {
-        updates: {},
-      } as unknown as ExpoConfig,
-      inputs: {},
-    });
-
-    expect(androidSetChannelNativelyAsync).not.toBeCalled();
-    expect(iosSetChannelNativelyAsync).not.toBeCalled();
-    expect(isExpoUpdatesInstalledAsync).toBeCalledTimes(1);
+    expect(iosSetClassicReleaseChannelNativelyAsync).not.toBeCalled();
+    expect(getExpoUpdatesPackageVersionIfInstalledAsync).toBeCalledTimes(1);
   });
 });
