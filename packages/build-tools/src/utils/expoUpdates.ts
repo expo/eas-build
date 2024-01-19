@@ -2,6 +2,7 @@ import assert from 'assert';
 
 import { Platform, Job } from '@expo/eas-build-job';
 import { getRuntimeVersionNullableAsync } from '@expo/config-plugins/build/utils/Updates';
+import semver from 'semver';
 
 import {
   androidSetRuntimeVersionNativelyAsync,
@@ -21,7 +22,7 @@ import {
 } from '../ios/expoUpdates';
 import { BuildContext } from '../context';
 
-import isExpoUpdatesInstalledAsync from './isExpoUpdatesInstalled';
+import getExpoUpdatesPackageVersionIfInstalledAsync from './getExpoUpdatesPackageVersionIfInstalledAsync';
 
 export async function setRuntimeVersionNativelyAsync(
   ctx: BuildContext<Job>,
@@ -138,7 +139,10 @@ export async function configureEASExpoUpdatesAsync(ctx: BuildContext<Job>): Prom
 }
 
 export async function configureExpoUpdatesIfInstalledAsync(ctx: BuildContext<Job>): Promise<void> {
-  if (!(await isExpoUpdatesInstalledAsync(ctx.getReactNativeProjectDirectory()))) {
+  const expoUpdatesVersion = await getExpoUpdatesPackageVersionIfInstalledAsync(
+    ctx.getReactNativeProjectDirectory()
+  );
+  if (expoUpdatesVersion === null) {
     return;
   }
 
@@ -181,7 +185,7 @@ export async function configureExpoUpdatesIfInstalledAsync(ctx: BuildContext<Job
         ctx.markBuildPhaseHasWarnings();
       }
     }
-  } else {
+  } else if (shouldConfigureClassicUpdatesReleaseChannelAsFallback(expoUpdatesVersion)) {
     await configureClassicExpoUpdatesAsync(ctx);
   }
 
@@ -230,4 +234,12 @@ export function isEASUpdateConfigured(ctx: BuildContext<Job>): boolean {
     ctx.logger.error(`Assuming EAS Update is not configured`);
     return false;
   }
+}
+
+export function shouldConfigureClassicUpdatesReleaseChannelAsFallback(
+  expoUpdatesPackageVersion: string
+): boolean {
+  // Anything before SDK 50 should configure classic updates as a fallback. The first version
+  // of the expo-updates package published for SDK 50 was 0.19.0
+  return semver.lt(expoUpdatesPackageVersion, '0.19.0');
 }

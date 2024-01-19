@@ -3,7 +3,7 @@ import { bunyan } from '@expo/logger';
 import { ExpoConfig } from '@expo/config';
 import { getRuntimeVersionNullableAsync } from '@expo/config-plugins/build/utils/Updates';
 
-import isExpoUpdatesInstalledAsync from '../../utils/isExpoUpdatesInstalled';
+import getExpoUpdatesPackageVersionIfInstalledAsync from '../../utils/getExpoUpdatesPackageVersionIfInstalledAsync';
 
 import {
   iosGetNativelyDefinedChannelAsync,
@@ -32,7 +32,9 @@ export async function configureEASUpdateIfInstalledAsync({
   };
   appConfig: ExpoConfig;
 }): Promise<void> {
-  if (!(await isExpoUpdatesInstalledAsync(workingDirectory))) {
+  const expoUpdatesPackageVersion =
+    await getExpoUpdatesPackageVersionIfInstalledAsync(workingDirectory);
+  if (expoUpdatesPackageVersion === null) {
     throw new Error(
       `Cannot configure Expo Updates because the expo-updates package is not installed.`
     );
