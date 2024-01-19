@@ -17,17 +17,24 @@ import {
 
 export type DistributionType = 'store' | 'internal' | 'simulator';
 
+export enum ProvisioningProfileType {
+  MOBILEPROVISION = 'mobileprovision',
+  PROVISIONPROFILE = 'provisionprofile',
+}
+
 export const TargetCredentialsSchema = Joi.object<TargetCredentials>().keys({
   provisioningProfileBase64: Joi.string().required(),
   distributionCertificate: Joi.object({
     dataBase64: Joi.string().required(),
     password: Joi.string().allow('').required(),
   }).required(),
+  provisioningProfileType: Joi.allow(Object.values(ProvisioningProfileType)).required(),
 });
 
 export interface TargetCredentials {
   provisioningProfileBase64: string;
   distributionCertificate: DistributionCertificate;
+  provisioningProfileType: ProvisioningProfileType;
 }
 
 export const BuildCredentialsSchema = Joi.object<BuildCredentials>().pattern(

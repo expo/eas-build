@@ -1,3 +1,4 @@
+import { Ios } from '@expo/eas-build-job';
 import { createLogger } from '@expo/logger';
 
 import Keychain from '../keychain';
@@ -28,6 +29,7 @@ describe('ProvisioningProfile class', () => {
         keychainPath: keychain.data.path,
         target: 'testapp',
         certificateCommonName: 'Abc 123',
+        profileType: Ios.ProvisioningProfileType.MOBILEPROVISION,
       });
       try {
         await pp.init(mockLogger);
@@ -45,6 +47,7 @@ describe('ProvisioningProfile class', () => {
         keychainPath: keychain.data.path,
         target: 'testapp',
         certificateCommonName: 'Abc 123',
+        profileType: Ios.ProvisioningProfileType.MOBILEPROVISION,
       });
 
       try {

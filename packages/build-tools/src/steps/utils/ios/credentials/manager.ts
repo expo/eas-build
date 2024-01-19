@@ -122,6 +122,7 @@ export default class IosCredentialsManager {
         certificateCommonName,
         keychainPath: this.keychain.data.path,
         target,
+        profileType: targetCredentials.provisioningProfileType,
       });
       await provisioningProfile.init(logger);
 
