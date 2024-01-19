@@ -17,7 +17,7 @@ import {
 
 export type DistributionType = 'store' | 'internal' | 'simulator';
 
-const TargetCredentialsSchema = Joi.object().keys({
+export const TargetCredentialsSchema = Joi.object<TargetCredentials>().keys({
   provisioningProfileBase64: Joi.string().required(),
   distributionCertificate: Joi.object({
     dataBase64: Joi.string().required(),
@@ -30,7 +30,7 @@ export interface TargetCredentials {
   distributionCertificate: DistributionCertificate;
 }
 
-const BuildCredentialsSchema = Joi.object().pattern(
+export const BuildCredentialsSchema = Joi.object<BuildCredentials>().pattern(
   Joi.string().required(),
   TargetCredentialsSchema
 );
