@@ -41,16 +41,32 @@ export default class ProvisioningProfile {
     }
   }
 
+  private readonly profile: Buffer;
+  private readonly keychainPath: string;
+  private readonly target: string;
+  private readonly certificateCommonName: string;
   private readonly profilePath: string;
   private profileData?: ProvisioningProfileData;
 
-  constructor(
-    private readonly profile: Buffer,
-    private readonly keychainPath: string,
-    private readonly target: string,
-    private readonly certificateCommonName: string
-  ) {
-    this.profilePath = path.join(PROVISIONING_PROFILES_DIRECTORY, `${uuid()}.mobileprovision`);
+  constructor({
+    profile,
+    keychainPath,
+    target,
+    certificateCommonName,
+  }: {
+    profile: Buffer;
+    keychainPath: string;
+    target: string;
+    certificateCommonName: string;
+  }) {
+    this.profile = profile;
+    this.keychainPath = keychainPath;
+    this.target = target;
+    this.certificateCommonName = certificateCommonName;
+    this.profilePath = path.join(
+      PROVISIONING_PROFILES_DIRECTORY,
+      `${uuid()}.${getExtensionForType(profileType)}`
+    );
   }
 
   public async init(logger: bunyan): Promise<void> {

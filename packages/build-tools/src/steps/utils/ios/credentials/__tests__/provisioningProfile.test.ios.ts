@@ -23,12 +23,12 @@ describe('ProvisioningProfile class', () => {
     });
 
     it("shouldn't throw any error if the provisioning profile and distribution certificate match", async () => {
-      const pp = new ProvisioningProfile(
-        Buffer.from(provisioningProfile.dataBase64, 'base64'),
-        keychain.data.path,
-        'testapp',
-        'Abc 123'
-      );
+      const pp = new ProvisioningProfile({
+        profile: Buffer.from(provisioningProfile.dataBase64, 'base64'),
+        keychainPath: keychain.data.path,
+        target: 'testapp',
+        certificateCommonName: 'Abc 123',
+      });
       try {
         await pp.init(mockLogger);
         expect(() => {
@@ -40,12 +40,12 @@ describe('ProvisioningProfile class', () => {
     });
 
     it("should throw an error if the provisioning profile and distribution certificate don't match", async () => {
-      const pp = new ProvisioningProfile(
-        Buffer.from(provisioningProfile.dataBase64, 'base64'),
-        keychain.data.path,
-        'testapp',
-        'Abc 123'
-      );
+      const pp = new ProvisioningProfile({
+        profile: Buffer.from(provisioningProfile.dataBase64, 'base64'),
+        keychainPath: keychain.data.path,
+        target: 'testapp',
+        certificateCommonName: 'Abc 123',
+      });
 
       try {
         await pp.init(mockLogger);
