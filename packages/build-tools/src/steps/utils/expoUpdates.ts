@@ -1,7 +1,7 @@
 import { Job, Platform } from '@expo/eas-build-job';
 import { bunyan } from '@expo/logger';
 import { ExpoConfig } from '@expo/config';
-import { getRuntimeVersionNullable } from '@expo/config-plugins/build/utils/Updates';
+import { getRuntimeVersionNullableAsync } from '@expo/config-plugins/build/utils/Updates';
 
 import isExpoUpdatesInstalledAsync from '../../utils/isExpoUpdatesInstalled';
 
@@ -41,7 +41,7 @@ export async function configureEASUpdateIfInstalledAsync({
   const runtimeVersion =
     inputs.channel ??
     job.version?.runtimeVersion ??
-    getRuntimeVersionNullable(appConfig, job.platform);
+    (await getRuntimeVersionNullableAsync(workingDirectory, appConfig, job.platform));
 
   const jobOrInputChannel = inputs.channel ?? job.updates?.channel;
 

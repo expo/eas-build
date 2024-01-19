@@ -1,7 +1,7 @@
 import assert from 'assert';
 
 import { Platform, Job } from '@expo/eas-build-job';
-import { getRuntimeVersionNullable } from '@expo/config-plugins/build/utils/Updates';
+import { getRuntimeVersionNullableAsync } from '@expo/config-plugins/build/utils/Updates';
 
 import {
   androidSetRuntimeVersionNativelyAsync,
@@ -143,7 +143,12 @@ export async function configureExpoUpdatesIfInstalledAsync(ctx: BuildContext<Job
   }
 
   const appConfigRuntimeVersion =
-    ctx.job.version?.runtimeVersion ?? getRuntimeVersionNullable(ctx.appConfig, ctx.job.platform);
+    ctx.job.version?.runtimeVersion ??
+    (await getRuntimeVersionNullableAsync(
+      ctx.getReactNativeProjectDirectory(),
+      ctx.appConfig,
+      ctx.job.platform
+    ));
   if (ctx.metadata?.runtimeVersion && ctx.metadata?.runtimeVersion !== appConfigRuntimeVersion) {
     ctx.markBuildPhaseHasWarnings();
     ctx.logger.warn(
