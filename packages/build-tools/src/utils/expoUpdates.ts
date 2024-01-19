@@ -144,11 +144,11 @@ export async function configureExpoUpdatesIfInstalledAsync(ctx: BuildContext<Job
 
   const appConfigRuntimeVersion =
     ctx.job.version?.runtimeVersion ??
-    getRuntimeVersionNullableAsync(
+    (await getRuntimeVersionNullableAsync(
       ctx.getReactNativeProjectDirectory(),
       ctx.appConfig,
       ctx.job.platform
-    );
+    ));
   if (ctx.metadata?.runtimeVersion && ctx.metadata?.runtimeVersion !== appConfigRuntimeVersion) {
     ctx.markBuildPhaseHasWarnings();
     ctx.logger.warn(
