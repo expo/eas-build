@@ -14,7 +14,7 @@ export enum GenericArtifactType {
   IOS_SIMULATOR_APP = 'ios-simulator-app',
   IOS_IPA = 'ios-ipa',
 
-  UNKNOWN = 'unknown',
+  OTHER = 'other',
 }
 
 export const isGenericArtifact = <
