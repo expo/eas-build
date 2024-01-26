@@ -18,6 +18,7 @@ import { configureIosVersionFunction } from './functions/configureIosVersion';
 import { generateGymfileFromTemplateFunction } from './functions/generateGymfileFromTemplate';
 import { runFastlaneFunction } from './functions/runFastlane';
 import { createStartAndroidEmulatorBuildFunction } from './functions/startAndroidEmulator';
+import { createStartIosSimulatorBuildFunction } from './functions/startIosSimulator';
 
 export function getEasFunctions(ctx: CustomBuildContext): BuildFunction[] {
   return [
@@ -37,5 +38,6 @@ export function getEasFunctions(ctx: CustomBuildContext): BuildFunction[] {
     generateGymfileFromTemplateFunction(),
     runFastlaneFunction(),
     createStartAndroidEmulatorBuildFunction(),
+    createStartIosSimulatorBuildFunction(),
   ];
 }
