@@ -16,6 +16,12 @@ export function createStartAndroidEmulatorBuildFunction(): BuildFunction {
     name: 'Start Android Emulator',
     inputProviders: [
       BuildStepInput.createProvider({
+        id: 'device_name',
+        required: false,
+        defaultValue: 'EasAndroidDevice01',
+        allowedValueTypeName: BuildStepInputValueTypeName.STRING,
+      }),
+      BuildStepInput.createProvider({
         id: 'system_image_package',
         required: false,
         defaultValue: defaultSystemImagePackage,
@@ -23,7 +29,7 @@ export function createStartAndroidEmulatorBuildFunction(): BuildFunction {
       }),
     ],
     fn: async ({ logger }, { inputs }) => {
-      const deviceName = 'EasAndroidDevice01';
+      const deviceName = `${inputs.device_name.value}`;
       const systemImagePackage = `${inputs.system_image_package.value}`;
       logger.info('Making sure system image is installed');
       await spawn('sdkmanager', [systemImagePackage], {
