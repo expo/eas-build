@@ -34,7 +34,7 @@ export enum BuildTrigger {
 
 export type ArchiveSource =
   | { type: ArchiveSourceType.NONE }
-  | { type: ArchiveSourceType.GCS; bucketKey: string }
+  | { type: ArchiveSourceType.GCS; bucketKey: string; metadataLocation?: string }
   | { type: ArchiveSourceType.URL; url: string }
   | { type: ArchiveSourceType.PATH; path: string }
   | {
@@ -59,6 +59,7 @@ export const ArchiveSourceSchema = Joi.object<ArchiveSource>({
     then: Joi.object({
       type: Joi.string().valid(ArchiveSourceType.GCS).required(),
       bucketKey: Joi.string().required(),
+      metadataLocation: Joi.string(),
     }),
   })
   .when(Joi.object({ type: ArchiveSourceType.URL }).unknown(), {
