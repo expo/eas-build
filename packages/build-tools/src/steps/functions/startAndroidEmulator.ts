@@ -1,9 +1,11 @@
 import assert from 'assert';
 
+import { PipeMode } from '@expo/logger';
 import { BuildFunction, BuildStepInput, BuildStepInputValueTypeName } from '@expo/steps';
 import spawn from '@expo/turtle-spawn';
 import { v4 as uuidv4 } from 'uuid';
-import { PipeMode } from '@expo/logger';
+
+import { retryAsync } from '../../utils/retry';
 
 const defaultSystemImagePackage = `system-images;android-30;default;${
   process.arch === 'arm64' ? 'arm64-v8a' : 'x86_64'
@@ -37,45 +39,38 @@ export function createStartAndroidEmulatorBuildFunction(): BuildFunction {
       });
 
       logger.info('Creating emulator device');
-      await spawn(
+      const avdManager = spawn(
         'avdmanager',
         ['create', 'avd', '--name', deviceName, '--package', systemImagePackage, '--force'],
         {
-          ignoreStdio: true,
+          stdio: 'pipe',
         }
       );
+      avdManager.child.stdin?.write('no');
+      avdManager.child.stdin?.end();
+      await avdManager;
 
-      const emuPropId = uuidv4();
+      const qemuPropId = uuidv4();
 
       logger.info('Starting emulator device');
-      const emulatorPromise = spawn(
-        `${process.env.ANDROID_HOME}/emulator/emulator`,
-        [
-          '-no-window',
-          '-no-boot-anim',
-          '-writable-system',
-          '-noaudio',
-          '-avd',
-          deviceName,
-          '-prop',
-          `qemu.uuid=${emuPropId}`,
-        ],
-        {
-          detached: true,
-          stdio: 'ignore',
-        }
-      );
-      // If emulator fails to start, throw its error.
-      if (!emulatorPromise.child.pid) {
-        await emulatorPromise;
-      }
-      emulatorPromise.child.unref();
+      await startAndroidSimulator({ deviceName, qemuPropId });
 
       logger.info('Waiting for emulator to become ready');
-      await spawn('adb', ['wait-for-device']);
-
-      const serialId = await getEmulatorSerialId({ emuPropId });
-      assert(serialId, 'Failed to configure emulator: emulator with required ID not found.');
+      const serialId = await retryAsync(
+        async () => {
+          const serialId = await getEmulatorSerialId({ qemuPropId });
+          assert(serialId, 'Failed to configure emulator: emulator with required ID not found.');
+          return serialId;
+        },
+        {
+          logger,
+          retryOptions: {
+            // Emulators usually take 30 second tops to boot.
+            retries: 60,
+            retryIntervalMs: 1_000,
+          },
+        }
+      );
 
       let hasBootCompleted = false;
       while (!hasBootCompleted) {
@@ -96,7 +91,38 @@ export function createStartAndroidEmulatorBuildFunction(): BuildFunction {
   });
 }
 
-async function getEmulatorSerialId({ emuPropId }: { emuPropId: string }): Promise<string | null> {
+async function startAndroidSimulator({
+  deviceName,
+  qemuPropId,
+}: {
+  deviceName: string;
+  qemuPropId: string;
+}): Promise<void> {
+  const emulatorPromise = spawn(
+    `${process.env.ANDROID_HOME}/emulator/emulator`,
+    [
+      '-no-window',
+      '-no-boot-anim',
+      '-writable-system',
+      '-noaudio',
+      '-avd',
+      deviceName,
+      '-prop',
+      `qemu.uuid=${qemuPropId}`,
+    ],
+    {
+      detached: true,
+      stdio: 'ignore',
+    }
+  );
+  // If emulator fails to start, throw its error.
+  if (!emulatorPromise.child.pid) {
+    await emulatorPromise;
+  }
+  emulatorPromise.child.unref();
+}
+
+async function getEmulatorSerialId({ qemuPropId }: { qemuPropId: string }): Promise<string | null> {
   const adbDevices = await spawn('adb', ['devices'], { mode: PipeMode.COMBINED });
   for (const adbDeviceLine of adbDevices.stdout.split('\n')) {
     if (!adbDeviceLine.startsWith('emulator')) {
@@ -112,7 +138,7 @@ async function getEmulatorSerialId({ emuPropId }: { emuPropId: string }): Promis
     const getProp = await spawn('adb', ['-s', serialId, 'shell', 'getprop', 'qemu.uuid'], {
       mode: PipeMode.COMBINED,
     });
-    if (getProp.stdout.startsWith(emuPropId)) {
+    if (getProp.stdout.startsWith(qemuPropId)) {
       return serialId;
     }
   }
