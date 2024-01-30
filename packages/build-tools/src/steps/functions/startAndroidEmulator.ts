@@ -46,6 +46,9 @@ export function createStartAndroidEmulatorBuildFunction(): BuildFunction {
           stdio: 'pipe',
         }
       );
+      // `avdmanager create` always asks about creating a custom hardware profile.
+      // > Do you wish to create a custom hardware profile? [no]
+      // We answer "no".
       avdManager.child.stdin?.write('no');
       avdManager.child.stdin?.end();
       await avdManager;
@@ -72,19 +75,28 @@ export function createStartAndroidEmulatorBuildFunction(): BuildFunction {
         }
       );
 
-      let hasBootCompleted = false;
-      while (!hasBootCompleted) {
-        const { stdout } = await spawn(
-          'adb',
-          ['-s', serialId, 'shell', 'getprop', 'sys.boot_completed'],
-          {
-            mode: PipeMode.COMBINED,
+      await retryAsync(
+        async () => {
+          const { stdout } = await spawn(
+            'adb',
+            ['-s', serialId, 'shell', 'getprop', 'sys.boot_completed'],
+            {
+              mode: PipeMode.COMBINED,
+            }
+          );
+
+          if (!stdout.startsWith('1')) {
+            throw new Error('Emulator boot has not completed.');
           }
-        );
-        if (stdout.startsWith('1')) {
-          hasBootCompleted = true;
+        },
+        {
+          // Retry every second for 3 minutes.
+          retryOptions: {
+            retries: 3 * 60,
+            retryIntervalMs: 1_000,
+          },
         }
-      }
+      );
 
       logger.info(`${deviceName} is ready.`);
     },
