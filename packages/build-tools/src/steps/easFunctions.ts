@@ -17,6 +17,7 @@ import { configureIosCredentialsFunction } from './functions/configureIosCredent
 import { configureIosVersionFunction } from './functions/configureIosVersion';
 import { generateGymfileFromTemplateFunction } from './functions/generateGymfileFromTemplate';
 import { runFastlaneFunction } from './functions/runFastlane';
+import { createStartAndroidEmulatorBuildFunction } from './functions/startAndroidEmulator';
 
 export function getEasFunctions(ctx: CustomBuildContext): BuildFunction[] {
   return [
@@ -35,5 +36,6 @@ export function getEasFunctions(ctx: CustomBuildContext): BuildFunction[] {
     configureIosVersionFunction(),
     generateGymfileFromTemplateFunction(),
     runFastlaneFunction(),
+    createStartAndroidEmulatorBuildFunction(),
   ];
 }
