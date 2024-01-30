@@ -24,11 +24,53 @@ export function createInstallMaestroBuildFunction(): BuildFunction {
       }),
     ],
     fn: async ({ logger, global }, { inputs, env }) => {
+      let currentMaestroVersion: string | undefined;
+      try {
+        currentMaestroVersion = await getMaestroVersion();
+      } catch {}
+
+      // When not running in EAS Build VM, do not modify local environment.
+      if (env.EAS_BUILD_RUNNER !== 'eas-build') {
+        const currentIsJavaInstalled = await isJavaInstalled();
+        const currentIsIdbInstalled = await isIdbInstalled();
+
+        if (!currentIsJavaInstalled) {
+          logger.warn(
+            'It seems Java is not installed. It is required to run Maestro. If the job fails, this may be the reason.'
+          );
+          logger.info('');
+        }
+
+        if (!currentIsIdbInstalled) {
+          logger.warn(
+            'It seems IDB is not installed. Maestro requires it to run flows on iOS Simulator. If the job fails, this may be the reason.'
+          );
+          logger.info('');
+        }
+
+        if (!currentMaestroVersion) {
+          logger.warn(
+            'It seems Maestro is not installed. Please install Maestro manually and rerun the job.'
+          );
+          logger.info('');
+        }
+
+        // Guide is helpful in these two cases, it doesn't mention Java.
+        if (!currentIsIdbInstalled || !currentMaestroVersion) {
+          logger.warn(
+            'For more info, check out Maestro installation guide: https://maestro.mobile.dev/getting-started/installing-maestro'
+          );
+        }
+
+        if (currentMaestroVersion) {
+          logger.info(`Maestro ${currentMaestroVersion} is ready.`);
+        }
+
+        return;
+      }
+
       if (!(await isJavaInstalled())) {
-        if (
-          global.runtimePlatform === BuildRuntimePlatform.DARWIN &&
-          env.EAS_BUILD_RUNNER === 'eas-build'
-        ) {
+        if (global.runtimePlatform === BuildRuntimePlatform.DARWIN) {
           logger.info('Installing Java');
           await installJavaFromGcs({ logger });
         } else {
@@ -48,12 +90,6 @@ export function createInstallMaestroBuildFunction(): BuildFunction {
       // Skip installing if the input sets a specific Maestro version to install
       // and it is already installed which happens when developing on a local computer.
       const requestedMaestroVersion = inputs.maestro_version.value as string | undefined;
-      let currentMaestroVersion: string | undefined;
-      if (requestedMaestroVersion) {
-        try {
-          currentMaestroVersion = await getMaestroVersion();
-        } catch {}
-      }
 
       if (!currentMaestroVersion || requestedMaestroVersion !== currentMaestroVersion) {
         await installMaestro({
