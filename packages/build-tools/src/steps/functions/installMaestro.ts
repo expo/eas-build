@@ -1,3 +1,4 @@
+import assert from 'assert';
 import path from 'path';
 
 import fs from 'fs-extra';
@@ -24,10 +25,8 @@ export function createInstallMaestroBuildFunction(): BuildFunction {
       }),
     ],
     fn: async ({ logger, global }, { inputs, env }) => {
-      let currentMaestroVersion: string | undefined;
-      try {
-        currentMaestroVersion = await getMaestroVersion();
-      } catch {}
+      const requestedMaestroVersion = inputs.maestro_version.value as string | undefined;
+      const currentMaestroVersion = await getMaestroVersion();
 
       // When not running in EAS Build VM, do not modify local environment.
       if (env.EAS_BUILD_RUNNER !== 'eas-build') {
@@ -89,8 +88,6 @@ export function createInstallMaestroBuildFunction(): BuildFunction {
 
       // Skip installing if the input sets a specific Maestro version to install
       // and it is already installed which happens when developing on a local computer.
-      const requestedMaestroVersion = inputs.maestro_version.value as string | undefined;
-
       if (!currentMaestroVersion || requestedMaestroVersion !== currentMaestroVersion) {
         await installMaestro({
           version: requestedMaestroVersion,
@@ -100,14 +97,19 @@ export function createInstallMaestroBuildFunction(): BuildFunction {
       }
 
       const maestroVersion = await getMaestroVersion();
+      assert(maestroVersion, 'Failed to ensure Maestro is installed.');
       logger.info(`Maestro ${maestroVersion} is ready.`);
     },
   });
 }
 
-async function getMaestroVersion(): Promise<string> {
-  const maestroVersion = await spawn('maestro', ['--version'], { stdio: 'pipe' });
-  return maestroVersion.stdout.trim();
+async function getMaestroVersion(): Promise<string | null> {
+  try {
+    const maestroVersion = await spawn('maestro', ['--version'], { stdio: 'pipe' });
+    return maestroVersion.stdout.trim();
+  } catch {
+    return null;
+  }
 }
 
 async function installMaestro({
@@ -143,7 +145,7 @@ async function installMaestro({
 
 async function isIdbInstalled(): Promise<boolean> {
   try {
-    await spawn('idb', ['-h']);
+    await spawn('idb', ['-h'], { ignoreStdio: true });
     return true;
   } catch {
     return false;
@@ -177,7 +179,7 @@ async function installIdbFromBrew({
 
 async function isJavaInstalled(): Promise<boolean> {
   try {
-    await spawn('java', ['-version']);
+    await spawn('java', ['-version'], { ignoreStdio: true });
     return true;
   } catch {
     return false;
