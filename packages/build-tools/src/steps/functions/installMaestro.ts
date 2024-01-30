@@ -23,9 +23,12 @@ export function createInstallMaestroBuildFunction(): BuildFunction {
         allowedValueTypeName: BuildStepInputValueTypeName.STRING,
       }),
     ],
-    fn: async ({ logger, global }, { inputs }) => {
+    fn: async ({ logger, global }, { inputs, env }) => {
       if (!(await isJavaInstalled())) {
-        if (global.runtimePlatform === BuildRuntimePlatform.DARWIN) {
+        if (
+          global.runtimePlatform === BuildRuntimePlatform.DARWIN &&
+          env.EAS_BUILD_RUNNER === 'eas-build'
+        ) {
           logger.info('Installing Java');
           await installJavaFromGcs({ logger });
         } else {
@@ -118,18 +121,20 @@ async function installIdbFromBrew({
   global: BuildStepGlobalContext;
   logger: bunyan;
 }): Promise<void> {
-  await spawn('brew', ['tap', 'facebook/fb'], {
-    env: {
-      ...global.env,
-      HOMEBREW_NO_AUTO_UPDATE: '1',
-    },
+  // Unfortunately our Mac images sometimes have two Homebrew
+  // installations. We should use the ARM64 one, located in /opt/homebrew.
+  const brewPath = '/opt/homebrew/bin/brew';
+  const env = {
+    ...global.env,
+    HOMEBREW_NO_AUTO_UPDATE: '1',
+  };
+
+  await spawn(brewPath, ['tap', 'facebook/fb'], {
+    env,
     logger,
   });
-  await spawn('brew', ['install', 'idb-companion'], {
-    env: {
-      ...global.env,
-      HOMEBREW_NO_AUTO_UPDATE: '1',
-    },
+  await spawn(brewPath, ['install', 'idb-companion'], {
+    env,
     logger,
   });
 }
@@ -143,6 +148,10 @@ async function isJavaInstalled(): Promise<boolean> {
   }
 }
 
+/**
+ * Installs Java 11 from a file uploaded manually to GCS as cache.
+ * Should not be run outside of EAS Build VMs not to break users' environments.
+ */
 async function installJavaFromGcs({ logger }: { logger: bunyan }): Promise<void> {
   const downloadUrl =
     'https://storage.googleapis.com/turtle-v2/zulu11.68.17-ca-jdk11.0.21-macosx_aarch64.dmg';
