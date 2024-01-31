@@ -19,6 +19,7 @@ import { generateGymfileFromTemplateFunction } from './functions/generateGymfile
 import { runFastlaneFunction } from './functions/runFastlane';
 import { createStartAndroidEmulatorBuildFunction } from './functions/startAndroidEmulator';
 import { createStartIosSimulatorBuildFunction } from './functions/startIosSimulator';
+import { createInstallMaestroBuildFunction } from './functions/installMaestro';
 
 export function getEasFunctions(ctx: CustomBuildContext): BuildFunction[] {
   return [
@@ -39,5 +40,6 @@ export function getEasFunctions(ctx: CustomBuildContext): BuildFunction[] {
     runFastlaneFunction(),
     createStartAndroidEmulatorBuildFunction(),
     createStartIosSimulatorBuildFunction(),
+    createInstallMaestroBuildFunction(),
   ];
 }
