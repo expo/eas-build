@@ -195,13 +195,13 @@ async function installJavaFromGcs({ logger }: { logger: bunyan }): Promise<void>
     'https://storage.googleapis.com/turtle-v2/zulu11.68.17-ca-jdk11.0.21-macosx_aarch64.dmg';
   const filename = path.basename(downloadUrl);
   const tempDirectory = await fs.mkdtemp('install_java');
+  const installerPath = path.join(tempDirectory, filename);
+  const installerMountDirectory = path.join(tempDirectory, 'mountpoint');
   try {
-    const installerPath = path.join(tempDirectory, filename);
     logger.info('Downloading Java installer');
     // This is simpler than piping body into a write stream with node-fetch.
     await spawn('curl', ['--output', installerPath, downloadUrl]);
 
-    const installerMountDirectory = path.join(tempDirectory, 'mountpoint');
     await fs.mkdir(installerMountDirectory);
     logger.info('Mounting Java installer');
     await spawn(
@@ -223,6 +223,11 @@ async function installJavaFromGcs({ logger }: { logger: bunyan }): Promise<void>
       { logger }
     );
   } finally {
+    try {
+      // We need to unmount to remove, otherwise we get "resource busy"
+      await spawn('hdiutil', ['detach', installerMountDirectory]);
+    } catch {}
+
     await fs.remove(tempDirectory);
   }
 }
