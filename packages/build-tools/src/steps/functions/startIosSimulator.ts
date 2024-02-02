@@ -1,5 +1,10 @@
 import { PipeMode } from '@expo/logger';
-import { BuildFunction, BuildStepInput, BuildStepInputValueTypeName } from '@expo/steps';
+import {
+  BuildFunction,
+  BuildStepEnv,
+  BuildStepInput,
+  BuildStepInputValueTypeName,
+} from '@expo/steps';
 import spawn from '@expo/turtle-spawn';
 import { minBy } from 'lodash';
 
@@ -17,9 +22,9 @@ export function createStartIosSimulatorBuildFunction(): BuildFunction {
         allowedValueTypeName: BuildStepInputValueTypeName.STRING,
       }),
     ],
-    fn: async ({ logger }, { inputs }) => {
+    fn: async ({ logger }, { inputs, env }) => {
       try {
-        const availableDevices = await getAvailableSimulatorDevices();
+        const availableDevices = await getAvailableSimulatorDevices({ env });
         logger.info(
           `Available Simulator devices:\n- ${availableDevices
             .map(formatSimulatorDevice)
@@ -32,7 +37,7 @@ export function createStartIosSimulatorBuildFunction(): BuildFunction {
       }
 
       const deviceIdentifier =
-        inputs.device_identifier.value?.toString() ?? (await findMostGenericIphone())?.name;
+        inputs.device_identifier.value?.toString() ?? (await findMostGenericIphone({ env }))?.name;
 
       if (!deviceIdentifier) {
         throw new Error('Could not find an iPhone among available simulator devices.');
@@ -43,12 +48,15 @@ export function createStartIosSimulatorBuildFunction(): BuildFunction {
         ['simctl', 'bootstatus', deviceIdentifier, '-b'],
         {
           logger,
+          env,
         }
       );
 
       await retryAsync(
         async () => {
-          await spawn('xcrun', ['simctl', 'io', deviceIdentifier, 'screenshot', '/dev/null']);
+          await spawn('xcrun', ['simctl', 'io', deviceIdentifier, 'screenshot', '/dev/null'], {
+            env,
+          });
         },
         {
           retryOptions: {
@@ -62,14 +70,18 @@ export function createStartIosSimulatorBuildFunction(): BuildFunction {
       logger.info('');
 
       const udid = parseUdidFromBootstatusStdout(bootstatusResult.stdout);
-      const device = udid ? await getSimulatorDevice(udid) : null;
+      const device = udid ? await getSimulatorDevice({ udid, env }) : null;
       logger.info(`${device ? formatSimulatorDevice(device) : deviceIdentifier} is ready.`);
     },
   });
 }
 
-async function findMostGenericIphone(): Promise<AvailableXcrunSimctlDevice | null> {
-  const availableSimulatorDevices = await getAvailableSimulatorDevices();
+async function findMostGenericIphone({
+  env,
+}: {
+  env: BuildStepEnv;
+}): Promise<AvailableXcrunSimctlDevice | null> {
+  const availableSimulatorDevices = await getAvailableSimulatorDevices({ env });
   const availableIphones = availableSimulatorDevices.filter((device) =>
     device.name.startsWith('iPhone')
   );
@@ -90,16 +102,27 @@ function parseUdidFromBootstatusStdout(stdout: string): string | null {
   return matches[1];
 }
 
-async function getSimulatorDevice(udid: string): Promise<SimulatorDevice | null> {
-  const devices = await getAvailableSimulatorDevices();
+async function getSimulatorDevice({
+  udid,
+  env,
+}: {
+  udid: string;
+  env: BuildStepEnv;
+}): Promise<SimulatorDevice | null> {
+  const devices = await getAvailableSimulatorDevices({ env });
   return devices.find((device) => device.udid === udid) ?? null;
 }
 
-async function getAvailableSimulatorDevices(): Promise<SimulatorDevice[]> {
+async function getAvailableSimulatorDevices({
+  env,
+}: {
+  env: BuildStepEnv;
+}): Promise<SimulatorDevice[]> {
   const result = await spawn(
     'xcrun',
     ['simctl', 'list', 'devices', '--json', '--no-escape-slashes', 'available'],
     {
+      env,
       mode: PipeMode.COMBINED_AS_STDOUT,
     }
   );

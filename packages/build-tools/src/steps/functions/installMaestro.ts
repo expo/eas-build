@@ -5,6 +5,7 @@ import fs from 'fs-extra';
 import {
   BuildFunction,
   BuildRuntimePlatform,
+  BuildStepEnv,
   BuildStepGlobalContext,
   BuildStepInput,
   BuildStepInputValueTypeName,
@@ -26,12 +27,12 @@ export function createInstallMaestroBuildFunction(): BuildFunction {
     ],
     fn: async ({ logger, global }, { inputs, env }) => {
       const requestedMaestroVersion = inputs.maestro_version.value as string | undefined;
-      const currentMaestroVersion = await getMaestroVersion();
+      const currentMaestroVersion = await getMaestroVersion({ env });
 
       // When not running in EAS Build VM, do not modify local environment.
       if (env.EAS_BUILD_RUNNER !== 'eas-build') {
-        const currentIsJavaInstalled = await isJavaInstalled();
-        const currentIsIdbInstalled = await isIdbInstalled();
+        const currentIsJavaInstalled = await isJavaInstalled({ env });
+        const currentIsIdbInstalled = await isIdbInstalled({ env });
 
         if (!currentIsJavaInstalled) {
           logger.warn(
@@ -68,10 +69,10 @@ export function createInstallMaestroBuildFunction(): BuildFunction {
         return;
       }
 
-      if (!(await isJavaInstalled())) {
+      if (!(await isJavaInstalled({ env }))) {
         if (global.runtimePlatform === BuildRuntimePlatform.DARWIN) {
           logger.info('Installing Java');
-          await installJavaFromGcs({ logger });
+          await installJavaFromGcs({ logger, env });
         } else {
           // We expect Java to be pre-installed on Linux images,
           // so this should only happen when running this step locally.
@@ -81,9 +82,12 @@ export function createInstallMaestroBuildFunction(): BuildFunction {
       }
 
       // IDB is only a requirement on macOS.
-      if (global.runtimePlatform === BuildRuntimePlatform.DARWIN && !(await isIdbInstalled())) {
+      if (
+        global.runtimePlatform === BuildRuntimePlatform.DARWIN &&
+        !(await isIdbInstalled({ env }))
+      ) {
         logger.info('Installing IDB');
-        await installIdbFromBrew({ global, logger });
+        await installIdbFromBrew({ logger, env });
       }
 
       // Skip installing if the input sets a specific Maestro version to install
@@ -93,19 +97,20 @@ export function createInstallMaestroBuildFunction(): BuildFunction {
           version: requestedMaestroVersion,
           global,
           logger,
+          env,
         });
       }
 
-      const maestroVersion = await getMaestroVersion();
+      const maestroVersion = await getMaestroVersion({ env });
       assert(maestroVersion, 'Failed to ensure Maestro is installed.');
       logger.info(`Maestro ${maestroVersion} is ready.`);
     },
   });
 }
 
-async function getMaestroVersion(): Promise<string | null> {
+async function getMaestroVersion({ env }: { env: BuildStepEnv }): Promise<string | null> {
   try {
-    const maestroVersion = await spawn('maestro', ['--version'], { stdio: 'pipe' });
+    const maestroVersion = await spawn('maestro', ['--version'], { stdio: 'pipe', env });
     return maestroVersion.stdout.trim();
   } catch {
     return null;
@@ -116,10 +121,12 @@ async function installMaestro({
   global,
   version,
   logger,
+  env,
 }: {
   version?: string;
   logger: bunyan;
   global: BuildStepGlobalContext;
+  env: BuildStepEnv;
 }): Promise<void> {
   logger.info('Fetching install script');
   const tempDirectory = await fs.mkdtemp('install_maestro');
@@ -131,21 +138,36 @@ async function installMaestro({
       mode: 0o777,
     });
     logger.info('Installing Maestro');
+    assert(
+      env.HOME,
+      'Failed to infer directory to install Maestro in: $HOME environment variable is empty.'
+    );
+    const maestroDir = path.join(env.HOME, '.maestro');
     await spawn(installMaestroScriptFilePath, [], {
       logger,
       env: {
-        ...global.env,
+        ...env,
+        MAESTRO_DIR: maestroDir,
         MAESTRO_VERSION: version,
       },
     });
+    // That's where Maestro installs binary as of February 2024
+    // I suspect/hope they don't change the location.
+    const maestroBinDir = path.join(maestroDir, 'bin');
+    global.updateEnv({
+      ...global.env,
+      PATH: `${global.env.PATH}:${maestroBinDir}`,
+    });
+    env.PATH = `${env.PATH}:${maestroBinDir}`;
+    process.env.PATH = `${process.env.PATH}:${maestroBinDir}`;
   } finally {
     await fs.remove(tempDirectory);
   }
 }
 
-async function isIdbInstalled(): Promise<boolean> {
+async function isIdbInstalled({ env }: { env: BuildStepEnv }): Promise<boolean> {
   try {
-    await spawn('idb', ['-h'], { ignoreStdio: true });
+    await spawn('idb', ['-h'], { ignoreStdio: true, env });
     return true;
   } catch {
     return false;
@@ -153,33 +175,33 @@ async function isIdbInstalled(): Promise<boolean> {
 }
 
 async function installIdbFromBrew({
-  global,
   logger,
+  env,
 }: {
-  global: BuildStepGlobalContext;
   logger: bunyan;
+  env: BuildStepEnv;
 }): Promise<void> {
   // Unfortunately our Mac images sometimes have two Homebrew
   // installations. We should use the ARM64 one, located in /opt/homebrew.
   const brewPath = '/opt/homebrew/bin/brew';
-  const env = {
-    ...global.env,
+  const localEnv = {
+    ...env,
     HOMEBREW_NO_AUTO_UPDATE: '1',
   };
 
   await spawn(brewPath, ['tap', 'facebook/fb'], {
-    env,
+    env: localEnv,
     logger,
   });
   await spawn(brewPath, ['install', 'idb-companion'], {
-    env,
+    env: localEnv,
     logger,
   });
 }
 
-async function isJavaInstalled(): Promise<boolean> {
+async function isJavaInstalled({ env }: { env: BuildStepEnv }): Promise<boolean> {
   try {
-    await spawn('java', ['-version'], { ignoreStdio: true });
+    await spawn('java', ['-version'], { ignoreStdio: true, env });
     return true;
   } catch {
     return false;
@@ -190,7 +212,13 @@ async function isJavaInstalled(): Promise<boolean> {
  * Installs Java 11 from a file uploaded manually to GCS as cache.
  * Should not be run outside of EAS Build VMs not to break users' environments.
  */
-async function installJavaFromGcs({ logger }: { logger: bunyan }): Promise<void> {
+async function installJavaFromGcs({
+  logger,
+  env,
+}: {
+  logger: bunyan;
+  env: BuildStepEnv;
+}): Promise<void> {
   const downloadUrl =
     'https://storage.googleapis.com/turtle-v2/zulu11.68.17-ca-jdk11.0.21-macosx_aarch64.dmg';
   const filename = path.basename(downloadUrl);
@@ -200,14 +228,14 @@ async function installJavaFromGcs({ logger }: { logger: bunyan }): Promise<void>
   try {
     logger.info('Downloading Java installer');
     // This is simpler than piping body into a write stream with node-fetch.
-    await spawn('curl', ['--output', installerPath, downloadUrl]);
+    await spawn('curl', ['--output', installerPath, downloadUrl], { env });
 
     await fs.mkdir(installerMountDirectory);
     logger.info('Mounting Java installer');
     await spawn(
       'hdiutil',
       ['attach', installerPath, '-noverify', '-mountpoint', installerMountDirectory],
-      { logger }
+      { logger, env }
     );
 
     logger.info('Installing Java');
@@ -220,12 +248,12 @@ async function installJavaFromGcs({ logger }: { logger: bunyan }): Promise<void>
         '-target',
         '/',
       ],
-      { logger }
+      { logger, env }
     );
   } finally {
     try {
       // We need to unmount to remove, otherwise we get "resource busy"
-      await spawn('hdiutil', ['detach', installerMountDirectory]);
+      await spawn('hdiutil', ['detach', installerMountDirectory], { env });
     } catch {}
 
     await fs.remove(tempDirectory);

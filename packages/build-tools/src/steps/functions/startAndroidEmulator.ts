@@ -1,7 +1,12 @@
 import assert from 'assert';
 
 import { PipeMode } from '@expo/logger';
-import { BuildFunction, BuildStepInput, BuildStepInputValueTypeName } from '@expo/steps';
+import {
+  BuildFunction,
+  BuildStepEnv,
+  BuildStepInput,
+  BuildStepInputValueTypeName,
+} from '@expo/steps';
 import spawn from '@expo/turtle-spawn';
 import { v4 as uuidv4 } from 'uuid';
 
@@ -30,11 +35,12 @@ export function createStartAndroidEmulatorBuildFunction(): BuildFunction {
         allowedValueTypeName: BuildStepInputValueTypeName.STRING,
       }),
     ],
-    fn: async ({ logger }, { inputs }) => {
+    fn: async ({ logger }, { inputs, env }) => {
       const deviceName = `${inputs.device_name.value}`;
       const systemImagePackage = `${inputs.system_image_package.value}`;
       logger.info('Making sure system image is installed');
       await spawn('sdkmanager', [systemImagePackage], {
+        env,
         logger,
       });
 
@@ -43,6 +49,7 @@ export function createStartAndroidEmulatorBuildFunction(): BuildFunction {
         'avdmanager',
         ['create', 'avd', '--name', deviceName, '--package', systemImagePackage, '--force'],
         {
+          env,
           stdio: 'pipe',
         }
       );
@@ -56,12 +63,12 @@ export function createStartAndroidEmulatorBuildFunction(): BuildFunction {
       const qemuPropId = uuidv4();
 
       logger.info('Starting emulator device');
-      await startAndroidSimulator({ deviceName, qemuPropId });
+      await startAndroidSimulator({ deviceName, qemuPropId, env });
 
       logger.info('Waiting for emulator to become ready');
       const serialId = await retryAsync(
         async () => {
-          const serialId = await getEmulatorSerialId({ qemuPropId });
+          const serialId = await getEmulatorSerialId({ qemuPropId, env });
           assert(serialId, 'Failed to configure emulator: emulator with required ID not found.');
           return serialId;
         },
@@ -81,6 +88,7 @@ export function createStartAndroidEmulatorBuildFunction(): BuildFunction {
             'adb',
             ['-s', serialId, 'shell', 'getprop', 'sys.boot_completed'],
             {
+              env,
               mode: PipeMode.COMBINED,
             }
           );
@@ -106,9 +114,11 @@ export function createStartAndroidEmulatorBuildFunction(): BuildFunction {
 async function startAndroidSimulator({
   deviceName,
   qemuPropId,
+  env,
 }: {
   deviceName: string;
   qemuPropId: string;
+  env: BuildStepEnv;
 }): Promise<void> {
   const emulatorPromise = spawn(
     `${process.env.ANDROID_HOME}/emulator/emulator`,
@@ -125,6 +135,7 @@ async function startAndroidSimulator({
     {
       detached: true,
       stdio: 'ignore',
+      env,
     }
   );
   // If emulator fails to start, throw its error.
@@ -134,8 +145,14 @@ async function startAndroidSimulator({
   emulatorPromise.child.unref();
 }
 
-async function getEmulatorSerialId({ qemuPropId }: { qemuPropId: string }): Promise<string | null> {
-  const adbDevices = await spawn('adb', ['devices'], { mode: PipeMode.COMBINED });
+async function getEmulatorSerialId({
+  qemuPropId,
+  env,
+}: {
+  qemuPropId: string;
+  env: BuildStepEnv;
+}): Promise<string | null> {
+  const adbDevices = await spawn('adb', ['devices'], { mode: PipeMode.COMBINED, env });
   for (const adbDeviceLine of adbDevices.stdout.split('\n')) {
     if (!adbDeviceLine.startsWith('emulator')) {
       continue;
@@ -149,6 +166,7 @@ async function getEmulatorSerialId({ qemuPropId }: { qemuPropId: string }): Prom
     const [, serialId] = matches;
     const getProp = await spawn('adb', ['-s', serialId, 'shell', 'getprop', 'qemu.uuid'], {
       mode: PipeMode.COMBINED,
+      env,
     });
     if (getProp.stdout.startsWith(qemuPropId)) {
       return serialId;
