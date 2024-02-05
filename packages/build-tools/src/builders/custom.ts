@@ -1,6 +1,6 @@
 import path from 'path';
 
-import { BuildPhase, Job } from '@expo/eas-build-job';
+import { BuildPhase, BuildTrigger, Job } from '@expo/eas-build-job';
 import { BuildConfigParser, BuildStepGlobalContext, errors } from '@expo/steps';
 import nullthrows from 'nullthrows';
 
@@ -8,10 +8,19 @@ import { Artifacts, BuildContext } from '../context';
 import { prepareProjectSourcesAsync } from '../common/projectSources';
 import { getEasFunctions } from '../steps/easFunctions';
 import { CustomBuildContext } from '../customBuildContext';
+import { resolveEnvFromBuildProfileAsync } from '../common/easBuildInternal';
 
 export async function runCustomBuildAsync<T extends Job>(ctx: BuildContext<T>): Promise<Artifacts> {
   const customBuildCtx = new CustomBuildContext(ctx);
   await prepareProjectSourcesAsync(ctx, customBuildCtx.projectSourceDirectory);
+  if (ctx.job.triggeredBy === BuildTrigger.GIT_BASED_INTEGRATION) {
+    // We need to setup envs from eas.json
+    const env = await resolveEnvFromBuildProfileAsync(ctx, {
+      cwd: customBuildCtx.projectSourceDirectory,
+    });
+    ctx.updateEnv(env);
+    customBuildCtx.updateEnv(ctx.env);
+  }
   const relativeConfigPath = nullthrows(
     ctx.job.customBuildConfig?.path,
     'Custom build config must be defined for custom builds'

@@ -20,6 +20,7 @@ import { runFastlaneFunction } from './functions/runFastlane';
 import { createStartAndroidEmulatorBuildFunction } from './functions/startAndroidEmulator';
 import { createStartIosSimulatorBuildFunction } from './functions/startIosSimulator';
 import { createInstallMaestroBuildFunction } from './functions/installMaestro';
+import { createGetCredentialsForBuildTriggeredByGithubIntegration } from './functions/getCredentialsForBuildTriggeredByGitHubIntegration';
 
 export function getEasFunctions(ctx: CustomBuildContext): BuildFunction[] {
   return [
@@ -41,5 +42,6 @@ export function getEasFunctions(ctx: CustomBuildContext): BuildFunction[] {
     createStartAndroidEmulatorBuildFunction(),
     createStartIosSimulatorBuildFunction(),
     createInstallMaestroBuildFunction(),
+    createGetCredentialsForBuildTriggeredByGithubIntegration(ctx),
   ];
 }

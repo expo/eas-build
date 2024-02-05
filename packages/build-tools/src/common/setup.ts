@@ -18,7 +18,7 @@ import { getParentAndDescendantProcessPidsAsync } from '../utils/processes';
 
 import { prepareProjectSourcesAsync } from './projectSources';
 import { installDependenciesAsync, resolvePackagerDir } from './installDependencies';
-import { configureEnvFromBuildProfileAsync, runEasBuildInternalAsync } from './easBuildInternal';
+import { resolveEnvFromBuildProfileAsync, runEasBuildInternalAsync } from './easBuildInternal';
 
 const MAX_EXPO_DOCTOR_TIMEOUT_MS = 30 * 1000;
 const INSTALL_DEPENDENCIES_WARN_TIMEOUT_MS = 15 * 60 * 1000;
@@ -37,7 +37,10 @@ export async function setupAsync<TJob extends Job>(ctx: BuildContext<TJob>): Pro
     if (ctx.job.triggeredBy === BuildTrigger.GIT_BASED_INTEGRATION) {
       // We need to setup envs from eas.json before
       // eas-build-pre-install hook is called.
-      await configureEnvFromBuildProfileAsync(ctx);
+      const env = await resolveEnvFromBuildProfileAsync(ctx, {
+        cwd: ctx.getReactNativeProjectDirectory(),
+      });
+      ctx.updateEnv(env);
     }
     // try to read package.json to see if it exists and is valid
     return readPackageJson(ctx.getReactNativeProjectDirectory());
@@ -58,7 +61,13 @@ export async function setupAsync<TJob extends Job>(ctx: BuildContext<TJob>): Pro
 
   if (ctx.job.triggeredBy === BuildTrigger.GIT_BASED_INTEGRATION) {
     await ctx.runBuildPhase(BuildPhase.EAS_BUILD_INTERNAL, async () => {
-      await runEasBuildInternalAsync(ctx);
+      const { newJob, newMetadata } = await runEasBuildInternalAsync({
+        job: ctx.job,
+        env: ctx.env,
+        logger: ctx.logger,
+        cwd: ctx.getReactNativeProjectDirectory(),
+      });
+      ctx.updateJobInformation(newJob, newMetadata);
     });
   }
 
