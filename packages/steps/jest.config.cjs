@@ -20,4 +20,7 @@ module.exports = {
   },
   clearMocks: true,
   setupFilesAfterEnv: ['<rootDir>/../jest/setup-tests.ts'],
+  globals: {
+    fetch: global.fetch
+  }
 };
