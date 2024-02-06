@@ -1,10 +1,11 @@
 import assert from 'assert';
 
 import { Env, Job, Metadata, sanitizeJob, sanitizeMetadata } from '@expo/eas-build-job';
-import { PipeMode } from '@expo/logger';
+import { PipeMode, bunyan } from '@expo/logger';
 import spawn from '@expo/turtle-spawn';
 import Joi from 'joi';
 import nullthrows from 'nullthrows';
+import { BuildStepEnv } from '@expo/steps';
 
 import { BuildContext } from '../context';
 import { isAtLeastNpm7Async } from '../utils/packageManager';
@@ -17,36 +18,50 @@ const EasBuildInternalResultSchema = Joi.object<{ job: object; metadata: object 
   metadata: Joi.object().unknown(),
 });
 
-export async function runEasBuildInternalAsync<TJob extends Job>(
-  ctx: BuildContext<TJob>
-): Promise<void> {
+export async function runEasBuildInternalAsync<TJob extends Job>({
+  job,
+  logger,
+  env,
+  cwd,
+}: {
+  job: TJob;
+  logger: bunyan;
+  env: BuildStepEnv;
+  cwd: string;
+}): Promise<{
+  newJob: TJob;
+  newMetadata: Metadata;
+}> {
   const { cmd, args, extraEnv } = await resolveEasCommandPrefixAndEnvAsync();
-  const { buildProfile } = ctx.job;
+  const { buildProfile } = job;
   assert(buildProfile, 'build profile is missing in a build from git-based integration.');
   const result = await spawn(
     cmd,
-    [...args, 'build:internal', '--platform', ctx.job.platform, '--profile', buildProfile],
+    [...args, 'build:internal', '--platform', job.platform, '--profile', buildProfile],
     {
-      cwd: ctx.getReactNativeProjectDirectory(),
+      cwd,
       env: {
-        ...ctx.env,
-        EXPO_TOKEN: nullthrows(ctx.job.secrets, 'Secrets must be defined for non-custom builds')
+        ...env,
+        EXPO_TOKEN: nullthrows(job.secrets, 'Secrets must be defined for non-custom builds')
           .robotAccessToken,
         ...extraEnv,
       },
-      logger: ctx.logger,
+      logger,
       mode: PipeMode.STDERR_ONLY_AS_STDOUT,
     }
   );
   const stdout = result.stdout.toString();
   const parsed = JSON.parse(stdout);
-  const { job, metadata } = validateEasBuildInternalResult(ctx, parsed);
-  ctx.updateJobInformation(job, metadata);
+  return validateEasBuildInternalResult({
+    result: parsed,
+    oldJob: job,
+  });
 }
 
-export async function configureEnvFromBuildProfileAsync<TJob extends Job>(
-  ctx: BuildContext<TJob>
-): Promise<void> {
+export async function resolveEnvFromBuildProfileAsync<TJob extends Job>(
+  ctx: BuildContext<TJob>,
+  { cwd }: { cwd: string }
+): Promise<Env> {
   const { cmd, args, extraEnv } = await resolveEasCommandPrefixAndEnvAsync();
   const { buildProfile } = ctx.job;
   assert(buildProfile, 'build profile is missing in a build from git-based integration.');
@@ -66,7 +81,7 @@ export async function configureEnvFromBuildProfileAsync<TJob extends Job>(
         '--eas-json-only',
       ],
       {
-        cwd: ctx.getReactNativeProjectDirectory(),
+        cwd,
         env: { ...ctx.env, ...extraEnv },
       }
     );
@@ -78,7 +93,7 @@ export async function configureEnvFromBuildProfileAsync<TJob extends Job>(
   const stdout = spawnResult.stdout.toString();
   const parsed = JSON.parse(stdout);
   const env = validateEnvs(parsed.buildProfile);
-  ctx.updateEnv(env);
+  return env;
 }
 
 async function resolveEasCommandPrefixAndEnvAsync(): Promise<{
@@ -108,10 +123,13 @@ async function resolveEasCommandPrefixAndEnvAsync(): Promise<{
   }
 }
 
-function validateEasBuildInternalResult<TJob extends Job>(
-  ctx: BuildContext<TJob>,
-  result: any
-): { job: TJob; metadata: Metadata } {
+function validateEasBuildInternalResult<TJob extends Job>({
+  oldJob,
+  result,
+}: {
+  oldJob: TJob;
+  result: any;
+}): { newJob: TJob; newMetadata: Metadata } {
   const { value, error } = EasBuildInternalResultSchema.validate(result, {
     stripUnknown: true,
     convert: true,
@@ -120,10 +138,10 @@ function validateEasBuildInternalResult<TJob extends Job>(
   if (error) {
     throw error;
   }
-  const job = sanitizeJob(value.job) as TJob;
-  assert(job.platform === ctx.job.platform, 'eas-cli returned a job for a wrong platform');
-  const metadata = sanitizeMetadata(value.metadata);
-  return { job, metadata };
+  const newJob = sanitizeJob(value.job) as TJob;
+  assert(newJob.platform === oldJob.platform, 'eas-cli returned a job for a wrong platform');
+  const newMetadata = sanitizeMetadata(value.metadata);
+  return { newJob, newMetadata };
 }
 
 function validateEnvs(result: any): Env {

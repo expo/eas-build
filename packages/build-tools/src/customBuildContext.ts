@@ -1,6 +1,6 @@
 import path from 'path';
 
-import { BuildPhase, Env, Job, Metadata, Platform } from '@expo/eas-build-job';
+import { BuildPhase, BuildTrigger, Env, Job, Metadata, Platform } from '@expo/eas-build-job';
 import { bunyan } from '@expo/logger';
 import { ExternalBuildContextProvider, BuildRuntimePlatform } from '@expo/steps';
 
@@ -38,8 +38,8 @@ export class CustomBuildContext implements ExternalBuildContextProvider {
 
   public readonly logger: bunyan;
   public readonly runtimeApi: BuilderRuntimeApi;
-  public readonly job: Job;
-  public readonly metadata?: Metadata;
+  public job: Job;
+  public metadata?: Metadata;
 
   private _env: Env;
 
@@ -75,5 +75,15 @@ export class CustomBuildContext implements ExternalBuildContextProvider {
 
   public updateEnv(env: Env): void {
     this._env = env;
+  }
+
+  public updateJobInformation(job: Job, metadata: Metadata): void {
+    if (this.job.triggeredBy !== BuildTrigger.GIT_BASED_INTEGRATION) {
+      throw new Error(
+        'Updating job information is only allowed when build was triggered by a git-based integration.'
+      );
+    }
+    this.job = { ...job, triggeredBy: this.job.triggeredBy };
+    this.metadata = metadata;
   }
 }
