@@ -47,17 +47,17 @@ export async function sendSlackMessageAsync(
       headers: { 'Content-Type': 'application/json' },
     });
   } catch (error) {
-    logger.warn(`Sending Slack message to hook url "${slackHookUrl}" failed`);
+    logger.warn(`Sending Slack message to webhook url "${slackHookUrl}" failed`);
     logger.debug(error);
-    throw new Error(`Sending Slack message to hook url "${slackHookUrl}" failed`);
+    throw new Error(`Sending Slack message to webhook url "${slackHookUrl}" failed`);
   }
   if (!fetchResult.ok) {
     logger.warn(
-      `Sending Slack message to hook url "${slackHookUrl}" failed with status ${fetchResult.status}`
+      `Sending Slack message to webhook url "${slackHookUrl}" failed with status ${fetchResult.status}`
     );
     logger.debug(`${fetchResult.status} - ${fetchResult.statusText}`);
     throw new Error(
-      `Sending Slack message to hook url "${slackHookUrl}" failed with status ${fetchResult.status}`
+      `Sending Slack message to webhook url "${slackHookUrl}" failed with status ${fetchResult.status}`
     );
   }
   logger.info('Slack message sent successfully');
