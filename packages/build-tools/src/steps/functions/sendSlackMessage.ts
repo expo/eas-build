@@ -1,12 +1,6 @@
-import {
-  BuildFunction,
-  BuildStepContext,
-  BuildStepEnv,
-  BuildStepInput,
-  BuildStepInputValueTypeName,
-} from '@expo/steps';
-import { BuildStepInputById } from '@expo/steps/dist_esm/BuildStepInput';
+import { BuildFunction, BuildStepInput, BuildStepInputValueTypeName } from '@expo/steps';
 import fetch, { Response } from 'node-fetch';
+import { bunyan } from '@expo/logger';
 
 export function createSendSlackMessageFunction(): BuildFunction {
   return new BuildFunction({
@@ -21,18 +15,23 @@ export function createSendSlackMessageFunction(): BuildFunction {
       }),
     ],
     fn: async (stepCtx, { inputs, env }) => {
-      await sendSlackMessageAsync(stepCtx, { inputs, env });
+      const { logger } = stepCtx;
+      const slackHookUrl = env.SLACK_HOOK_URL;
+      const slackMessage = inputs.message.value as string;
+      await sendSlackMessageAsync({ logger, slackHookUrl, slackMessage });
     },
   });
 }
 
-export async function sendSlackMessageAsync(
-  stepCtx: BuildStepContext,
-  { inputs, env }: { inputs: BuildStepInputById; env: BuildStepEnv }
-): Promise<void> {
-  const { logger } = stepCtx;
-  const slackHookUrl = env.SLACK_HOOK_URL;
-  const slackMessage = inputs.message.value as string;
+async function sendSlackMessageAsync({
+  logger,
+  slackHookUrl,
+  slackMessage,
+}: {
+  logger: bunyan;
+  slackHookUrl: string | undefined;
+  slackMessage: string;
+}): Promise<void> {
   if (!slackHookUrl) {
     logger.warn(`"SLACK_HOOK_URL" secret not set`);
     throw new Error(`Sending Slack message failed - set "SLACK_HOOK_URL" secret`);
