@@ -6,14 +6,14 @@ import {
   BuildFunctionInputs,
   BuildFunctionOutputs,
   BuildStepBareCommandRun,
-  BuildStepBareFunctionCall,
+  BuildStepBareFunctionOrFunctionGroupCall,
   BuildStepCommandRun,
   BuildStepConfig,
   BuildStepFunctionCall,
   BuildStepInputs,
   BuildStepOutputs,
   isBuildStepBareCommandRun,
-  isBuildStepBareFunctionCall,
+  isBuildStepBareFunctionOrFunctionGroupCall,
   isBuildStepCommandRun,
   readAndValidateBuildConfigAsync,
 } from './BuildConfig.js';
@@ -31,33 +31,55 @@ import { BuildWorkflowValidator } from './BuildWorkflowValidator.js';
 import { BuildConfigError } from './errors.js';
 import { duplicates } from './utils/expodash/duplicates.js';
 import { uniq } from './utils/expodash/uniq.js';
+import {
+  BuildFunctionGroup,
+  BuildFunctionGroupById,
+  createBuildFunctionGroupByIdMapping,
+} from './BuildFunctionGroup.js';
 
 export class BuildConfigParser {
   private readonly configPath: string;
   private readonly externalFunctions?: BuildFunction[];
+  private readonly externalFunctionGroups?: BuildFunctionGroup[];
 
   constructor(
     private readonly ctx: BuildStepGlobalContext,
-    { configPath, externalFunctions }: { configPath: string; externalFunctions?: BuildFunction[] }
+    {
+      configPath,
+      externalFunctions,
+      externalFunctionGroups,
+    }: {
+      configPath: string;
+      externalFunctions?: BuildFunction[];
+      externalFunctionGroups?: BuildFunctionGroup[];
+    }
   ) {
     this.validateExternalFunctions(externalFunctions);
 
     this.configPath = configPath;
     this.externalFunctions = externalFunctions;
+    this.externalFunctionGroups = externalFunctionGroups;
   }
 
   public async parseAsync(): Promise<BuildWorkflow> {
     const config = await readAndValidateBuildConfigAsync(this.configPath, {
       externalFunctionIds: this.getExternalFunctionFullIds(),
+      externalFunctionGroupsIds: this.getExternalFunctionGroupFullIds(),
     });
     const configBuildFunctions = this.createBuildFunctionsFromConfig(config.functions);
     const buildFunctions = this.mergeBuildFunctionsWithExternal(
       configBuildFunctions,
       this.externalFunctions
     );
-    const buildSteps = config.build.steps.map((stepConfig) =>
-      this.createBuildStepFromConfig(stepConfig, buildFunctions)
+    const buildFunctionGroups = createBuildFunctionGroupByIdMapping(
+      this.externalFunctionGroups ?? []
     );
+    const buildSteps: BuildStep[] = [];
+    for (const stepConfig of config.build.steps) {
+      buildSteps.push(
+        ...this.createBuildStepFromConfig(stepConfig, buildFunctions, buildFunctionGroups)
+      );
+    }
     const workflow = new BuildWorkflow(this.ctx, { buildSteps, buildFunctions });
     await new BuildWorkflowValidator(workflow).validateAsync();
     return workflow;
@@ -65,16 +87,21 @@ export class BuildConfigParser {
 
   private createBuildStepFromConfig(
     buildStepConfig: BuildStepConfig,
-    buildFunctions: BuildFunctionById
-  ): BuildStep {
+    buildFunctions: BuildFunctionById,
+    buildFunctionGroups: BuildFunctionGroupById
+  ): BuildStep[] {
     if (isBuildStepCommandRun(buildStepConfig)) {
-      return this.createBuildStepFromBuildStepCommandRun(buildStepConfig);
+      return [this.createBuildStepFromBuildStepCommandRun(buildStepConfig)];
     } else if (isBuildStepBareCommandRun(buildStepConfig)) {
-      return this.createBuildStepFromBuildStepBareCommandRun(buildStepConfig);
-    } else if (isBuildStepBareFunctionCall(buildStepConfig)) {
-      return this.createBuildStepFromBuildStepBareFunctionCall(buildFunctions, buildStepConfig);
+      return [this.createBuildStepFromBuildStepBareCommandRun(buildStepConfig)];
+    } else if (isBuildStepBareFunctionOrFunctionGroupCall(buildStepConfig)) {
+      return this.createBuildStepsFromBuildStepFunctionOrBuildStepFunctionGroupCall(
+        buildFunctions,
+        buildFunctionGroups,
+        buildStepConfig
+      );
     } else if (buildStepConfig !== null) {
-      return this.createBuildStepFromBuildStepFunctionCall(buildFunctions, buildStepConfig);
+      return [this.createBuildStepFromBuildStepFunctionCall(buildFunctions, buildStepConfig)];
     } else {
       throw new BuildConfigError(
         'Invalid build step configuration detected. Build step cannot be empty.'
@@ -126,12 +153,41 @@ export class BuildConfigParser {
     });
   }
 
+  private createBuildStepsFromBuildStepBareFunctionGroupCall(
+    buildFunctionGroups: BuildFunctionGroupById,
+    functionGroupId: string
+  ): BuildStep[] {
+    const buildFunctionGroup = buildFunctionGroups[functionGroupId];
+    assert(
+      buildFunctionGroup !== undefined,
+      `Build function group with id "${functionGroupId}" is not defined.`
+    );
+    return buildFunctionGroup.createBuildStepsFromFunctionGroupCall(this.ctx);
+  }
+
   private createBuildStepFromBuildStepBareFunctionCall(
     buildFunctions: BuildFunctionById,
-    functionId: BuildStepBareFunctionCall
+    functionId: BuildStepBareFunctionOrFunctionGroupCall
   ): BuildStep {
     const buildFunction = buildFunctions[functionId];
     return buildFunction.createBuildStepFromFunctionCall(this.ctx);
+  }
+
+  private createBuildStepsFromBuildStepFunctionOrBuildStepFunctionGroupCall(
+    buildFunctions: BuildFunctionById,
+    buildFunctionGroups: BuildFunctionGroupById,
+    functionOrFunctionGroupId: string
+  ): BuildStep[] {
+    const maybeFunctionGroup = buildFunctionGroups[functionOrFunctionGroupId];
+    if (maybeFunctionGroup !== undefined) {
+      return this.createBuildStepsFromBuildStepBareFunctionGroupCall(
+        buildFunctionGroups,
+        functionOrFunctionGroupId
+      );
+    }
+    return [
+      this.createBuildStepFromBuildStepBareFunctionCall(buildFunctions, functionOrFunctionGroupId),
+    ];
   }
 
   private createBuildStepFromBuildStepFunctionCall(
@@ -303,6 +359,14 @@ export class BuildConfigParser {
       return [];
     }
     const ids = this.externalFunctions.map((f) => f.getFullId());
+    return uniq(ids);
+  }
+
+  private getExternalFunctionGroupFullIds(): string[] {
+    if (this.externalFunctionGroups === undefined) {
+      return [];
+    }
+    const ids = this.externalFunctionGroups.map((f) => f.getFullId());
     return uniq(ids);
   }
 }

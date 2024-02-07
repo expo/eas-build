@@ -35,9 +35,8 @@ export async function configureEASUpdateIfInstalledAsync({
   const expoUpdatesPackageVersion =
     await getExpoUpdatesPackageVersionIfInstalledAsync(workingDirectory);
   if (expoUpdatesPackageVersion === null) {
-    throw new Error(
-      `Cannot configure Expo Updates because the expo-updates package is not installed.`
-    );
+    logger.info('Expo Updates is not installed, skipping configuring Expo Updates.');
+    return;
   }
 
   const runtimeVersion =
