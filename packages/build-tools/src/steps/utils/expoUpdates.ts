@@ -35,8 +35,16 @@ export async function configureEASUpdateIfInstalledAsync({
 }): Promise<void> {
   const expoUpdatesPackageVersion =
     await getExpoUpdatesPackageVersionIfInstalledAsync(workingDirectory);
-  if (expoUpdatesPackageVersion === null && inputs.throwIfNotConfigured) {
-    logger.info('Expo Updates is not installed, skipping configuring Expo Updates.');
+  if (expoUpdatesPackageVersion === null) {
+    if (inputs.throwIfNotConfigured) {
+      logger.error(
+        'Cannot configure EAS Update because the expo-updates package is not installed.'
+      );
+      throw new Error(
+        'Cannot configure EAS Update because the expo-updates package is not installed.'
+      );
+    }
+    logger.warn('Cannot configure EAS Update because the expo-updates package is not installed.');
     return;
   }
 

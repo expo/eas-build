@@ -37,7 +37,7 @@ describe(configureEASUpdateIfInstalledAsync, () => {
         },
       })
     ).rejects.toThrowError(
-      'Cannot configure Expo Updates because the expo-updates package is not installed.'
+      'Cannot configure EAS Update because the expo-updates package is not installed.'
     );
 
     expect(androidSetChannelNativelyAsync).not.toBeCalled();
