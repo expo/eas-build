@@ -5,6 +5,7 @@ import {
   BuildStepInputValueTypeName,
 } from '@expo/steps';
 import { BuildStepInputById } from '@expo/steps/dist_esm/BuildStepInput';
+import fetch, { Response } from 'node-fetch';
 
 export function createSendSlackMessageFunction(): BuildFunction {
   return new BuildFunction({

@@ -1,9 +1,11 @@
 import { errors } from '@expo/steps';
+import fetch from 'node-fetch';
 
 import { createSendSlackMessageFunction } from '../sendSlackMessage';
 import { createGlobalContextMock } from '../../../__tests__/utils/context';
 
 jest.mock('@expo/logger');
+jest.mock('node-fetch');
 
 describe(createSendSlackMessageFunction, () => {
   let fetchMock: jest.SpyInstance;
@@ -13,7 +15,7 @@ describe(createSendSlackMessageFunction, () => {
   let loggerErrorMock: jest.SpyInstance;
 
   beforeEach(() => {
-    fetchMock = jest.spyOn(global, 'fetch');
+    fetchMock = jest.mocked(fetch);
   });
 
   afterEach(() => {
