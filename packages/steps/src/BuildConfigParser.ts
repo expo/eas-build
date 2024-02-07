@@ -96,7 +96,7 @@ export class BuildConfigParser {
     } else if (isBuildStepBareCommandRun(buildStepConfig)) {
       return [this.createBuildStepFromBuildStepBareCommandRun(buildStepConfig)];
     } else if (isBuildStepBareFunctionOrFunctionGroupCall(buildStepConfig)) {
-      return this.createBuildStepsFromBuildStepFunctionOrBuildStepFunctionGroupCall(
+      return this.createBuildStepsFromBareBuildStepFunctionOrBareBuildStepFunctionGroupCall(
         buildFunctions,
         buildFunctionGroups,
         buildStepConfig
@@ -174,13 +174,13 @@ export class BuildConfigParser {
     return buildFunction.createBuildStepFromFunctionCall(this.ctx);
   }
 
-  private createBuildStepsFromBuildStepFunctionOrBuildStepFunctionGroupCall(
+  private createBuildStepsFromBareBuildStepFunctionOrBareBuildStepFunctionGroupCall(
     buildFunctions: BuildFunctionById,
     buildFunctionGroups: BuildFunctionGroupById,
     functionOrFunctionGroupId: string
   ): BuildStep[] {
     const maybeFunctionGroup = buildFunctionGroups[functionOrFunctionGroupId];
-    if (maybeFunctionGroup !== undefined) {
+    if (maybeFunctionGroup) {
       return this.createBuildStepsFromBuildStepBareFunctionGroupCall(
         buildFunctionGroups,
         functionOrFunctionGroupId

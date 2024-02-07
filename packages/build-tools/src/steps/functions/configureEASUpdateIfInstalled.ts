@@ -23,6 +23,12 @@ export function configureEASUpdateIfInstalledFunction(): BuildFunction {
         required: false,
         allowedValueTypeName: BuildStepInputValueTypeName.STRING,
       }),
+      BuildStepInput.createProvider({
+        id: 'throw_if_not_configured',
+        required: false,
+        defaultValue: true,
+        allowedValueTypeName: BuildStepInputValueTypeName.BOOLEAN,
+      }),
     ],
     fn: async (stepCtx, { env, inputs }) => {
       assert(stepCtx.global.staticContext.job, 'Job is not defined');
@@ -44,6 +50,7 @@ export function configureEASUpdateIfInstalledFunction(): BuildFunction {
 
       const releaseChannelInput = inputs.channel.value as string | undefined;
       const runtimeVersionInput = inputs.runtime_version.value as string | undefined;
+      const throwIfNotConfigured = inputs.throw_if_not_configured.value as boolean;
       if (runtimeVersionInput && !semver.valid(runtimeVersionInput)) {
         throw new Error(
           `Runtime version provided by the "runtime_version" input is not a valid semver version: ${releaseChannelInput}`
@@ -58,6 +65,7 @@ export function configureEASUpdateIfInstalledFunction(): BuildFunction {
         inputs: {
           runtimeVersion: runtimeVersionInput,
           channel: releaseChannelInput,
+          throwIfNotConfigured,
         },
       });
     },

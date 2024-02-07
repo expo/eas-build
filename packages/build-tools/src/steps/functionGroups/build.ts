@@ -64,11 +64,14 @@ function createStepsForIosSimulatorBuild({
   globalCtx,
   buildToolsContext,
 }: HelperFunctionsInput): BuildStep[] {
+  const installPods = createInstallPodsBuildFunction().createBuildStepFromFunctionCall(globalCtx, {
+    workingDirectory: './ios',
+  });
   return [
     createCheckoutBuildFunction().createBuildStepFromFunctionCall(globalCtx),
     createInstallNodeModulesBuildFunction().createBuildStepFromFunctionCall(globalCtx),
     createPrebuildBuildFunction().createBuildStepFromFunctionCall(globalCtx),
-    createInstallPodsBuildFunction().createBuildStepFromFunctionCall(globalCtx),
+    installPods,
     configureEASUpdateIfInstalledFunction().createBuildStepFromFunctionCall(globalCtx),
     generateGymfileFromTemplateFunction().createBuildStepFromFunctionCall(globalCtx),
     runFastlaneFunction().createBuildStepFromFunctionCall(globalCtx),
@@ -91,6 +94,9 @@ function createStepsForIosBuildWithCredentials({
       apple_team_id: '${ steps.resolve_apple_team_id_from_credentials.apple_team_id }',
     },
   });
+  const installPods = createInstallPodsBuildFunction().createBuildStepFromFunctionCall(globalCtx, {
+    workingDirectory: './ios',
+  });
   return [
     createCheckoutBuildFunction().createBuildStepFromFunctionCall(globalCtx),
     createInstallNodeModulesBuildFunction().createBuildStepFromFunctionCall(globalCtx),
@@ -99,7 +105,7 @@ function createStepsForIosBuildWithCredentials({
     ).createBuildStepFromFunctionCall(globalCtx),
     resolveAppleTeamIdFromCredentials,
     prebuildStep,
-    createInstallPodsBuildFunction().createBuildStepFromFunctionCall(globalCtx),
+    installPods,
     configureEASUpdateIfInstalledFunction().createBuildStepFromFunctionCall(globalCtx),
     configureIosCredentialsFunction().createBuildStepFromFunctionCall(globalCtx),
     configureIosVersionFunction().createBuildStepFromFunctionCall(globalCtx),

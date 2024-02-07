@@ -29,12 +29,13 @@ export async function configureEASUpdateIfInstalledAsync({
   inputs: {
     runtimeVersion?: string;
     channel?: string;
+    throwIfNotConfigured: boolean;
   };
   appConfig: ExpoConfig;
 }): Promise<void> {
   const expoUpdatesPackageVersion =
     await getExpoUpdatesPackageVersionIfInstalledAsync(workingDirectory);
-  if (expoUpdatesPackageVersion === null) {
+  if (expoUpdatesPackageVersion === null && inputs.throwIfNotConfigured) {
     logger.info('Expo Updates is not installed, skipping configuring Expo Updates.');
     return;
   }
