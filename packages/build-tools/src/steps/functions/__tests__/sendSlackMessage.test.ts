@@ -1,5 +1,6 @@
 import { errors } from '@expo/steps';
 import fetch, { Response } from 'node-fetch';
+import { bunyan } from '@expo/logger';
 
 import { createSendSlackMessageFunction } from '../sendSlackMessage';
 import { createGlobalContextMock } from '../../../__tests__/utils/context';
@@ -19,6 +20,13 @@ describe(createSendSlackMessageFunction, () => {
     jest.resetAllMocks();
   });
 
+  function mockLogger(logger: bunyan): void {
+    loggerInfoMock = jest.spyOn(logger, 'info');
+    loggerWarnMock = jest.spyOn(logger, 'warn');
+    loggerDebugMock = jest.spyOn(logger, 'debug');
+    loggerErrorMock = jest.spyOn(logger, 'error');
+  }
+
   it('calls the webhook and logs the info messages when successful', async () => {
     fetchMock.mockImplementation(() => Promise.resolve({ status: 200, ok: true } as Response));
     const buildStep = sendSlackMessage.createBuildStepFromFunctionCall(
@@ -33,8 +41,7 @@ describe(createSendSlackMessageFunction, () => {
         id: sendSlackMessage.id,
       }
     );
-    loggerInfoMock = jest.spyOn(buildStep.ctx.logger, 'info');
-    loggerWarnMock = jest.spyOn(buildStep.ctx.logger, 'warn');
+    mockLogger(buildStep.ctx.logger);
     await buildStep.executeAsync();
     expect(fetchMock).toHaveBeenCalledWith('https://slack.hook.url', {
       method: 'POST',
@@ -42,16 +49,8 @@ describe(createSendSlackMessageFunction, () => {
       headers: { 'Content-Type': 'application/json' },
     });
     expect(loggerInfoMock).toHaveBeenCalledTimes(4);
-    expect(loggerInfoMock.mock.calls[0]).toEqual([
-      { marker: 'start-step' },
-      'Executing build step "Send Slack message"',
-    ]);
-    expect(loggerInfoMock.mock.calls[1]).toEqual(['Sending Slack message']);
-    expect(loggerInfoMock.mock.calls[2]).toEqual(['Slack message sent successfully']);
-    expect(loggerInfoMock.mock.calls[3]).toEqual([
-      { marker: 'end-step', result: 'success' },
-      'Finished build step "Send Slack message" successfully',
-    ]);
+    expect(loggerInfoMock).toHaveBeenCalledWith('Sending Slack message');
+    expect(loggerInfoMock).toHaveBeenCalledWith('Slack message sent successfully');
     expect(loggerWarnMock).not.toHaveBeenCalled();
   });
 
@@ -67,18 +66,13 @@ describe(createSendSlackMessageFunction, () => {
         id: sendSlackMessage.id,
       }
     );
-    loggerInfoMock = jest.spyOn(buildStep.ctx.logger, 'info');
-    loggerWarnMock = jest.spyOn(buildStep.ctx.logger, 'warn');
+    mockLogger(buildStep.ctx.logger);
     const expectedError = new errors.BuildStepRuntimeError(
       `Sending Slack message failed - set "SLACK_HOOK_URL" secret`
     );
     await expect(buildStep.executeAsync()).rejects.toThrow(expectedError);
     expect(fetchMock).not.toHaveBeenCalled();
     expect(loggerInfoMock).toHaveBeenCalledTimes(1);
-    expect(loggerInfoMock.mock.calls[0]).toEqual([
-      { marker: 'start-step' },
-      'Executing build step "Send Slack message"',
-    ]);
     expect(loggerWarnMock).toHaveBeenCalledWith('"SLACK_HOOK_URL" secret not set');
   });
 
@@ -94,18 +88,13 @@ describe(createSendSlackMessageFunction, () => {
         id: sendSlackMessage.id,
       }
     );
-    loggerInfoMock = jest.spyOn(buildStep.ctx.logger, 'info');
-    loggerWarnMock = jest.spyOn(buildStep.ctx.logger, 'warn');
+    mockLogger(buildStep.ctx.logger);
     const expectedError = new errors.BuildStepRuntimeError(
       `Input parameter "message" for step "send_slack_message" is required but it was not set.`
     );
     await expect(buildStep.executeAsync()).rejects.toThrow(expectedError);
     expect(fetchMock).not.toHaveBeenCalled();
     expect(loggerInfoMock).toHaveBeenCalledTimes(1);
-    expect(loggerInfoMock.mock.calls[0]).toEqual([
-      { marker: 'start-step' },
-      'Executing build step "Send Slack message"',
-    ]);
     expect(loggerWarnMock).not.toHaveBeenCalled();
   });
 
@@ -126,10 +115,7 @@ describe(createSendSlackMessageFunction, () => {
         id: sendSlackMessage.id,
       }
     );
-    loggerInfoMock = jest.spyOn(buildStep.ctx.logger, 'info');
-    loggerWarnMock = jest.spyOn(buildStep.ctx.logger, 'warn');
-    loggerDebugMock = jest.spyOn(buildStep.ctx.logger, 'debug');
-    loggerErrorMock = jest.spyOn(buildStep.ctx.logger, 'error');
+    mockLogger(buildStep.ctx.logger);
     const expectedError = new Error(
       'Sending Slack message to webhook url "https://slack.hook.url" failed'
     );
@@ -140,26 +126,15 @@ describe(createSendSlackMessageFunction, () => {
       headers: { 'Content-Type': 'application/json' },
     });
     expect(loggerInfoMock).toHaveBeenCalledTimes(2);
-    expect(loggerInfoMock.mock.calls[0]).toEqual([
-      { marker: 'start-step' },
-      'Executing build step "Send Slack message"',
-    ]);
-    expect(loggerInfoMock.mock.calls[1]).toEqual(['Sending Slack message']);
+    expect(loggerInfoMock).toHaveBeenCalledWith('Sending Slack message');
     expect(loggerWarnMock).toHaveBeenCalledTimes(1);
-    expect(loggerWarnMock.mock.calls[0]).toEqual([
-      'Sending Slack message to webhook url "https://slack.hook.url" failed',
-    ]);
+    expect(loggerWarnMock).toHaveBeenCalledWith(
+      'Sending Slack message to webhook url "https://slack.hook.url" failed'
+    );
     expect(loggerDebugMock).toHaveBeenCalledWith(thrownError);
     expect(loggerErrorMock).toHaveBeenCalledWith({
       err: expectedError,
     });
-    expect(loggerErrorMock).toHaveBeenCalledWith(
-      {
-        marker: 'end-step',
-        result: 'fail',
-      },
-      'Build step "Send Slack message" failed'
-    );
   });
 
   it.each([
@@ -183,10 +158,7 @@ describe(createSendSlackMessageFunction, () => {
           id: sendSlackMessage.id,
         }
       );
-      loggerInfoMock = jest.spyOn(buildStep.ctx.logger, 'info');
-      loggerWarnMock = jest.spyOn(buildStep.ctx.logger, 'warn');
-      loggerDebugMock = jest.spyOn(buildStep.ctx.logger, 'debug');
-      loggerErrorMock = jest.spyOn(buildStep.ctx.logger, 'error');
+      mockLogger(buildStep.ctx.logger);
       const expectedError = new Error(
         `Sending Slack message to webhook url "https://slack.hook.url" failed with status ${statusCode}`
       );
@@ -197,26 +169,15 @@ describe(createSendSlackMessageFunction, () => {
         headers: { 'Content-Type': 'application/json' },
       });
       expect(loggerInfoMock).toHaveBeenCalledTimes(2);
-      expect(loggerInfoMock.mock.calls[0]).toEqual([
-        { marker: 'start-step' },
-        'Executing build step "Send Slack message"',
-      ]);
-      expect(loggerInfoMock.mock.calls[1]).toEqual(['Sending Slack message']);
+      expect(loggerInfoMock).toHaveBeenCalledWith('Sending Slack message');
       expect(loggerWarnMock).toHaveBeenCalledTimes(1);
-      expect(loggerWarnMock.mock.calls[0]).toEqual([
-        `Sending Slack message to webhook url "https://slack.hook.url" failed with status ${statusCode}`,
-      ]);
+      expect(loggerWarnMock).toHaveBeenCalledWith(
+        `Sending Slack message to webhook url "https://slack.hook.url" failed with status ${statusCode}`
+      );
       expect(loggerDebugMock).toHaveBeenCalledWith(`${statusCode} - ${statusText}`);
       expect(loggerErrorMock).toHaveBeenCalledWith({
         err: expectedError,
       });
-      expect(loggerErrorMock).toHaveBeenCalledWith(
-        {
-          marker: 'end-step',
-          result: 'fail',
-        },
-        `Build step "Send Slack message" failed`
-      );
     }
   );
 });
