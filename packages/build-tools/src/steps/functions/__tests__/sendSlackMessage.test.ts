@@ -1,5 +1,5 @@
 import { errors } from '@expo/steps';
-import fetch from 'node-fetch';
+import fetch, { Response } from 'node-fetch';
 
 import { createSendSlackMessageFunction } from '../sendSlackMessage';
 import { createGlobalContextMock } from '../../../__tests__/utils/context';
@@ -8,24 +8,19 @@ jest.mock('@expo/logger');
 jest.mock('node-fetch');
 
 describe(createSendSlackMessageFunction, () => {
-  let fetchMock: jest.SpyInstance;
+  const fetchMock = jest.mocked(fetch);
+  const sendSlackMessage = createSendSlackMessageFunction();
   let loggerInfoMock: jest.SpyInstance;
   let loggerWarnMock: jest.SpyInstance;
   let loggerDebugMock: jest.SpyInstance;
   let loggerErrorMock: jest.SpyInstance;
 
-  beforeEach(() => {
-    fetchMock = jest.mocked(fetch);
-  });
-
   afterEach(() => {
-    jest.restoreAllMocks();
+    jest.resetAllMocks();
   });
-
-  const sendSlackMessage = createSendSlackMessageFunction();
 
   it('calls the webhook and logs the info messages when successful', async () => {
-    fetchMock.mockImplementation(() => Promise.resolve({ status: 200, ok: true, body: 'ok' }));
+    fetchMock.mockImplementation(() => Promise.resolve({ status: 200, ok: true } as Response));
     const buildStep = sendSlackMessage.createBuildStepFromFunctionCall(
       createGlobalContextMock({}),
       {
@@ -61,7 +56,7 @@ describe(createSendSlackMessageFunction, () => {
   });
 
   it('does not call the webhook when no url specified', async () => {
-    fetchMock.mockImplementation(() => Promise.resolve({ status: 200, ok: true, body: 'ok' }));
+    fetchMock.mockImplementation(() => Promise.resolve({ status: 200, ok: true } as Response));
     const buildStep = sendSlackMessage.createBuildStepFromFunctionCall(
       createGlobalContextMock({}),
       {
@@ -88,7 +83,7 @@ describe(createSendSlackMessageFunction, () => {
   });
 
   it('does not call the webhook when no message specified', async () => {
-    fetchMock.mockImplementation(() => Promise.resolve({ status: 200, ok: true, body: 'ok' }));
+    fetchMock.mockImplementation(() => Promise.resolve({ status: 200, ok: true } as Response));
     const buildStep = sendSlackMessage.createBuildStepFromFunctionCall(
       createGlobalContextMock({}),
       {
@@ -174,7 +169,7 @@ describe(createSendSlackMessageFunction, () => {
     'handles %s error status code, logs warning and details in debug, throws new error',
     async (statusCode, statusText) => {
       fetchMock.mockImplementation(() =>
-        Promise.resolve({ status: statusCode, ok: false, body: 'error', statusText })
+        Promise.resolve({ status: statusCode, ok: false, statusText } as Response)
       );
       const buildStep = sendSlackMessage.createBuildStepFromFunctionCall(
         createGlobalContextMock({}),
