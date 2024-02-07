@@ -1,6 +1,7 @@
 import {
   BuildFunction,
   BuildStepContext,
+  BuildStepEnv,
   BuildStepInput,
   BuildStepInputValueTypeName,
 } from '@expo/steps';
@@ -14,29 +15,28 @@ export function createSendSlackMessageFunction(): BuildFunction {
     name: 'Send Slack message',
     inputProviders: [
       BuildStepInput.createProvider({
-        id: 'slack_hook_url',
-        allowedValueTypeName: BuildStepInputValueTypeName.STRING,
-        required: true,
-      }),
-      BuildStepInput.createProvider({
         id: 'message',
         allowedValueTypeName: BuildStepInputValueTypeName.STRING,
         required: true,
       }),
     ],
-    fn: async (stepCtx, { inputs }) => {
-      await sendSlackMessageAsync(stepCtx, inputs);
+    fn: async (stepCtx, { inputs, env }) => {
+      await sendSlackMessageAsync(stepCtx, { inputs, env });
     },
   });
 }
 
 export async function sendSlackMessageAsync(
   stepCtx: BuildStepContext,
-  inputs: BuildStepInputById
+  { inputs, env }: { inputs: BuildStepInputById; env: BuildStepEnv }
 ): Promise<void> {
   const { logger } = stepCtx;
-  const slackHookUrl = inputs.slack_hook_url.value as string;
+  const slackHookUrl = env.SLACK_HOOK_URL;
   const slackMessage = inputs.message.value as string;
+  if (!slackHookUrl) {
+    logger.warn(`"SLACK_HOOK_URL" secret not set`);
+    throw new Error(`Sending Slack message failed - set "SLACK_HOOK_URL" secret`);
+  }
   logger.info('Sending Slack message');
 
   const body = { text: slackMessage };

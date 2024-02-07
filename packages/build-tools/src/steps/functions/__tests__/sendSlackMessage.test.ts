@@ -30,9 +30,12 @@ describe(createSendSlackMessageFunction, () => {
       createGlobalContextMock({}),
       {
         callInputs: {
-          slack_hook_url: 'https://slack.hook.url',
           message: 'Test message',
         },
+        env: {
+          SLACK_HOOK_URL: 'https://slack.hook.url',
+        },
+        id: sendSlackMessage.id,
       }
     );
     loggerInfoMock = jest.spyOn(buildStep.ctx.logger, 'info');
@@ -65,13 +68,14 @@ describe(createSendSlackMessageFunction, () => {
         callInputs: {
           message: 'Test message',
         },
+        env: {},
         id: sendSlackMessage.id,
       }
     );
     loggerInfoMock = jest.spyOn(buildStep.ctx.logger, 'info');
     loggerWarnMock = jest.spyOn(buildStep.ctx.logger, 'warn');
     const expectedError = new errors.BuildStepRuntimeError(
-      `Input parameter "slack_hook_url" for step "send_slack_message" is required but it was not set.`
+      `Sending Slack message failed - set "SLACK_HOOK_URL" secret`
     );
     await expect(buildStep.executeAsync()).rejects.toThrow(expectedError);
     expect(fetchMock).not.toHaveBeenCalled();
@@ -80,7 +84,7 @@ describe(createSendSlackMessageFunction, () => {
       { marker: 'start-step' },
       'Executing build step "Send Slack message"',
     ]);
-    expect(loggerWarnMock).not.toHaveBeenCalled();
+    expect(loggerWarnMock).toHaveBeenCalledWith('"SLACK_HOOK_URL" secret not set');
   });
 
   it('does not call the webhook when no message specified', async () => {
@@ -88,8 +92,9 @@ describe(createSendSlackMessageFunction, () => {
     const buildStep = sendSlackMessage.createBuildStepFromFunctionCall(
       createGlobalContextMock({}),
       {
-        callInputs: {
-          slack_hook_url: 'https://slack.hook.url',
+        callInputs: {},
+        env: {
+          SLACK_HOOK_URL: 'https://slack.hook.url',
         },
         id: sendSlackMessage.id,
       }
@@ -118,8 +123,10 @@ describe(createSendSlackMessageFunction, () => {
       createGlobalContextMock({}),
       {
         callInputs: {
-          slack_hook_url: 'https://slack.hook.url',
           message: 'Test message',
+        },
+        env: {
+          SLACK_HOOK_URL: 'https://slack.hook.url',
         },
         id: sendSlackMessage.id,
       }
@@ -173,8 +180,10 @@ describe(createSendSlackMessageFunction, () => {
         createGlobalContextMock({}),
         {
           callInputs: {
-            slack_hook_url: 'https://slack.hook.url',
             message: 'Test message',
+          },
+          env: {
+            SLACK_HOOK_URL: 'https://slack.hook.url',
           },
           id: sendSlackMessage.id,
         }
