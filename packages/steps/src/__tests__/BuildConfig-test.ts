@@ -954,7 +954,18 @@ describe(validateAllFunctionsExist, () => {
       validateAllFunctionsExist(buildConfig, { externalFunctionIds: [] });
     }).toThrowError(/Calling non-existent functions: "say_hi", "say_hello"/);
   });
-  test('non-existent namespaced functions with skipNamespacedFunctionsCheck = false', () => {
+  test('non-existent function groups', () => {
+    const buildConfig: BuildConfig = {
+      build: {
+        steps: ['eas/build'],
+      },
+    };
+
+    expect(() => {
+      validateAllFunctionsExist(buildConfig, { externalFunctionIds: [] });
+    }).toThrowError(/Calling non-existent functions: "eas\/build"/);
+  });
+  test('non-existent namespaced functions with skipNamespacedFunctionsOrFunctionGroupsCheck = false', () => {
     const buildConfig: BuildConfig = {
       build: {
         steps: ['abc/say_hi', 'abc/say_hello'],
@@ -968,7 +979,7 @@ describe(validateAllFunctionsExist, () => {
       });
     }).toThrowError(/Calling non-existent functions: "abc\/say_hi", "abc\/say_hello"/);
   });
-  test('non-existent namespaced functions with skipNamespacedFunctionsCheck = true', () => {
+  test('non-existent namespaced functions with skipNamespacedFunctionsOrFunctionGroupsCheck = true', () => {
     const buildConfig: BuildConfig = {
       build: {
         steps: ['abc/say_hi', 'abc/say_hello'],
@@ -992,6 +1003,19 @@ describe(validateAllFunctionsExist, () => {
     expect(() => {
       validateAllFunctionsExist(buildConfig, {
         externalFunctionIds: ['say_hi', 'say_hello'],
+      });
+    }).not.toThrowError();
+  });
+  test('works with external function groups', () => {
+    const buildConfig: BuildConfig = {
+      build: {
+        steps: ['hi'],
+      },
+    };
+
+    expect(() => {
+      validateAllFunctionsExist(buildConfig, {
+        externalFunctionGroupsIds: ['hi'],
       });
     }).not.toThrowError();
   });

@@ -55,6 +55,7 @@ export class BuildConfigParser {
     }
   ) {
     this.validateExternalFunctions(externalFunctions);
+    this.validateExternalFunctionGroups(externalFunctionGroups);
 
     this.configPath = configPath;
     this.externalFunctions = externalFunctions;
@@ -349,6 +350,22 @@ export class BuildConfigParser {
     }
     throw new BuildConfigError(
       `Provided external functions with duplicated IDs: ${duplicatedExternalFunctionIds
+        .map((id) => `"${id}"`)
+        .join(', ')}`
+    );
+  }
+
+  private validateExternalFunctionGroups(externalFunctionGroups?: BuildFunctionGroup[]): void {
+    if (externalFunctionGroups === undefined) {
+      return;
+    }
+    const externalFunctionGroupIds = externalFunctionGroups.map((f) => f.getFullId());
+    const duplicatedExternalFunctionGroupIds = duplicates(externalFunctionGroupIds);
+    if (duplicatedExternalFunctionGroupIds.length === 0) {
+      return;
+    }
+    throw new BuildConfigError(
+      `Provided external function groups with duplicated IDs: ${duplicatedExternalFunctionGroupIds
         .map((id) => `"${id}"`)
         .join(', ')}`
     );
