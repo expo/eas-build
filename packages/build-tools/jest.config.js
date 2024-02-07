@@ -8,5 +8,4 @@ module.exports = {
   ],
   clearMocks: true,
   setupFilesAfterEnv: ['<rootDir>/../jest/setup-tests.ts'],
-  moduleNameMapper: { 'node-fetch': '<rootDir>/../../../node_modules/node-fetch-jest' },
 };
