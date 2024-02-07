@@ -32,7 +32,9 @@ describe(configureEASUpdateIfInstalledAsync, () => {
           name: 'test',
         }),
         appConfig: {} as unknown as ExpoConfig,
-        inputs: {},
+        inputs: {
+          throwIfNotConfigured: true,
+        },
       })
     ).rejects.toThrowError(
       'Cannot configure Expo Updates because the expo-updates package is not installed.'
@@ -59,7 +61,9 @@ describe(configureEASUpdateIfInstalledAsync, () => {
           url: 'https://u.expo.dev/blahblah',
         },
       } as unknown as ExpoConfig,
-      inputs: {},
+      inputs: {
+        throwIfNotConfigured: true,
+      },
     });
 
     expect(androidSetChannelNativelyAsync).not.toBeCalled();
@@ -88,7 +92,9 @@ describe(configureEASUpdateIfInstalledAsync, () => {
           url: 'https://u.expo.dev/blahblah',
         },
       } as unknown as ExpoConfig,
-      inputs: {},
+      inputs: {
+        throwIfNotConfigured: true,
+      },
     });
 
     expect(androidSetChannelNativelyAsync).not.toBeCalled();
@@ -116,7 +122,9 @@ describe(configureEASUpdateIfInstalledAsync, () => {
           url: 'https://u.expo.dev/blahblah',
         },
       } as unknown as ExpoConfig,
-      inputs: {},
+      inputs: {
+        throwIfNotConfigured: true,
+      },
     });
 
     expect(androidSetChannelNativelyAsync).not.toBeCalled();
