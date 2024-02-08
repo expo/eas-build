@@ -64,6 +64,13 @@ export function configureIosVersionFunction(): BuildFunction {
         );
       }
 
+      if (!buildNumber && !appVersion) {
+        stepCtx.logger.info(
+          'No build number or app version provided. Skipping the step to configure iOS version.'
+        );
+        return;
+      }
+
       stepCtx.logger.info('Setting iOS version...');
       if (buildNumber) {
         stepCtx.logger.info(`Build number: ${buildNumber}`);

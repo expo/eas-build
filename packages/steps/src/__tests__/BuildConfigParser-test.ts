@@ -9,6 +9,7 @@ import { BuildConfigError, BuildStepRuntimeError } from '../errors.js';
 import { getDefaultShell } from '../utils/shell/command.js';
 import { BuildRuntimePlatform } from '../BuildRuntimePlatform.js';
 import { BuildStepInputValueTypeName } from '../BuildStepInput.js';
+import { BuildFunctionGroup } from '../BuildFunctionGroup.js';
 
 import { createGlobalContextMock } from './utils/context.js';
 import { getError, getErrorAsync } from './utils/error.js';
@@ -34,6 +35,30 @@ describe(BuildConfigParser, () => {
       expect(error.message).toMatch(/Provided external functions with duplicated IDs/);
     });
 
+    it('throws if provided external function groups with duplicated IDs', () => {
+      const ctx = createGlobalContextMock();
+      const error = getError<BuildStepRuntimeError>(() => {
+        // eslint-disable-next-line no-new
+        new BuildConfigParser(ctx, {
+          configPath: './fake.yml',
+          externalFunctionGroups: [
+            new BuildFunctionGroup({
+              id: 'abc',
+              namespace: 'test',
+              createBuildStepsFromFunctionGroupCall: () => [],
+            }),
+            new BuildFunctionGroup({
+              id: 'abc',
+              namespace: 'test',
+              createBuildStepsFromFunctionGroupCall: () => [],
+            }),
+          ],
+        });
+      });
+      expect(error).toBeInstanceOf(BuildConfigError);
+      expect(error.message).toMatch(/Provided external function groups with duplicated IDs/);
+    });
+
     it(`doesn't throw if provided external functions don't have duplicated IDs`, () => {
       const ctx = createGlobalContextMock();
       expect(() => {
@@ -43,6 +68,28 @@ describe(BuildConfigParser, () => {
           externalFunctions: [
             new BuildFunction({ namespace: 'a', id: 'abc', command: 'echo 123' }),
             new BuildFunction({ namespace: 'b', id: 'abc', command: 'echo 456' }),
+          ],
+        });
+      }).not.toThrow();
+    });
+
+    it(`doesn't throw if provided external function groups don't have duplicated IDs`, () => {
+      const ctx = createGlobalContextMock();
+      expect(() => {
+        // eslint-disable-next-line no-new
+        new BuildConfigParser(ctx, {
+          configPath: './fake.yml',
+          externalFunctionGroups: [
+            new BuildFunctionGroup({
+              id: 'abc',
+              namespace: 'test',
+              createBuildStepsFromFunctionGroupCall: () => [],
+            }),
+            new BuildFunctionGroup({
+              id: 'abcd',
+              namespace: 'test',
+              createBuildStepsFromFunctionGroupCall: () => [],
+            }),
           ],
         });
       }).not.toThrow();
@@ -586,6 +633,113 @@ describe(BuildConfigParser, () => {
       const step2 = workflow.buildSteps[1];
       expect(step2.id).toMatch(UUID_REGEX);
       expect(step2.fn).toBe(buildProjectFn);
+    });
+
+    it('works with external function groups', async () => {
+      const ctx = createGlobalContextMock();
+
+      const downloadProjectFn: BuildStepFunction = (ctx) => {
+        ctx.logger.info('Downloading project...');
+      };
+
+      const buildProjectFn: BuildStepFunction = (ctx) => {
+        ctx.logger.info('Building project...');
+      };
+
+      const parser = new BuildConfigParser(ctx, {
+        configPath: path.join(__dirname, './fixtures/external-function-groups.yml'),
+        externalFunctions: [
+          new BuildFunction({
+            namespace: 'eas',
+            id: 'download_project',
+            fn: downloadProjectFn,
+          }),
+          new BuildFunction({
+            namespace: 'eas',
+            id: 'build_project',
+            fn: buildProjectFn,
+          }),
+        ],
+        externalFunctionGroups: [
+          new BuildFunctionGroup({
+            id: 'build',
+            namespace: 'eas',
+            createBuildStepsFromFunctionGroupCall: () => [
+              new BuildFunction({
+                namespace: 'eas',
+                id: 'download_project3',
+                fn: downloadProjectFn,
+              }).createBuildStepFromFunctionCall(ctx),
+              new BuildFunction({
+                namespace: 'eas',
+                id: 'build_project4',
+                fn: buildProjectFn,
+              }).createBuildStepFromFunctionCall(ctx),
+            ],
+          }),
+          new BuildFunctionGroup({
+            id: 'submit',
+            namespace: 'eas',
+            createBuildStepsFromFunctionGroupCall: () => [
+              new BuildFunction({
+                namespace: 'eas',
+                id: 'download_project5',
+                fn: downloadProjectFn,
+              }).createBuildStepFromFunctionCall(ctx),
+              new BuildFunction({
+                namespace: 'eas',
+                id: 'build_project6',
+                fn: buildProjectFn,
+              }).createBuildStepFromFunctionCall(ctx),
+              new BuildFunction({
+                namespace: 'eas',
+                id: 'test7',
+                fn: (ctx) => {
+                  ctx.logger.info('Test');
+                },
+              }).createBuildStepFromFunctionCall(ctx),
+            ],
+          }),
+        ],
+      });
+
+      const workflow = await parser.parseAsync();
+      expect(workflow.buildSteps.length).toBe(7);
+
+      // - eas/download_project
+      const step1 = workflow.buildSteps[0];
+      expect(step1.id).toMatch(UUID_REGEX);
+      expect(step1.fn).toBe(downloadProjectFn);
+
+      // - eas/build_project
+      const step2 = workflow.buildSteps[1];
+      expect(step2.id).toMatch(UUID_REGEX);
+      expect(step2.fn).toBe(buildProjectFn);
+
+      // - eas/download_project3 originating from build group eas/build
+      const step3 = workflow.buildSteps[2];
+      expect(step3.id).toMatch(UUID_REGEX);
+      expect(step3.fn).toBe(downloadProjectFn);
+
+      // - eas/build_project4 originating from build group eas/build
+      const step4 = workflow.buildSteps[3];
+      expect(step4.id).toMatch(UUID_REGEX);
+      expect(step4.fn).toBe(buildProjectFn);
+
+      // - eas/download_project5 originating from submit group eas/submit
+      const step5 = workflow.buildSteps[4];
+      expect(step5.id).toMatch(UUID_REGEX);
+      expect(step5.fn).toBe(downloadProjectFn);
+
+      // - eas/build_project6 originating from submit group eas/submit
+      const step6 = workflow.buildSteps[5];
+      expect(step6.id).toMatch(UUID_REGEX);
+      expect(step6.fn).toBe(buildProjectFn);
+
+      // - eas/test7 originating from submit group eas/submit
+      const step7 = workflow.buildSteps[6];
+      expect(step7.id).toMatch(UUID_REGEX);
+      expect(step7.fn).toBeDefined();
     });
   });
 });

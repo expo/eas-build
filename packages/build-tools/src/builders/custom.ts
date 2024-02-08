@@ -9,6 +9,7 @@ import { prepareProjectSourcesAsync } from '../common/projectSources';
 import { getEasFunctions } from '../steps/easFunctions';
 import { CustomBuildContext } from '../customBuildContext';
 import { resolveEnvFromBuildProfileAsync } from '../common/easBuildInternal';
+import { getEasFunctionGroups } from '../steps/easFunctionGroups';
 
 export async function runCustomBuildAsync<T extends Job>(ctx: BuildContext<T>): Promise<Artifacts> {
   const customBuildCtx = new CustomBuildContext(ctx);
@@ -32,8 +33,10 @@ export async function runCustomBuildAsync<T extends Job>(ctx: BuildContext<T>): 
 
   const globalContext = new BuildStepGlobalContext(customBuildCtx, false);
   const easFunctions = getEasFunctions(customBuildCtx);
+  const easFunctionGroups = getEasFunctionGroups(customBuildCtx);
   const parser = new BuildConfigParser(globalContext, {
     externalFunctions: easFunctions,
+    externalFunctionGroups: easFunctionGroups,
     configPath,
   });
   const workflow = await ctx.runBuildPhase(BuildPhase.PARSE_CUSTOM_WORKFLOW_CONFIG, async () => {
