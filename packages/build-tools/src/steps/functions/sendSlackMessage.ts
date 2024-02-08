@@ -13,11 +13,16 @@ export function createSendSlackMessageFunction(): BuildFunction {
         allowedValueTypeName: BuildStepInputValueTypeName.STRING,
         required: true,
       }),
+      BuildStepInput.createProvider({
+        id: 'slack_hook_url',
+        allowedValueTypeName: BuildStepInputValueTypeName.STRING,
+        required: false,
+      }),
     ],
     fn: async (stepCtx, { inputs, env }) => {
       const { logger } = stepCtx;
-      const slackHookUrl = env.SLACK_HOOK_URL;
       const slackMessage = inputs.message.value as string;
+      const slackHookUrl = (inputs.slack_hook_url.value as string) ?? env.SLACK_HOOK_URL;
       await sendSlackMessageAsync({ logger, slackHookUrl, slackMessage });
     },
   });
@@ -33,8 +38,12 @@ async function sendSlackMessageAsync({
   slackMessage: string;
 }): Promise<void> {
   if (!slackHookUrl) {
-    logger.warn(`"SLACK_HOOK_URL" secret not set`);
-    throw new Error(`Sending Slack message failed - set "SLACK_HOOK_URL" secret`);
+    logger.warn(
+      'Slack webhook URL not provided - provide input "slack_hook_url" or set "SLACK_HOOK_URL" secret'
+    );
+    throw new Error(
+      'Sending Slack message failed - provide input "slack_hook_url" or set "SLACK_HOOK_URL" secret'
+    );
   }
   logger.info('Sending Slack message');
 

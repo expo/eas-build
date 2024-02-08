@@ -27,7 +27,7 @@ describe(createSendSlackMessageFunction, () => {
     loggerErrorMock = jest.spyOn(logger, 'error');
   }
 
-  it('calls the webhook and logs the info messages when successful', async () => {
+  it('calls the default webhook defined in SLACK_HOOK_URL secret and logs the info messages when successful', async () => {
     fetchMock.mockImplementation(() => Promise.resolve({ status: 200, ok: true } as Response));
     const buildStep = sendSlackMessage.createBuildStepFromFunctionCall(
       createGlobalContextMock({}),
@@ -54,6 +54,64 @@ describe(createSendSlackMessageFunction, () => {
     expect(loggerWarnMock).not.toHaveBeenCalled();
   });
 
+  it('calls the webhook provided as input overwriting SLACK_HOOK_URL secret and logs the info messages when successful', async () => {
+    fetchMock.mockImplementation(() => Promise.resolve({ status: 200, ok: true } as Response));
+    const buildStep = sendSlackMessage.createBuildStepFromFunctionCall(
+      createGlobalContextMock({}),
+      {
+        callInputs: {
+          message: 'Test message',
+          slack_hook_url: 'https://another.slack.hook.url',
+        },
+        env: {
+          SLACK_HOOK_URL: 'https://slack.hook.url',
+        },
+        id: sendSlackMessage.id,
+      }
+    );
+    mockLogger(buildStep.ctx.logger);
+    await buildStep.executeAsync();
+    expect(fetchMock).toHaveBeenCalledWith('https://another.slack.hook.url', {
+      method: 'POST',
+      body: JSON.stringify({ text: 'Test message' }),
+      headers: { 'Content-Type': 'application/json' },
+    });
+    expect(loggerInfoMock).toHaveBeenCalledTimes(4);
+    expect(loggerInfoMock).toHaveBeenCalledWith('Sending Slack message');
+    expect(loggerInfoMock).toHaveBeenCalledWith('Slack message sent successfully');
+    expect(loggerWarnMock).not.toHaveBeenCalled();
+  });
+
+  it('calls the webhook provided as reference to specific env variable, overwriting SLACK_HOOK_URL secret and logs the info messages when successful', async () => {
+    fetchMock.mockImplementation(() => Promise.resolve({ status: 200, ok: true } as Response));
+    const buildStep = sendSlackMessage.createBuildStepFromFunctionCall(
+      createGlobalContextMock({
+        staticContextContent: { env: { ANOTHER_SLACK_HOOK_URL: 'https://another.slack.hook.url' } },
+      }),
+      {
+        callInputs: {
+          message: 'Test message',
+          slack_hook_url: '${ eas.env.ANOTHER_SLACK_HOOK_URL }',
+        },
+        env: {
+          SLACK_HOOK_URL: 'https://slack.hook.url',
+        },
+        id: sendSlackMessage.id,
+      }
+    );
+    mockLogger(buildStep.ctx.logger);
+    await buildStep.executeAsync();
+    expect(fetchMock).toHaveBeenCalledWith('https://another.slack.hook.url', {
+      method: 'POST',
+      body: JSON.stringify({ text: 'Test message' }),
+      headers: { 'Content-Type': 'application/json' },
+    });
+    expect(loggerInfoMock).toHaveBeenCalledTimes(4);
+    expect(loggerInfoMock).toHaveBeenCalledWith('Sending Slack message');
+    expect(loggerInfoMock).toHaveBeenCalledWith('Slack message sent successfully');
+    expect(loggerWarnMock).not.toHaveBeenCalled();
+  });
+
   it('does not call the webhook when no url specified', async () => {
     fetchMock.mockImplementation(() => Promise.resolve({ status: 200, ok: true } as Response));
     const buildStep = sendSlackMessage.createBuildStepFromFunctionCall(
@@ -68,12 +126,14 @@ describe(createSendSlackMessageFunction, () => {
     );
     mockLogger(buildStep.ctx.logger);
     const expectedError = new errors.BuildStepRuntimeError(
-      `Sending Slack message failed - set "SLACK_HOOK_URL" secret`
+      'Sending Slack message failed - provide input "slack_hook_url" or set "SLACK_HOOK_URL" secret'
     );
     await expect(buildStep.executeAsync()).rejects.toThrow(expectedError);
     expect(fetchMock).not.toHaveBeenCalled();
     expect(loggerInfoMock).toHaveBeenCalledTimes(1);
-    expect(loggerWarnMock).toHaveBeenCalledWith('"SLACK_HOOK_URL" secret not set');
+    expect(loggerWarnMock).toHaveBeenCalledWith(
+      'Slack webhook URL not provided - provide input "slack_hook_url" or set "SLACK_HOOK_URL" secret'
+    );
   });
 
   it('does not call the webhook when no message specified', async () => {
