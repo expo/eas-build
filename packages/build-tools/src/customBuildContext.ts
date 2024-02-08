@@ -70,6 +70,7 @@ export class CustomBuildContext implements ExternalBuildContextProvider {
     return {
       job: this.job,
       metadata: this.metadata,
+      env: this.env,
     };
   }
 
