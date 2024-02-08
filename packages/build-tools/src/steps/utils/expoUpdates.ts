@@ -3,8 +3,6 @@ import { bunyan } from '@expo/logger';
 import { ExpoConfig } from '@expo/config';
 import { getRuntimeVersionNullableAsync } from '@expo/config-plugins/build/utils/Updates';
 
-import getExpoUpdatesPackageVersionIfInstalledAsync from '../../utils/getExpoUpdatesPackageVersionIfInstalledAsync';
-
 import {
   iosGetNativelyDefinedChannelAsync,
   iosSetChannelNativelyAsync,
@@ -16,7 +14,7 @@ import {
   androidSetRuntimeVersionNativelyAsync,
 } from './android/expoUpdates';
 
-export async function configureEASUpdateIfInstalledAsync({
+export async function configureEASUpdateAsync({
   job,
   workingDirectory,
   logger,
@@ -29,25 +27,9 @@ export async function configureEASUpdateIfInstalledAsync({
   inputs: {
     runtimeVersion?: string;
     channel?: string;
-    throwIfNotConfigured: boolean;
   };
   appConfig: ExpoConfig;
 }): Promise<void> {
-  const expoUpdatesPackageVersion =
-    await getExpoUpdatesPackageVersionIfInstalledAsync(workingDirectory);
-  if (expoUpdatesPackageVersion === null) {
-    if (inputs.throwIfNotConfigured) {
-      logger.error(
-        'Cannot configure EAS Update because the expo-updates package is not installed.'
-      );
-      throw new Error(
-        'Cannot configure EAS Update because the expo-updates package is not installed.'
-      );
-    }
-    logger.warn('Cannot configure EAS Update because the expo-updates package is not installed.');
-    return;
-  }
-
   const runtimeVersion =
     inputs.channel ??
     job.version?.runtimeVersion ??

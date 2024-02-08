@@ -440,10 +440,10 @@ export function validateAllFunctionsExist(
   const calledFunctionsOrFunctionGroup = Array.from(calledFunctionsOrFunctionGroupsSet);
   const externalFunctionIdsSet = new Set(externalFunctionIds);
   const externalFunctionGroupsIdsSet = new Set(externalFunctionGroupsIds);
-  const nonExistentFunctionsOrfunctionGroups = calledFunctionsOrFunctionGroup.filter(
+  const nonExistentFunctionsOrFunctionGroups = calledFunctionsOrFunctionGroup.filter(
     (calledFunctionOrFunctionGroup) => {
       if (
-        isFulldIdNamespaced(calledFunctionOrFunctionGroup) &&
+        isFullIdNamespaced(calledFunctionOrFunctionGroup) &&
         skipNamespacedFunctionsOrFunctionGroupsCheck
       ) {
         return false;
@@ -455,9 +455,9 @@ export function validateAllFunctionsExist(
       );
     }
   );
-  if (nonExistentFunctionsOrfunctionGroups.length > 0) {
+  if (nonExistentFunctionsOrFunctionGroups.length > 0) {
     throw new BuildConfigError(
-      `Calling non-existent functions: ${nonExistentFunctionsOrfunctionGroups
+      `Calling non-existent functions: ${nonExistentFunctionsOrFunctionGroups
         .map((f) => `"${f}"`)
         .join(', ')}.`
     );
@@ -471,6 +471,6 @@ function maybeResolveCustomFunctionRelativePath(dir: string, customFunctionPath:
   return customFunctionPath;
 }
 
-function isFulldIdNamespaced(fullId: string): boolean {
+function isFullIdNamespaced(fullId: string): boolean {
   return fullId.includes('/');
 }

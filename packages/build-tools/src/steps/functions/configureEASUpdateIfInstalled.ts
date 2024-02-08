@@ -4,8 +4,9 @@ import { BuildFunction, BuildStepInput, BuildStepInputValueTypeName } from '@exp
 import { Job, Metadata } from '@expo/eas-build-job';
 import semver from 'semver';
 
-import { configureEASUpdateIfInstalledAsync } from '../utils/expoUpdates';
+import { configureEASUpdateAsync } from '../utils/expoUpdates';
 import { readAppConfig } from '../../utils/appConfig';
+import getExpoUpdatesPackageVersionIfInstalledAsync from '../../utils/getExpoUpdatesPackageVersionIfInstalledAsync';
 
 export function configureEASUpdateIfInstalledFunction(): BuildFunction {
   return new BuildFunction({
@@ -57,7 +58,22 @@ export function configureEASUpdateIfInstalledFunction(): BuildFunction {
         );
       }
 
-      await configureEASUpdateIfInstalledAsync({
+      const expoUpdatesPackageVersion = await getExpoUpdatesPackageVersionIfInstalledAsync(
+        stepCtx.workingDirectory
+      );
+      if (expoUpdatesPackageVersion === null) {
+        if (throwIfNotConfigured) {
+          throw new Error(
+            'Cannot configure EAS Update because the expo-updates package is not installed.'
+          );
+        }
+        stepCtx.logger.warn(
+          'Cannot configure EAS Update because the expo-updates package is not installed.'
+        );
+        return;
+      }
+
+      await configureEASUpdateAsync({
         job,
         workingDirectory: stepCtx.workingDirectory,
         logger: stepCtx.logger,
@@ -65,7 +81,6 @@ export function configureEASUpdateIfInstalledFunction(): BuildFunction {
         inputs: {
           runtimeVersion: runtimeVersionInput,
           channel: releaseChannelInput,
-          throwIfNotConfigured,
         },
       });
     },

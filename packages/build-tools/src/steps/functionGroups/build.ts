@@ -109,6 +109,14 @@ function createStepsForIosBuildWithCredentials({
         throw_if_not_configured: false,
       },
     });
+  const generateGymfile = generateGymfileFromTemplateFunction().createBuildStepFromFunctionCall(
+    globalCtx,
+    {
+      callInputs: {
+        credentials: '${ eas.job.secrets.buildCredentials }',
+      },
+    }
+  );
   return [
     createCheckoutBuildFunction().createBuildStepFromFunctionCall(globalCtx),
     createInstallNodeModulesBuildFunction().createBuildStepFromFunctionCall(globalCtx),
@@ -121,7 +129,7 @@ function createStepsForIosBuildWithCredentials({
     configureEASUpdate,
     configureIosCredentialsFunction().createBuildStepFromFunctionCall(globalCtx),
     configureIosVersionFunction().createBuildStepFromFunctionCall(globalCtx),
-    generateGymfileFromTemplateFunction().createBuildStepFromFunctionCall(globalCtx),
+    generateGymfile,
     runFastlaneFunction().createBuildStepFromFunctionCall(globalCtx),
     createFindAndUploadBuildArtifactsBuildFunction(
       buildToolsContext

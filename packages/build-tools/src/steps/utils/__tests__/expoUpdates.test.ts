@@ -2,7 +2,7 @@ import { Platform, Job } from '@expo/eas-build-job';
 import { createLogger } from '@expo/logger';
 import { ExpoConfig } from '@expo/config';
 
-import { configureEASUpdateIfInstalledAsync } from '../expoUpdates';
+import { configureEASUpdateAsync } from '../expoUpdates';
 import getExpoUpdatesPackageVersionIfInstalledAsync from '../../../utils/getExpoUpdatesPackageVersionIfInstalledAsync';
 import { androidSetChannelNativelyAsync } from '../android/expoUpdates';
 import { iosSetChannelNativelyAsync } from '../ios/expoUpdates';
@@ -16,41 +16,15 @@ jest.mock('../android/expoUpdates');
 jest.mock('../../../android/expoUpdates');
 jest.mock('fs');
 
-describe(configureEASUpdateIfInstalledAsync, () => {
+describe(configureEASUpdateAsync, () => {
   beforeAll(() => {
     jest.restoreAllMocks();
-  });
-
-  it('aborts if expo-updates is not installed', async () => {
-    jest.mocked(getExpoUpdatesPackageVersionIfInstalledAsync).mockResolvedValue(null);
-
-    await expect(
-      configureEASUpdateIfInstalledAsync({
-        job: { platform: Platform.IOS } as unknown as Job,
-        workingDirectory: '/app',
-        logger: createLogger({
-          name: 'test',
-        }),
-        appConfig: {} as unknown as ExpoConfig,
-        inputs: {
-          throwIfNotConfigured: true,
-        },
-      })
-    ).rejects.toThrowError(
-      'Cannot configure EAS Update because the expo-updates package is not installed.'
-    );
-
-    expect(androidSetChannelNativelyAsync).not.toBeCalled();
-    expect(androidSetClassicReleaseChannelNativelyAsync).not.toBeCalled();
-    expect(iosSetChannelNativelyAsync).not.toBeCalled();
-    expect(iosSetClassicReleaseChannelNativelyAsync).not.toBeCalled();
-    expect(getExpoUpdatesPackageVersionIfInstalledAsync).toBeCalledTimes(1);
   });
 
   it('aborts if updates.url (app config) is set but updates.channel (eas.json) is not', async () => {
     jest.mocked(getExpoUpdatesPackageVersionIfInstalledAsync).mockResolvedValue('0.18.0');
 
-    await configureEASUpdateIfInstalledAsync({
+    await configureEASUpdateAsync({
       job: { platform: Platform.IOS } as unknown as Job,
       workingDirectory: '/app',
       logger: createLogger({
@@ -61,9 +35,7 @@ describe(configureEASUpdateIfInstalledAsync, () => {
           url: 'https://u.expo.dev/blahblah',
         },
       } as unknown as ExpoConfig,
-      inputs: {
-        throwIfNotConfigured: true,
-      },
+      inputs: {},
     });
 
     expect(androidSetChannelNativelyAsync).not.toBeCalled();
@@ -76,7 +48,7 @@ describe(configureEASUpdateIfInstalledAsync, () => {
   it('configures for EAS if updates.channel (eas.json) and updates.url (app config) are set', async () => {
     jest.mocked(getExpoUpdatesPackageVersionIfInstalledAsync).mockResolvedValue('0.18.0');
 
-    await configureEASUpdateIfInstalledAsync({
+    await configureEASUpdateAsync({
       job: {
         updates: {
           channel: 'main',
@@ -92,9 +64,7 @@ describe(configureEASUpdateIfInstalledAsync, () => {
           url: 'https://u.expo.dev/blahblah',
         },
       } as unknown as ExpoConfig,
-      inputs: {
-        throwIfNotConfigured: true,
-      },
+      inputs: {},
     });
 
     expect(androidSetChannelNativelyAsync).not.toBeCalled();
@@ -107,7 +77,7 @@ describe(configureEASUpdateIfInstalledAsync, () => {
   it('configures for EAS if the updates.channel and releaseChannel are both set', async () => {
     jest.mocked(getExpoUpdatesPackageVersionIfInstalledAsync).mockResolvedValue('0.18.0');
 
-    await configureEASUpdateIfInstalledAsync({
+    await configureEASUpdateAsync({
       job: {
         updates: { channel: 'main' },
         releaseChannel: 'default',
@@ -122,9 +92,7 @@ describe(configureEASUpdateIfInstalledAsync, () => {
           url: 'https://u.expo.dev/blahblah',
         },
       } as unknown as ExpoConfig,
-      inputs: {
-        throwIfNotConfigured: true,
-      },
+      inputs: {},
     });
 
     expect(androidSetChannelNativelyAsync).not.toBeCalled();

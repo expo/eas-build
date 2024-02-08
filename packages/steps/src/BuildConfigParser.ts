@@ -159,10 +159,7 @@ export class BuildConfigParser {
     functionGroupId: string
   ): BuildStep[] {
     const buildFunctionGroup = buildFunctionGroups[functionGroupId];
-    assert(
-      buildFunctionGroup !== undefined,
-      `Build function group with id "${functionGroupId}" is not defined.`
-    );
+    assert(buildFunctionGroup, `Build function group with id "${functionGroupId}" is not defined.`);
     return buildFunctionGroup.createBuildStepsFromFunctionGroupCall(this.ctx);
   }
 
