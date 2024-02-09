@@ -55,26 +55,6 @@ describe(BuildFunction, () => {
     });
   });
 
-  describe(BuildFunction.isFulldIdNamespaced, () => {
-    it('returns true for namespaced functions', () => {
-      const func = new BuildFunction({
-        namespace: 'sokal',
-        id: 'dominik',
-        fn: () => {},
-      });
-      const funcFullId = func.getFullId();
-      expect(BuildFunction.isFulldIdNamespaced(funcFullId)).toBe(true);
-    });
-    it('returns false for non-namespaced functions', () => {
-      const func = new BuildFunction({
-        id: 'dominik',
-        fn: () => {},
-      });
-      const funcFullId = func.getFullId();
-      expect(BuildFunction.isFulldIdNamespaced(funcFullId)).toBe(false);
-    });
-  });
-
   describe(BuildFunction.prototype.getFullId, () => {
     test('namespace is not defined', () => {
       const buildFunction = new BuildFunction({

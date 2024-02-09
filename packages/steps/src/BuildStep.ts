@@ -339,6 +339,8 @@ export class BuildStep extends BuildStepOutputAccessor {
         cwd: this.ctx.workingDirectory,
         logger: this.ctx.logger,
         env: this.getScriptEnv({ outputsDir, envsDir }),
+        // stdin is /dev/null, std{out,err} are piped into logger.
+        stdio: ['ignore', 'pipe', 'pipe'],
       });
       this.ctx.logger.debug(`Script completed successfully`);
 

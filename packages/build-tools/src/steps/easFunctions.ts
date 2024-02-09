@@ -21,6 +21,7 @@ import { createStartAndroidEmulatorBuildFunction } from './functions/startAndroi
 import { createStartIosSimulatorBuildFunction } from './functions/startIosSimulator';
 import { createInstallMaestroBuildFunction } from './functions/installMaestro';
 import { createGetCredentialsForBuildTriggeredByGithubIntegration } from './functions/getCredentialsForBuildTriggeredByGitHubIntegration';
+import { createInstallPodsBuildFunction } from './functions/installPods';
 import { createSendSlackMessageFunction } from './functions/sendSlackMessage';
 
 export function getEasFunctions(ctx: CustomBuildContext): BuildFunction[] {
@@ -44,6 +45,7 @@ export function getEasFunctions(ctx: CustomBuildContext): BuildFunction[] {
     createStartIosSimulatorBuildFunction(),
     createInstallMaestroBuildFunction(),
     createGetCredentialsForBuildTriggeredByGithubIntegration(ctx),
+    createInstallPodsBuildFunction(),
     createSendSlackMessageFunction(),
   ];
 }

@@ -38,3 +38,15 @@ jobs:
           ref: main
           workflow: update-eas-build-modules.yml
           token: ${{ secrets.EXPO_BOT_PAT }}
+  open-pr-in-eas-cli:
+    name: Open a PR with version bumps in eas-cli
+    needs: publish-to-npm
+    runs-on: ubuntu-latest
+    steps:
+      - name: Open a PR with version bumps in eas-cli
+        uses: benc-uk/workflow-dispatch@v1
+        with:
+          repo: expo/eas-cli
+          ref: main
+          workflow: upgrade-eas-build-modules.yml
+          token: ${{ secrets.EXPO_BOT_PAT }}

@@ -56,6 +56,7 @@ export function createCustomFunctionCall(rawCustomFunctionModulePath: string): B
           logger: ctx.logger,
           cwd: ctx.workingDirectory,
           env,
+          stdio: 'pipe',
         }
       );
     } catch {

@@ -7,7 +7,6 @@ import YAML from 'yaml';
 
 import { BuildConfigError, BuildWorkflowError } from './errors.js';
 import { BuildRuntimePlatform } from './BuildRuntimePlatform.js';
-import { BuildFunction } from './BuildFunction.js';
 import {
   BuildStepInputValueTypeWithRequired,
   BuildStepInputValueTypeName,
@@ -37,7 +36,7 @@ export type BuildStepConfig =
   | BuildStepCommandRun
   | BuildStepBareCommandRun
   | BuildStepFunctionCall
-  | BuildStepBareFunctionCall;
+  | BuildStepBareFunctionOrFunctionGroupCall;
 
 export type BuildStepCommandRun = {
   run: BuildFunctionCallConfig & {
@@ -49,7 +48,7 @@ export type BuildStepBareCommandRun = { run: string };
 export type BuildStepFunctionCall = {
   [functionId: string]: BuildFunctionCallConfig;
 };
-export type BuildStepBareFunctionCall = string;
+export type BuildStepBareFunctionOrFunctionGroupCall = string;
 
 export type BuildFunctionCallConfig = {
   id?: string;
@@ -269,7 +268,8 @@ export const BuildConfigSchema = BuildFunctionsConfigFileSchema.append<BuildConf
 
 interface BuildConfigValidationParams {
   externalFunctionIds?: string[];
-  skipNamespacedFunctionsCheck?: boolean;
+  externalFunctionGroupsIds?: string[];
+  skipNamespacedFunctionsOrFunctionGroupsCheck?: boolean;
 }
 
 export async function readAndValidateBuildConfigAsync(
@@ -410,42 +410,56 @@ export function isBuildStepFunctionCall(step: BuildStepConfig): step is BuildSte
   return Boolean(step) && typeof step === 'object' && !('run' in step);
 }
 
-export function isBuildStepBareFunctionCall(
+export function isBuildStepBareFunctionOrFunctionGroupCall(
   step: BuildStepConfig
-): step is BuildStepBareFunctionCall {
+): step is BuildStepBareFunctionOrFunctionGroupCall {
   return typeof step === 'string';
 }
 
 export function validateAllFunctionsExist(
   config: BuildConfig,
-  { externalFunctionIds = [], skipNamespacedFunctionsCheck }: BuildConfigValidationParams
+  {
+    externalFunctionIds = [],
+    externalFunctionGroupsIds = [],
+    skipNamespacedFunctionsOrFunctionGroupsCheck,
+  }: BuildConfigValidationParams
 ): void {
-  const calledFunctionsSet = new Set<string>();
+  const calledFunctionsOrFunctionGroupsSet = new Set<string>();
   for (const step of config.build.steps) {
     if (typeof step === 'string') {
-      calledFunctionsSet.add(step);
+      calledFunctionsOrFunctionGroupsSet.add(step);
     } else if (step !== null && !('run' in step)) {
       const keys = Object.keys(step);
       assert(
         keys.length === 1,
         'There must be at most one function call in the step (enforced by joi).'
       );
-      calledFunctionsSet.add(keys[0]);
+      calledFunctionsOrFunctionGroupsSet.add(keys[0]);
     }
   }
-  const calledFunctions = Array.from(calledFunctionsSet);
+  const calledFunctionsOrFunctionGroup = Array.from(calledFunctionsOrFunctionGroupsSet);
   const externalFunctionIdsSet = new Set(externalFunctionIds);
-  const nonExistentFunctions = calledFunctions.filter((calledFunction) => {
-    if (BuildFunction.isFulldIdNamespaced(calledFunction) && skipNamespacedFunctionsCheck) {
-      return false;
+  const externalFunctionGroupsIdsSet = new Set(externalFunctionGroupsIds);
+  const nonExistentFunctionsOrFunctionGroups = calledFunctionsOrFunctionGroup.filter(
+    (calledFunctionOrFunctionGroup) => {
+      if (
+        isFullIdNamespaced(calledFunctionOrFunctionGroup) &&
+        skipNamespacedFunctionsOrFunctionGroupsCheck
+      ) {
+        return false;
+      }
+      return (
+        !(calledFunctionOrFunctionGroup in (config.functions ?? {})) &&
+        !externalFunctionIdsSet.has(calledFunctionOrFunctionGroup) &&
+        !externalFunctionGroupsIdsSet.has(calledFunctionOrFunctionGroup)
+      );
     }
-    return (
-      !(calledFunction in (config.functions ?? {})) && !externalFunctionIdsSet.has(calledFunction)
-    );
-  });
-  if (nonExistentFunctions.length > 0) {
+  );
+  if (nonExistentFunctionsOrFunctionGroups.length > 0) {
     throw new BuildConfigError(
-      `Calling non-existent functions: ${nonExistentFunctions.map((f) => `"${f}"`).join(', ')}.`
+      `Calling non-existent functions: ${nonExistentFunctionsOrFunctionGroups
+        .map((f) => `"${f}"`)
+        .join(', ')}.`
     );
   }
 }
@@ -455,4 +469,8 @@ function maybeResolveCustomFunctionRelativePath(dir: string, customFunctionPath:
     return path.resolve(dir, customFunctionPath);
   }
   return customFunctionPath;
+}
+
+function isFullIdNamespaced(fullId: string): boolean {
+  return fullId.includes('/');
 }

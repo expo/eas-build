@@ -4,11 +4,11 @@ import url from 'url';
 
 import {
   BuildStepBareCommandRun,
-  BuildStepBareFunctionCall,
+  BuildStepBareFunctionOrFunctionGroupCall,
   BuildStepCommandRun,
   BuildStepFunctionCall,
   isBuildStepBareCommandRun,
-  isBuildStepBareFunctionCall,
+  isBuildStepBareFunctionOrFunctionGroupCall,
   isBuildStepCommandRun,
   isBuildStepFunctionCall,
   readRawBuildConfigAsync,
@@ -64,7 +64,7 @@ describe(readAndValidateBuildConfigAsync, () => {
         },
       },
     });
-    assert(isBuildStepBareFunctionCall(config.build.steps[1]));
+    assert(isBuildStepBareFunctionOrFunctionGroupCall(config.build.steps[1]));
     expect(config.build.steps[1]).toBe('say_hi_wojtek');
     expect(config.functions?.say_hi).toBeDefined();
     expect(config.functions?.say_hi_wojtek).toBeDefined();
@@ -954,7 +954,18 @@ describe(validateAllFunctionsExist, () => {
       validateAllFunctionsExist(buildConfig, { externalFunctionIds: [] });
     }).toThrowError(/Calling non-existent functions: "say_hi", "say_hello"/);
   });
-  test('non-existent namespaced functions with skipNamespacedFunctionsCheck = false', () => {
+  test('non-existent function groups', () => {
+    const buildConfig: BuildConfig = {
+      build: {
+        steps: ['eas/build'],
+      },
+    };
+
+    expect(() => {
+      validateAllFunctionsExist(buildConfig, { externalFunctionIds: [] });
+    }).toThrowError(/Calling non-existent functions: "eas\/build"/);
+  });
+  test('non-existent namespaced functions with skipNamespacedFunctionsOrFunctionGroupsCheck = false', () => {
     const buildConfig: BuildConfig = {
       build: {
         steps: ['abc/say_hi', 'abc/say_hello'],
@@ -964,11 +975,11 @@ describe(validateAllFunctionsExist, () => {
     expect(() => {
       validateAllFunctionsExist(buildConfig, {
         externalFunctionIds: [],
-        skipNamespacedFunctionsCheck: false,
+        skipNamespacedFunctionsOrFunctionGroupsCheck: false,
       });
     }).toThrowError(/Calling non-existent functions: "abc\/say_hi", "abc\/say_hello"/);
   });
-  test('non-existent namespaced functions with skipNamespacedFunctionsCheck = true', () => {
+  test('non-existent namespaced functions with skipNamespacedFunctionsOrFunctionGroupsCheck = true', () => {
     const buildConfig: BuildConfig = {
       build: {
         steps: ['abc/say_hi', 'abc/say_hello'],
@@ -978,7 +989,7 @@ describe(validateAllFunctionsExist, () => {
     expect(() => {
       validateAllFunctionsExist(buildConfig, {
         externalFunctionIds: [],
-        skipNamespacedFunctionsCheck: true,
+        skipNamespacedFunctionsOrFunctionGroupsCheck: true,
       });
     }).not.toThrow();
   });
@@ -992,6 +1003,19 @@ describe(validateAllFunctionsExist, () => {
     expect(() => {
       validateAllFunctionsExist(buildConfig, {
         externalFunctionIds: ['say_hi', 'say_hello'],
+      });
+    }).not.toThrowError();
+  });
+  test('works with external function groups', () => {
+    const buildConfig: BuildConfig = {
+      build: {
+        steps: ['hi'],
+      },
+    };
+
+    expect(() => {
+      validateAllFunctionsExist(buildConfig, {
+        externalFunctionGroupsIds: ['hi'],
       });
     }).not.toThrowError();
   });
@@ -1015,7 +1039,7 @@ const buildStepFunctionCall: BuildStepFunctionCall = {
   },
 };
 
-const buildStepBareFunctionCall: BuildStepBareFunctionCall = 'say_hi';
+const buildStepBareFunctionCall: BuildStepBareFunctionOrFunctionGroupCall = 'say_hi';
 
 describe(isBuildStepCommandRun, () => {
   it.each([buildStepBareCommandRun, buildStepFunctionCall, buildStepBareFunctionCall])(
@@ -1053,14 +1077,14 @@ describe(isBuildStepFunctionCall, () => {
   });
 });
 
-describe(isBuildStepBareFunctionCall, () => {
+describe(isBuildStepBareFunctionOrFunctionGroupCall, () => {
   it.each([buildStepCommandRun, buildStepBareCommandRun, buildStepFunctionCall])(
     'returns false',
     (i) => {
-      expect(isBuildStepBareFunctionCall(i)).toBe(false);
+      expect(isBuildStepBareFunctionOrFunctionGroupCall(i)).toBe(false);
     }
   );
   it('returns true', () => {
-    expect(isBuildStepBareFunctionCall(buildStepBareFunctionCall)).toBe(true);
+    expect(isBuildStepBareFunctionOrFunctionGroupCall(buildStepBareFunctionCall)).toBe(true);
   });
 });

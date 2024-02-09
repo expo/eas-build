@@ -101,6 +101,7 @@ async function runCustomJsFunctionAsync(): Promise<void> {
       promises.push(
         spawnAsync('set-output', [output.id, output.value], {
           env,
+          stdio: 'pipe',
         })
       );
     }
@@ -111,6 +112,7 @@ async function runCustomJsFunctionAsync(): Promise<void> {
       promises.push(
         spawnAsync('set-env', [envName, envValue], {
           env,
+          stdio: 'pipe',
         })
       );
     }
