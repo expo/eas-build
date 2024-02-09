@@ -23,6 +23,14 @@ export function createSendSlackMessageFunction(): BuildFunction {
       const { logger } = stepCtx;
       const slackMessage = inputs.message.value as string;
       const slackHookUrl = (inputs.slack_hook_url.value as string) ?? env.SLACK_HOOK_URL;
+      if (!slackHookUrl) {
+        logger.warn(
+          'Slack webhook URL not provided - provide input "slack_hook_url" or set "SLACK_HOOK_URL" secret'
+        );
+        throw new Error(
+          'Sending Slack message failed - provide input "slack_hook_url" or set "SLACK_HOOK_URL" secret'
+        );
+      }
       await sendSlackMessageAsync({ logger, slackHookUrl, slackMessage });
     },
   });
@@ -34,17 +42,9 @@ async function sendSlackMessageAsync({
   slackMessage,
 }: {
   logger: bunyan;
-  slackHookUrl: string | undefined;
+  slackHookUrl: string;
   slackMessage: string;
 }): Promise<void> {
-  if (!slackHookUrl) {
-    logger.warn(
-      'Slack webhook URL not provided - provide input "slack_hook_url" or set "SLACK_HOOK_URL" secret'
-    );
-    throw new Error(
-      'Sending Slack message failed - provide input "slack_hook_url" or set "SLACK_HOOK_URL" secret'
-    );
-  }
   logger.info('Sending Slack message');
 
   const body = { text: slackMessage };
