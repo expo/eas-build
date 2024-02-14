@@ -45,7 +45,7 @@ export function getSelectedStatusCheckFromIfStatementTemplate(
 
 export function getObjectValueForInterpolation(
   path: string,
-  obj: Record<string, any>
+  obj: Record<string, unknown>
 ): string | number | boolean | null {
   const value = get(obj, path);
 
@@ -96,7 +96,7 @@ function interpolate(
 }
 
 function isAllowedValueTypeForObjectInterpolation(
-  value: any
+  value: unknown
 ): value is string | number | boolean | object | null {
   return (
     typeof value === 'string' ||

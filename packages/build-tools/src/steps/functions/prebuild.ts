@@ -37,7 +37,7 @@ export function createPrebuildBuildFunction(): BuildFunction {
       const packageManager = resolvePackageManager(stepCtx.global.projectTargetDirectory);
 
       assert(stepCtx.global.staticContext.job, 'Job is not defined');
-      const job = stepCtx.global.staticContext.job as Job;
+      const job = stepCtx.global.staticContext.job;
       const prebuildCommandArgs = getPrebuildCommandArgs(job, {
         clean: inputs.clean.value as boolean,
       });

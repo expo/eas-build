@@ -1,6 +1,7 @@
 import os from 'os';
 import path from 'path';
 
+import { BuildStaticContext } from '@expo/eas-build-job';
 import { bunyan } from '@expo/logger';
 import { v4 as uuidv4 } from 'uuid';
 
@@ -24,7 +25,7 @@ interface SerializedExternalBuildContextProvider {
   defaultWorkingDirectory: string;
   buildLogsDirectory: string;
   runtimePlatform: BuildRuntimePlatform;
-  staticContext: Record<string, any>;
+  staticContext: BuildStaticContext;
   env: BuildStepEnv;
 }
 
@@ -36,7 +37,7 @@ export interface ExternalBuildContextProvider {
   readonly runtimePlatform: BuildRuntimePlatform;
   readonly logger: bunyan;
 
-  readonly staticContext: () => Record<string, any>;
+  readonly staticContext: () => BuildStaticContext;
 
   readonly env: BuildStepEnv;
   updateEnv(env: BuildStepEnv): void;
@@ -86,7 +87,7 @@ export class BuildStepGlobalContext {
     return this.provider.env;
   }
 
-  public get staticContext(): Record<string, any> {
+  public get staticContext(): BuildStaticContext {
     return this.provider.staticContext();
   }
 

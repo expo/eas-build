@@ -1,6 +1,7 @@
 import path from 'path';
 import assert from 'assert';
 
+import { Platform } from '@expo/eas-build-job';
 import { BuildFunction, BuildStepInput, BuildStepInputValueTypeName } from '@expo/steps';
 
 import { resolveGradleCommand, runGradleCommand } from '../utils/android/gradle';
@@ -19,6 +20,10 @@ export function runGradleFunction(): BuildFunction {
     ],
     fn: async (stepCtx, { env, inputs }) => {
       assert(stepCtx.global.staticContext.job, 'Job is required');
+      assert(
+        stepCtx.global.staticContext.job.platform === Platform.ANDROID,
+        'This function is only available when building for Android'
+      );
       const command = resolveGradleCommand(
         stepCtx.global.staticContext.job,
         inputs.command.value as string | undefined

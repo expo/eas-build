@@ -1,6 +1,7 @@
 import os from 'os';
 import path from 'path';
 
+import { BuildStaticContext } from '@expo/eas-build-job';
 import { bunyan } from '@expo/logger';
 import { v4 as uuidv4 } from 'uuid';
 
@@ -24,12 +25,12 @@ export class MockContextProvider implements ExternalBuildContextProvider {
     public readonly projectTargetDirectory: string,
     public readonly defaultWorkingDirectory: string,
     public readonly buildLogsDirectory: string,
-    public readonly staticContextContent: Record<string, any> = {}
+    public readonly staticContextContent: BuildStaticContext
   ) {}
   public get env(): BuildStepEnv {
     return this._env;
   }
-  public staticContext(): any {
+  public staticContext(): BuildStaticContext {
     return { ...this.staticContextContent };
   }
   public updateEnv(env: BuildStepEnv): void {
@@ -45,7 +46,7 @@ interface BuildContextParams {
   projectSourceDirectory?: string;
   projectTargetDirectory?: string;
   relativeWorkingDirectory?: string;
-  staticContextContent?: Record<string, any>;
+  staticContextContent?: BuildStaticContext;
 }
 
 export function createStepContextMock({
@@ -95,7 +96,7 @@ export function createGlobalContextMock({
         ? path.resolve(resolvedProjectTargetDirectory, relativeWorkingDirectory)
         : resolvedProjectTargetDirectory,
       '/non/existent/dir',
-      staticContextContent ?? {}
+      staticContextContent ?? ({} as BuildStaticContext)
     ),
     skipCleanup ?? false
   );
