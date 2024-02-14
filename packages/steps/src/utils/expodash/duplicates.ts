@@ -1,4 +1,4 @@
-export function duplicates<T = any>(items: T[]): T[] {
+export function duplicates<T>(items: T[]): T[] {
   const visitedItemsSet = new Set<T>();
   const duplicatedItemsSet = new Set<T>();
   for (const item of items) {

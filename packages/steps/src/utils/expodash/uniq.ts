@@ -1,4 +1,4 @@
-export function uniq<T = any>(items: T[]): T[] {
+export function uniq<T>(items: T[]): T[] {
   const set = new Set(items);
   return [...set];
 }

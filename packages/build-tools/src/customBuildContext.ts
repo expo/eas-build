@@ -1,6 +1,14 @@
 import path from 'path';
 
-import { BuildPhase, BuildTrigger, Env, Job, Metadata, Platform } from '@expo/eas-build-job';
+import {
+  BuildPhase,
+  BuildStaticContext,
+  BuildTrigger,
+  Env,
+  Job,
+  Metadata,
+  Platform,
+} from '@expo/eas-build-job';
 import { bunyan } from '@expo/logger';
 import { ExternalBuildContextProvider, BuildRuntimePlatform } from '@expo/steps';
 
@@ -66,10 +74,10 @@ export class CustomBuildContext implements ExternalBuildContextProvider {
     return this._env;
   }
 
-  public staticContext(): any {
+  public staticContext(): BuildStaticContext {
     return {
       job: this.job,
-      metadata: this.metadata,
+      metadata: this.metadata ?? null,
       env: this.env,
     };
   }

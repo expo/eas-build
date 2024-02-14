@@ -18,3 +18,4 @@ export { Metadata, sanitizeMetadata } from './metadata';
 export * from './logs';
 export * as errors from './errors';
 export * from './artifacts';
+export * from './context';

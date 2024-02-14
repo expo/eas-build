@@ -43,8 +43,8 @@ export enum BuildStepLogMarker {
   END_STEP = 'end-step',
 }
 
-export type BuildStepFunction = (
-  ctx: BuildStepContext,
+export type BuildStepFunction<TStaticContext> = (
+  ctx: BuildStepContext<TStaticContext>,
   {
     inputs,
     outputs,
@@ -116,7 +116,7 @@ export class BuildStepOutputAccessor {
   }
 }
 
-export class BuildStep extends BuildStepOutputAccessor {
+export class BuildStep<TStaticContext> extends BuildStepOutputAccessor {
   public readonly id: string;
   public readonly name?: string;
   public readonly displayName: string;
@@ -124,9 +124,9 @@ export class BuildStep extends BuildStepOutputAccessor {
   public readonly inputs?: BuildStepInput[];
   public readonly outputs?: BuildStepOutput[];
   public readonly command?: string;
-  public readonly fn?: BuildStepFunction;
+  public readonly fn?: BuildStepFunction<TStaticContext>;
   public readonly shell: string;
-  public readonly ctx: BuildStepContext;
+  public readonly ctx: BuildStepContext<TStaticContext>;
   public readonly env: BuildStepEnv;
   public readonly ifCondition?: string;
   public status: BuildStepStatus;
@@ -168,7 +168,7 @@ export class BuildStep extends BuildStepOutputAccessor {
   }
 
   constructor(
-    ctx: BuildStepGlobalContext,
+    ctx: BuildStepGlobalContext<TStaticContext>,
     {
       id,
       name,
@@ -189,7 +189,7 @@ export class BuildStep extends BuildStepOutputAccessor {
       inputs?: BuildStepInput[];
       outputs?: BuildStepOutput[];
       command?: string;
-      fn?: BuildStepFunction;
+      fn?: BuildStepFunction<TStaticContext>;
       workingDirectory?: string;
       shell?: string;
       supportedRuntimePlatforms?: BuildRuntimePlatform[];

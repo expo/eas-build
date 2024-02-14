@@ -82,7 +82,7 @@ async function runCustomJsFunctionAsync(): Promise<void> {
   const env = serializedFunctionArguments.env;
   const envBefore = cloneDeep(serializedFunctionArguments.env);
 
-  let customModule: any;
+  let customModule: { default: BuildStepFunction };
   try {
     customModule = await require(customJavascriptFunctionModulePath);
   } catch (e) {
@@ -90,7 +90,7 @@ async function runCustomJsFunctionAsync(): Promise<void> {
     throw e;
   }
 
-  const customJavascriptFunction: BuildStepFunction = customModule.default;
+  const customJavascriptFunction = customModule.default;
 
   await customJavascriptFunction(ctx, { inputs, outputs, env });
 
