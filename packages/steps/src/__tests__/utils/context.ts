@@ -1,6 +1,7 @@
 import os from 'os';
 import path from 'path';
 
+import { BuildStaticContext } from '@expo/eas-build-job';
 import { bunyan } from '@expo/logger';
 import { v4 as uuidv4 } from 'uuid';
 
@@ -14,9 +15,7 @@ import { BuildStepEnv } from '../../BuildStepEnv.js';
 
 import { createMockLogger } from './logger.js';
 
-export class MockContextProvider<TStaticContext>
-  implements ExternalBuildContextProvider<TStaticContext>
-{
+export class MockContextProvider implements ExternalBuildContextProvider {
   private _env: BuildStepEnv = {};
 
   constructor(
@@ -26,12 +25,12 @@ export class MockContextProvider<TStaticContext>
     public readonly projectTargetDirectory: string,
     public readonly defaultWorkingDirectory: string,
     public readonly buildLogsDirectory: string,
-    public readonly staticContextContent: TStaticContext
+    public readonly staticContextContent: BuildStaticContext
   ) {}
   public get env(): BuildStepEnv {
     return this._env;
   }
-  public staticContext(): TStaticContext {
+  public staticContext(): BuildStaticContext {
     return { ...this.staticContextContent };
   }
   public updateEnv(env: BuildStepEnv): void {
@@ -39,7 +38,7 @@ export class MockContextProvider<TStaticContext>
   }
 }
 
-interface BuildContextParams<TStaticContext> {
+interface BuildContextParams {
   buildId?: string;
   logger?: bunyan;
   skipCleanup?: boolean;
@@ -47,10 +46,10 @@ interface BuildContextParams<TStaticContext> {
   projectSourceDirectory?: string;
   projectTargetDirectory?: string;
   relativeWorkingDirectory?: string;
-  staticContextContent?: TStaticContext;
+  staticContextContent?: BuildStaticContext;
 }
 
-export function createStepContextMock<TStaticContext>({
+export function createStepContextMock({
   buildId,
   logger,
   skipCleanup,
@@ -59,7 +58,7 @@ export function createStepContextMock<TStaticContext>({
   projectTargetDirectory,
   relativeWorkingDirectory,
   staticContextContent,
-}: BuildContextParams<TStaticContext> = {}): BuildStepContext<TStaticContext> {
+}: BuildContextParams = {}): BuildStepContext {
   const globalCtx = createGlobalContextMock({
     buildId,
     logger,
@@ -76,7 +75,7 @@ export function createStepContextMock<TStaticContext>({
   });
 }
 
-export function createGlobalContextMock<TStaticContext>({
+export function createGlobalContextMock({
   logger,
   skipCleanup,
   runtimePlatform,
@@ -84,11 +83,11 @@ export function createGlobalContextMock<TStaticContext>({
   projectTargetDirectory,
   relativeWorkingDirectory,
   staticContextContent,
-}: BuildContextParams<TStaticContext> = {}): BuildStepGlobalContext<TStaticContext> {
+}: BuildContextParams = {}): BuildStepGlobalContext {
   const resolvedProjectTargetDirectory =
     projectTargetDirectory ?? path.join(os.tmpdir(), 'eas-build', uuidv4());
-  return new BuildStepGlobalContext<TStaticContext>(
-    new MockContextProvider<TStaticContext>(
+  return new BuildStepGlobalContext(
+    new MockContextProvider(
       logger ?? createMockLogger(),
       runtimePlatform ?? BuildRuntimePlatform.LINUX,
       projectSourceDirectory ?? '/non/existent/dir',
@@ -97,7 +96,7 @@ export function createGlobalContextMock<TStaticContext>({
         ? path.resolve(resolvedProjectTargetDirectory, relativeWorkingDirectory)
         : resolvedProjectTargetDirectory,
       '/non/existent/dir',
-      staticContextContent ?? ({} as TStaticContext)
+      staticContextContent ?? ({} as BuildStaticContext)
     ),
     skipCleanup ?? false
   );

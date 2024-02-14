@@ -1,6 +1,7 @@
 import os from 'os';
 import path from 'path';
 
+import { BuildStaticContext } from '@expo/eas-build-job';
 import { bunyan } from '@expo/logger';
 import { v4 as uuidv4 } from 'uuid';
 
@@ -18,17 +19,17 @@ import { BuildStepRuntimeError } from './errors.js';
 import { BuildRuntimePlatform } from './BuildRuntimePlatform.js';
 import { BuildStepEnv } from './BuildStepEnv.js';
 
-interface SerializedExternalBuildContextProvider<TStaticContext> {
+interface SerializedExternalBuildContextProvider {
   projectSourceDirectory: string;
   projectTargetDirectory: string;
   defaultWorkingDirectory: string;
   buildLogsDirectory: string;
   runtimePlatform: BuildRuntimePlatform;
-  staticContext: TStaticContext;
+  staticContext: BuildStaticContext;
   env: BuildStepEnv;
 }
 
-export interface ExternalBuildContextProvider<TStaticContext> {
+export interface ExternalBuildContextProvider {
   readonly projectSourceDirectory: string;
   readonly projectTargetDirectory: string;
   readonly defaultWorkingDirectory: string;
@@ -36,20 +37,20 @@ export interface ExternalBuildContextProvider<TStaticContext> {
   readonly runtimePlatform: BuildRuntimePlatform;
   readonly logger: bunyan;
 
-  readonly staticContext: () => TStaticContext;
+  readonly staticContext: () => BuildStaticContext;
 
   readonly env: BuildStepEnv;
   updateEnv(env: BuildStepEnv): void;
 }
 
-export interface SerializedBuildStepGlobalContext<TStaticContext> {
+export interface SerializedBuildStepGlobalContext {
   stepsInternalBuildDirectory: string;
   stepById: Record<string, SerializedBuildStepOutputAccessor>;
-  provider: SerializedExternalBuildContextProvider<TStaticContext>;
+  provider: SerializedExternalBuildContextProvider;
   skipCleanup: boolean;
 }
 
-export class BuildStepGlobalContext<TStaticContext> {
+export class BuildStepGlobalContext {
   public stepsInternalBuildDirectory: string;
   public readonly runtimePlatform: BuildRuntimePlatform;
   public readonly baseLogger: bunyan;
@@ -58,7 +59,7 @@ export class BuildStepGlobalContext<TStaticContext> {
   private stepById: Record<string, BuildStepOutputAccessor> = {};
 
   constructor(
-    private readonly provider: ExternalBuildContextProvider<TStaticContext>,
+    private readonly provider: ExternalBuildContextProvider,
     public readonly skipCleanup: boolean
   ) {
     this.stepsInternalBuildDirectory = path.join(os.tmpdir(), 'eas-build', uuidv4());
@@ -86,7 +87,7 @@ export class BuildStepGlobalContext<TStaticContext> {
     return this.provider.env;
   }
 
-  public get staticContext(): TStaticContext {
+  public get staticContext(): BuildStaticContext {
     return this.provider.staticContext();
   }
 
@@ -94,7 +95,7 @@ export class BuildStepGlobalContext<TStaticContext> {
     this.provider.updateEnv(updatedEnv);
   }
 
-  public registerStep(step: BuildStep<TStaticContext>): void {
+  public registerStep(step: BuildStep): void {
     this.stepById[step.id] = step;
   }
 
@@ -119,10 +120,7 @@ export class BuildStepGlobalContext<TStaticContext> {
     });
   }
 
-  public stepCtx(options: {
-    logger: bunyan;
-    relativeWorkingDirectory?: string;
-  }): BuildStepContext<TStaticContext> {
+  public stepCtx(options: { logger: bunyan; relativeWorkingDirectory?: string }): BuildStepContext {
     return new BuildStepContext(this, options);
   }
 
@@ -133,7 +131,7 @@ export class BuildStepGlobalContext<TStaticContext> {
     );
   }
 
-  public serialize(): SerializedBuildStepGlobalContext<TStaticContext> {
+  public serialize(): SerializedBuildStepGlobalContext {
     return {
       stepsInternalBuildDirectory: this.stepsInternalBuildDirectory,
       stepById: Object.fromEntries(
@@ -152,11 +150,11 @@ export class BuildStepGlobalContext<TStaticContext> {
     };
   }
 
-  public static deserialize<TStaticContext>(
-    serialized: SerializedBuildStepGlobalContext<TStaticContext>,
+  public static deserialize(
+    serialized: SerializedBuildStepGlobalContext,
     logger: bunyan
-  ): BuildStepGlobalContext<TStaticContext> {
-    const deserializedProvider: ExternalBuildContextProvider<TStaticContext> = {
+  ): BuildStepGlobalContext {
+    const deserializedProvider: ExternalBuildContextProvider = {
       projectSourceDirectory: serialized.provider.projectSourceDirectory,
       projectTargetDirectory: serialized.provider.projectTargetDirectory,
       defaultWorkingDirectory: serialized.provider.defaultWorkingDirectory,
@@ -177,17 +175,17 @@ export class BuildStepGlobalContext<TStaticContext> {
   }
 }
 
-export interface SerializedBuildStepContext<TStaticContext> {
+export interface SerializedBuildStepContext {
   relativeWorkingDirectory?: string;
-  global: SerializedBuildStepGlobalContext<TStaticContext>;
+  global: SerializedBuildStepGlobalContext;
 }
 
-export class BuildStepContext<TStaticContext> {
+export class BuildStepContext {
   public readonly logger: bunyan;
   public readonly relativeWorkingDirectory?: string;
 
   constructor(
-    private readonly ctx: BuildStepGlobalContext<TStaticContext>,
+    private readonly ctx: BuildStepGlobalContext,
     {
       logger,
       relativeWorkingDirectory,
@@ -200,7 +198,7 @@ export class BuildStepContext<TStaticContext> {
     this.relativeWorkingDirectory = relativeWorkingDirectory;
   }
 
-  public get global(): BuildStepGlobalContext<TStaticContext> {
+  public get global(): BuildStepGlobalContext {
     return this.ctx;
   }
 
@@ -210,17 +208,17 @@ export class BuildStepContext<TStaticContext> {
       : this.ctx.defaultWorkingDirectory;
   }
 
-  public serialize(): SerializedBuildStepContext<TStaticContext> {
+  public serialize(): SerializedBuildStepContext {
     return {
       relativeWorkingDirectory: this.relativeWorkingDirectory,
       global: this.ctx.serialize(),
     };
   }
 
-  public static deserialize<TStaticContext>(
-    serialized: SerializedBuildStepContext<TStaticContext>,
+  public static deserialize(
+    serialized: SerializedBuildStepContext,
     logger: bunyan
-  ): BuildStepContext<TStaticContext> {
+  ): BuildStepContext {
     const deserializedGlobal = BuildStepGlobalContext.deserialize(serialized.global, logger);
     return new BuildStepContext(deserializedGlobal, {
       logger,
