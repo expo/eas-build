@@ -1,10 +1,9 @@
-import path from 'path';
-
 import { GenericArtifactType, ManagedArtifactType } from '@expo/eas-build-job';
 import { BuildFunction, BuildStepInput, BuildStepInputValueTypeName } from '@expo/steps';
-import nullthrows from 'nullthrows';
+import z from 'zod';
 
 import { CustomBuildContext } from '../../customBuildContext';
+import { findArtifacts } from '../../utils/artifacts';
 
 const artifactTypeInputToManagedArtifactType: Record<string, ManagedArtifactType | undefined> = {
   'application-archive': ManagedArtifactType.APPLICATION_ARCHIVE,
@@ -36,20 +35,32 @@ export function createUploadArtifactBuildFunction(ctx: CustomBuildContext): Buil
         allowedValueTypeName: BuildStepInputValueTypeName.STRING,
       }),
       BuildStepInput.createProvider({
+        id: 'paths',
+        required: false,
+        allowedValueTypeName: BuildStepInputValueTypeName.JSON,
+      }),
+      // Backwards compatibility
+      BuildStepInput.createProvider({
         id: 'path',
-        required: true,
+        required: false,
         allowedValueTypeName: BuildStepInputValueTypeName.STRING,
       }),
     ],
     fn: async (stepsCtx, { inputs }) => {
-      const filePath = path.resolve(
-        stepsCtx.workingDirectory,
-        nullthrows(inputs.path.value).toString()
-      );
+      const artifactSearchPaths = z
+        .array(z.string())
+        .parse(inputs.paths.value ?? [inputs.path.value]);
+      const artifactPaths = (
+        await Promise.all(
+          artifactSearchPaths.map((searchPath) =>
+            findArtifacts(stepsCtx.workingDirectory, searchPath, stepsCtx.logger)
+          )
+        )
+      ).flat();
 
       const artifact = {
         type: parseArtifactTypeInput(`${inputs.type.value}`),
-        paths: [filePath],
+        paths: artifactPaths,
         key: inputs.key.value as string,
       };
 
