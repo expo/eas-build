@@ -46,7 +46,7 @@ describe('Ios.JobSchema', () => {
           ENV_VAR: '123',
         },
       },
-      buildExpoUrl: 'https://expo.dev/fake/build/url',
+      expoBuildUrl: 'https://expo.dev/fake/build/url',
     };
 
     const { value, error } = Ios.JobSchema.validate(genericJob, joiOptions);

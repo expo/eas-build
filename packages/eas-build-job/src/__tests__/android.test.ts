@@ -44,7 +44,7 @@ describe('Android.JobSchema', () => {
           SOME_ENV: '123',
         },
       },
-      buildExpoUrl: 'https://expo.dev/fake/build/url',
+      expoBuildUrl: 'https://expo.dev/fake/build/url',
     };
 
     const { value, error } = Android.JobSchema.validate(genericJob, joiOptions);

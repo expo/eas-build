@@ -120,7 +120,7 @@ export interface Job {
   experimental?: {
     prebuildCommand?: string;
   };
-  buildExpoUrl?: string;
+  expoBuildUrl?: string;
 }
 
 const SecretsSchema = Joi.object({
@@ -201,5 +201,5 @@ export const JobSchema = Joi.object({
   experimental: Joi.object({
     prebuildCommand: Joi.string(),
   }),
-  buildExpoUrl: Joi.string().uri().optional(),
+  expoBuildUrl: Joi.string().uri().optional(),
 }).oxor('releaseChannel', 'updates.channel');
