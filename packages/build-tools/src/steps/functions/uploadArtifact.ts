@@ -1,6 +1,7 @@
+import assert from 'assert';
+
 import { GenericArtifactType, ManagedArtifactType } from '@expo/eas-build-job';
 import { BuildFunction, BuildStepInput, BuildStepInputValueTypeName } from '@expo/steps';
-import z from 'zod';
 
 import { CustomBuildContext } from '../../customBuildContext';
 import { findArtifacts } from '../../utils/artifacts';
@@ -35,21 +36,14 @@ export function createUploadArtifactBuildFunction(ctx: CustomBuildContext): Buil
         allowedValueTypeName: BuildStepInputValueTypeName.STRING,
       }),
       BuildStepInput.createProvider({
-        id: 'paths',
-        required: false,
-        allowedValueTypeName: BuildStepInputValueTypeName.JSON,
-      }),
-      // Backwards compatibility
-      BuildStepInput.createProvider({
         id: 'path',
-        required: false,
+        required: true,
         allowedValueTypeName: BuildStepInputValueTypeName.STRING,
       }),
     ],
     fn: async (stepsCtx, { inputs }) => {
-      const artifactSearchPaths = z
-        .array(z.string())
-        .parse(inputs.paths.value ?? [inputs.path.value]);
+      assert(inputs.path.value, 'Path input cannot be empty.');
+      const artifactSearchPaths = inputs.path.value.toString().split('\n');
       const artifactPaths = (
         await Promise.all(
           artifactSearchPaths.map((searchPath) =>

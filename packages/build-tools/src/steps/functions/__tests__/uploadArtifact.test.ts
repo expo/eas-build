@@ -26,7 +26,7 @@ describe(createUploadArtifactBuildFunction, () => {
     const buildStep = uploadArtifact.createBuildStepFromFunctionCall(createGlobalContextMock({}), {
       callInputs: {
         type,
-        paths: ['/'],
+        path: '/',
       },
     });
     const typeInput = buildStep.inputs?.find((input) => input.id === 'type')!;
@@ -43,7 +43,7 @@ describe(createUploadArtifactBuildFunction, () => {
     await expect(buildStep.executeAsync()).resolves.not.toThrowError();
   });
 
-  it('accepts `paths` argument', async () => {
+  it('accepts multiline `path` argument', async () => {
     const globalContext = createGlobalContextMock({});
     const tempDir = globalContext.defaultWorkingDirectory;
 
@@ -71,10 +71,10 @@ describe(createUploadArtifactBuildFunction, () => {
       const buildStep = uploadArtifact.createBuildStepFromFunctionCall(globalContext, {
         callInputs: {
           type: 'build-artifact',
-          paths: [
+          path: [
             path.join('Build', 'Products', '*simulator', '*.app'),
             path.relative(tempDir, directArtifactPath),
-          ],
+          ].join('\n'),
         },
       });
 
@@ -101,7 +101,7 @@ describe(createUploadArtifactBuildFunction, () => {
   it('does not throw for undefined type input', async () => {
     const buildStep = uploadArtifact.createBuildStepFromFunctionCall(createGlobalContextMock({}), {
       callInputs: {
-        paths: '/',
+        path: '/',
       },
     });
     for (const input of buildStep.inputs ?? []) {
@@ -113,7 +113,7 @@ describe(createUploadArtifactBuildFunction, () => {
     const buildStep = uploadArtifact.createBuildStepFromFunctionCall(createGlobalContextMock({}), {
       callInputs: {
         type,
-        paths: '/',
+        path: '/',
       },
     });
     const typeInput = buildStep.inputs?.find((input) => input.id === 'type')!;
