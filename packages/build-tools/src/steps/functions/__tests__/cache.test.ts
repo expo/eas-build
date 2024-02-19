@@ -2,32 +2,47 @@ import fs from 'fs/promises';
 import os from 'os';
 import path from 'path';
 
+import { Job, Metadata } from '@expo/eas-build-job';
 import {
   BuildRuntimePlatform,
   BuildStepGlobalContext,
+  Cache,
+  DynamicCacheManager,
   ExternalBuildContextProvider,
-  CacheManager,
 } from '@expo/steps';
 import { anything, capture, instance, mock, reset, verify, when } from 'ts-mockito';
 
 import { createLogger } from '../../../__mocks__/@expo/logger';
+import { createTestIosJob } from '../../../__tests__/utils/job';
+import { createMockLogger } from '../../../__tests__/utils/logger';
+import { BuildContext } from '../../../context';
+import { CustomBuildContext } from '../../../customBuildContext';
 import { createRestoreCacheBuildFunction, createSaveCacheBuildFunction } from '../cache';
 
-const cacheSaveBuildFunction = createSaveCacheBuildFunction();
-const cacheRestoreBuildFunction = createRestoreCacheBuildFunction();
+const dynamicCacheManagerMock = mock<DynamicCacheManager>();
+const dynamicCacheManager = instance(dynamicCacheManagerMock);
+
+const buildCtx = new BuildContext(createTestIosJob({}), {
+  env: {},
+  logBuffer: { getLogs: () => [], getPhaseLogs: () => [] },
+  logger: createMockLogger(),
+  uploadArtifact: jest.fn(),
+  workingdir: '',
+  dynamicCacheManager,
+  runGlobalExpoCliCommand: jest.fn(),
+});
+const customContext = new CustomBuildContext(buildCtx);
+
+const cacheSaveBuildFunction = createSaveCacheBuildFunction(customContext);
+const cacheRestoreBuildFunction = createRestoreCacheBuildFunction(customContext);
 
 const providerMock = mock<ExternalBuildContextProvider>();
-const cacheManagerMock = mock<CacheManager>();
 
-const cacheManager = instance(cacheManagerMock);
-const initialCache = { downloadUrls: {} };
+const initialCache: Cache = { disabled: false, clear: false, paths: [] };
 
 const provider = instance(providerMock);
 
 let ctx: BuildStepGlobalContext;
-
-const existingKey =
-  'c7d8e33243968f8675ec0463ad89e11c1e754723695ab9b23dfb8f9ddd389a28-value-8b6e2366e2a2ff8b43556a1dcc5f1cf97ddcf4cdf3c8f9a6d54e0efe2e747922';
 
 describe('cache functions', () => {
   let key: string;
@@ -35,14 +50,17 @@ describe('cache functions', () => {
   beforeEach(async () => {
     key = '${ hashFiles("./src/*")  }-value';
     paths = ['path1', 'path2'];
-    reset(cacheManagerMock);
+    reset(dynamicCacheManagerMock);
     reset(providerMock);
 
     const projectSourceDirectory = await fs.mkdtemp(path.join(os.tmpdir(), 'project-'));
     when(providerMock.logger).thenReturn(createLogger());
     when(providerMock.runtimePlatform).thenReturn(BuildRuntimePlatform.LINUX);
-    when(providerMock.staticContext()).thenReturn({ some: 'key', job: { cache: initialCache } });
-    when(providerMock.cacheManager).thenReturn(cacheManager);
+    when(providerMock.staticContext()).thenReturn({
+      metadata: {} as Metadata,
+      env: {},
+      job: { cache: initialCache } as Job,
+    });
     when(providerMock.projectSourceDirectory).thenReturn(projectSourceDirectory);
     when(providerMock.defaultWorkingDirectory).thenReturn(projectSourceDirectory);
     when(providerMock.projectTargetDirectory).thenReturn(projectSourceDirectory);
@@ -62,9 +80,6 @@ describe('cache functions', () => {
     });
 
     test('restores cache if it exists', async () => {
-      when(cacheManagerMock.restoreCache(anything(), anything()));
-      initialCache.downloadUrls = { [existingKey]: 'url' };
-
       const buildStep = cacheRestoreBuildFunction.createBuildStepFromFunctionCall(ctx, {
         callInputs: { key, paths },
       });
@@ -73,24 +88,11 @@ describe('cache functions', () => {
 
       await buildStep.executeAsync();
 
-      verify(cacheManagerMock.restoreCache(anything(), anything())).once();
+      verify(dynamicCacheManagerMock.restoreCache(anything(), anything())).once();
 
-      const [, cache] = capture(cacheManagerMock.restoreCache).first();
+      const [, cache] = capture(dynamicCacheManagerMock.restoreCache).first();
       expect(cache.key).toMatch(/^\w+-value/);
       expect(cache.paths).toStrictEqual(paths);
-    });
-
-    test("doesn't restore cache if it doesn't exist", async () => {
-      when(cacheManagerMock.restoreCache(anything(), anything()));
-      initialCache.downloadUrls = { invalidkey: 'url' };
-
-      const buildStep = cacheRestoreBuildFunction.createBuildStepFromFunctionCall(ctx, {
-        callInputs: { key, paths },
-      });
-
-      await buildStep.executeAsync();
-
-      verify(cacheManagerMock.restoreCache(anything(), anything())).never();
     });
   });
 
@@ -102,35 +104,16 @@ describe('cache functions', () => {
     });
 
     test('saves cache if it does not exist', async () => {
-      when(cacheManagerMock.restoreCache(anything(), anything()));
-
-      initialCache.downloadUrls = {};
-
       const buildStep = cacheSaveBuildFunction.createBuildStepFromFunctionCall(ctx, {
         callInputs: { key, paths },
       });
 
       await buildStep.executeAsync();
 
-      verify(cacheManagerMock.saveCache(anything(), anything())).once();
+      verify(dynamicCacheManagerMock.saveCache(anything(), anything())).once();
 
-      const [, cache] = capture(cacheManagerMock.saveCache).first();
+      const [, cache] = capture(dynamicCacheManagerMock.saveCache).first();
       expect(cache?.key).toMatch(/^\w+-value/);
-      expect(cache?.paths).toStrictEqual(paths);
-    });
-
-    test("doesn't save cache if it exists", async () => {
-      when(cacheManagerMock.restoreCache(anything(), anything()));
-
-      initialCache.downloadUrls = { [existingKey]: 'url' };
-
-      const buildStep = cacheSaveBuildFunction.createBuildStepFromFunctionCall(ctx, {
-        callInputs: { key, paths },
-      });
-
-      await buildStep.executeAsync();
-
-      verify(cacheManagerMock.saveCache(anything(), anything())).never();
     });
   });
 });

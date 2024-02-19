@@ -17,15 +17,14 @@ import {
 } from '@expo/eas-build-job';
 import { BuildTrigger } from '@expo/eas-build-job/dist/common';
 import { bunyan } from '@expo/logger';
-import { CacheManager } from '@expo/steps';
 import { SpawnOptions, SpawnPromise, SpawnResult } from '@expo/turtle-spawn';
 import fs from 'fs-extra';
+import { DynamicCacheManager } from '@expo/steps';
 
 import { resolveBuildPhaseErrorAsync } from './buildErrors/detectError';
 import { readAppConfig } from './utils/appConfig';
 import { createTemporaryEnvironmentSecretFile } from './utils/environmentSecrets';
 import { PackageManager, resolvePackageManager } from './utils/packageManager';
-export { CacheManager } from '@expo/steps';
 
 export type Artifacts = Partial<Record<ManagedArtifactType, string>>;
 
@@ -56,6 +55,7 @@ export interface BuildContextOptions {
   logBuffer: LogBuffer;
   env: Env;
   cacheManager?: CacheManager;
+  dynamicCacheManager?: DynamicCacheManager;
   uploadArtifact: (spec: { artifact: ArtifactToUpload; logger: bunyan }) => Promise<string | null>;
   reportError?: (
     msg: string,
@@ -74,6 +74,15 @@ export class BuildContext<TJob extends Job = Job> {
   public logger: bunyan;
   public readonly logBuffer: LogBuffer;
   public readonly cacheManager?: CacheManager;
+  public readonly dynamicCacheManager?: DynamicCacheManager;
+  /**
+   * @deprecated
+   */
+  public readonly runGlobalExpoCliCommand: (
+    args: string[],
+    options: SpawnOptions,
+    npmVersionAtLeast7: boolean
+  ) => SpawnPromise<SpawnResult>;
   public readonly reportError?: (
     msg: string,
     err?: Error,
@@ -99,6 +108,7 @@ export class BuildContext<TJob extends Job = Job> {
     this.logger = this.defaultLogger;
     this.logBuffer = options.logBuffer;
     this.cacheManager = options.cacheManager;
+    this.dynamicCacheManager = options.dynamicCacheManager;
     this._uploadArtifact = options.uploadArtifact;
     this.reportError = options.reportError;
     this._job = job;
@@ -116,10 +126,6 @@ export class BuildContext<TJob extends Job = Job> {
     this._env.PATH = this._env.PATH
       ? [this.buildExecutablesDirectory, this._env.PATH].join(':')
       : this.buildExecutablesDirectory;
-  }
-
-  get projectRootDirectory(): string | undefined {
-    return this.job.projectRootDirectory;
   }
 
   public get job(): TJob {

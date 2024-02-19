@@ -12,9 +12,13 @@ import {
   Platform,
 } from '@expo/eas-build-job';
 import { bunyan } from '@expo/logger';
-import { ExternalBuildContextProvider, BuildRuntimePlatform, CacheManager } from '@expo/steps';
+import {
+  ExternalBuildContextProvider,
+  BuildRuntimePlatform,
+  DynamicCacheManager,
+} from '@expo/steps';
 
-import { ArtifactToUpload, BuildContext } from './context';
+import { ArtifactToUpload, BuildContext, CacheManager } from './context';
 
 const platformToBuildRuntimePlatform: Record<Platform, BuildRuntimePlatform> = {
   [Platform.ANDROID]: BuildRuntimePlatform.LINUX,
@@ -23,6 +27,7 @@ const platformToBuildRuntimePlatform: Record<Platform, BuildRuntimePlatform> = {
 
 export interface BuilderRuntimeApi {
   uploadArtifact: (spec: { artifact: ArtifactToUpload; logger: bunyan }) => Promise<void>;
+  cacheManager?: DynamicCacheManager;
 }
 
 export class CustomBuildContext<TJob extends Job = Job> implements ExternalBuildContextProvider {
@@ -52,7 +57,6 @@ export class CustomBuildContext<TJob extends Job = Job> implements ExternalBuild
   public metadata?: Metadata;
   public readonly cacheManager?: CacheManager;
   public readonly buildDirectory: string;
-  public readonly projectRootDirectory: string;
 
   private _env: Env;
 
@@ -68,10 +72,10 @@ export class CustomBuildContext<TJob extends Job = Job> implements ExternalBuild
     this.buildLogsDirectory = path.join(buildCtx.workingdir, 'logs');
     this.runtimeApi = {
       uploadArtifact: (...args) => buildCtx['uploadArtifact'](...args),
+      cacheManager: buildCtx.dynamicCacheManager,
     };
     this.cacheManager = buildCtx.cacheManager;
     this.buildDirectory = buildCtx.buildDirectory;
-    this.projectRootDirectory = buildCtx.projectRootDirectory ?? '.';
   }
 
   public hasBuildJob(): this is CustomBuildContext<BuildJob> {

@@ -113,7 +113,11 @@ export class BuildStepInput<
   }
 
   private requiresInterpolation(rawValue: any): rawValue is string {
-    return typeof rawValue === 'string';
+    return !(
+      rawValue === undefined ||
+      typeof rawValue === 'boolean' ||
+      typeof rawValue === 'number'
+    );
   }
 
   public validateFunctions(

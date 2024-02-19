@@ -5,24 +5,21 @@ import { BuildStaticContext } from '@expo/eas-build-job';
 import { bunyan } from '@expo/logger';
 import { v4 as uuidv4 } from 'uuid';
 
-import { BuildRuntimePlatform } from './BuildRuntimePlatform.js';
 import {
   BuildStep,
   BuildStepOutputAccessor,
   SerializedBuildStepOutputAccessor,
 } from './BuildStep.js';
-import { BuildStepEnv } from './BuildStepEnv.js';
-import { CacheManager } from './cacheUtils.js';
-import { BuildStepRuntimeError } from './errors.js';
 import {
   getObjectValueForInterpolation,
   interpolateWithGlobalContext,
   parseOutputPath,
 } from './utils/template.js';
+import { BuildStepRuntimeError } from './errors.js';
+import { BuildRuntimePlatform } from './BuildRuntimePlatform.js';
+import { BuildStepEnv } from './BuildStepEnv.js';
 
 interface SerializedExternalBuildContextProvider {
-  buildDirectory: string;
-  projectRootDirectory: string;
   projectSourceDirectory: string;
   projectTargetDirectory: string;
   defaultWorkingDirectory: string;
@@ -33,15 +30,12 @@ interface SerializedExternalBuildContextProvider {
 }
 
 export interface ExternalBuildContextProvider {
-  buildDirectory: string;
-  projectRootDirectory: string;
   readonly projectSourceDirectory: string;
   readonly projectTargetDirectory: string;
   readonly defaultWorkingDirectory: string;
   readonly buildLogsDirectory: string;
   readonly runtimePlatform: BuildRuntimePlatform;
   readonly logger: bunyan;
-  readonly cacheManager?: CacheManager;
 
   readonly staticContext: () => BuildStaticContext;
 
@@ -61,25 +55,16 @@ export class BuildStepGlobalContext {
   public readonly runtimePlatform: BuildRuntimePlatform;
   public readonly baseLogger: bunyan;
   private didCheckOut = false;
-  public readonly cacheManager?: CacheManager;
 
   private stepById: Record<string, BuildStepOutputAccessor> = {};
 
   constructor(
-    public readonly provider: ExternalBuildContextProvider,
+    private readonly provider: ExternalBuildContextProvider,
     public readonly skipCleanup: boolean
   ) {
     this.stepsInternalBuildDirectory = path.join(os.tmpdir(), 'eas-build', uuidv4());
     this.runtimePlatform = provider.runtimePlatform;
     this.baseLogger = provider.logger;
-    this.cacheManager = provider.cacheManager;
-  }
-
-  public get buildDirectory(): string {
-    return this.provider.buildDirectory;
-  }
-  public get projectRootDirectory(): string {
-    return this.provider.projectRootDirectory;
   }
 
   public get projectSourceDirectory(): string {
@@ -164,8 +149,6 @@ export class BuildStepGlobalContext {
         defaultWorkingDirectory: this.provider.defaultWorkingDirectory,
         buildLogsDirectory: this.provider.buildLogsDirectory,
         runtimePlatform: this.provider.runtimePlatform,
-        buildDirectory: this.provider.buildDirectory,
-        projectRootDirectory: this.provider.projectRootDirectory,
         staticContext: this.provider.staticContext(),
         env: this.provider.env,
       },
@@ -183,8 +166,6 @@ export class BuildStepGlobalContext {
       defaultWorkingDirectory: serialized.provider.defaultWorkingDirectory,
       buildLogsDirectory: serialized.provider.buildLogsDirectory,
       runtimePlatform: serialized.provider.runtimePlatform,
-      buildDirectory: serialized.provider.buildDirectory,
-      projectRootDirectory: serialized.provider.projectRootDirectory,
       logger,
       staticContext: () => serialized.provider.staticContext,
       env: serialized.provider.env,
@@ -221,10 +202,6 @@ export class BuildStepContext {
   ) {
     this.logger = logger ?? ctx.baseLogger;
     this.relativeWorkingDirectory = relativeWorkingDirectory;
-  }
-
-  public get workingdir(): string {
-    return this.workingDirectory;
   }
 
   public get global(): BuildStepGlobalContext {

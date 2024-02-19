@@ -1,5 +1,4 @@
-import crypto from 'crypto';
-
+import { BuildJob } from '@expo/eas-build-job';
 import {
   BuildFunction,
   BuildStepInput,
@@ -7,16 +6,9 @@ import {
   BuildStepOutput,
 } from '@expo/steps';
 
-function createCacheKey(cacheKey: string, paths: string[]): string {
-  const hash = crypto.createHash('sha256');
-  hash.update(paths.sort().join(''));
+import { CustomBuildContext } from '../../customBuildContext';
 
-  const pathsHash = hash.digest('hex');
-
-  return `${cacheKey}-${pathsHash}`;
-}
-
-export function createRestoreCacheBuildFunction(): BuildFunction {
+export function createRestoreCacheBuildFunction(ctx: CustomBuildContext): BuildFunction {
   return new BuildFunction({
     namespace: 'eas',
     id: 'restore-cache',
@@ -30,6 +22,7 @@ export function createRestoreCacheBuildFunction(): BuildFunction {
       BuildStepInput.createProvider({
         id: 'paths',
         required: true,
+        defaultValue: [],
         allowedValueTypeName: BuildStepInputValueTypeName.JSON,
       }),
     ],
@@ -38,28 +31,36 @@ export function createRestoreCacheBuildFunction(): BuildFunction {
         id: 'cache_key',
         required: true,
       }),
+      BuildStepOutput.createProvider({
+        id: 'cache_paths',
+        required: false,
+      }),
     ],
     fn: async (stepsCtx, { inputs, outputs }) => {
-      const cacheManager = stepsCtx.global.cacheManager;
+      const cacheManager = ctx.runtimeApi.cacheManager;
+
+      const key = inputs.key.value as string;
+      const paths = inputs.paths.value as [string];
+      outputs.cache_key.set(key);
+      if (paths.length > 0) {
+        outputs.cache_paths.set(JSON.stringify(paths));
+      }
 
       if (!cacheManager) {
+        stepsCtx.logger.warn('Cache manager is not available, skipping...');
         return;
       }
 
-      outputs.cache_key.set(inputs.key.value as string);
-      const paths = inputs.paths.value as [string];
-      const key = createCacheKey(inputs.key.value as string, paths);
-
-      cacheManager.generateUrls = true;
-      const {
-        job: { cache },
-      } = stepsCtx.global.provider.staticContext();
-
-      if (!(cache.downloadUrls && key in cache.downloadUrls)) {
-        stepsCtx.logger.info(`Cache ${key} does not exist, skipping restoring`);
+      const job = stepsCtx.global.staticContext.job as BuildJob;
+      const cache = job.cache;
+      if (!cache) {
         return;
       }
-      stepsCtx.logger.info(`Restoring cache ${key} in:\n ${paths.join('\n')}`);
+
+      stepsCtx.logger.info(`Restoring cache ${inputs.key.value} from:`);
+      paths.forEach((path) => {
+        stepsCtx.logger.info(`- ${path}`);
+      });
 
       await cacheManager.restoreCache(stepsCtx, {
         ...cache,
@@ -72,7 +73,7 @@ export function createRestoreCacheBuildFunction(): BuildFunction {
   });
 }
 
-export function createSaveCacheBuildFunction(): BuildFunction {
+export function createSaveCacheBuildFunction(ctx: CustomBuildContext): BuildFunction {
   return new BuildFunction({
     namespace: 'eas',
     id: 'save-cache',
@@ -83,40 +84,21 @@ export function createSaveCacheBuildFunction(): BuildFunction {
         required: true,
         allowedValueTypeName: BuildStepInputValueTypeName.STRING,
       }),
-      BuildStepInput.createProvider({
-        id: 'paths',
-        required: true,
-        allowedValueTypeName: BuildStepInputValueTypeName.JSON,
-      }),
     ],
     fn: async (stepsCtx, { inputs }) => {
-      const cacheManager = stepsCtx.global.cacheManager;
+      const cacheManager = ctx.runtimeApi.cacheManager;
 
       if (!cacheManager) {
+        stepsCtx.logger.warn('Cache manager is not available, skipping...');
         return;
       }
-      const paths = inputs.paths.value as [string];
-      const key = createCacheKey(inputs.key.value as string, paths);
-
-      const {
-        job: { cache },
-      } = stepsCtx.global.provider.staticContext();
-      if (cache.downloadUrls && key in cache.downloadUrls) {
-        stepsCtx.logger.info(`Cache ${key} already exists, skipping saving`);
-        return;
-      }
-
-      stepsCtx.logger.info(`Saving cache from:\n ${paths.join('\n')}`);
-
-      cacheManager.generateUrls = true;
 
       await cacheManager.saveCache(stepsCtx, {
         disabled: false,
         clear: false,
-        key,
-        paths,
+        key: inputs.key.value as string,
+        paths: [],
       });
-      stepsCtx.logger.info('Cache saved');
     },
   });
 }
