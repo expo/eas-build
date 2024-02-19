@@ -117,7 +117,6 @@ export interface Cache {
    */
   customPaths?: string[];
   paths: string[];
-  downloadUrls?: Record<string, string>;
 }
 
 export const CacheSchema = Joi.object({

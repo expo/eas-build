@@ -113,7 +113,11 @@ export class BuildStepInput<
   }
 
   private requiresInterpolation(rawValue: any): rawValue is string {
-    return typeof rawValue === 'string';
+    return !(
+      rawValue === undefined ||
+      typeof rawValue === 'boolean' ||
+      typeof rawValue === 'number'
+    );
   }
 
   public validateFunctions(
@@ -161,9 +165,7 @@ export class BuildStepInput<
     }
 
     if (!this.requiresInterpolation(rawValue)) {
-      const currentTypeName =
-        typeof rawValue === 'object' ? BuildStepInputValueTypeName.JSON : typeof rawValue;
-      if (currentTypeName !== this.allowedValueTypeName && rawValue !== undefined) {
+      if (typeof rawValue !== this.allowedValueTypeName && rawValue !== undefined) {
         throw new BuildStepRuntimeError(
           `Input parameter "${this.id}" for step "${this.stepDisplayName}" must be of type "${this.allowedValueTypeName}".`
         );

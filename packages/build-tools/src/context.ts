@@ -17,15 +17,14 @@ import {
 } from '@expo/eas-build-job';
 import { BuildTrigger } from '@expo/eas-build-job/dist/common';
 import { bunyan } from '@expo/logger';
-import { CacheManager } from '@expo/steps';
 import { SpawnOptions, SpawnPromise, SpawnResult } from '@expo/turtle-spawn';
 import fs from 'fs-extra';
+import { DynamicCacheManager } from '@expo/steps';
 
 import { resolveBuildPhaseErrorAsync } from './buildErrors/detectError';
 import { readAppConfig } from './utils/appConfig';
 import { createTemporaryEnvironmentSecretFile } from './utils/environmentSecrets';
 import { PackageManager, resolvePackageManager } from './utils/packageManager';
-export { CacheManager } from '@expo/steps';
 
 export type Artifacts = Partial<Record<ManagedArtifactType, string>>;
 
@@ -56,6 +55,7 @@ export interface BuildContextOptions {
   logBuffer: LogBuffer;
   env: Env;
   cacheManager?: CacheManager;
+  dynamicCacheManager?: DynamicCacheManager;
   /**
    * @deprecated
    */
@@ -82,6 +82,7 @@ export class BuildContext<TJob extends Job> {
   public logger: bunyan;
   public readonly logBuffer: LogBuffer;
   public readonly cacheManager?: CacheManager;
+  public readonly dynamicCacheManager?: DynamicCacheManager;
   /**
    * @deprecated
    */
@@ -115,6 +116,7 @@ export class BuildContext<TJob extends Job> {
     this.logger = this.defaultLogger;
     this.logBuffer = options.logBuffer;
     this.cacheManager = options.cacheManager;
+    this.dynamicCacheManager = options.dynamicCacheManager;
     this.runGlobalExpoCliCommand = options.runGlobalExpoCliCommand;
     this._uploadArtifact = options.uploadArtifact;
     this.reportError = options.reportError;

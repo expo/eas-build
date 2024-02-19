@@ -10,9 +10,13 @@ import {
   Platform,
 } from '@expo/eas-build-job';
 import { bunyan } from '@expo/logger';
-import { ExternalBuildContextProvider, BuildRuntimePlatform, CacheManager } from '@expo/steps';
+import {
+  ExternalBuildContextProvider,
+  BuildRuntimePlatform,
+  DynamicCacheManager,
+} from '@expo/steps';
 
-import { ArtifactToUpload, BuildContext } from './context';
+import { ArtifactToUpload, BuildContext, CacheManager } from './context';
 
 const platformToBuildRuntimePlatform: Record<Platform, BuildRuntimePlatform> = {
   [Platform.ANDROID]: BuildRuntimePlatform.LINUX,
@@ -21,6 +25,7 @@ const platformToBuildRuntimePlatform: Record<Platform, BuildRuntimePlatform> = {
 
 export interface BuilderRuntimeApi {
   uploadArtifact: (spec: { artifact: ArtifactToUpload; logger: bunyan }) => Promise<void>;
+  cacheManager?: DynamicCacheManager;
 }
 
 export class CustomBuildContext implements ExternalBuildContextProvider {
@@ -66,6 +71,7 @@ export class CustomBuildContext implements ExternalBuildContextProvider {
     this.buildLogsDirectory = path.join(buildCtx.workingdir, 'logs');
     this.runtimeApi = {
       uploadArtifact: (...args) => buildCtx['uploadArtifact'](...args),
+      cacheManager: buildCtx.dynamicCacheManager,
     };
     this.cacheManager = buildCtx.cacheManager;
     this.buildDirectory = buildCtx.buildDirectory;

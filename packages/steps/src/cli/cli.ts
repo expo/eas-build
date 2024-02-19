@@ -7,7 +7,6 @@ import { BuildConfigParser } from '../BuildConfigParser.js';
 import { BuildRuntimePlatform } from '../BuildRuntimePlatform.js';
 import { BuildStepGlobalContext, ExternalBuildContextProvider } from '../BuildStepContext.js';
 import { BuildStepEnv } from '../BuildStepEnv.js';
-import { CacheManager } from '../cacheUtils.js';
 import { BuildWorkflowError } from '../errors.js';
 
 const logger = createLogger({
@@ -28,7 +27,6 @@ export class CliContextProvider implements ExternalBuildContextProvider {
     public readonly buildDirectory: string,
     public readonly projectRootDirectory: string
   ) {}
-  cacheManager?: CacheManager | undefined;
   public get env(): BuildStepEnv {
     return this._env;
   }
