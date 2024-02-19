@@ -4,7 +4,7 @@ import { GenericArtifactType, ManagedArtifactType } from '@expo/eas-build-job';
 import { BuildFunction, BuildStepInput, BuildStepInputValueTypeName } from '@expo/steps';
 
 import { CustomBuildContext } from '../../customBuildContext';
-import { findArtifacts } from '../../utils/artifacts';
+import { FindArtifactsError, findArtifacts } from '../../utils/artifacts';
 
 const artifactTypeInputToManagedArtifactType: Record<string, ManagedArtifactType | undefined> = {
   'application-archive': ManagedArtifactType.APPLICATION_ARCHIVE,
@@ -35,22 +35,57 @@ export function createUploadArtifactBuildFunction(ctx: CustomBuildContext): Buil
         required: false,
         allowedValueTypeName: BuildStepInputValueTypeName.STRING,
       }),
+      /**
+       * path inputs expects a list of newline-delimited search paths.
+       * Valid examples include:
+       * - path: app/artifact.app
+       * - path: app/*.app
+       * - path: |
+       *     assets/*.png
+       *     assets/*.jpg
+       *     public/another-photo.jpg
+       */
       BuildStepInput.createProvider({
         id: 'path',
         required: true,
         allowedValueTypeName: BuildStepInputValueTypeName.STRING,
       }),
     ],
-    fn: async (stepsCtx, { inputs }) => {
+    fn: async ({ logger, global }, { inputs }) => {
       assert(inputs.path.value, 'Path input cannot be empty.');
-      const artifactSearchPaths = inputs.path.value.toString().split('\n');
-      const artifactPaths = (
-        await Promise.all(
-          artifactSearchPaths.map((searchPath) =>
-            findArtifacts(stepsCtx.workingDirectory, searchPath, stepsCtx.logger)
-          )
+
+      const artifactSearchPaths = inputs.path.value
+        .toString()
+        .split('\n')
+        // It's easy to get an empty line with YAML
+        .filter((entry) => entry);
+
+      const artifactsSearchResults = await Promise.allSettled(
+        artifactSearchPaths.map((patternOrPath) =>
+          findArtifacts({
+            rootDir: global.projectTargetDirectory,
+            patternOrPath,
+            // We're logging the error ourselves.
+            logger: null,
+          })
         )
-      ).flat();
+      );
+
+      const artifactPaths = artifactsSearchResults.flatMap((result, index) => {
+        if (result.status === 'fulfilled') {
+          logger.info(
+            `Found ${result.value.length} paths matching "${artifactSearchPaths[index]}".`
+          );
+          return result.value;
+        }
+
+        if (result.status === 'rejected' && result.reason instanceof FindArtifactsError) {
+          logger.warn(`Did not find any paths matching "${artifactSearchPaths[index]}. Ignoring.`);
+          return [];
+        }
+
+        throw result.reason;
+      });
 
       const artifact = {
         type: parseArtifactTypeInput(`${inputs.type.value}`),
@@ -60,7 +95,7 @@ export function createUploadArtifactBuildFunction(ctx: CustomBuildContext): Buil
 
       await ctx.runtimeApi.uploadArtifact({
         artifact,
-        logger: stepsCtx.logger,
+        logger,
       });
     },
   });

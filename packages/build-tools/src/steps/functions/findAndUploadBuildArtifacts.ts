@@ -18,11 +18,11 @@ export function createFindAndUploadBuildArtifactsBuildFunction(
         ctx.job.platform === Platform.ANDROID
           ? ctx.job.applicationArchivePath ?? 'android/app/build/outputs/**/*.{apk,aab}'
           : resolveIosArtifactPath(ctx.job);
-      const applicationArchives = await findArtifacts(
-        stepCtx.workingDirectory,
-        applicationArchivePatternOrPath,
-        logger
-      );
+      const applicationArchives = await findArtifacts({
+        rootDir: stepCtx.workingDirectory,
+        patternOrPath: applicationArchivePatternOrPath,
+        logger,
+      });
       logger.info(
         `Application archive${
           applicationArchives.length > 1 ? 's' : ''
@@ -31,7 +31,7 @@ export function createFindAndUploadBuildArtifactsBuildFunction(
       const buildArtifacts = (
         await Promise.all(
           (ctx.job.buildArtifactPaths ?? []).map((path) =>
-            findArtifacts(ctx.projectTargetDirectory, path, logger)
+            findArtifacts({ rootDir: ctx.projectTargetDirectory, patternOrPath: path, logger })
           )
         )
       ).flat();

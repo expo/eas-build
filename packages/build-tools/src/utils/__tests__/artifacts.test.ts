@@ -17,7 +17,11 @@ describe(findArtifacts, () => {
       info: jest.fn(),
       error: jest.fn(),
     };
-    const paths = await findArtifacts('/dir1/dir2/dir3/dir4/', 'file', loggerMock as any);
+    const paths = await findArtifacts({
+      rootDir: '/dir1/dir2/dir3/dir4/',
+      patternOrPath: 'file',
+      logger: loggerMock as any,
+    });
     expect(loggerMock.error).toHaveBeenCalledTimes(0);
     expect(paths.length).toBe(1);
     expect(paths[0]).toBe('/dir1/dir2/dir3/dir4/file');
@@ -31,11 +35,11 @@ describe(findArtifacts, () => {
       info: jest.fn(),
       error: jest.fn(),
     };
-    const paths = await findArtifacts(
-      '/dir1/dir2/dir3/dir4/',
-      'file{,-release}.aab',
-      loggerMock as any
-    );
+    const paths = await findArtifacts({
+      rootDir: '/dir1/dir2/dir3/dir4/',
+      patternOrPath: 'file{,-release}.aab',
+      logger: loggerMock as any,
+    });
     expect(loggerMock.error).toHaveBeenCalledTimes(0);
     expect(paths.length).toBe(2);
   });
@@ -50,7 +54,11 @@ describe(findArtifacts, () => {
       }),
     };
     await expect(
-      findArtifacts('/dir1/dir2/dir3/dir4/', 'file', loggerMock as any)
+      findArtifacts({
+        rootDir: '/dir1/dir2/dir3/dir4/',
+        patternOrPath: 'file',
+        logger: loggerMock as any,
+      })
     ).rejects.toThrow();
     expect(loggerMock.error).toHaveBeenCalledTimes(1);
     expect(errMsg).toEqual(
@@ -70,7 +78,11 @@ describe(findArtifacts, () => {
       }),
     };
     await expect(
-      findArtifacts('/dir1/dir2/dir3/dir4/', 'file', loggerMock as any)
+      findArtifacts({
+        rootDir: '/dir1/dir2/dir3/dir4/',
+        patternOrPath: 'file',
+        logger: loggerMock as any,
+      })
     ).rejects.toThrow();
     expect(loggerMock.error).toHaveBeenCalledTimes(1);
     expect(errMsg).toEqual(
@@ -88,7 +100,11 @@ describe(findArtifacts, () => {
       }),
     };
     await expect(
-      findArtifacts('/dir1/dir2/dir3/dir4/', 'file', loggerMock as any)
+      findArtifacts({
+        rootDir: '/dir1/dir2/dir3/dir4/',
+        patternOrPath: 'file',
+        logger: loggerMock as any,
+      })
     ).rejects.toThrow();
     expect(loggerMock.error).toHaveBeenCalledTimes(1);
     expect(errMsg).toEqual('There is no such file or directory "/dir1/dir2/dir3/dir4/file".');

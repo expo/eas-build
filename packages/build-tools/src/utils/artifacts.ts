@@ -7,18 +7,27 @@ import { ManagedArtifactType, Job } from '@expo/eas-build-job';
 
 import { BuildContext } from '../context';
 
-export async function findArtifacts(
-  rootDir: string,
-  patternOrPath: string,
-  buildLogger: bunyan
-): Promise<string[]> {
+export class FindArtifactsError extends Error {}
+
+export async function findArtifacts({
+  rootDir,
+  patternOrPath,
+  logger,
+}: {
+  rootDir: string;
+  patternOrPath: string;
+  /** If provided, will log error suggesting possible files to upload. */
+  logger: bunyan | null;
+}): Promise<string[]> {
   const files = await fg(patternOrPath, { cwd: rootDir, onlyFiles: false });
   if (files.length === 0) {
     if (fg.isDynamicPattern(patternOrPath)) {
-      throw new Error(`There are no files matching pattern "${patternOrPath}"`);
+      throw new FindArtifactsError(`There are no files matching pattern "${patternOrPath}"`);
     } else {
-      await logMissingFileError(path.join(rootDir, patternOrPath), buildLogger);
-      throw new Error(`No such file or directory ${patternOrPath}`);
+      if (logger) {
+        await logMissingFileError(path.join(rootDir, patternOrPath), logger);
+      }
+      throw new FindArtifactsError(`No such file or directory ${patternOrPath}`);
     }
   }
   return files.map((relativePath) => path.join(rootDir, relativePath));
@@ -58,7 +67,11 @@ export async function maybeFindAndUploadBuildArtifacts(
     const buildArtifacts = (
       await Promise.all(
         ctx.job.buildArtifactPaths.map((path) =>
-          findArtifacts(ctx.getReactNativeProjectDirectory(), path, logger)
+          findArtifacts({
+            rootDir: ctx.getReactNativeProjectDirectory(),
+            patternOrPath: path,
+            logger,
+          })
         )
       )
     ).flat();
@@ -88,7 +101,7 @@ export async function uploadApplicationArchive(
     rootDir: string;
   }
 ): Promise<void> {
-  const applicationArchives = await findArtifacts(rootDir, patternOrPath, logger);
+  const applicationArchives = await findArtifacts({ rootDir, patternOrPath, logger });
   logger.info(`Application archives: ${applicationArchives.join(', ')}`);
   logger.info('Uploading application archive...');
   await ctx.uploadArtifact({
