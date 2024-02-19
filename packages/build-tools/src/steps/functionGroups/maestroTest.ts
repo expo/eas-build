@@ -10,6 +10,7 @@ import { CustomBuildContext } from '../../customBuildContext';
 import { createInstallMaestroBuildFunction } from '../functions/installMaestro';
 import { createStartIosSimulatorBuildFunction } from '../functions/startIosSimulator';
 import { createStartAndroidEmulatorBuildFunction } from '../functions/startAndroidEmulator';
+import { createUploadArtifactBuildFunction } from '../functions/uploadArtifact';
 
 export function createEasMaestroTestFunctionGroup(
   buildToolsContext: CustomBuildContext
@@ -41,14 +42,22 @@ export function createEasMaestroTestFunctionGroup(
 
       const flowFilePath = inputs.flow_file_path.value;
       if (flowFilePath) {
-        steps.push(
-          new BuildStep(globalCtx, {
-            id: BuildStep.getNewId(),
-            name: 'maestro_test',
-            displayName: 'Run "maestro test"',
-            command: `maestro test ${inputs.flow_path.value}`,
-          })
-        );
+        const flowFilePaths = flowFilePath
+          .toString()
+          .split('\n')
+          // It's easy to get an empty line with YAML
+          .filter((entry) => entry);
+        for (const flowFilePath of flowFilePaths) {
+          steps.push(
+            new BuildStep(globalCtx, {
+              id: BuildStep.getNewId(),
+              name: 'maestro_test',
+              ifCondition: '${ always() }',
+              displayName: `maestro test ${flowFilePath}`,
+              command: `maestro test ${flowFilePath}`,
+            })
+          );
+        }
       } else {
         steps.push(
           new BuildStep(globalCtx, {
@@ -62,6 +71,21 @@ export function createEasMaestroTestFunctionGroup(
           })
         );
       }
+
+      steps.push(
+        createUploadArtifactBuildFunction(buildToolsContext).createBuildStepFromFunctionCall(
+          globalCtx,
+          {
+            ifCondition: '${ always() }',
+            name: 'Upload Maestro test results',
+            callInputs: {
+              path: '${ eas.env.HOME }/.maestro/',
+              ignore_error: true,
+              type: 'build-artifact',
+            },
+          }
+        )
+      );
 
       return steps;
     },

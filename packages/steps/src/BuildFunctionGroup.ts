@@ -16,9 +16,7 @@ export class BuildFunctionGroup {
   public readonly inputProviders?: BuildStepInputProvider[];
   public readonly createBuildStepsFromFunctionGroupCall: (
     globalCtx: BuildStepGlobalContext,
-    {
-      callInputs,
-    }?: {
+    options?: {
       callInputs?: BuildFunctionCallInputs;
     }
   ) => BuildStep[];
