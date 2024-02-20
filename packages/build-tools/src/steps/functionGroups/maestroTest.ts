@@ -21,8 +21,8 @@ export function createEasMaestroTestFunctionGroup(
     inputProviders: [
       BuildStepInput.createProvider({
         allowedValueTypeName: BuildStepInputValueTypeName.STRING,
-        id: 'flow_file_path',
-        required: false,
+        id: 'flow_path',
+        required: true,
       }),
     ],
     createBuildStepsFromFunctionGroupCall: (globalCtx, { inputs }) => {
@@ -40,34 +40,17 @@ export function createEasMaestroTestFunctionGroup(
         );
       }
 
-      const flowFilePath = inputs.flow_file_path.value;
-      if (flowFilePath) {
-        const flowFilePaths = flowFilePath
-          .toString()
-          .split('\n')
-          // It's easy to get an empty line with YAML
-          .filter((entry) => entry);
-        for (const flowFilePath of flowFilePaths) {
-          steps.push(
-            new BuildStep(globalCtx, {
-              id: BuildStep.getNewId(),
-              name: 'maestro_test',
-              ifCondition: '${ always() }',
-              displayName: `maestro test ${flowFilePath}`,
-              command: `maestro test ${flowFilePath}`,
-            })
-          );
-        }
-      } else {
+      const flowPaths = `${inputs.flow_path.value}`
+        .split('\n') // It's easy to get an empty line with YAML
+        .filter((entry) => entry);
+      for (const flowPath of flowPaths) {
         steps.push(
           new BuildStep(globalCtx, {
             id: BuildStep.getNewId(),
             name: 'maestro_test',
-            displayName: 'Run "maestro test"',
-            ifCondition: '${ never() }',
-            fn: (ctx) => {
-              ctx.logger.warn('flow_file_path not provided. Skipping running test.');
-            },
+            ifCondition: '${ always() }',
+            displayName: `maestro test ${flowPath}`,
+            command: `maestro test ${flowPath}`,
           })
         );
       }
