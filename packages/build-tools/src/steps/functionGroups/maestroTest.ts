@@ -34,9 +34,35 @@ export function createEasMaestroTestFunctionGroup(
         steps.push(
           createStartIosSimulatorBuildFunction().createBuildStepFromFunctionCall(globalCtx)
         );
+        steps.push(
+          new BuildStep(globalCtx, {
+            id: BuildStep.getNewId(),
+            name: 'install_app',
+            displayName: `Install app to Simulator`,
+            command: `
+              for APP_PATH in ios/build/Build/Products/*simulator/*.app; do
+                xcrun simctl install booted $APP_PATH
+              done
+            `,
+          })
+        );
       } else if (buildToolsContext.job.platform === Platform.ANDROID) {
         steps.push(
           createStartAndroidEmulatorBuildFunction().createBuildStepFromFunctionCall(globalCtx)
+        );
+        steps.push(
+          new BuildStep(globalCtx, {
+            id: BuildStep.getNewId(),
+            name: 'install_app',
+            displayName: `Install app to Emulator`,
+            // shopt -s globstar is necessary to add /**/ support
+            command: `
+              shopt -s globstar
+              for APP_PATH in android/app/build/outputs/**/*.apk; do
+                adb install $APP_PATH
+              done
+            `,
+          })
         );
       }
 
