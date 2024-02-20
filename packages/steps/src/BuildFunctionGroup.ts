@@ -1,5 +1,11 @@
+import { BuildFunctionCallInputs } from './BuildFunction.js';
 import { BuildStep } from './BuildStep.js';
 import { BuildStepGlobalContext } from './BuildStepContext.js';
+import {
+  BuildStepInputById,
+  BuildStepInputProvider,
+  makeBuildStepInputByIdMap,
+} from './BuildStepInput.js';
 import { BuildConfigError } from './errors.js';
 
 export type BuildFunctionGroupById = Record<string, BuildFunctionGroup | undefined>;
@@ -7,22 +13,48 @@ export type BuildFunctionGroupById = Record<string, BuildFunctionGroup | undefin
 export class BuildFunctionGroup {
   public readonly namespace: string;
   public readonly id: string;
+  public readonly inputProviders?: BuildStepInputProvider[];
   public readonly createBuildStepsFromFunctionGroupCall: (
-    globalCtx: BuildStepGlobalContext
+    globalCtx: BuildStepGlobalContext,
+    options?: {
+      callInputs?: BuildFunctionCallInputs;
+    }
   ) => BuildStep[];
 
   constructor({
     namespace,
     id,
+    inputProviders,
     createBuildStepsFromFunctionGroupCall,
   }: {
     namespace: string;
     id: string;
-    createBuildStepsFromFunctionGroupCall: (globalCtx: BuildStepGlobalContext) => BuildStep[];
+    inputProviders?: BuildStepInputProvider[];
+    createBuildStepsFromFunctionGroupCall: (
+      globalCtx: BuildStepGlobalContext,
+      {
+        inputs,
+      }: {
+        inputs: BuildStepInputById;
+      }
+    ) => BuildStep[];
   }) {
     this.namespace = namespace;
     this.id = id;
-    this.createBuildStepsFromFunctionGroupCall = createBuildStepsFromFunctionGroupCall;
+    this.inputProviders = inputProviders;
+
+    this.createBuildStepsFromFunctionGroupCall = (ctx, { callInputs = {} } = {}) => {
+      const inputs = this.inputProviders?.map((inputProvider) => {
+        const input = inputProvider(ctx, id);
+        if (input.id in callInputs) {
+          input.set(callInputs[input.id]);
+        }
+        return input;
+      });
+      return createBuildStepsFromFunctionGroupCall(ctx, {
+        inputs: makeBuildStepInputByIdMap(inputs),
+      });
+    };
   }
 
   public getFullId(): string {

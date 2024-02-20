@@ -297,6 +297,8 @@ export class BuildStep extends BuildStepOutputAccessor {
         return hasAnyPreviousStepsFailed;
       case 'always':
         return true;
+      case 'never':
+        return false;
     }
   }
 

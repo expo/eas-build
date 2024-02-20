@@ -50,6 +50,11 @@ export function createUploadArtifactBuildFunction(ctx: CustomBuildContext): Buil
         required: true,
         allowedValueTypeName: BuildStepInputValueTypeName.STRING,
       }),
+      BuildStepInput.createProvider({
+        id: 'ignore_error',
+        required: false,
+        allowedValueTypeName: BuildStepInputValueTypeName.BOOLEAN,
+      }),
     ],
     fn: async ({ logger, global }, { inputs }) => {
       assert(inputs.path.value, 'Path input cannot be empty.');
@@ -93,10 +98,20 @@ export function createUploadArtifactBuildFunction(ctx: CustomBuildContext): Buil
         key: inputs.key.value as string,
       };
 
-      await ctx.runtimeApi.uploadArtifact({
-        artifact,
-        logger,
-      });
+      try {
+        await ctx.runtimeApi.uploadArtifact({
+          artifact,
+          logger,
+        });
+      } catch (error) {
+        if (inputs.ignore_error.value) {
+          logger.error(`Failed to upload ${artifact.type}. Ignoring error.`, error);
+          // Ignoring error.
+          return;
+        }
+
+        throw error;
+      }
     },
   });
 }

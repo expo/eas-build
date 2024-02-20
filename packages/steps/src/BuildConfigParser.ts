@@ -102,7 +102,11 @@ export class BuildConfigParser {
         buildStepConfig
       );
     } else if (buildStepConfig !== null) {
-      return [this.createBuildStepFromBuildStepFunctionCall(buildFunctions, buildStepConfig)];
+      return this.createBuildStepsFromBuildStepFunctionOrBuildStepFunctionGroupCall(
+        buildFunctions,
+        buildFunctionGroups,
+        buildStepConfig
+      );
     } else {
       throw new BuildConfigError(
         'Invalid build step configuration detected. Build step cannot be empty.'
@@ -154,6 +158,18 @@ export class BuildConfigParser {
     });
   }
 
+  private createBuildStepsFromBuildStepFunctionGroupCall(
+    buildFunctionGroups: BuildFunctionGroupById,
+    buildStepFunctionCall: BuildStepFunctionCall
+  ): BuildStep[] {
+    const functionId = getFunctionIdFromBuildStepFunctionCall(buildStepFunctionCall);
+    const buildFunctionGroup = buildFunctionGroups[functionId];
+    assert(buildFunctionGroup, `Build function group with id "${functionId}" is not defined.`);
+    return buildFunctionGroup.createBuildStepsFromFunctionGroupCall(this.ctx, {
+      callInputs: buildStepFunctionCall[functionId].inputs,
+    });
+  }
+
   private createBuildStepsFromBuildStepBareFunctionGroupCall(
     buildFunctionGroups: BuildFunctionGroupById,
     functionGroupId: string
@@ -188,16 +204,28 @@ export class BuildConfigParser {
     ];
   }
 
+  private createBuildStepsFromBuildStepFunctionOrBuildStepFunctionGroupCall(
+    buildFunctions: BuildFunctionById,
+    buildFunctionGroups: BuildFunctionGroupById,
+    buildStepFunctionCall: BuildStepFunctionCall
+  ): BuildStep[] {
+    const functionId = getFunctionIdFromBuildStepFunctionCall(buildStepFunctionCall);
+
+    const maybeFunctionGroup = buildFunctionGroups[functionId];
+    if (maybeFunctionGroup) {
+      return this.createBuildStepsFromBuildStepFunctionGroupCall(
+        buildFunctionGroups,
+        buildStepFunctionCall
+      );
+    }
+    return [this.createBuildStepFromBuildStepFunctionCall(buildFunctions, buildStepFunctionCall)];
+  }
+
   private createBuildStepFromBuildStepFunctionCall(
     buildFunctions: BuildFunctionById,
     buildStepFunctionCall: BuildStepFunctionCall
   ): BuildStep {
-    const keys = Object.keys(buildStepFunctionCall);
-    assert(
-      keys.length === 1,
-      'There must be at most one function call in the step (enforced by joi).'
-    );
-    const functionId = keys[0];
+    const functionId = getFunctionIdFromBuildStepFunctionCall(buildStepFunctionCall);
     const buildFunctionCallConfig = buildStepFunctionCall[functionId];
     const buildFunction = buildFunctions[functionId];
     return buildFunction.createBuildStepFromFunctionCall(this.ctx, {
@@ -383,4 +411,15 @@ export class BuildConfigParser {
     const ids = this.externalFunctionGroups.map((f) => f.getFullId());
     return uniq(ids);
   }
+}
+
+function getFunctionIdFromBuildStepFunctionCall(
+  buildStepFunctionCall: BuildStepFunctionCall
+): string {
+  const keys = Object.keys(buildStepFunctionCall);
+  assert(
+    keys.length === 1,
+    'There must be at most one function call in the step (enforced by joi).'
+  );
+  return keys[0];
 }
