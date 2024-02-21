@@ -40,9 +40,19 @@ export function createEasMaestroTestFunctionGroup(
             name: 'install_app',
             displayName: `Install app to Simulator`,
             command: `
-              for APP_PATH in ios/build/Build/Products/*simulator/*.app; do
-                xcrun simctl install booted $APP_PATH
+              SEARCH_PATH="ios/build/Build/Products/*simulator/*.app"
+              FILES_FOUND=false
+
+              for APP_PATH in $SEARCH_PATH; do
+                FILES_FOUND=true
+                echo "Installing \\"$APP_PATH\\""
+                xcrun simctl install booted "$APP_PATH"
               done
+              
+              if ! FILES_FOUND; do
+                echo "No files found matching \\"$SEARCH_PATH\\". Are you sure you've built a Simulator app?"
+                exit 1
+              fi
             `,
           })
         );
@@ -55,12 +65,23 @@ export function createEasMaestroTestFunctionGroup(
             id: BuildStep.getNewId(),
             name: 'install_app',
             displayName: `Install app to Emulator`,
-            // shopt -s globstar is necessary to add /**/ support
             command: `
+              # shopt -s globstar is necessary to add /**/ support
               shopt -s globstar
-              for APP_PATH in android/app/build/outputs/**/*.apk; do
-                adb install $APP_PATH
+
+              SEARCH_PATH="android/app/build/outputs/**/*.apk"
+              FILES_FOUND=false
+
+              for APP_PATH in $SEARCH_PATH; do
+                FILES_FOUND=true
+                echo "Installing \\"$APP_PATH\\""
+                adb install "$APP_PATH"
               done
+              
+              if ! FILES_FOUND; do
+                echo "No files found matching \\"$SEARCH_PATH\\". Are you sure you've built an Emulator app?"
+                exit 1
+              fi
             `,
           })
         );

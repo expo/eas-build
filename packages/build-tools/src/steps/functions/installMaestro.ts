@@ -188,6 +188,7 @@ async function installIdbFromBrew({
   const localEnv = {
     ...env,
     HOMEBREW_NO_AUTO_UPDATE: '1',
+    HOMEBREW_NO_INSTALL_CLEANUP: '1',
   };
 
   await spawn(brewPath, ['tap', 'facebook/fb'], {
@@ -236,7 +237,7 @@ async function installJavaFromGcs({
     await spawn(
       'hdiutil',
       ['attach', installerPath, '-noverify', '-mountpoint', installerMountDirectory],
-      { logger, env }
+      { env }
     );
 
     logger.info('Installing Java');
@@ -249,7 +250,7 @@ async function installJavaFromGcs({
         '-target',
         '/',
       ],
-      { logger, env }
+      { env }
     );
   } finally {
     try {
