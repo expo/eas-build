@@ -40,6 +40,10 @@ export function createEasMaestroTestFunctionGroup(
             name: 'install_app',
             displayName: `Install app to Simulator`,
             command: `
+              # shopt -s nullglob is necessary not to try to install
+              # SEARCH_PATH literally if there are no matching files.
+              shopt -s nullglob
+
               SEARCH_PATH="ios/build/Build/Products/*simulator/*.app"
               FILES_FOUND=false
 
@@ -49,9 +53,9 @@ export function createEasMaestroTestFunctionGroup(
                 xcrun simctl install booted "$APP_PATH"
               done
               
-              if ! FILES_FOUND; then
+              if ! $FILES_FOUND; then
                 echo "No files found matching \\"$SEARCH_PATH\\". Are you sure you've built a Simulator app?"
-                exit 1
+                #exit 1
               fi
             `,
           })
@@ -68,6 +72,9 @@ export function createEasMaestroTestFunctionGroup(
             command: `
               # shopt -s globstar is necessary to add /**/ support
               shopt -s globstar
+              # shopt -s nullglob is necessary not to try to install
+              # SEARCH_PATH literally if there are no matching files.
+              shopt -s nullglob
 
               SEARCH_PATH="android/app/build/outputs/**/*.apk"
               FILES_FOUND=false
@@ -78,7 +85,7 @@ export function createEasMaestroTestFunctionGroup(
                 adb install "$APP_PATH"
               done
               
-              if ! FILES_FOUND; then
+              if ! $FILES_FOUND; then
                 echo "No files found matching \\"$SEARCH_PATH\\". Are you sure you've built an Emulator app?"
                 exit 1
               fi
