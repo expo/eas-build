@@ -3,10 +3,8 @@ import {
   BuildStep,
   BuildStepInput,
   BuildStepInputValueTypeName,
-  spawnAsync,
 } from '@expo/steps';
 import { Platform } from '@expo/eas-build-job';
-import fg from 'fast-glob';
 
 import { CustomBuildContext } from '../../customBuildContext';
 import { createInstallMaestroBuildFunction } from '../functions/installMaestro';
@@ -41,24 +39,21 @@ export function createEasMaestroTestFunctionGroup(
             id: BuildStep.getNewId(),
             name: 'install_app',
             displayName: `Install app to Simulator`,
-            fn: async (ctx, { env }) => {
-              const searchPath = 'ios/build/Build/Products/*simulator/*.app';
-              const appPaths = await fg(searchPath, { onlyFiles: true, cwd: ctx.workingDirectory });
+            command: `
+              SEARCH_PATH="ios/build/Build/Products/*simulator/*.app"
+              FILES_FOUND=false
 
-              if (appPaths.length === 0) {
-                ctx.logger.warn(
-                  `No files found matching "${searchPath}". Are you sure you've built a Simulator app?`
-                );
-              }
-
-              for (const appPath of appPaths) {
-                ctx.logger.info(`Installing "${appPath}"`);
-                await spawnAsync('xcrun', ['simctl', 'install', 'booted', appPath], {
-                  env,
-                  cwd: ctx.workingDirectory,
-                });
-              }
-            },
+              for APP_PATH in $SEARCH_PATH; do
+                FILES_FOUND=true
+                echo "Installing \\"$APP_PATH\\""
+                xcrun simctl install booted "$APP_PATH"
+              done
+              
+              if ! FILES_FOUND; do
+                echo "No files found matching \\"$SEARCH_PATH\\". Are you sure you've built a Simulator app?"
+                exit 1
+              fi
+            `,
           })
         );
       } else if (buildToolsContext.job.platform === Platform.ANDROID) {
@@ -70,24 +65,24 @@ export function createEasMaestroTestFunctionGroup(
             id: BuildStep.getNewId(),
             name: 'install_app',
             displayName: `Install app to Emulator`,
-            fn: async (ctx, { env }) => {
-              const searchPath = 'android/app/build/outputs/**/*.apk';
-              const appPaths = await fg(searchPath, { onlyFiles: true, cwd: ctx.workingDirectory });
+            command: `
+              # shopt -s globstar is necessary to add /**/ support
+              shopt -s globstar
 
-              if (appPaths.length === 0) {
-                ctx.logger.warn(
-                  `No files found matching "${searchPath}". Are you sure you've built an Emulator app?`
-                );
-              }
+              SEARCH_PATH="android/app/build/outputs/**/*.apk"
+              FILES_FOUND=false
 
-              for (const appPath of appPaths) {
-                ctx.logger.info(`Installing "${appPath}"`);
-                await spawnAsync('adb', ['install', appPath], {
-                  env,
-                  cwd: ctx.workingDirectory,
-                });
-              }
-            },
+              for APP_PATH in $SEARCH_PATH; do
+                FILES_FOUND=true
+                echo "Installing \\"$APP_PATH\\""
+                adb install "$APP_PATH"
+              done
+              
+              if ! FILES_FOUND; do
+                echo "No files found matching \\"$SEARCH_PATH\\". Are you sure you've built an Emulator app?"
+                exit 1
+              fi
+            `,
           })
         );
       }
