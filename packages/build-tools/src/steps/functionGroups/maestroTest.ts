@@ -49,7 +49,7 @@ export function createEasMaestroTestFunctionGroup(
                 xcrun simctl install booted "$APP_PATH"
               done
               
-              if ! FILES_FOUND; do
+              if ! FILES_FOUND; then
                 echo "No files found matching \\"$SEARCH_PATH\\". Are you sure you've built a Simulator app?"
                 exit 1
               fi
@@ -78,7 +78,7 @@ export function createEasMaestroTestFunctionGroup(
                 adb install "$APP_PATH"
               done
               
-              if ! FILES_FOUND; do
+              if ! FILES_FOUND; then
                 echo "No files found matching \\"$SEARCH_PATH\\". Are you sure you've built an Emulator app?"
                 exit 1
               fi
@@ -109,7 +109,7 @@ export function createEasMaestroTestFunctionGroup(
             ifCondition: '${ always() }',
             name: 'Upload Maestro test results',
             callInputs: {
-              path: '${ eas.env.HOME }/.maestro/',
+              path: '${ eas.env.HOME }/.maestro/tests',
               ignore_error: true,
               type: 'build-artifact',
             },
