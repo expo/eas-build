@@ -30,7 +30,18 @@ export async function findArtifacts({
       throw new FindArtifactsError(`No such file or directory ${patternOrPath}`);
     }
   }
-  return files.map((relativePath) => path.join(rootDir, relativePath));
+
+  return files.map((filePath) => {
+    // User may provide an absolute path as input in which case
+    // fg will return an absolute path.
+    if (path.isAbsolute(filePath)) {
+      return filePath;
+    }
+
+    // User may also provide a relative path in which case
+    // fg will return a path relative to rootDir.
+    return path.join(rootDir, filePath);
+  });
 }
 
 async function logMissingFileError(artifactPath: string, buildLogger: bunyan): Promise<void> {
