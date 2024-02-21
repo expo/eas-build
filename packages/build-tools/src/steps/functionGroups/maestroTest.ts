@@ -3,8 +3,10 @@ import {
   BuildStep,
   BuildStepInput,
   BuildStepInputValueTypeName,
+  spawnAsync,
 } from '@expo/steps';
 import { Platform } from '@expo/eas-build-job';
+import fg from 'fast-glob';
 
 import { CustomBuildContext } from '../../customBuildContext';
 import { createInstallMaestroBuildFunction } from '../functions/installMaestro';
@@ -39,11 +41,24 @@ export function createEasMaestroTestFunctionGroup(
             id: BuildStep.getNewId(),
             name: 'install_app',
             displayName: `Install app to Simulator`,
-            command: `
-              for APP_PATH in ios/build/Build/Products/*simulator/*.app; do
-                xcrun simctl install booted $APP_PATH
-              done
-            `,
+            fn: async (ctx, { env }) => {
+              const searchPath = 'ios/build/Build/Products/*simulator/*.app';
+              const appPaths = await fg(searchPath, { onlyFiles: true, cwd: ctx.workingDirectory });
+
+              if (appPaths.length === 0) {
+                ctx.logger.warn(
+                  `No files found matching "${searchPath}". Are you sure you've built a Simulator app?`
+                );
+              }
+
+              for (const appPath of appPaths) {
+                ctx.logger.info(`Installing "${appPath}"`);
+                await spawnAsync('xcrun', ['simctl', 'install', 'booted', appPath], {
+                  env,
+                  cwd: ctx.workingDirectory,
+                });
+              }
+            },
           })
         );
       } else if (buildToolsContext.job.platform === Platform.ANDROID) {
@@ -55,13 +70,24 @@ export function createEasMaestroTestFunctionGroup(
             id: BuildStep.getNewId(),
             name: 'install_app',
             displayName: `Install app to Emulator`,
-            // shopt -s globstar is necessary to add /**/ support
-            command: `
-              shopt -s globstar
-              for APP_PATH in android/app/build/outputs/**/*.apk; do
-                adb install $APP_PATH
-              done
-            `,
+            fn: async (ctx, { env }) => {
+              const searchPath = 'android/app/build/outputs/**/*.apk';
+              const appPaths = await fg(searchPath, { onlyFiles: true, cwd: ctx.workingDirectory });
+
+              if (appPaths.length === 0) {
+                ctx.logger.warn(
+                  `No files found matching "${searchPath}". Are you sure you've built an Emulator app?`
+                );
+              }
+
+              for (const appPath of appPaths) {
+                ctx.logger.info(`Installing "${appPath}"`);
+                await spawnAsync('adb', ['install', appPath], {
+                  env,
+                  cwd: ctx.workingDirectory,
+                });
+              }
+            },
           })
         );
       }
