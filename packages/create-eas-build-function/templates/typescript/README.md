@@ -1,33 +1,13 @@
-# My EAS Build function
+# This is your TypeScript function for EAS Build custom builds 🎉
 
-This is an EAS Build function written in TypeScript. It can be used as a step in a [custom build](https://docs.expo.dev/preview/custom-build-config/).
+## What is this? 👀
 
-## How to use it
+This is a custom build function that can be used as a step in the EAS Build build process. If you don't know what custom builds are or how to use them, refer to the [custom builds documentation](https://docs.expo.dev/custom-builds/get-started/).
 
-1. Install dependencies: `npm install`.
-2. Implement your function in `src/index.ts`.
-3. Install [`ncc`](https://github.com/vercel/ncc) if not yet installed: `npm install -g @vercel/ncc`.
-4. Compile the function with `ncc` by running `npm run build`. Ensure that the `build` directory is not ignored by `.gitignore` / `.easignore`, it must be included in the [archive uploaded when running `eas build`](https://expo.fyi/eas-build-archive).
-5. Use the function in a custom build YAML config. For example:
+This is a way of executing your custom TypeScript code as a part of your build process running on EAS servers.
 
-    ```yml
-    build:
-        name: Custom build
-        steps:
-            - run:
-                name: Hi!
-                command: echo "Hello! Let's run a custom function!"
-            - my_function:
-                id: my-function-call
-            - run:
-                name: Bye!
-                command: echo "Bye! The custom function has finished its job."
+## How can I use it? 🚀
 
-    functions:
-        my_function:
-            name: my-function
-            path: ./my-function # The path is resolved relative to this config file.
-    ```
-## Learn more
+Please refer to [this tutorial](https://docs.expo.dev/custom-builds/functions/) to learn how to use this function in your EAS Build custom build process.
 
-Refer to the [custom builds documentation](https://docs.expo.dev/preview/custom-build-config/).
+Check out the [custom build's **config.yml** schema reference](https://docs.expo.dev/custom-builds/schema/) to learn more!
