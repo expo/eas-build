@@ -223,4 +223,27 @@ describe(expoUpdates.configureExpoUpdatesIfInstalledAsync, () => {
     expect(androidGetNativelyDefinedClassicReleaseChannelAsync).not.toBeCalled();
     expect(iosGetNativelyDefinedClassicReleaseChannelAsync).not.toBeCalled();
   });
+
+  it('does not use the default release channel if the releaseChannel is not defined in ctx.job.releaseChannel nor natively, and expo-updates version is canary', async () => {
+    jest
+      .mocked(getExpoUpdatesPackageVersionIfInstalledAsync)
+      .mockResolvedValue('0.0.1-canary-20240109-93608d8');
+
+    const infoLogger = jest.fn();
+    const managedCtx: BuildContext<Job> = {
+      appConfig: {},
+      job: { platform: Platform.IOS },
+      logger: { info: infoLogger, warn: () => {} },
+      getReactNativeProjectDirectory: () => '/app',
+    } as any;
+    await expoUpdates.configureExpoUpdatesIfInstalledAsync(managedCtx);
+
+    expect(infoLogger).not.toBeCalledWith(
+      `Using default release channel for 'expo-updates' (default)`
+    );
+    expect(iosSetClassicReleaseChannelNativelyAsync).not.toBeCalled();
+    expect(androidSetClassicReleaseChannelNativelyAsync).not.toBeCalled();
+    expect(androidGetNativelyDefinedClassicReleaseChannelAsync).not.toBeCalled();
+    expect(iosGetNativelyDefinedClassicReleaseChannelAsync).not.toBeCalled();
+  });
 });
