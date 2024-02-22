@@ -8,6 +8,6 @@ This is a way of executing your custom JavaScript code as a part of your build p
 
 ## How can I use it? 🚀
 
-Please refer to [this](https://docs.expo.dev/custom-builds/functions/) tutorial to learn how to use this function in your EAS Build custom build process.
+Please refer to [this tutorial](https://docs.expo.dev/custom-builds/functions/) to learn how to use this function in your EAS Build custom build process.
 
 Check out the [custom build's **config.yml** schema reference](https://docs.expo.dev/custom-builds/schema/) to learn more!
