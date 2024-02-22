@@ -4,9 +4,9 @@
   "main": "./build/index.js",
   "type": "commonjs",
   "devDependencies": {
-    "@babel/cli": "^7.22.9",
-    "@babel/core": "^7.22.9",
-    "@babel/preset-env": "^7.22.9"
+    "@babel/cli": "^7.23.9",
+    "@babel/core": "^7.23.9",
+    "@babel/preset-env": "^7.23.9"
   },
   "scripts": {
     "babel": "babel src --out-dir babel",
