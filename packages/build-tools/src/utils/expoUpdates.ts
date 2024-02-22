@@ -239,6 +239,10 @@ export function isEASUpdateConfigured(ctx: BuildContext<Job>): boolean {
 export function shouldConfigureClassicUpdatesReleaseChannelAsFallback(
   expoUpdatesPackageVersion: string
 ): boolean {
+  if (expoUpdatesPackageVersion.includes('canary')) {
+    return false;
+  }
+
   // Anything before SDK 50 should configure classic updates as a fallback. The first version
   // of the expo-updates package published for SDK 50 was 0.19.0
   return semver.lt(expoUpdatesPackageVersion, '0.19.0');
