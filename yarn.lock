@@ -673,6 +673,14 @@
     slugify "^1.3.4"
     sucrase "3.34.0"
 
+"@expo/eas-build-job@1.0.74":
+  version "1.0.74"
+  resolved "https://registry.yarnpkg.com/@expo/eas-build-job/-/eas-build-job-1.0.74.tgz#041a9472f1e7505b53947db79f9a3e42e4384c96"
+  integrity sha512-8HfL8erYrZ5z38E+OqsS5xt2G5Ajt0eF/9RwcgtTGd0tNBn8Lmk8ICeazav2B3ETyK9SzJmRE2LtG+DTWdopvA==
+  dependencies:
+    joi "^17.11.0"
+    semver "^7.5.4"
+
 "@expo/env@^0.0.5":
   version "0.0.5"
   resolved "https://registry.yarnpkg.com/@expo/env/-/env-0.0.5.tgz#86526ed5c966fc39b2644341f7a10f4b855e59b8"

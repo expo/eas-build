@@ -73,6 +73,7 @@ function createStepsForIosSimulatorBuild({
         throw_if_not_configured: false,
       },
     });
+  const runFastlane = runFastlaneFunction();
   return [
     createCheckoutBuildFunction().createBuildStepFromFunctionCall(globalCtx),
     createInstallNodeModulesBuildFunction().createBuildStepFromFunctionCall(globalCtx),
@@ -80,7 +81,7 @@ function createStepsForIosSimulatorBuild({
     installPods,
     configureEASUpdate,
     generateGymfileFromTemplateFunction().createBuildStepFromFunctionCall(globalCtx),
-    runFastlaneFunction().createBuildStepFromFunctionCall(globalCtx),
+    runFastlane.createBuildStepFromFunctionCall(globalCtx, { id: runFastlane.id }),
     createFindAndUploadBuildArtifactsBuildFunction(
       buildToolsContext
     ).createBuildStepFromFunctionCall(globalCtx),
@@ -117,6 +118,7 @@ function createStepsForIosBuildWithCredentials({
       },
     }
   );
+  const runFastlane = runFastlaneFunction();
   return [
     createCheckoutBuildFunction().createBuildStepFromFunctionCall(globalCtx),
     createInstallNodeModulesBuildFunction().createBuildStepFromFunctionCall(globalCtx),
@@ -130,7 +132,7 @@ function createStepsForIosBuildWithCredentials({
     configureIosCredentialsFunction().createBuildStepFromFunctionCall(globalCtx),
     configureIosVersionFunction().createBuildStepFromFunctionCall(globalCtx),
     generateGymfile,
-    runFastlaneFunction().createBuildStepFromFunctionCall(globalCtx),
+    runFastlane.createBuildStepFromFunctionCall(globalCtx, { id: runFastlane.id }),
     createFindAndUploadBuildArtifactsBuildFunction(
       buildToolsContext
     ).createBuildStepFromFunctionCall(globalCtx),
@@ -147,12 +149,13 @@ function createStepsForAndroidBuildWithoutCredentials({
         throw_if_not_configured: false,
       },
     });
+  const runGradle = runGradleFunction();
   return [
     createCheckoutBuildFunction().createBuildStepFromFunctionCall(globalCtx),
     createInstallNodeModulesBuildFunction().createBuildStepFromFunctionCall(globalCtx),
     createPrebuildBuildFunction().createBuildStepFromFunctionCall(globalCtx),
     configureEASUpdate,
-    runGradleFunction().createBuildStepFromFunctionCall(globalCtx),
+    runGradle.createBuildStepFromFunctionCall(globalCtx, { id: runGradle.id }),
     createFindAndUploadBuildArtifactsBuildFunction(
       buildToolsContext
     ).createBuildStepFromFunctionCall(globalCtx),
@@ -169,6 +172,7 @@ function createStepsForAndroidBuildWithCredentials({
         throw_if_not_configured: false,
       },
     });
+  const runGradle = runGradleFunction();
   return [
     createCheckoutBuildFunction().createBuildStepFromFunctionCall(globalCtx),
     createInstallNodeModulesBuildFunction().createBuildStepFromFunctionCall(globalCtx),
@@ -179,7 +183,7 @@ function createStepsForAndroidBuildWithCredentials({
     configureEASUpdate,
     injectAndroidCredentialsFunction().createBuildStepFromFunctionCall(globalCtx),
     configureAndroidVersionFunction().createBuildStepFromFunctionCall(globalCtx),
-    runGradleFunction().createBuildStepFromFunctionCall(globalCtx),
+    runGradle.createBuildStepFromFunctionCall(globalCtx, { id: runGradle.id }),
     createFindAndUploadBuildArtifactsBuildFunction(
       buildToolsContext
     ).createBuildStepFromFunctionCall(globalCtx),

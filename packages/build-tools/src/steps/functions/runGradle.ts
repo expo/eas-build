@@ -1,9 +1,15 @@
 import path from 'path';
 import assert from 'assert';
 
-import { BuildFunction, BuildStepInput, BuildStepInputValueTypeName } from '@expo/steps';
+import {
+  BuildFunction,
+  BuildStepInput,
+  BuildStepInputValueTypeName,
+  BuildStepOutput,
+} from '@expo/steps';
 
 import { resolveGradleCommand, runGradleCommand } from '../utils/android/gradle';
+import { BuildStatusText, BuildStepOutputName } from '../utils/slackMessageDynamicFields';
 
 export function runGradleFunction(): BuildFunction {
   return new BuildFunction({
@@ -17,18 +23,36 @@ export function runGradleFunction(): BuildFunction {
         allowedValueTypeName: BuildStepInputValueTypeName.STRING,
       }),
     ],
-    fn: async (stepCtx, { env, inputs }) => {
+    outputProviders: [
+      BuildStepOutput.createProvider({
+        id: BuildStepOutputName.STATUS_TEXT,
+        required: true,
+      }),
+      BuildStepOutput.createProvider({
+        id: BuildStepOutputName.ERROR_TEXT,
+        required: false,
+      }),
+    ],
+    fn: async (stepCtx, { env, inputs, outputs }) => {
+      outputs[BuildStepOutputName.STATUS_TEXT].set(BuildStatusText.STARTED);
       assert(stepCtx.global.staticContext.job, 'Job is required');
       const command = resolveGradleCommand(
         stepCtx.global.staticContext.job,
         inputs.command.value as string | undefined
       );
-      await runGradleCommand({
-        logger: stepCtx.logger,
-        gradleCommand: command,
-        androidDir: path.join(stepCtx.workingDirectory, 'android'),
-        env,
-      });
+      try {
+        await runGradleCommand({
+          logger: stepCtx.logger,
+          gradleCommand: command,
+          androidDir: path.join(stepCtx.workingDirectory, 'android'),
+          env,
+        });
+      } catch (error) {
+        outputs[BuildStepOutputName.STATUS_TEXT].set(BuildStatusText.ERROR);
+        outputs[BuildStepOutputName.ERROR_TEXT].set((error as Error).toString());
+        throw error;
+      }
+      outputs[BuildStepOutputName.STATUS_TEXT].set(BuildStatusText.SUCCESS);
     },
   });
 }
