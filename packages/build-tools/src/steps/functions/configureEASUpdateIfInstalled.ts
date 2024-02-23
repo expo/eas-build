@@ -1,7 +1,7 @@
 import assert from 'assert';
 
 import { BuildFunction, BuildStepInput, BuildStepInputValueTypeName } from '@expo/steps';
-import { Job, Metadata } from '@expo/eas-build-job';
+import { Metadata } from '@expo/eas-build-job';
 import semver from 'semver';
 
 import { configureEASUpdateAsync } from '../utils/expoUpdates';
@@ -33,7 +33,7 @@ export function configureEASUpdateIfInstalledFunction(): BuildFunction {
     ],
     fn: async (stepCtx, { env, inputs }) => {
       assert(stepCtx.global.staticContext.job, 'Job is not defined');
-      const job = stepCtx.global.staticContext.job as Job;
+      const job = stepCtx.global.staticContext.job;
       const metadata = stepCtx.global.staticContext.metadata as Metadata | undefined;
 
       const appConfig = readAppConfig({

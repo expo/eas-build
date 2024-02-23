@@ -9,7 +9,8 @@ export const BUILD_STEP_INPUT_EXPRESSION_REGEXP = /\${\s*(inputs\.[\S]+)\s*}/;
 export const BUILD_STEP_OUTPUT_EXPRESSION_REGEXP = /\${\s*(steps\.[\S]+)\s*}/;
 export const BUILD_GLOBAL_CONTEXT_EXPRESSION_REGEXP = /\${\s*(eas\.[\S]+)\s*}/;
 export const BUILD_STEP_OR_BUILD_GLOBAL_CONTEXT_REFERENCE_REGEX = /\${\s*((steps|eas)\.[\S]+)\s*}/;
-export const BUILD_STEP_IF_CONDITION_EXPRESSION_REGEXP = /\${\s*(always|success|failure)\(\)\s*}/;
+export const BUILD_STEP_IF_CONDITION_EXPRESSION_REGEXP =
+  /\${\s*(always|success|failure|never)\(\)\s*}/;
 
 export function interpolateWithInputs(
   templateString: string,
@@ -31,7 +32,7 @@ export function interpolateWithOutputs(
  */
 export function getSelectedStatusCheckFromIfStatementTemplate(
   ifCondition: string
-): 'success' | 'failure' | 'always' {
+): 'success' | 'failure' | 'always' | 'never' {
   const matched = ifCondition.match(new RegExp(BUILD_STEP_IF_CONDITION_EXPRESSION_REGEXP, 'g'));
   if (!matched) {
     // this should never happen because of regex pattern validation
@@ -40,12 +41,12 @@ export function getSelectedStatusCheckFromIfStatementTemplate(
   const [, selectedStatusCheck] = nullthrows(
     matched[0].match(BUILD_STEP_IF_CONDITION_EXPRESSION_REGEXP)
   );
-  return selectedStatusCheck as 'success' | 'failure' | 'always';
+  return selectedStatusCheck as 'success' | 'failure' | 'always' | 'never';
 }
 
 export function getObjectValueForInterpolation(
   path: string,
-  obj: Record<string, any>
+  obj: Record<string, unknown>
 ): string | number | boolean | null {
   const value = get(obj, path);
 
@@ -96,7 +97,7 @@ function interpolate(
 }
 
 function isAllowedValueTypeForObjectInterpolation(
-  value: any
+  value: unknown
 ): value is string | number | boolean | object | null {
   return (
     typeof value === 'string' ||

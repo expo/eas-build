@@ -1,7 +1,8 @@
 import assert from 'assert';
+import fs from 'fs';
+import os from 'os';
 import path from 'path';
 
-import fs from 'fs-extra';
 import {
   BuildFunction,
   BuildRuntimePlatform,
@@ -129,12 +130,12 @@ async function installMaestro({
   env: BuildStepEnv;
 }): Promise<void> {
   logger.info('Fetching install script');
-  const tempDirectory = await fs.mkdtemp('install_maestro');
+  const tempDirectory = await fs.promises.mkdtemp(path.join(os.tmpdir(), 'install_maestro'));
   try {
     const installMaestroScriptResponse = await fetch('https://get.maestro.mobile.dev');
     const installMaestroScript = await installMaestroScriptResponse.text();
     const installMaestroScriptFilePath = path.join(tempDirectory, 'install_maestro.sh');
-    await fs.writeFile(installMaestroScriptFilePath, installMaestroScript, {
+    await fs.promises.writeFile(installMaestroScriptFilePath, installMaestroScript, {
       mode: 0o777,
     });
     logger.info('Installing Maestro');
@@ -161,7 +162,7 @@ async function installMaestro({
     env.PATH = `${env.PATH}:${maestroBinDir}`;
     process.env.PATH = `${process.env.PATH}:${maestroBinDir}`;
   } finally {
-    await fs.remove(tempDirectory);
+    await fs.promises.rm(tempDirectory, { force: true, recursive: true });
   }
 }
 
@@ -187,6 +188,7 @@ async function installIdbFromBrew({
   const localEnv = {
     ...env,
     HOMEBREW_NO_AUTO_UPDATE: '1',
+    HOMEBREW_NO_INSTALL_CLEANUP: '1',
   };
 
   await spawn(brewPath, ['tap', 'facebook/fb'], {
@@ -222,7 +224,7 @@ async function installJavaFromGcs({
   const downloadUrl =
     'https://storage.googleapis.com/turtle-v2/zulu11.68.17-ca-jdk11.0.21-macosx_aarch64.dmg';
   const filename = path.basename(downloadUrl);
-  const tempDirectory = await fs.mkdtemp('install_java');
+  const tempDirectory = await fs.promises.mkdtemp(path.join(os.tmpdir(), 'install_java'));
   const installerPath = path.join(tempDirectory, filename);
   const installerMountDirectory = path.join(tempDirectory, 'mountpoint');
   try {
@@ -230,12 +232,12 @@ async function installJavaFromGcs({
     // This is simpler than piping body into a write stream with node-fetch.
     await spawn('curl', ['--output', installerPath, downloadUrl], { env });
 
-    await fs.mkdir(installerMountDirectory);
+    await fs.promises.mkdir(installerMountDirectory);
     logger.info('Mounting Java installer');
     await spawn(
       'hdiutil',
       ['attach', installerPath, '-noverify', '-mountpoint', installerMountDirectory],
-      { logger, env }
+      { env }
     );
 
     logger.info('Installing Java');
@@ -248,7 +250,7 @@ async function installJavaFromGcs({
         '-target',
         '/',
       ],
-      { logger, env }
+      { env }
     );
   } finally {
     try {
@@ -256,6 +258,6 @@ async function installJavaFromGcs({
       await spawn('hdiutil', ['detach', installerMountDirectory], { env });
     } catch {}
 
-    await fs.remove(tempDirectory);
+    await fs.promises.rm(tempDirectory, { force: true, recursive: true });
   }
 }

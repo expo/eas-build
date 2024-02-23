@@ -54,6 +54,13 @@ export enum BuildPhase {
   CUSTOM = 'CUSTOM',
 }
 
+export enum SubmissionPhase {
+  SPIN_UP_SUBMISSION_WORKER = 'SPIN_UP_SUBMISSION_WORKER',
+  SUBMIT_TO_PLAY_STORE = 'SUBMIT_TO_PLAY_STORE',
+  SUBMIT_TO_APP_STORE = 'SUBMIT_TO_APP_STORE',
+  FAIL_SUBMISSION = 'FAIL_SUBMISSION',
+}
+
 export const buildPhaseDisplayName: Record<BuildPhase, string> = {
   [BuildPhase.UNKNOWN]: 'Unknown build phase',
   [BuildPhase.QUEUE]: 'Waiting to start',
@@ -105,6 +112,13 @@ export const buildPhaseDisplayName: Record<BuildPhase, string> = {
   [BuildPhase.PARSE_CUSTOM_WORKFLOW_CONFIG]: 'Parse custom build config',
 };
 
+export const submissionPhaseDisplayName: Record<SubmissionPhase, string> = {
+  [SubmissionPhase.SPIN_UP_SUBMISSION_WORKER]: 'Spin up submission worker',
+  [SubmissionPhase.SUBMIT_TO_PLAY_STORE]: 'Submit to Play Store',
+  [SubmissionPhase.SUBMIT_TO_APP_STORE]: 'Submit to App Store',
+  [SubmissionPhase.FAIL_SUBMISSION]: 'Fail submission',
+};
+
 export const buildPhaseWebsiteId: Record<BuildPhase, string> = {
   [BuildPhase.UNKNOWN]: 'unknown',
   [BuildPhase.QUEUE]: 'waiting-to-start',
@@ -154,6 +168,13 @@ export const buildPhaseWebsiteId: Record<BuildPhase, string> = {
   // CUSTOM
   [BuildPhase.CUSTOM]: 'custom',
   [BuildPhase.PARSE_CUSTOM_WORKFLOW_CONFIG]: 'parse-custom-workflow-config',
+};
+
+export const submissionPhaseWebsiteId: Record<SubmissionPhase, string> = {
+  [SubmissionPhase.SPIN_UP_SUBMISSION_WORKER]: 'spin-up-submission-worker',
+  [SubmissionPhase.SUBMIT_TO_PLAY_STORE]: 'submit-to-play-store',
+  [SubmissionPhase.SUBMIT_TO_APP_STORE]: 'submit-to-app-store',
+  [SubmissionPhase.FAIL_SUBMISSION]: 'fail-submission',
 };
 
 export const XCODE_LOGS_BUILD_PHASE_WEBSITE_ID = 'xcode-logs';

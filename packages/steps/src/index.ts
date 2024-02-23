@@ -11,3 +11,4 @@ export { BuildStepEnv } from './BuildStepEnv.js';
 export { BuildFunctionGroup } from './BuildFunctionGroup.js';
 export { BuildStep } from './BuildStep.js';
 export * as errors from './errors.js';
+export * from './utils/shell/spawn.js';

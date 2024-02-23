@@ -1,3 +1,5 @@
+import { BuildStaticContext } from '@expo/eas-build-job';
+
 import { BuildStepRuntimeError } from '../errors.js';
 import { BuildStep } from '../BuildStep.js';
 import {
@@ -131,7 +133,7 @@ describe(BuildStepInput, () => {
             },
           ],
         },
-      },
+      } as unknown as BuildStaticContext,
     });
     const i = new BuildStepInput<BuildStepInputValueTypeName>(ctx, {
       id: 'foo',
@@ -158,7 +160,7 @@ describe(BuildStepInput, () => {
             },
           ],
         },
-      },
+      } as unknown as BuildStaticContext,
     });
     const i = new BuildStepInput<BuildStepInputValueTypeName>(ctx, {
       id: 'foo',
@@ -185,7 +187,7 @@ describe(BuildStepInput, () => {
             },
           ],
         },
-      },
+      } as unknown as BuildStaticContext,
     });
     const i = new BuildStepInput<BuildStepInputValueTypeName>(ctx, {
       id: 'foo',
@@ -212,7 +214,7 @@ describe(BuildStepInput, () => {
             },
           ],
         },
-      },
+      } as unknown as BuildStaticContext,
     });
     const i = new BuildStepInput<BuildStepInputValueTypeName>(ctx, {
       id: 'foo',
@@ -241,7 +243,7 @@ describe(BuildStepInput, () => {
             },
           ],
         },
-      },
+      } as unknown as BuildStaticContext,
     });
     const i = new BuildStepInput<BuildStepInputValueTypeName>(ctx, {
       id: 'foo',
@@ -270,7 +272,7 @@ describe(BuildStepInput, () => {
             },
           ],
         },
-      },
+      } as unknown as BuildStaticContext,
     });
     const i = new BuildStepInput<BuildStepInputValueTypeName>(ctx, {
       id: 'foo',
