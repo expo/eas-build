@@ -181,6 +181,19 @@ export async function configureExpoUpdatesIfInstalledAsync(ctx: BuildContext<Job
           ctx.logger.warn(
             `This build is configured to query EAS Update for updates, however no channel is set in eas.json.`
           );
+          const easUpdateUrl = ctx.appConfig.updates?.url ?? null;
+          const jobProfile = ctx.job.buildProfile ?? null;
+          ctx.logger.warn(
+            `This build has an invalid EAS Update configuration: update.url is set to "${easUpdateUrl}" in app config, but a channel is not specified${
+              jobProfile ? '' : ` for the current build profile "${jobProfile}" in eas.json`
+            }.`
+          );
+          ctx.logger.warn(
+            `- No channel will be set and EAS Update will be disabled for the build.`
+          );
+          ctx.logger.warn(
+            `- Run \`eas update:configure\` to set your channel in eas.json. For more details, see https://docs.expo.dev/eas-update/getting-started/#configure-your-project`
+          );
         }
         ctx.markBuildPhaseHasWarnings();
       }
