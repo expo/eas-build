@@ -39,7 +39,7 @@ export async function configureEASUpdateAsync({
 
   if (isEASUpdateConfigured(appConfig, logger)) {
     const channel = jobOrInputChannel ?? (await getChannelAsync(job, workingDirectory));
-    const isDevelopmentClient = job.isDevelopmentClient ?? false;
+    const isDevelopmentClient = job.developmentClient ?? false;
     if (channel) {
       await configureEASUpdate(job, logger, channel, workingDirectory);
     } else if (isDevelopmentClient) {

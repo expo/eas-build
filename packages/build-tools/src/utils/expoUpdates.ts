@@ -168,7 +168,7 @@ export async function configureExpoUpdatesIfInstalledAsync(ctx: BuildContext<Job
       await configureEASExpoUpdatesAsync(ctx);
     } else {
       const channel = await getChannelAsync(ctx);
-      const isDevelopmentClient = ctx.job.isDevelopmentClient ?? false;
+      const isDevelopmentClient = ctx.job.developmentClient ?? false;
 
       if (channel !== null) {
         const configFile =
