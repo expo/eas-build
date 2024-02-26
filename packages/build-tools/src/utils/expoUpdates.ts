@@ -182,9 +182,6 @@ export async function configureExpoUpdatesIfInstalledAsync(ctx: BuildContext<Job
             `This build is configured with EAS Update however has a Classic Updates releaseChannel set instead of having an EAS Update channel.`
           );
         } else {
-          ctx.logger.warn(
-            `This build is configured to query EAS Update for updates, however no channel is set in eas.json.`
-          );
           const easUpdateUrl = ctx.appConfig.updates?.url ?? null;
           const jobProfile = ctx.job.buildProfile ?? null;
           ctx.logger.warn(
