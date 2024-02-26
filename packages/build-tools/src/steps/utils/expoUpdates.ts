@@ -39,8 +39,11 @@ export async function configureEASUpdateAsync({
 
   if (isEASUpdateConfigured(appConfig, logger)) {
     const channel = jobOrInputChannel ?? (await getChannelAsync(job, workingDirectory));
+    const isDevelopmentClient = job.isDevelopmentClient ?? false;
     if (channel) {
       await configureEASUpdate(job, logger, channel, workingDirectory);
+    } else if (isDevelopmentClient) {
+      // NO-OP: Development clients don't need to have a channel set
     } else {
       if (job.releaseChannel !== undefined) {
         logger.warn(

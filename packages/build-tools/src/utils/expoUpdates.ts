@@ -168,10 +168,14 @@ export async function configureExpoUpdatesIfInstalledAsync(ctx: BuildContext<Job
       await configureEASExpoUpdatesAsync(ctx);
     } else {
       const channel = await getChannelAsync(ctx);
+      const isDevelopmentClient = ctx.job.isDevelopmentClient ?? false;
+
       if (channel !== null) {
         const configFile =
           ctx.job.platform === Platform.ANDROID ? 'AndroidManifest.xml' : 'Expo.plist';
         ctx.logger.info(`The channel name for EAS Update in ${configFile} is set to "${channel}"`);
+      } else if (isDevelopmentClient) {
+        // NO-OP: Development clients don't need to have a channel set
       } else {
         if (ctx.job.releaseChannel !== undefined) {
           ctx.logger.warn(
