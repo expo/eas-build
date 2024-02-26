@@ -97,7 +97,7 @@ export enum EnvironmentSecretType {
 export const EnvironmentSecretsSchema = Joi.array().items(
   Joi.object({
     name: Joi.string().required(),
-    value: Joi.string().required(),
+    value: Joi.string().allow('').required(),
     type: Joi.string()
       .valid(...Object.values(EnvironmentSecretType))
       .required(),
