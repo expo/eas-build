@@ -17,6 +17,7 @@ import { runGradleFunction } from '../functions/runGradle';
 import { configureIosVersionFunction } from '../functions/configureIosVersion';
 import { injectAndroidCredentialsFunction } from '../functions/injectAndroidCredentials';
 import { configureAndroidVersionFunction } from '../functions/configureAndroidVersion';
+import { createSetUpNpmrcBuildFunction } from '../functions/useNpmToken';
 
 interface HelperFunctionsInput {
   globalCtx: BuildStepGlobalContext;
@@ -76,6 +77,7 @@ function createStepsForIosSimulatorBuild({
   const runFastlane = runFastlaneFunction();
   return [
     createCheckoutBuildFunction().createBuildStepFromFunctionCall(globalCtx),
+    createSetUpNpmrcBuildFunction().createBuildStepFromFunctionCall(globalCtx),
     createInstallNodeModulesBuildFunction().createBuildStepFromFunctionCall(globalCtx),
     createPrebuildBuildFunction().createBuildStepFromFunctionCall(globalCtx),
     installPods,
@@ -121,6 +123,7 @@ function createStepsForIosBuildWithCredentials({
   const runFastlane = runFastlaneFunction();
   return [
     createCheckoutBuildFunction().createBuildStepFromFunctionCall(globalCtx),
+    createSetUpNpmrcBuildFunction().createBuildStepFromFunctionCall(globalCtx),
     createInstallNodeModulesBuildFunction().createBuildStepFromFunctionCall(globalCtx),
     createGetCredentialsForBuildTriggeredByGithubIntegration(
       buildToolsContext
@@ -152,6 +155,7 @@ function createStepsForAndroidBuildWithoutCredentials({
   const runGradle = runGradleFunction();
   return [
     createCheckoutBuildFunction().createBuildStepFromFunctionCall(globalCtx),
+    createSetUpNpmrcBuildFunction().createBuildStepFromFunctionCall(globalCtx),
     createInstallNodeModulesBuildFunction().createBuildStepFromFunctionCall(globalCtx),
     createPrebuildBuildFunction().createBuildStepFromFunctionCall(globalCtx),
     configureEASUpdate,
@@ -175,6 +179,7 @@ function createStepsForAndroidBuildWithCredentials({
   const runGradle = runGradleFunction();
   return [
     createCheckoutBuildFunction().createBuildStepFromFunctionCall(globalCtx),
+    createSetUpNpmrcBuildFunction().createBuildStepFromFunctionCall(globalCtx),
     createInstallNodeModulesBuildFunction().createBuildStepFromFunctionCall(globalCtx),
     createGetCredentialsForBuildTriggeredByGithubIntegration(
       buildToolsContext
