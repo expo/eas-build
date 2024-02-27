@@ -110,21 +110,16 @@ export class BuildStepInput<
     }
 
     const valueDoesNotRequireInterpolation =
-      rawValue === undefined ||
-      typeof rawValue === 'boolean' ||
-      typeof rawValue === 'number' ||
-      typeof rawValue === 'object';
+      rawValue === undefined || typeof rawValue === 'boolean' || typeof rawValue === 'number';
     if (valueDoesNotRequireInterpolation) {
-      const currentTypeName =
-        typeof rawValue === 'object' ? BuildStepInputValueTypeName.JSON : typeof rawValue;
-      if (currentTypeName !== this.allowedValueTypeName && rawValue !== undefined) {
+      if (typeof rawValue !== this.allowedValueTypeName && rawValue !== undefined) {
         throw new BuildStepRuntimeError(
           `Input parameter "${this.id}" for step "${this.stepDisplayName}" must be of type "${this.allowedValueTypeName}".`
         );
       }
       return rawValue as BuildStepInputValueTypeWithRequired<T, R>;
     } else {
-      const valueInterpolatedWithGlobalContext = this.ctx.interpolate(rawValue);
+      const valueInterpolatedWithGlobalContext = this.ctx.interpolate(rawValue as string | object);
       const valueInterpolatedWithOutputsAndGlobalContext = interpolateWithOutputs(
         valueInterpolatedWithGlobalContext,
         (path) => this.ctx.getStepOutputValue(path) ?? ''
@@ -193,7 +188,12 @@ export class BuildStepInput<
     return input;
   }
 
-  private parseInputValueToAllowedType(value: string): BuildStepInputValueTypeWithRequired<T, R> {
+  private parseInputValueToAllowedType(
+    value: string | object
+  ): BuildStepInputValueTypeWithRequired<T, R> {
+    if (typeof value === 'object') {
+      return value as BuildStepInputValueTypeWithRequired<T, R>;
+    }
     if (this.allowedValueTypeName === BuildStepInputValueTypeName.STRING) {
       return value as BuildStepInputValueTypeWithRequired<T, R>;
     } else if (this.allowedValueTypeName === BuildStepInputValueTypeName.NUMBER) {

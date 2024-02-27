@@ -19,11 +19,36 @@ export function interpolateWithInputs(
   return interpolate(templateString, BUILD_STEP_INPUT_EXPRESSION_REGEXP, inputs);
 }
 
-export function interpolateWithOutputs(
+export function interpolateWithOutputs<InterpolableType extends string | object>(
+  interpolableValue: InterpolableType,
+  fn: (path: string) => string
+): InterpolableType {
+  if (typeof interpolableValue === 'string') {
+    return interpolateStringWithOutputs(interpolableValue, fn) as InterpolableType;
+  } else {
+    return interpolateObjectWithOutputs(interpolableValue, fn) as InterpolableType;
+  }
+}
+
+export function interpolateStringWithOutputs(
   templateString: string,
   fn: (path: string) => string
 ): string {
   return interpolate(templateString, BUILD_STEP_OUTPUT_EXPRESSION_REGEXP, fn);
+}
+
+export function interpolateObjectWithOutputs(
+  interpolableObject: object,
+  fn: (path: string) => string
+): object {
+  const interpolableObjectCopy = JSON.parse(JSON.stringify(interpolableObject));
+  Object.keys(interpolableObject).forEach((property) => {
+    const propertyValue = interpolableObject[property as keyof typeof interpolableObject];
+    if (['string', 'object'].includes(typeof propertyValue)) {
+      interpolableObjectCopy[property] = interpolateWithOutputs(propertyValue, fn);
+    }
+  });
+  return interpolableObjectCopy;
 }
 
 /**

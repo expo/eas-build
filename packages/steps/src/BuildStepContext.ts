@@ -107,7 +107,17 @@ export class BuildStepGlobalContext {
     return this.stepById[stepId].getOutputValueByName(outputId);
   }
 
-  public interpolate(value: string): string {
+  public interpolate<InterpolableType extends string | object>(
+    value: InterpolableType
+  ): InterpolableType {
+    if (typeof value === 'string') {
+      return this.interpolateString(value) as InterpolableType;
+    } else {
+      return this.interpolateObject(value) as InterpolableType;
+    }
+  }
+
+  public interpolateString(value: string): string {
     return interpolateWithGlobalContext(value, (path) => {
       return (
         getObjectValueForInterpolation(path, {
@@ -118,6 +128,17 @@ export class BuildStepGlobalContext {
         })?.toString() ?? ''
       );
     });
+  }
+
+  public interpolateObject(value: object): object {
+    const valueDeepCopy = JSON.parse(JSON.stringify(value));
+    Object.keys(value).forEach((property) => {
+      const propertyValue = value[property as keyof typeof value];
+      if (['string', 'object'].includes(typeof propertyValue)) {
+        valueDeepCopy[property] = this.interpolate(propertyValue);
+      }
+    });
+    return valueDeepCopy;
   }
 
   public stepCtx(options: { logger: bunyan; relativeWorkingDirectory?: string }): BuildStepContext {
