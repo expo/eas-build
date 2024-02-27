@@ -4,6 +4,7 @@ import path from 'path';
 import { BuildStaticContext } from '@expo/eas-build-job';
 import { bunyan } from '@expo/logger';
 import { v4 as uuidv4 } from 'uuid';
+import cloneDeep from 'lodash.clonedeep';
 
 import {
   BuildStep,
@@ -131,7 +132,7 @@ export class BuildStepGlobalContext {
   }
 
   public interpolateObject(value: object): object {
-    const valueDeepCopy = JSON.parse(JSON.stringify(value));
+    const valueDeepCopy = cloneDeep(value);
     Object.keys(value).forEach((property) => {
       const propertyValue = value[property as keyof typeof value];
       if (['string', 'object'].includes(typeof propertyValue)) {

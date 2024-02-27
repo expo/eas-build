@@ -1,4 +1,5 @@
 import get from 'lodash.get';
+import cloneDeep from 'lodash.clonedeep';
 
 import { BuildStepInputValueTypeName } from '../BuildStepInput.js';
 import { BuildConfigError, BuildStepRuntimeError } from '../errors.js';
@@ -41,7 +42,7 @@ export function interpolateObjectWithOutputs(
   interpolableObject: object,
   fn: (path: string) => string
 ): object {
-  const interpolableObjectCopy = JSON.parse(JSON.stringify(interpolableObject));
+  const interpolableObjectCopy = cloneDeep(interpolableObject);
   Object.keys(interpolableObject).forEach((property) => {
     const propertyValue = interpolableObject[property as keyof typeof interpolableObject];
     if (['string', 'object'].includes(typeof propertyValue)) {
