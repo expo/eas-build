@@ -307,6 +307,7 @@ describe(BuildStepInput, () => {
       baz: {
         bazfoo: 'bazfoo',
         bazbar: '${ eas.context_val_2.in_val_1 }',
+        bazbaz: ['bazbaz', '${ eas.context_val_1 }', '${ eas.context_val_2.in_val_1 }'],
       },
     });
     expect(i.value).toEqual({
@@ -315,6 +316,7 @@ describe(BuildStepInput, () => {
       baz: {
         bazfoo: 'bazfoo',
         bazbar: 'in_val_1',
+        bazbaz: ['bazbaz', 'val_1', 'in_val_1'],
       },
     });
   });
