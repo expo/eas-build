@@ -11,7 +11,12 @@ export function createSendSlackMessageFunction(): BuildFunction {
       BuildStepInput.createProvider({
         id: 'message',
         allowedValueTypeName: BuildStepInputValueTypeName.STRING,
-        required: true,
+        required: false,
+      }),
+      BuildStepInput.createProvider({
+        id: 'payload',
+        allowedValueTypeName: BuildStepInputValueTypeName.JSON,
+        required: false,
       }),
       BuildStepInput.createProvider({
         id: 'slack_hook_url',
@@ -22,6 +27,23 @@ export function createSendSlackMessageFunction(): BuildFunction {
     fn: async (stepCtx, { inputs, env }) => {
       const { logger } = stepCtx;
       const slackMessage = inputs.message.value as string;
+      const slackPayload = inputs.payload.value as object;
+      if (!slackMessage && !slackPayload) {
+        logger.warn(
+          'You need to provide either "message" input or "payload" input to specify the Slack message contents'
+        );
+        throw new Error(
+          'You need to provide either "message" input or "payload" input to specify the Slack message contents'
+        );
+      }
+      if (slackMessage && slackPayload) {
+        logger.warn(
+          'You cannot specify both "message" input and "payload" input - choose one for the Slack message contents'
+        );
+        throw new Error(
+          'You cannot specify both "message" input and "payload" input - choose one for the Slack message contents'
+        );
+      }
       const slackHookUrl = (inputs.slack_hook_url.value as string) ?? env.SLACK_HOOK_URL;
       if (!slackHookUrl) {
         logger.warn(
@@ -31,7 +53,7 @@ export function createSendSlackMessageFunction(): BuildFunction {
           'Sending Slack message failed - provide input "slack_hook_url" or set "SLACK_HOOK_URL" secret'
         );
       }
-      await sendSlackMessageAsync({ logger, slackHookUrl, slackMessage });
+      await sendSlackMessageAsync({ logger, slackHookUrl, slackMessage, slackPayload });
     },
   });
 }
@@ -40,14 +62,16 @@ async function sendSlackMessageAsync({
   logger,
   slackHookUrl,
   slackMessage,
+  slackPayload,
 }: {
   logger: bunyan;
   slackHookUrl: string;
-  slackMessage: string;
+  slackMessage: string | undefined;
+  slackPayload: object | undefined;
 }): Promise<void> {
   logger.info('Sending Slack message');
 
-  const body = { text: slackMessage };
+  const body = slackPayload ? slackPayload : { text: slackMessage };
   let fetchResult: Response;
   try {
     fetchResult = await fetch(slackHookUrl, {
