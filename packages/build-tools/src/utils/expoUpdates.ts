@@ -168,18 +168,32 @@ export async function configureExpoUpdatesIfInstalledAsync(ctx: BuildContext<Job
       await configureEASExpoUpdatesAsync(ctx);
     } else {
       const channel = await getChannelAsync(ctx);
+      const isDevelopmentClient = ctx.job.developmentClient ?? false;
+
       if (channel !== null) {
         const configFile =
           ctx.job.platform === Platform.ANDROID ? 'AndroidManifest.xml' : 'Expo.plist';
         ctx.logger.info(`The channel name for EAS Update in ${configFile} is set to "${channel}"`);
+      } else if (isDevelopmentClient) {
+        // NO-OP: Development clients don't need to have a channel set
       } else {
         if (ctx.job.releaseChannel !== undefined) {
           ctx.logger.warn(
             `This build is configured with EAS Update however has a Classic Updates releaseChannel set instead of having an EAS Update channel.`
           );
         } else {
+          const easUpdateUrl = ctx.appConfig.updates?.url ?? null;
+          const jobProfile = ctx.job.buildProfile ?? null;
           ctx.logger.warn(
-            `This build is configured to query EAS Update for updates, however no channel is set in eas.json.`
+            `This build has an invalid EAS Update configuration: update.url is set to "${easUpdateUrl}" in app config, but a channel is not specified${
+              jobProfile ? '' : ` for the current build profile "${jobProfile}" in eas.json`
+            }.`
+          );
+          ctx.logger.warn(
+            `- No channel will be set and EAS Update will be disabled for the build.`
+          );
+          ctx.logger.warn(
+            `- Run \`eas update:configure\` to set your channel in eas.json. For more details, see https://docs.expo.dev/eas-update/getting-started/#configure-your-project`
           );
         }
         ctx.markBuildPhaseHasWarnings();
