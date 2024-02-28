@@ -1,3 +1,5 @@
+import assert from 'assert';
+
 import { bunyan } from '@expo/logger';
 
 import { BuildStepGlobalContext, SerializedBuildStepGlobalContext } from './BuildStepContext.js';
@@ -119,7 +121,8 @@ export class BuildStepInput<
       }
       return rawValue as BuildStepInputValueTypeWithRequired<T, R>;
     } else {
-      const valueInterpolatedWithGlobalContext = this.ctx.interpolate(rawValue as string | object);
+      assert(rawValue !== undefined);
+      const valueInterpolatedWithGlobalContext = this.ctx.interpolate(rawValue);
       const valueInterpolatedWithOutputsAndGlobalContext = interpolateWithOutputs(
         valueInterpolatedWithGlobalContext,
         (path) => this.ctx.getStepOutputValue(path) ?? ''
