@@ -136,7 +136,7 @@ export class BuildStepGlobalContext {
     Object.keys(value).forEach((property) => {
       const propertyValue = value[property as keyof typeof value];
       if (['string', 'object'].includes(typeof propertyValue)) {
-        valueDeepCopy[property] = this.interpolate(propertyValue);
+        valueDeepCopy[property as keyof typeof valueDeepCopy] = this.interpolate(propertyValue);
       }
     });
     return valueDeepCopy;

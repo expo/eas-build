@@ -46,7 +46,8 @@ export function interpolateObjectWithOutputs(
   Object.keys(interpolableObject).forEach((property) => {
     const propertyValue = interpolableObject[property as keyof typeof interpolableObject];
     if (['string', 'object'].includes(typeof propertyValue)) {
-      interpolableObjectCopy[property] = interpolateWithOutputs(propertyValue, fn);
+      interpolableObjectCopy[property as keyof typeof interpolableObjectCopy] =
+        interpolateWithOutputs(propertyValue, fn);
     }
   });
   return interpolableObjectCopy;
