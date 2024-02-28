@@ -182,10 +182,7 @@ describe(createSendSlackMessageFunction, () => {
     await expect(buildStep.executeAsync()).rejects.toThrow(expectedError);
     expect(fetchMock).not.toHaveBeenCalled();
     expect(loggerInfoMock).toHaveBeenCalledTimes(1);
-    expect(loggerWarnMock).toHaveBeenCalledTimes(1);
-    expect(loggerWarnMock).toHaveBeenCalledWith(
-      'You need to provide either "message" input or "payload" input to specify the Slack message contents'
-    );
+    expect(loggerWarnMock).not.toHaveBeenCalled();
   });
 
   it('does not call the webhook when both message and payload are specified', async () => {
@@ -210,10 +207,7 @@ describe(createSendSlackMessageFunction, () => {
     await expect(buildStep.executeAsync()).rejects.toThrow(expectedError);
     expect(fetchMock).not.toHaveBeenCalled();
     expect(loggerInfoMock).toHaveBeenCalledTimes(1);
-    expect(loggerWarnMock).toHaveBeenCalledTimes(1);
-    expect(loggerWarnMock).toHaveBeenCalledWith(
-      'You cannot specify both "message" input and "payload" input - choose one for the Slack message contents'
-    );
+    expect(loggerWarnMock).not.toHaveBeenCalled();
   });
 
   it('catches error if thrown, logs warning and details in debug, throws new error', async () => {
@@ -245,10 +239,7 @@ describe(createSendSlackMessageFunction, () => {
     });
     expect(loggerInfoMock).toHaveBeenCalledTimes(2);
     expect(loggerInfoMock).toHaveBeenCalledWith('Sending Slack message');
-    expect(loggerWarnMock).toHaveBeenCalledTimes(1);
-    expect(loggerWarnMock).toHaveBeenCalledWith(
-      'Sending Slack message to webhook url "https://slack.hook.url" failed'
-    );
+    expect(loggerWarnMock).not.toHaveBeenCalled();
     expect(loggerDebugMock).toHaveBeenCalledWith(thrownError);
     expect(loggerErrorMock).toHaveBeenCalledWith({
       err: expectedError,
@@ -288,10 +279,7 @@ describe(createSendSlackMessageFunction, () => {
       });
       expect(loggerInfoMock).toHaveBeenCalledTimes(2);
       expect(loggerInfoMock).toHaveBeenCalledWith('Sending Slack message');
-      expect(loggerWarnMock).toHaveBeenCalledTimes(1);
-      expect(loggerWarnMock).toHaveBeenCalledWith(
-        `Sending Slack message to webhook url "https://slack.hook.url" failed with status ${statusCode}`
-      );
+      expect(loggerWarnMock).not.toHaveBeenCalled();
       expect(loggerDebugMock).toHaveBeenCalledWith(`${statusCode} - ${statusText}`);
       expect(loggerErrorMock).toHaveBeenCalledWith({
         err: expectedError,

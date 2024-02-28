@@ -29,17 +29,11 @@ export function createSendSlackMessageFunction(): BuildFunction {
       const slackMessage = inputs.message.value as string;
       const slackPayload = inputs.payload.value as object;
       if (!slackMessage && !slackPayload) {
-        logger.warn(
-          'You need to provide either "message" input or "payload" input to specify the Slack message contents'
-        );
         throw new Error(
           'You need to provide either "message" input or "payload" input to specify the Slack message contents'
         );
       }
       if (slackMessage && slackPayload) {
-        logger.warn(
-          'You cannot specify both "message" input and "payload" input - choose one for the Slack message contents'
-        );
         throw new Error(
           'You cannot specify both "message" input and "payload" input - choose one for the Slack message contents'
         );
@@ -80,14 +74,10 @@ async function sendSlackMessageAsync({
       headers: { 'Content-Type': 'application/json' },
     });
   } catch (error) {
-    logger.warn(`Sending Slack message to webhook url "${slackHookUrl}" failed`);
     logger.debug(error);
     throw new Error(`Sending Slack message to webhook url "${slackHookUrl}" failed`);
   }
   if (!fetchResult.ok) {
-    logger.warn(
-      `Sending Slack message to webhook url "${slackHookUrl}" failed with status ${fetchResult.status}`
-    );
     logger.debug(`${fetchResult.status} - ${fetchResult.statusText}`);
     throw new Error(
       `Sending Slack message to webhook url "${slackHookUrl}" failed with status ${fetchResult.status}`
