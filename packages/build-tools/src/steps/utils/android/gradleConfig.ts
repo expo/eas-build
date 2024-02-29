@@ -5,14 +5,8 @@ import { bunyan } from '@expo/logger';
 import fs from 'fs-extra';
 import templateFile from '@expo/template-file';
 
-const EAS_BUILD_INJECT_CREDENTIALS_GRADLE_TEMPLATE_PATH = path.join(
-  __dirname,
-  '../../../../templates/eas-build-inject-android-credentials.gradle'
-);
-const EAS_BUILD_CONFIGURE_VERSION_GRADLE_TEMPLATE_PATH = path.join(
-  __dirname,
-  '../../../../templates/eas-build-configure-version.gradle.template'
-);
+const EAS_BUILD_INJECT_CREDENTIALS_GRADLE_TEMPLATE = require('../../../../templates/eas-build-inject-android-credentials.gradle');
+const EAS_BUILD_CONFIGURE_VERSION_GRADLE_TEMPLATE = require('../../../../templates/eas-build-configure-version.gradle.template');
 
 const APPLY_EAS_BUILD_INJECT_CREDENTIALS_GRADLE_LINE =
   'apply from: "./eas-build-inject-android-credentials.gradle"';
@@ -68,7 +62,7 @@ function getEasBuildConfigureVersionGradlePath(workingDir: string): string {
 
 async function createEasBuildInjectCredentialsGradle(workingDir: string): Promise<void> {
   const targetPath = getEasBuildInjectCredentialsGradlePath(workingDir);
-  await fs.copy(EAS_BUILD_INJECT_CREDENTIALS_GRADLE_TEMPLATE_PATH, targetPath);
+  await fs.writeFile(targetPath, EAS_BUILD_INJECT_CREDENTIALS_GRADLE_TEMPLATE);
 }
 
 async function createEasBuildConfigureVersionGradle(
@@ -77,7 +71,7 @@ async function createEasBuildConfigureVersionGradle(
 ): Promise<void> {
   const targetPath = getEasBuildConfigureVersionGradlePath(workingDir);
   await templateFile(
-    EAS_BUILD_CONFIGURE_VERSION_GRADLE_TEMPLATE_PATH,
+    EAS_BUILD_CONFIGURE_VERSION_GRADLE_TEMPLATE,
     {
       VERSION_CODE: versionCode,
       VERSION_NAME: versionName,

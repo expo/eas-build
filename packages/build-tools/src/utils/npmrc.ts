@@ -8,7 +8,7 @@ import { BuildContext } from '../context';
 
 import { findPackagerRootDir } from './packageManager';
 
-const NPMRC_TEMPLATE_PATH = path.join(__dirname, '../../templates/npmrc');
+const NPMRC_TEMPLATE = require('../../templates/npmrc');
 
 export async function setUpNpmrcAsync(ctx: BuildContext<Job>, logger: bunyan): Promise<void> {
   if (ctx.env.NPM_TOKEN) {
@@ -24,10 +24,10 @@ async function createNpmrcIfNotExistsAsync(ctx: BuildContext<Job>, logger: bunya
   if (await fs.pathExists(projectNpmrcPath)) {
     logger.info('.npmrc already exists in your project directory, skipping generation');
   } else {
-    const npmrcContents = await fs.readFile(NPMRC_TEMPLATE_PATH, 'utf8');
+    const npmrcContents = NPMRC_TEMPLATE;
     logger.info('Creating .npmrc in your project directory with the following contents:');
     logger.info(npmrcContents);
-    await fs.copy(NPMRC_TEMPLATE_PATH, projectNpmrcPath);
+    await fs.writeFile(projectNpmrcPath, NPMRC_TEMPLATE);
   }
 }
 

@@ -6,8 +6,8 @@ import fs from 'fs-extra';
 import { BuildContext } from '../context';
 
 export async function prepareExecutableAsync(ctx: BuildContext<Job>): Promise<void> {
-  await fs.copy(
-    path.join(__dirname, '../../bin/set-env'),
-    path.join(ctx.buildExecutablesDirectory, 'set-env')
+  await fs.writeFile(
+    path.join(ctx.buildExecutablesDirectory, 'set-env'),
+    require('../../bin/set-env')
   );
 }

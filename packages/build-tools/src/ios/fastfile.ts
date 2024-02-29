@@ -1,10 +1,8 @@
-import path from 'path';
-
 import templateFile from '@expo/template-file';
 
 import { TargetProvisioningProfiles } from './credentials/manager';
 
-const RESIGN_TEMPLATE_FILE_PATH = path.join(__dirname, '../../templates/Fastfile.resign.template');
+const RESIGN_TEMPLATE = require('../../templates/Fastfile.resign.template');
 
 export async function createFastfileForResigningBuild({
   outputFile,
@@ -30,7 +28,7 @@ export async function createFastfileForResigningBuild({
   }
 
   await templateFile(
-    RESIGN_TEMPLATE_FILE_PATH,
+    RESIGN_TEMPLATE,
     {
       IPA_PATH: ipaPath,
       SIGNING_IDENTITY: signingIdentity,
@@ -38,6 +36,8 @@ export async function createFastfileForResigningBuild({
       KEYCHAIN_PATH: keychainPath,
     },
     outputFile,
-    { mustache: false }
+    {
+      mustache: false,
+    }
   );
 }
