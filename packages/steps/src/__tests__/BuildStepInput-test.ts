@@ -286,6 +286,41 @@ describe(BuildStepInput, () => {
     );
   });
 
+  test('context values in an object', () => {
+    const ctx = createGlobalContextMock({
+      staticContextContent: {
+        context_val_1: 'val_1',
+        context_val_2: {
+          in_val_1: 'in_val_1',
+        },
+      } as unknown as BuildStaticContext,
+    });
+    const i = new BuildStepInput(ctx, {
+      id: 'foo',
+      stepDisplayName: BuildStep.getDisplayName({ id: 'test1' }),
+      required: true,
+      allowedValueTypeName: BuildStepInputValueTypeName.JSON,
+    });
+    i.set({
+      foo: 'foo',
+      bar: '${ eas.context_val_1 }',
+      baz: {
+        bazfoo: 'bazfoo',
+        bazbar: '${ eas.context_val_2.in_val_1 }',
+        bazbaz: ['bazbaz', '${ eas.context_val_1 }', '${ eas.context_val_2.in_val_1 }'],
+      },
+    });
+    expect(i.value).toEqual({
+      foo: 'foo',
+      bar: 'val_1',
+      baz: {
+        bazfoo: 'bazfoo',
+        bazbar: 'in_val_1',
+        bazbaz: ['bazbaz', 'val_1', 'in_val_1'],
+      },
+    });
+  });
+
   test('default value number', () => {
     const ctx = createGlobalContextMock();
     const i = new BuildStepInput(ctx, {

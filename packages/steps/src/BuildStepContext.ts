@@ -107,7 +107,9 @@ export class BuildStepGlobalContext {
     return this.stepById[stepId].getOutputValueByName(outputId);
   }
 
-  public interpolate(value: string): string {
+  public interpolate<InterpolableType extends string | object>(
+    value: InterpolableType
+  ): InterpolableType {
     return interpolateWithGlobalContext(value, (path) => {
       return (
         getObjectValueForInterpolation(path, {

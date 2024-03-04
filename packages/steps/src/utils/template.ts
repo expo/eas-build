@@ -1,4 +1,5 @@
 import get from 'lodash.get';
+import cloneDeep from 'lodash.clonedeep';
 
 import { BuildStepInputValueTypeName } from '../BuildStepInput.js';
 import { BuildConfigError, BuildStepRuntimeError } from '../errors.js';
@@ -19,11 +20,37 @@ export function interpolateWithInputs(
   return interpolate(templateString, BUILD_STEP_INPUT_EXPRESSION_REGEXP, inputs);
 }
 
-export function interpolateWithOutputs(
+export function interpolateWithOutputs<InterpolableType extends string | object>(
+  interpolableValue: InterpolableType,
+  fn: (path: string) => string
+): InterpolableType {
+  if (typeof interpolableValue === 'string') {
+    return interpolateStringWithOutputs(interpolableValue, fn) as InterpolableType;
+  } else {
+    return interpolateObjectWithOutputs(interpolableValue, fn) as InterpolableType;
+  }
+}
+
+export function interpolateStringWithOutputs(
   templateString: string,
   fn: (path: string) => string
 ): string {
   return interpolate(templateString, BUILD_STEP_OUTPUT_EXPRESSION_REGEXP, fn);
+}
+
+export function interpolateObjectWithOutputs(
+  interpolableObject: object,
+  fn: (path: string) => string
+): object {
+  const interpolableObjectCopy = cloneDeep(interpolableObject);
+  Object.keys(interpolableObject).forEach((property) => {
+    const propertyValue = interpolableObject[property as keyof typeof interpolableObject];
+    if (['string', 'object'].includes(typeof propertyValue)) {
+      interpolableObjectCopy[property as keyof typeof interpolableObjectCopy] =
+        interpolateWithOutputs(propertyValue, fn);
+    }
+  });
+  return interpolableObjectCopy;
 }
 
 /**
@@ -71,11 +98,37 @@ export function getObjectValueForInterpolation(
   return value;
 }
 
-export function interpolateWithGlobalContext(
+export function interpolateWithGlobalContext<InterpolableType extends string | object>(
+  interpolableValue: InterpolableType,
+  fn: (path: string) => string
+): InterpolableType {
+  if (typeof interpolableValue === 'string') {
+    return interpolateStringWithGlobalContext(interpolableValue, fn) as InterpolableType;
+  } else {
+    return interpolateObjectWithGlobalContext(interpolableValue, fn) as InterpolableType;
+  }
+}
+
+export function interpolateStringWithGlobalContext(
   templateString: string,
   fn: (path: string) => string
 ): string {
   return interpolate(templateString, BUILD_GLOBAL_CONTEXT_EXPRESSION_REGEXP, fn);
+}
+
+export function interpolateObjectWithGlobalContext(
+  templateObject: object,
+  fn: (path: string) => string
+): object {
+  const templateObjectCopy = cloneDeep(templateObject);
+  Object.keys(templateObject).forEach((property) => {
+    const propertyValue = templateObject[property as keyof typeof templateObject];
+    if (['string', 'object'].includes(typeof propertyValue)) {
+      templateObjectCopy[property as keyof typeof templateObjectCopy] =
+        interpolateWithGlobalContext(propertyValue, fn);
+    }
+  });
+  return templateObjectCopy;
 }
 
 function interpolate(

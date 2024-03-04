@@ -14,7 +14,7 @@ export default class Keychain {
   private destroyed = false;
 
   constructor() {
-    this.keychainPath = path.join(os.tmpdir(), `turtle-v2-${uuid()}.keychain`);
+    this.keychainPath = path.join(os.tmpdir(), `eas-build-${uuid()}.keychain`);
     this.keychainPassword = uuid();
   }
 
@@ -93,7 +93,7 @@ export default class Keychain {
       i.slice(1, i.length - 1)
     );
     const turtleKeychainList = keychainList.filter((keychain) =>
-      /turtle-v2-[\w-]+\.keychain$/.exec(keychain)
+      /eas-build-[\w-]+\.keychain$/.exec(keychain)
     );
     for (const turtleKeychainPath of turtleKeychainList) {
       await this.destroy(logger, turtleKeychainPath);
