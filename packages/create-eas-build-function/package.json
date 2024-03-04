@@ -1,6 +1,6 @@
 {
   "name": "create-eas-build-function",
-  "version": "1.0.78",
+  "version": "1.0.81",
   "bin": {
     "create-eas-build-function": "./build/index.js"
   },
@@ -33,7 +33,7 @@
     "clean": "rimraf ./build/"
   },
   "dependencies": {
-    "@expo/steps": "1.0.78"
+    "@expo/steps": "1.0.81"
   },
   "devDependencies": {
     "@expo/package-manager": "^1.0.2",
