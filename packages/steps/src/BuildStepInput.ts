@@ -121,6 +121,8 @@ export class BuildStepInput<
       }
       return rawValue as BuildStepInputValueTypeWithRequired<T, R>;
     } else {
+      // `valueDoesNotRequireInterpolation` checks that `rawValue` is not undefined
+      // so this will never be true.
       assert(rawValue !== undefined);
       const valueInterpolatedWithGlobalContext = this.ctx.interpolate(rawValue);
       const valueInterpolatedWithOutputsAndGlobalContext = interpolateWithOutputs(
