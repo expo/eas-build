@@ -54,6 +54,33 @@ describe(createSendSlackMessageFunction, () => {
     expect(loggerWarnMock).not.toHaveBeenCalled();
   });
 
+  it('calls the webhook when using the payload input', async () => {
+    fetchMock.mockImplementation(() => Promise.resolve({ status: 200, ok: true } as Response));
+    const buildStep = sendSlackMessage.createBuildStepFromFunctionCall(
+      createGlobalContextMock({}),
+      {
+        callInputs: {
+          payload: { blocks: [] },
+        },
+        env: {
+          SLACK_HOOK_URL: 'https://slack.hook.url',
+        },
+        id: sendSlackMessage.id,
+      }
+    );
+    mockLogger(buildStep.ctx.logger);
+    await buildStep.executeAsync();
+    expect(fetchMock).toHaveBeenCalledWith('https://slack.hook.url', {
+      method: 'POST',
+      body: JSON.stringify({ blocks: [] }),
+      headers: { 'Content-Type': 'application/json' },
+    });
+    expect(loggerInfoMock).toHaveBeenCalledTimes(4);
+    expect(loggerInfoMock).toHaveBeenCalledWith('Sending Slack message');
+    expect(loggerInfoMock).toHaveBeenCalledWith('Slack message sent successfully');
+    expect(loggerWarnMock).not.toHaveBeenCalled();
+  });
+
   it('calls the webhook provided as input overwriting SLACK_HOOK_URL secret and logs the info messages when successful', async () => {
     fetchMock.mockImplementation(() => Promise.resolve({ status: 200, ok: true } as Response));
     const buildStep = sendSlackMessage.createBuildStepFromFunctionCall(
@@ -136,7 +163,7 @@ describe(createSendSlackMessageFunction, () => {
     );
   });
 
-  it('does not call the webhook when no message specified', async () => {
+  it('does not call the webhook when no message or payload specified', async () => {
     fetchMock.mockImplementation(() => Promise.resolve({ status: 200, ok: true } as Response));
     const buildStep = sendSlackMessage.createBuildStepFromFunctionCall(
       createGlobalContextMock({}),
@@ -150,7 +177,32 @@ describe(createSendSlackMessageFunction, () => {
     );
     mockLogger(buildStep.ctx.logger);
     const expectedError = new errors.BuildStepRuntimeError(
-      `Input parameter "message" for step "send_slack_message" is required but it was not set.`
+      `You need to provide either "message" input or "payload" input to specify the Slack message contents`
+    );
+    await expect(buildStep.executeAsync()).rejects.toThrow(expectedError);
+    expect(fetchMock).not.toHaveBeenCalled();
+    expect(loggerInfoMock).toHaveBeenCalledTimes(1);
+    expect(loggerWarnMock).not.toHaveBeenCalled();
+  });
+
+  it('does not call the webhook when both message and payload are specified', async () => {
+    fetchMock.mockImplementation(() => Promise.resolve({ status: 200, ok: true } as Response));
+    const buildStep = sendSlackMessage.createBuildStepFromFunctionCall(
+      createGlobalContextMock({}),
+      {
+        callInputs: {
+          message: 'Test message',
+          payload: { blocks: [] },
+        },
+        env: {
+          SLACK_HOOK_URL: 'https://slack.hook.url',
+        },
+        id: sendSlackMessage.id,
+      }
+    );
+    mockLogger(buildStep.ctx.logger);
+    const expectedError = new errors.BuildStepRuntimeError(
+      `You cannot specify both "message" input and "payload" input - choose one for the Slack message contents`
     );
     await expect(buildStep.executeAsync()).rejects.toThrow(expectedError);
     expect(fetchMock).not.toHaveBeenCalled();
@@ -187,10 +239,7 @@ describe(createSendSlackMessageFunction, () => {
     });
     expect(loggerInfoMock).toHaveBeenCalledTimes(2);
     expect(loggerInfoMock).toHaveBeenCalledWith('Sending Slack message');
-    expect(loggerWarnMock).toHaveBeenCalledTimes(1);
-    expect(loggerWarnMock).toHaveBeenCalledWith(
-      'Sending Slack message to webhook url "https://slack.hook.url" failed'
-    );
+    expect(loggerWarnMock).not.toHaveBeenCalled();
     expect(loggerDebugMock).toHaveBeenCalledWith(thrownError);
     expect(loggerErrorMock).toHaveBeenCalledWith({
       err: expectedError,
@@ -230,10 +279,7 @@ describe(createSendSlackMessageFunction, () => {
       });
       expect(loggerInfoMock).toHaveBeenCalledTimes(2);
       expect(loggerInfoMock).toHaveBeenCalledWith('Sending Slack message');
-      expect(loggerWarnMock).toHaveBeenCalledTimes(1);
-      expect(loggerWarnMock).toHaveBeenCalledWith(
-        `Sending Slack message to webhook url "https://slack.hook.url" failed with status ${statusCode}`
-      );
+      expect(loggerWarnMock).not.toHaveBeenCalled();
       expect(loggerDebugMock).toHaveBeenCalledWith(`${statusCode} - ${statusText}`);
       expect(loggerErrorMock).toHaveBeenCalledWith({
         err: expectedError,
