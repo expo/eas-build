@@ -1,7 +1,6 @@
 import assert from 'assert';
 
 import { Platform, Job } from '@expo/eas-build-job';
-import { getRuntimeVersionNullableAsync } from '@expo/config-plugins/build/utils/Updates';
 import semver from 'semver';
 
 import {
@@ -23,6 +22,7 @@ import {
 import { BuildContext } from '../context';
 
 import getExpoUpdatesPackageVersionIfInstalledAsync from './getExpoUpdatesPackageVersionIfInstalledAsync';
+import { resolveRuntimeVersionAsync } from './resolveRuntimeVersionAsync';
 
 export async function setRuntimeVersionNativelyAsync(
   ctx: BuildContext<Job>,
@@ -148,11 +148,12 @@ export async function configureExpoUpdatesIfInstalledAsync(ctx: BuildContext<Job
 
   const appConfigRuntimeVersion =
     ctx.job.version?.runtimeVersion ??
-    (await getRuntimeVersionNullableAsync(
-      ctx.getReactNativeProjectDirectory(),
-      ctx.appConfig,
-      ctx.job.platform
-    ));
+    (await resolveRuntimeVersionAsync({
+      projectDir: ctx.getReactNativeProjectDirectory(),
+      exp: ctx.appConfig,
+      platform: ctx.job.platform,
+      logger: ctx.logger,
+    }));
   if (ctx.metadata?.runtimeVersion && ctx.metadata?.runtimeVersion !== appConfigRuntimeVersion) {
     ctx.markBuildPhaseHasWarnings();
     ctx.logger.warn(
