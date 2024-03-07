@@ -22,6 +22,7 @@ describe(configureEASUpdateAsync, () => {
 
   it('aborts if updates.url (app config) is set but updates.channel (eas.json) is not', async () => {
     await configureEASUpdateAsync({
+      expoUpdatesPackageVersion: '1.0',
       job: { platform: Platform.IOS } as unknown as Job,
       workingDirectory: '/app',
       logger: createLogger({
@@ -43,6 +44,7 @@ describe(configureEASUpdateAsync, () => {
 
   it('configures for EAS if updates.channel (eas.json) and updates.url (app config) are set', async () => {
     await configureEASUpdateAsync({
+      expoUpdatesPackageVersion: '1.0',
       job: {
         updates: {
           channel: 'main',
@@ -69,6 +71,7 @@ describe(configureEASUpdateAsync, () => {
 
   it('configures for EAS if the updates.channel and releaseChannel are both set', async () => {
     await configureEASUpdateAsync({
+      expoUpdatesPackageVersion: '1.0',
       job: {
         updates: { channel: 'main' },
         releaseChannel: 'default',

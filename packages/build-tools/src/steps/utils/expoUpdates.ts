@@ -1,7 +1,8 @@
 import { Job, Platform } from '@expo/eas-build-job';
 import { bunyan } from '@expo/logger';
 import { ExpoConfig } from '@expo/config';
-import { getRuntimeVersionNullableAsync } from '@expo/config-plugins/build/utils/Updates';
+
+import { resolveRuntimeVersionAsync } from '../../utils/resolveRuntimeVersionAsync';
 
 import {
   iosGetNativelyDefinedChannelAsync,
@@ -20,6 +21,7 @@ export async function configureEASUpdateAsync({
   logger,
   inputs,
   appConfig,
+  expoUpdatesPackageVersion,
 }: {
   job: Job;
   workingDirectory: string;
@@ -29,11 +31,18 @@ export async function configureEASUpdateAsync({
     channel?: string;
   };
   appConfig: ExpoConfig;
+  expoUpdatesPackageVersion: string;
 }): Promise<void> {
   const runtimeVersion =
-    inputs.channel ??
+    inputs.runtimeVersion ??
     job.version?.runtimeVersion ??
-    (await getRuntimeVersionNullableAsync(workingDirectory, appConfig, job.platform));
+    (await resolveRuntimeVersionAsync({
+      expoUpdatesPackageVersion,
+      projectDir: workingDirectory,
+      exp: appConfig,
+      platform: job.platform,
+      logger,
+    }));
 
   const jobOrInputChannel = inputs.channel ?? job.updates?.channel;
 
