@@ -70,7 +70,7 @@ async function sendSlackMessageAsync({
   try {
     fetchResult = await fetch(slackHookUrl, {
       method: 'POST',
-      body: JSON.stringify(body),
+      body: JSON.stringify(body).replace(/\\n/g, '\n'),
       headers: { 'Content-Type': 'application/json' },
     });
   } catch (error) {
