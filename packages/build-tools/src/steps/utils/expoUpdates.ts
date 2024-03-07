@@ -21,6 +21,7 @@ export async function configureEASUpdateAsync({
   logger,
   inputs,
   appConfig,
+  expoUpdatesPackageVersion,
 }: {
   job: Job;
   workingDirectory: string;
@@ -30,11 +31,13 @@ export async function configureEASUpdateAsync({
     channel?: string;
   };
   appConfig: ExpoConfig;
+  expoUpdatesPackageVersion: string;
 }): Promise<void> {
   const runtimeVersion =
     inputs.runtimeVersion ??
     job.version?.runtimeVersion ??
     (await resolveRuntimeVersionAsync({
+      expoUpdatesPackageVersion,
       projectDir: workingDirectory,
       exp: appConfig,
       platform: job.platform,

@@ -74,6 +74,7 @@ export function configureEASUpdateIfInstalledFunction(): BuildFunction {
       }
 
       await configureEASUpdateAsync({
+        expoUpdatesPackageVersion,
         job,
         workingDirectory: stepCtx.workingDirectory,
         logger: stepCtx.logger,
