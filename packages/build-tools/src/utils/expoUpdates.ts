@@ -139,10 +139,10 @@ export async function configureEASExpoUpdatesAsync(ctx: BuildContext<Job>): Prom
 }
 
 export async function configureExpoUpdatesIfInstalledAsync(ctx: BuildContext<Job>): Promise<void> {
-  const expoUpdatesVersion = await getExpoUpdatesPackageVersionIfInstalledAsync(
+  const expoUpdatesPackageVersion = await getExpoUpdatesPackageVersionIfInstalledAsync(
     ctx.getReactNativeProjectDirectory()
   );
-  if (expoUpdatesVersion === null) {
+  if (expoUpdatesPackageVersion === null) {
     return;
   }
 
@@ -153,6 +153,7 @@ export async function configureExpoUpdatesIfInstalledAsync(ctx: BuildContext<Job
       exp: ctx.appConfig,
       platform: ctx.job.platform,
       logger: ctx.logger,
+      expoUpdatesPackageVersion,
     }));
   if (ctx.metadata?.runtimeVersion && ctx.metadata?.runtimeVersion !== appConfigRuntimeVersion) {
     ctx.markBuildPhaseHasWarnings();
@@ -200,7 +201,7 @@ export async function configureExpoUpdatesIfInstalledAsync(ctx: BuildContext<Job
         ctx.markBuildPhaseHasWarnings();
       }
     }
-  } else if (shouldConfigureClassicUpdatesReleaseChannelAsFallback(expoUpdatesVersion)) {
+  } else if (shouldConfigureClassicUpdatesReleaseChannelAsFallback(expoUpdatesPackageVersion)) {
     await configureClassicExpoUpdatesAsync(ctx);
   }
 
@@ -261,4 +262,15 @@ export function shouldConfigureClassicUpdatesReleaseChannelAsFallback(
   // Anything before SDK 50 should configure classic updates as a fallback. The first version
   // of the expo-updates package published for SDK 50 was 0.19.0
   return semver.lt(expoUpdatesPackageVersion, '0.19.0');
+}
+
+export function isModernExpoUpdatesCLIWithRuntimeVersionCommandSupported(
+  expoUpdatesPackageVersion: string
+): boolean {
+  if (expoUpdatesPackageVersion.includes('canary')) {
+    return true;
+  }
+
+  // TODO(wschurman): add semver check once we know the SDK51 version of expo-updates that supports this
+  return false;
 }
