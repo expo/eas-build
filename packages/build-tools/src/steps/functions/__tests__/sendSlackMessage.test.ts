@@ -54,6 +54,33 @@ describe(createSendSlackMessageFunction, () => {
     expect(loggerWarnMock).not.toHaveBeenCalled();
   });
 
+  it('calls the webhook when using multiline plain text input', async () => {
+    fetchMock.mockImplementation(() => Promise.resolve({ status: 200, ok: true } as Response));
+    const buildStep = sendSlackMessage.createBuildStepFromFunctionCall(
+      createGlobalContextMock({}),
+      {
+        callInputs: {
+          message: 'Line 1\nLine 2\n\nLine 3',
+        },
+        env: {
+          SLACK_HOOK_URL: 'https://slack.hook.url',
+        },
+        id: sendSlackMessage.id,
+      }
+    );
+    mockLogger(buildStep.ctx.logger);
+    await buildStep.executeAsync();
+    expect(fetchMock).toHaveBeenCalledWith('https://slack.hook.url', {
+      method: 'POST',
+      body: '{"text":"Line 1\nLine 2\n\nLine 3"}',
+      headers: { 'Content-Type': 'application/json' },
+    });
+    expect(loggerInfoMock).toHaveBeenCalledTimes(4);
+    expect(loggerInfoMock).toHaveBeenCalledWith('Sending Slack message');
+    expect(loggerInfoMock).toHaveBeenCalledWith('Slack message sent successfully');
+    expect(loggerWarnMock).not.toHaveBeenCalled();
+  });
+
   it('calls the webhook when using the payload input', async () => {
     fetchMock.mockImplementation(() => Promise.resolve({ status: 200, ok: true } as Response));
     const buildStep = sendSlackMessage.createBuildStepFromFunctionCall(
