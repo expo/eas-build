@@ -65,12 +65,13 @@ async function sendSlackMessageAsync({
 }): Promise<void> {
   logger.info('Sending Slack message');
 
-  const body = slackPayload ? slackPayload : { text: slackMessage };
+  let body = slackPayload ? slackPayload : { text: slackMessage };
+  body = fixEscapeCharactersInObject(body);
   let fetchResult: Response;
   try {
     fetchResult = await fetch(slackHookUrl, {
       method: 'POST',
-      body: JSON.stringify(body).replace(/\\n/g, '\n'),
+      body: JSON.stringify(body),
       headers: { 'Content-Type': 'application/json' },
     });
   } catch (error) {
@@ -84,4 +85,16 @@ async function sendSlackMessageAsync({
     );
   }
   logger.info('Slack message sent successfully');
+}
+
+function fixEscapeCharactersInObject(body: Record<string, any>): Record<string, any> {
+  for (const property of Object.keys(body)) {
+    if (typeof body[property] === 'string') {
+      body[property] = body[property].replace(/\\n/g, '\n');
+    } else if (typeof body[property] === 'object') {
+      const fixedObject = fixEscapeCharactersInObject(body[property]);
+      body[property] = fixedObject;
+    }
+  }
+  return body;
 }
