@@ -33,11 +33,28 @@ export async function runEasBuildInternalAsync<TJob extends Job>({
   newMetadata: Metadata;
 }> {
   const { cmd, args, extraEnv } = await resolveEasCommandPrefixAndEnvAsync();
-  const { buildProfile } = job;
+  const { buildProfile, gitHubTriggerOptions } = job;
   assert(buildProfile, 'build profile is missing in a build from git-based integration.');
+
+  const autoSubmitArgs = [];
+  if (gitHubTriggerOptions?.submitProfile) {
+    autoSubmitArgs.push('--auto-submit-with-profile');
+    autoSubmitArgs.push(gitHubTriggerOptions.submitProfile);
+  } else if (gitHubTriggerOptions?.autoSubmit) {
+    autoSubmitArgs.push('--auto-submit');
+  }
+
   const result = await spawn(
     cmd,
-    [...args, 'build:internal', '--platform', job.platform, '--profile', buildProfile],
+    [
+      ...args,
+      'build:internal',
+      '--platform',
+      job.platform,
+      '--profile',
+      buildProfile,
+      ...autoSubmitArgs,
+    ],
     {
       cwd,
       env: {
