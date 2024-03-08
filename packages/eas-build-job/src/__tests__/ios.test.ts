@@ -235,4 +235,24 @@ describe('Ios.JobSchema', () => {
       '"value" contains a conflict between optional exclusive peers [releaseChannel, updates.channel]'
     );
   });
+
+  test('can set github trigger options', () => {
+    const job = {
+      mode: BuildMode.CUSTOM,
+      type: Workflow.UNKNOWN,
+      platform: Platform.ANDROID,
+      projectArchive: {
+        type: ArchiveSourceType.URL,
+        url: 'https://expo.dev/builds/123',
+      },
+      projectRootDirectory: '.',
+      githubTriggerOptions: {
+        autoSubmit: true,
+        submitProfile: 'default',
+      },
+    };
+    const { value, error } = Ios.JobSchema.validate(job, joiOptions);
+    expect(value).toMatchObject(job);
+    expect(error).toBeFalsy();
+  });
 });
