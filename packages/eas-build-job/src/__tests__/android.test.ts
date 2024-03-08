@@ -244,7 +244,7 @@ describe('Android.JobSchema', () => {
 
   test('can set github trigger options', () => {
     const job = {
-      mode: BuildMode.CUSTOM,
+      mode: BuildMode.BUILD,
       type: Workflow.UNKNOWN,
       platform: Platform.ANDROID,
       projectArchive: {
@@ -256,6 +256,7 @@ describe('Android.JobSchema', () => {
         autoSubmit: true,
         submitProfile: 'default',
       },
+      secrets,
     };
     const { value, error } = Android.JobSchema.validate(job, joiOptions);
     expect(value).toMatchObject(job);

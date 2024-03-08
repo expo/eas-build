@@ -238,9 +238,9 @@ describe('Ios.JobSchema', () => {
 
   test('can set github trigger options', () => {
     const job = {
-      mode: BuildMode.CUSTOM,
+      mode: BuildMode.BUILD,
       type: Workflow.UNKNOWN,
-      platform: Platform.ANDROID,
+      platform: Platform.IOS,
       projectArchive: {
         type: ArchiveSourceType.URL,
         url: 'https://expo.dev/builds/123',
@@ -249,6 +249,9 @@ describe('Ios.JobSchema', () => {
       githubTriggerOptions: {
         autoSubmit: true,
         submitProfile: 'default',
+      },
+      secrets: {
+        buildCredentials,
       },
     };
     const { value, error } = Ios.JobSchema.validate(job, joiOptions);
