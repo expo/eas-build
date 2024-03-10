@@ -121,6 +121,10 @@ export interface Job {
     prebuildCommand?: string;
   };
   expoBuildUrl?: string;
+  githubTriggerOptions?: {
+    autoSubmit: boolean;
+    submitProfile?: string;
+  };
 }
 
 const SecretsSchema = Joi.object({
@@ -202,4 +206,8 @@ export const JobSchema = Joi.object({
     prebuildCommand: Joi.string(),
   }),
   expoBuildUrl: Joi.string().uri().optional(),
+  githubTriggerOptions: Joi.object({
+    autoSubmit: Joi.boolean().default(false),
+    submitProfile: Joi.string(),
+  }),
 }).oxor('releaseChannel', 'updates.channel');
