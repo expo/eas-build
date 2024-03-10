@@ -121,7 +121,7 @@ export interface Job {
     prebuildCommand?: string;
   };
   expoBuildUrl?: string;
-  gitHubTriggerOptions?: {
+  githubTriggerOptions?: {
     autoSubmit: boolean;
     submitProfile?: string;
   };
