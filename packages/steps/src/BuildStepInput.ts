@@ -113,13 +113,14 @@ export class BuildStepInput<
 
     const valueDoesNotRequireInterpolation =
       rawValue === undefined || typeof rawValue === 'boolean' || typeof rawValue === 'number';
+    let returnValue;
     if (valueDoesNotRequireInterpolation) {
       if (typeof rawValue !== this.allowedValueTypeName && rawValue !== undefined) {
         throw new BuildStepRuntimeError(
           `Input parameter "${this.id}" for step "${this.stepDisplayName}" must be of type "${this.allowedValueTypeName}".`
         );
       }
-      return rawValue as BuildStepInputValueTypeWithRequired<T, R>;
+      returnValue = rawValue as BuildStepInputValueTypeWithRequired<T, R>;
     } else {
       // `valueDoesNotRequireInterpolation` checks that `rawValue` is not undefined
       // so this will never be true.
@@ -129,7 +130,23 @@ export class BuildStepInput<
         valueInterpolatedWithGlobalContext,
         (path) => this.ctx.getStepOutputValue(path) ?? ''
       );
-      return this.parseInputValueToAllowedType(valueInterpolatedWithOutputsAndGlobalContext);
+      returnValue = this.parseInputValueToAllowedType(valueInterpolatedWithOutputsAndGlobalContext);
+    }
+    return this.fixEscapeCharacters(returnValue);
+  }
+
+  private fixEscapeCharacters(
+    input: BuildStepInputValueTypeWithRequired<T, R>
+  ): BuildStepInputValueTypeWithRequired<T, R> {
+    if (typeof input === 'string') {
+      return input.replace(/\\n/g, '\n') as BuildStepInputValueTypeWithRequired<T, R>;
+    } else if (typeof input === 'object') {
+      for (const property of Object.keys(input)) {
+        input[property] = this.fixEscapeCharacters(input[property]);
+      }
+      return input;
+    } else {
+      return input;
     }
   }
 
