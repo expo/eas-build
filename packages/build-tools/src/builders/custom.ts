@@ -1,6 +1,6 @@
 import path from 'path';
 
-import { BuildPhase, BuildTrigger, Job } from '@expo/eas-build-job';
+import { BuildPhase, BuildTrigger, Ios, Job, Platform } from '@expo/eas-build-job';
 import { BuildConfigParser, BuildStepGlobalContext, errors } from '@expo/steps';
 import nullthrows from 'nullthrows';
 
@@ -10,6 +10,7 @@ import { getEasFunctions } from '../steps/easFunctions';
 import { CustomBuildContext } from '../customBuildContext';
 import { resolveEnvFromBuildProfileAsync } from '../common/easBuildInternal';
 import { getEasFunctionGroups } from '../steps/easFunctionGroups';
+import { findAndUploadXcodeBuildLogsAsync } from '../ios/xcodeBuildLogs';
 
 export async function runCustomBuildAsync<T extends Job>(ctx: BuildContext<T>): Promise<Artifacts> {
   const customBuildCtx = new CustomBuildContext(ctx);
@@ -53,7 +54,19 @@ export async function runCustomBuildAsync<T extends Job>(ctx: BuildContext<T>): 
     }
   });
   try {
-    await workflow.executeAsync();
+    try {
+      await workflow.executeAsync();
+    } finally {
+      if (!ctx.artifacts.XCODE_BUILD_LOGS && ctx.job.platform === Platform.IOS) {
+        try {
+          await findAndUploadXcodeBuildLogsAsync(ctx as BuildContext<Ios.Job>, {
+            logger: ctx.logger,
+          });
+        } catch {
+          // do nothing, it's a non-breaking error.
+        }
+      }
+    }
   } catch (err: any) {
     err.artifacts = ctx.artifacts;
     throw err;

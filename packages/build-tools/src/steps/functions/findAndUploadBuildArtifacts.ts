@@ -1,5 +1,5 @@
 import { ManagedArtifactType, Ios, Platform } from '@expo/eas-build-job';
-import { BuildFunction } from '@expo/steps';
+import { BuildFunction, BuildStepContext } from '@expo/steps';
 
 import { findArtifacts } from '../../utils/artifacts';
 import { findXcodeBuildLogsPathAsync } from '../../ios/xcodeBuildLogs';
@@ -13,82 +13,40 @@ export function createFindAndUploadBuildArtifactsBuildFunction(
     id: 'find_and_upload_build_artifacts',
     name: 'Find and upload build artifacts',
     fn: async (stepCtx) => {
-      const { logger } = stepCtx;
-      const applicationArchivePatternOrPath =
-        ctx.job.platform === Platform.ANDROID
-          ? ctx.job.applicationArchivePath ?? 'android/app/build/outputs/**/*.{apk,aab}'
-          : resolveIosArtifactPath(ctx.job);
-      const applicationArchives = await findArtifacts({
-        rootDir: stepCtx.workingDirectory,
-        patternOrPath: applicationArchivePatternOrPath,
-        logger,
-      });
-      logger.info(
-        `Application archive${
-          applicationArchives.length > 1 ? 's' : ''
-        }: ${applicationArchives.join(', ')}`
-      );
-      const buildArtifacts = (
-        await Promise.all(
-          (ctx.job.buildArtifactPaths ?? []).map((path) =>
-            findArtifacts({ rootDir: ctx.projectTargetDirectory, patternOrPath: path, logger })
-          )
-        )
-      ).flat();
-      if (buildArtifacts.length > 0) {
-        logger.info(`Found additional build artifacts: ${buildArtifacts.join(', ')}`);
+      // We want each upload to print logs on its own
+      // and we don't want to interleave logs from different uploads
+      // so we execute uploads consecutively.
+      // Both application archive and build artifact uploads errors
+      // are throwing. We count the former as more important,
+      // so we save its for final throw.
+
+      let firstError: any = null;
+
+      try {
+        await uploadApplicationArchivesAsync({ ctx, stepCtx });
+      } catch (err: unknown) {
+        stepCtx.logger.error(`Failed to upload application archives.`, err);
+        firstError ||= err;
       }
 
-      logger.info('Uploading...');
-      const [archiveUpload, artifactsUpload, xcodeBuildLogsUpload] = await Promise.allSettled([
-        ctx.runtimeApi.uploadArtifact({
-          artifact: {
-            type: ManagedArtifactType.APPLICATION_ARCHIVE,
-            paths: applicationArchives,
-          },
-          logger,
-        }),
-        (async () => {
-          if (buildArtifacts.length > 0) {
-            await ctx.runtimeApi.uploadArtifact({
-              artifact: {
-                type: ManagedArtifactType.BUILD_ARTIFACTS,
-                paths: buildArtifacts,
-              },
-              logger,
-            });
-          }
-        })(),
-        (async () => {
-          if (ctx.job.platform !== Platform.IOS) {
-            return;
-          }
-          const xcodeBuildLogsPath = await findXcodeBuildLogsPathAsync(
-            stepCtx.global.buildLogsDirectory
-          );
-          if (xcodeBuildLogsPath) {
-            await ctx.runtimeApi.uploadArtifact({
-              artifact: {
-                type: ManagedArtifactType.XCODE_BUILD_LOGS,
-                paths: [xcodeBuildLogsPath],
-              },
-              logger,
-            });
-          }
-        })(),
-      ]);
-      if (archiveUpload.status === 'rejected') {
-        logger.error('Failed to upload application archive.');
-        throw archiveUpload.reason;
+      try {
+        await uploadBuildArtifacts({ ctx, stepCtx });
+      } catch (err: unknown) {
+        stepCtx.logger.error(`Failed to upload build artifacts.`, err);
+        firstError ||= err;
       }
-      if (artifactsUpload.status === 'rejected') {
-        logger.error('Failed to upload build artifacts.');
-        throw artifactsUpload.reason;
+
+      if (ctx.job.platform === Platform.IOS) {
+        try {
+          await uploadXcodeBuildLogs({ ctx, stepCtx });
+        } catch (err: unknown) {
+          stepCtx.logger.error(`Failed to upload Xcode build logs.`, err);
+        }
       }
-      if (xcodeBuildLogsUpload.status === 'rejected') {
-        logger.error(`Failed to upload Xcode build logs. ${xcodeBuildLogsUpload.reason}`);
+
+      if (firstError) {
+        throw firstError;
       }
-      logger.info('Upload finished');
     },
   });
 }
@@ -101,4 +59,97 @@ function resolveIosArtifactPath(job: Ios.Job): string {
   } else {
     return 'ios/build/*.ipa';
   }
+}
+
+async function uploadApplicationArchivesAsync({
+  ctx,
+  stepCtx: { workingDirectory, logger },
+}: {
+  ctx: CustomBuildContext;
+  stepCtx: BuildStepContext;
+}): Promise<void> {
+  const applicationArchivePatternOrPath =
+    ctx.job.platform === Platform.ANDROID
+      ? ctx.job.applicationArchivePath ?? 'android/app/build/outputs/**/*.{apk,aab}'
+      : resolveIosArtifactPath(ctx.job);
+  const applicationArchives = await findArtifacts({
+    rootDir: workingDirectory,
+    patternOrPath: applicationArchivePatternOrPath,
+    logger,
+  });
+
+  if (applicationArchives.length === 0) {
+    throw new Error(`Found no application archives for "${applicationArchivePatternOrPath}".`);
+  }
+
+  const count = applicationArchives.length;
+  logger.info(
+    `Found ${count} application archive${count > 1 ? 's' : ''}:\n- ${applicationArchives.join(
+      '\n- '
+    )}`
+  );
+
+  logger.info('Uploading...');
+  await ctx.runtimeApi.uploadArtifact({
+    artifact: {
+      type: ManagedArtifactType.APPLICATION_ARCHIVE,
+      paths: applicationArchives,
+    },
+    logger,
+  });
+  logger.info('Done.');
+}
+
+async function uploadBuildArtifacts({
+  ctx,
+  stepCtx: { workingDirectory, logger },
+}: {
+  ctx: CustomBuildContext;
+  stepCtx: BuildStepContext;
+}): Promise<void> {
+  const buildArtifacts = (
+    await Promise.all(
+      (ctx.job.buildArtifactPaths ?? []).map((path) =>
+        findArtifacts({ rootDir: workingDirectory, patternOrPath: path, logger })
+      )
+    )
+  ).flat();
+  if (buildArtifacts.length === 0) {
+    return;
+  }
+
+  logger.info(`Found additional build artifacts:\n- ${buildArtifacts.join('\n- ')}`);
+  logger.info('Uploading...');
+  await ctx.runtimeApi.uploadArtifact({
+    artifact: {
+      type: ManagedArtifactType.BUILD_ARTIFACTS,
+      paths: buildArtifacts,
+    },
+    logger,
+  });
+  logger.info('Done.');
+}
+
+async function uploadXcodeBuildLogs({
+  ctx,
+  stepCtx: { logger, global },
+}: {
+  ctx: CustomBuildContext;
+  stepCtx: BuildStepContext;
+}): Promise<void> {
+  const xcodeBuildLogsPath = await findXcodeBuildLogsPathAsync(global.buildLogsDirectory);
+  if (!xcodeBuildLogsPath) {
+    return;
+  }
+
+  logger.info(`Found Xcode build logs.`);
+  logger.info('Uploading...');
+  await ctx.runtimeApi.uploadArtifact({
+    artifact: {
+      type: ManagedArtifactType.XCODE_BUILD_LOGS,
+      paths: [xcodeBuildLogsPath],
+    },
+    logger,
+  });
+  logger.info('Done.');
 }
