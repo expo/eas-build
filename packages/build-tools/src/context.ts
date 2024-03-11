@@ -1,29 +1,30 @@
 import path from 'path';
 
-import fs from 'fs-extra';
+import { ExpoConfig } from '@expo/config';
 import {
   ManagedArtifactType,
   BuildPhase,
   BuildPhaseResult,
   BuildPhaseStats,
+  Env,
+  EnvironmentSecretType,
   Job,
   LogMarker,
-  Env,
-  errors,
   Metadata,
-  EnvironmentSecretType,
+  errors,
   GenericArtifactType,
   isGenericArtifact,
 } from '@expo/eas-build-job';
-import { ExpoConfig } from '@expo/config';
-import { bunyan } from '@expo/logger';
-import { SpawnPromise, SpawnOptions, SpawnResult } from '@expo/turtle-spawn';
 import { BuildTrigger } from '@expo/eas-build-job/dist/common';
+import { bunyan } from '@expo/logger';
+import { SpawnOptions, SpawnPromise, SpawnResult } from '@expo/turtle-spawn';
+import fs from 'fs-extra';
+import { DynamicCacheManager } from '@expo/steps';
 
-import { PackageManager, resolvePackageManager } from './utils/packageManager';
 import { resolveBuildPhaseErrorAsync } from './buildErrors/detectError';
 import { readAppConfig } from './utils/appConfig';
 import { createTemporaryEnvironmentSecretFile } from './utils/environmentSecrets';
+import { PackageManager, resolvePackageManager } from './utils/packageManager';
 
 export type Artifacts = Partial<Record<ManagedArtifactType, string>>;
 
@@ -54,6 +55,7 @@ export interface BuildContextOptions {
   logBuffer: LogBuffer;
   env: Env;
   cacheManager?: CacheManager;
+  dynamicCacheManager?: DynamicCacheManager;
   /**
    * @deprecated
    */
@@ -80,6 +82,7 @@ export class BuildContext<TJob extends Job> {
   public logger: bunyan;
   public readonly logBuffer: LogBuffer;
   public readonly cacheManager?: CacheManager;
+  public readonly dynamicCacheManager?: DynamicCacheManager;
   /**
    * @deprecated
    */
@@ -113,6 +116,7 @@ export class BuildContext<TJob extends Job> {
     this.logger = this.defaultLogger;
     this.logBuffer = options.logBuffer;
     this.cacheManager = options.cacheManager;
+    this.dynamicCacheManager = options.dynamicCacheManager;
     this.runGlobalExpoCliCommand = options.runGlobalExpoCliCommand;
     this._uploadArtifact = options.uploadArtifact;
     this.reportError = options.reportError;
@@ -131,6 +135,10 @@ export class BuildContext<TJob extends Job> {
     this._env.PATH = this._env.PATH
       ? [this.buildExecutablesDirectory, this._env.PATH].join(':')
       : this.buildExecutablesDirectory;
+  }
+
+  get projectRootDirectory(): string | undefined {
+    return this.job.projectRootDirectory;
   }
 
   public get job(): TJob {

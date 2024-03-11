@@ -29,3 +29,8 @@ build:
         name: Use non-default shell
         shell: /nib/hsab
         command: echo 123
+    - eas/save-cache:
+        inputs:
+          key: cache-key
+          paths:
+            - src

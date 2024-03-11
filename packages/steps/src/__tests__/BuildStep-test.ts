@@ -602,6 +602,13 @@ describe(BuildStep, () => {
             allowedValueTypeName: BuildStepInputValueTypeName.JSON,
             required: true,
           }),
+          new BuildStepInput(baseStepCtx, {
+            id: 'foo6',
+            stepDisplayName: displayName,
+            defaultValue: "${ hashFiles('src') }-hello",
+            allowedValueTypeName: BuildStepInputValueTypeName.STRING,
+            required: true,
+          }),
         ];
         const outputs: BuildStepOutput[] = [
           new BuildStepOutput(baseStepCtx, {

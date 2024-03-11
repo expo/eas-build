@@ -4,10 +4,10 @@ import { BuildStaticContext, Env, Job, Metadata } from '@expo/eas-build-job';
 import { bunyan, createLogger } from '@expo/logger';
 
 import { BuildConfigParser } from '../BuildConfigParser.js';
-import { ExternalBuildContextProvider, BuildStepGlobalContext } from '../BuildStepContext.js';
-import { BuildWorkflowError } from '../errors.js';
 import { BuildRuntimePlatform } from '../BuildRuntimePlatform.js';
+import { BuildStepGlobalContext, ExternalBuildContextProvider } from '../BuildStepContext.js';
 import { BuildStepEnv } from '../BuildStepEnv.js';
+import { BuildWorkflowError } from '../errors.js';
 
 const logger = createLogger({
   name: 'steps-cli',
@@ -23,7 +23,9 @@ export class CliContextProvider implements ExternalBuildContextProvider {
     public readonly projectSourceDirectory: string,
     public readonly projectTargetDirectory: string,
     public readonly defaultWorkingDirectory: string,
-    public readonly buildLogsDirectory: string
+    public readonly buildLogsDirectory: string,
+    public readonly buildDirectory: string,
+    public readonly projectRootDirectory: string
   ) {}
   public get env(): BuildStepEnv {
     return this._env;
@@ -49,6 +51,8 @@ async function runAsync(
     new CliContextProvider(
       logger,
       runtimePlatform,
+      relativeProjectDirectory,
+      relativeProjectDirectory,
       relativeProjectDirectory,
       relativeProjectDirectory,
       relativeProjectDirectory,
