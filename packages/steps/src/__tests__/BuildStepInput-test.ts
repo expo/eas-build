@@ -120,6 +120,42 @@ describe(BuildStepInput, () => {
     expect(i.value).toEqual('linux');
   });
 
+  test('context value string with newline characters', () => {
+    const ctx = createGlobalContextMock({
+      staticContextContent: {
+        foo: {
+          bar: 'Line 1\nLine 2\n\nLine 3',
+        },
+      } as unknown as BuildStaticContext,
+    });
+    const i = new BuildStepInput(ctx, {
+      id: 'foo',
+      stepDisplayName: BuildStep.getDisplayName({ id: 'test1' }),
+      defaultValue: '${ eas.foo.bar }',
+      required: true,
+      allowedValueTypeName: BuildStepInputValueTypeName.STRING,
+    });
+    expect(i.value).toEqual('Line 1\nLine 2\n\nLine 3');
+  });
+
+  test('context value string with doubly escaped newline characters', () => {
+    const ctx = createGlobalContextMock({
+      staticContextContent: {
+        foo: {
+          bar: 'Line 1\\nLine 2\\n\\nLine 3',
+        },
+      } as unknown as BuildStaticContext,
+    });
+    const i = new BuildStepInput(ctx, {
+      id: 'foo',
+      stepDisplayName: BuildStep.getDisplayName({ id: 'test1' }),
+      defaultValue: '${ eas.foo.bar }',
+      required: true,
+      allowedValueTypeName: BuildStepInputValueTypeName.STRING,
+    });
+    expect(i.value).toEqual('Line 1\nLine 2\n\nLine 3');
+  });
+
   test('context value number', () => {
     const ctx = createGlobalContextMock({
       staticContextContent: {
@@ -317,6 +353,66 @@ describe(BuildStepInput, () => {
         bazfoo: 'bazfoo',
         bazbar: 'in_val_1',
         bazbaz: ['bazbaz', 'val_1', 'in_val_1'],
+      },
+    });
+  });
+
+  test('context values in an object with newline characters', () => {
+    const ctx = createGlobalContextMock({
+      staticContextContent: {
+        context_val_1: 'Line 1\nLine 2\n\nLine 3',
+      } as unknown as BuildStaticContext,
+    });
+    const i = new BuildStepInput(ctx, {
+      id: 'foo',
+      stepDisplayName: BuildStep.getDisplayName({ id: 'test1' }),
+      required: true,
+      allowedValueTypeName: BuildStepInputValueTypeName.JSON,
+    });
+    i.set({
+      foo: 'foo',
+      bar: '${ eas.context_val_1 }',
+      baz: {
+        bazfoo: 'bazfoo',
+        bazbaz: ['bazbaz', '${ eas.context_val_1 }'],
+      },
+    });
+    expect(i.value).toEqual({
+      foo: 'foo',
+      bar: 'Line 1\nLine 2\n\nLine 3',
+      baz: {
+        bazfoo: 'bazfoo',
+        bazbaz: ['bazbaz', 'Line 1\nLine 2\n\nLine 3'],
+      },
+    });
+  });
+
+  test('context values in an object with doubly escaped newline characters', () => {
+    const ctx = createGlobalContextMock({
+      staticContextContent: {
+        context_val_1: 'Line 1\\nLine 2\\n\\nLine 3',
+      } as unknown as BuildStaticContext,
+    });
+    const i = new BuildStepInput(ctx, {
+      id: 'foo',
+      stepDisplayName: BuildStep.getDisplayName({ id: 'test1' }),
+      required: true,
+      allowedValueTypeName: BuildStepInputValueTypeName.JSON,
+    });
+    i.set({
+      foo: 'foo',
+      bar: '${ eas.context_val_1 }',
+      baz: {
+        bazfoo: 'bazfoo',
+        bazbaz: ['bazbaz', '${ eas.context_val_1 }'],
+      },
+    });
+    expect(i.value).toEqual({
+      foo: 'foo',
+      bar: 'Line 1\nLine 2\n\nLine 3',
+      baz: {
+        bazfoo: 'bazfoo',
+        bazbaz: ['bazbaz', 'Line 1\nLine 2\n\nLine 3'],
       },
     });
   });
