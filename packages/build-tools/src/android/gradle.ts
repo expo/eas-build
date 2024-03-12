@@ -26,7 +26,8 @@ export async function runGradleCommand(
     logger,
     gradleCommand,
     androidDir,
-  }: { logger: bunyan; gradleCommand: string; androidDir: string }
+    extraEnv,
+  }: { logger: bunyan; gradleCommand: string; androidDir: string; extraEnv?: Env }
 ): Promise<void> {
   logger.info(`Running 'gradlew ${gradleCommand}' in ${androidDir}`);
   const spawnPromise = spawn('bash', ['-c', `sh gradlew ${gradleCommand}`], {
@@ -39,7 +40,7 @@ export async function runGradleCommand(
         return line;
       }
     },
-    env: { ...ctx.env, ...resolveVersionOverridesEnvs(ctx) },
+    env: { ...ctx.env, ...extraEnv, ...resolveVersionOverridesEnvs(ctx) },
   });
   if (ctx.env.EAS_BUILD_RUNNER === 'eas-build' && process.platform === 'linux') {
     adjustOOMScore(spawnPromise, logger);
@@ -80,7 +81,7 @@ function adjustOOMScore(spawnPromise: SpawnPromise<SpawnResult>, logger: bunyan)
 }
 
 // Version envs should be set at the beginning of the build, but when building
-// from github those values are resolved latter.
+// from github those values are resolved later.
 function resolveVersionOverridesEnvs(ctx: BuildContext<Job>): Env {
   const extraEnvs: Env = {};
   if (

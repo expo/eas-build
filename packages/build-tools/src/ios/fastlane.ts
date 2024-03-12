@@ -1,6 +1,6 @@
 import path from 'path';
 
-import { Ios } from '@expo/eas-build-job';
+import { Env, Ios } from '@expo/eas-build-job';
 import { bunyan } from '@expo/logger';
 import spawn, { SpawnResult } from '@expo/turtle-spawn';
 import fs from 'fs-extra';
@@ -21,11 +21,13 @@ export async function runFastlaneGym<TJob extends Ios.Job>(
     buildConfiguration,
     credentials,
     entitlements,
+    extraEnv,
   }: {
     scheme: string;
     buildConfiguration?: string;
     credentials: Credentials | null;
     entitlements: object | null;
+    extraEnv?: Env;
   }
 ): Promise<void> {
   await ensureGymfileExists(ctx, {
@@ -44,7 +46,7 @@ export async function runFastlaneGym<TJob extends Ios.Job>(
     await runFastlane(['gym'], {
       cwd: path.join(ctx.getReactNativeProjectDirectory(), 'ios'),
       logger: ctx.logger,
-      env: ctx.env,
+      env: { ...ctx.env, ...extraEnv },
     });
   } finally {
     await buildLogger.flush();

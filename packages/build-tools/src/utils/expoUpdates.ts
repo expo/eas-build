@@ -138,7 +138,10 @@ export async function configureEASExpoUpdatesAsync(ctx: BuildContext<Job>): Prom
   await setChannelNativelyAsync(ctx);
 }
 
-export async function configureExpoUpdatesIfInstalledAsync(ctx: BuildContext<Job>): Promise<void> {
+export async function configureExpoUpdatesIfInstalledAsync(
+  ctx: BuildContext<Job>,
+  { resolvedRuntimeVersion }: { resolvedRuntimeVersion: string | null }
+): Promise<void> {
   const expoUpdatesPackageVersion = await getExpoUpdatesPackageVersionIfInstalledAsync(
     ctx.getReactNativeProjectDirectory()
   );
@@ -146,16 +149,8 @@ export async function configureExpoUpdatesIfInstalledAsync(ctx: BuildContext<Job
     return;
   }
 
-  const appConfigRuntimeVersion =
-    ctx.job.version?.runtimeVersion ??
-    (await resolveRuntimeVersionAsync({
-      projectDir: ctx.getReactNativeProjectDirectory(),
-      exp: ctx.appConfig,
-      platform: ctx.job.platform,
-      logger: ctx.logger,
-      expoUpdatesPackageVersion,
-    }));
-  if (ctx.metadata?.runtimeVersion && ctx.metadata?.runtimeVersion !== appConfigRuntimeVersion) {
+  const appConfigRuntimeVersion = ctx.job.version?.runtimeVersion ?? resolvedRuntimeVersion;
+  if (ctx.metadata?.runtimeVersion && ctx.metadata.runtimeVersion !== appConfigRuntimeVersion) {
     ctx.markBuildPhaseHasWarnings();
     ctx.logger.warn(
       `Runtime version from the app config evaluated on your local machine (${ctx.metadata.runtimeVersion}) does not match the one resolved here (${appConfigRuntimeVersion}).`
@@ -209,6 +204,28 @@ export async function configureExpoUpdatesIfInstalledAsync(ctx: BuildContext<Job
     ctx.logger.info('Updating runtimeVersion in Expo.plist');
     await setRuntimeVersionNativelyAsync(ctx, ctx.job.version.runtimeVersion);
   }
+}
+
+export async function resolveRuntimeVersionForExpoUpdatesIfConfiguredAsync(
+  ctx: BuildContext<Job>
+): Promise<string | null> {
+  const expoUpdatesPackageVersion = await getExpoUpdatesPackageVersionIfInstalledAsync(
+    ctx.getReactNativeProjectDirectory()
+  );
+  if (expoUpdatesPackageVersion === null) {
+    return null;
+  }
+
+  const resolvedRuntimeVersion = await resolveRuntimeVersionAsync({
+    projectDir: ctx.getReactNativeProjectDirectory(),
+    exp: ctx.appConfig,
+    platform: ctx.job.platform,
+    logger: ctx.logger,
+    expoUpdatesPackageVersion,
+  });
+
+  ctx.logger.info(`Resolved runtime version: ${resolvedRuntimeVersion}`);
+  return resolvedRuntimeVersion;
 }
 
 export async function getChannelAsync(ctx: BuildContext<Job>): Promise<string | null> {

@@ -15,6 +15,7 @@ export enum BuildPhase {
   EAS_BUILD_INTERNAL = 'EAS_BUILD_INTERNAL',
   PREBUILD = 'PREBUILD',
   PREPARE_CREDENTIALS = 'PREPARE_CREDENTIALS',
+  CALCULATE_EXPO_UPDATES_RUNTIME_VERSION = 'CALCULATE_EXPO_UPDATES_RUNTIME_VERSION',
   CONFIGURE_EXPO_UPDATES = 'CONFIGURE_EXPO_UPDATES',
   SAVE_CACHE = 'SAVE_CACHE',
   /**
@@ -75,6 +76,7 @@ export const buildPhaseDisplayName: Record<BuildPhase, string> = {
   [BuildPhase.EAS_BUILD_INTERNAL]: 'Resolve build configuration',
   [BuildPhase.PREBUILD]: 'Prebuild',
   [BuildPhase.PREPARE_CREDENTIALS]: 'Prepare credentials',
+  [BuildPhase.CALCULATE_EXPO_UPDATES_RUNTIME_VERSION]: 'Calculate expo-updates runtime version',
   [BuildPhase.CONFIGURE_EXPO_UPDATES]: 'Configure expo-updates',
   [BuildPhase.SAVE_CACHE]: 'Save cache',
   [BuildPhase.UPLOAD_ARTIFACTS]: 'Upload artifacts',
@@ -133,6 +135,7 @@ export const buildPhaseWebsiteId: Record<BuildPhase, string> = {
   [BuildPhase.EAS_BUILD_INTERNAL]: 'resolve-build-configuration',
   [BuildPhase.PREBUILD]: 'prebuild',
   [BuildPhase.PREPARE_CREDENTIALS]: 'prepare-credentials',
+  [BuildPhase.CALCULATE_EXPO_UPDATES_RUNTIME_VERSION]: 'calculate-expo-updates-runtime-version',
   [BuildPhase.CONFIGURE_EXPO_UPDATES]: 'configure-expo-updates',
   [BuildPhase.SAVE_CACHE]: 'save-cache',
   [BuildPhase.UPLOAD_ARTIFACTS]: 'upload-artifacts',

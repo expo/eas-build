@@ -27,10 +27,13 @@ describe(expoUpdates.configureExpoUpdatesIfInstalledAsync, () => {
   it('aborts if expo-updates is not installed', async () => {
     jest.mocked(getExpoUpdatesPackageVersionIfInstalledAsync).mockResolvedValue(null);
 
-    await expoUpdates.configureExpoUpdatesIfInstalledAsync({
-      job: { Platform: Platform.IOS },
-      getReactNativeProjectDirectory: () => '/app',
-    } as any);
+    await expoUpdates.configureExpoUpdatesIfInstalledAsync(
+      {
+        job: { Platform: Platform.IOS },
+        getReactNativeProjectDirectory: () => '/app',
+      } as any,
+      { resolvedRuntimeVersion: '1' }
+    );
 
     expect(androidSetChannelNativelyAsync).not.toBeCalled();
     expect(androidSetClassicReleaseChannelNativelyAsync).not.toBeCalled();
@@ -54,7 +57,9 @@ describe(expoUpdates.configureExpoUpdatesIfInstalledAsync, () => {
       logger: { info: () => {} },
       getReactNativeProjectDirectory: () => '/app',
     } as any;
-    await expoUpdates.configureExpoUpdatesIfInstalledAsync(managedCtx);
+    await expoUpdates.configureExpoUpdatesIfInstalledAsync(managedCtx, {
+      resolvedRuntimeVersion: '1',
+    });
 
     expect(androidSetChannelNativelyAsync).not.toBeCalled();
     expect(androidSetClassicReleaseChannelNativelyAsync).not.toBeCalled();
@@ -81,7 +86,9 @@ describe(expoUpdates.configureExpoUpdatesIfInstalledAsync, () => {
       logger: { info: () => {} },
       getReactNativeProjectDirectory: () => '/app',
     } as any;
-    await expoUpdates.configureExpoUpdatesIfInstalledAsync(managedCtx);
+    await expoUpdates.configureExpoUpdatesIfInstalledAsync(managedCtx, {
+      resolvedRuntimeVersion: '1',
+    });
 
     expect(androidSetChannelNativelyAsync).not.toBeCalled();
     expect(androidSetClassicReleaseChannelNativelyAsync).not.toBeCalled();
@@ -103,7 +110,9 @@ describe(expoUpdates.configureExpoUpdatesIfInstalledAsync, () => {
       logger: { info: () => {} },
       getReactNativeProjectDirectory: () => '/app',
     } as any;
-    await expoUpdates.configureExpoUpdatesIfInstalledAsync(managedCtx);
+    await expoUpdates.configureExpoUpdatesIfInstalledAsync(managedCtx, {
+      resolvedRuntimeVersion: '1',
+    });
 
     expect(androidSetChannelNativelyAsync).not.toBeCalled();
     expect(androidSetClassicReleaseChannelNativelyAsync).not.toBeCalled();
@@ -121,7 +130,9 @@ describe(expoUpdates.configureExpoUpdatesIfInstalledAsync, () => {
       logger: { info: () => {} },
       getReactNativeProjectDirectory: () => '/app',
     } as any;
-    await expoUpdates.configureExpoUpdatesIfInstalledAsync(managedCtx);
+    await expoUpdates.configureExpoUpdatesIfInstalledAsync(managedCtx, {
+      resolvedRuntimeVersion: '1',
+    });
 
     expect(androidSetChannelNativelyAsync).not.toBeCalled();
     expect(androidSetClassicReleaseChannelNativelyAsync).not.toBeCalled();
@@ -140,7 +151,9 @@ describe(expoUpdates.configureExpoUpdatesIfInstalledAsync, () => {
       logger: { info: () => {} },
       getReactNativeProjectDirectory: () => '/app',
     } as any;
-    await expoUpdates.configureExpoUpdatesIfInstalledAsync(managedCtx);
+    await expoUpdates.configureExpoUpdatesIfInstalledAsync(managedCtx, {
+      resolvedRuntimeVersion: '1',
+    });
 
     expect(androidSetChannelNativelyAsync).not.toBeCalled();
     expect(androidSetClassicReleaseChannelNativelyAsync).not.toBeCalled();
@@ -159,7 +172,9 @@ describe(expoUpdates.configureExpoUpdatesIfInstalledAsync, () => {
       logger: { info: () => {} },
       getReactNativeProjectDirectory: () => '/app',
     } as any;
-    await expoUpdates.configureExpoUpdatesIfInstalledAsync(managedCtx);
+    await expoUpdates.configureExpoUpdatesIfInstalledAsync(managedCtx, {
+      resolvedRuntimeVersion: '1',
+    });
 
     expect(iosSetClassicReleaseChannelNativelyAsync).toBeCalledTimes(1);
     expect(androidSetClassicReleaseChannelNativelyAsync).not.toBeCalled();
@@ -176,7 +191,9 @@ describe(expoUpdates.configureExpoUpdatesIfInstalledAsync, () => {
       logger: { info: () => {} },
       getReactNativeProjectDirectory: () => '/app',
     } as any;
-    await expoUpdates.configureExpoUpdatesIfInstalledAsync(managedCtx);
+    await expoUpdates.configureExpoUpdatesIfInstalledAsync(managedCtx, {
+      resolvedRuntimeVersion: '1',
+    });
 
     expect(iosSetClassicReleaseChannelNativelyAsync).not.toBeCalled();
     expect(androidSetClassicReleaseChannelNativelyAsync).not.toBeCalled();
@@ -194,7 +211,9 @@ describe(expoUpdates.configureExpoUpdatesIfInstalledAsync, () => {
       logger: { info: infoLogger, warn: () => {} },
       getReactNativeProjectDirectory: () => '/app',
     } as any;
-    await expoUpdates.configureExpoUpdatesIfInstalledAsync(managedCtx);
+    await expoUpdates.configureExpoUpdatesIfInstalledAsync(managedCtx, {
+      resolvedRuntimeVersion: '1',
+    });
 
     expect(infoLogger).toBeCalledWith(`Using default release channel for 'expo-updates' (default)`);
     expect(iosSetClassicReleaseChannelNativelyAsync).not.toBeCalled();
@@ -213,7 +232,9 @@ describe(expoUpdates.configureExpoUpdatesIfInstalledAsync, () => {
       logger: { info: infoLogger, warn: () => {} },
       getReactNativeProjectDirectory: () => '/app',
     } as any;
-    await expoUpdates.configureExpoUpdatesIfInstalledAsync(managedCtx);
+    await expoUpdates.configureExpoUpdatesIfInstalledAsync(managedCtx, {
+      resolvedRuntimeVersion: '1',
+    });
 
     expect(infoLogger).not.toBeCalledWith(
       `Using default release channel for 'expo-updates' (default)`
@@ -236,7 +257,9 @@ describe(expoUpdates.configureExpoUpdatesIfInstalledAsync, () => {
       logger: { info: infoLogger, warn: () => {} },
       getReactNativeProjectDirectory: () => '/app',
     } as any;
-    await expoUpdates.configureExpoUpdatesIfInstalledAsync(managedCtx);
+    await expoUpdates.configureExpoUpdatesIfInstalledAsync(managedCtx, {
+      resolvedRuntimeVersion: '1',
+    });
 
     expect(infoLogger).not.toBeCalledWith(
       `Using default release channel for 'expo-updates' (default)`

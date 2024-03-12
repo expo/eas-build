@@ -5,7 +5,10 @@ import fs from 'fs-extra';
 import nullthrows from 'nullthrows';
 
 import { Artifacts, BuildContext } from '../context';
-import { configureExpoUpdatesIfInstalledAsync } from '../utils/expoUpdates';
+import {
+  resolveRuntimeVersionForExpoUpdatesIfConfiguredAsync,
+  configureExpoUpdatesIfInstalledAsync,
+} from '../utils/expoUpdates';
 import { uploadApplicationArchive } from '../utils/artifacts';
 import { Hook, runHookIfPresent } from '../utils/hooks';
 import { configureXcodeProject } from '../ios/configure';
@@ -74,6 +77,13 @@ async function buildAsync(ctx: BuildContext<Ios.Job>): Promise<void> {
       await runHookIfPresent(ctx, Hook.POST_INSTALL);
     });
 
+    const resolvedExpoUpdatesRuntimeVersion = await ctx.runBuildPhase(
+      BuildPhase.CALCULATE_EXPO_UPDATES_RUNTIME_VERSION,
+      async () => {
+        return await resolveRuntimeVersionForExpoUpdatesIfConfiguredAsync(ctx);
+      }
+    );
+
     const buildConfiguration = resolveBuildConfiguration(ctx);
     if (credentials) {
       await ctx.runBuildPhase(BuildPhase.CONFIGURE_XCODE_PROJECT, async () => {
@@ -82,7 +92,9 @@ async function buildAsync(ctx: BuildContext<Ios.Job>): Promise<void> {
     }
 
     await ctx.runBuildPhase(BuildPhase.CONFIGURE_EXPO_UPDATES, async () => {
-      await configureExpoUpdatesIfInstalledAsync(ctx);
+      await configureExpoUpdatesIfInstalledAsync(ctx, {
+        resolvedRuntimeVersion: resolvedExpoUpdatesRuntimeVersion,
+      });
     });
 
     await ctx.runBuildPhase(BuildPhase.RUN_FASTLANE, async () => {
@@ -93,6 +105,9 @@ async function buildAsync(ctx: BuildContext<Ios.Job>): Promise<void> {
         scheme,
         buildConfiguration,
         entitlements,
+        ...(resolvedExpoUpdatesRuntimeVersion
+          ? { extraEnv: { EXPO_UPDATES_FINGERPRINT_OVERRIDE: resolvedExpoUpdatesRuntimeVersion } }
+          : null),
       });
     });
   } finally {

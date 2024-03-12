@@ -4,7 +4,10 @@ import { Android, BuildMode, BuildPhase, Workflow } from '@expo/eas-build-job';
 import nullthrows from 'nullthrows';
 
 import { Artifacts, BuildContext, SkipNativeBuildError } from '../context';
-import { configureExpoUpdatesIfInstalledAsync } from '../utils/expoUpdates';
+import {
+  configureExpoUpdatesIfInstalledAsync,
+  resolveRuntimeVersionForExpoUpdatesIfConfiguredAsync,
+} from '../utils/expoUpdates';
 import {
   runGradleCommand,
   ensureLFLineEndingsInGradlewScript,
@@ -66,6 +69,13 @@ async function buildAsync(ctx: BuildContext<Android.Job>): Promise<void> {
     await runHookIfPresent(ctx, Hook.POST_INSTALL);
   });
 
+  const resolvedExpoUpdatesRuntimeVersion = await ctx.runBuildPhase(
+    BuildPhase.CALCULATE_EXPO_UPDATES_RUNTIME_VERSION,
+    async () => {
+      return await resolveRuntimeVersionForExpoUpdatesIfConfiguredAsync(ctx);
+    }
+  );
+
   if (
     nullthrows(ctx.job.secrets, 'Secrets must be defined for non-custom builds').buildCredentials
   ) {
@@ -75,7 +85,9 @@ async function buildAsync(ctx: BuildContext<Android.Job>): Promise<void> {
     });
   }
   await ctx.runBuildPhase(BuildPhase.CONFIGURE_EXPO_UPDATES, async () => {
-    await configureExpoUpdatesIfInstalledAsync(ctx);
+    await configureExpoUpdatesIfInstalledAsync(ctx, {
+      resolvedRuntimeVersion: resolvedExpoUpdatesRuntimeVersion,
+    });
   });
 
   if (ctx.skipNativeBuild) {
@@ -87,6 +99,9 @@ async function buildAsync(ctx: BuildContext<Android.Job>): Promise<void> {
       logger: ctx.logger,
       gradleCommand,
       androidDir: path.join(ctx.getReactNativeProjectDirectory(), 'android'),
+      ...(resolvedExpoUpdatesRuntimeVersion
+        ? { extraEnv: { EXPO_UPDATES_FINGERPRINT_OVERRIDE: resolvedExpoUpdatesRuntimeVersion } }
+        : null),
     });
   });
 
