@@ -133,6 +133,10 @@ export class BuildStepGlobalContext {
     );
   }
 
+  public wasCheckedOut(): boolean {
+    return this.didCheckOut;
+  }
+
   public serialize(): SerializedBuildStepGlobalContext {
     return {
       stepsInternalBuildDirectory: this.stepsInternalBuildDirectory,
