@@ -23,6 +23,7 @@ import { createInstallMaestroBuildFunction } from './functions/installMaestro';
 import { createGetCredentialsForBuildTriggeredByGithubIntegration } from './functions/getCredentialsForBuildTriggeredByGitHubIntegration';
 import { createInstallPodsBuildFunction } from './functions/installPods';
 import { createSendSlackMessageFunction } from './functions/sendSlackMessage';
+import { createResolveBuildConfigBuildFunction } from './functions/resolveBuildConfig';
 
 export function getEasFunctions(ctx: CustomBuildContext): BuildFunction[] {
   return [
@@ -47,5 +48,6 @@ export function getEasFunctions(ctx: CustomBuildContext): BuildFunction[] {
     createGetCredentialsForBuildTriggeredByGithubIntegration(ctx),
     createInstallPodsBuildFunction(),
     createSendSlackMessageFunction(),
+    createResolveBuildConfigBuildFunction(ctx),
   ];
 }

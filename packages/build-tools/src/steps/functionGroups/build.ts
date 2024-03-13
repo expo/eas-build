@@ -10,7 +10,6 @@ import { generateGymfileFromTemplateFunction } from '../functions/generateGymfil
 import { runFastlaneFunction } from '../functions/runFastlane';
 import { createFindAndUploadBuildArtifactsBuildFunction } from '../functions/findAndUploadBuildArtifacts';
 import { CustomBuildContext } from '../../customBuildContext';
-import { createGetCredentialsForBuildTriggeredByGithubIntegration } from '../functions/getCredentialsForBuildTriggeredByGitHubIntegration';
 import { resolveAppleTeamIdFromCredentialsFunction } from '../functions/resolveAppleTeamIdFromCredentials';
 import { configureIosCredentialsFunction } from '../functions/configureIosCredentials';
 import { runGradleFunction } from '../functions/runGradle';
@@ -18,6 +17,7 @@ import { configureIosVersionFunction } from '../functions/configureIosVersion';
 import { injectAndroidCredentialsFunction } from '../functions/injectAndroidCredentials';
 import { configureAndroidVersionFunction } from '../functions/configureAndroidVersion';
 import { createSetUpNpmrcBuildFunction } from '../functions/useNpmToken';
+import { createResolveBuildConfigBuildFunction } from '../functions/resolveBuildConfig';
 
 interface HelperFunctionsInput {
   globalCtx: BuildStepGlobalContext;
@@ -79,6 +79,9 @@ function createStepsForIosSimulatorBuild({
     createCheckoutBuildFunction().createBuildStepFromFunctionCall(globalCtx),
     createSetUpNpmrcBuildFunction().createBuildStepFromFunctionCall(globalCtx),
     createInstallNodeModulesBuildFunction().createBuildStepFromFunctionCall(globalCtx),
+    createResolveBuildConfigBuildFunction(buildToolsContext).createBuildStepFromFunctionCall(
+      globalCtx
+    ),
     createPrebuildBuildFunction().createBuildStepFromFunctionCall(globalCtx),
     installPods,
     configureEASUpdate,
@@ -125,9 +128,9 @@ function createStepsForIosBuildWithCredentials({
     createCheckoutBuildFunction().createBuildStepFromFunctionCall(globalCtx),
     createSetUpNpmrcBuildFunction().createBuildStepFromFunctionCall(globalCtx),
     createInstallNodeModulesBuildFunction().createBuildStepFromFunctionCall(globalCtx),
-    createGetCredentialsForBuildTriggeredByGithubIntegration(
-      buildToolsContext
-    ).createBuildStepFromFunctionCall(globalCtx),
+    createResolveBuildConfigBuildFunction(buildToolsContext).createBuildStepFromFunctionCall(
+      globalCtx
+    ),
     resolveAppleTeamIdFromCredentials,
     prebuildStep,
     installPods,
@@ -157,6 +160,9 @@ function createStepsForAndroidBuildWithoutCredentials({
     createCheckoutBuildFunction().createBuildStepFromFunctionCall(globalCtx),
     createSetUpNpmrcBuildFunction().createBuildStepFromFunctionCall(globalCtx),
     createInstallNodeModulesBuildFunction().createBuildStepFromFunctionCall(globalCtx),
+    createResolveBuildConfigBuildFunction(buildToolsContext).createBuildStepFromFunctionCall(
+      globalCtx
+    ),
     createPrebuildBuildFunction().createBuildStepFromFunctionCall(globalCtx),
     configureEASUpdate,
     runGradle.createBuildStepFromFunctionCall(globalCtx, { id: runGradle.id }),
@@ -181,9 +187,9 @@ function createStepsForAndroidBuildWithCredentials({
     createCheckoutBuildFunction().createBuildStepFromFunctionCall(globalCtx),
     createSetUpNpmrcBuildFunction().createBuildStepFromFunctionCall(globalCtx),
     createInstallNodeModulesBuildFunction().createBuildStepFromFunctionCall(globalCtx),
-    createGetCredentialsForBuildTriggeredByGithubIntegration(
-      buildToolsContext
-    ).createBuildStepFromFunctionCall(globalCtx),
+    createResolveBuildConfigBuildFunction(buildToolsContext).createBuildStepFromFunctionCall(
+      globalCtx
+    ),
     createPrebuildBuildFunction().createBuildStepFromFunctionCall(globalCtx),
     configureEASUpdate,
     injectAndroidCredentialsFunction().createBuildStepFromFunctionCall(globalCtx),
