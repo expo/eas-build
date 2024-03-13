@@ -11,11 +11,13 @@ export async function runGradleCommand({
   gradleCommand,
   androidDir,
   env,
+  extraEnv,
 }: {
   logger: bunyan;
   gradleCommand: string;
   androidDir: string;
   env: BuildStepEnv;
+  extraEnv?: BuildStepEnv;
 }): Promise<void> {
   logger.info(`Running 'gradlew ${gradleCommand}' in ${androidDir}`);
   const spawnPromise = spawn('bash', ['-c', `sh gradlew ${gradleCommand}`], {
@@ -28,7 +30,7 @@ export async function runGradleCommand({
         return line;
       }
     },
-    env,
+    env: { ...env, ...extraEnv },
   });
   if (env.EAS_BUILD_RUNNER === 'eas-build' && process.platform === 'linux') {
     adjustOOMScore(spawnPromise, logger);

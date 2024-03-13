@@ -2,6 +2,8 @@ import assert from 'assert';
 
 import { Platform, Job } from '@expo/eas-build-job';
 import semver from 'semver';
+import { ExpoConfig } from '@expo/config';
+import { bunyan } from '@expo/logger';
 
 import {
   androidSetRuntimeVersionNativelyAsync,
@@ -206,25 +208,31 @@ export async function configureExpoUpdatesIfInstalledAsync(
   }
 }
 
-export async function resolveRuntimeVersionForExpoUpdatesIfConfiguredAsync(
-  ctx: BuildContext<Job>
-): Promise<string | null> {
-  const expoUpdatesPackageVersion = await getExpoUpdatesPackageVersionIfInstalledAsync(
-    ctx.getReactNativeProjectDirectory()
-  );
+export async function resolveRuntimeVersionForExpoUpdatesIfConfiguredAsync({
+  cwd,
+  appConfig,
+  platform,
+  logger,
+}: {
+  cwd: string;
+  appConfig: ExpoConfig;
+  platform: Platform;
+  logger: bunyan;
+}): Promise<string | null> {
+  const expoUpdatesPackageVersion = await getExpoUpdatesPackageVersionIfInstalledAsync(cwd);
   if (expoUpdatesPackageVersion === null) {
     return null;
   }
 
   const resolvedRuntimeVersion = await resolveRuntimeVersionAsync({
-    projectDir: ctx.getReactNativeProjectDirectory(),
-    exp: ctx.appConfig,
-    platform: ctx.job.platform,
-    logger: ctx.logger,
+    projectDir: cwd,
+    exp: appConfig,
+    platform,
+    logger,
     expoUpdatesPackageVersion,
   });
 
-  ctx.logger.info(`Resolved runtime version: ${resolvedRuntimeVersion}`);
+  logger.info(`Resolved runtime version: ${resolvedRuntimeVersion}`);
   return resolvedRuntimeVersion;
 }
 

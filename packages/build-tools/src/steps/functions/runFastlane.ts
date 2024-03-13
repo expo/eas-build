@@ -1,4 +1,9 @@
-import { BuildFunction, BuildStepOutput } from '@expo/steps';
+import {
+  BuildFunction,
+  BuildStepInput,
+  BuildStepInputValueTypeName,
+  BuildStepOutput,
+} from '@expo/steps';
 
 import { runFastlaneGym } from '../utils/ios/fastlane';
 import { BuildStatusText, BuildStepOutputName } from '../utils/slackMessageDynamicFields';
@@ -18,20 +23,27 @@ export function runFastlaneFunction(): BuildFunction {
         required: false,
       }),
     ],
-    fn: async (stepCtx, { env, outputs }) => {
+    inputProviders: [
+      BuildStepInput.createProvider({
+        id: 'resolved_eas_update_runtime_version',
+        required: false,
+        allowedValueTypeName: BuildStepInputValueTypeName.STRING,
+      }),
+    ],
+    fn: async (stepCtx, { env, outputs, inputs }) => {
       outputs[BuildStepOutputName.STATUS_TEXT].set(BuildStatusText.STARTED);
+      const resolvedEASUpdateRuntimeVersion = inputs.resolved_eas_update_runtime_version.value as
+        | string
+        | undefined;
       try {
         await runFastlaneGym({
           workingDir: stepCtx.workingDirectory,
-          env: Object.keys(env).reduce(
-            (acc, key) => {
-              acc[key] = env[key] ?? '';
-              return acc;
-            },
-            {} as Record<string, string>
-          ),
+          env,
           logger: stepCtx.logger,
           buildLogsDirectory: stepCtx.global.buildLogsDirectory,
+          ...(resolvedEASUpdateRuntimeVersion
+            ? { extraEnv: { EXPO_UPDATES_FINGERPRINT_OVERRIDE: resolvedEASUpdateRuntimeVersion } }
+            : null),
         });
       } catch (error) {
         outputs[BuildStepOutputName.STATUS_TEXT].set(BuildStatusText.ERROR);

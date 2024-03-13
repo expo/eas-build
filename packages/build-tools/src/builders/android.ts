@@ -72,7 +72,12 @@ async function buildAsync(ctx: BuildContext<Android.Job>): Promise<void> {
   const resolvedExpoUpdatesRuntimeVersion = await ctx.runBuildPhase(
     BuildPhase.CALCULATE_EXPO_UPDATES_RUNTIME_VERSION,
     async () => {
-      return await resolveRuntimeVersionForExpoUpdatesIfConfiguredAsync(ctx);
+      return await resolveRuntimeVersionForExpoUpdatesIfConfiguredAsync({
+        cwd: ctx.getReactNativeProjectDirectory(),
+        logger: ctx.logger,
+        appConfig: ctx.appConfig,
+        platform: ctx.job.platform,
+      });
     }
   );
 
