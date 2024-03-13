@@ -24,6 +24,7 @@ import { createGetCredentialsForBuildTriggeredByGithubIntegration } from './func
 import { createInstallPodsBuildFunction } from './functions/installPods';
 import { createSendSlackMessageFunction } from './functions/sendSlackMessage';
 import { createResolveBuildConfigBuildFunction } from './functions/resolveBuildConfig';
+import { calculateEASUpdateRuntimeVersionFunction } from './functions/calculateEASUpdateRuntimeVersion';
 
 export function getEasFunctions(ctx: CustomBuildContext): BuildFunction[] {
   return [
@@ -49,5 +50,6 @@ export function getEasFunctions(ctx: CustomBuildContext): BuildFunction[] {
     createInstallPodsBuildFunction(),
     createSendSlackMessageFunction(),
     createResolveBuildConfigBuildFunction(ctx),
+    calculateEASUpdateRuntimeVersionFunction(),
   ];
 }
