@@ -7,6 +7,10 @@ export function createCheckoutBuildFunction(): BuildFunction {
     id: 'checkout',
     name: 'Checkout',
     fn: async (stepsCtx) => {
+      if (stepsCtx.global.wasCheckedOut()) {
+        stepsCtx.logger.info('Project directory is already checked out');
+        return;
+      }
       stepsCtx.logger.info('Checking out project directory');
       await fs.move(
         stepsCtx.global.projectSourceDirectory,
