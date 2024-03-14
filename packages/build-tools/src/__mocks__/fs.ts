@@ -1,6 +1,6 @@
 import { fs } from 'memfs';
 
-fs.mkdirSync('/tmp');
+fs.mkdirSync('/tmp', { recursive: true });
 if (process.env.TMPDIR) {
   fs.mkdirSync(process.env.TMPDIR, { recursive: true });
 }
