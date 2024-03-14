@@ -28,7 +28,7 @@ class DoctorTimeoutError extends Error {}
 class InstallDependenciesTimeoutError extends Error {}
 
 export async function setupAsync<TJob extends Job>(ctx: BuildContext<TJob>): Promise<void> {
-  const packageJson = await ctx.runBuildPhase(BuildPhase.PREPARE_PROJECT, async () => {
+  await ctx.runBuildPhase(BuildPhase.PREPARE_PROJECT, async () => {
     await prepareProjectSourcesAsync(ctx);
     await setUpNpmrcAsync(ctx, ctx.logger);
     if (ctx.job.platform === Platform.IOS && ctx.env.EAS_BUILD_RUNNER === 'eas-build') {
@@ -42,17 +42,17 @@ export async function setupAsync<TJob extends Job>(ctx: BuildContext<TJob>): Pro
       });
       ctx.updateEnv(env);
     }
-    // try to read package.json to see if it exists and is valid
-    return readPackageJson(ctx.getReactNativeProjectDirectory());
   });
 
   await ctx.runBuildPhase(BuildPhase.PRE_INSTALL_HOOK, async () => {
     await runHookIfPresent(ctx, Hook.PRE_INSTALL);
   });
 
-  await ctx.runBuildPhase(BuildPhase.READ_PACKAGE_JSON, async () => {
+  const packageJson = await ctx.runBuildPhase(BuildPhase.READ_PACKAGE_JSON, async () => {
     ctx.logger.info('Using package.json:');
+    const packageJson = readPackageJson(ctx.getReactNativeProjectDirectory());
     ctx.logger.info(JSON.stringify(packageJson, null, 2));
+    return packageJson;
   });
 
   await ctx.runBuildPhase(BuildPhase.INSTALL_DEPENDENCIES, async () => {
