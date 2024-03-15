@@ -14,6 +14,7 @@ import {
   BuildTrigger,
   BuildMode,
 } from './common';
+import { AndroidWorkerImageWithAliases, androidWorkerImages } from './images';
 
 export interface Keystore {
   dataBase64: string;
@@ -35,7 +36,8 @@ export enum BuildType {
 }
 
 export interface BuilderEnvironment {
-  image?: string;
+  // TODO: make it required on 15th March 2025
+  image?: AndroidWorkerImageWithAliases;
   node?: string;
   pnpm?: string;
   yarn?: string;
@@ -46,7 +48,8 @@ export interface BuilderEnvironment {
 }
 
 const BuilderEnvironmentSchema = Joi.object({
-  image: Joi.string(),
+  // TODO: make it required on 15th March 2025
+  image: Joi.string().valid(...androidWorkerImages),
   node: Joi.string(),
   yarn: Joi.string(),
   pnpm: Joi.string(),

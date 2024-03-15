@@ -14,6 +14,7 @@ import {
   BuildTrigger,
   BuildMode,
 } from './common';
+import { IosWorkerImageWithAliases, iosWorkerImages } from './images';
 
 export type DistributionType = 'store' | 'internal' | 'simulator';
 
@@ -43,7 +44,8 @@ export interface DistributionCertificate {
   password: string;
 }
 export interface BuilderEnvironment {
-  image?: string;
+  // TODO: make it required on 15th March 2025
+  image?: IosWorkerImageWithAliases;
   node?: string;
   yarn?: string;
   bun?: string;
@@ -56,7 +58,8 @@ export interface BuilderEnvironment {
 }
 
 const BuilderEnvironmentSchema = Joi.object({
-  image: Joi.string(),
+  // TODO: make it required on 15th March 2025
+  image: Joi.string().valid(...iosWorkerImages),
   node: Joi.string(),
   yarn: Joi.string(),
   pnpm: Joi.string(),
