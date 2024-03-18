@@ -1,4 +1,5 @@
 import Joi from 'joi';
+import { z } from 'zod';
 
 import { BuildPhase, BuildPhaseResult } from './logs';
 
@@ -82,6 +83,27 @@ export const ArchiveSourceSchema = Joi.object<ArchiveSource>({
     }),
   });
 
+export const ArchiveSourceSchemaZ = z.discriminatedUnion('type', [
+  z.object({
+    type: z.literal(ArchiveSourceType.GIT),
+    repositoryUrl: z.string(),
+    gitRef: z.string(),
+  }),
+  z.object({
+    type: z.literal(ArchiveSourceType.PATH),
+    path: z.string(),
+  }),
+  z.object({
+    type: z.literal(ArchiveSourceType.URL),
+    url: z.string().url(),
+  }),
+  z.object({
+    type: z.literal(ArchiveSourceType.GCS),
+    bucketKey: z.string(),
+    metadataLocation: z.string().optional(),
+  }),
+]);
+
 export type Env = Record<string, string>;
 export const EnvSchema = Joi.object().pattern(Joi.string(), Joi.string());
 
@@ -103,6 +125,11 @@ export const EnvironmentSecretsSchema = Joi.array().items(
       .required(),
   })
 );
+export const EnvironmentSecretZ = z.object({
+  name: z.string(),
+  value: z.string(),
+  type: z.nativeEnum(EnvironmentSecretType),
+});
 
 export interface Cache {
   disabled: boolean;
