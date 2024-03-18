@@ -18,6 +18,7 @@ import { injectAndroidCredentialsFunction } from '../functions/injectAndroidCred
 import { configureAndroidVersionFunction } from '../functions/configureAndroidVersion';
 import { createSetUpNpmrcBuildFunction } from '../functions/useNpmToken';
 import { createResolveBuildConfigBuildFunction } from '../functions/resolveBuildConfig';
+import { calculateEASUpdateRuntimeVersionFunction } from '../functions/calculateEASUpdateRuntimeVersion';
 
 interface HelperFunctionsInput {
   globalCtx: BuildStepGlobalContext;
@@ -65,6 +66,10 @@ function createStepsForIosSimulatorBuild({
   globalCtx,
   buildToolsContext,
 }: HelperFunctionsInput): BuildStep[] {
+  const calculateEASUpdateRuntimeVersion =
+    calculateEASUpdateRuntimeVersionFunction().createBuildStepFromFunctionCall(globalCtx, {
+      id: 'calculate_eas_update_runtime_version',
+    });
   const installPods = createInstallPodsBuildFunction().createBuildStepFromFunctionCall(globalCtx, {
     workingDirectory: './ios',
   });
@@ -72,9 +77,17 @@ function createStepsForIosSimulatorBuild({
     configureEASUpdateIfInstalledFunction().createBuildStepFromFunctionCall(globalCtx, {
       callInputs: {
         throw_if_not_configured: false,
+        resolved_eas_update_runtime_version:
+          '${ steps.calculate_eas_update_runtime_version.resolved_eas_update_runtime_version }',
       },
     });
-  const runFastlane = runFastlaneFunction();
+  const runFastlane = runFastlaneFunction().createBuildStepFromFunctionCall(globalCtx, {
+    id: 'run_fastlane',
+    callInputs: {
+      resolved_eas_update_runtime_version:
+        '${ steps.calculate_eas_update_runtime_version.resolved_eas_update_runtime_version }',
+    },
+  });
   return [
     createCheckoutBuildFunction().createBuildStepFromFunctionCall(globalCtx),
     createSetUpNpmrcBuildFunction().createBuildStepFromFunctionCall(globalCtx),
@@ -83,10 +96,11 @@ function createStepsForIosSimulatorBuild({
       globalCtx
     ),
     createPrebuildBuildFunction().createBuildStepFromFunctionCall(globalCtx),
+    calculateEASUpdateRuntimeVersion,
     installPods,
     configureEASUpdate,
     generateGymfileFromTemplateFunction().createBuildStepFromFunctionCall(globalCtx),
-    runFastlane.createBuildStepFromFunctionCall(globalCtx, { id: runFastlane.id }),
+    runFastlane,
     createFindAndUploadBuildArtifactsBuildFunction(
       buildToolsContext
     ).createBuildStepFromFunctionCall(globalCtx),
@@ -101,6 +115,10 @@ function createStepsForIosBuildWithCredentials({
     resolveAppleTeamIdFromCredentialsFunction().createBuildStepFromFunctionCall(globalCtx, {
       id: 'resolve_apple_team_id_from_credentials',
     });
+  const calculateEASUpdateRuntimeVersion =
+    calculateEASUpdateRuntimeVersionFunction().createBuildStepFromFunctionCall(globalCtx, {
+      id: 'calculate_eas_update_runtime_version',
+    });
   const prebuildStep = createPrebuildBuildFunction().createBuildStepFromFunctionCall(globalCtx, {
     callInputs: {
       apple_team_id: '${ steps.resolve_apple_team_id_from_credentials.apple_team_id }',
@@ -113,6 +131,8 @@ function createStepsForIosBuildWithCredentials({
     configureEASUpdateIfInstalledFunction().createBuildStepFromFunctionCall(globalCtx, {
       callInputs: {
         throw_if_not_configured: false,
+        resolved_eas_update_runtime_version:
+          '${ steps.calculate_eas_update_runtime_version.resolved_eas_update_runtime_version }',
       },
     });
   const generateGymfile = generateGymfileFromTemplateFunction().createBuildStepFromFunctionCall(
@@ -123,7 +143,13 @@ function createStepsForIosBuildWithCredentials({
       },
     }
   );
-  const runFastlane = runFastlaneFunction();
+  const runFastlane = runFastlaneFunction().createBuildStepFromFunctionCall(globalCtx, {
+    id: 'run_fastlane',
+    callInputs: {
+      resolved_eas_update_runtime_version:
+        '${ steps.calculate_eas_update_runtime_version.resolved_eas_update_runtime_version }',
+    },
+  });
   return [
     createCheckoutBuildFunction().createBuildStepFromFunctionCall(globalCtx),
     createSetUpNpmrcBuildFunction().createBuildStepFromFunctionCall(globalCtx),
@@ -133,12 +159,13 @@ function createStepsForIosBuildWithCredentials({
     ),
     resolveAppleTeamIdFromCredentials,
     prebuildStep,
+    calculateEASUpdateRuntimeVersion,
     installPods,
     configureEASUpdate,
     configureIosCredentialsFunction().createBuildStepFromFunctionCall(globalCtx),
     configureIosVersionFunction().createBuildStepFromFunctionCall(globalCtx),
     generateGymfile,
-    runFastlane.createBuildStepFromFunctionCall(globalCtx, { id: runFastlane.id }),
+    runFastlane,
     createFindAndUploadBuildArtifactsBuildFunction(
       buildToolsContext
     ).createBuildStepFromFunctionCall(globalCtx),
@@ -149,13 +176,25 @@ function createStepsForAndroidBuildWithoutCredentials({
   globalCtx,
   buildToolsContext,
 }: HelperFunctionsInput): BuildStep[] {
+  const calculateEASUpdateRuntimeVersion =
+    calculateEASUpdateRuntimeVersionFunction().createBuildStepFromFunctionCall(globalCtx, {
+      id: 'calculate_eas_update_runtime_version',
+    });
   const configureEASUpdate =
     configureEASUpdateIfInstalledFunction().createBuildStepFromFunctionCall(globalCtx, {
       callInputs: {
         throw_if_not_configured: false,
+        resolved_eas_update_runtime_version:
+          '${ steps.calculate_eas_update_runtime_version.resolved_eas_update_runtime_version }',
       },
     });
-  const runGradle = runGradleFunction();
+  const runGradle = runGradleFunction().createBuildStepFromFunctionCall(globalCtx, {
+    id: 'run_gradle',
+    callInputs: {
+      resolved_eas_update_runtime_version:
+        '${ steps.calculate_eas_update_runtime_version.resolved_eas_update_runtime_version }',
+    },
+  });
   return [
     createCheckoutBuildFunction().createBuildStepFromFunctionCall(globalCtx),
     createSetUpNpmrcBuildFunction().createBuildStepFromFunctionCall(globalCtx),
@@ -164,8 +203,9 @@ function createStepsForAndroidBuildWithoutCredentials({
       globalCtx
     ),
     createPrebuildBuildFunction().createBuildStepFromFunctionCall(globalCtx),
+    calculateEASUpdateRuntimeVersion,
     configureEASUpdate,
-    runGradle.createBuildStepFromFunctionCall(globalCtx, { id: runGradle.id }),
+    runGradle,
     createFindAndUploadBuildArtifactsBuildFunction(
       buildToolsContext
     ).createBuildStepFromFunctionCall(globalCtx),
@@ -176,13 +216,25 @@ function createStepsForAndroidBuildWithCredentials({
   globalCtx,
   buildToolsContext,
 }: HelperFunctionsInput): BuildStep[] {
+  const calculateEASUpdateRuntimeVersion =
+    calculateEASUpdateRuntimeVersionFunction().createBuildStepFromFunctionCall(globalCtx, {
+      id: 'calculate_eas_update_runtime_version',
+    });
   const configureEASUpdate =
     configureEASUpdateIfInstalledFunction().createBuildStepFromFunctionCall(globalCtx, {
       callInputs: {
         throw_if_not_configured: false,
+        resolved_eas_update_runtime_version:
+          '${ steps.calculate_eas_update_runtime_version.resolved_eas_update_runtime_version }',
       },
     });
-  const runGradle = runGradleFunction();
+  const runGradle = runGradleFunction().createBuildStepFromFunctionCall(globalCtx, {
+    id: 'run_gradle',
+    callInputs: {
+      resolved_eas_update_runtime_version:
+        '${ steps.calculate_eas_update_runtime_version.resolved_eas_update_runtime_version }',
+    },
+  });
   return [
     createCheckoutBuildFunction().createBuildStepFromFunctionCall(globalCtx),
     createSetUpNpmrcBuildFunction().createBuildStepFromFunctionCall(globalCtx),
@@ -191,10 +243,11 @@ function createStepsForAndroidBuildWithCredentials({
       globalCtx
     ),
     createPrebuildBuildFunction().createBuildStepFromFunctionCall(globalCtx),
+    calculateEASUpdateRuntimeVersion,
     configureEASUpdate,
     injectAndroidCredentialsFunction().createBuildStepFromFunctionCall(globalCtx),
     configureAndroidVersionFunction().createBuildStepFromFunctionCall(globalCtx),
-    runGradle.createBuildStepFromFunctionCall(globalCtx, { id: runGradle.id }),
+    runGradle,
     createFindAndUploadBuildArtifactsBuildFunction(
       buildToolsContext
     ).createBuildStepFromFunctionCall(globalCtx),

@@ -1,8 +1,8 @@
 import path from 'path';
 
 import { bunyan } from '@expo/logger';
-import { Env } from '@expo/eas-build-job';
 import spawn, { SpawnResult } from '@expo/turtle-spawn';
+import { BuildStepEnv } from '@expo/steps';
 
 import { XcodeBuildLogger } from './xcpretty';
 
@@ -11,11 +11,13 @@ export async function runFastlaneGym({
   logger,
   buildLogsDirectory,
   env,
+  extraEnv,
 }: {
   workingDir: string;
   logger: bunyan;
   buildLogsDirectory: string;
-  env: Env;
+  env: BuildStepEnv;
+  extraEnv?: BuildStepEnv;
 }): Promise<void> {
   const buildLogger = new XcodeBuildLogger(logger, workingDir);
   void buildLogger.watchLogFiles(buildLogsDirectory);
@@ -24,6 +26,7 @@ export async function runFastlaneGym({
       cwd: path.join(workingDir, 'ios'),
       logger,
       env,
+      extraEnv,
     });
   } finally {
     await buildLogger.flush();
@@ -36,10 +39,12 @@ export async function runFastlane(
     logger,
     env,
     cwd,
+    extraEnv,
   }: {
     logger?: bunyan;
-    env?: Record<string, string>;
+    env?: BuildStepEnv;
     cwd?: string;
+    extraEnv?: BuildStepEnv;
   } = {}
 ): Promise<SpawnResult> {
   const fastlaneEnvVars = {
@@ -49,6 +54,7 @@ export async function runFastlane(
     FASTLANE_HIDE_TIMESTAMP: 'true',
     LC_ALL: 'en_US.UTF-8',
     ...(env ?? process.env),
+    ...extraEnv,
   };
   return await spawn('fastlane', fastlaneArgs, {
     env: fastlaneEnvVars,

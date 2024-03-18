@@ -30,6 +30,11 @@ export function configureEASUpdateIfInstalledFunction(): BuildFunction {
         defaultValue: true,
         allowedValueTypeName: BuildStepInputValueTypeName.BOOLEAN,
       }),
+      BuildStepInput.createProvider({
+        id: 'resolved_eas_update_runtime_version',
+        required: false,
+        allowedValueTypeName: BuildStepInputValueTypeName.STRING,
+      }),
     ],
     fn: async (stepCtx, { env, inputs }) => {
       assert(stepCtx.global.staticContext.job, 'Job is not defined');
@@ -51,6 +56,9 @@ export function configureEASUpdateIfInstalledFunction(): BuildFunction {
 
       const releaseChannelInput = inputs.channel.value as string | undefined;
       const runtimeVersionInput = inputs.runtime_version.value as string | undefined;
+      const resolvedRuntimeVersionInput = inputs.resolved_eas_update_runtime_version.value as
+        | string
+        | undefined;
       const throwIfNotConfigured = inputs.throw_if_not_configured.value as boolean;
       if (runtimeVersionInput && !semver.valid(runtimeVersionInput)) {
         throw new Error(
@@ -74,7 +82,6 @@ export function configureEASUpdateIfInstalledFunction(): BuildFunction {
       }
 
       await configureEASUpdateAsync({
-        expoUpdatesPackageVersion,
         job,
         workingDirectory: stepCtx.workingDirectory,
         logger: stepCtx.logger,
@@ -82,7 +89,9 @@ export function configureEASUpdateIfInstalledFunction(): BuildFunction {
         inputs: {
           runtimeVersion: runtimeVersionInput,
           channel: releaseChannelInput,
+          resolvedRuntimeVersion: resolvedRuntimeVersionInput,
         },
+        metadata: stepCtx.global.staticContext.metadata,
       });
     },
   });

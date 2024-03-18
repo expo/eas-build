@@ -1,8 +1,6 @@
-import { Job, Platform } from '@expo/eas-build-job';
+import { Job, Metadata, Platform } from '@expo/eas-build-job';
 import { bunyan } from '@expo/logger';
 import { ExpoConfig } from '@expo/config';
-
-import { resolveRuntimeVersionAsync } from '../../utils/resolveRuntimeVersionAsync';
 
 import {
   iosGetNativelyDefinedChannelAsync,
@@ -21,7 +19,7 @@ export async function configureEASUpdateAsync({
   logger,
   inputs,
   appConfig,
-  expoUpdatesPackageVersion,
+  metadata,
 }: {
   job: Job;
   workingDirectory: string;
@@ -29,47 +27,55 @@ export async function configureEASUpdateAsync({
   inputs: {
     runtimeVersion?: string;
     channel?: string;
+    resolvedRuntimeVersion?: string;
   };
   appConfig: ExpoConfig;
-  expoUpdatesPackageVersion: string;
+  metadata: Metadata | null;
 }): Promise<void> {
   const runtimeVersion =
-    inputs.runtimeVersion ??
-    job.version?.runtimeVersion ??
-    (await resolveRuntimeVersionAsync({
-      expoUpdatesPackageVersion,
-      projectDir: workingDirectory,
-      exp: appConfig,
-      platform: job.platform,
-      logger,
-    }));
+    inputs.runtimeVersion ?? job.version?.runtimeVersion ?? inputs.resolvedRuntimeVersion;
+
+  if (metadata?.runtimeVersion && metadata.runtimeVersion !== runtimeVersion) {
+    logger.warn(
+      `Runtime version from the app config evaluated on your local machine (${metadata.runtimeVersion}) does not match the one resolved here (${runtimeVersion}).`
+    );
+    logger.warn(
+      "If you're using conditional app configs, e.g. depending on an environment variable, make sure to set the variable in eas.json or configure it with EAS Secret."
+    );
+  }
 
   const jobOrInputChannel = inputs.channel ?? job.updates?.channel;
 
   if (isEASUpdateConfigured(appConfig, logger)) {
-    const channel = jobOrInputChannel ?? (await getChannelAsync(job, workingDirectory));
-    const isDevelopmentClient = job.developmentClient ?? false;
-    if (channel) {
-      await configureEASUpdate(job, logger, channel, workingDirectory);
-    } else if (isDevelopmentClient) {
-      // NO-OP: Development clients don't need to have a channel set
+    if (jobOrInputChannel) {
+      await configureEASUpdate(job, logger, jobOrInputChannel, workingDirectory);
     } else {
-      if (job.releaseChannel !== undefined) {
-        logger.warn(
-          `This build is configured with EAS Update however has a Classic Updates releaseChannel set instead of having an EAS Update channel.`
-        );
+      const channel = await getChannelAsync(job, workingDirectory);
+      const isDevelopmentClient = job.developmentClient ?? false;
+
+      if (channel) {
+        const configFile = job.platform === Platform.ANDROID ? 'AndroidManifest.xml' : 'Expo.plist';
+        logger.info(`The channel name for EAS Update in ${configFile} is set to "${channel}"`);
+      } else if (isDevelopmentClient) {
+        // NO-OP: Development clients don't need to have a channel set
       } else {
-        const easUpdateUrl = appConfig.updates?.url ?? null;
-        const jobProfile = job.buildProfile ?? null;
-        logger.warn(
-          `This build has an invalid EAS Update configuration: update.url is set to "${easUpdateUrl}" in app config, but a channel is not specified${
-            jobProfile ? '' : ` for the current build profile "${jobProfile}" in eas.json`
-          }.`
-        );
-        logger.warn(`- No channel will be set and EAS Update will be disabled for the build.`);
-        logger.warn(
-          `- Run \`eas update:configure\` to set your channel in eas.json. For more details, see https://docs.expo.dev/eas-update/getting-started/#configure-your-project`
-        );
+        if (job.releaseChannel !== undefined) {
+          logger.warn(
+            `This build is configured with EAS Update however has a Classic Updates releaseChannel set instead of having an EAS Update channel.`
+          );
+        } else {
+          const easUpdateUrl = appConfig.updates?.url ?? null;
+          const jobProfile = job.buildProfile ?? null;
+          logger.warn(
+            `This build has an invalid EAS Update configuration: update.url is set to "${easUpdateUrl}" in app config, but a channel is not specified${
+              jobProfile ? '' : ` for the current build profile "${jobProfile}" in eas.json`
+            }.`
+          );
+          logger.warn(`- No channel will be set and EAS Update will be disabled for the build.`);
+          logger.warn(
+            `- Run \`eas update:configure\` to set your channel in eas.json. For more details, see https://docs.expo.dev/eas-update/getting-started/#configure-your-project`
+          );
+        }
       }
     }
   } else {

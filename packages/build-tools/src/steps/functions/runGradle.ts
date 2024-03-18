@@ -23,6 +23,11 @@ export function runGradleFunction(): BuildFunction {
         required: false,
         allowedValueTypeName: BuildStepInputValueTypeName.STRING,
       }),
+      BuildStepInput.createProvider({
+        id: 'resolved_eas_update_runtime_version',
+        required: false,
+        allowedValueTypeName: BuildStepInputValueTypeName.STRING,
+      }),
     ],
     outputProviders: [
       BuildStepOutput.createProvider({
@@ -45,12 +50,18 @@ export function runGradleFunction(): BuildFunction {
         stepCtx.global.staticContext.job,
         inputs.command.value as string | undefined
       );
+      const resolvedEASUpdateRuntimeVersion = inputs.resolved_eas_update_runtime_version.value as
+        | string
+        | undefined;
       try {
         await runGradleCommand({
           logger: stepCtx.logger,
           gradleCommand: command,
           androidDir: path.join(stepCtx.workingDirectory, 'android'),
           env,
+          ...(resolvedEASUpdateRuntimeVersion
+            ? { extraEnv: { EXPO_UPDATES_FINGERPRINT_OVERRIDE: resolvedEASUpdateRuntimeVersion } }
+            : null),
         });
       } catch (error) {
         outputs[BuildStepOutputName.STATUS_TEXT].set(BuildStatusText.ERROR);
