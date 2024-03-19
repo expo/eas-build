@@ -162,7 +162,12 @@ export async function configureExpoUpdatesIfInstalledAsync(
     );
   }
 
-  if (isEASUpdateConfigured(ctx)) {
+  if (
+    isEASUpdateConfigured({
+      expoConfig: ctx.appConfig,
+      logger: ctx.logger,
+    })
+  ) {
     if (ctx.job.updates?.channel !== undefined) {
       await configureEASExpoUpdatesAsync(ctx);
     } else {
@@ -222,7 +227,11 @@ export async function resolveRuntimeVersionForExpoUpdatesIfConfiguredAsync({
   channel?: string;
 }): Promise<string | null> {
   const expoUpdatesPackageVersion = await getExpoUpdatesPackageVersionIfInstalledAsync(cwd);
-  if (expoUpdatesPackageVersion === null || !channel) {
+  if (
+    !isEASUpdateConfigured({ expoConfig: appConfig, logger }) ||
+    expoUpdatesPackageVersion === null ||
+    !channel
+  ) {
     return null;
   }
 
@@ -264,8 +273,14 @@ export async function getRuntimeVersionAsync(ctx: BuildContext<Job>): Promise<st
   }
 }
 
-export function isEASUpdateConfigured(ctx: BuildContext<Job>): boolean {
-  const rawUrl = ctx.appConfig.updates?.url;
+export function isEASUpdateConfigured({
+  expoConfig,
+  logger,
+}: {
+  expoConfig: ExpoConfig;
+  logger: bunyan;
+}): boolean {
+  const rawUrl = expoConfig.updates?.url;
   if (!rawUrl) {
     return false;
   }
@@ -273,8 +288,8 @@ export function isEASUpdateConfigured(ctx: BuildContext<Job>): boolean {
     const url = new URL(rawUrl);
     return ['u.expo.dev', 'staging-u.expo.dev'].includes(url.hostname);
   } catch (err) {
-    ctx.logger.error({ err }, `Cannot parse expo.updates.url = ${rawUrl} as URL`);
-    ctx.logger.error(`Assuming EAS Update is not configured`);
+    logger.error({ err }, `Cannot parse expo.updates.url = ${rawUrl} as URL`);
+    logger.error(`Assuming EAS Update is not configured`);
     return false;
   }
 }
