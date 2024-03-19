@@ -86,7 +86,7 @@ export const ArchiveSourceSchema = Joi.object<ArchiveSource>({
 export const ArchiveSourceSchemaZ = z.discriminatedUnion('type', [
   z.object({
     type: z.literal(ArchiveSourceType.GIT),
-    repositoryUrl: z.string(),
+    repositoryUrl: z.string().url(),
     gitRef: z.string(),
   }),
   z.object({
