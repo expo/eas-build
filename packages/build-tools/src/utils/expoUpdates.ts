@@ -213,14 +213,16 @@ export async function resolveRuntimeVersionForExpoUpdatesIfConfiguredAsync({
   appConfig,
   platform,
   logger,
+  channel,
 }: {
   cwd: string;
   appConfig: ExpoConfig;
   platform: Platform;
   logger: bunyan;
+  channel?: string;
 }): Promise<string | null> {
   const expoUpdatesPackageVersion = await getExpoUpdatesPackageVersionIfInstalledAsync(cwd);
-  if (expoUpdatesPackageVersion === null) {
+  if (expoUpdatesPackageVersion === null || !channel) {
     return null;
   }
 

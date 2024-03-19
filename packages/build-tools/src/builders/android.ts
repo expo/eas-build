@@ -77,6 +77,7 @@ async function buildAsync(ctx: BuildContext<Android.Job>): Promise<void> {
         logger: ctx.logger,
         appConfig: ctx.appConfig,
         platform: ctx.job.platform,
+        channel: ctx.job.updates?.channel,
       });
     }
   );

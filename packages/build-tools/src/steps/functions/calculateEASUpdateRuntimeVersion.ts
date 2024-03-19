@@ -32,6 +32,7 @@ export function calculateEASUpdateRuntimeVersionFunction(): BuildFunction {
         logger: stepCtx.logger,
         appConfig,
         platform: stepCtx.global.staticContext.job.platform,
+        channel: stepCtx.global.staticContext.job.updates?.channel,
       });
       if (resolvedRuntimeVersion) {
         outputs.resolved_eas_update_runtime_version.set(resolvedRuntimeVersion);
