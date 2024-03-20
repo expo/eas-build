@@ -5,7 +5,7 @@ import { BuildFunction } from '@expo/steps';
 
 import { findPackagerRootDir } from '../../utils/packageManager';
 
-const NPMRC_TEMPLATE_PATH = path.join(__dirname, '../../templates/npmrc');
+const NPMRC_TEMPLATE_PATH = path.join(__dirname, '../../../templates/npmrc');
 
 export function createSetUpNpmrcBuildFunction(): BuildFunction {
   return new BuildFunction({
