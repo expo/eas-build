@@ -1,6 +1,5 @@
 import assert from 'assert';
 import path from 'path';
-import os from 'os';
 
 import fs from 'fs-extra';
 import { BuildFunction, BuildStepInput, BuildStepInputValueTypeName } from '@expo/steps';
@@ -9,7 +8,6 @@ import { IOSConfig } from '@expo/config-plugins';
 import plist from '@expo/plist';
 import { bunyan } from '@expo/logger';
 import templateFile from '@expo/template-file';
-import { v4 as uuid } from 'uuid';
 
 import { IosBuildCredentialsSchema } from '../utils/ios/credentials/credentials';
 import IosCredentialsManager, { Credentials } from '../utils/ios/credentials/manager';
@@ -147,8 +145,6 @@ export function generateGymfileFromTemplateFunction(): BuildFunction {
         buildConfiguration
       );
 
-      const templatePath = await saveTemplateToTemporaryFileAsync(template);
-
       const gymfilePath = path.join(stepCtx.workingDirectory, 'ios/Gymfile');
 
       const PROFILES: { BUNDLE_ID: string; UUID: string }[] = [];
@@ -175,7 +171,7 @@ export function generateGymfileFromTemplateFunction(): BuildFunction {
       const simulatorDestination = `generic/platform=${isTV ? 'tvOS' : 'iOS'} Simulator`;
 
       await createGymfile({
-        template: templatePath,
+        template,
         outputFile: gymfilePath,
         vars: {
           SCHEME: scheme,
@@ -237,12 +233,4 @@ async function createGymfile({
   vars: Record<string, string | number | any>;
 }): Promise<void> {
   await templateFile(template, vars, outputFile, { mustache: false });
-}
-
-async function saveTemplateToTemporaryFileAsync(template: string): Promise<string> {
-  const directory = path.join(os.tmpdir(), `gymfile-template-${uuid()}`);
-  await fs.mkdir(directory, { recursive: true });
-  const templatePath = path.join(directory, 'Gymfile.template');
-  await fs.writeFile(templatePath, template);
-  return templatePath;
 }

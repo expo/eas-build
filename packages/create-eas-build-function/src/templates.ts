@@ -1,7 +1,5 @@
 #!/usr/bin/env node
 
-import path from 'path';
-
 import fs from 'fs-extra';
 import chalk from 'chalk';
 import prompts from 'prompts';
@@ -63,7 +61,7 @@ export async function copyTemplateAsync(
     cwd: string;
   }
 ): Promise<void> {
-  const modulePath = path.resolve(__dirname, '../templates', resolvedTemplate);
+  const modulePath = require(`../templates/${resolvedTemplate}`);
   try {
     await copyDir(modulePath, props.cwd);
   } catch (error: any) {

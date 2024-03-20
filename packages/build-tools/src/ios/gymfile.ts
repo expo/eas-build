@@ -1,15 +1,10 @@
-import path from 'path';
-
 import templateFile from '@expo/template-file';
 import fs from 'fs-extra';
 
 import { Credentials } from './credentials/manager';
 
-const ARCHIVE_TEMPLATE_FILE_PATH = path.join(__dirname, '../../templates/Gymfile.archive.template');
-const SIMULATOR_TEMPLATE_FILE_PATH = path.join(
-  __dirname,
-  '../../templates/Gymfile.simulator.template'
-);
+const ARCHIVE_TEMPLATE = require('../../templates/Gymfile.archive.template');
+const SIMULATOR_TEMPLATE = require('../../templates/Gymfile.simulator.template');
 
 interface ArchiveBuildOptions {
   outputFile: string;
@@ -58,7 +53,7 @@ export async function createGymfileForArchiveBuild({
 
   await fs.mkdirp(logsDirectory);
   await createGymfile({
-    template: ARCHIVE_TEMPLATE_FILE_PATH,
+    template: ARCHIVE_TEMPLATE,
     outputFile,
     vars: {
       KEYCHAIN_PATH: credentials.keychainPath,
@@ -85,7 +80,7 @@ export async function createGymfileForSimulatorBuild({
 }: SimulatorBuildOptions): Promise<void> {
   await fs.mkdirp(logsDirectory);
   await createGymfile({
-    template: SIMULATOR_TEMPLATE_FILE_PATH,
+    template: SIMULATOR_TEMPLATE,
     outputFile,
     vars: {
       SCHEME: scheme,

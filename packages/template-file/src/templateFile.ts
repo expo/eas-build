@@ -2,12 +2,11 @@ import _ from 'lodash';
 import fs from 'fs-extra';
 
 async function templateFile(
-  templateFilePath: string,
+  templateString: string,
   envs: Record<string, string | number | any>,
   outputFilePath?: string,
   { mustache = true }: { mustache?: boolean } = {}
 ): Promise<string | void> {
-  const templateString = await fs.readFile(templateFilePath, 'utf8');
   const compiledTemplate = _.template(
     templateString,
     mustache

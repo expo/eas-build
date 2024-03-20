@@ -6,7 +6,7 @@ import fs from 'fs-extra';
 
 import { BuildContext } from '../context';
 
-const EAS_BUILD_GRADLE_TEMPLATE_PATH = path.join(__dirname, '../../templates/eas-build.gradle');
+const EAS_BUILD_GRADLE_TEMPLATE = require('../../templates/eas-build.gradle');
 const APPLY_EAS_BUILD_GRADLE_LINE = 'apply from: "./eas-build.gradle"';
 
 export async function configureBuildGradle(ctx: BuildContext<Android.Job>): Promise<void> {
@@ -31,7 +31,7 @@ function getEasBuildGradlePath(projectRoot: string): string {
 
 async function createEasBuildGradle(projectRoot: string): Promise<void> {
   const easBuildGradlePath = getEasBuildGradlePath(projectRoot);
-  await fs.copy(EAS_BUILD_GRADLE_TEMPLATE_PATH, easBuildGradlePath);
+  await fs.writeFile(easBuildGradlePath, EAS_BUILD_GRADLE_TEMPLATE);
 }
 
 async function addApplyToBuildGradle(projectRoot: string): Promise<void> {
