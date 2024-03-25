@@ -50,14 +50,10 @@ function isValid<T extends jsep.ExpressionType>(
 }
 
 const getParameterPath = (
-  node: jsep.Identifier | jsep.MemberExpression,
+  node: jsep.MemberExpression,
   context: Record<string, unknown>
 ): string => {
-  // the easy case: 'IDENTIFIER's
-  if (node.type === 'Identifier') {
-    return node.name;
-  }
-  // Otherwise it's a MEMBER expression
+  // it's a MEMBER expression
   // EXAMPLES:  a[b] (computed)
   //            a.b (not computed)
   const computed = node.computed;
@@ -74,8 +70,8 @@ const getParameterPath = (
   let objectPath = '';
   if (object.type === 'ThisExpression') {
     objectPath = '';
-  } else if (typeof node.name === 'string') {
-    objectPath = node.name;
+  } else if (isValid(object, ['Identifier'])) {
+    objectPath = object.name;
   } else {
     objectPath = getParameterPath(object, context);
   }
@@ -84,9 +80,11 @@ const getParameterPath = (
     // if computed -> evaluate anew
     const propertyPath = evaluateExpressionNode(property, context);
     return objectPath + '[' + propertyPath + ']';
+  } else if (isValid(property, ['Identifier'])) {
+    return (objectPath ? objectPath + '.' : '') + property.name;
   } else {
-    assert(isValid(property, ['MemberExpression', 'Identifier']), 'Invalid object type');
-    const propertyPath = property.name ?? getParameterPath(property, context);
+    assert(isValid(property, ['MemberExpression']), 'Invalid object type');
+    const propertyPath = getParameterPath(property, context);
     return (objectPath ? objectPath + '.' : '') + propertyPath;
   }
 };
@@ -149,9 +147,17 @@ const evaluateExpressionNode = (node: jsep.Expression, context: Record<string, u
       // eslint-disable-next-line prefer-spread
       return callee.apply(null, args);
     }
-    case 'Identifier': // !!! fall-through to MEMBER !!! //
+    case 'Identifier': {
+      const identifier = (node as jsep.Identifier).name;
+      if (!(identifier in context)) {
+        throw new Error(
+          `Invalid identifier "${identifier}". Expected one of ${Object.keys(context).join(', ')}`
+        );
+      }
+      return get(context, identifier);
+    }
     case 'MemberExpression': {
-      const path = getParameterPath(node as jsep.Identifier | jsep.MemberExpression, context);
+      const path = getParameterPath(node as jsep.MemberExpression, context);
       return get(context, path);
     }
     case 'ArrayExpression': {

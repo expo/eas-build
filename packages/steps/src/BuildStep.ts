@@ -293,8 +293,6 @@ export class BuildStep extends BuildStepOutputAccessor {
       ifCondition = ifCondition.slice(2, -1);
     }
 
-    ifCondition = this.interpolateInputsAndGlobalContextInTemplate(ifCondition);
-
     return Boolean(
       jsepEval(ifCondition, {
         success: () => !hasAnyPreviousStepsFailed,
@@ -302,7 +300,18 @@ export class BuildStep extends BuildStepOutputAccessor {
         always: () => true,
         never: () => false,
         env: this.env,
-        ctx: this.ctx,
+        inputs:
+          this.inputs?.reduce(
+            (acc, input) => {
+              acc[input.id] = input.value;
+              return acc;
+            },
+            {} as Record<string, unknown>
+          ) ?? {},
+        eas: {
+          runtimePlatform: this.ctx.global.runtimePlatform,
+          ...this.ctx.global.staticContext,
+        },
       })
     );
   }
