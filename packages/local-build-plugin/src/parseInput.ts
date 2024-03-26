@@ -1,9 +1,9 @@
 import {
-  Job,
-  sanitizeJob,
+  sanitizeBuildJob,
   ArchiveSourceType,
   Metadata,
   sanitizeMetadata,
+  BuildJob,
 } from '@expo/eas-build-job';
 import Joi from 'joi';
 import chalk from 'chalk';
@@ -14,7 +14,7 @@ import { registerHandler } from './exit';
 const packageJson = require('../package.json');
 
 interface Params {
-  job: Job;
+  job: BuildJob;
   metadata: Metadata;
 }
 
@@ -60,7 +60,7 @@ function validateParams(params: object): Params {
     throw error;
   }
   try {
-    const job = sanitizeJob(value.job);
+    const job = sanitizeBuildJob(value.job);
     const metadata = sanitizeMetadata(value.metadata);
     return { ...value, job, metadata };
   } catch (err) {

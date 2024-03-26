@@ -1,20 +1,35 @@
-import { BuildFunction, BuildStepOutput } from '@expo/steps';
+import { Platform } from '@expo/eas-build-job';
+import {
+  BuildFunction,
+  BuildStepInput,
+  BuildStepInputValueTypeName,
+  BuildStepOutput,
+} from '@expo/steps';
 
 import { resolveRuntimeVersionForExpoUpdatesIfConfiguredAsync } from '../../utils/expoUpdates';
 import { readAppConfig } from '../../utils/appConfig';
+import { CustomBuildContext } from '../../customBuildContext';
 
-export function calculateEASUpdateRuntimeVersionFunction(): BuildFunction {
+export function calculateEASUpdateRuntimeVersionFunction(ctx: CustomBuildContext): BuildFunction {
   return new BuildFunction({
     namespace: 'eas',
     id: 'calculate_eas_update_runtime_version',
     name: 'Calculate EAS Update Runtime Version',
+    inputProviders: [
+      BuildStepInput.createProvider({
+        id: 'platform',
+        defaultValue: ctx.job.platform,
+        required: !ctx.job.platform,
+        allowedValueTypeName: BuildStepInputValueTypeName.STRING,
+      }),
+    ],
     outputProviders: [
       BuildStepOutput.createProvider({
         id: 'resolved_eas_update_runtime_version',
         required: false,
       }),
     ],
-    fn: async (stepCtx, { env, outputs }) => {
+    fn: async (stepCtx, { env, inputs, outputs }) => {
       const appConfig = readAppConfig({
         projectDir: stepCtx.workingDirectory,
         env: Object.keys(env).reduce(
@@ -31,7 +46,7 @@ export function calculateEASUpdateRuntimeVersionFunction(): BuildFunction {
         cwd: stepCtx.workingDirectory,
         logger: stepCtx.logger,
         appConfig,
-        platform: stepCtx.global.staticContext.job.platform,
+        platform: inputs.platform.value as Platform,
       });
       if (resolvedRuntimeVersion) {
         outputs.resolved_eas_update_runtime_version.set(resolvedRuntimeVersion);

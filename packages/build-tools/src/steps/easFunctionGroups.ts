@@ -6,5 +6,11 @@ import { createEasBuildBuildFunctionGroup } from './functionGroups/build';
 import { createEasMaestroTestFunctionGroup } from './functionGroups/maestroTest';
 
 export function getEasFunctionGroups(ctx: CustomBuildContext): BuildFunctionGroup[] {
-  return [createEasBuildBuildFunctionGroup(ctx), createEasMaestroTestFunctionGroup(ctx)];
+  const functionGroups = [createEasMaestroTestFunctionGroup(ctx)];
+
+  if (ctx.hasBuildJob()) {
+    functionGroups.push(...[createEasBuildBuildFunctionGroup(ctx)]);
+  }
+
+  return functionGroups;
 }

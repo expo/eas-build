@@ -1,4 +1,4 @@
-import { BuildTrigger } from '@expo/eas-build-job';
+import { BuildJob, BuildTrigger } from '@expo/eas-build-job';
 import { bunyan } from '@expo/logger';
 import { BuildFunction, BuildStepEnv } from '@expo/steps';
 import { omit } from 'lodash';
@@ -6,7 +6,9 @@ import { omit } from 'lodash';
 import { runEasBuildInternalAsync } from '../../common/easBuildInternal';
 import { CustomBuildContext } from '../../customBuildContext';
 
-export function createResolveBuildConfigBuildFunction(ctx: CustomBuildContext): BuildFunction {
+export function createResolveBuildConfigBuildFunction(
+  ctx: CustomBuildContext<BuildJob>
+): BuildFunction {
   return new BuildFunction({
     namespace: 'eas',
     id: 'resolve_build_config',
@@ -26,7 +28,7 @@ export async function resolveBuildConfigAsync({
   logger: bunyan;
   workingDirectory: string;
   env: BuildStepEnv;
-  ctx: CustomBuildContext;
+  ctx: CustomBuildContext<BuildJob>;
 }): Promise<void> {
   if (ctx.job.triggeredBy === BuildTrigger.GIT_BASED_INTEGRATION) {
     logger.info('Resolving build config...');

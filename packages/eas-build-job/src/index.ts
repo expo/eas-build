@@ -1,3 +1,6 @@
+import { Generic } from './generic';
+import { BuildJob } from './job';
+
 export * as Android from './android';
 export * as Ios from './ios';
 export {
@@ -13,10 +16,12 @@ export {
   Platform,
   Cache,
 } from './common';
-export { Job, sanitizeJob } from './job';
+export { BuildJob, sanitizeBuildJob } from './job';
 export { Metadata, sanitizeMetadata } from './metadata';
 export * from './logs';
 export * as errors from './errors';
 export * from './artifacts';
 export * from './context';
 export * from './generic';
+
+export type Job = BuildJob | Generic.Job;

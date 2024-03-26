@@ -2,7 +2,7 @@ import assert from 'assert';
 
 import fs from 'fs-extra';
 import { AndroidConfig, XML } from '@expo/config-plugins';
-import { Job } from '@expo/eas-build-job';
+import { BuildJob, Job } from '@expo/eas-build-job';
 
 import { BuildContext } from '../context';
 
@@ -35,7 +35,7 @@ export async function androidSetRuntimeVersionNativelyAsync(
   await AndroidConfig.Manifest.writeAndroidManifestAsync(manifestPath, androidManifest);
 }
 
-export async function androidSetChannelNativelyAsync(ctx: BuildContext<Job>): Promise<void> {
+export async function androidSetChannelNativelyAsync(ctx: BuildContext<BuildJob>): Promise<void> {
   assert(ctx.job.updates?.channel, 'updates.channel must be defined');
 
   const manifestPath = await AndroidConfig.Paths.getAndroidManifestAsync(
@@ -91,7 +91,7 @@ export async function androidGetNativelyDefinedChannelAsync(
 }
 
 export async function androidSetClassicReleaseChannelNativelyAsync(
-  ctx: BuildContext<Job>
+  ctx: BuildContext<BuildJob>
 ): Promise<void> {
   const { releaseChannel } = ctx.job;
   assert(releaseChannel, 'releaseChannel must be defined');

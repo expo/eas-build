@@ -117,7 +117,7 @@ export const userErrorHandlers: ErrorHandler<UserFacingError>[] = [
         'EAS_BUILD_HIGHER_MINIMUM_DEPLOYMENT_TARGET_ERROR',
         `Some pods require a higher minimum deployment target.
 ${
-  job.type === Workflow.MANAGED
+  'type' in job && job.type === Workflow.MANAGED
     ? 'You can use the expo-build-properties config plugin (https://docs.expo.dev/versions/latest/sdk/build-properties/) to override the default native build properties and set a different minimum deployment target.'
     : 'You need to manually update the minimum deployment target in your project to resolve this issue.'
 }
@@ -229,7 +229,7 @@ You are seeing this error because either:
     // /Users/expo/workingdir/build/managed/ios/Pods/Pods.xcodeproj: error: Signing for "EXUpdates-EXUpdates" requires a development team. Select a development team in the Signing & Capabilities editor. (in target 'EXUpdates-EXUpdates' from project 'Pods')
     regexp: /error: Signing for "[a-zA-Z-0-9_]+" requires a development team/,
     createError: (_, { job }) =>
-      job.type === Workflow.MANAGED
+      'type' in job && job.type === Workflow.MANAGED
         ? new UserFacingError(
             'XCODE_RESOURCE_BUNDLE_CODE_SIGNING_ERROR',
             `Starting from Xcode 14, resource bundles are signed by default, which requires setting the development team for each resource bundle target.

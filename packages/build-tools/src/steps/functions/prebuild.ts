@@ -1,7 +1,7 @@
 import assert from 'assert';
 
 import { Platform } from '@expo/config';
-import { Job } from '@expo/eas-build-job';
+import { BuildJob } from '@expo/eas-build-job';
 import { BuildFunction, BuildStepInput, BuildStepInputValueTypeName } from '@expo/steps';
 import spawn from '@expo/turtle-spawn';
 
@@ -38,6 +38,7 @@ export function createPrebuildBuildFunction(): BuildFunction {
 
       assert(stepCtx.global.staticContext.job, 'Job is not defined');
       const job = stepCtx.global.staticContext.job;
+      assert(job.platform, 'Prebuild command is not supported in generic jobs.');
       const prebuildCommandArgs = getPrebuildCommandArgs(job, {
         clean: inputs.clean.value as boolean,
       });
@@ -67,7 +68,7 @@ export function createPrebuildBuildFunction(): BuildFunction {
   });
 }
 
-function getPrebuildCommandArgs(job: Job, { clean }: PrebuildOptions): string[] {
+function getPrebuildCommandArgs(job: BuildJob, { clean }: PrebuildOptions): string[] {
   if (job.experimental?.prebuildCommand) {
     return sanitizeUserDefinedPrebuildCommand(job.experimental.prebuildCommand, job.platform, {
       clean,

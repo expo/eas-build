@@ -39,6 +39,7 @@ export function configureEASUpdateIfInstalledFunction(): BuildFunction {
     fn: async (stepCtx, { env, inputs }) => {
       assert(stepCtx.global.staticContext.job, 'Job is not defined');
       const job = stepCtx.global.staticContext.job;
+      assert(job.platform, 'Configuring EAS Update in generic jobs is not supported.');
       const metadata = stepCtx.global.staticContext.metadata as Metadata | undefined;
 
       const appConfig = readAppConfig({

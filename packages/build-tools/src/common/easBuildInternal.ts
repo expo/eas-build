@@ -1,6 +1,6 @@
 import assert from 'assert';
 
-import { Env, Job, Metadata, sanitizeJob, sanitizeMetadata } from '@expo/eas-build-job';
+import { BuildJob, Env, Metadata, sanitizeBuildJob, sanitizeMetadata } from '@expo/eas-build-job';
 import { PipeMode, bunyan } from '@expo/logger';
 import spawn from '@expo/turtle-spawn';
 import Joi from 'joi';
@@ -18,7 +18,7 @@ const EasBuildInternalResultSchema = Joi.object<{ job: object; metadata: object 
   metadata: Joi.object().unknown(),
 });
 
-export async function runEasBuildInternalAsync<TJob extends Job>({
+export async function runEasBuildInternalAsync<TJob extends BuildJob>({
   job,
   logger,
   env,
@@ -75,7 +75,7 @@ export async function runEasBuildInternalAsync<TJob extends Job>({
   });
 }
 
-export async function resolveEnvFromBuildProfileAsync<TJob extends Job>(
+export async function resolveEnvFromBuildProfileAsync<TJob extends BuildJob>(
   ctx: BuildContext<TJob>,
   { cwd }: { cwd: string }
 ): Promise<Env> {
@@ -140,7 +140,7 @@ async function resolveEasCommandPrefixAndEnvAsync(): Promise<{
   }
 }
 
-function validateEasBuildInternalResult<TJob extends Job>({
+function validateEasBuildInternalResult<TJob extends BuildJob>({
   oldJob,
   result,
 }: {
@@ -155,7 +155,7 @@ function validateEasBuildInternalResult<TJob extends Job>({
   if (error) {
     throw error;
   }
-  const newJob = sanitizeJob(value.job) as TJob;
+  const newJob = sanitizeBuildJob(value.job) as TJob;
   assert(newJob.platform === oldJob.platform, 'eas-cli returned a job for a wrong platform');
   const newMetadata = sanitizeMetadata(value.metadata);
   return { newJob, newMetadata };

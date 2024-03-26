@@ -3,7 +3,7 @@ import path from 'path';
 import fs from 'fs-extra';
 import fg from 'fast-glob';
 import { bunyan } from '@expo/logger';
-import { ManagedArtifactType, Job } from '@expo/eas-build-job';
+import { ManagedArtifactType, Job, BuildJob } from '@expo/eas-build-job';
 
 import { BuildContext } from '../context';
 
@@ -68,7 +68,7 @@ async function logMissingFileError(artifactPath: string, buildLogger: bunyan): P
 }
 
 export async function maybeFindAndUploadBuildArtifacts(
-  ctx: BuildContext<Job>,
+  ctx: BuildContext<BuildJob>,
   { logger }: { logger: bunyan }
 ): Promise<void> {
   if (!ctx.job.buildArtifactPaths || ctx.job.buildArtifactPaths.length === 0) {

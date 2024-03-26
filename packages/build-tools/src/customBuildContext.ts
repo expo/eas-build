@@ -1,6 +1,8 @@
+import assert from 'assert';
 import path from 'path';
 
 import {
+  BuildJob,
   BuildPhase,
   BuildStaticContext,
   BuildTrigger,
@@ -23,7 +25,7 @@ export interface BuilderRuntimeApi {
   uploadArtifact: (spec: { artifact: ArtifactToUpload; logger: bunyan }) => Promise<void>;
 }
 
-export class CustomBuildContext implements ExternalBuildContextProvider {
+export class CustomBuildContext<TJob extends Job = Job> implements ExternalBuildContextProvider {
   /*
    * Directory that contains project sources before eas/checkout.
    */
@@ -46,12 +48,12 @@ export class CustomBuildContext implements ExternalBuildContextProvider {
 
   public readonly logger: bunyan;
   public readonly runtimeApi: BuilderRuntimeApi;
-  public job: Job;
+  public job: TJob;
   public metadata?: Metadata;
 
   private _env: Env;
 
-  constructor(buildCtx: BuildContext<Job>) {
+  constructor(buildCtx: BuildContext<TJob>) {
     this._env = buildCtx.env;
     this.job = buildCtx.job;
     this.metadata = buildCtx.metadata;
@@ -66,7 +68,23 @@ export class CustomBuildContext implements ExternalBuildContextProvider {
     };
   }
 
+  public hasBuildJob(): this is BuildContext<BuildJob> {
+    return Boolean(this.job.platform);
+  }
+
   public get runtimePlatform(): BuildRuntimePlatform {
+    // Generic jobs are not per-platform.
+    if (!this.job.platform) {
+      assert(
+        process.platform === 'linux' || process.platform === 'darwin',
+        `Invalid platform, expected linux or darwin, got: ${process.platform}`
+      );
+      return {
+        linux: BuildRuntimePlatform.LINUX,
+        darwin: BuildRuntimePlatform.DARWIN,
+      }[process.platform];
+    }
+
     return platformToBuildRuntimePlatform[this.job.platform];
   }
 
@@ -86,7 +104,7 @@ export class CustomBuildContext implements ExternalBuildContextProvider {
     this._env = env;
   }
 
-  public updateJobInformation(job: Job, metadata: Metadata): void {
+  public updateJobInformation(job: TJob, metadata: Metadata): void {
     if (this.job.triggeredBy !== BuildTrigger.GIT_BASED_INTEGRATION) {
       throw new Error(
         'Updating job information is only allowed when build was triggered by a git-based integration.'

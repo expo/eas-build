@@ -2,7 +2,7 @@ import path from 'path';
 
 import spawn, { SpawnPromise, SpawnResult } from '@expo/turtle-spawn';
 import fs from 'fs-extra';
-import { BuildPhase, Ios, Job, Platform } from '@expo/eas-build-job';
+import { BuildJob, BuildPhase, Ios, Job, Platform } from '@expo/eas-build-job';
 import { BuildTrigger } from '@expo/eas-build-job/dist/common';
 import nullthrows from 'nullthrows';
 import { ExpoConfig } from '@expo/config';
@@ -27,7 +27,7 @@ const INSTALL_DEPENDENCIES_KILL_TIMEOUT_MS = 30 * 60 * 1000;
 class DoctorTimeoutError extends Error {}
 class InstallDependenciesTimeoutError extends Error {}
 
-export async function setupAsync<TJob extends Job>(ctx: BuildContext<TJob>): Promise<void> {
+export async function setupAsync<TJob extends BuildJob>(ctx: BuildContext<TJob>): Promise<void> {
   await ctx.runBuildPhase(BuildPhase.PREPARE_PROJECT, async () => {
     await prepareProjectSourcesAsync(ctx);
     await setUpNpmrcAsync(ctx, ctx.logger);

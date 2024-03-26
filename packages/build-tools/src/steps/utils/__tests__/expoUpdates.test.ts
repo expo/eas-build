@@ -1,4 +1,4 @@
-import { Platform, Job } from '@expo/eas-build-job';
+import { Platform, BuildJob } from '@expo/eas-build-job';
 import { createLogger } from '@expo/logger';
 import { ExpoConfig } from '@expo/config';
 
@@ -22,7 +22,7 @@ describe(configureEASUpdateAsync, () => {
 
   it('aborts if updates.url (app config) is set but updates.channel (eas.json) is not', async () => {
     await configureEASUpdateAsync({
-      job: { platform: Platform.IOS } as unknown as Job,
+      job: { platform: Platform.IOS } as unknown as BuildJob,
       workingDirectory: '/app',
       logger: createLogger({
         name: 'test',
@@ -49,7 +49,7 @@ describe(configureEASUpdateAsync, () => {
           channel: 'main',
         },
         platform: Platform.IOS,
-      } as unknown as Job,
+      } as unknown as BuildJob,
       workingDirectory: '/app',
       logger: createLogger({
         name: 'test',
@@ -75,7 +75,7 @@ describe(configureEASUpdateAsync, () => {
         updates: { channel: 'main' },
         releaseChannel: 'default',
         platform: Platform.IOS,
-      } as unknown as Job,
+      } as unknown as BuildJob,
       workingDirectory: '/app',
       logger: createLogger({
         name: 'test',

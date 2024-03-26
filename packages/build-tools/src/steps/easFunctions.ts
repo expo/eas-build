@@ -27,13 +27,13 @@ import { createResolveBuildConfigBuildFunction } from './functions/resolveBuildC
 import { calculateEASUpdateRuntimeVersionFunction } from './functions/calculateEASUpdateRuntimeVersion';
 
 export function getEasFunctions(ctx: CustomBuildContext): BuildFunction[] {
-  return [
+  const functions = [
     createCheckoutBuildFunction(),
     createUploadArtifactBuildFunction(ctx),
     createSetUpNpmrcBuildFunction(),
     createInstallNodeModulesBuildFunction(),
     createPrebuildBuildFunction(),
-    createFindAndUploadBuildArtifactsBuildFunction(ctx),
+
     configureEASUpdateIfInstalledFunction(),
     injectAndroidCredentialsFunction(),
     configureAndroidVersionFunction(),
@@ -46,10 +46,22 @@ export function getEasFunctions(ctx: CustomBuildContext): BuildFunction[] {
     createStartAndroidEmulatorBuildFunction(),
     createStartIosSimulatorBuildFunction(),
     createInstallMaestroBuildFunction(),
-    createGetCredentialsForBuildTriggeredByGithubIntegration(ctx),
+
     createInstallPodsBuildFunction(),
     createSendSlackMessageFunction(),
-    createResolveBuildConfigBuildFunction(ctx),
-    calculateEASUpdateRuntimeVersionFunction(),
+
+    calculateEASUpdateRuntimeVersionFunction(ctx),
   ];
+
+  if (ctx.hasBuildJob()) {
+    functions.push(
+      ...[
+        createFindAndUploadBuildArtifactsBuildFunction(ctx),
+        createResolveBuildConfigBuildFunction(ctx),
+        createGetCredentialsForBuildTriggeredByGithubIntegration(ctx),
+      ]
+    );
+  }
+
+  return functions;
 }

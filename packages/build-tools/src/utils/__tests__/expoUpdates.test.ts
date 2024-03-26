@@ -1,4 +1,4 @@
-import { Platform, Job } from '@expo/eas-build-job';
+import { Platform, BuildJob } from '@expo/eas-build-job';
 
 import { BuildContext } from '../../context';
 import * as expoUpdates from '../expoUpdates';
@@ -45,7 +45,7 @@ describe(expoUpdates.configureExpoUpdatesIfInstalledAsync, () => {
   it('aborts if updates.url (app config) is set but updates.channel (eas.json) is not', async () => {
     jest.mocked(getExpoUpdatesPackageVersionIfInstalledAsync).mockResolvedValue('0.18.0');
 
-    const managedCtx: BuildContext<Job> = {
+    const managedCtx: BuildContext<BuildJob> = {
       appConfig: {
         updates: {
           url: 'https://u.expo.dev/blahblah',
@@ -71,7 +71,7 @@ describe(expoUpdates.configureExpoUpdatesIfInstalledAsync, () => {
   it('configures for EAS if updates.channel (eas.json) and updates.url (app config) are set', async () => {
     jest.mocked(getExpoUpdatesPackageVersionIfInstalledAsync).mockResolvedValue('0.18.0');
 
-    const managedCtx: BuildContext<Job> = {
+    const managedCtx: BuildContext<BuildJob> = {
       appConfig: {
         updates: {
           url: 'https://u.expo.dev/blahblah',
@@ -100,7 +100,7 @@ describe(expoUpdates.configureExpoUpdatesIfInstalledAsync, () => {
   it('configures for EAS if the updates.channel and releaseChannel are both set', async () => {
     jest.mocked(getExpoUpdatesPackageVersionIfInstalledAsync).mockResolvedValue('0.18.0');
 
-    const managedCtx: BuildContext<Job> = {
+    const managedCtx: BuildContext<BuildJob> = {
       appConfig: {
         updates: {
           url: 'https://u.expo.dev/blahblah',
@@ -124,7 +124,7 @@ describe(expoUpdates.configureExpoUpdatesIfInstalledAsync, () => {
   it('configures for classic updates if the updates.channel and releaseChannel fields (eas.json) are not set, and updates.url (app config) is not set, and expo-updates version is < 0.19.0', async () => {
     jest.mocked(getExpoUpdatesPackageVersionIfInstalledAsync).mockResolvedValue('0.18.0');
 
-    const managedCtx: BuildContext<Job> = {
+    const managedCtx: BuildContext<BuildJob> = {
       appConfig: { updates: {} },
       job: { platform: Platform.IOS },
       logger: { info: () => {} },
@@ -145,7 +145,7 @@ describe(expoUpdates.configureExpoUpdatesIfInstalledAsync, () => {
   it('does not configure for classic updates if the updates.channel and releaseChannel fields (eas.json) are not set, and updates.url (app config) is not set, and expo-updates version is >= 0.19.0', async () => {
     jest.mocked(getExpoUpdatesPackageVersionIfInstalledAsync).mockResolvedValue('0.19.0');
 
-    const managedCtx: BuildContext<Job> = {
+    const managedCtx: BuildContext<BuildJob> = {
       appConfig: { updates: {} },
       job: { platform: Platform.IOS },
       logger: { info: () => {} },
@@ -166,7 +166,7 @@ describe(expoUpdates.configureExpoUpdatesIfInstalledAsync, () => {
   it('sets the release channel if it is supplied in ctx.job.releaseChannel, and expo-updates version is < 0.19.0', async () => {
     jest.mocked(getExpoUpdatesPackageVersionIfInstalledAsync).mockResolvedValue('0.18.0');
 
-    const managedCtx: BuildContext<Job> = {
+    const managedCtx: BuildContext<BuildJob> = {
       appConfig: {},
       job: { releaseChannel: 'default', platform: Platform.IOS },
       logger: { info: () => {} },
@@ -185,7 +185,7 @@ describe(expoUpdates.configureExpoUpdatesIfInstalledAsync, () => {
   it('does not set the release channel if it is supplied in ctx.job.releaseChannel, and expo-updates version is >= 0.19.0', async () => {
     jest.mocked(getExpoUpdatesPackageVersionIfInstalledAsync).mockResolvedValue('0.19.0');
 
-    const managedCtx: BuildContext<Job> = {
+    const managedCtx: BuildContext<BuildJob> = {
       appConfig: {},
       job: { releaseChannel: 'default', platform: Platform.IOS },
       logger: { info: () => {} },
@@ -205,7 +205,7 @@ describe(expoUpdates.configureExpoUpdatesIfInstalledAsync, () => {
     jest.mocked(getExpoUpdatesPackageVersionIfInstalledAsync).mockResolvedValue('0.18.0');
 
     const infoLogger = jest.fn();
-    const managedCtx: BuildContext<Job> = {
+    const managedCtx: BuildContext<BuildJob> = {
       appConfig: {},
       job: { platform: Platform.IOS },
       logger: { info: infoLogger, warn: () => {} },
@@ -226,7 +226,7 @@ describe(expoUpdates.configureExpoUpdatesIfInstalledAsync, () => {
     jest.mocked(getExpoUpdatesPackageVersionIfInstalledAsync).mockResolvedValue('0.19.0');
 
     const infoLogger = jest.fn();
-    const managedCtx: BuildContext<Job> = {
+    const managedCtx: BuildContext<BuildJob> = {
       appConfig: {},
       job: { platform: Platform.IOS },
       logger: { info: infoLogger, warn: () => {} },
@@ -251,7 +251,7 @@ describe(expoUpdates.configureExpoUpdatesIfInstalledAsync, () => {
       .mockResolvedValue('0.0.1-canary-20240109-93608d8');
 
     const infoLogger = jest.fn();
-    const managedCtx: BuildContext<Job> = {
+    const managedCtx: BuildContext<BuildJob> = {
       appConfig: {},
       job: { platform: Platform.IOS },
       logger: { info: infoLogger, warn: () => {} },
