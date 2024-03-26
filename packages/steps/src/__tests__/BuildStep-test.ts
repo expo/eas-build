@@ -1015,6 +1015,68 @@ describe(BuildStep.prototype.shouldExecuteStep, () => {
     expect(step.shouldExecuteStep(hasAnyPreviousStepsFailed)).toBe(false);
   });
 
+  it('returns true when a dynamic expression matches', () => {
+    const ctx = createGlobalContextMock();
+    const step = new BuildStep(ctx, {
+      id: 'test1',
+      displayName: 'Test 1',
+      command: 'echo 123',
+      env: {
+        NODE_ENV: 'production',
+      },
+      ifCondition: '${ env.NODE_ENV === "production" }',
+    });
+    expect(step.shouldExecuteStep(false)).toBe(true);
+  });
+
+  it('returns true when a simplified dynamic expression matches', () => {
+    const ctx = createGlobalContextMock();
+    const step = new BuildStep(ctx, {
+      id: 'test1',
+      displayName: 'Test 1',
+      command: 'echo 123',
+      env: {
+        NODE_ENV: 'production',
+      },
+      ifCondition: "env.NODE_ENV === 'production'",
+    });
+    expect(step.shouldExecuteStep(false)).toBe(true);
+  });
+
+  it('returns true when an input matches', () => {
+    const ctx = createGlobalContextMock();
+    const step = new BuildStep(ctx, {
+      id: 'test1',
+      displayName: 'Test 1',
+      command: 'echo 123',
+      env: {
+        NODE_ENV: 'production',
+      },
+      inputs: [
+        new BuildStepInput(ctx, {
+          id: 'foo1',
+          stepDisplayName: 'Test 1',
+          defaultValue: 'bar',
+          required: true,
+          allowedValueTypeName: BuildStepInputValueTypeName.STRING,
+        }),
+      ],
+      ifCondition: 'inputs.foo1 === "bar"',
+    });
+    expect(step.shouldExecuteStep(false)).toBe(true);
+  });
+
+  it('returns true when an eas value matches', () => {
+    const ctx = createGlobalContextMock({ runtimePlatform: BuildRuntimePlatform.LINUX });
+    const step = new BuildStep(ctx, {
+      id: 'test1',
+      displayName: 'Test 1',
+      command: 'echo 123',
+      ifCondition: 'eas.runtimePlatform === "linux"',
+    });
+    expect(step.shouldExecuteStep(false)).toBe(true);
+  });
+
   it('returns true when if condition is success and previous steps have not failed', () => {
     const ctx = createGlobalContextMock();
     const step = new BuildStep(ctx, {

@@ -21,13 +21,11 @@ import {
   saveScriptToTemporaryFileAsync,
 } from './BuildTemporaryFiles.js';
 import { spawnAsync } from './utils/shell/spawn.js';
-import {
-  getSelectedStatusCheckFromIfStatementTemplate,
-  interpolateWithInputs,
-} from './utils/template.js';
+import { interpolateWithInputs } from './utils/template.js';
 import { BuildStepRuntimeError } from './errors.js';
 import { BuildStepEnv } from './BuildStepEnv.js';
 import { BuildRuntimePlatform } from './BuildRuntimePlatform.js';
+import { jsepEval } from './utils/jsepEval.js';
 
 export enum BuildStepStatus {
   NEW = 'new',
@@ -285,21 +283,37 @@ export class BuildStep extends BuildStepOutputAccessor {
   }
 
   public shouldExecuteStep(hasAnyPreviousStepsFailed: boolean): boolean {
-    const defaultStatusCheck = 'success';
-    const statusCheck = this.ifCondition
-      ? getSelectedStatusCheckFromIfStatementTemplate(this.ifCondition)
-      : defaultStatusCheck;
-
-    switch (statusCheck) {
-      case 'success':
-        return !hasAnyPreviousStepsFailed;
-      case 'failure':
-        return hasAnyPreviousStepsFailed;
-      case 'always':
-        return true;
-      case 'never':
-        return false;
+    if (!this.ifCondition) {
+      return !hasAnyPreviousStepsFailed;
     }
+
+    let ifCondition = this.ifCondition;
+
+    if (ifCondition.startsWith('${') && ifCondition.endsWith('}')) {
+      ifCondition = ifCondition.slice(2, -1);
+    }
+
+    return Boolean(
+      jsepEval(ifCondition, {
+        success: () => !hasAnyPreviousStepsFailed,
+        failure: () => hasAnyPreviousStepsFailed,
+        always: () => true,
+        never: () => false,
+        env: this.env,
+        inputs:
+          this.inputs?.reduce(
+            (acc, input) => {
+              acc[input.id] = input.value;
+              return acc;
+            },
+            {} as Record<string, unknown>
+          ) ?? {},
+        eas: {
+          runtimePlatform: this.ctx.global.runtimePlatform,
+          ...this.ctx.global.staticContext,
+        },
+      })
+    );
   }
 
   public skip(): void {
@@ -319,7 +333,7 @@ export class BuildStep extends BuildStepOutputAccessor {
     assert(this.command, 'Command must be defined.');
 
     try {
-      const command = this.interpolateInputsAndGlobalContextInCommand(this.command, this.inputs);
+      const command = this.interpolateInputsAndGlobalContextInTemplate(this.command, this.inputs);
       this.ctx.logger.debug(`Interpolated inputs in the command template`);
 
       const outputsDir = await createTemporaryOutputsDirectoryAsync(this.ctx.global, this.id);
@@ -382,12 +396,12 @@ export class BuildStep extends BuildStepOutputAccessor {
     }
   }
 
-  private interpolateInputsAndGlobalContextInCommand(
-    command: string,
+  private interpolateInputsAndGlobalContextInTemplate(
+    template: string,
     inputs?: BuildStepInput[]
   ): string {
     if (!inputs) {
-      return this.ctx.global.interpolate(command);
+      return this.ctx.global.interpolate(template);
     }
     const vars = inputs.reduce(
       (acc, input) => {
@@ -399,7 +413,7 @@ export class BuildStep extends BuildStepOutputAccessor {
       },
       {} as Record<string, string>
     );
-    const valueInterpolatedWithGlobalContext = this.ctx.global.interpolate(command);
+    const valueInterpolatedWithGlobalContext = this.ctx.global.interpolate(template);
     return interpolateWithInputs(valueInterpolatedWithGlobalContext, vars);
   }
 

@@ -284,26 +284,6 @@ describe(validateConfig, () => {
             validateConfig(BuildConfigSchema, buildConfig);
           }).toThrowError(/"build.steps\[0\].run.env.ENV1" must be a string/);
         });
-        test('invalid if statement', () => {
-          const buildConfig = {
-            build: {
-              steps: [
-                {
-                  run: {
-                    command: 'echo 123',
-                    if: 'error',
-                  },
-                },
-              ],
-            },
-          };
-
-          expect(() => {
-            validateConfig(BuildConfigSchema, buildConfig);
-          }).toThrowError(
-            /"build.steps\[0\].run.if" with value "error" fails to match the allowed "if" condition values regex pattern/
-          );
-        });
         test('valid command', () => {
           const buildConfig = {
             build: {
@@ -515,30 +495,6 @@ describe(validateConfig, () => {
           expect(() => {
             validateConfig(BuildConfigSchema, buildConfig);
           }).toThrowError(/"build.steps\[0\].say_hi.env.ENV1" must be a string/);
-        });
-        test('invalid if statement', () => {
-          const buildConfig = {
-            build: {
-              steps: [
-                {
-                  say_hi: {
-                    if: 'error',
-                  },
-                },
-              ],
-            },
-            functions: {
-              say_hi: {
-                command: 'echo "Hi!"',
-              },
-            },
-          };
-
-          expect(() => {
-            validateConfig(BuildConfigSchema, buildConfig);
-          }).toThrowError(
-            /"build.steps\[0\].say_hi.if" with value "error" fails to match the allowed "if" condition values regex pattern/
-          );
         });
         test('call with inputs boolean', () => {
           const buildConfig = {
