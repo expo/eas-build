@@ -1017,14 +1017,17 @@ describe(BuildStep.prototype.shouldExecuteStep, () => {
 
   it('returns true when a dynamic expression matches', () => {
     const ctx = createGlobalContextMock();
+    ctx.updateEnv({
+      NODE_ENV: 'production',
+    });
     const step = new BuildStep(ctx, {
       id: 'test1',
       displayName: 'Test 1',
       command: 'echo 123',
       env: {
-        NODE_ENV: 'production',
+        LOCAL_ENV: 'true',
       },
-      ifCondition: '${ env.NODE_ENV === "production" }',
+      ifCondition: '${ env.NODE_ENV === "production" && env.LOCAL_ENV === "true" }',
     });
     expect(step.shouldExecuteStep(false)).toBe(true);
   });

@@ -274,7 +274,7 @@ describe(BuildFunction, () => {
           ENV2: 'env2',
         },
       });
-      expect(step.env).toMatchObject({
+      expect(step.stepEnvOverrides).toMatchObject({
         ENV1: 'env1',
         ENV2: 'env2',
       });

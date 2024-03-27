@@ -125,7 +125,7 @@ export class BuildStep extends BuildStepOutputAccessor {
   public readonly fn?: BuildStepFunction;
   public readonly shell: string;
   public readonly ctx: BuildStepContext;
-  public readonly env: BuildStepEnv;
+  public readonly stepEnvOverrides: BuildStepEnv;
   public readonly ifCondition?: string;
   public status: BuildStepStatus;
 
@@ -222,7 +222,7 @@ export class BuildStep extends BuildStepOutputAccessor {
       buildStepDisplayName: this.displayName,
     });
     this.ctx = ctx.stepCtx({ logger, relativeWorkingDirectory: maybeWorkingDirectory });
-    this.env = env ?? {};
+    this.stepEnvOverrides = env ?? {};
 
     ctx.registerStep(this);
   }
@@ -299,7 +299,7 @@ export class BuildStep extends BuildStepOutputAccessor {
         failure: () => hasAnyPreviousStepsFailed,
         always: () => true,
         never: () => false,
-        env: this.env,
+        env: this.effectiveEnv,
         inputs:
           this.inputs?.reduce(
             (acc, input) => {
@@ -470,6 +470,10 @@ export class BuildStep extends BuildStepOutputAccessor {
     });
   }
 
+  private get effectiveEnv(): Record<string, unknown> {
+    return { ...this.ctx.global.env, ...this.stepEnvOverrides };
+  }
+
   private getScriptEnv({
     envsDir,
     outputsDir,
@@ -477,7 +481,7 @@ export class BuildStep extends BuildStepOutputAccessor {
     envsDir: string;
     outputsDir: string;
   }): Record<string, string> {
-    const env = { ...this.ctx.global.env, ...this.env };
+    const env = this.effectiveEnv;
     const currentPath = env.PATH ?? process.env.PATH;
     const newPath = currentPath ? `${BIN_PATH}:${currentPath}` : BIN_PATH;
     return {
