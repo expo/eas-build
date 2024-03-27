@@ -125,7 +125,7 @@ export class BuildStep extends BuildStepOutputAccessor {
   public readonly fn?: BuildStepFunction;
   public readonly shell: string;
   public readonly ctx: BuildStepContext;
-  public readonly stepEnv: BuildStepEnv;
+  public readonly stepEnvOverrides: BuildStepEnv;
   public readonly ifCondition?: string;
   public status: BuildStepStatus;
 
@@ -222,7 +222,7 @@ export class BuildStep extends BuildStepOutputAccessor {
       buildStepDisplayName: this.displayName,
     });
     this.ctx = ctx.stepCtx({ logger, relativeWorkingDirectory: maybeWorkingDirectory });
-    this.stepEnv = env ?? {};
+    this.stepEnvOverrides = env ?? {};
 
     ctx.registerStep(this);
   }
@@ -471,7 +471,7 @@ export class BuildStep extends BuildStepOutputAccessor {
   }
 
   private get effectiveEnv(): Record<string, unknown> {
-    return { ...this.ctx.global.env, ...this.stepEnv };
+    return { ...this.ctx.global.env, ...this.stepEnvOverrides };
   }
 
   private getScriptEnv({

@@ -122,7 +122,7 @@ describe(BuildConfigParser, () => {
       expect(step1.command).toBe('echo "Hi!"');
       expect(step1.ctx.workingDirectory).toBe(ctx.defaultWorkingDirectory);
       expect(step1.shell).toBe(getDefaultShell());
-      expect(step1.stepEnv).toMatchObject({});
+      expect(step1.stepEnvOverrides).toMatchObject({});
 
       // - run:
       //     name: Say HELLO
@@ -138,7 +138,7 @@ describe(BuildConfigParser, () => {
       expect(step2.command).toMatchSnapshot();
       expect(step2.ctx.workingDirectory).toBe(ctx.defaultWorkingDirectory);
       expect(step2.shell).toBe(getDefaultShell());
-      expect(step2.stepEnv).toMatchObject({});
+      expect(step2.stepEnvOverrides).toMatchObject({});
 
       // - run:
       //     id: id_2137
@@ -152,7 +152,7 @@ describe(BuildConfigParser, () => {
       expect(step3.command).toBe('echo "Step with an ID"');
       expect(step3.ctx.workingDirectory).toBe(ctx.defaultWorkingDirectory);
       expect(step3.shell).toBe(getDefaultShell());
-      expect(step3.stepEnv).toMatchObject({
+      expect(step3.stepEnvOverrides).toMatchObject({
         FOO: 'bar',
         BAR: 'baz',
       });
@@ -169,7 +169,7 @@ describe(BuildConfigParser, () => {
         path.join(ctx.defaultWorkingDirectory, 'relative/path/to/files')
       );
       expect(step4.shell).toBe(getDefaultShell());
-      expect(step4.stepEnv).toMatchObject({});
+      expect(step4.stepEnvOverrides).toMatchObject({});
 
       // - run:
       //     name: List files in another directory
@@ -181,7 +181,7 @@ describe(BuildConfigParser, () => {
       expect(step5.command).toBe('ls -la');
       expect(step5.ctx.workingDirectory).toBe('/home/dsokal');
       expect(step5.shell).toBe(getDefaultShell());
-      expect(step5.stepEnv).toMatchObject({});
+      expect(step5.stepEnvOverrides).toMatchObject({});
 
       // - run:
       //     if: ${ always() }
@@ -194,7 +194,7 @@ describe(BuildConfigParser, () => {
       expect(step6.command).toBe('echo 123');
       expect(step6.ctx.workingDirectory).toBe(ctx.defaultWorkingDirectory);
       expect(step6.shell).toBe('/nib/hsab');
-      expect(step6.stepEnv).toMatchObject({});
+      expect(step6.stepEnvOverrides).toMatchObject({});
       expect(step6.ifCondition).toBe('${ always() }');
     });
 
@@ -343,7 +343,7 @@ describe(BuildConfigParser, () => {
         property2: ['aaa', 'bbb'],
       });
       expect(step1.inputs?.[2].allowedValueTypeName).toBe(BuildStepInputValueTypeName.JSON);
-      expect(step1.stepEnv).toMatchObject({
+      expect(step1.stepEnvOverrides).toMatchObject({
         ENV1: 'value1',
         ENV2: 'value2',
       });
@@ -371,7 +371,7 @@ describe(BuildConfigParser, () => {
         property2: ['value2', { value3: { property3: 'value4' } }],
       });
       expect(step2.inputs?.[2].allowedValueTypeName).toBe(BuildStepInputValueTypeName.JSON);
-      expect(step2.stepEnv).toMatchObject({});
+      expect(step2.stepEnvOverrides).toMatchObject({});
 
       // - say_hi_wojtek
       const step3 = buildSteps[2];
@@ -380,7 +380,7 @@ describe(BuildConfigParser, () => {
       expect(step3.command).toBe('echo "Hi, Wojtek!"');
       expect(step3.ctx.workingDirectory).toBe(ctx.defaultWorkingDirectory);
       expect(step3.shell).toBe(getDefaultShell());
-      expect(step3.stepEnv).toMatchObject({});
+      expect(step3.stepEnvOverrides).toMatchObject({});
 
       // - random:
       //     id: random_number
@@ -392,7 +392,7 @@ describe(BuildConfigParser, () => {
       expect(step4.shell).toBe(getDefaultShell());
       expect(step4.outputs?.[0].id).toBe('value');
       expect(step4.outputs?.[0].required).toBe(true);
-      expect(step4.stepEnv).toMatchObject({});
+      expect(step4.stepEnvOverrides).toMatchObject({});
 
       // - print:
       //     inputs:
@@ -406,7 +406,7 @@ describe(BuildConfigParser, () => {
       expect(step5.inputs?.[0].id).toBe('value');
       expect(step5.inputs?.[0].required).toBe(true);
       expect(step5.inputs?.[0].allowedValueTypeName).toBe(BuildStepInputValueTypeName.STRING);
-      expect(step5.stepEnv).toMatchObject({});
+      expect(step5.stepEnvOverrides).toMatchObject({});
 
       // - say_hi_2:
       //     inputs:
@@ -442,7 +442,7 @@ describe(BuildConfigParser, () => {
       expect(step6.inputs?.[3].defaultValue).toBe(undefined);
       expect(step6.inputs?.[3].allowedValues).toEqual(undefined);
       expect(step6.inputs?.[3].allowedValueTypeName).toBe(BuildStepInputValueTypeName.NUMBER);
-      expect(step6.stepEnv).toMatchObject({});
+      expect(step6.stepEnvOverrides).toMatchObject({});
 
       const { buildFunctions } = workflow;
       expect(Object.keys(buildFunctions).length).toBe(6);
