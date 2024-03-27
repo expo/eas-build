@@ -1,6 +1,6 @@
 import assert from 'assert';
 
-import { Platform, Job } from '@expo/eas-build-job';
+import { Platform, Job, BuildJob } from '@expo/eas-build-job';
 import semver from 'semver';
 import { ExpoConfig } from '@expo/config';
 import { bunyan } from '@expo/logger';
@@ -47,7 +47,7 @@ export async function setRuntimeVersionNativelyAsync(
 /**
  * Used for when Expo Updates is pointed at an EAS server.
  */
-export async function setChannelNativelyAsync(ctx: BuildContext<Job>): Promise<void> {
+export async function setChannelNativelyAsync(ctx: BuildContext<BuildJob>): Promise<void> {
   assert(ctx.job.updates?.channel, 'updates.channel must be defined');
   const newUpdateRequestHeaders: Record<string, string> = {
     'expo-channel-name': ctx.job.updates.channel,
@@ -77,7 +77,9 @@ export async function setChannelNativelyAsync(ctx: BuildContext<Job>): Promise<v
 /**
  * Used for classic Expo Updates
  */
-export async function setClassicReleaseChannelNativelyAsync(ctx: BuildContext<Job>): Promise<void> {
+export async function setClassicReleaseChannelNativelyAsync(
+  ctx: BuildContext<BuildJob>
+): Promise<void> {
   assert(ctx.job.releaseChannel, 'releaseChannel must be defined');
 
   const configFile = ctx.job.platform === Platform.ANDROID ? 'AndroidManifest.xml' : 'Expo.plist';
@@ -115,7 +117,7 @@ export async function getNativelyDefinedClassicReleaseChannelAsync(
   }
 }
 
-export async function configureClassicExpoUpdatesAsync(ctx: BuildContext<Job>): Promise<void> {
+export async function configureClassicExpoUpdatesAsync(ctx: BuildContext<BuildJob>): Promise<void> {
   if (ctx.job.releaseChannel) {
     await setClassicReleaseChannelNativelyAsync(ctx);
   } else {
@@ -136,12 +138,12 @@ export async function configureClassicExpoUpdatesAsync(ctx: BuildContext<Job>): 
   }
 }
 
-export async function configureEASExpoUpdatesAsync(ctx: BuildContext<Job>): Promise<void> {
+export async function configureEASExpoUpdatesAsync(ctx: BuildContext<BuildJob>): Promise<void> {
   await setChannelNativelyAsync(ctx);
 }
 
 export async function configureExpoUpdatesIfInstalledAsync(
-  ctx: BuildContext<Job>,
+  ctx: BuildContext<BuildJob>,
   { resolvedRuntimeVersion }: { resolvedRuntimeVersion: string | null }
 ): Promise<void> {
   const expoUpdatesPackageVersion = await getExpoUpdatesPackageVersionIfInstalledAsync(

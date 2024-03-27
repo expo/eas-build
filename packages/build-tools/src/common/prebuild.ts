@@ -1,4 +1,4 @@
-import { Job } from '@expo/eas-build-job';
+import { BuildJob } from '@expo/eas-build-job';
 import { SpawnOptions } from '@expo/turtle-spawn';
 import semver from 'semver';
 import { bunyan } from '@expo/logger';
@@ -13,7 +13,7 @@ export interface PrebuildOptions {
   extraEnvs?: Record<string, string>;
 }
 
-export async function prebuildAsync<TJob extends Job>(
+export async function prebuildAsync<TJob extends BuildJob>(
   ctx: BuildContext<TJob>,
   { logger, workingDir, options }: { logger: bunyan; workingDir: string; options?: PrebuildOptions }
 ): Promise<void> {
@@ -44,7 +44,7 @@ export async function prebuildAsync<TJob extends Job>(
   await installDependenciesSpawnPromise;
 }
 
-function getPrebuildCommandArgs<TJob extends Job>(ctx: BuildContext<TJob>): string[] {
+function getPrebuildCommandArgs<TJob extends BuildJob>(ctx: BuildContext<TJob>): string[] {
   let prebuildCommand =
     ctx.job.experimental?.prebuildCommand ??
     `prebuild --non-interactive --no-install --platform ${ctx.job.platform}`;

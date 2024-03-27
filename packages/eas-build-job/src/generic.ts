@@ -1,6 +1,6 @@
 import { z } from 'zod';
 
-import { ArchiveSourceSchemaZ, EnvironmentSecretZ } from './common';
+import { ArchiveSourceSchemaZ, BuildTrigger, EnvironmentSecretZ } from './common';
 
 export namespace Generic {
   const BuilderEnvironmentSchemaZ = z.object({
@@ -31,5 +31,8 @@ export namespace Generic {
     }),
     expoDevUrl: z.string().url(),
     builderEnvironment: BuilderEnvironmentSchemaZ,
+    // We use this to discern between Android.Job, Ios.Job and Generic.Job.
+    platform: z.never().optional(),
+    triggeredBy: z.literal(BuildTrigger.GIT_BASED_INTEGRATION),
   });
 }

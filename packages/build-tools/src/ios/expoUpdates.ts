@@ -3,7 +3,7 @@ import assert from 'assert';
 import { IOSConfig } from '@expo/config-plugins';
 import fs from 'fs-extra';
 import plist from '@expo/plist';
-import { Job } from '@expo/eas-build-job';
+import { BuildJob, Job } from '@expo/eas-build-job';
 
 import { BuildContext } from '../context';
 
@@ -31,7 +31,7 @@ export async function iosSetRuntimeVersionNativelyAsync(
   await fs.writeFile(expoPlistPath, updatedExpoPlistContents);
 }
 
-export async function iosSetChannelNativelyAsync(ctx: BuildContext<Job>): Promise<void> {
+export async function iosSetChannelNativelyAsync(ctx: BuildContext<BuildJob>): Promise<void> {
   assert(ctx.job.updates?.channel, 'updates.channel must be defined');
 
   const expoPlistPath = IOSConfig.Paths.getExpoPlistPath(ctx.getReactNativeProjectDirectory());
@@ -78,7 +78,7 @@ export async function iosGetNativelyDefinedChannelAsync(
 }
 
 export async function iosSetClassicReleaseChannelNativelyAsync(
-  ctx: BuildContext<Job>
+  ctx: BuildContext<BuildJob>
 ): Promise<void> {
   assert(ctx.job.releaseChannel, 'releaseChannel must be defined');
 

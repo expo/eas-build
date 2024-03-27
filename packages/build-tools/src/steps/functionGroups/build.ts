@@ -1,5 +1,5 @@
 import { BuildFunctionGroup, BuildStep, BuildStepGlobalContext } from '@expo/steps';
-import { Platform } from '@expo/eas-build-job';
+import { BuildJob, Platform } from '@expo/eas-build-job';
 
 import { createCheckoutBuildFunction } from '../functions/checkout';
 import { createInstallNodeModulesBuildFunction } from '../functions/installNodeModules';
@@ -22,11 +22,11 @@ import { calculateEASUpdateRuntimeVersionFunction } from '../functions/calculate
 
 interface HelperFunctionsInput {
   globalCtx: BuildStepGlobalContext;
-  buildToolsContext: CustomBuildContext;
+  buildToolsContext: CustomBuildContext<BuildJob>;
 }
 
 export function createEasBuildBuildFunctionGroup(
-  buildToolsContext: CustomBuildContext
+  buildToolsContext: CustomBuildContext<BuildJob>
 ): BuildFunctionGroup {
   return new BuildFunctionGroup({
     namespace: 'eas',
@@ -45,7 +45,7 @@ export function createEasBuildBuildFunctionGroup(
             buildToolsContext,
           });
         }
-      } else {
+      } else if (buildToolsContext.job.platform === Platform.ANDROID) {
         if (!buildToolsContext.job.secrets?.buildCredentials) {
           return createStepsForAndroidBuildWithoutCredentials({
             globalCtx,
@@ -58,6 +58,8 @@ export function createEasBuildBuildFunctionGroup(
           });
         }
       }
+
+      throw new Error('Build function group is not supported in generic jobs.');
     },
   });
 }
@@ -66,10 +68,11 @@ function createStepsForIosSimulatorBuild({
   globalCtx,
   buildToolsContext,
 }: HelperFunctionsInput): BuildStep[] {
-  const calculateEASUpdateRuntimeVersion =
-    calculateEASUpdateRuntimeVersionFunction().createBuildStepFromFunctionCall(globalCtx, {
-      id: 'calculate_eas_update_runtime_version',
-    });
+  const calculateEASUpdateRuntimeVersion = calculateEASUpdateRuntimeVersionFunction(
+    buildToolsContext
+  ).createBuildStepFromFunctionCall(globalCtx, {
+    id: 'calculate_eas_update_runtime_version',
+  });
   const installPods = createInstallPodsBuildFunction().createBuildStepFromFunctionCall(globalCtx, {
     workingDirectory: './ios',
   });
@@ -115,10 +118,11 @@ function createStepsForIosBuildWithCredentials({
     resolveAppleTeamIdFromCredentialsFunction().createBuildStepFromFunctionCall(globalCtx, {
       id: 'resolve_apple_team_id_from_credentials',
     });
-  const calculateEASUpdateRuntimeVersion =
-    calculateEASUpdateRuntimeVersionFunction().createBuildStepFromFunctionCall(globalCtx, {
-      id: 'calculate_eas_update_runtime_version',
-    });
+  const calculateEASUpdateRuntimeVersion = calculateEASUpdateRuntimeVersionFunction(
+    buildToolsContext
+  ).createBuildStepFromFunctionCall(globalCtx, {
+    id: 'calculate_eas_update_runtime_version',
+  });
   const prebuildStep = createPrebuildBuildFunction().createBuildStepFromFunctionCall(globalCtx, {
     callInputs: {
       apple_team_id: '${ steps.resolve_apple_team_id_from_credentials.apple_team_id }',
@@ -176,10 +180,11 @@ function createStepsForAndroidBuildWithoutCredentials({
   globalCtx,
   buildToolsContext,
 }: HelperFunctionsInput): BuildStep[] {
-  const calculateEASUpdateRuntimeVersion =
-    calculateEASUpdateRuntimeVersionFunction().createBuildStepFromFunctionCall(globalCtx, {
-      id: 'calculate_eas_update_runtime_version',
-    });
+  const calculateEASUpdateRuntimeVersion = calculateEASUpdateRuntimeVersionFunction(
+    buildToolsContext
+  ).createBuildStepFromFunctionCall(globalCtx, {
+    id: 'calculate_eas_update_runtime_version',
+  });
   const configureEASUpdate =
     configureEASUpdateIfInstalledFunction().createBuildStepFromFunctionCall(globalCtx, {
       callInputs: {
@@ -216,10 +221,11 @@ function createStepsForAndroidBuildWithCredentials({
   globalCtx,
   buildToolsContext,
 }: HelperFunctionsInput): BuildStep[] {
-  const calculateEASUpdateRuntimeVersion =
-    calculateEASUpdateRuntimeVersionFunction().createBuildStepFromFunctionCall(globalCtx, {
-      id: 'calculate_eas_update_runtime_version',
-    });
+  const calculateEASUpdateRuntimeVersion = calculateEASUpdateRuntimeVersionFunction(
+    buildToolsContext
+  ).createBuildStepFromFunctionCall(globalCtx, {
+    id: 'calculate_eas_update_runtime_version',
+  });
   const configureEASUpdate =
     configureEASUpdateIfInstalledFunction().createBuildStepFromFunctionCall(globalCtx, {
       callInputs: {

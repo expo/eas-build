@@ -1,4 +1,4 @@
-import { Job, Metadata, Platform } from '@expo/eas-build-job';
+import { BuildJob, Job, Metadata, Platform } from '@expo/eas-build-job';
 import { bunyan } from '@expo/logger';
 import { ExpoConfig } from '@expo/config';
 
@@ -21,7 +21,7 @@ export async function configureEASUpdateAsync({
   appConfig,
   metadata,
 }: {
-  job: Job;
+  job: BuildJob;
   workingDirectory: string;
   logger: bunyan;
   inputs: {

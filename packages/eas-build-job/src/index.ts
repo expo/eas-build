@@ -13,8 +13,8 @@ export {
   Platform,
   Cache,
 } from './common';
-export { Job, sanitizeJob } from './job';
 export { Metadata, sanitizeMetadata } from './metadata';
+export * from './job';
 export * from './logs';
 export * as errors from './errors';
 export * from './artifacts';

@@ -1,11 +1,11 @@
-import { BuildPhase, Ios, Job, Platform } from '@expo/eas-build-job';
+import { BuildJob, BuildPhase, Ios, Platform } from '@expo/eas-build-job';
 
 import { Artifacts, BuildContext } from '../context';
 import { findAndUploadXcodeBuildLogsAsync } from '../ios/xcodeBuildLogs';
 import { maybeFindAndUploadBuildArtifacts } from '../utils/artifacts';
 import { Hook, runHookIfPresent } from '../utils/hooks';
 
-export async function runBuilderWithHooksAsync<T extends Job>(
+export async function runBuilderWithHooksAsync<T extends BuildJob>(
   ctx: BuildContext<T>,
   builderAsync: (ctx: BuildContext<T>) => Promise<void>
 ): Promise<Artifacts> {

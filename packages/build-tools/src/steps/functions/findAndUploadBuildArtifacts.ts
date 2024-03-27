@@ -1,4 +1,4 @@
-import { ManagedArtifactType, Ios, Platform } from '@expo/eas-build-job';
+import { ManagedArtifactType, Ios, Platform, BuildJob } from '@expo/eas-build-job';
 import { BuildFunction, BuildStepContext } from '@expo/steps';
 
 import { findArtifacts } from '../../utils/artifacts';
@@ -6,7 +6,7 @@ import { findXcodeBuildLogsPathAsync } from '../../ios/xcodeBuildLogs';
 import { CustomBuildContext } from '../../customBuildContext';
 
 export function createFindAndUploadBuildArtifactsBuildFunction(
-  ctx: CustomBuildContext
+  ctx: CustomBuildContext<BuildJob>
 ): BuildFunction {
   return new BuildFunction({
     namespace: 'eas',
@@ -65,7 +65,7 @@ async function uploadApplicationArchivesAsync({
   ctx,
   stepCtx: { workingDirectory, logger },
 }: {
-  ctx: CustomBuildContext;
+  ctx: CustomBuildContext<BuildJob>;
   stepCtx: BuildStepContext;
 }): Promise<void> {
   const applicationArchivePatternOrPath =
@@ -104,7 +104,7 @@ async function uploadBuildArtifacts({
   ctx,
   stepCtx: { workingDirectory, logger },
 }: {
-  ctx: CustomBuildContext;
+  ctx: CustomBuildContext<BuildJob>;
   stepCtx: BuildStepContext;
 }): Promise<void> {
   const buildArtifacts = (

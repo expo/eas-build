@@ -1,8 +1,8 @@
 import { BuildMode, BuildPhase, Env, Job, Platform } from '@expo/eas-build-job';
 
-export interface ErrorContext {
+export interface ErrorContext<TJob extends Job = Job> {
   phase: BuildPhase;
-  job: Job;
+  job: TJob;
   env: Env;
 }
 

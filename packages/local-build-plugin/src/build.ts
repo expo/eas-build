@@ -1,6 +1,6 @@
 import path from 'path';
 
-import { Job, Platform, ArchiveSourceType, Metadata, Workflow } from '@expo/eas-build-job';
+import { BuildJob, Platform, ArchiveSourceType, Metadata, Workflow } from '@expo/eas-build-job';
 import pickBy from 'lodash/pickBy';
 import fs from 'fs-extra';
 import chalk from 'chalk';
@@ -11,7 +11,7 @@ import config from './config';
 import { buildIosAsync } from './ios';
 import { prepareWorkingdirAsync } from './workingdir';
 
-export async function buildAsync(job: Job, metadata: Metadata): Promise<void> {
+export async function buildAsync(job: BuildJob, metadata: Metadata): Promise<void> {
   const workingdir = await prepareWorkingdirAsync();
 
   try {
