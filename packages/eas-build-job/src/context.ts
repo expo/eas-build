@@ -1,7 +1,6 @@
 import { Env } from './common';
+import { Job } from './job';
 import { Metadata } from './metadata';
-
-import { Job } from './index';
 
 export type BuildStaticContext = {
   job: Job;
