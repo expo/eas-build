@@ -1,0 +1,40 @@
+# this is the example of customized config for running Android builds the users can build using custom builds
+build:
+  name: highly customized Android builds example
+  steps:
+    - eas/checkout
+
+    - run:
+        name: Install dependencies
+        command: yarn install
+
+    - run:
+        name: Run expo prebuild
+        command: npx expo prebuild --non-interactive --no-install --platform android
+
+    - utils/inject_android_credentials:
+        inputs:
+          credentials: ${ eas.secrets.buildCredentials } # can pass other object or specify it inline
+
+    - utils/configure_android_versions:
+        inputs:
+          version_code: ${ eas.job.secrets.version.versionCode } # can pass other value or specify it inline
+          version: ${ eas.job.secrets.version.versionName } # can pass other value or specify it inline
+
+    - run:
+        name: Build Android app
+        working_directory: ./android
+        command: gradle :app:bundleRelease
+
+    # important: eas/upload_artifact for app archive can be called exactly once with current implementation
+    - eas/upload_artifact:
+        name: Upload application archive
+        inputs:
+          path: fixtures/app.aab
+
+    # important: eas/upload_artifact for build-artifact can be called exactly once with current implementation
+    - eas/upload_artifact:
+        name: Upload build artifact
+        inputs:
+          type: build-artifact
+          path: assets/icon.png
