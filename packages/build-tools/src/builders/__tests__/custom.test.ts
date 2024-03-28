@@ -1,4 +1,4 @@
-import { Job } from '@expo/eas-build-job';
+import { BuildJob } from '@expo/eas-build-job';
 import { vol } from 'memfs';
 
 import { runCustomBuildAsync } from '../custom';
@@ -19,7 +19,7 @@ afterEach(() => {
 });
 
 describe(runCustomBuildAsync, () => {
-  let ctx: BuildContext<Job>;
+  let ctx: BuildContext<BuildJob>;
 
   beforeEach(() => {
     const job = createTestIosJob();

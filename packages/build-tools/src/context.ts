@@ -75,7 +75,7 @@ export interface BuildContextOptions {
 
 export class SkipNativeBuildError extends Error {}
 
-export class BuildContext<TJob extends Job> {
+export class BuildContext<TJob extends Job = Job> {
   public readonly workingdir: string;
   public logger: bunyan;
   public readonly logBuffer: LogBuffer;

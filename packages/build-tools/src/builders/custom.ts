@@ -1,6 +1,6 @@
 import path from 'path';
 
-import { BuildJob, BuildPhase, BuildTrigger, Ios, Job, Platform } from '@expo/eas-build-job';
+import { BuildJob, BuildPhase, BuildTrigger, Ios, Platform } from '@expo/eas-build-job';
 import { BuildConfigParser, BuildStepGlobalContext, errors } from '@expo/steps';
 import nullthrows from 'nullthrows';
 
@@ -12,21 +12,16 @@ import { resolveEnvFromBuildProfileAsync } from '../common/easBuildInternal';
 import { getEasFunctionGroups } from '../steps/easFunctionGroups';
 import { findAndUploadXcodeBuildLogsAsync } from '../ios/xcodeBuildLogs';
 
-export async function runCustomBuildAsync<T extends Job>(ctx: BuildContext<T>): Promise<Artifacts> {
+export async function runCustomBuildAsync(ctx: BuildContext<BuildJob>): Promise<Artifacts> {
   const customBuildCtx = new CustomBuildContext(ctx);
   await prepareProjectSourcesAsync(ctx, customBuildCtx.projectSourceDirectory);
   if (ctx.job.triggeredBy === BuildTrigger.GIT_BASED_INTEGRATION) {
-    // TODO: Add support for resolving env from job profile.
-
-    // If platform is present, the job must be BuildJob
-    if (ctx.job.platform) {
-      // We need to setup envs from eas.json
-      const env = await resolveEnvFromBuildProfileAsync(ctx as BuildContext<BuildJob>, {
-        cwd: customBuildCtx.projectSourceDirectory,
-      });
-      ctx.updateEnv(env);
-      customBuildCtx.updateEnv(ctx.env);
-    }
+    // We need to setup envs from eas.json
+    const env = await resolveEnvFromBuildProfileAsync(ctx, {
+      cwd: customBuildCtx.projectSourceDirectory,
+    });
+    ctx.updateEnv(env);
+    customBuildCtx.updateEnv(ctx.env);
   }
   const relativeConfigPath = nullthrows(
     ctx.job.customBuildConfig?.path,

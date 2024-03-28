@@ -68,7 +68,7 @@ export class CustomBuildContext<TJob extends Job = Job> implements ExternalBuild
     };
   }
 
-  public hasBuildJob(): this is BuildContext<BuildJob> {
+  public hasBuildJob(): this is CustomBuildContext<BuildJob> {
     return Boolean(this.job.platform);
   }
 
