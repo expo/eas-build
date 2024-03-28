@@ -13,9 +13,7 @@ import { getEasFunctionGroups } from './steps/easFunctionGroups';
 export async function runGenericJobAsync(ctx: BuildContext<Generic.Job>): Promise<void> {
   const customBuildCtx = new CustomBuildContext(ctx);
 
-  await ctx.runBuildPhase(BuildPhase.PREPARE_PROJECT, async () => {
-    await prepareProjectSourcesAsync(ctx, customBuildCtx.projectSourceDirectory);
-  });
+  await prepareProjectSourcesAsync(ctx, customBuildCtx.projectSourceDirectory);
 
   const relativeConfigPath = nullthrows(
     ctx.job.customBuildConfig?.path,
