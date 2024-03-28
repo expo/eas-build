@@ -1,4 +1,4 @@
-import { Job } from '@expo/eas-build-job';
+import { BuildJob } from '@expo/eas-build-job';
 import spawn from '@expo/turtle-spawn';
 import { vol } from 'memfs';
 
@@ -19,14 +19,14 @@ const loggerMock = {
   child: () => loggerMock,
 };
 
-let ctx: BuildContext<Job>;
+let ctx: BuildContext<BuildJob>;
 
 describe(runHookIfPresent, () => {
   beforeEach(() => {
     vol.reset();
     (spawn as jest.Mock).mockReset();
 
-    ctx = new BuildContext({ projectRootDirectory: '.' } as Job, {
+    ctx = new BuildContext({ projectRootDirectory: '.' } as BuildJob, {
       workingdir: '/workingdir',
       logBuffer: { getLogs: () => [], getPhaseLogs: () => [] },
       logger: loggerMock as any,
