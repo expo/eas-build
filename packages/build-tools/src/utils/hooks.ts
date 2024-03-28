@@ -1,4 +1,4 @@
-import { Job } from '@expo/eas-build-job';
+import { BuildJob } from '@expo/eas-build-job';
 import spawn from '@expo/turtle-spawn';
 
 import { BuildContext } from '../context';
@@ -19,7 +19,7 @@ export enum Hook {
   ON_BUILD_CANCEL = 'eas-build-on-cancel',
 }
 
-export async function runHookIfPresent<TJob extends Job>(
+export async function runHookIfPresent<TJob extends BuildJob>(
   ctx: BuildContext<TJob>,
   hook: Hook,
   { extraEnvs }: { extraEnvs?: Record<string, string> } = {}
