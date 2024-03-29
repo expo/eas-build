@@ -68,7 +68,8 @@ export function configureEASUpdateIfInstalledFunction(): BuildFunction {
       }
 
       const expoUpdatesPackageVersion = await getExpoUpdatesPackageVersionIfInstalledAsync(
-        stepCtx.workingDirectory
+        stepCtx.workingDirectory,
+        stepCtx.logger
       );
       if (expoUpdatesPackageVersion === null) {
         if (throwIfNotConfigured) {
