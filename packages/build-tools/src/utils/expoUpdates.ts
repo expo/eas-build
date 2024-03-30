@@ -147,7 +147,8 @@ export async function configureExpoUpdatesIfInstalledAsync(
   { resolvedRuntimeVersion }: { resolvedRuntimeVersion: string | null }
 ): Promise<void> {
   const expoUpdatesPackageVersion = await getExpoUpdatesPackageVersionIfInstalledAsync(
-    ctx.getReactNativeProjectDirectory()
+    ctx.getReactNativeProjectDirectory(),
+    ctx.logger
   );
   if (expoUpdatesPackageVersion === null) {
     return;
@@ -221,7 +222,7 @@ export async function resolveRuntimeVersionForExpoUpdatesIfConfiguredAsync({
   platform: Platform;
   logger: bunyan;
 }): Promise<string | null> {
-  const expoUpdatesPackageVersion = await getExpoUpdatesPackageVersionIfInstalledAsync(cwd);
+  const expoUpdatesPackageVersion = await getExpoUpdatesPackageVersionIfInstalledAsync(cwd, logger);
   if (expoUpdatesPackageVersion === null) {
     return null;
   }

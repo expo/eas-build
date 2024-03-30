@@ -19,16 +19,22 @@ export async function resolveRuntimeVersionAsync({
   expoUpdatesPackageVersion: string;
 }): Promise<string | null> {
   if (!isModernExpoUpdatesCLIWithRuntimeVersionCommandSupported(expoUpdatesPackageVersion)) {
+    logger.debug('Using expo-updates config plugin for runtime version resolution');
     // fall back to the previous behavior (using the @expo/config-plugins eas-cli dependency rather
     // than the versioned @expo/config-plugins dependency in the project)
     return await Updates.getRuntimeVersionNullableAsync(projectDir, exp, platform);
   }
 
   try {
+    logger.debug('Using expo-updates runtimeversion:resolve CLI for runtime version resolution');
+
+    const extraArgs = logger.debug() ? ['--debug'] : [];
+
     const resolvedRuntimeVersionJSONResult = await expoUpdatesCommandAsync(projectDir, [
       'runtimeversion:resolve',
       '--platform',
       platform,
+      ...extraArgs,
     ]);
     const runtimeVersionResult = JSON.parse(resolvedRuntimeVersionJSONResult);
     if (runtimeVersionResult.fingerprintSources) {
@@ -39,6 +45,9 @@ export async function resolveRuntimeVersionAsync({
   } catch (e: any) {
     // if expo-updates is not installed, there's no need for a runtime version in the build
     if (e instanceof ExpoUpdatesCLIModuleNotFoundError) {
+      logger.error(
+        `Error when resolving runtime version using expo-updates runtimeversion:resolve CLI: ${e.message}`
+      );
       return null;
     }
     throw e;
