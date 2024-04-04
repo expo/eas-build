@@ -1,4 +1,5 @@
 import Joi from 'joi';
+import { LoggerLevel } from '@expo/logger';
 
 import { ArchiveSourceType, BuildMode, Platform, Workflow } from '../common';
 import * as Ios from '../ios';
@@ -253,6 +254,26 @@ describe('Ios.JobSchema', () => {
       secrets: {
         buildCredentials,
       },
+    };
+    const { value, error } = Ios.JobSchema.validate(job, joiOptions);
+    expect(value).toMatchObject(job);
+    expect(error).toBeFalsy();
+  });
+
+  test('can set loggerLevel', () => {
+    const job = {
+      mode: BuildMode.BUILD,
+      type: Workflow.UNKNOWN,
+      platform: Platform.IOS,
+      projectArchive: {
+        type: ArchiveSourceType.URL,
+        url: 'https://expo.dev/builds/123',
+      },
+      projectRootDirectory: '.',
+      secrets: {
+        buildCredentials,
+      },
+      loggerLevel: LoggerLevel.INFO,
     };
     const { value, error } = Ios.JobSchema.validate(job, joiOptions);
     expect(value).toMatchObject(job);

@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import { LoggerLevel } from '@expo/logger';
 
 import { ArchiveSourceSchemaZ, BuildTrigger, EnvironmentSecretZ } from './common';
 
@@ -34,5 +35,6 @@ export namespace Generic {
     // We use this to discern between Android.Job, Ios.Job and Generic.Job.
     platform: z.never().optional(),
     triggeredBy: z.literal(BuildTrigger.GIT_BASED_INTEGRATION),
+    loggerLevel: z.nativeEnum(LoggerLevel).optional(),
   });
 }

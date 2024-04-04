@@ -1,4 +1,5 @@
 import Joi from 'joi';
+import { LoggerLevel } from '@expo/logger';
 
 import * as Android from '../android';
 import { ArchiveSourceType, BuildMode, BuildTrigger, Platform, Workflow } from '../common';
@@ -257,6 +258,24 @@ describe('Android.JobSchema', () => {
         submitProfile: 'default',
       },
       secrets,
+    };
+    const { value, error } = Android.JobSchema.validate(job, joiOptions);
+    expect(value).toMatchObject(job);
+    expect(error).toBeFalsy();
+  });
+
+  test('can set github trigger options', () => {
+    const job = {
+      mode: BuildMode.BUILD,
+      type: Workflow.UNKNOWN,
+      platform: Platform.ANDROID,
+      projectArchive: {
+        type: ArchiveSourceType.URL,
+        url: 'https://expo.dev/builds/123',
+      },
+      projectRootDirectory: '.',
+      secrets,
+      loggerLevel: LoggerLevel.DEBUG,
     };
     const { value, error } = Android.JobSchema.validate(job, joiOptions);
     expect(value).toMatchObject(job);
