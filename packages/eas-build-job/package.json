@@ -26,6 +26,7 @@
     "typescript": "^5.3.3"
   },
   "dependencies": {
+    "@expo/logger": "1.0.57",
     "joi": "^17.11.0",
     "semver": "^7.5.4",
     "zod": "^3.22.4"

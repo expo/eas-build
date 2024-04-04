@@ -1,4 +1,5 @@
 import Joi from 'joi';
+import { LoggerLevel } from '@expo/logger';
 
 import {
   ArchiveSource,
@@ -125,6 +126,7 @@ export interface Job {
     autoSubmit: boolean;
     submitProfile?: string;
   };
+  loggerLevel?: LoggerLevel;
 }
 
 const SecretsSchema = Joi.object({
@@ -210,4 +212,5 @@ export const JobSchema = Joi.object({
     autoSubmit: Joi.boolean().default(false),
     submitProfile: Joi.string(),
   }),
+  loggerLevel: Joi.string().valid(...Object.values(LoggerLevel)),
 }).oxor('releaseChannel', 'updates.channel');
