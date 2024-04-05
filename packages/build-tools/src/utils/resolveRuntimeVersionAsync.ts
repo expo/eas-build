@@ -37,10 +37,10 @@ export async function resolveRuntimeVersionAsync({
       ...extraArgs,
     ]);
     const runtimeVersionResult = JSON.parse(resolvedRuntimeVersionJSONResult);
-    if (runtimeVersionResult.fingerprintSources) {
-      logger.debug(`Resolved fingeprint runtime version for platform "${platform}". Sources:`);
-      logger.debug(runtimeVersionResult.fingerprintSources);
-    }
+
+    logger.debug('runtimeversion:resolve output:');
+    logger.debug(runtimeVersionResult);
+
     return runtimeVersionResult.runtimeVersion ?? null;
   } catch (e: any) {
     // if expo-updates is not installed, there's no need for a runtime version in the build
