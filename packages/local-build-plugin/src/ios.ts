@@ -3,14 +3,14 @@ import { Builders, BuildContext, Artifacts } from '@expo/build-tools';
 import omit from 'lodash/omit';
 
 import { runGlobalExpoCliCommandAsync } from './expoCli';
-import logger, { logBuffer } from './logger';
+import { logBuffer } from './logger';
 import { BuildParams } from './types';
 import { prepareArtifacts } from './artifacts';
 import config from './config';
 
 export async function buildIosAsync(
   job: Ios.Job,
-  { workingdir, env: baseEnv, metadata }: BuildParams
+  { workingdir, env: baseEnv, metadata, logger }: BuildParams
 ): Promise<Artifacts> {
   const buildNumber = job.version?.buildNumber;
   const appVersion = job.version?.appVersion;

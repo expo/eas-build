@@ -2,12 +2,12 @@ import path from 'path';
 
 import chalk from 'chalk';
 import fs from 'fs-extra';
+import { bunyan } from '@expo/logger';
 
 import config from './config';
-import logger from './logger';
 import { registerHandler } from './exit';
 
-export async function prepareWorkingdirAsync(): Promise<string> {
+export async function prepareWorkingdirAsync(logger: bunyan): Promise<string> {
   const { workingdir } = config;
   logger.info({ phase: 'SETUP_WORKINGDIR' }, `Preparing workingdir ${workingdir}`);
 

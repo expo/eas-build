@@ -2,7 +2,7 @@ import { Android, ManagedArtifactType, BuildPhase, Env } from '@expo/eas-build-j
 import { Builders, BuildContext, Artifacts } from '@expo/build-tools';
 import omit from 'lodash/omit';
 
-import logger, { logBuffer } from './logger';
+import { logBuffer } from './logger';
 import { BuildParams } from './types';
 import { prepareArtifacts } from './artifacts';
 import config from './config';
@@ -10,7 +10,7 @@ import { runGlobalExpoCliCommandAsync } from './expoCli';
 
 export async function buildAndroidAsync(
   job: Android.Job,
-  { workingdir, env: baseEnv, metadata }: BuildParams
+  { workingdir, env: baseEnv, metadata, logger }: BuildParams
 ): Promise<Artifacts> {
   const versionName = job.version?.versionName;
   const versionCode = job.version?.versionCode;
