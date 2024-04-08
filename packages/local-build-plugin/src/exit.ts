@@ -1,4 +1,4 @@
-import logger from './logger';
+import { createLogger } from './logger';
 
 const handlers: (() => void | Promise<void>)[] = [];
 let shouldExitStatus = false;
@@ -13,7 +13,7 @@ export function listenForInterrupts(): void {
         return;
       }
       handlerInProgress = true;
-      logger.error({ phase: 'ABORT' }, 'Received termination signal.');
+      createLogger().error({ phase: 'ABORT' }, 'Received termination signal.');
       shouldExitStatus = true;
       await Promise.allSettled(
         handlers.map((handler) => {

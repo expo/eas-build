@@ -5,14 +5,17 @@ import pickBy from 'lodash/pickBy';
 import fs from 'fs-extra';
 import chalk from 'chalk';
 import { Artifacts, SkipNativeBuildError } from '@expo/build-tools';
+import { DEBUG } from 'bunyan';
 
 import { buildAndroidAsync } from './android';
 import config from './config';
 import { buildIosAsync } from './ios';
 import { prepareWorkingdirAsync } from './workingdir';
+import { createLogger } from './logger';
 
 export async function buildAsync(job: BuildJob, metadata: Metadata): Promise<void> {
-  const workingdir = await prepareWorkingdirAsync();
+  const logger = createLogger(job.loggerLevel);
+  const workingdir = await prepareWorkingdirAsync({ logger });
 
   try {
     let username = metadata.username;
@@ -48,11 +51,11 @@ export async function buildAsync(job: BuildJob, metadata: Metadata): Promise<voi
     let artifacts: Artifacts | undefined;
     switch (job.platform) {
       case Platform.ANDROID: {
-        artifacts = await buildAndroidAsync(job, { env, workingdir, metadata });
+        artifacts = await buildAndroidAsync(job, { env, workingdir, metadata, logger });
         break;
       }
       case Platform.IOS: {
-        artifacts = await buildIosAsync(job, { env, workingdir, metadata });
+        artifacts = await buildIosAsync(job, { env, workingdir, metadata, logger });
         break;
       }
     }
@@ -72,7 +75,7 @@ export async function buildAsync(job: BuildJob, metadata: Metadata): Promise<voi
     }
     console.error();
     console.error(chalk.red(`Build failed`));
-    if (config.logger.level === 'debug') {
+    if (logger.level() === DEBUG) {
       console.error(e.innerError);
     }
     throw e;
