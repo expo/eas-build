@@ -5,7 +5,7 @@ import pickBy from 'lodash/pickBy';
 import fs from 'fs-extra';
 import chalk from 'chalk';
 import { Artifacts, SkipNativeBuildError } from '@expo/build-tools';
-import { LoggerLevel } from '@expo/logger';
+import { DEBUG } from 'bunyan';
 
 import { buildAndroidAsync } from './android';
 import config from './config';
@@ -15,7 +15,7 @@ import { createLogger } from './logger';
 
 export async function buildAsync(job: BuildJob, metadata: Metadata): Promise<void> {
   const logger = createLogger(job.loggerLevel);
-  const workingdir = await prepareWorkingdirAsync(logger);
+  const workingdir = await prepareWorkingdirAsync({ logger });
 
   try {
     let username = metadata.username;
@@ -75,7 +75,7 @@ export async function buildAsync(job: BuildJob, metadata: Metadata): Promise<voi
     }
     console.error();
     console.error(chalk.red(`Build failed`));
-    if (config.logger.defaultLoggerLevel === LoggerLevel.DEBUG) {
+    if (logger.level() === DEBUG) {
       console.error(e.innerError);
     }
     throw e;
