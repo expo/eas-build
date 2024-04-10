@@ -1,3 +1,4 @@
+import fs from 'fs';
 import path from 'path';
 
 import { BuildPhase, Generic } from '@expo/eas-build-job';
@@ -10,10 +11,24 @@ import { getEasFunctions } from './steps/easFunctions';
 import { CustomBuildContext } from './customBuildContext';
 import { getEasFunctionGroups } from './steps/easFunctionGroups';
 
+require.extensions['.yml'] = function (module, filename) {
+  const fs = require('fs');
+  const yamlContent = fs.readFileSync(filename, 'utf8');
+  module.exports = yamlContent;
+};
+
 export async function runGenericJobAsync(ctx: BuildContext<Generic.Job>): Promise<void> {
   const customBuildCtx = new CustomBuildContext(ctx);
 
   await prepareProjectSourcesAsync(ctx, customBuildCtx.projectSourceDirectory);
+
+  await fs.promises.mkdir(path.join(customBuildCtx.projectSourceDirectory, '__eas'), {
+    recursive: true,
+  });
+  await fs.promises.writeFile(
+    path.join(customBuildCtx.projectSourceDirectory, '__eas', 'update-in-the-cloud.yml'),
+    require('../resources/update-in-the-cloud.yml')
+  );
 
   const relativeConfigPath = nullthrows(
     ctx.job.customBuildConfig?.path,
