@@ -50,26 +50,13 @@ export async function runGenericJobAsync(ctx: BuildContext<Generic.Job>): Promis
 }
 
 async function addEasWorkflows(customBuildCtx: CustomBuildContext): Promise<void> {
-  const originalRequireExtensionsYml = require.extensions['.yml'];
-  try {
-    require.extensions['.yml'] = function (module, filename) {
-      const fs = require('fs');
-      const yamlContent = fs.readFileSync(filename, 'utf8');
-      module.exports = yamlContent;
-    };
+  await fs.promises.mkdir(path.join(customBuildCtx.projectSourceDirectory, '__eas'), {
+    recursive: true,
+  });
 
-    const WORKFLOW_FILE_PATHS = ['../resources/update-in-the-cloud.yml'];
-    await fs.promises.mkdir(path.join(customBuildCtx.projectSourceDirectory, '__eas'), {
-      recursive: true,
-    });
-    for (const workflowFilePath of WORKFLOW_FILE_PATHS) {
-      const workflowString = require(workflowFilePath);
-      await fs.promises.writeFile(
-        path.join(customBuildCtx.projectSourceDirectory, '__eas', 'update-in-the-cloud.yml'),
-        workflowString
-      );
-    }
-  } finally {
-    require.extensions['.yml'] = originalRequireExtensionsYml;
-  }
+  await fs.promises.cp(
+    path.join(__dirname, '..', 'resources', '__eas'),
+    path.join(customBuildCtx.projectSourceDirectory, '__eas'),
+    { recursive: true }
+  );
 }
