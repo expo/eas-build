@@ -18,7 +18,7 @@ export async function runCustomBuildAsync(ctx: BuildContext<BuildJob>): Promise<
   if (ctx.job.triggeredBy === BuildTrigger.GIT_BASED_INTEGRATION) {
     // We need to setup envs from eas.json
     const env = await resolveEnvFromBuildProfileAsync(ctx, {
-      cwd: customBuildCtx.projectSourceDirectory,
+      cwd: path.join(customBuildCtx.projectSourceDirectory, ctx.job.projectRootDirectory ?? '.'),
     });
     ctx.updateEnv(env);
     customBuildCtx.updateEnv(ctx.env);
