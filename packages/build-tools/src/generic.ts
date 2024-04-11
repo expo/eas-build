@@ -11,24 +11,12 @@ import { getEasFunctions } from './steps/easFunctions';
 import { CustomBuildContext } from './customBuildContext';
 import { getEasFunctionGroups } from './steps/easFunctionGroups';
 
-require.extensions['.yml'] = function (module, filename) {
-  const fs = require('fs');
-  const yamlContent = fs.readFileSync(filename, 'utf8');
-  module.exports = yamlContent;
-};
-
 export async function runGenericJobAsync(ctx: BuildContext<Generic.Job>): Promise<void> {
   const customBuildCtx = new CustomBuildContext(ctx);
 
   await prepareProjectSourcesAsync(ctx, customBuildCtx.projectSourceDirectory);
 
-  await fs.promises.mkdir(path.join(customBuildCtx.projectSourceDirectory, '__eas'), {
-    recursive: true,
-  });
-  await fs.promises.writeFile(
-    path.join(customBuildCtx.projectSourceDirectory, '__eas', 'update-in-the-cloud.yml'),
-    require('../resources/update-in-the-cloud.yml')
-  );
+  await addEasWorkflows(customBuildCtx);
 
   const relativeConfigPath = nullthrows(
     ctx.job.customBuildConfig?.path,
@@ -59,4 +47,29 @@ export async function runGenericJobAsync(ctx: BuildContext<Generic.Job>): Promis
   });
 
   await workflow.executeAsync();
+}
+
+async function addEasWorkflows(customBuildCtx: CustomBuildContext): Promise<void> {
+  const originalRequireExtensionsYml = require.extensions['.yml'];
+  try {
+    require.extensions['.yml'] = function (module, filename) {
+      const fs = require('fs');
+      const yamlContent = fs.readFileSync(filename, 'utf8');
+      module.exports = yamlContent;
+    };
+
+    const WORKFLOW_FILE_PATHS = ['../resources/update-in-the-cloud.yml'];
+    await fs.promises.mkdir(path.join(customBuildCtx.projectSourceDirectory, '__eas'), {
+      recursive: true,
+    });
+    for (const workflowFilePath of WORKFLOW_FILE_PATHS) {
+      const workflowString = require(workflowFilePath);
+      await fs.promises.writeFile(
+        path.join(customBuildCtx.projectSourceDirectory, '__eas', 'update-in-the-cloud.yml'),
+        workflowString
+      );
+    }
+  } finally {
+    require.extensions['.yml'] = originalRequireExtensionsYml;
+  }
 }
