@@ -1,10 +1,15 @@
-import spawnAsync from '@expo/spawn-async';
 import resolveFrom, { silent as silentResolveFrom } from 'resolve-from';
+import spawnAsync from '@expo/turtle-spawn';
+import { bunyan } from '@expo/logger';
 
 export class ExpoUpdatesCLIModuleNotFoundError extends Error {}
 export class ExpoUpdatesCLIInvalidCommandError extends Error {}
 
-export async function expoUpdatesCommandAsync(projectDir: string, args: string[]): Promise<string> {
+export async function expoUpdatesCommandAsync(
+  projectDir: string,
+  args: string[],
+  { logger }: { logger: bunyan }
+): Promise<string> {
   let expoUpdatesCli;
   try {
     expoUpdatesCli =
@@ -20,7 +25,12 @@ export async function expoUpdatesCommandAsync(projectDir: string, args: string[]
   }
 
   try {
-    return (await spawnAsync(expoUpdatesCli, args)).stdout;
+    const spawnResult = await spawnAsync(expoUpdatesCli, args, {
+      stdio: 'pipe',
+      cwd: projectDir,
+      logger,
+    });
+    return spawnResult.stdout;
   } catch (e: any) {
     if (e.stderr && typeof e.stderr === 'string' && e.stderr.includes('Invalid command')) {
       throw new ExpoUpdatesCLIInvalidCommandError(
