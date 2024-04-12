@@ -4,6 +4,7 @@ import { bunyan } from '@expo/logger';
 
 export class ExpoUpdatesCLIModuleNotFoundError extends Error {}
 export class ExpoUpdatesCLIInvalidCommandError extends Error {}
+export class ExpoUpdatesCLICommandFailedError extends Error {}
 
 export async function expoUpdatesCommandAsync(
   projectDir: string,
@@ -32,10 +33,14 @@ export async function expoUpdatesCommandAsync(
     });
     return spawnResult.stdout;
   } catch (e: any) {
-    if (e.stderr && typeof e.stderr === 'string' && e.stderr.includes('Invalid command')) {
-      throw new ExpoUpdatesCLIInvalidCommandError(
-        `The command specified by ${args} was not valid in the \`expo-updates\` CLI.`
-      );
+    if (e.stderr && typeof e.stderr === 'string') {
+      if (e.stderr.includes('Invalid command')) {
+        throw new ExpoUpdatesCLIInvalidCommandError(
+          `The command specified by ${args} was not valid in the \`expo-updates\` CLI.`
+        );
+      } else {
+        throw new ExpoUpdatesCLICommandFailedError(e.stderr);
+      }
     }
     throw e;
   }
