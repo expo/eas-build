@@ -1,0 +1,10 @@
+build:
+  name: EAS Update in the Cloud
+  steps:
+    - eas/checkout
+
+    - eas/use_npm_token
+
+    - eas/install_node_modules
+
+    - run: eas update --auto

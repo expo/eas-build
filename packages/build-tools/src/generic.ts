@@ -1,3 +1,4 @@
+import fs from 'fs';
 import path from 'path';
 
 import { BuildPhase, Generic } from '@expo/eas-build-job';
@@ -14,6 +15,8 @@ export async function runGenericJobAsync(ctx: BuildContext<Generic.Job>): Promis
   const customBuildCtx = new CustomBuildContext(ctx);
 
   await prepareProjectSourcesAsync(ctx, customBuildCtx.projectSourceDirectory);
+
+  await addEasWorkflows(customBuildCtx);
 
   const relativeConfigPath = nullthrows(
     ctx.job.customBuildConfig?.path,
@@ -44,4 +47,16 @@ export async function runGenericJobAsync(ctx: BuildContext<Generic.Job>): Promis
   });
 
   await workflow.executeAsync();
+}
+
+async function addEasWorkflows(customBuildCtx: CustomBuildContext): Promise<void> {
+  await fs.promises.mkdir(path.join(customBuildCtx.projectSourceDirectory, '__eas'), {
+    recursive: true,
+  });
+
+  await fs.promises.cp(
+    path.join(__dirname, '..', 'resources', '__eas'),
+    path.join(customBuildCtx.projectSourceDirectory, '__eas'),
+    { recursive: true }
+  );
 }
