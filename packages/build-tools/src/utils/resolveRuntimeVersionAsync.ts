@@ -30,16 +30,17 @@ export async function resolveRuntimeVersionAsync({
 
     const extraArgs = logger.debug() ? ['--debug'] : [];
 
-    const resolvedRuntimeVersionJSONResult = await expoUpdatesCommandAsync(projectDir, [
-      'runtimeversion:resolve',
-      '--platform',
-      platform,
-      ...extraArgs,
-    ]);
+    const resolvedRuntimeVersionJSONResult = await expoUpdatesCommandAsync(
+      projectDir,
+      ['runtimeversion:resolve', '--platform', platform, ...extraArgs],
+      {
+        logger,
+      }
+    );
     const runtimeVersionResult = JSON.parse(resolvedRuntimeVersionJSONResult);
 
     logger.debug('runtimeversion:resolve output:');
-    logger.debug(runtimeVersionResult);
+    logger.debug(resolvedRuntimeVersionJSONResult);
 
     return runtimeVersionResult.runtimeVersion ?? null;
   } catch (e: any) {
