@@ -7,6 +7,7 @@ on:
       - main
     paths:
       - .github/workflows/license.yml
+  workflow_dispatch:
 
 jobs:
   test:
