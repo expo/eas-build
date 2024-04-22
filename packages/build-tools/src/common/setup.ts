@@ -67,17 +67,17 @@ export async function setupAsync<TJob extends BuildJob>(ctx: BuildContext<TJob>)
   });
 
   if (ctx.job.triggeredBy === BuildTrigger.GIT_BASED_INTEGRATION) {
-    if (!ctx.appConfig.ios?.bundleIdentifier) {
-      throw new Error(
-        'The "ios.bundleIdentifier" is required to be set in app config for builds triggered by GitHub integration. Learn more: https://docs.expo.dev/versions/latest/config/app/#bundleidentifier.'
-      );
-    }
-    if (!ctx.appConfig.android?.package) {
-      throw new Error(
-        'The "android.package" is required to be set in app config for builds triggered by GitHub integration. Learn more: https://docs.expo.dev/versions/latest/config/app/#package.'
-      );
-    }
     await ctx.runBuildPhase(BuildPhase.EAS_BUILD_INTERNAL, async () => {
+      if (!ctx.appConfig.ios?.bundleIdentifier && ctx.job.platform === Platform.IOS) {
+        throw new Error(
+          'The "ios.bundleIdentifier" is required to be set in app config for builds triggered by GitHub integration. Learn more: https://docs.expo.dev/versions/latest/config/app/#bundleidentifier.'
+        );
+      }
+      if (!ctx.appConfig.android?.package && ctx.job.platform === Platform.ANDROID) {
+        throw new Error(
+          'The "android.package" is required to be set in app config for builds triggered by GitHub integration. Learn more: https://docs.expo.dev/versions/latest/config/app/#package.'
+        );
+      }
       const { newJob, newMetadata } = await runEasBuildInternalAsync({
         job: ctx.job,
         env: ctx.env,
