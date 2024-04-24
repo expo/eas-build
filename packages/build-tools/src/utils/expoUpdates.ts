@@ -302,6 +302,6 @@ export function isModernExpoUpdatesCLIWithRuntimeVersionCommandSupported(
     return true;
   }
 
-  // TODO(wschurman): add semver check once we know the SDK51 version of expo-updates that supports this
-  return false;
+  // Anything SDK 51 or greater uses the expo-updates CLI
+  return semver.gte(expoUpdatesPackageVersion, '0.25.4');
 }
