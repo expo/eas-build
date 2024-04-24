@@ -1,4 +1,4 @@
-import { Platform } from '@expo/eas-build-job';
+import { Platform, Workflow } from '@expo/eas-build-job';
 import {
   BuildFunction,
   BuildStepInput,
@@ -20,6 +20,12 @@ export function calculateEASUpdateRuntimeVersionFunction(ctx: CustomBuildContext
         id: 'platform',
         defaultValue: ctx.job.platform,
         required: !ctx.job.platform,
+        allowedValueTypeName: BuildStepInputValueTypeName.STRING,
+      }),
+      BuildStepInput.createProvider({
+        id: 'workflow',
+        defaultValue: ctx.job.type,
+        required: !ctx.job.type,
         allowedValueTypeName: BuildStepInputValueTypeName.STRING,
       }),
     ],
@@ -47,6 +53,7 @@ export function calculateEASUpdateRuntimeVersionFunction(ctx: CustomBuildContext
         logger: stepCtx.logger,
         appConfig,
         platform: inputs.platform.value as Platform,
+        workflow: inputs.workflow.value as Workflow,
       });
       if (resolvedRuntimeVersion) {
         outputs.resolved_eas_update_runtime_version.set(resolvedRuntimeVersion);

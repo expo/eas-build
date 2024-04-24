@@ -1,6 +1,6 @@
 import assert from 'assert';
 
-import { Platform, Job, BuildJob } from '@expo/eas-build-job';
+import { Platform, Job, BuildJob, Workflow } from '@expo/eas-build-job';
 import semver from 'semver';
 import { ExpoConfig } from '@expo/config';
 import { bunyan } from '@expo/logger';
@@ -215,11 +215,13 @@ export async function resolveRuntimeVersionForExpoUpdatesIfConfiguredAsync({
   cwd,
   appConfig,
   platform,
+  workflow,
   logger,
 }: {
   cwd: string;
   appConfig: ExpoConfig;
   platform: Platform;
+  workflow: Workflow;
   logger: bunyan;
 }): Promise<string | null> {
   const expoUpdatesPackageVersion = await getExpoUpdatesPackageVersionIfInstalledAsync(cwd, logger);
@@ -231,6 +233,7 @@ export async function resolveRuntimeVersionForExpoUpdatesIfConfiguredAsync({
     projectDir: cwd,
     exp: appConfig,
     platform,
+    workflow,
     logger,
     expoUpdatesPackageVersion,
   });

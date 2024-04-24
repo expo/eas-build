@@ -77,6 +77,7 @@ async function buildAsync(ctx: BuildContext<Android.Job>): Promise<void> {
         logger: ctx.logger,
         appConfig: ctx.appConfig,
         platform: ctx.job.platform,
+        workflow: ctx.job.type,
       });
     }
   );
@@ -105,7 +106,12 @@ async function buildAsync(ctx: BuildContext<Android.Job>): Promise<void> {
       gradleCommand,
       androidDir: path.join(ctx.getReactNativeProjectDirectory(), 'android'),
       ...(resolvedExpoUpdatesRuntimeVersion
-        ? { extraEnv: { EXPO_UPDATES_FINGERPRINT_OVERRIDE: resolvedExpoUpdatesRuntimeVersion } }
+        ? {
+            extraEnv: {
+              EXPO_UPDATES_FINGERPRINT_OVERRIDE: resolvedExpoUpdatesRuntimeVersion,
+              EXPO_UPDATES_WORKFLOW_OVERRIDE: ctx.job.type,
+            },
+          }
         : null),
     });
   });
