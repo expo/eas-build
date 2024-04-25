@@ -102,7 +102,7 @@ describe('uploadArtifact', () => {
       type: ManagedArtifactType.APPLICATION_ARCHIVE,
       paths: [],
     };
-    expect(ctx.uploadArtifact({ artifact, logger: mockLogger })).rejects.toThrow(finalError);
+    await expect(ctx.uploadArtifact({ artifact, logger: mockLogger })).rejects.toThrow(finalError);
     expect(ctx.artifacts[artifact.type]).toBeUndefined();
   });
 });
