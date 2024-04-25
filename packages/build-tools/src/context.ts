@@ -2,28 +2,29 @@ import path from 'path';
 
 import fs from 'fs-extra';
 import {
-  ManagedArtifactType,
   BuildPhase,
   BuildPhaseResult,
   BuildPhaseStats,
-  Job,
-  LogMarker,
   Env,
-  errors,
-  Metadata,
   EnvironmentSecretType,
+  errors,
   GenericArtifactType,
   isGenericArtifact,
+  Job,
+  LogMarker,
+  ManagedArtifactType,
+  Metadata,
 } from '@expo/eas-build-job';
 import { ExpoConfig } from '@expo/config';
 import { bunyan } from '@expo/logger';
-import { SpawnPromise, SpawnOptions, SpawnResult } from '@expo/turtle-spawn';
+import { SpawnOptions, SpawnPromise, SpawnResult } from '@expo/turtle-spawn';
 import { BuildTrigger } from '@expo/eas-build-job/dist/common';
 
 import { PackageManager, resolvePackageManager } from './utils/packageManager';
 import { resolveBuildPhaseErrorAsync } from './buildErrors/detectError';
 import { readAppConfig } from './utils/appConfig';
 import { createTemporaryEnvironmentSecretFile } from './utils/environmentSecrets';
+import { retryAsync } from './utils/retry';
 
 export type Artifacts = Partial<Record<ManagedArtifactType, string>>;
 
@@ -106,6 +107,7 @@ export class BuildContext<TJob extends Job = Job> {
   private buildPhaseHasWarnings = false;
   private _appConfig?: ExpoConfig;
   private readonly reportBuildPhaseStats?: (stats: BuildPhaseStats) => void;
+  private readonly ARTIFACT_UPLOAD_RETRY_INTERVAL_MS: number = 30_000;
 
   constructor(job: TJob, options: BuildContextOptions) {
     this.workingdir = options.workingdir;
@@ -226,7 +228,18 @@ export class BuildContext<TJob extends Job = Job> {
     artifact: ArtifactToUpload;
     logger: bunyan;
   }): Promise<void> {
-    const bucketKey = await this._uploadArtifact({ artifact, logger });
+    const bucketKey = await retryAsync(
+      async () => {
+        return await this._uploadArtifact({ artifact, logger });
+      },
+      {
+        retryOptions: {
+          retries: 2,
+          retryIntervalMs: this.ARTIFACT_UPLOAD_RETRY_INTERVAL_MS,
+        },
+        logger,
+      }
+    );
     if (bucketKey && !isGenericArtifact(artifact)) {
       this.artifacts[artifact.type] = bucketKey;
     }
