@@ -18,7 +18,7 @@ describe('uploadArtifact', () => {
       runGlobalExpoCliCommand: jest.fn(),
       uploadArtifact: jest.fn().mockImplementation(() => Promise.resolve('bucketKey')),
     });
-    (ctx as any).ARTIFACT_UPLOAD_RETRY_INTERVAL_MS = 500;
+    (ctx as any).ARTIFACT_UPLOAD_RETRY_INTERVAL_MS = 500; // reduced for testing, normally 30s
     const artifact = {
       type: ManagedArtifactType.APPLICATION_ARCHIVE,
       paths: [],
@@ -41,7 +41,7 @@ describe('uploadArtifact', () => {
         })
         .mockImplementation(() => Promise.resolve('bucketKey')),
     });
-    (ctx as any).ARTIFACT_UPLOAD_RETRY_INTERVAL_MS = 500;
+    (ctx as any).ARTIFACT_UPLOAD_RETRY_INTERVAL_MS = 500; // reduced for testing, normally 30s
     const artifact = {
       type: ManagedArtifactType.APPLICATION_ARCHIVE,
       paths: [],
@@ -67,7 +67,7 @@ describe('uploadArtifact', () => {
         })
         .mockImplementation(() => Promise.resolve('bucketKey')),
     });
-    (ctx as any).ARTIFACT_UPLOAD_RETRY_INTERVAL_MS = 500;
+    (ctx as any).ARTIFACT_UPLOAD_RETRY_INTERVAL_MS = 500; // reduced for testing, normally 30s
     const artifact = {
       type: ManagedArtifactType.APPLICATION_ARCHIVE,
       paths: [],
@@ -97,7 +97,7 @@ describe('uploadArtifact', () => {
         })
         .mockImplementation(() => Promise.resolve('bucketKey')),
     });
-    (ctx as any).ARTIFACT_UPLOAD_RETRY_INTERVAL_MS = 500;
+    (ctx as any).ARTIFACT_UPLOAD_RETRY_INTERVAL_MS = 500; // reduced for testing, normally 30s
     const artifact = {
       type: ManagedArtifactType.APPLICATION_ARCHIVE,
       paths: [],
