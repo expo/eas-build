@@ -116,4 +116,28 @@ describe('uploadArtifact', () => {
     await expect(ctx.uploadArtifact({ artifact, logger: mockLogger })).rejects.toThrow(finalError);
     expect(ctx.artifacts[artifact.type]).toBeUndefined();
   });
+  it('does not upload artifact if fails once with an error different than DNS error', async () => {
+    const job = createTestIosJob();
+    const firstError = new Error('Upload failed with a different kind of error');
+    const ctx = new BuildContext(job, {
+      workingdir: '/workingdir',
+      logBuffer: { getLogs: () => [], getPhaseLogs: () => [] },
+      logger: mockLogger,
+      env: {},
+      runGlobalExpoCliCommand: jest.fn(),
+      uploadArtifact: jest
+        .fn()
+        .mockImplementationOnce(() => {
+          throw firstError;
+        })
+        .mockImplementation(() => Promise.resolve('bucketKey')),
+    });
+    (ctx as any).ARTIFACT_UPLOAD_RETRY_INTERVAL_MS = 500; // reduced for testing, normally 30s
+    const artifact = {
+      type: ManagedArtifactType.APPLICATION_ARCHIVE,
+      paths: [],
+    };
+    await expect(ctx.uploadArtifact({ artifact, logger: mockLogger })).rejects.toThrow(firstError);
+    expect(ctx.artifacts[artifact.type]).toBeUndefined();
+  });
 });
