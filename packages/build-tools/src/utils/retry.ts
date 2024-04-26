@@ -36,3 +36,33 @@ export async function retryAsync<T = void>(
     }
   }
 }
+
+export async function retryWithConditionAsync<T = void>(
+  fn: (attemptCount: number) => Promise<T>,
+  {
+    retryOptions: { retries, retryIntervalMs },
+    retryConditionFn,
+    logger,
+  }: {
+    retryOptions: RetryOptions;
+    retryConditionFn: (error: any) => boolean;
+    logger?: bunyan;
+  }
+): Promise<T> {
+  let attemptCount = -1;
+  for (;;) {
+    try {
+      attemptCount += 1;
+      return await fn(attemptCount);
+    } catch (err: any) {
+      logger?.debug(
+        { err, stdout: err.stdout, stderr: err.stderr },
+        `Retry attempt ${attemptCount}`
+      );
+      if (attemptCount === retries || !retryConditionFn(err)) {
+        throw err;
+      }
+      await sleepAsync(retryIntervalMs);
+    }
+  }
+}
