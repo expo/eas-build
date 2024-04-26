@@ -24,7 +24,7 @@ import { PackageManager, resolvePackageManager } from './utils/packageManager';
 import { resolveBuildPhaseErrorAsync } from './buildErrors/detectError';
 import { readAppConfig } from './utils/appConfig';
 import { createTemporaryEnvironmentSecretFile } from './utils/environmentSecrets';
-import { retryAsync } from './utils/retry';
+import { retryWithConditionAsync } from './utils/retry';
 
 export type Artifacts = Partial<Record<ManagedArtifactType, string>>;
 
@@ -228,7 +228,7 @@ export class BuildContext<TJob extends Job = Job> {
     artifact: ArtifactToUpload;
     logger: bunyan;
   }): Promise<void> {
-    const bucketKey = await retryAsync(
+    const bucketKey = await retryWithConditionAsync(
       async () => {
         return await this._uploadArtifact({ artifact, logger });
       },
@@ -237,6 +237,8 @@ export class BuildContext<TJob extends Job = Job> {
           retries: 2,
           retryIntervalMs: this.ARTIFACT_UPLOAD_RETRY_INTERVAL_MS,
         },
+        retryConditionFn: (e: Error & { code: string }) =>
+          e.code === 'ENOTFOUND' || e.code === 'EAI_AGAIN',
         logger,
       }
     );
