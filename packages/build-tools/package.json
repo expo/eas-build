@@ -5,6 +5,7 @@
   "types": "dist/index.d.ts",
   "files": [
     "dist",
+    "resources",
     "templates",
     "bin"
   ],
