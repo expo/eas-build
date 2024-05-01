@@ -1,5 +1,5 @@
 build:
-  name: EAS Update in the Cloud
+  name: EAS Update – Publish
   steps:
     - eas/checkout
 
@@ -7,4 +7,4 @@ build:
 
     - eas/install_node_modules
 
-    - run: eas update --auto
+    - run: npx -y eas-cli update --auto
