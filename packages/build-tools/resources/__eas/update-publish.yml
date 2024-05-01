@@ -7,4 +7,4 @@ build:
 
     - eas/install_node_modules
 
-    - run: npx -y eas-cli update --auto
+    - run: npx -y eas-cli@latest update --auto
