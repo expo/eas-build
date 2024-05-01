@@ -2,6 +2,7 @@ import { ExpoConfig } from '@expo/config';
 import { Updates } from '@expo/config-plugins';
 import { bunyan } from '@expo/logger';
 import { Workflow } from '@expo/eas-build-job';
+import { BuildStepEnv } from '@expo/steps';
 
 import { ExpoUpdatesCLIModuleNotFoundError, expoUpdatesCommandAsync } from './expoUpdatesCli';
 import { isModernExpoUpdatesCLIWithRuntimeVersionCommandSupported } from './expoUpdates';
@@ -13,6 +14,7 @@ export async function resolveRuntimeVersionAsync({
   projectDir,
   logger,
   expoUpdatesPackageVersion,
+  env,
 }: {
   exp: ExpoConfig;
   platform: 'ios' | 'android';
@@ -20,6 +22,7 @@ export async function resolveRuntimeVersionAsync({
   projectDir: string;
   logger: bunyan;
   expoUpdatesPackageVersion: string;
+  env: BuildStepEnv;
 }): Promise<string | null> {
   if (!isModernExpoUpdatesCLIWithRuntimeVersionCommandSupported(expoUpdatesPackageVersion)) {
     logger.debug('Using expo-updates config plugin for runtime version resolution');
@@ -38,6 +41,7 @@ export async function resolveRuntimeVersionAsync({
       ['runtimeversion:resolve', '--platform', platform, '--workflow', workflow, ...extraArgs],
       {
         logger,
+        env,
       }
     );
     const runtimeVersionResult = JSON.parse(resolvedRuntimeVersionJSONResult);

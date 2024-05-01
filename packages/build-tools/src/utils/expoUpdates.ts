@@ -4,6 +4,7 @@ import { Platform, Job, BuildJob, Workflow } from '@expo/eas-build-job';
 import semver from 'semver';
 import { ExpoConfig } from '@expo/config';
 import { bunyan } from '@expo/logger';
+import { BuildStepEnv } from '@expo/steps';
 
 import {
   androidSetRuntimeVersionNativelyAsync,
@@ -217,12 +218,14 @@ export async function resolveRuntimeVersionForExpoUpdatesIfConfiguredAsync({
   platform,
   workflow,
   logger,
+  env,
 }: {
   cwd: string;
   appConfig: ExpoConfig;
   platform: Platform;
   workflow: Workflow;
   logger: bunyan;
+  env: BuildStepEnv;
 }): Promise<string | null> {
   const expoUpdatesPackageVersion = await getExpoUpdatesPackageVersionIfInstalledAsync(cwd, logger);
   if (expoUpdatesPackageVersion === null) {
@@ -236,6 +239,7 @@ export async function resolveRuntimeVersionForExpoUpdatesIfConfiguredAsync({
     workflow,
     logger,
     expoUpdatesPackageVersion,
+    env,
   });
 
   logger.info(`Resolved runtime version: ${resolvedRuntimeVersion}`);

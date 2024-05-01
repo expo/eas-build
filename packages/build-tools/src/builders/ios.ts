@@ -86,6 +86,7 @@ async function buildAsync(ctx: BuildContext<Ios.Job>): Promise<void> {
           appConfig: ctx.appConfig,
           platform: ctx.job.platform,
           workflow: ctx.job.type,
+          env: ctx.env,
         });
       }
     );
