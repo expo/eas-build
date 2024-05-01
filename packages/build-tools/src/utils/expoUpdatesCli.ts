@@ -1,6 +1,7 @@
 import resolveFrom, { silent as silentResolveFrom } from 'resolve-from';
 import spawnAsync from '@expo/turtle-spawn';
 import { bunyan } from '@expo/logger';
+import { BuildStepEnv } from '@expo/steps';
 
 export class ExpoUpdatesCLIModuleNotFoundError extends Error {}
 export class ExpoUpdatesCLIInvalidCommandError extends Error {}
@@ -9,7 +10,7 @@ export class ExpoUpdatesCLICommandFailedError extends Error {}
 export async function expoUpdatesCommandAsync(
   projectDir: string,
   args: string[],
-  { logger }: { logger: bunyan }
+  { logger, env }: { logger: bunyan; env: BuildStepEnv }
 ): Promise<string> {
   let expoUpdatesCli;
   try {
@@ -30,6 +31,7 @@ export async function expoUpdatesCommandAsync(
       stdio: 'pipe',
       cwd: projectDir,
       logger,
+      env,
     });
     return spawnResult.stdout;
   } catch (e: any) {
