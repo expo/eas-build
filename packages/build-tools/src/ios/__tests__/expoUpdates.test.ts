@@ -3,11 +3,9 @@ import plist from '@expo/plist';
 import { vol } from 'memfs';
 
 import {
-  iosGetNativelyDefinedClassicReleaseChannelAsync,
   IosMetadataName,
   iosSetChannelNativelyAsync,
   iosGetNativelyDefinedChannelAsync,
-  iosSetClassicReleaseChannelNativelyAsync,
   iosGetNativelyDefinedRuntimeVersionAsync,
   iosSetRuntimeVersionNativelyAsync,
 } from '../../ios/expoUpdates';
@@ -26,30 +24,6 @@ const channel = 'easupdatechannel';
 
 afterEach(() => {
   vol.reset();
-});
-
-describe(iosSetClassicReleaseChannelNativelyAsync, () => {
-  test('sets the release channel', async () => {
-    const releaseChannel = 'examplechannel';
-    vol.fromJSON(
-      {
-        'ios/testapp/Supporting/Expo.plist': noItemsExpoPlist,
-        'ios/testapp.xcodeproj/project.pbxproj': 'placeholder',
-        'ios/testapp/AppDelegate.m': 'placeholder',
-      },
-      '/app'
-    );
-
-    const ctx = {
-      getReactNativeProjectDirectory: () => '/app',
-      job: { releaseChannel },
-      logger: { info: () => {} },
-    };
-    await iosSetClassicReleaseChannelNativelyAsync(ctx as any);
-
-    const newExpoPlist = await fs.readFile(expoPlistPath, 'utf8');
-    expect(plist.parse(newExpoPlist)[IosMetadataName.RELEASE_CHANNEL]).toEqual(releaseChannel);
-  });
 });
 
 describe(iosSetChannelNativelyAsync, () => {
@@ -107,39 +81,6 @@ describe(iosGetNativelyDefinedChannelAsync, () => {
       logger: { info: () => {} },
     };
     await expect(iosGetNativelyDefinedChannelAsync(ctx as any)).resolves.toBe('staging-123');
-  });
-});
-
-describe(iosGetNativelyDefinedClassicReleaseChannelAsync, () => {
-  it('gets the natively defined release channel', async () => {
-    const expoPlist = `
-    <?xml version="1.0" encoding="UTF-8"?>
-    <!DOCTYPE plist PUBLIC "-//Apple Computer//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
-    <plist version="1.0">
-      <dict>
-        <key>EXUpdatesReleaseChannel</key>
-        <string>examplechannel</string>
-      </dict>
-    </plist>`;
-
-    vol.fromJSON(
-      {
-        'ios/testapp/Supporting/Expo.plist': expoPlist,
-        'ios/testapp.xcodeproj/project.pbxproj': 'placeholder',
-        'ios/testapp/AppDelegate.m': 'placeholder',
-      },
-      '/app'
-    );
-
-    const ctx = {
-      getReactNativeProjectDirectory: () => '/app',
-      logger: { info: () => {} },
-    };
-    const nativelyDefinedReleaseChannel = await iosGetNativelyDefinedClassicReleaseChannelAsync(
-      ctx as any
-    );
-
-    expect(nativelyDefinedReleaseChannel).toBe('examplechannel');
   });
 });
 

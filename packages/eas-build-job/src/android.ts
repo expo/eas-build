@@ -73,7 +73,6 @@ export interface Job {
   platform: Platform.ANDROID;
   projectRootDirectory: string;
   buildProfile?: string;
-  releaseChannel?: string;
   updates?: {
     channel?: string;
   };
@@ -137,7 +136,6 @@ export const JobSchema = Joi.object({
     then: Joi.string().required(),
     otherwise: Joi.string(),
   }),
-  releaseChannel: Joi.string(),
   updates: Joi.object({
     channel: Joi.string(),
   }),
@@ -177,4 +175,4 @@ export const JobSchema = Joi.object({
     submitProfile: Joi.string(),
   }),
   loggerLevel: Joi.string().valid(...Object.values(LoggerLevel)),
-}).oxor('releaseChannel', 'updates.channel');
+});

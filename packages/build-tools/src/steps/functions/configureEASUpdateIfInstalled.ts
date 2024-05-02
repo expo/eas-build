@@ -55,7 +55,7 @@ export function configureEASUpdateIfInstalledFunction(): BuildFunction {
         sdkVersion: metadata?.sdkVersion,
       }).exp;
 
-      const releaseChannelInput = inputs.channel.value as string | undefined;
+      const channelInput = inputs.channel.value as string | undefined;
       const runtimeVersionInput = inputs.runtime_version.value as string | undefined;
       const resolvedRuntimeVersionInput = inputs.resolved_eas_update_runtime_version.value as
         | string
@@ -63,7 +63,7 @@ export function configureEASUpdateIfInstalledFunction(): BuildFunction {
       const throwIfNotConfigured = inputs.throw_if_not_configured.value as boolean;
       if (runtimeVersionInput && !semver.valid(runtimeVersionInput)) {
         throw new Error(
-          `Runtime version provided by the "runtime_version" input is not a valid semver version: ${releaseChannelInput}`
+          `Runtime version provided by the "runtime_version" input is not a valid semver version: ${runtimeVersionInput}`
         );
       }
 
@@ -90,7 +90,7 @@ export function configureEASUpdateIfInstalledFunction(): BuildFunction {
         appConfig,
         inputs: {
           runtimeVersion: runtimeVersionInput,
-          channel: releaseChannelInput,
+          channel: channelInput,
           resolvedRuntimeVersion: resolvedRuntimeVersionInput,
         },
         metadata: stepCtx.global.staticContext.metadata,

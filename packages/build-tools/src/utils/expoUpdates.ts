@@ -9,16 +9,12 @@ import { BuildStepEnv } from '@expo/steps';
 import {
   androidSetRuntimeVersionNativelyAsync,
   androidSetChannelNativelyAsync,
-  androidSetClassicReleaseChannelNativelyAsync,
-  androidGetNativelyDefinedClassicReleaseChannelAsync,
   androidGetNativelyDefinedRuntimeVersionAsync,
   androidGetNativelyDefinedChannelAsync,
 } from '../android/expoUpdates';
 import {
   iosSetRuntimeVersionNativelyAsync,
   iosSetChannelNativelyAsync,
-  iosSetClassicReleaseChannelNativelyAsync,
-  iosGetNativelyDefinedClassicReleaseChannelAsync,
   iosGetNativelyDefinedRuntimeVersionAsync,
   iosGetNativelyDefinedChannelAsync,
 } from '../ios/expoUpdates';
@@ -75,70 +71,6 @@ export async function setChannelNativelyAsync(ctx: BuildContext<BuildJob>): Prom
   }
 }
 
-/**
- * Used for classic Expo Updates
- */
-export async function setClassicReleaseChannelNativelyAsync(
-  ctx: BuildContext<BuildJob>
-): Promise<void> {
-  assert(ctx.job.releaseChannel, 'releaseChannel must be defined');
-
-  const configFile = ctx.job.platform === Platform.ANDROID ? 'AndroidManifest.xml' : 'Expo.plist';
-  ctx.logger.info(`Setting the release channel in '${configFile}' to '${ctx.job.releaseChannel}'`);
-
-  switch (ctx.job.platform) {
-    case Platform.ANDROID: {
-      await androidSetClassicReleaseChannelNativelyAsync(ctx);
-      return;
-    }
-    case Platform.IOS: {
-      await iosSetClassicReleaseChannelNativelyAsync(ctx);
-      return;
-    }
-    default:
-      throw new Error(`Platform is not supported.`);
-  }
-}
-
-/**
- * Used for classic Expo Updates
- */
-export async function getNativelyDefinedClassicReleaseChannelAsync(
-  ctx: BuildContext<Job>
-): Promise<string | null> {
-  switch (ctx.job.platform) {
-    case Platform.ANDROID: {
-      return androidGetNativelyDefinedClassicReleaseChannelAsync(ctx);
-    }
-    case Platform.IOS: {
-      return iosGetNativelyDefinedClassicReleaseChannelAsync(ctx);
-    }
-    default:
-      throw new Error(`Platform is not supported.`);
-  }
-}
-
-export async function configureClassicExpoUpdatesAsync(ctx: BuildContext<BuildJob>): Promise<void> {
-  if (ctx.job.releaseChannel) {
-    await setClassicReleaseChannelNativelyAsync(ctx);
-  } else {
-    /**
-     * If releaseChannel is not defined:
-     *  1. Try to infer it from the native value.
-     *  2. If it is not set, fallback to 'default'.
-     */
-    const releaseChannel = await getNativelyDefinedClassicReleaseChannelAsync(ctx);
-    if (releaseChannel) {
-      ctx.logger.info(
-        `Using the release channel pre-configured in native project (${releaseChannel})`
-      );
-      ctx.logger.warn('Please add the "releaseChannel" field to your build profile (eas.json)');
-    } else {
-      ctx.logger.info(`Using default release channel for 'expo-updates' (default)`);
-    }
-  }
-}
-
 export async function configureEASExpoUpdatesAsync(ctx: BuildContext<BuildJob>): Promise<void> {
   await setChannelNativelyAsync(ctx);
 }
@@ -180,30 +112,21 @@ export async function configureExpoUpdatesIfInstalledAsync(
       } else if (isDevelopmentClient) {
         // NO-OP: Development clients don't need to have a channel set
       } else {
-        if (ctx.job.releaseChannel !== undefined) {
-          ctx.logger.warn(
-            `This build is configured with EAS Update however has a Classic Updates releaseChannel set instead of having an EAS Update channel.`
-          );
-        } else {
-          const easUpdateUrl = ctx.appConfig.updates?.url ?? null;
-          const jobProfile = ctx.job.buildProfile ?? null;
-          ctx.logger.warn(
-            `This build has an invalid EAS Update configuration: update.url is set to "${easUpdateUrl}" in app config, but a channel is not specified${
-              jobProfile ? '' : ` for the current build profile "${jobProfile}" in eas.json`
-            }.`
-          );
-          ctx.logger.warn(
-            `- No channel will be set and EAS Update will be disabled for the build.`
-          );
-          ctx.logger.warn(
-            `- Run \`eas update:configure\` to set your channel in eas.json. For more details, see https://docs.expo.dev/eas-update/getting-started/#configure-your-project`
-          );
-        }
+        const easUpdateUrl = ctx.appConfig.updates?.url ?? null;
+        const jobProfile = ctx.job.buildProfile ?? null;
+        ctx.logger.warn(
+          `This build has an invalid EAS Update configuration: update.url is set to "${easUpdateUrl}" in app config, but a channel is not specified${
+            jobProfile ? '' : ` for the current build profile "${jobProfile}" in eas.json`
+          }.`
+        );
+        ctx.logger.warn(`- No channel will be set and EAS Update will be disabled for the build.`);
+        ctx.logger.warn(
+          `- Run \`eas update:configure\` to set your channel in eas.json. For more details, see https://docs.expo.dev/eas-update/getting-started/#configure-your-project`
+        );
+
         ctx.markBuildPhaseHasWarnings();
       }
     }
-  } else if (shouldConfigureClassicUpdatesReleaseChannelAsFallback(expoUpdatesPackageVersion)) {
-    await configureClassicExpoUpdatesAsync(ctx);
   }
 
   if (ctx.job.version?.runtimeVersion) {
@@ -285,18 +208,6 @@ export function isEASUpdateConfigured(ctx: BuildContext<Job>): boolean {
     ctx.logger.error(`Assuming EAS Update is not configured`);
     return false;
   }
-}
-
-export function shouldConfigureClassicUpdatesReleaseChannelAsFallback(
-  expoUpdatesPackageVersion: string
-): boolean {
-  if (expoUpdatesPackageVersion.includes('canary')) {
-    return false;
-  }
-
-  // Anything before SDK 50 should configure classic updates as a fallback. The first version
-  // of the expo-updates package published for SDK 50 was 0.19.0
-  return semver.lt(expoUpdatesPackageVersion, '0.19.0');
 }
 
 export function isModernExpoUpdatesCLIWithRuntimeVersionCommandSupported(
