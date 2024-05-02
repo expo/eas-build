@@ -55,12 +55,6 @@ export type Metadata = {
   runtimeVersion?: string;
 
   /**
-   * Release channel (for classic expo-updates)
-   * It's undefined if the classic expo-updates package is not installed for the project.
-   */
-  releaseChannel?: string;
-
-  /**
    * Version of the react-native package used in the project.
    */
   reactNativeVersion?: string;
@@ -180,7 +174,6 @@ export const MetadataSchema = Joi.object({
   sdkVersion: Joi.string(),
   runtimeVersion: Joi.string(),
   reactNativeVersion: Joi.string(),
-  releaseChannel: Joi.string(),
   channel: Joi.string(),
   appName: Joi.string(),
   appIdentifier: Joi.string(),

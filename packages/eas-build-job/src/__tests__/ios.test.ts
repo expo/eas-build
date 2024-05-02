@@ -36,7 +36,6 @@ describe('Ios.JobSchema', () => {
       scheme: 'testapp',
       buildConfiguration: 'Release',
       applicationArchivePath: 'ios/build/*.ipa',
-      releaseChannel: 'default',
       builderEnvironment: {
         image: 'default',
         node: '1.2.3',
@@ -153,7 +152,6 @@ describe('Ios.JobSchema', () => {
       },
       projectRootDirectory: '.',
       username: 'turtle-tutorial',
-      releaseChannel: 'default',
       builderEnvironment: {
         image: 'default',
         node: '1.2.3',
@@ -212,29 +210,6 @@ describe('Ios.JobSchema', () => {
     const { value, error } = Ios.JobSchema.validate(managedJob, joiOptions);
     expect(value).toMatchObject(managedJob);
     expect(error).toBeFalsy();
-  });
-  test('fails when both releaseChannel and updates.channel are defined', () => {
-    const managedJob = {
-      secrets: {
-        buildCredentials,
-      },
-      type: Workflow.MANAGED,
-      platform: Platform.IOS,
-      releaseChannel: 'default',
-      updates: {
-        channel: 'main',
-      },
-      projectArchive: {
-        type: ArchiveSourceType.URL,
-        url: 'http://localhost:3000',
-      },
-      projectRootDirectory: '.',
-    };
-
-    const { error } = Ios.JobSchema.validate(managedJob, joiOptions);
-    expect(error?.message).toBe(
-      '"value" contains a conflict between optional exclusive peers [releaseChannel, updates.channel]'
-    );
   });
 
   test('can set github trigger options', () => {

@@ -59,23 +59,17 @@ export async function configureEASUpdateAsync({
       } else if (isDevelopmentClient) {
         // NO-OP: Development clients don't need to have a channel set
       } else {
-        if (job.releaseChannel !== undefined) {
-          logger.warn(
-            `This build is configured with EAS Update however has a Classic Updates releaseChannel set instead of having an EAS Update channel.`
-          );
-        } else {
-          const easUpdateUrl = appConfig.updates?.url ?? null;
-          const jobProfile = job.buildProfile ?? null;
-          logger.warn(
-            `This build has an invalid EAS Update configuration: update.url is set to "${easUpdateUrl}" in app config, but a channel is not specified${
-              jobProfile ? '' : ` for the current build profile "${jobProfile}" in eas.json`
-            }.`
-          );
-          logger.warn(`- No channel will be set and EAS Update will be disabled for the build.`);
-          logger.warn(
-            `- Run \`eas update:configure\` to set your channel in eas.json. For more details, see https://docs.expo.dev/eas-update/getting-started/#configure-your-project`
-          );
-        }
+        const easUpdateUrl = appConfig.updates?.url ?? null;
+        const jobProfile = job.buildProfile ?? null;
+        logger.warn(
+          `This build has an invalid EAS Update configuration: update.url is set to "${easUpdateUrl}" in app config, but a channel is not specified${
+            jobProfile ? '' : ` for the current build profile "${jobProfile}" in eas.json`
+          }.`
+        );
+        logger.warn(`- No channel will be set and EAS Update will be disabled for the build.`);
+        logger.warn(
+          `- Run \`eas update:configure\` to set your channel in eas.json. For more details, see https://docs.expo.dev/eas-update/getting-started/#configure-your-project`
+        );
       }
     }
   } else {

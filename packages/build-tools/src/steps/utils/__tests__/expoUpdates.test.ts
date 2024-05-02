@@ -5,8 +5,6 @@ import { ExpoConfig } from '@expo/config';
 import { configureEASUpdateAsync } from '../expoUpdates';
 import { androidSetChannelNativelyAsync } from '../android/expoUpdates';
 import { iosSetChannelNativelyAsync } from '../ios/expoUpdates';
-import { androidSetClassicReleaseChannelNativelyAsync } from '../../../android/expoUpdates';
-import { iosSetClassicReleaseChannelNativelyAsync } from '../../../ios/expoUpdates';
 
 jest.mock('../../../utils/getExpoUpdatesPackageVersionIfInstalledAsync');
 jest.mock('../ios/expoUpdates');
@@ -37,9 +35,7 @@ describe(configureEASUpdateAsync, () => {
     });
 
     expect(androidSetChannelNativelyAsync).not.toBeCalled();
-    expect(androidSetClassicReleaseChannelNativelyAsync).not.toBeCalled();
     expect(iosSetChannelNativelyAsync).not.toBeCalled();
-    expect(iosSetClassicReleaseChannelNativelyAsync).not.toBeCalled();
   });
 
   it('configures for EAS if updates.channel (eas.json) and updates.url (app config) are set', async () => {
@@ -64,16 +60,13 @@ describe(configureEASUpdateAsync, () => {
     });
 
     expect(androidSetChannelNativelyAsync).not.toBeCalled();
-    expect(androidSetClassicReleaseChannelNativelyAsync).not.toBeCalled();
     expect(iosSetChannelNativelyAsync).toBeCalledTimes(1);
-    expect(iosSetClassicReleaseChannelNativelyAsync).not.toBeCalled();
   });
 
-  it('configures for EAS if the updates.channel and releaseChannel are both set', async () => {
+  it('configures for EAS if the updates.channel is set', async () => {
     await configureEASUpdateAsync({
       job: {
         updates: { channel: 'main' },
-        releaseChannel: 'default',
         platform: Platform.IOS,
       } as unknown as BuildJob,
       workingDirectory: '/app',
@@ -90,8 +83,6 @@ describe(configureEASUpdateAsync, () => {
     });
 
     expect(androidSetChannelNativelyAsync).not.toBeCalled();
-    expect(androidSetClassicReleaseChannelNativelyAsync).not.toBeCalled();
     expect(iosSetChannelNativelyAsync).toBeCalledTimes(1);
-    expect(iosSetClassicReleaseChannelNativelyAsync).not.toBeCalled();
   });
 });

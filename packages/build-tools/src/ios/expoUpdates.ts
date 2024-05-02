@@ -9,7 +9,6 @@ import { BuildContext } from '../context';
 
 export enum IosMetadataName {
   UPDATES_CONFIGURATION_REQUEST_HEADERS_KEY = 'EXUpdatesRequestHeaders',
-  RELEASE_CHANNEL = 'EXUpdatesReleaseChannel',
   RUNTIME_VERSION = 'EXUpdatesRuntimeVersion',
 }
 
@@ -75,40 +74,6 @@ export async function iosGetNativelyDefinedChannelAsync(
       `Failed to parse ${IosMetadataName.UPDATES_CONFIGURATION_REQUEST_HEADERS_KEY} from Expo.plist: ${err.message}`
     );
   }
-}
-
-export async function iosSetClassicReleaseChannelNativelyAsync(
-  ctx: BuildContext<BuildJob>
-): Promise<void> {
-  assert(ctx.job.releaseChannel, 'releaseChannel must be defined');
-
-  const expoPlistPath = IOSConfig.Paths.getExpoPlistPath(ctx.getReactNativeProjectDirectory());
-
-  if (!(await fs.pathExists(expoPlistPath))) {
-    throw new Error(`${expoPlistPath} does not exist`);
-  }
-
-  const expoPlistContents = await fs.readFile(expoPlistPath, 'utf8');
-  const items: Record<string, string | Record<string, string>> = plist.parse(expoPlistContents);
-  items[IosMetadataName.RELEASE_CHANNEL] = ctx.job.releaseChannel;
-  const updatedExpoPlistContents = plist.build(items);
-
-  await fs.writeFile(expoPlistPath, updatedExpoPlistContents);
-}
-
-export async function iosGetNativelyDefinedClassicReleaseChannelAsync(
-  ctx: BuildContext<Job>
-): Promise<string | null> {
-  const expoPlistPath = IOSConfig.Paths.getExpoPlistPath(ctx.getReactNativeProjectDirectory());
-  if (!(await fs.pathExists(expoPlistPath))) {
-    return null;
-  }
-  const expoPlistContents = await fs.readFile(expoPlistPath, 'utf8');
-  const parsedPlist = plist.parse(expoPlistContents);
-  if (!parsedPlist) {
-    return null;
-  }
-  return parsedPlist[IosMetadataName.RELEASE_CHANNEL] ?? null;
 }
 
 export async function iosGetNativelyDefinedRuntimeVersionAsync(
