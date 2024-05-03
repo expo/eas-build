@@ -2,7 +2,8 @@ import path from 'path';
 
 import spawn from '@expo/turtle-spawn';
 import fs from 'fs-extra';
-import { ArchiveSourceType, Job } from '@expo/eas-build-job';
+import nullthrows from 'nullthrows';
+import { ArchiveSource, ArchiveSourceType, Job } from '@expo/eas-build-job';
 import { bunyan } from '@expo/logger';
 import downloadFile from '@expo/downloader';
 
@@ -23,35 +24,87 @@ export async function prepareProjectSourcesAsync<TJob extends Job>(
       destinationDirectory
     );
   } else if (ctx.job.projectArchive.type === ArchiveSourceType.GIT) {
-    await shallowCloneRepositoryAsync(
-      ctx,
-      ctx.job.projectArchive.repositoryUrl,
-      ctx.job.projectArchive.gitRef,
-      destinationDirectory
-    );
+    await shallowCloneRepositoryAsync({
+      logger: ctx.logger,
+      archiveSource: ctx.job.projectArchive,
+      destinationDirectory,
+    });
   }
 }
 
-async function shallowCloneRepositoryAsync<TJob extends Job>(
-  ctx: BuildContext<TJob>,
-  projectRepoUrl: string,
-  gitRef: string,
-  destinationDirectory: string
-): Promise<void> {
+async function shallowCloneRepositoryAsync({
+  logger,
+  archiveSource,
+  destinationDirectory,
+}: {
+  logger: bunyan;
+  archiveSource: ArchiveSource & { type: ArchiveSourceType.GIT };
+  destinationDirectory: string;
+}): Promise<void> {
+  const { repositoryUrl } = archiveSource;
   try {
     await spawn('git', ['init'], { cwd: destinationDirectory });
-    await spawn('git', ['remote', 'add', 'origin', projectRepoUrl], { cwd: destinationDirectory });
-    await spawn('git', ['fetch', 'origin', '--depth', '1', gitRef], { cwd: destinationDirectory });
-    await spawn('git', ['checkout', gitRef], { cwd: destinationDirectory });
-  } catch (err: any) {
-    const sanitizedUrl = getSanitizedGitUrl(projectRepoUrl);
-    if (sanitizedUrl) {
-      ctx.logger.error(`Failed to clone git repository: ${sanitizedUrl}.`);
+    await spawn('git', ['remote', 'add', 'origin', repositoryUrl], { cwd: destinationDirectory });
+
+    let gitRef: string | null;
+    let gitCommitHash: string;
+    // If gitRef is provided, but gitCommitHash is not,
+    // we're handling a legacy case - gitRef is the commit hash.
+    // Otherwise we expect gitCommitHash to be present.
+    if (archiveSource.gitRef && !archiveSource.gitCommitHash) {
+      gitCommitHash = archiveSource.gitRef;
+      gitRef = null;
     } else {
-      ctx.logger.error('Failed to clone git repository.');
+      gitCommitHash = nullthrows(archiveSource.gitCommitHash);
+      gitRef = archiveSource.gitRef ?? null;
     }
-    ctx.logger.error(err.stderr);
+
+    await spawn(
+      'git',
+      ['fetch', 'origin', '--depth', '1', '--no-tags', getGitRefSpec({ gitCommitHash, gitRef })],
+      {
+        cwd: destinationDirectory,
+      }
+    );
+
+    await spawn('git', ['checkout', ...getGitRefCheckoutArgs({ gitCommitHash, gitRef })], {
+      cwd: destinationDirectory,
+    });
+  } catch (err: any) {
+    const sanitizedUrl = getSanitizedGitUrl(repositoryUrl);
+    if (sanitizedUrl) {
+      logger.error(`Failed to clone git repository: ${sanitizedUrl}.`);
+    } else {
+      logger.error('Failed to clone git repository.');
+    }
+    logger.error(err.stderr);
     throw err;
+  }
+}
+
+function getGitRefCheckoutArgs({
+  gitCommitHash,
+  gitRef,
+}: {
+  gitCommitHash: string;
+  gitRef: string | null;
+}): [commit: string, '-B', branch: string] | [ref: string] {
+  // No ref provided, checkout the commit hash
+  if (!gitRef) {
+    return [gitCommitHash];
+  }
+
+  const { name, type } = getStrippedBranchOrTagName(gitRef);
+  switch (type) {
+    case 'branch':
+      // We can check out a remote branch because we fetched it through the refspec.
+      return [`refs/remotes/origin/${name}`, '-B', name];
+    case 'tag':
+      // We can check out a tag because we fetched it through the refspec.
+      return [`refs/tags/${name}`];
+    case 'other':
+      // We checkout the commit and start a new branch.
+      return [gitCommitHash, '-B', name];
   }
 }
 
@@ -116,4 +169,54 @@ async function unpackTarGzAsync({
   await spawn('tar', ['-C', destination, '--strip-components', '1', '-zxf', source], {
     logger,
   });
+}
+
+function getStrippedBranchOrTagName(ref: string): {
+  name: string;
+  type: 'branch' | 'tag' | 'other';
+} {
+  const branchRegex = /(\/?refs)?\/?heads\/(.+)/;
+  const branchMatch = ref.match(branchRegex);
+
+  if (branchMatch) {
+    return {
+      name: branchMatch[2],
+      type: 'branch',
+    };
+  }
+
+  const tagRegex = /(\/?refs)?\/?tags\/(.+)/;
+  const tagMatch = ref.match(tagRegex);
+
+  if (tagMatch) {
+    return {
+      name: tagMatch[2],
+      type: 'tag',
+    };
+  }
+
+  return {
+    name: ref,
+    type: 'other',
+  };
+}
+
+function getGitRefSpec({
+  gitCommitHash,
+  gitRef,
+}: {
+  gitCommitHash: string;
+  gitRef: string | null;
+}): string {
+  const { name, type } = getStrippedBranchOrTagName(gitRef ?? '');
+  switch (type) {
+    case 'branch':
+      // By using a remote ref we also set the upstream.
+      return `+${gitCommitHash}:refs/remotes/origin/${name}`;
+    case 'tag':
+      return `+${gitCommitHash}:refs/tags/${name}`;
+    case 'other':
+      // Checks out a new branch or falls back to FETCH_HEAD if name is empty.
+      return `+${gitCommitHash}:${name}`;
+  }
 }
