@@ -59,17 +59,31 @@ async function shallowCloneRepositoryAsync({
       gitRef = archiveSource.gitRef ?? null;
     }
 
-    await spawn(
-      'git',
-      ['fetch', 'origin', '--depth', '1', '--no-tags', getGitRefSpec({ gitCommitHash, gitRef })],
-      {
-        cwd: destinationDirectory,
-      }
-    );
-
-    await spawn('git', ['checkout', ...getGitRefCheckoutArgs({ gitCommitHash, gitRef })], {
+    await spawn('git', ['fetch', 'origin', '--depth', '1', '--no-tags', gitCommitHash], {
       cwd: destinationDirectory,
     });
+
+    await spawn('git', ['checkout', gitCommitHash], { cwd: destinationDirectory });
+
+    // If we have a gitRef, we try to add it to the repo.
+    if (gitRef) {
+      const { name, type } = getStrippedBranchOrTagName(gitRef);
+      switch (type) {
+        // If the gitRef is for a tag, we add a lightweight tag to current commit.
+        case 'tag': {
+          await spawn('git', ['tag', name], { cwd: destinationDirectory });
+          break;
+        }
+        // gitRef for a branch may come as:
+        // - qualified ref (e.g. refs/heads/feature/add-icon), detected as "branch" for a push,
+        // - unqualified ref (e.g. feature/add-icon), detected as "other" for a pull request.
+        case 'branch':
+        case 'other': {
+          await spawn('git', ['checkout', '-b', name], { cwd: destinationDirectory });
+          break;
+        }
+      }
+    }
   } catch (err: any) {
     const sanitizedUrl = getSanitizedGitUrl(repositoryUrl);
     if (sanitizedUrl) {
@@ -79,32 +93,6 @@ async function shallowCloneRepositoryAsync({
     }
     logger.error(err.stderr);
     throw err;
-  }
-}
-
-function getGitRefCheckoutArgs({
-  gitCommitHash,
-  gitRef,
-}: {
-  gitCommitHash: string;
-  gitRef: string | null;
-}): [commit: string, '-B', branch: string] | [ref: string] {
-  // No ref provided, checkout the commit hash
-  if (!gitRef) {
-    return [gitCommitHash];
-  }
-
-  const { name, type } = getStrippedBranchOrTagName(gitRef);
-  switch (type) {
-    case 'branch':
-      // We can check out a remote branch because we fetched it through the refspec.
-      return [`refs/remotes/origin/${name}`, '-B', name];
-    case 'tag':
-      // We can check out a tag because we fetched it through the refspec.
-      return [`refs/tags/${name}`];
-    case 'other':
-      // We checkout the commit and start a new branch.
-      return [gitCommitHash, '-B', name];
   }
 }
 
@@ -199,24 +187,4 @@ function getStrippedBranchOrTagName(ref: string): {
     name: ref,
     type: 'other',
   };
-}
-
-function getGitRefSpec({
-  gitCommitHash,
-  gitRef,
-}: {
-  gitCommitHash: string;
-  gitRef: string | null;
-}): string {
-  const { name, type } = getStrippedBranchOrTagName(gitRef ?? '');
-  switch (type) {
-    case 'branch':
-      // By using a remote ref we also set the upstream.
-      return `+${gitCommitHash}:refs/remotes/origin/${name}`;
-    case 'tag':
-      return `+${gitCommitHash}:refs/tags/${name}`;
-    case 'other':
-      // Checks out a new branch or falls back to FETCH_HEAD if name is empty.
-      return `+${gitCommitHash}:${name}`;
-  }
 }
