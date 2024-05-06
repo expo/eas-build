@@ -2,7 +2,8 @@ import path from 'path';
 
 import spawn from '@expo/turtle-spawn';
 import fs from 'fs-extra';
-import { ArchiveSourceType, Job } from '@expo/eas-build-job';
+import nullthrows from 'nullthrows';
+import { ArchiveSource, ArchiveSourceType, Job } from '@expo/eas-build-job';
 import { bunyan } from '@expo/logger';
 import downloadFile from '@expo/downloader';
 
@@ -23,34 +24,74 @@ export async function prepareProjectSourcesAsync<TJob extends Job>(
       destinationDirectory
     );
   } else if (ctx.job.projectArchive.type === ArchiveSourceType.GIT) {
-    await shallowCloneRepositoryAsync(
-      ctx,
-      ctx.job.projectArchive.repositoryUrl,
-      ctx.job.projectArchive.gitRef,
-      destinationDirectory
-    );
+    await shallowCloneRepositoryAsync({
+      logger: ctx.logger,
+      archiveSource: ctx.job.projectArchive,
+      destinationDirectory,
+    });
   }
 }
 
-async function shallowCloneRepositoryAsync<TJob extends Job>(
-  ctx: BuildContext<TJob>,
-  projectRepoUrl: string,
-  gitRef: string,
-  destinationDirectory: string
-): Promise<void> {
+async function shallowCloneRepositoryAsync({
+  logger,
+  archiveSource,
+  destinationDirectory,
+}: {
+  logger: bunyan;
+  archiveSource: ArchiveSource & { type: ArchiveSourceType.GIT };
+  destinationDirectory: string;
+}): Promise<void> {
+  const { repositoryUrl } = archiveSource;
   try {
     await spawn('git', ['init'], { cwd: destinationDirectory });
-    await spawn('git', ['remote', 'add', 'origin', projectRepoUrl], { cwd: destinationDirectory });
-    await spawn('git', ['fetch', 'origin', '--depth', '1', gitRef], { cwd: destinationDirectory });
-    await spawn('git', ['checkout', gitRef], { cwd: destinationDirectory });
-  } catch (err: any) {
-    const sanitizedUrl = getSanitizedGitUrl(projectRepoUrl);
-    if (sanitizedUrl) {
-      ctx.logger.error(`Failed to clone git repository: ${sanitizedUrl}.`);
+    await spawn('git', ['remote', 'add', 'origin', repositoryUrl], { cwd: destinationDirectory });
+
+    let gitRef: string | null;
+    let gitCommitHash: string;
+    // If gitRef is provided, but gitCommitHash is not,
+    // we're handling a legacy case - gitRef is the commit hash.
+    // Otherwise we expect gitCommitHash to be present.
+    if (archiveSource.gitRef && !archiveSource.gitCommitHash) {
+      gitCommitHash = archiveSource.gitRef;
+      gitRef = null;
     } else {
-      ctx.logger.error('Failed to clone git repository.');
+      gitCommitHash = nullthrows(archiveSource.gitCommitHash);
+      gitRef = archiveSource.gitRef ?? null;
     }
-    ctx.logger.error(err.stderr);
+
+    await spawn('git', ['fetch', 'origin', '--depth', '1', '--no-tags', gitCommitHash], {
+      cwd: destinationDirectory,
+    });
+
+    await spawn('git', ['checkout', gitCommitHash], { cwd: destinationDirectory });
+
+    // If we have a gitRef, we try to add it to the repo.
+    if (gitRef) {
+      const { name, type } = getStrippedBranchOrTagName(gitRef);
+      switch (type) {
+        // If the gitRef is for a tag, we add a lightweight tag to current commit.
+        case 'tag': {
+          await spawn('git', ['tag', name], { cwd: destinationDirectory });
+          break;
+        }
+        // gitRef for a branch may come as:
+        // - qualified ref (e.g. refs/heads/feature/add-icon), detected as "branch" for a push,
+        // - unqualified ref (e.g. feature/add-icon), detected as "other" for a pull request.
+        case 'branch':
+        case 'other': {
+          await spawn('git', ['checkout', '-b', name], { cwd: destinationDirectory });
+          break;
+        }
+      }
+    }
+  } catch (err: any) {
+    const sanitizedUrl = getSanitizedGitUrl(repositoryUrl);
+    if (sanitizedUrl) {
+      logger.error(`Failed to clone git repository: ${sanitizedUrl}.`);
+    } else {
+      logger.error('Failed to clone git repository.');
+    }
+    logger.error(err.stderr);
     throw err;
   }
 }
@@ -116,4 +157,34 @@ async function unpackTarGzAsync({
   await spawn('tar', ['-C', destination, '--strip-components', '1', '-zxf', source], {
     logger,
   });
+}
+
+function getStrippedBranchOrTagName(ref: string): {
+  name: string;
+  type: 'branch' | 'tag' | 'other';
+} {
+  const branchRegex = /(\/?refs)?\/?heads\/(.+)/;
+  const branchMatch = ref.match(branchRegex);
+
+  if (branchMatch) {
+    return {
+      name: branchMatch[2],
+      type: 'branch',
+    };
+  }
+
+  const tagRegex = /(\/?refs)?\/?tags\/(.+)/;
+  const tagMatch = ref.match(tagRegex);
+
+  if (tagMatch) {
+    return {
+      name: tagMatch[2],
+      type: 'tag',
+    };
+  }
+
+  return {
+    name: ref,
+    type: 'other',
+  };
 }
