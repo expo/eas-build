@@ -81,7 +81,7 @@ describe(IosCredentialsManager, () => {
       expect(credentials.distributionType).toBe('app-store');
 
       const profile = credentials.targetProvisioningProfiles[targetName];
-      expect(profile.bundleIdentifier).toBe('org.reactjs.native.example.testapp.turtlev2.test');
+      expect(profile.bundleIdentifier).toBe('org.reactjs.native.example.testapp.turtlev2');
       expect(profile.distributionType).toBe('app-store');
       expect(profile.teamId).toBe('QL76XYH73P');
     });
