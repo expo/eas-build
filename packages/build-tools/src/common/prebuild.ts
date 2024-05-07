@@ -1,6 +1,5 @@
 import { BuildJob } from '@expo/eas-build-job';
 import { SpawnOptions } from '@expo/turtle-spawn';
-import semver from 'semver';
 import { bunyan } from '@expo/logger';
 
 import { BuildContext } from '../context';
@@ -16,15 +15,11 @@ export async function prebuildAsync<TJob extends BuildJob>(
   ctx: BuildContext<TJob>,
   { logger, workingDir, options }: { logger: bunyan; workingDir: string; options?: PrebuildOptions }
 ): Promise<void> {
-  const customExpoCliVersion = ctx.job.builderEnvironment?.expoCli;
-  const shouldDisableSharp =
-    !customExpoCliVersion || semver.satisfies(customExpoCliVersion, '>=5.4.4');
-
   const spawnOptions: SpawnOptions = {
     cwd: workingDir,
     logger,
     env: {
-      ...(shouldDisableSharp ? { EXPO_IMAGE_UTILS_NO_SHARP: '1' } : {}),
+      EXPO_IMAGE_UTILS_NO_SHARP: '1',
       ...options?.extraEnvs,
       ...ctx.env,
     },

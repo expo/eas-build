@@ -49,7 +49,6 @@ export interface BuilderEnvironment {
   yarn?: string;
   bun?: string;
   pnpm?: string;
-  expoCli?: string;
   bundler?: string;
   fastlane?: string;
   cocoapods?: string;
@@ -62,7 +61,6 @@ const BuilderEnvironmentSchema = Joi.object({
   yarn: Joi.string(),
   pnpm: Joi.string(),
   bun: Joi.string(),
-  expoCli: Joi.string(),
   bundler: Joi.string(),
   fastlane: Joi.string(),
   cocoapods: Joi.string(),
