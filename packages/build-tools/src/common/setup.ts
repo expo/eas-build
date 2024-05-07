@@ -1,6 +1,6 @@
 import path from 'path';
 
-import spawn, { SpawnPromise, SpawnResult } from '@expo/turtle-spawn';
+import spawn, { SpawnResult } from '@expo/turtle-spawn';
 import fs from 'fs-extra';
 import { BuildJob, BuildPhase, Ios, Job, Platform } from '@expo/eas-build-job';
 import { BuildTrigger } from '@expo/eas-build-job/dist/common';
@@ -13,7 +13,7 @@ import { deleteXcodeEnvLocalIfExistsAsync } from '../ios/xcodeEnv';
 import { Hook, runHookIfPresent } from '../utils/hooks';
 import { setUpNpmrcAsync } from '../utils/npmrc';
 import { isAtLeastNpm7Async } from '../utils/packageManager';
-import { readPackageJson, shouldUseGlobalExpoCli } from '../utils/project';
+import { readPackageJson } from '../utils/project';
 import { getParentAndDescendantProcessPidsAsync } from '../utils/processes';
 
 import { prepareProjectSourcesAsync } from './projectSources';
@@ -114,25 +114,12 @@ async function runExpoDoctor<TJob extends Job>(ctx: BuildContext<TJob>): Promise
   let timedOut = false;
   const isAtLeastNpm7 = await isAtLeastNpm7Async();
   try {
-    let promise: SpawnPromise<SpawnResult>;
-    if (!shouldUseGlobalExpoCli(ctx)) {
-      const argsPrefix = isAtLeastNpm7 ? ['-y'] : [];
-      promise = spawn('npx', [...argsPrefix, 'expo-doctor'], {
-        cwd: ctx.getReactNativeProjectDirectory(),
-        logger: ctx.logger,
-        env: ctx.env,
-      });
-    } else {
-      promise = ctx.runGlobalExpoCliCommand(
-        ['doctor'],
-        {
-          cwd: ctx.getReactNativeProjectDirectory(),
-          logger: ctx.logger,
-          env: ctx.env,
-        },
-        isAtLeastNpm7
-      );
-    }
+    const argsPrefix = isAtLeastNpm7 ? ['-y'] : [];
+    const promise = spawn('npx', [...argsPrefix, 'expo-doctor'], {
+      cwd: ctx.getReactNativeProjectDirectory(),
+      logger: ctx.logger,
+      env: ctx.env,
+    });
     timeout = setTimeout(async () => {
       timedOut = true;
       const ppid = nullthrows(promise.child.pid);

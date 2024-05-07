@@ -48,7 +48,6 @@ describe(runCustomBuildAsync, () => {
         logBuffer: { getLogs: () => [], getPhaseLogs: () => [] },
         logger: createMockLogger(),
         env: {},
-        runGlobalExpoCliCommand: jest.fn(),
         uploadArtifact: jest.fn(),
       }
     );

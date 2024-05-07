@@ -18,7 +18,6 @@ describe(createFindAndUploadBuildArtifactsBuildFunction, () => {
     logger: createMockLogger(),
     uploadArtifact: contextUploadArtifact,
     workingdir: '',
-    runGlobalExpoCliCommand: jest.fn(),
   });
   const customContext = new CustomBuildContext(ctx);
   const findAndUploadBuildArtifacts = createFindAndUploadBuildArtifactsBuildFunction(customContext);

@@ -17,7 +17,6 @@ import {
 } from '@expo/eas-build-job';
 import { ExpoConfig } from '@expo/config';
 import { bunyan } from '@expo/logger';
-import { SpawnPromise, SpawnOptions, SpawnResult } from '@expo/turtle-spawn';
 import { BuildTrigger } from '@expo/eas-build-job/dist/common';
 
 import { PackageManager, resolvePackageManager } from './utils/packageManager';
@@ -54,14 +53,6 @@ export interface BuildContextOptions {
   logBuffer: LogBuffer;
   env: Env;
   cacheManager?: CacheManager;
-  /**
-   * @deprecated
-   */
-  runGlobalExpoCliCommand: (
-    args: string[],
-    options: SpawnOptions,
-    npmVersionAtLeast7: boolean
-  ) => SpawnPromise<SpawnResult>;
   uploadArtifact: (spec: { artifact: ArtifactToUpload; logger: bunyan }) => Promise<string | null>;
   reportError?: (
     msg: string,
@@ -80,14 +71,6 @@ export class BuildContext<TJob extends Job = Job> {
   public logger: bunyan;
   public readonly logBuffer: LogBuffer;
   public readonly cacheManager?: CacheManager;
-  /**
-   * @deprecated
-   */
-  public readonly runGlobalExpoCliCommand: (
-    args: string[],
-    options: SpawnOptions,
-    npmVersionAtLeast7: boolean
-  ) => SpawnPromise<SpawnResult>;
   public readonly reportError?: (
     msg: string,
     err?: Error,
@@ -113,7 +96,6 @@ export class BuildContext<TJob extends Job = Job> {
     this.logger = this.defaultLogger;
     this.logBuffer = options.logBuffer;
     this.cacheManager = options.cacheManager;
-    this.runGlobalExpoCliCommand = options.runGlobalExpoCliCommand;
     this._uploadArtifact = options.uploadArtifact;
     this.reportError = options.reportError;
     this._job = job;

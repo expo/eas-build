@@ -2,7 +2,6 @@ import { Ios, BuildPhase, Env, ManagedArtifactType } from '@expo/eas-build-job';
 import { Builders, BuildContext, Artifacts } from '@expo/build-tools';
 import omit from 'lodash/omit';
 
-import { runGlobalExpoCliCommandAsync } from './expoCli';
 import { logBuffer } from './logger';
 import { BuildParams } from './types';
 import { prepareArtifacts } from './artifacts';
@@ -23,7 +22,6 @@ export async function buildIosAsync(
     workingdir,
     logger,
     logBuffer,
-    runGlobalExpoCliCommand: runGlobalExpoCliCommandAsync,
     uploadArtifact: async ({ artifact, logger }) => {
       if (artifact.type !== ManagedArtifactType.APPLICATION_ARCHIVE) {
         return null;

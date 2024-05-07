@@ -17,7 +17,6 @@ describe(createUploadArtifactBuildFunction, () => {
     logger: createMockLogger(),
     uploadArtifact: contextUploadArtifact,
     workingdir: '',
-    runGlobalExpoCliCommand: jest.fn(),
   });
   const customContext = new CustomBuildContext(ctx);
   const uploadArtifact = createUploadArtifactBuildFunction(customContext);
