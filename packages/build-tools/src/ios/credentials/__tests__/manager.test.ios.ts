@@ -68,7 +68,6 @@ describe(IosCredentialsManager, () => {
         logBuffer: { getLogs: () => [], getPhaseLogs: () => [] },
         logger: mockLogger,
         env: {},
-        runGlobalExpoCliCommand: jest.fn(),
         uploadArtifact: jest.fn(),
       });
       const manager = new IosCredentialsManager(ctx);

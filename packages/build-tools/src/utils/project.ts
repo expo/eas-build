@@ -3,7 +3,6 @@ import path from 'path';
 import { Job } from '@expo/eas-build-job';
 import spawn, { SpawnOptions, SpawnPromise, SpawnResult } from '@expo/turtle-spawn';
 import fs from 'fs-extra';
-import semver from 'semver';
 
 import { BuildContext } from '../context';
 import { findPackagerRootDir, PackageManager } from '../utils/packageManager';
@@ -20,40 +19,20 @@ export async function isUsingYarn2(projectDir: string): Promise<boolean> {
 export function runExpoCliCommand<TJob extends Job>(
   ctx: BuildContext<TJob>,
   args: string[],
-  options: SpawnOptions,
-  {
-    forceUseGlobalExpoCli = false,
-    npmVersionAtLeast7,
-  }: { forceUseGlobalExpoCli?: boolean; npmVersionAtLeast7: boolean }
+  options: SpawnOptions
 ): SpawnPromise<SpawnResult> {
-  if (shouldUseGlobalExpoCli(ctx, forceUseGlobalExpoCli)) {
-    return ctx.runGlobalExpoCliCommand(args, options, npmVersionAtLeast7);
+  const argsWithExpo = ['expo', ...args];
+  if (ctx.packageManager === PackageManager.NPM) {
+    return spawn('npx', argsWithExpo, options);
+  } else if (ctx.packageManager === PackageManager.YARN) {
+    return spawn('yarn', argsWithExpo, options);
+  } else if (ctx.packageManager === PackageManager.PNPM) {
+    return spawn('pnpm', argsWithExpo, options);
+  } else if (ctx.packageManager === PackageManager.BUN) {
+    return spawn('bun', argsWithExpo, options);
   } else {
-    const argsWithExpo = ['expo', ...args];
-    if (ctx.packageManager === PackageManager.NPM) {
-      return spawn('npx', argsWithExpo, options);
-    } else if (ctx.packageManager === PackageManager.YARN) {
-      return spawn('yarn', argsWithExpo, options);
-    } else if (ctx.packageManager === PackageManager.PNPM) {
-      return spawn('pnpm', argsWithExpo, options);
-    } else if (ctx.packageManager === PackageManager.BUN) {
-      return spawn('bun', argsWithExpo, options);
-    } else {
-      throw new Error(`Unsupported package manager: ${ctx.packageManager}`);
-    }
+    throw new Error(`Unsupported package manager: ${ctx.packageManager}`);
   }
-}
-
-export function shouldUseGlobalExpoCli<TJob extends Job>(
-  ctx: BuildContext<TJob>,
-  forceUseGlobalExpoCli = false
-): boolean {
-  return (
-    forceUseGlobalExpoCli ||
-    ctx.env.EXPO_USE_LOCAL_CLI === '0' ||
-    !ctx.appConfig.sdkVersion ||
-    semver.satisfies(ctx.appConfig.sdkVersion, '<46')
-  );
 }
 
 export function readPackageJson(projectDir: string): any {

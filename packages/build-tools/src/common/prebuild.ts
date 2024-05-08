@@ -1,11 +1,9 @@
 import { BuildJob } from '@expo/eas-build-job';
 import { SpawnOptions } from '@expo/turtle-spawn';
-import semver from 'semver';
 import { bunyan } from '@expo/logger';
 
 import { BuildContext } from '../context';
-import { isAtLeastNpm7Async } from '../utils/packageManager';
-import { runExpoCliCommand, shouldUseGlobalExpoCli } from '../utils/project';
+import { runExpoCliCommand } from '../utils/project';
 
 import { installDependenciesAsync, resolvePackagerDir } from './installDependencies';
 
@@ -17,24 +15,18 @@ export async function prebuildAsync<TJob extends BuildJob>(
   ctx: BuildContext<TJob>,
   { logger, workingDir, options }: { logger: bunyan; workingDir: string; options?: PrebuildOptions }
 ): Promise<void> {
-  const customExpoCliVersion = ctx.job.builderEnvironment?.expoCli;
-  const shouldDisableSharp =
-    !customExpoCliVersion || semver.satisfies(customExpoCliVersion, '>=5.4.4');
-
   const spawnOptions: SpawnOptions = {
     cwd: workingDir,
     logger,
     env: {
-      ...(shouldDisableSharp ? { EXPO_IMAGE_UTILS_NO_SHARP: '1' } : {}),
+      EXPO_IMAGE_UTILS_NO_SHARP: '1',
       ...options?.extraEnvs,
       ...ctx.env,
     },
   };
 
   const prebuildCommandArgs = getPrebuildCommandArgs(ctx);
-  await runExpoCliCommand(ctx, prebuildCommandArgs, spawnOptions, {
-    npmVersionAtLeast7: await isAtLeastNpm7Async(),
-  });
+  await runExpoCliCommand(ctx, prebuildCommandArgs, spawnOptions);
   const installDependenciesSpawnPromise = (
     await installDependenciesAsync(ctx, {
       logger,
@@ -46,8 +38,7 @@ export async function prebuildAsync<TJob extends BuildJob>(
 
 function getPrebuildCommandArgs<TJob extends BuildJob>(ctx: BuildContext<TJob>): string[] {
   let prebuildCommand =
-    ctx.job.experimental?.prebuildCommand ??
-    `prebuild --non-interactive --no-install --platform ${ctx.job.platform}`;
+    ctx.job.experimental?.prebuildCommand ?? `prebuild --no-install --platform ${ctx.job.platform}`;
   if (!prebuildCommand.match(/(?:--platform| -p)/)) {
     prebuildCommand = `${prebuildCommand} --platform ${ctx.job.platform}`;
   }
@@ -63,8 +54,6 @@ function getPrebuildCommandArgs<TJob extends BuildJob>(ctx: BuildContext<TJob>):
   if (prebuildCommand.startsWith(expoCliCommandPrefix)) {
     prebuildCommand = prebuildCommand.substring(expoCliCommandPrefix.length).trim();
   }
-  if (!shouldUseGlobalExpoCli(ctx)) {
-    prebuildCommand = prebuildCommand.replace(' --non-interactive', '');
-  }
+
   return prebuildCommand.split(' ');
 }

@@ -31,7 +31,6 @@ describe(runHookIfPresent, () => {
       logBuffer: { getLogs: () => [], getPhaseLogs: () => [] },
       logger: loggerMock as any,
       env: {},
-      runGlobalExpoCliCommand: jest.fn(),
       uploadArtifact: jest.fn(),
     });
   });

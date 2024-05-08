@@ -10,7 +10,6 @@ export namespace Generic {
     yarn: z.string().optional(),
     pnpm: z.string().optional(),
     bun: z.string().optional(),
-    expoCli: z.string().optional(),
     env: z.record(z.string()),
     // Linux
     ndk: z.string().optional(),

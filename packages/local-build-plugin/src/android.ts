@@ -6,7 +6,6 @@ import { logBuffer } from './logger';
 import { BuildParams } from './types';
 import { prepareArtifacts } from './artifacts';
 import config from './config';
-import { runGlobalExpoCliCommandAsync } from './expoCli';
 
 export async function buildAndroidAsync(
   job: Android.Job,
@@ -23,7 +22,6 @@ export async function buildAndroidAsync(
     workingdir,
     logger,
     logBuffer,
-    runGlobalExpoCliCommand: runGlobalExpoCliCommandAsync,
     uploadArtifact: async ({ artifact, logger }) => {
       if (artifact.type !== ManagedArtifactType.APPLICATION_ARCHIVE) {
         return null;
