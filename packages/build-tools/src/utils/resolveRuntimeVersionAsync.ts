@@ -40,7 +40,6 @@ export async function resolveRuntimeVersionAsync({
       projectDir,
       ['runtimeversion:resolve', '--platform', platform, '--workflow', workflow, ...extraArgs],
       {
-        logger,
         env,
       }
     );
