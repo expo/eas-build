@@ -2,7 +2,6 @@ import path from 'path';
 
 import spawn from '@expo/turtle-spawn';
 import fs from 'fs-extra';
-import nullthrows from 'nullthrows';
 import { ArchiveSource, ArchiveSourceType, Job } from '@expo/eas-build-job';
 import { bunyan } from '@expo/logger';
 import downloadFile from '@expo/downloader';
@@ -46,18 +45,7 @@ async function shallowCloneRepositoryAsync({
     await spawn('git', ['init'], { cwd: destinationDirectory });
     await spawn('git', ['remote', 'add', 'origin', repositoryUrl], { cwd: destinationDirectory });
 
-    let gitRef: string | null;
-    let gitCommitHash: string;
-    // If gitRef is provided, but gitCommitHash is not,
-    // we're handling a legacy case - gitRef is the commit hash.
-    // Otherwise we expect gitCommitHash to be present.
-    if (archiveSource.gitRef && !archiveSource.gitCommitHash) {
-      gitCommitHash = archiveSource.gitRef;
-      gitRef = null;
-    } else {
-      gitCommitHash = nullthrows(archiveSource.gitCommitHash);
-      gitRef = archiveSource.gitRef ?? null;
-    }
+    const { gitRef, gitCommitHash } = archiveSource;
 
     await spawn('git', ['fetch', 'origin', '--depth', '1', '--no-tags', gitCommitHash], {
       cwd: destinationDirectory,
