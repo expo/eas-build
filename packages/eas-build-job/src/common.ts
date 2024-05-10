@@ -45,12 +45,12 @@ export type ArchiveSource =
        * It should contain embedded credentials for private registries.
        */
       repositoryUrl: string;
-      /** A Git ref - points to a branch, tag, or commit. */
-      gitRef?: string;
+      /** A Git ref - points to a branch head, tag head or a branch name. */
+      gitRef: string | null;
       /**
        * Git commit hash.
        */
-      gitCommitHash?: string;
+      gitCommitHash: string;
     };
 
 export const ArchiveSourceSchema = Joi.object<ArchiveSource>({
@@ -75,8 +75,8 @@ export const ArchiveSourceSchema = Joi.object<ArchiveSource>({
     then: Joi.object({
       type: Joi.string().valid(ArchiveSourceType.GIT).required(),
       repositoryUrl: Joi.string().required(),
-      gitCommitHash: Joi.string().optional(),
-      gitRef: Joi.string().optional(),
+      gitCommitHash: Joi.string().required(),
+      gitRef: Joi.string().allow(null).required(),
     }),
   })
   .when(Joi.object({ type: ArchiveSourceType.PATH }).unknown(), {
@@ -90,8 +90,8 @@ export const ArchiveSourceSchemaZ = z.discriminatedUnion('type', [
   z.object({
     type: z.literal(ArchiveSourceType.GIT),
     repositoryUrl: z.string().url(),
-    gitRef: z.string().optional(),
-    gitCommitHash: z.string().optional(),
+    gitRef: z.string().nullable(),
+    gitCommitHash: z.string(),
   }),
   z.object({
     type: z.literal(ArchiveSourceType.PATH),
