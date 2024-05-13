@@ -38,6 +38,7 @@ export function spawnAsync(
   }
 ): SpawnPromise<SpawnResult> {
   const { logger, ...options } = allOptions;
+  logger?.info(`+ ${[command, ...args].join(' ')}`);
   const promise = spawnAsyncOriginal(command, args, options);
   if (logger && promise.child) {
     pipeSpawnOutput(logger, promise.child, options);
