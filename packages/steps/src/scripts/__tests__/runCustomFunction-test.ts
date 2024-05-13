@@ -1,20 +1,20 @@
-import path from 'path';
-import os from 'os';
 import fs from 'fs/promises';
+import os from 'os';
+import path from 'path';
 
 import { createContext } from 'this-file';
 import { v4 as uuidv4 } from 'uuid';
 
 import { BuildStepInput, BuildStepInputValueTypeName } from '../../BuildStepInput.js';
 import { BuildStepOutput } from '../../BuildStepOutput.js';
-import { createStepContextMock } from '../../__tests__/utils/context.js';
 import {
   cleanUpStepTemporaryDirectoriesAsync,
   createTemporaryEnvsDirectoryAsync,
   createTemporaryOutputsDirectoryAsync,
 } from '../../BuildTemporaryFiles.js';
-import { BIN_PATH } from '../../utils/shell/bin.js';
+import { createStepContextMock } from '../../__tests__/utils/context.js';
 import { createCustomFunctionCall } from '../../utils/customFunction.js';
+import { BIN_PATH } from '../../utils/shell/bin.js';
 
 describe('runCustomFunction', () => {
   test('can run custom function', async () => {

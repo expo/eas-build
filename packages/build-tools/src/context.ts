@@ -2,24 +2,23 @@ import path from 'path';
 
 import { ExpoConfig } from '@expo/config';
 import {
-  ManagedArtifactType,
   BuildPhase,
   BuildPhaseResult,
   BuildPhaseStats,
   Env,
   EnvironmentSecretType,
+  GenericArtifactType,
   Job,
   LogMarker,
+  ManagedArtifactType,
   Metadata,
   errors,
-  GenericArtifactType,
   isGenericArtifact,
 } from '@expo/eas-build-job';
 import { BuildTrigger } from '@expo/eas-build-job/dist/common';
 import { bunyan } from '@expo/logger';
-import { SpawnOptions, SpawnPromise, SpawnResult } from '@expo/turtle-spawn';
-import fs from 'fs-extra';
 import { DynamicCacheManager } from '@expo/steps';
+import fs from 'fs-extra';
 
 import { resolveBuildPhaseErrorAsync } from './buildErrors/detectError';
 import { readAppConfig } from './utils/appConfig';
@@ -78,11 +77,6 @@ export class BuildContext<TJob extends Job = Job> {
   /**
    * @deprecated
    */
-  public readonly runGlobalExpoCliCommand: (
-    args: string[],
-    options: SpawnOptions,
-    npmVersionAtLeast7: boolean
-  ) => SpawnPromise<SpawnResult>;
   public readonly reportError?: (
     msg: string,
     err?: Error,

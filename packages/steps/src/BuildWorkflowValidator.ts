@@ -6,7 +6,7 @@ import { BuildStep } from './BuildStep.js';
 import { BuildStepInputValueTypeName } from './BuildStepInput.js';
 import { BuildWorkflow } from './BuildWorkflow.js';
 import { BuildConfigError, BuildWorkflowError } from './errors.js';
-import * as inputFunctions from './inputFunctions.js';
+import { validateInputFunction } from './inputFunctions.js';
 import { duplicates } from './utils/expodash/duplicates.js';
 import { nullthrows } from './utils/nullthrows.js';
 import { findOutputPaths } from './utils/template.js';
@@ -77,22 +77,29 @@ export class BuildWorkflowValidator {
 
         if (currentStepInput.isFunctionCall()) {
           errors.push(
-            ...currentStepInput.validateFunctions((error, fn, args) => {
+            ...currentStepInput.validateFunctions(({ error, templateFunction }) => {
               if (error) {
                 return new BuildConfigError(
                   `Input parameter "${currentStepInput.id}" for step "${currentStep.displayName}" ${error}.`
                 );
               }
-              if (fn && fn in inputFunctions) {
+              if (!templateFunction) {
                 return null;
               }
-              return new BuildConfigError(
-                `Input parameter "${currentStepInput.id}" for step "${
-                  currentStep.displayName
-                }" is set to "\${ ${fn}(${args
-                  .map((i) => `"${i}"`)
-                  .join(',')}) }" which is not a valid build-in function name.`
-              );
+              try {
+                validateInputFunction(templateFunction);
+              } catch (err: any) {
+                if (err.message.startsWith('Invalid identifier')) {
+                  return new BuildConfigError(
+                    `Input parameter "${currentStepInput.id}" for step "${currentStep.displayName}" is set to "\${ ${templateFunction} }" which is not a valid built-in function name.`
+                  );
+                } else {
+                  return new BuildConfigError(
+                    `Input parameter "${currentStepInput.id}" for step "${currentStep.displayName}" contains an error in expression '${templateFunction}': ${err.message}.`
+                  );
+                }
+              }
+              return null;
             })
           );
         }

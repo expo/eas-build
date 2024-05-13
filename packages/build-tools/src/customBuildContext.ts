@@ -13,9 +13,9 @@ import {
 } from '@expo/eas-build-job';
 import { bunyan } from '@expo/logger';
 import {
-  ExternalBuildContextProvider,
   BuildRuntimePlatform,
   DynamicCacheManager,
+  ExternalBuildContextProvider,
 } from '@expo/steps';
 
 import { ArtifactToUpload, BuildContext, CacheManager } from './context';

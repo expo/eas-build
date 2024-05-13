@@ -1,5 +1,5 @@
-import get from 'lodash.get';
 import cloneDeep from 'lodash.clonedeep';
+import get from 'lodash.get';
 
 import { BuildStepInputValueTypeName } from '../BuildStepInput.js';
 import { BuildConfigError, BuildStepRuntimeError } from '../errors.js';
@@ -8,7 +8,7 @@ import { nullthrows } from './nullthrows.js';
 
 export const BUILD_STEP_INPUT_EXPRESSION_REGEXP = /\${\s*(inputs\.[\S]+)\s*}/;
 export const BUILD_STEP_OUTPUT_EXPRESSION_REGEXP = /\${\s*(steps\.[\S]+)\s*}/;
-export const BUILD_STEP_FUNCTION_EXPRESSION_REGEXP = /\${\s*(?<fun>\w+)\((?<args>.*)\)\s*}/;
+export const BUILD_STEP_FUNCTION_EXPRESSION_REGEXP = /\${\s*((\w+)\((.*)\))\s*}/;
 export const BUILD_GLOBAL_CONTEXT_EXPRESSION_REGEXP = /\${\s*(eas\.[\S]+)\s*}/;
 export const BUILD_STEP_OR_BUILD_GLOBAL_CONTEXT_REFERENCE_REGEX = /\${\s*((steps|eas)\.[\S]+)\s*}/;
 
@@ -27,17 +27,14 @@ export function templateFunctionsAndArgsIterator(templateString: string): Iterab
       return {
         next() {
           while ((functionCallMatch = regex.exec(templateString))) {
-            if (functionCallMatch?.groups) {
-              const templateFunction = functionCallMatch.groups['fun'];
-              try {
-                const args = JSON.parse(`[${functionCallMatch.groups['args']}]`.replace(/'/g, '"'));
-                return { done: false, value: { templateFunction, args, functionCallMatch } };
-              } catch (e) {
-                if (e instanceof SyntaxError) {
-                  throw new BuildConfigError(`contains syntax error in "${templateString}"`);
-                }
-                throw e;
-              }
+            if (functionCallMatch[1]) {
+              return {
+                done: false,
+                value: {
+                  templateFunction: functionCallMatch[1],
+                  matchedGroup: functionCallMatch[0],
+                },
+              };
             }
           }
           return { done: true, value: null };
@@ -49,25 +46,24 @@ export function templateFunctionsAndArgsIterator(templateString: string): Iterab
 
 export function iterateWithFunctions(
   templateString: string,
-  fn: (fn: string, args: string[]) => any
+  fn: (templateFunction: string) => any
 ): void {
-  const iterator = templateFunctionsAndArgsIterator(templateString);
-  for (const { templateFunction, args } of iterator) {
-    fn(templateFunction, args);
+  for (const { templateFunction } of templateFunctionsAndArgsIterator(templateString)) {
+    fn(templateFunction);
   }
 }
 
 export async function interpolateWithFunctionsAsync(
   templateString: string,
-  fn: (fn: string, args: string[]) => Promise<string>
+  fn: (templateFunction: string) => Promise<string>
 ): Promise<string> {
   let result = templateString;
 
   const iterator = templateFunctionsAndArgsIterator(templateString);
 
-  for (const { templateFunction, args, functionCallMatch } of iterator) {
-    const value = await fn(templateFunction, args);
-    result = result.replace(functionCallMatch[0], value);
+  for (const { templateFunction, matchedGroup } of iterator) {
+    const value = await fn(templateFunction);
+    result = result.replace(matchedGroup, value);
   }
   return result;
 }

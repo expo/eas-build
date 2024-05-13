@@ -5,11 +5,9 @@ import path from 'path';
 import fg from 'fast-glob';
 
 import { BuildStepGlobalContext } from './BuildStepContext.js';
+import { jsepEval } from './utils/jsepEval.js';
 
-export async function hashFilesAsync(
-  ctx: BuildStepGlobalContext,
-  files: string[]
-): Promise<string> {
+async function hashFilesAsync(ctx: BuildStepGlobalContext, ...files: string[]): Promise<string> {
   const hash = crypto.createHash('sha256');
 
   await Promise.all(
@@ -33,17 +31,28 @@ export async function hashFilesAsync(
   return hash.digest('hex');
 }
 
-export const hashFiles = hashFilesAsync;
+function _getFunctions(ctx?: BuildStepGlobalContext): Record<string, (...args: any) => any> {
+  return {
+    hashFiles: (...args: any) => ctx && hashFilesAsync(ctx, ...args),
+  };
+}
+
+// Returns noop list of functions for evaluation by jsep.
+function getFunctionsForValidation(): Record<string, (...args: any) => any> {
+  return _getFunctions();
+}
+
+function getFunctions(ctx: BuildStepGlobalContext): Record<string, (...args: any) => any> {
+  return _getFunctions(ctx);
+}
+
+export function validateInputFunction(templateFunction: string): string {
+  return jsepEval(templateFunction, getFunctionsForValidation());
+}
 
 export default async function callInputFunctionAsync(
-  fnName: string,
-  args: any[],
+  templateFunction: string,
   ctx: BuildStepGlobalContext
 ): Promise<string> {
-  switch (fnName) {
-    case 'hashFiles':
-      return await hashFilesAsync(ctx, args);
-    default:
-      throw new Error(`Unknown input function: ${fnName}`);
-  }
+  return jsepEval(templateFunction, getFunctions(ctx));
 }

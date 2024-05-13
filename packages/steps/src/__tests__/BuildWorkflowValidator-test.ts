@@ -1,13 +1,13 @@
 import assert from 'assert';
 
+import { BuildFunction } from '../BuildFunction.js';
+import { BuildRuntimePlatform } from '../BuildRuntimePlatform.js';
 import { BuildStep, BuildStepFunction } from '../BuildStep.js';
 import { BuildStepInput, BuildStepInputValueTypeName } from '../BuildStepInput.js';
 import { BuildStepOutput } from '../BuildStepOutput.js';
 import { BuildWorkflow } from '../BuildWorkflow.js';
 import { BuildWorkflowValidator } from '../BuildWorkflowValidator.js';
 import { BuildConfigError, BuildWorkflowError } from '../errors.js';
-import { BuildRuntimePlatform } from '../BuildRuntimePlatform.js';
-import { BuildFunction } from '../BuildFunction.js';
 
 import { createGlobalContextMock } from './utils/context.js';
 import { getErrorAsync } from './utils/error.js';
@@ -56,7 +56,7 @@ describe(BuildWorkflowValidator, () => {
     expect(error.errors[0]).toBeInstanceOf(BuildConfigError);
     expect(error.errors[0].message).toBe('Duplicated step IDs: "test1", "test3"');
   });
-  test('input set to a non-allowed value', async () => {
+  test('input sdfet to a non-allowed value', async () => {
     const ctx = createGlobalContextMock();
 
     const id1 = 'test1';
@@ -235,10 +235,10 @@ describe(BuildWorkflowValidator, () => {
       'Input parameter "id6" for step "step_id" is set to "${ wrong.aaa }" which is not of type "number" or is not step or context reference.'
     );
     expect((error as BuildWorkflowError).errors[4].message).toBe(
-      'Input parameter "id7" for step "step_id" is set to "${ invalidFunction("foo") }" which is not a valid build-in function name.'
+      'Input parameter "id7" for step "step_id" is set to "${ invalidFunction("foo") }" which is not a valid built-in function name.'
     );
     expect((error as BuildWorkflowError).errors[5].message).toBe(
-      'Input parameter "id8" for step "step_id" contains syntax error in "${ hashFiles("foo) }".'
+      'Input parameter "id8" for step "step_id" contains an error in expression \'hashFiles("foo)\': Unclosed quote after "foo)" at character 15.'
     );
   });
   test('output from future step', async () => {
@@ -538,7 +538,7 @@ describe(BuildWorkflowValidator, () => {
     );
   });
 
-  test('non-existing  function module', async () => {
+  test('non-existing function module', async () => {
     const ctx = createGlobalContextMock({ runtimePlatform: BuildRuntimePlatform.LINUX });
     const workflow = new BuildWorkflow(ctx, {
       buildSteps: [],

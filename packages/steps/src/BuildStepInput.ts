@@ -8,9 +8,9 @@ import callInputFunctionAsync from './inputFunctions.js';
 import {
   BUILD_STEP_FUNCTION_EXPRESSION_REGEXP,
   BUILD_STEP_OR_BUILD_GLOBAL_CONTEXT_REFERENCE_REGEX,
-  iterateWithFunctions,
   interpolateWithFunctionsAsync,
   interpolateWithOutputs,
+  iterateWithFunctions,
 } from './utils/template.js';
 
 export enum BuildStepInputValueTypeName {
@@ -56,6 +56,18 @@ interface BuildStepInputParams<T extends BuildStepInputValueTypeName, R extends 
   extends BuildStepInputProviderParams<T, R> {
   stepDisplayName: string;
 }
+
+interface ValidateFunctionError {
+  error: string;
+  templateFunction?: never;
+}
+
+interface ValidateFunctionSuccess {
+  error?: never;
+  templateFunction: string;
+}
+
+type ValidateFunctionInput = ValidateFunctionError | ValidateFunctionSuccess;
 
 export interface SerializedBuildStepInput<
   T extends BuildStepInputValueTypeName = BuildStepInputValueTypeName,
@@ -109,7 +121,10 @@ export class BuildStepInput<
   }
 
   public isFunctionCall(): boolean {
-    return this.rawValue?.toString().match(BUILD_STEP_FUNCTION_EXPRESSION_REGEXP) !== null;
+    if (!this.rawValue) {
+      return false;
+    }
+    return this.rawValue.toString().match(BUILD_STEP_FUNCTION_EXPRESSION_REGEXP) !== null;
   }
 
   private requiresInterpolation(rawValue: any): rawValue is string {
@@ -120,22 +135,20 @@ export class BuildStepInput<
     );
   }
 
-  public validateFunctions(
-    fn: (error: string | null, f: string | null, args: string[]) => any
-  ): BuildConfigError[] {
+  public validateFunctions(fn: (input: ValidateFunctionInput) => any): BuildConfigError[] {
     const rawValue = this._value ?? this.defaultValue;
     const errors = [];
     if (this.requiresInterpolation(rawValue) && this.isFunctionCall()) {
       try {
-        iterateWithFunctions(rawValue, (fun, args) => {
-          const error = fn(null, fun, args);
+        iterateWithFunctions(rawValue, (templateFunction) => {
+          const error = fn({ templateFunction });
           if (error) {
             errors.push(error);
           }
         });
       } catch (e) {
         if (e instanceof BuildConfigError) {
-          errors.push(fn(e.message, null, []));
+          errors.push(fn({ error: e.message }));
         } else {
           throw e;
         }
@@ -147,12 +160,9 @@ export class BuildStepInput<
   public async prepareValueAsync(): Promise<void> {
     const rawValue = this._value ?? this.defaultValue;
     if (this.requiresInterpolation(rawValue) && this.isFunctionCall()) {
-      this._computedValue = (await interpolateWithFunctionsAsync(
-        rawValue,
-        (fn: string, args: string[]) => {
-          return callInputFunctionAsync(fn, args, this.ctx);
-        }
-      )) as BuildStepInputValueType<T>;
+      this._computedValue = (await interpolateWithFunctionsAsync(rawValue, (templateFunction) => {
+        return callInputFunctionAsync(templateFunction, this.ctx);
+      })) as BuildStepInputValueType<T>;
     }
   }
 

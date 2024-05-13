@@ -29,7 +29,6 @@ const buildCtx = new BuildContext(createTestIosJob({}), {
   uploadArtifact: jest.fn(),
   workingdir: '',
   dynamicCacheManager,
-  runGlobalExpoCliCommand: jest.fn(),
 });
 const customContext = new CustomBuildContext(buildCtx);
 

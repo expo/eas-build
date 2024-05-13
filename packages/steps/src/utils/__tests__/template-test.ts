@@ -1,12 +1,12 @@
-import { BuildConfigError, BuildStepRuntimeError } from '../../errors.js';
 import { getError } from '../../__tests__/utils/error.js';
+import { BuildConfigError, BuildStepRuntimeError } from '../../errors.js';
 import {
   findOutputPaths,
   getObjectValueForInterpolation,
+  interpolateWithFunctionsAsync,
   interpolateWithGlobalContext,
   interpolateWithInputs,
   interpolateWithOutputs,
-  interpolateWithFunctionsAsync,
   parseOutputPath,
 } from '../template.js';
 
@@ -37,35 +37,38 @@ describe(interpolateWithOutputs, () => {
 
 describe(interpolateWithFunctionsAsync, () => {
   test('interpolation', async () => {
-    const nonArgs = await interpolateWithFunctionsAsync('foo${ noArgs() }bar', async (fn, args) => {
-      if (fn === 'noArgs' && args.length === 0) {
-        return 'ok';
+    const nonArgs = await interpolateWithFunctionsAsync(
+      'foo${ noArgs() }bar',
+      async (templateFunction) => {
+        if (templateFunction === 'noArgs()') {
+          return '-ok-';
+        }
+        return templateFunction;
       }
-      return '${fn} | ${args.join(", ")}';
-    });
+    );
     const oneArg = await interpolateWithFunctionsAsync(
       'foo${ oneArg("src") }bar',
-      async (fn, args) => {
-        if (fn === 'oneArg' && args[0] === 'src') {
-          return 'ok';
+      async (templateFunction) => {
+        if (templateFunction === 'oneArg("src")') {
+          return '-ok-';
         }
-        return '${fn} | ${args.join(", ")}';
+        return templateFunction;
       }
     );
 
     const manyArgs = await interpolateWithFunctionsAsync(
       'foo${ manyArgs("src", "hello") }bar',
-      async (fn, args) => {
-        if (fn === 'manyArgs' && args[0] === 'src' && args[1] === 'hello') {
-          return 'ok';
+      async (templateFunction) => {
+        if (templateFunction === 'manyArgs("src", "hello")') {
+          return '-ok-';
         }
-        return '${fn} | ${args.join(", ")}';
+        return templateFunction;
       }
     );
 
-    expect(nonArgs).toBe('foookbar');
-    expect(oneArg).toBe('foookbar');
-    expect(manyArgs).toBe('foookbar');
+    expect(nonArgs).toBe('foo-ok-bar');
+    expect(oneArg).toBe('foo-ok-bar');
+    expect(manyArgs).toBe('foo-ok-bar');
   });
 });
 

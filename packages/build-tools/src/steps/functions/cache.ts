@@ -8,7 +8,7 @@ import {
 
 import { CustomBuildContext } from '../../customBuildContext';
 
-export function createRestoreCacheBuildFunction(ctx: CustomBuildContext): BuildFunction {
+export function createRestoreCacheBuildFunction(ctx: CustomBuildContext<BuildJob>): BuildFunction {
   return new BuildFunction({
     namespace: 'eas',
     id: 'restore-cache',
@@ -51,9 +51,10 @@ export function createRestoreCacheBuildFunction(ctx: CustomBuildContext): BuildF
         return;
       }
 
-      const job = stepsCtx.global.staticContext.job as BuildJob;
-      const cache = job.cache;
+      const { cache } = ctx.job;
       if (!cache) {
+        stepsCtx.logger.warn('Cache is not available, skipping...');
+
         return;
       }
 
@@ -73,7 +74,7 @@ export function createRestoreCacheBuildFunction(ctx: CustomBuildContext): BuildF
   });
 }
 
-export function createSaveCacheBuildFunction(ctx: CustomBuildContext): BuildFunction {
+export function createSaveCacheBuildFunction(ctx: CustomBuildContext<BuildJob>): BuildFunction {
   return new BuildFunction({
     namespace: 'eas',
     id: 'save-cache',
