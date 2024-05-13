@@ -1,10 +1,10 @@
 import path from 'path';
 
-import spawn from '@expo/turtle-spawn';
 import fs from 'fs-extra';
 import { ArchiveSource, ArchiveSourceType, Job } from '@expo/eas-build-job';
 import { bunyan } from '@expo/logger';
 import downloadFile from '@expo/downloader';
+import { spawnAsync } from '@expo/steps';
 
 import { BuildContext } from '../context';
 
@@ -42,16 +42,18 @@ async function shallowCloneRepositoryAsync({
 }): Promise<void> {
   const { repositoryUrl } = archiveSource;
   try {
-    await spawn('git', ['init'], { cwd: destinationDirectory });
-    await spawn('git', ['remote', 'add', 'origin', repositoryUrl], { cwd: destinationDirectory });
-
-    const { gitRef, gitCommitHash } = archiveSource;
-
-    await spawn('git', ['fetch', 'origin', '--depth', '1', '--no-tags', gitCommitHash], {
+    await spawnAsync('git', ['init'], { cwd: destinationDirectory });
+    await spawnAsync('git', ['remote', 'add', 'origin', repositoryUrl], {
       cwd: destinationDirectory,
     });
 
-    await spawn('git', ['checkout', gitCommitHash], { cwd: destinationDirectory });
+    const { gitRef, gitCommitHash } = archiveSource;
+
+    await spawnAsync('git', ['fetch', 'origin', '--depth', '1', '--no-tags', gitCommitHash], {
+      cwd: destinationDirectory,
+    });
+
+    await spawnAsync('git', ['checkout', gitCommitHash], { cwd: destinationDirectory });
 
     // If we have a gitRef, we try to add it to the repo.
     if (gitRef) {
@@ -59,7 +61,7 @@ async function shallowCloneRepositoryAsync({
       switch (type) {
         // If the gitRef is for a tag, we add a lightweight tag to current commit.
         case 'tag': {
-          await spawn('git', ['tag', name], { cwd: destinationDirectory });
+          await spawnAsync('git', ['tag', name], { cwd: destinationDirectory });
           break;
         }
         // gitRef for a branch may come as:
@@ -67,7 +69,7 @@ async function shallowCloneRepositoryAsync({
         // - unqualified ref (e.g. feature/add-icon), detected as "other" for a pull request.
         case 'branch':
         case 'other': {
-          await spawn('git', ['checkout', '-b', name], { cwd: destinationDirectory });
+          await spawnAsync('git', ['checkout', '-b', name], { cwd: destinationDirectory });
           break;
         }
       }
@@ -142,8 +144,9 @@ async function unpackTarGzAsync({
   source: string;
   destination: string;
 }): Promise<void> {
-  await spawn('tar', ['-C', destination, '--strip-components', '1', '-zxf', source], {
+  await spawnAsync('tar', ['-C', destination, '--strip-components', '1', '-zxf', source], {
     logger,
+    stdio: 'pipe',
   });
 }
 

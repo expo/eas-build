@@ -1,5 +1,5 @@
-import spawnAsync from '@expo/turtle-spawn';
 import * as PackageManagerUtils from '@expo/package-manager';
+import { spawnAsync } from '@expo/steps';
 import semver from 'semver';
 
 export enum PackageManager {

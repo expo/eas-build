@@ -1,5 +1,5 @@
 import { BuildJob } from '@expo/eas-build-job';
-import spawn from '@expo/turtle-spawn';
+import { spawnAsync } from '@expo/steps';
 import { vol } from 'memfs';
 
 import { BuildContext } from '../../context';
@@ -7,10 +7,14 @@ import { Hook, runHookIfPresent } from '../hooks';
 import { PackageManager } from '../packageManager';
 
 jest.mock('fs');
-jest.mock('@expo/turtle-spawn', () => ({
-  __esModule: true,
-  default: jest.fn(),
-}));
+jest.mock('@expo/steps', () => {
+  const spawnAsync = jest.fn();
+  return {
+    ...jest.requireActual('@expo/steps'),
+    spawnAsync,
+    __esModule: true,
+  };
+});
 
 const loggerMock = {
   info: jest.fn(),
@@ -24,7 +28,7 @@ let ctx: BuildContext<BuildJob>;
 describe(runHookIfPresent, () => {
   beforeEach(() => {
     vol.reset();
-    (spawn as jest.Mock).mockReset();
+    (spawnAsync as jest.Mock).mockReset();
 
     ctx = new BuildContext({ projectRootDirectory: '.' } as BuildJob, {
       workingdir: '/workingdir',
@@ -51,7 +55,11 @@ describe(runHookIfPresent, () => {
 
     await runHookIfPresent(ctx, Hook.PRE_INSTALL);
 
-    expect(spawn).toBeCalledWith(PackageManager.YARN, ['run', Hook.PRE_INSTALL], expect.anything());
+    expect(spawnAsync).toBeCalledWith(
+      PackageManager.YARN,
+      ['run', Hook.PRE_INSTALL],
+      expect.anything()
+    );
   });
 
   it('runs the hook with yarn if yarn.lock exists', async () => {
@@ -71,7 +79,11 @@ describe(runHookIfPresent, () => {
 
     await runHookIfPresent(ctx, Hook.PRE_INSTALL);
 
-    expect(spawn).toBeCalledWith(PackageManager.YARN, ['run', Hook.PRE_INSTALL], expect.anything());
+    expect(spawnAsync).toBeCalledWith(
+      PackageManager.YARN,
+      ['run', Hook.PRE_INSTALL],
+      expect.anything()
+    );
   });
 
   it('runs the PRE_INSTALL hook using npm when the project uses yarn 2', async () => {
@@ -92,7 +104,11 @@ describe(runHookIfPresent, () => {
 
     await runHookIfPresent(ctx, Hook.PRE_INSTALL);
 
-    expect(spawn).toBeCalledWith(PackageManager.NPM, ['run', Hook.PRE_INSTALL], expect.anything());
+    expect(spawnAsync).toBeCalledWith(
+      PackageManager.NPM,
+      ['run', Hook.PRE_INSTALL],
+      expect.anything()
+    );
     expect(true).toBe(true);
   });
 
@@ -111,7 +127,7 @@ describe(runHookIfPresent, () => {
 
     await runHookIfPresent(ctx, Hook.PRE_INSTALL);
 
-    expect(spawn).not.toBeCalled();
+    expect(spawnAsync).not.toBeCalled();
   });
 
   it('runs ON_BUILD_CANCEL hook if present', async () => {
@@ -128,7 +144,7 @@ describe(runHookIfPresent, () => {
 
     await runHookIfPresent(ctx, Hook.ON_BUILD_CANCEL);
 
-    expect(spawn).toBeCalledWith(
+    expect(spawnAsync).toBeCalledWith(
       ctx.packageManager,
       ['run', 'eas-build-on-cancel'],
       expect.anything()
@@ -147,6 +163,6 @@ describe(runHookIfPresent, () => {
 
     await runHookIfPresent(ctx, Hook.ON_BUILD_CANCEL);
 
-    expect(spawn).not.toHaveBeenCalled();
+    expect(spawnAsync).not.toHaveBeenCalled();
   });
 });

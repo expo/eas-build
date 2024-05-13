@@ -1,7 +1,7 @@
 import path from 'path';
 
 import { Job } from '@expo/eas-build-job';
-import spawn, { SpawnPromise, SpawnResult, SpawnOptions } from '@expo/turtle-spawn';
+import { SpawnOptions, SpawnPromise, SpawnResult, spawnAsync } from '@expo/steps';
 
 import { BuildContext } from '../context';
 import { PackageManager, findPackagerRootDir } from '../utils/packageManager';
@@ -22,9 +22,10 @@ export async function installDependenciesAsync<TJob extends Job>(
   }
   logger?.info(`Running "${ctx.packageManager} ${args.join(' ')}" in ${cwd} directory`);
   return {
-    spawnPromise: spawn(ctx.packageManager, args, {
+    spawnPromise: spawnAsync(ctx.packageManager, args, {
       cwd,
       logger,
+      stdio: 'pipe',
       infoCallbackFn,
       env: ctx.env,
     }),
