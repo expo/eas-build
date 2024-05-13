@@ -807,7 +807,7 @@
     base64-js "^1.2.3"
     xmlbuilder "^14.0.0"
 
-"@expo/repack-app@^0.0.2":
+"@expo/repack-app@0.0.2":
   version "0.0.2"
   resolved "https://registry.yarnpkg.com/@expo/repack-app/-/repack-app-0.0.2.tgz#37a8d7856a6c0fb2d697107bb5be5243c26c6f50"
   integrity sha512-t8XFHDy0y411df6GrU1TA/Uqe5ndsvLRbznzC3JHOrlQI4m/riHw1j3w/aMMOwIFVWQg72Wd7dCTuhj11S9wnQ==
