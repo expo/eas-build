@@ -32,7 +32,6 @@
     "@expo/plist": "^0.0.20",
     "@expo/steps": "1.0.108",
     "@expo/template-file": "1.0.57",
-    "@expo/turtle-spawn": "1.0.57",
     "@expo/xcpretty": "^4.3.0",
     "fast-glob": "^3.3.2",
     "fs-extra": "^11.2.0",
