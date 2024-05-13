@@ -5,14 +5,14 @@ import path from 'path';
 import Joi from 'joi';
 import YAML from 'yaml';
 
-import { BuildConfigError, BuildWorkflowError } from './errors.js';
 import { BuildRuntimePlatform } from './BuildRuntimePlatform.js';
-import {
-  BuildStepInputValueTypeWithRequired,
-  BuildStepInputValueTypeName,
-  BuildStepInputValueType,
-} from './BuildStepInput.js';
 import { BuildStepEnv } from './BuildStepEnv.js';
+import {
+  BuildStepInputValueType,
+  BuildStepInputValueTypeName,
+  BuildStepInputValueTypeWithRequired,
+} from './BuildStepInput.js';
+import { BuildConfigError, BuildWorkflowError } from './errors.js';
 import { BUILD_STEP_OR_BUILD_GLOBAL_CONTEXT_REFERENCE_REGEX } from './utils/template.js';
 
 export type BuildFunctions = Record<string, BuildFunctionConfig>;
@@ -92,82 +92,86 @@ const BuildFunctionInputsSchema = Joi.array().items(
   Joi.alternatives().conditional(Joi.ref('.'), {
     is: Joi.string(),
     then: Joi.string().required(),
-    otherwise: Joi.object({
-      name: Joi.string().required(),
-      defaultValue: Joi.when('allowedValues', {
-        is: Joi.exist(),
-        then: Joi.valid(Joi.in('allowedValues')).messages({
-          'any.only': '{{#label}} must be one of allowed values',
-        }),
-      })
-        .when('allowedValueType', {
+    otherwise: Joi.alternatives().conditional(Joi.ref('.'), {
+      is: Joi.array(),
+      then: Joi.array().required(),
+      otherwise: Joi.object({
+        name: Joi.string().required(),
+        defaultValue: Joi.when('allowedValues', {
+          is: Joi.exist(),
+          then: Joi.valid(Joi.in('allowedValues')).messages({
+            'any.only': '{{#label}} must be one of allowed values',
+          }),
+        })
+          .when('allowedValueType', {
+            is: BuildStepInputValueTypeName.STRING,
+            then: Joi.string().allow(''),
+          })
+          .when('allowedValueType', {
+            is: BuildStepInputValueTypeName.BOOLEAN,
+            then: Joi.alternatives(
+              Joi.boolean(),
+              Joi.string().pattern(
+                BUILD_STEP_OR_BUILD_GLOBAL_CONTEXT_REFERENCE_REGEX,
+                'context or output reference regex pattern'
+              )
+            ).messages({
+              'alternatives.types':
+                '{{#label}} must be a boolean or reference to output or context value',
+            }),
+          })
+          .when('allowedValueType', {
+            is: BuildStepInputValueTypeName.NUMBER,
+            then: Joi.alternatives(
+              Joi.number(),
+              Joi.string().pattern(
+                BUILD_STEP_OR_BUILD_GLOBAL_CONTEXT_REFERENCE_REGEX,
+                'context or output reference regex pattern'
+              )
+            ).messages({
+              'alternatives.types':
+                '{{#label}} must be a number or reference to output or context value',
+            }),
+          })
+          .when('allowedValueType', {
+            is: BuildStepInputValueTypeName.JSON,
+            then: Joi.alternatives(
+              Joi.object(),
+              Joi.string().pattern(
+                BUILD_STEP_OR_BUILD_GLOBAL_CONTEXT_REFERENCE_REGEX,
+                'context or output reference regex pattern'
+              )
+            ).messages({
+              'alternatives.types':
+                '{{#label}} must be a object or reference to output or context value',
+            }),
+          }),
+        allowedValues: Joi.when('allowedValueType', {
           is: BuildStepInputValueTypeName.STRING,
-          then: Joi.string().allow(''),
+          then: Joi.array().items(Joi.string().allow('')),
         })
-        .when('allowedValueType', {
-          is: BuildStepInputValueTypeName.BOOLEAN,
-          then: Joi.alternatives(
-            Joi.boolean(),
-            Joi.string().pattern(
-              BUILD_STEP_OR_BUILD_GLOBAL_CONTEXT_REFERENCE_REGEX,
-              'context or output reference regex pattern'
-            )
-          ).messages({
-            'alternatives.types':
-              '{{#label}} must be a boolean or reference to output or context value',
+          .when('allowedValueType', {
+            is: BuildStepInputValueTypeName.BOOLEAN,
+            then: Joi.array().items(Joi.boolean()),
+          })
+          .when('allowedValueType', {
+            is: BuildStepInputValueTypeName.NUMBER,
+            then: Joi.array().items(Joi.number()),
+          })
+          .when('allowedValueType', {
+            is: BuildStepInputValueTypeName.JSON,
+            then: Joi.array().items(Joi.object()),
           }),
-        })
-        .when('allowedValueType', {
-          is: BuildStepInputValueTypeName.NUMBER,
-          then: Joi.alternatives(
-            Joi.number(),
-            Joi.string().pattern(
-              BUILD_STEP_OR_BUILD_GLOBAL_CONTEXT_REFERENCE_REGEX,
-              'context or output reference regex pattern'
-            )
-          ).messages({
-            'alternatives.types':
-              '{{#label}} must be a number or reference to output or context value',
-          }),
-        })
-        .when('allowedValueType', {
-          is: BuildStepInputValueTypeName.JSON,
-          then: Joi.alternatives(
-            Joi.object(),
-            Joi.string().pattern(
-              BUILD_STEP_OR_BUILD_GLOBAL_CONTEXT_REFERENCE_REGEX,
-              'context or output reference regex pattern'
-            )
-          ).messages({
-            'alternatives.types':
-              '{{#label}} must be a object or reference to output or context value',
-          }),
-        }),
-      allowedValues: Joi.when('allowedValueType', {
-        is: BuildStepInputValueTypeName.STRING,
-        then: Joi.array().items(Joi.string().allow('')),
+        allowedValueType: Joi.string()
+          .valid(...Object.values(BuildStepInputValueTypeName))
+          .default(BuildStepInputValueTypeName.STRING),
+        required: Joi.boolean(),
       })
-        .when('allowedValueType', {
-          is: BuildStepInputValueTypeName.BOOLEAN,
-          then: Joi.array().items(Joi.boolean()),
-        })
-        .when('allowedValueType', {
-          is: BuildStepInputValueTypeName.NUMBER,
-          then: Joi.array().items(Joi.number()),
-        })
-        .when('allowedValueType', {
-          is: BuildStepInputValueTypeName.JSON,
-          then: Joi.array().items(Joi.object()),
-        }),
-      allowedValueType: Joi.string()
-        .valid(...Object.values(BuildStepInputValueTypeName))
-        .default(BuildStepInputValueTypeName.STRING),
-      required: Joi.boolean(),
-    })
-      .rename('allowed_values', 'allowedValues')
-      .rename('default_value', 'defaultValue')
-      .rename('type', 'allowedValueType')
-      .required(),
+        .rename('allowed_values', 'allowedValues')
+        .rename('default_value', 'defaultValue')
+        .rename('type', 'allowedValueType')
+        .required(),
+    }),
   })
 );
 
@@ -185,7 +189,13 @@ const BuildFunctionCallSchema = Joi.object({
   id: Joi.string(),
   inputs: Joi.object().pattern(
     Joi.string(),
-    Joi.alternatives().try(Joi.string().allow(''), Joi.boolean(), Joi.number(), Joi.object())
+    Joi.alternatives().try(
+      Joi.string().allow(''),
+      Joi.boolean(),
+      Joi.number(),
+      Joi.object(),
+      Joi.array().items(Joi.string().required())
+    )
   ),
   name: Joi.string(),
   workingDirectory: Joi.string(),
@@ -393,11 +403,11 @@ export function mergeConfigWithImportedFunctions(
 }
 
 export function isBuildStepCommandRun(step: BuildStepConfig): step is BuildStepCommandRun {
-  return Boolean(step) && typeof step === 'object' && typeof step.run === 'object';
+  return Boolean(step) && typeof step === 'object' && 'run' in step && typeof step.run === 'object';
 }
 
 export function isBuildStepBareCommandRun(step: BuildStepConfig): step is BuildStepBareCommandRun {
-  return Boolean(step) && typeof step === 'object' && typeof step.run === 'string';
+  return Boolean(step) && typeof step === 'object' && 'run' in step && typeof step.run === 'string';
 }
 
 export function isBuildStepFunctionCall(step: BuildStepConfig): step is BuildStepFunctionCall {

@@ -2,17 +2,17 @@ import * as Builders from './builders';
 
 export { Builders };
 
+export { PackageManager } from './utils/packageManager';
+
 export {
   ArtifactToUpload,
   Artifacts,
   BuildContext,
   BuildContextOptions,
-  CacheManager,
   LogBuffer,
   SkipNativeBuildError,
+  CacheManager,
 } from './context';
-
-export { PackageManager } from './utils/packageManager';
 
 export { findAndUploadXcodeBuildLogsAsync } from './ios/xcodeBuildLogs';
 

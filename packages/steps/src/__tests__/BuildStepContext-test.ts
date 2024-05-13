@@ -23,6 +23,8 @@ describe(BuildStepGlobalContext, () => {
           '/another/non/existent/path',
           '/working/dir/path',
           '/non/existent/path',
+          '/non/existent/path',
+          '/non/existent/path',
           {} as unknown as BuildStaticContext
         ),
         false
@@ -42,6 +44,8 @@ describe(BuildStepGlobalContext, () => {
           projectTargetDirectory,
           workingDirectory,
           '/non/existent/path',
+          '/non/existent/path',
+          '/non/existent/path',
           {} as unknown as BuildStaticContext
         ),
         false
@@ -59,6 +63,8 @@ describe(BuildStepGlobalContext, () => {
           '/non/existent/path',
           projectTargetDirectory,
           workingDirectory,
+          '/non/existent/path',
+          '/non/existent/path',
           '/non/existent/path',
           {} as unknown as BuildStaticContext
         ),
@@ -82,6 +88,8 @@ describe(BuildStepGlobalContext, () => {
         projectSourceDirectory: '/a/b/c',
         projectTargetDirectory: '/d/e/f',
         relativeWorkingDirectory: 'i',
+        projectRootDirectory: '/a/b/c',
+        buildDirectory: '/d/e/f',
         staticContextContent: { a: 1 } as unknown as BuildStaticContext,
       });
       expect(ctx.serialize()).toEqual(

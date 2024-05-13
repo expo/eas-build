@@ -1,5 +1,5 @@
-import get from 'lodash.get';
 import cloneDeep from 'lodash.clonedeep';
+import get from 'lodash.get';
 
 import { BuildStepInputValueTypeName } from '../BuildStepInput.js';
 import { BuildConfigError, BuildStepRuntimeError } from '../errors.js';
@@ -8,6 +8,7 @@ import { nullthrows } from './nullthrows.js';
 
 export const BUILD_STEP_INPUT_EXPRESSION_REGEXP = /\${\s*(inputs\.[\S]+)\s*}/;
 export const BUILD_STEP_OUTPUT_EXPRESSION_REGEXP = /\${\s*(steps\.[\S]+)\s*}/;
+export const BUILD_STEP_FUNCTION_EXPRESSION_REGEXP = /\${\s*((\w+)\((.*)\))\s*}/;
 export const BUILD_GLOBAL_CONTEXT_EXPRESSION_REGEXP = /\${\s*(eas\.[\S]+)\s*}/;
 export const BUILD_STEP_OR_BUILD_GLOBAL_CONTEXT_REFERENCE_REGEX = /\${\s*((steps|eas)\.[\S]+)\s*}/;
 
@@ -16,6 +17,55 @@ export function interpolateWithInputs(
   inputs: Record<string, string>
 ): string {
   return interpolate(templateString, BUILD_STEP_INPUT_EXPRESSION_REGEXP, inputs);
+}
+
+export function templateFunctionsAndArgsIterator(templateString: string): Iterable<any> {
+  return {
+    [Symbol.iterator]() {
+      const regex = new RegExp(BUILD_STEP_FUNCTION_EXPRESSION_REGEXP, 'g');
+      let functionCallMatch;
+      return {
+        next() {
+          while ((functionCallMatch = regex.exec(templateString))) {
+            if (functionCallMatch[1]) {
+              return {
+                done: false,
+                value: {
+                  templateFunction: functionCallMatch[1],
+                  matchedGroup: functionCallMatch[0],
+                },
+              };
+            }
+          }
+          return { done: true, value: null };
+        },
+      };
+    },
+  };
+}
+
+export function iterateWithFunctions(
+  templateString: string,
+  fn: (templateFunction: string) => any
+): void {
+  for (const { templateFunction } of templateFunctionsAndArgsIterator(templateString)) {
+    fn(templateFunction);
+  }
+}
+
+export async function interpolateWithFunctionsAsync(
+  templateString: string,
+  fn: (templateFunction: string) => Promise<string>
+): Promise<string> {
+  let result = templateString;
+
+  const iterator = templateFunctionsAndArgsIterator(templateString);
+
+  for (const { templateFunction, matchedGroup } of iterator) {
+    const value = await fn(templateFunction);
+    result = result.replace(matchedGroup, value);
+  }
+  return result;
 }
 
 export function interpolateWithOutputs<InterpolableType extends string | object>(

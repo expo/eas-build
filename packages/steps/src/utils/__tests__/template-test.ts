@@ -1,8 +1,9 @@
-import { BuildConfigError, BuildStepRuntimeError } from '../../errors.js';
 import { getError } from '../../__tests__/utils/error.js';
+import { BuildConfigError, BuildStepRuntimeError } from '../../errors.js';
 import {
   findOutputPaths,
   getObjectValueForInterpolation,
+  interpolateWithFunctionsAsync,
   interpolateWithGlobalContext,
   interpolateWithInputs,
   interpolateWithOutputs,
@@ -31,6 +32,43 @@ describe(interpolateWithOutputs, () => {
       }
     );
     expect(result).toBe('foobarbaz');
+  });
+});
+
+describe(interpolateWithFunctionsAsync, () => {
+  test('interpolation', async () => {
+    const nonArgs = await interpolateWithFunctionsAsync(
+      'foo${ noArgs() }bar',
+      async (templateFunction) => {
+        if (templateFunction === 'noArgs()') {
+          return '-ok-';
+        }
+        return templateFunction;
+      }
+    );
+    const oneArg = await interpolateWithFunctionsAsync(
+      'foo${ oneArg("src") }bar',
+      async (templateFunction) => {
+        if (templateFunction === 'oneArg("src")') {
+          return '-ok-';
+        }
+        return templateFunction;
+      }
+    );
+
+    const manyArgs = await interpolateWithFunctionsAsync(
+      'foo${ manyArgs("src", "hello") }bar',
+      async (templateFunction) => {
+        if (templateFunction === 'manyArgs("src", "hello")') {
+          return '-ok-';
+        }
+        return templateFunction;
+      }
+    );
+
+    expect(nonArgs).toBe('foo-ok-bar');
+    expect(oneArg).toBe('foo-ok-bar');
+    expect(manyArgs).toBe('foo-ok-bar');
   });
 });
 

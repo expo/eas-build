@@ -1,28 +1,29 @@
 import path from 'path';
 
-import fs from 'fs-extra';
+import { ExpoConfig } from '@expo/config';
 import {
-  ManagedArtifactType,
   BuildPhase,
   BuildPhaseResult,
   BuildPhaseStats,
-  Job,
-  LogMarker,
   Env,
-  errors,
-  Metadata,
   EnvironmentSecretType,
   GenericArtifactType,
+  Job,
+  LogMarker,
+  ManagedArtifactType,
+  Metadata,
+  errors,
   isGenericArtifact,
 } from '@expo/eas-build-job';
-import { ExpoConfig } from '@expo/config';
-import { bunyan } from '@expo/logger';
 import { BuildTrigger } from '@expo/eas-build-job/dist/common';
+import { bunyan } from '@expo/logger';
+import { DynamicCacheManager } from '@expo/steps';
+import fs from 'fs-extra';
 
-import { PackageManager, resolvePackageManager } from './utils/packageManager';
 import { resolveBuildPhaseErrorAsync } from './buildErrors/detectError';
 import { readAppConfig } from './utils/appConfig';
 import { createTemporaryEnvironmentSecretFile } from './utils/environmentSecrets';
+import { PackageManager, resolvePackageManager } from './utils/packageManager';
 
 export type Artifacts = Partial<Record<ManagedArtifactType, string>>;
 
@@ -53,6 +54,7 @@ export interface BuildContextOptions {
   logBuffer: LogBuffer;
   env: Env;
   cacheManager?: CacheManager;
+  dynamicCacheManager?: DynamicCacheManager;
   uploadArtifact: (spec: { artifact: ArtifactToUpload; logger: bunyan }) => Promise<string | null>;
   reportError?: (
     msg: string,
@@ -71,6 +73,10 @@ export class BuildContext<TJob extends Job = Job> {
   public logger: bunyan;
   public readonly logBuffer: LogBuffer;
   public readonly cacheManager?: CacheManager;
+  public readonly dynamicCacheManager?: DynamicCacheManager;
+  /**
+   * @deprecated
+   */
   public readonly reportError?: (
     msg: string,
     err?: Error,
@@ -96,6 +102,7 @@ export class BuildContext<TJob extends Job = Job> {
     this.logger = this.defaultLogger;
     this.logBuffer = options.logBuffer;
     this.cacheManager = options.cacheManager;
+    this.dynamicCacheManager = options.dynamicCacheManager;
     this._uploadArtifact = options.uploadArtifact;
     this.reportError = options.reportError;
     this._job = job;

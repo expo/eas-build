@@ -4,10 +4,10 @@ import { BuildStaticContext, Env, Job, Metadata } from '@expo/eas-build-job';
 import { bunyan, createLogger } from '@expo/logger';
 
 import { BuildConfigParser } from '../BuildConfigParser.js';
-import { ExternalBuildContextProvider, BuildStepGlobalContext } from '../BuildStepContext.js';
-import { BuildWorkflowError } from '../errors.js';
 import { BuildRuntimePlatform } from '../BuildRuntimePlatform.js';
+import { BuildStepGlobalContext, ExternalBuildContextProvider } from '../BuildStepContext.js';
 import { BuildStepEnv } from '../BuildStepEnv.js';
+import { BuildWorkflowError } from '../errors.js';
 
 const logger = createLogger({
   name: 'steps-cli',

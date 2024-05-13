@@ -1,13 +1,13 @@
 import assert from 'assert';
 
+import { BuildFunction } from '../BuildFunction.js';
+import { BuildRuntimePlatform } from '../BuildRuntimePlatform.js';
 import { BuildStep, BuildStepFunction } from '../BuildStep.js';
 import { BuildStepInput, BuildStepInputValueTypeName } from '../BuildStepInput.js';
 import { BuildStepOutput } from '../BuildStepOutput.js';
 import { BuildWorkflow } from '../BuildWorkflow.js';
 import { BuildWorkflowValidator } from '../BuildWorkflowValidator.js';
 import { BuildConfigError, BuildWorkflowError } from '../errors.js';
-import { BuildRuntimePlatform } from '../BuildRuntimePlatform.js';
-import { BuildFunction } from '../BuildFunction.js';
 
 import { createGlobalContextMock } from './utils/context.js';
 import { getErrorAsync } from './utils/error.js';
@@ -39,7 +39,7 @@ describe(BuildWorkflowValidator, () => {
         }),
         new BuildStep(ctx, {
           id: 'test3',
-          displayName: BuildStep.getDisplayName({ id: 'test3', command: 'echo 456' }),
+          displayName: BuildStep.getDisplayName({ id: 'test2', command: 'echo 456' }),
           command: 'echo 456',
         }),
       ],
@@ -56,7 +56,7 @@ describe(BuildWorkflowValidator, () => {
     expect(error.errors[0]).toBeInstanceOf(BuildConfigError);
     expect(error.errors[0].message).toBe('Duplicated step IDs: "test1", "test3"');
   });
-  test('input set to a non-allowed value', async () => {
+  test('input sdfet to a non-allowed value', async () => {
     const ctx = createGlobalContextMock();
 
     const id1 = 'test1';
@@ -179,6 +179,16 @@ describe(BuildWorkflowValidator, () => {
           allowedValueTypeName: BuildStepInputValueTypeName.NUMBER,
           required: true,
         }),
+        BuildStepInput.createProvider({
+          id: 'id7',
+          allowedValueTypeName: BuildStepInputValueTypeName.STRING,
+          required: true,
+        }),
+        BuildStepInput.createProvider({
+          id: 'id8',
+          allowedValueTypeName: BuildStepInputValueTypeName.STRING,
+          required: true,
+        }),
       ],
       command: 'echo "hi"',
     });
@@ -197,6 +207,8 @@ describe(BuildWorkflowValidator, () => {
             id4: '${ steps.step_id.output1 }',
             id5: '${ eas.job.version.buildNumber }',
             id6: '${ wrong.aaa }',
+            id7: '${ invalidFunction("foo") }',
+            id8: '${ hashFiles("foo) }',
           },
         }),
       ],
@@ -221,6 +233,12 @@ describe(BuildWorkflowValidator, () => {
     );
     expect((error as BuildWorkflowError).errors[3].message).toBe(
       'Input parameter "id6" for step "step_id" is set to "${ wrong.aaa }" which is not of type "number" or is not step or context reference.'
+    );
+    expect((error as BuildWorkflowError).errors[4].message).toBe(
+      'Input parameter "id7" for step "step_id" is set to "${ invalidFunction("foo") }" which is not a valid built-in function name.'
+    );
+    expect((error as BuildWorkflowError).errors[5].message).toBe(
+      'Input parameter "id8" for step "step_id" contains an error in expression \'hashFiles("foo)\': Unclosed quote after "foo)" at character 15.'
     );
   });
   test('output from future step', async () => {
@@ -496,6 +514,31 @@ describe(BuildWorkflowValidator, () => {
   });
 
   test('non-existing custom function module', async () => {
+    const ctx = createGlobalContextMock({ runtimePlatform: BuildRuntimePlatform.LINUX });
+    const workflow = new BuildWorkflow(ctx, {
+      buildSteps: [],
+      buildFunctions: {
+        test: new BuildFunction({
+          id: 'test',
+          customFunctionModulePath: '/non/existent/module',
+        }),
+      },
+    });
+
+    const validator = new BuildWorkflowValidator(workflow);
+    const error = await getErrorAsync<BuildWorkflowError>(async () => {
+      await validator.validateAsync();
+    });
+    assert(error instanceof BuildWorkflowError);
+    expect(error).toBeInstanceOf(BuildWorkflowError);
+    expect(error.errors.length).toBe(1);
+    expect(error.errors[0]).toBeInstanceOf(BuildConfigError);
+    expect(error.errors[0].message).toBe(
+      `Custom function module path "/non/existent/module" for function "test" does not exist.`
+    );
+  });
+
+  test('non-existing function module', async () => {
     const ctx = createGlobalContextMock({ runtimePlatform: BuildRuntimePlatform.LINUX });
     const workflow = new BuildWorkflow(ctx, {
       buildSteps: [],

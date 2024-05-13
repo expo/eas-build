@@ -4,7 +4,9 @@ import path from 'path';
 
 import { v4 as uuidv4 } from 'uuid';
 
+import { BuildRuntimePlatform } from './BuildRuntimePlatform.js';
 import { BuildStepContext, BuildStepGlobalContext } from './BuildStepContext.js';
+import { BuildStepEnv } from './BuildStepEnv.js';
 import { BuildStepInput, BuildStepInputById, makeBuildStepInputByIdMap } from './BuildStepInput.js';
 import {
   BuildStepOutput,
@@ -12,19 +14,17 @@ import {
   SerializedBuildStepOutput,
   makeBuildStepOutputByIdMap,
 } from './BuildStepOutput.js';
-import { BIN_PATH } from './utils/shell/bin.js';
-import { getDefaultShell, getShellCommandAndArgs } from './utils/shell/command.js';
 import {
   cleanUpStepTemporaryDirectoriesAsync,
   createTemporaryEnvsDirectoryAsync,
   createTemporaryOutputsDirectoryAsync,
   saveScriptToTemporaryFileAsync,
 } from './BuildTemporaryFiles.js';
+import { BuildStepRuntimeError } from './errors.js';
+import { BIN_PATH } from './utils/shell/bin.js';
+import { getDefaultShell, getShellCommandAndArgs } from './utils/shell/command.js';
 import { spawnAsync } from './utils/shell/spawn.js';
 import { interpolateWithInputs } from './utils/template.js';
-import { BuildStepRuntimeError } from './errors.js';
-import { BuildStepEnv } from './BuildStepEnv.js';
-import { BuildRuntimePlatform } from './BuildRuntimePlatform.js';
 import { jsepEval } from './utils/jsepEval.js';
 
 export enum BuildStepStatus {
@@ -227,6 +227,12 @@ export class BuildStep extends BuildStepOutputAccessor {
     ctx.registerStep(this);
   }
 
+  private async prepareInputsAsync(): Promise<void> {
+    if (this.inputs !== undefined) {
+      await Promise.all(this.inputs.map((input) => input.prepareValueAsync()));
+    }
+  }
+
   public async executeAsync(): Promise<void> {
     try {
       this.ctx.logger.info(
@@ -234,6 +240,8 @@ export class BuildStep extends BuildStepOutputAccessor {
         `Executing build step "${this.displayName}"`
       );
       this.status = BuildStepStatus.IN_PROGRESS;
+
+      await this.prepareInputsAsync();
 
       if (this.command !== undefined) {
         await this.executeCommandAsync();
