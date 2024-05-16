@@ -1,5 +1,5 @@
 build:
-  name: Repack golden app
+  name: Resign development client
   steps:
     - eas/checkout
     - eas/install_node_modules
