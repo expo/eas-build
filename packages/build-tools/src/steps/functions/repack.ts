@@ -82,6 +82,14 @@ export function createRepackBuildFunction(): BuildFunction {
           logger: stepsCtx.logger,
           skipWorkingDirCleanup: true,
           verbose: env.__EAS_REPACK_VERBOSE !== undefined,
+          env: {
+            FASTLANE_DISABLE_COLORS: '1',
+            FASTLANE_SKIP_UPDATE_CHECK: '1',
+            SKIP_SLOW_FASTLANE_WARNING: 'true',
+            FASTLANE_HIDE_TIMESTAMP: 'true',
+            LC_ALL: 'en_US.UTF-8',
+            ...env,
+          },
         });
       } else if (stepsCtx.global.staticContext.job.platform === Platform.ANDROID) {
         let androidCredentials:
@@ -121,6 +129,7 @@ export function createRepackBuildFunction(): BuildFunction {
           logger: stepsCtx.logger,
           skipWorkingDirCleanup: true,
           verbose: env.__EAS_REPACK_VERBOSE !== undefined,
+          env,
         });
       } else {
         throw new Error('Unsupported platform');

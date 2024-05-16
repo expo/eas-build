@@ -30,7 +30,7 @@
     "@expo/logger": "1.0.57",
     "@expo/package-manager": "1.1.2",
     "@expo/plist": "^0.0.20",
-    "@expo/repack-app": "0.0.5",
+    "@expo/repack-app": "0.0.6",
     "@expo/steps": "1.0.108",
     "@expo/template-file": "1.0.57",
     "@expo/turtle-spawn": "1.0.57",

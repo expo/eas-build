@@ -807,10 +807,10 @@
     base64-js "^1.2.3"
     xmlbuilder "^14.0.0"
 
-"@expo/repack-app@0.0.5":
-  version "0.0.5"
-  resolved "https://registry.yarnpkg.com/@expo/repack-app/-/repack-app-0.0.5.tgz#3a22f6c6e4651a8605f0c10e90af9e46918448bf"
-  integrity sha512-AFpgI64odImrt8rUIwUXIwrkHZ5+aI89tFr9nWkxfYNdYPgkoJ34WhQ9p5Fj1kbc81OHIb96/vsmUK+dt+Cy/w==
+"@expo/repack-app@0.0.6":
+  version "0.0.6"
+  resolved "https://registry.yarnpkg.com/@expo/repack-app/-/repack-app-0.0.6.tgz#dcc0747073cf0d5ce68d935905ef81320162d932"
+  integrity sha512-2IBw7IjGLAwjhNjR/Rzib99vZKhIz6vjp/yZmGrnNeOrhp2FzvySXtuxvQlRixHsY51SzjYW5qWG4+a07CJK2Q==
   dependencies:
     "@expo/config" "^8.5.6"
     "@expo/logger" "^1.0.57"
