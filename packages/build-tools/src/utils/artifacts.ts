@@ -19,7 +19,11 @@ export async function findArtifacts({
   /** If provided, will log error suggesting possible files to upload. */
   logger: bunyan | null;
 }): Promise<string[]> {
-  const files = await fg(patternOrPath, { cwd: rootDir, onlyFiles: false });
+  const files = path.isAbsolute(patternOrPath)
+    ? (await fs.pathExists(patternOrPath))
+      ? [patternOrPath]
+      : []
+    : await fg(patternOrPath, { cwd: rootDir, onlyFiles: false });
   if (files.length === 0) {
     if (fg.isDynamicPattern(patternOrPath)) {
       throw new FindArtifactsError(`There are no files matching pattern "${patternOrPath}"`);
