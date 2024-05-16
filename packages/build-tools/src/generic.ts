@@ -49,7 +49,7 @@ export async function runGenericJobAsync(ctx: BuildContext<Generic.Job>): Promis
   await workflow.executeAsync();
 }
 
-async function addEasWorkflows(customBuildCtx: CustomBuildContext): Promise<void> {
+export async function addEasWorkflows(customBuildCtx: CustomBuildContext): Promise<void> {
   await fs.promises.mkdir(path.join(customBuildCtx.projectSourceDirectory, '__eas'), {
     recursive: true,
   });
