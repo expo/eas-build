@@ -2,6 +2,7 @@ import path from 'path';
 import { promisify } from 'util';
 import { Stream } from 'stream';
 import assert from 'node:assert';
+import os from 'os';
 
 import { BuildFunction, BuildStepOutput } from '@expo/steps';
 import fs from 'fs-extra';
@@ -26,7 +27,7 @@ export function createRepackBuildFunction(): BuildFunction {
       }),
     ],
     fn: async (stepsCtx, { outputs, env }) => {
-      const tmpDir = `/tmp/eas-build-golden-dev-client-app-${uuidv4()}`;
+      const tmpDir = path.join(os.tmpdir(), `eas-build-golden-dev-client-app-${uuidv4()}`);
       await fs.mkdirs(tmpDir);
       stepsCtx.logger.info(`Created temporary directory: ${tmpDir}`);
 
@@ -41,7 +42,7 @@ export function createRepackBuildFunction(): BuildFunction {
       const goldenArchivePath = path.join(tmpDir, fileName);
       try {
         const response = await fetch(goldenArchiveUrl, {
-          timeout: 5 * 60 * 1000, // 5 minutes
+          timeout: 1 * 60 * 1000, // 1 minute
         });
         if (!response.ok) {
           throw new Error(`[${response.status}] ${response.statusText}`);
