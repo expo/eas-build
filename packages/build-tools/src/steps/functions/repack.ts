@@ -116,14 +116,7 @@ export function createRepackBuildFunction(): BuildFunction {
           sourceAppPath: goldenArchivePath,
           outputPath: repackedArchivePath,
           workingDirectory: tmpDir,
-          androidSigningOptions: androidCredentials
-            ? {
-                keyStorePath: androidCredentials?.keyStorePath,
-                keyStorePassword: androidCredentials?.keyStorePassword,
-                keyAlias: androidCredentials?.keyAlias,
-                keyPassword: androidCredentials?.keyPassword,
-              }
-            : undefined,
+          androidSigningOptions: androidCredentials,
           logger: stepsCtx.logger,
           skipWorkingDirCleanup: true,
           verbose: env.__EAS_REPACK_VERBOSE !== undefined,
