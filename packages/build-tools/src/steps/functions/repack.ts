@@ -1,8 +1,8 @@
 import path from 'path';
 import { promisify } from 'util';
 import { Stream } from 'stream';
-import assert from 'node:assert';
 import os from 'os';
+import assert from 'assert';
 
 import { BuildFunction, BuildStepOutput } from '@expo/steps';
 import fs from 'fs-extra';
@@ -10,6 +10,8 @@ import { Platform } from '@expo/eas-build-job';
 import fetch from 'node-fetch';
 import { repackAppAndroidAsync, repackAppIosAsync } from '@expo/repack-app';
 import { v4 as uuidv4 } from 'uuid';
+import { BuildCredentials } from '@expo/eas-build-job/dist/ios';
+import { bunyan } from '@expo/logger';
 
 import IosCredentialsManager from '../utils/ios/credentials/manager';
 
@@ -34,7 +36,9 @@ export function createRepackBuildFunction(): BuildFunction {
       stepsCtx.logger.info('Downloading golden development client archive...');
       const fileName =
         stepsCtx.global.staticContext.job.platform === Platform.IOS
-          ? 'golden-dev-client-latest.ipa'
+          ? stepsCtx.global.staticContext.job.simulator
+            ? 'golden-dev-client-simulator-latest.ipa'
+            : 'golden-dev-client-device-latest.ipa'
           : 'golden-dev-client-latest.apk';
       const goldenArchiveUrl =
         env.__EAS_GOLDEN_DEV_CLIENT_URL ??
@@ -56,29 +60,25 @@ export function createRepackBuildFunction(): BuildFunction {
       stepsCtx.logger.info('Repacking and resigning the app...');
       const repackedArchivePath = path.join(
         tmpDir,
-        stepsCtx.global.staticContext.job.platform === Platform.IOS ? 'target.ipa' : 'target.apk'
+        stepsCtx.global.staticContext.job.platform === Platform.IOS
+          ? stepsCtx.global.staticContext.job.simulator
+            ? 'target.zip'
+            : 'target.ipa'
+          : 'target.apk'
       );
       if (stepsCtx.global.staticContext.job.platform === Platform.IOS) {
-        assert(
-          stepsCtx.global.staticContext.job.secrets?.buildCredentials,
-          'iOS credentials are required'
-        );
-        const credentialsManager = new IosCredentialsManager(
-          stepsCtx.global.staticContext.job.secrets.buildCredentials
-        );
-        const credentials = await credentialsManager.prepare(stepsCtx.logger);
         await repackAppIosAsync({
           platform: 'ios',
           projectRoot: stepsCtx.workingDirectory,
           sourceAppPath: goldenArchivePath,
           outputPath: repackedArchivePath,
           workingDirectory: tmpDir,
-          iosSigningOptions: {
-            provisioningProfile: Object.values(credentials.targetProvisioningProfiles)[0].path,
-            keychainPath: credentials.keychainPath,
-            signingIdentity:
-              credentials.applicationTargetProvisioningProfile.data.certificateCommonName,
-          },
+          iosSigningOptions: stepsCtx.global.staticContext.job.simulator
+            ? undefined
+            : await resolveIosSigningOptions({
+                logger: stepsCtx.logger,
+                buildCredentials: stepsCtx.global.staticContext.job.secrets?.buildCredentials,
+              }),
           logger: stepsCtx.logger,
           skipWorkingDirCleanup: true,
           verbose: env.__EAS_REPACK_VERBOSE !== undefined,
@@ -134,4 +134,27 @@ export function createRepackBuildFunction(): BuildFunction {
       outputs.repacked_archive_path.set(repackedArchivePath);
     },
   });
+}
+
+async function resolveIosSigningOptions({
+  buildCredentials,
+  logger,
+}: {
+  buildCredentials: BuildCredentials | undefined;
+  logger: bunyan;
+}): Promise<{
+  provisioningProfile: string;
+  keychainPath: string;
+  signingIdentity: string;
+}> {
+  assert(buildCredentials, 'buildCredentials is required for repacking non-simulator iOS apps');
+
+  const credentialsManager = new IosCredentialsManager(buildCredentials);
+  const credentials = await credentialsManager.prepare(logger);
+
+  return {
+    provisioningProfile: Object.values(credentials.targetProvisioningProfiles)[0].path,
+    keychainPath: credentials.keychainPath,
+    signingIdentity: credentials.applicationTargetProvisioningProfile.data.certificateCommonName,
+  };
 }
