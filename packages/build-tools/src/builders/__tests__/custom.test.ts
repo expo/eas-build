@@ -7,7 +7,15 @@ import { createMockLogger } from '../../__tests__/utils/logger';
 import { createTestIosJob } from '../../__tests__/utils/job';
 import { findAndUploadXcodeBuildLogsAsync } from '../../ios/xcodeBuildLogs';
 
-jest.mock('fs');
+jest.mock('fs', () => {
+  return {
+    ...jest.requireActual('memfs').fs,
+    promises: {
+      cp: jest.fn(),
+      mkdir: jest.fn(),
+    },
+  };
+});
 jest.mock('fs/promises');
 jest.mock('../../common/projectSources');
 jest.mock('../../ios/xcodeBuildLogs');
