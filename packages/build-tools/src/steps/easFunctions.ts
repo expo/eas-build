@@ -25,6 +25,7 @@ import { createInstallPodsBuildFunction } from './functions/installPods';
 import { createSendSlackMessageFunction } from './functions/sendSlackMessage';
 import { createResolveBuildConfigBuildFunction } from './functions/resolveBuildConfig';
 import { calculateEASUpdateRuntimeVersionFunction } from './functions/calculateEASUpdateRuntimeVersion';
+import { createRepackBuildFunction } from './functions/repack';
 
 export function getEasFunctions(ctx: CustomBuildContext): BuildFunction[] {
   const functions = [
@@ -51,6 +52,8 @@ export function getEasFunctions(ctx: CustomBuildContext): BuildFunction[] {
     createSendSlackMessageFunction(),
 
     calculateEASUpdateRuntimeVersionFunction(ctx),
+
+    createRepackBuildFunction(),
   ];
 
   if (ctx.hasBuildJob()) {
