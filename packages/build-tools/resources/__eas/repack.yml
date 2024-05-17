@@ -2,12 +2,17 @@ build:
   name: Resign development client
   steps:
     - eas/checkout
+
     - eas/install_node_modules
+
+    - eas/resolve_build_config
+
     - eas/__download_and_repack_golden_development_client_archive:
         id: download_and_repack_golden_development_client_archive
+
     - eas/upload_artifact:
         name: Upload build artifact
         inputs:
           type: application-archive
           path: ${ steps.download_and_repack_golden_development_client_archive.repacked_archive_path }
-          
+
