@@ -4,11 +4,20 @@ import { Stream } from 'stream';
 import os from 'os';
 import assert from 'assert';
 
-import { BuildFunction, BuildStepOutput } from '@expo/steps';
+import { BuildFunction, BuildStepOutput, spawnAsync } from '@expo/steps';
 import fs from 'fs-extra';
 import { Platform } from '@expo/eas-build-job';
 import fetch from 'node-fetch';
-import { repackAppAndroidAsync, repackAppIosAsync } from '@expo/repack-app';
+import {
+  repackAppAndroidAsync,
+  repackAppIosAsync,
+  type AndroidSigningOptions,
+  type Logger,
+  type SpawnProcessAsync,
+  type SpawnProcessOptions,
+  type SpawnProcessPromise,
+  type SpawnProcessResult,
+} from '@expo/repack-app';
 import { v4 as uuidv4 } from 'uuid';
 import { BuildCredentials } from '@expo/eas-build-job/dist/ios';
 import { bunyan } from '@expo/logger';
@@ -79,27 +88,20 @@ export function createRepackBuildFunction(): BuildFunction {
                 logger: stepsCtx.logger,
                 buildCredentials: stepsCtx.global.staticContext.job.secrets?.buildCredentials,
               }),
-          logger: stepsCtx.logger,
-          skipWorkingDirCleanup: true,
-          verbose: env.__EAS_REPACK_VERBOSE !== undefined,
-          env: {
+          logger: new LoggerAdapter(stepsCtx.logger),
+          spawnAsync: createSpawnAsync(env.__EAS_REPACK_VERBOSE !== undefined, stepsCtx.logger, {
             FASTLANE_DISABLE_COLORS: '1',
             FASTLANE_SKIP_UPDATE_CHECK: '1',
             SKIP_SLOW_FASTLANE_WARNING: 'true',
             FASTLANE_HIDE_TIMESTAMP: 'true',
             LC_ALL: 'en_US.UTF-8',
             ...env,
-          },
+          }),
+          skipWorkingDirCleanup: true,
+          verbose: env.__EAS_REPACK_VERBOSE !== undefined,
         });
       } else if (stepsCtx.global.staticContext.job.platform === Platform.ANDROID) {
-        let androidCredentials:
-          | {
-              keyStorePath: string;
-              keyStorePassword: string;
-              keyAlias: string;
-              keyPassword: string | undefined;
-            }
-          | undefined;
+        let androidCredentials: AndroidSigningOptions | undefined;
         if (stepsCtx.global.staticContext.job.secrets?.buildCredentials?.keystore.dataBase64) {
           const keyStorePath = path.join(tmpDir, `keystore-${uuidv4()}`);
           await fs.writeFile(
@@ -126,10 +128,14 @@ export function createRepackBuildFunction(): BuildFunction {
           outputPath: repackedArchivePath,
           workingDirectory: tmpDir,
           androidSigningOptions: androidCredentials,
-          logger: stepsCtx.logger,
+          logger: new LoggerAdapter(stepsCtx.logger),
+          spawnAsync: createSpawnAsync(
+            env.__EAS_REPACK_VERBOSE !== undefined,
+            stepsCtx.logger,
+            env
+          ),
           skipWorkingDirCleanup: true,
           verbose: env.__EAS_REPACK_VERBOSE !== undefined,
-          env,
         });
       } else {
         throw new Error('Unsupported platform');
@@ -167,3 +173,64 @@ async function resolveIosSigningOptions({
     signingIdentity: credentials.applicationTargetProvisioningProfile.data.certificateCommonName,
   };
 }
+
+// #region Internals
+
+class LoggerAdapter implements Logger {
+  constructor(private readonly logger: bunyan) {}
+
+  debug(...message: any[]): void {
+    const [first, ...rest] = message;
+    this.logger.debug(first, ...rest);
+  }
+
+  info(...message: any[]): void {
+    const [first, ...rest] = message;
+    this.logger.info(first, ...rest);
+  }
+  warn(...message: any[]): void {
+    const [first, ...rest] = message;
+    this.logger.warn(first, ...rest);
+  }
+  error(...message: any[]): void {
+    const [first, ...rest] = message;
+    this.logger.error(first, ...rest);
+  }
+  time(label: string): void {
+    this.logger.info(label);
+  }
+  timeEnd(label: string): void {
+    let endLabel;
+    if (label.length === 0) {
+      endLabel = label;
+    } else {
+      const firstChar = label.charAt(0).toLowerCase();
+      const remains = label.slice(1);
+      endLabel = `Finished ${firstChar}${remains} ✅`;
+    }
+    this.logger.info(endLabel);
+  }
+}
+
+function createSpawnAsync(
+  verbose: boolean,
+  logger: bunyan,
+  env: NodeJS.ProcessEnv = process.env
+): SpawnProcessAsync {
+  return function stepsSpawnAsync(
+    command: string,
+    args: string[],
+    options?: SpawnProcessOptions
+  ): SpawnProcessPromise<SpawnProcessResult> {
+    const mergedEnv = options?.env ? { ...options.env, ...env } : env;
+    return spawnAsync(
+      command,
+      args,
+      verbose
+        ? { ...options, env: mergedEnv, logger, stdio: 'pipe' }
+        : { ...options, env: mergedEnv }
+    );
+  };
+}
+
+// #endregion Internals
