@@ -31,6 +31,8 @@ export function createRepackBuildFunction(): BuildFunction {
     fn: async (stepsCtx, { outputs, env }) => {
       const tmpDir = path.join(os.tmpdir(), `eas-build-golden-dev-client-app-${uuidv4()}`);
       await fs.mkdirs(tmpDir);
+      const workingDirectory = path.join(tmpDir, 'working-directory');
+      await fs.mkdirs(workingDirectory);
       stepsCtx.logger.info(`Created temporary directory: ${tmpDir}`);
 
       stepsCtx.logger.info('Downloading golden development client archive...');
@@ -72,7 +74,7 @@ export function createRepackBuildFunction(): BuildFunction {
           projectRoot: stepsCtx.workingDirectory,
           sourceAppPath: goldenArchivePath,
           outputPath: repackedArchivePath,
-          workingDirectory: tmpDir,
+          workingDirectory,
           iosSigningOptions: stepsCtx.global.staticContext.job.simulator
             ? undefined
             : await resolveIosSigningOptions({
@@ -80,7 +82,6 @@ export function createRepackBuildFunction(): BuildFunction {
                 buildCredentials: stepsCtx.global.staticContext.job.secrets?.buildCredentials,
               }),
           logger: stepsCtx.logger,
-          skipWorkingDirCleanup: true,
           verbose: env.__EAS_REPACK_VERBOSE !== undefined,
           env: {
             FASTLANE_DISABLE_COLORS: '1',
@@ -111,11 +112,9 @@ export function createRepackBuildFunction(): BuildFunction {
           );
           androidCredentials = {
             keyStorePath,
-            keyStorePassword:
-              stepsCtx.global.staticContext.job.secrets.buildCredentials.keystore.keystorePassword,
+            keyStorePassword: `pass:${stepsCtx.global.staticContext.job.secrets.buildCredentials.keystore.keystorePassword}`,
             keyAlias: stepsCtx.global.staticContext.job.secrets.buildCredentials.keystore.keyAlias,
-            keyPassword:
-              stepsCtx.global.staticContext.job.secrets.buildCredentials.keystore.keyPassword,
+            keyPassword: `pass:${stepsCtx.global.staticContext.job.secrets.buildCredentials.keystore.keyPassword}`,
           };
         }
 
@@ -124,10 +123,9 @@ export function createRepackBuildFunction(): BuildFunction {
           projectRoot: stepsCtx.workingDirectory,
           sourceAppPath: goldenArchivePath,
           outputPath: repackedArchivePath,
-          workingDirectory: tmpDir,
+          workingDirectory,
           androidSigningOptions: androidCredentials,
           logger: stepsCtx.logger,
-          skipWorkingDirCleanup: true,
           verbose: env.__EAS_REPACK_VERBOSE !== undefined,
           env,
         });
