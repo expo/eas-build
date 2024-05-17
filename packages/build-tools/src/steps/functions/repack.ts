@@ -11,6 +11,7 @@ import fetch from 'node-fetch';
 import {
   repackAppAndroidAsync,
   repackAppIosAsync,
+  type AndroidSigningOptions,
   type Logger,
   type SpawnProcessAsync,
   type SpawnProcessOptions,
@@ -100,14 +101,7 @@ export function createRepackBuildFunction(): BuildFunction {
           verbose: env.__EAS_REPACK_VERBOSE !== undefined,
         });
       } else if (stepsCtx.global.staticContext.job.platform === Platform.ANDROID) {
-        let androidCredentials:
-          | {
-              keyStorePath: string;
-              keyStorePassword: string;
-              keyAlias: string;
-              keyPassword: string | undefined;
-            }
-          | undefined;
+        let androidCredentials: AndroidSigningOptions | undefined;
         if (stepsCtx.global.staticContext.job.secrets?.buildCredentials?.keystore.dataBase64) {
           const keyStorePath = path.join(tmpDir, `keystore-${uuidv4()}`);
           await fs.writeFile(
