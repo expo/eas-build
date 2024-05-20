@@ -30,7 +30,7 @@ export default async function iosBuilder(ctx: BuildContext<Ios.Job>): Promise<Ar
     return await runBuilderWithHooksAsync(ctx, buildAsync);
   } else if (ctx.job.mode === BuildMode.RESIGN) {
     return await resignAsync(ctx);
-  } else if (ctx.job.mode === BuildMode.CUSTOM) {
+  } else if (ctx.job.mode === BuildMode.CUSTOM || ctx.job.mode === BuildMode.REPACK) {
     return await runCustomBuildAsync(ctx);
   } else {
     throw new Error('Not implemented');
