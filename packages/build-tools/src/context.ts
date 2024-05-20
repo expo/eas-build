@@ -98,9 +98,11 @@ export class BuildContext<TJob extends Job = Job> {
     this.cacheManager = options.cacheManager;
     this._uploadArtifact = options.uploadArtifact;
     this.reportError = options.reportError;
+
+    const shouldApplyRepackOverrides = job.platform && job.mode === BuildMode.REPACK;
     this._job = {
       ...job,
-      ...(job.platform && job.mode === BuildMode.REPACK
+      ...(shouldApplyRepackOverrides
         ? {
             customBuildConfig: {
               path: '__eas/repack.yml',
