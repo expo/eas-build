@@ -256,4 +256,21 @@ describe('Android.JobSchema', () => {
     expect(value).toMatchObject(job);
     expect(error).toBeFalsy();
   });
+
+  test('can set build mode === repack', () => {
+    const job = {
+      mode: BuildMode.REPACK,
+      type: Workflow.UNKNOWN,
+      platform: Platform.ANDROID,
+      projectArchive: {
+        type: ArchiveSourceType.URL,
+        url: 'https://expo.dev/builds/123',
+      },
+      projectRootDirectory: '.',
+      secrets,
+    };
+    const { value, error } = Android.JobSchema.validate(job, joiOptions);
+    expect(value).toMatchObject(job);
+    expect(error).toBeFalsy();
+  });
 });

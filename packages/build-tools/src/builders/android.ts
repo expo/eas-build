@@ -30,7 +30,7 @@ export default async function androidBuilder(ctx: BuildContext<Android.Job>): Pr
     return await runBuilderWithHooksAsync(ctx, buildAsync);
   } else if (ctx.job.mode === BuildMode.RESIGN) {
     throw new Error('Not implemented');
-  } else if (ctx.job.mode === BuildMode.CUSTOM) {
+  } else if (ctx.job.mode === BuildMode.CUSTOM || ctx.job.mode === BuildMode.REPACK) {
     return await runCustomBuildAsync(ctx);
   } else {
     throw new Error('Not implemented');

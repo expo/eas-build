@@ -7,6 +7,7 @@ export enum BuildMode {
   BUILD = 'build',
   RESIGN = 'resign',
   CUSTOM = 'custom',
+  REPACK = 'repack',
 }
 
 export enum Workflow {

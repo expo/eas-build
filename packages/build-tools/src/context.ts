@@ -17,7 +17,7 @@ import {
 } from '@expo/eas-build-job';
 import { ExpoConfig } from '@expo/config';
 import { bunyan } from '@expo/logger';
-import { BuildTrigger } from '@expo/eas-build-job/dist/common';
+import { BuildMode, BuildTrigger } from '@expo/eas-build-job/dist/common';
 
 import { PackageManager, resolvePackageManager } from './utils/packageManager';
 import { resolveBuildPhaseErrorAsync } from './buildErrors/detectError';
@@ -98,7 +98,16 @@ export class BuildContext<TJob extends Job = Job> {
     this.cacheManager = options.cacheManager;
     this._uploadArtifact = options.uploadArtifact;
     this.reportError = options.reportError;
-    this._job = job;
+    this._job = {
+      ...job,
+      ...(job.platform && job.mode === BuildMode.REPACK
+        ? {
+            customBuildConfig: {
+              path: '__eas/repack.yml',
+            },
+          }
+        : null),
+    };
     this._metadata = options.metadata;
     this.skipNativeBuild = options.skipNativeBuild;
     this.reportBuildPhaseStats = options.reportBuildPhaseStats;

@@ -119,7 +119,9 @@ const SecretsSchema = Joi.object({
 });
 
 export const JobSchema = Joi.object({
-  mode: Joi.string().valid(BuildMode.BUILD, BuildMode.CUSTOM).default(BuildMode.BUILD),
+  mode: Joi.string()
+    .valid(BuildMode.BUILD, BuildMode.CUSTOM, BuildMode.REPACK)
+    .default(BuildMode.BUILD),
   type: Joi.string()
     .valid(...Object.values(Workflow))
     .required(),
