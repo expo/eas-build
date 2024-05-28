@@ -221,7 +221,7 @@ async function resignAsync(ctx: BuildContext<Ios.Job>): Promise<Artifacts> {
 async function runInstallPodsAsync(ctx: BuildContext<Ios.Job>): Promise<void> {
   let warnTimeout: NodeJS.Timeout | undefined;
   let killTimeout: NodeJS.Timeout | undefined;
-  let killTimedOut: boolean = false;
+  let timedOutToKill: boolean = false;
   try {
     const installPodsSpawnPromise = (
       await installPods(ctx, {
@@ -238,7 +238,7 @@ async function runInstallPodsAsync(ctx: BuildContext<Ios.Job>): Promise<void> {
     }, INSTALL_PODS_WARN_TIMEOUT_MS);
 
     killTimeout = setTimeout(async () => {
-      killTimedOut = true;
+      timedOutToKill = true;
       ctx.logger.error(
         '"Install pods" phase takes a very long time and it did not produce any logs in the past 30 minutes. Most likely an unexpected error happened which caused the process to hang and it will be terminated'
       );
@@ -254,7 +254,7 @@ async function runInstallPodsAsync(ctx: BuildContext<Ios.Job>): Promise<void> {
 
     await installPodsSpawnPromise;
   } catch (err: any) {
-    if (killTimedOut) {
+    if (timedOutToKill) {
       throw new InstallPodsTimeoutError('"Install pods" phase was inactive for over 30 minutes');
     }
     throw err;
