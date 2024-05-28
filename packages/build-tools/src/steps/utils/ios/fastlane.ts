@@ -1,8 +1,7 @@
 import path from 'path';
 
 import { bunyan } from '@expo/logger';
-import spawn, { SpawnResult } from '@expo/turtle-spawn';
-import { BuildStepEnv } from '@expo/steps';
+import { BuildStepEnv, SpawnResult, spawnAsync } from '@expo/steps';
 
 import { XcodeBuildLogger } from './xcpretty';
 
@@ -56,9 +55,10 @@ export async function runFastlane(
     ...(env ?? process.env),
     ...extraEnv,
   };
-  return await spawn('fastlane', fastlaneArgs, {
+  return await spawnAsync('fastlane', fastlaneArgs, {
     env: fastlaneEnvVars,
     logger,
+    stdio: 'pipe',
     cwd,
   });
 }

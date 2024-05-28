@@ -2,7 +2,7 @@ import path from 'path';
 
 import { Env, Ios } from '@expo/eas-build-job';
 import { bunyan } from '@expo/logger';
-import spawn, { SpawnResult } from '@expo/turtle-spawn';
+import { SpawnResult, spawnAsync } from '@expo/steps';
 import fs from 'fs-extra';
 import nullthrows from 'nullthrows';
 
@@ -97,9 +97,10 @@ export async function runFastlane(
     LC_ALL: 'en_US.UTF-8',
     ...(env ?? process.env),
   };
-  return await spawn('fastlane', fastlaneArgs, {
+  return await spawnAsync('fastlane', fastlaneArgs, {
     env: fastlaneEnvVars,
     logger,
+    stdio: 'pipe',
     cwd,
   });
 }

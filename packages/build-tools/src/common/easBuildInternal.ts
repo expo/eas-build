@@ -2,10 +2,9 @@ import assert from 'assert';
 
 import { BuildJob, Env, Metadata, sanitizeBuildJob, sanitizeMetadata } from '@expo/eas-build-job';
 import { PipeMode, bunyan } from '@expo/logger';
-import spawn from '@expo/turtle-spawn';
 import Joi from 'joi';
 import nullthrows from 'nullthrows';
-import { BuildStepEnv } from '@expo/steps';
+import { BuildStepEnv, spawnAsync } from '@expo/steps';
 
 import { BuildContext } from '../context';
 import { isAtLeastNpm7Async } from '../utils/packageManager';
@@ -44,7 +43,7 @@ export async function runEasBuildInternalAsync<TJob extends BuildJob>({
     autoSubmitArgs.push('--auto-submit');
   }
 
-  const result = await spawn(
+  const result = await spawnAsync(
     cmd,
     [
       ...args,
@@ -64,6 +63,7 @@ export async function runEasBuildInternalAsync<TJob extends BuildJob>({
         ...extraEnv,
       },
       logger,
+      stdio: 'pipe',
       mode: PipeMode.STDERR_ONLY_AS_STDOUT,
     }
   );
@@ -84,7 +84,7 @@ export async function resolveEnvFromBuildProfileAsync<TJob extends BuildJob>(
   assert(buildProfile, 'build profile is missing in a build from git-based integration.');
   let spawnResult;
   try {
-    spawnResult = await spawn(
+    spawnResult = await spawnAsync(
       cmd,
       [
         ...args,

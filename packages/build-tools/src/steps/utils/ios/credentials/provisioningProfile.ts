@@ -3,11 +3,11 @@ import os from 'os';
 import path from 'path';
 
 import { errors } from '@expo/eas-build-job';
-import spawn from '@expo/turtle-spawn';
 import fs from 'fs-extra';
 import plist from 'plist';
 import { v4 as uuid } from 'uuid';
 import { bunyan } from '@expo/logger';
+import { spawnAsync } from '@expo/steps';
 
 export interface ProvisioningProfileData {
   path: string;
@@ -86,7 +86,7 @@ Profile's certificate fingerprint = ${devCertFingerprint}, distribution certific
   private async load(): Promise<void> {
     let result;
     try {
-      result = await spawn(
+      result = await spawnAsync(
         'security',
         ['cms', '-D', '-k', this.keychainPath, '-i', this.profilePath],
         {

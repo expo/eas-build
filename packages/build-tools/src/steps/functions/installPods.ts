@@ -1,5 +1,4 @@
-import { BuildFunction } from '@expo/steps';
-import spawn from '@expo/turtle-spawn';
+import { BuildFunction, spawnAsync } from '@expo/steps';
 
 export function createInstallPodsBuildFunction(): BuildFunction {
   return new BuildFunction({
@@ -8,9 +7,10 @@ export function createInstallPodsBuildFunction(): BuildFunction {
     name: 'Install Pods',
     fn: async (stepsCtx, { env }) => {
       stepsCtx.logger.info('Installing pods');
-      await spawn('pod', ['install'], {
+      await spawnAsync('pod', ['install'], {
         stdio: 'pipe',
         env,
+        logger: stepsCtx.logger,
         cwd: stepsCtx.workingDirectory,
       });
     },

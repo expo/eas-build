@@ -4,8 +4,8 @@ import {
   BuildStepEnv,
   BuildStepInput,
   BuildStepInputValueTypeName,
+  spawnAsync,
 } from '@expo/steps';
-import spawn from '@expo/turtle-spawn';
 import { minBy } from 'lodash';
 
 import { retryAsync } from '../../utils/retry';
@@ -43,18 +43,19 @@ export function createStartIosSimulatorBuildFunction(): BuildFunction {
         throw new Error('Could not find an iPhone among available simulator devices.');
       }
 
-      const bootstatusResult = await spawn(
+      const bootstatusResult = await spawnAsync(
         'xcrun',
         ['simctl', 'bootstatus', deviceIdentifier, '-b'],
         {
           logger,
           env,
+          stdio: 'pipe',
         }
       );
 
       await retryAsync(
         async () => {
-          await spawn('xcrun', ['simctl', 'io', deviceIdentifier, 'screenshot', '/dev/null'], {
+          await spawnAsync('xcrun', ['simctl', 'io', deviceIdentifier, 'screenshot', '/dev/null'], {
             env,
           });
         },
@@ -118,7 +119,7 @@ async function getAvailableSimulatorDevices({
 }: {
   env: BuildStepEnv;
 }): Promise<SimulatorDevice[]> {
-  const result = await spawn(
+  const result = await spawnAsync(
     'xcrun',
     ['simctl', 'list', 'devices', '--json', '--no-escape-slashes', 'available'],
     {

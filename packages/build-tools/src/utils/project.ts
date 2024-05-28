@@ -1,7 +1,7 @@
 import path from 'path';
 
 import { Job } from '@expo/eas-build-job';
-import spawn, { SpawnOptions, SpawnPromise, SpawnResult } from '@expo/turtle-spawn';
+import { spawnAsync, SpawnOptions, SpawnPromise, SpawnResult } from '@expo/steps';
 import fs from 'fs-extra';
 
 import { BuildContext } from '../context';
@@ -23,13 +23,13 @@ export function runExpoCliCommand<TJob extends Job>(
 ): SpawnPromise<SpawnResult> {
   const argsWithExpo = ['expo', ...args];
   if (ctx.packageManager === PackageManager.NPM) {
-    return spawn('npx', argsWithExpo, options);
+    return spawnAsync('npx', argsWithExpo, options);
   } else if (ctx.packageManager === PackageManager.YARN) {
-    return spawn('yarn', argsWithExpo, options);
+    return spawnAsync('yarn', argsWithExpo, options);
   } else if (ctx.packageManager === PackageManager.PNPM) {
-    return spawn('pnpm', argsWithExpo, options);
+    return spawnAsync('pnpm', argsWithExpo, options);
   } else if (ctx.packageManager === PackageManager.BUN) {
-    return spawn('bun', argsWithExpo, options);
+    return spawnAsync('bun', argsWithExpo, options);
   } else {
     throw new Error(`Unsupported package manager: ${ctx.packageManager}`);
   }

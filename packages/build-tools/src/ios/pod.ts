@@ -1,16 +1,17 @@
 import path from 'path';
 
 import { Ios } from '@expo/eas-build-job';
-import spawn from '@expo/turtle-spawn';
+import { spawnAsync } from '@expo/steps';
 
 import { BuildContext } from '../context';
 
 export async function installPods<TJob extends Ios.Job>(ctx: BuildContext<TJob>): Promise<void> {
   const iosDir = path.join(ctx.getReactNativeProjectDirectory(), 'ios');
 
-  await spawn('pod', ['install'], {
+  await spawnAsync('pod', ['install'], {
     cwd: iosDir,
     logger: ctx.logger,
+    stdio: 'pipe',
     env: {
       ...ctx.env,
       LANG: 'en_US.UTF-8',

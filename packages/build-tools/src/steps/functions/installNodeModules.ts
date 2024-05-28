@@ -1,6 +1,5 @@
-import { BuildFunction, BuildStepEnv } from '@expo/steps';
+import { BuildFunction, BuildStepEnv, spawnAsync } from '@expo/steps';
 import { BuildStepContext } from '@expo/steps/dist_esm/BuildStepContext';
-import spawn from '@expo/turtle-spawn';
 
 import {
   findPackagerRootDir,
@@ -37,9 +36,10 @@ export async function installNodeModules(
     }
   }
   logger.info(`Running "${packageManager} ${args.join(' ')}" in ${packagerRunDir} directory`);
-  await spawn(packageManager, args, {
+  await spawnAsync(packageManager, args, {
     cwd: packagerRunDir,
     logger: stepCtx.logger,
+    stdio: 'pipe',
     env,
   });
 }

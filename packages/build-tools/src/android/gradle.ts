@@ -1,10 +1,10 @@
 import path from 'path';
 import assert from 'assert';
 
-import spawn, { SpawnPromise, SpawnResult } from '@expo/turtle-spawn';
 import { Android, Env, Job, Platform } from '@expo/eas-build-job';
 import fs from 'fs-extra';
 import { bunyan } from '@expo/logger';
+import { SpawnPromise, SpawnResult, spawnAsync } from '@expo/steps';
 
 import { BuildContext } from '../context';
 import { getParentAndDescendantProcessPidsAsync } from '../utils/processes';
@@ -30,9 +30,10 @@ export async function runGradleCommand(
   }: { logger: bunyan; gradleCommand: string; androidDir: string; extraEnv?: Env }
 ): Promise<void> {
   logger.info(`Running 'gradlew ${gradleCommand}' in ${androidDir}`);
-  const spawnPromise = spawn('bash', ['-c', `sh gradlew ${gradleCommand}`], {
+  const spawnPromise = spawnAsync('bash', ['-c', `sh gradlew ${gradleCommand}`], {
     cwd: androidDir,
     logger,
+    stdio: 'pipe',
     lineTransformer: (line?: string) => {
       if (!line || /^\.+$/.exec(line)) {
         return null;

@@ -2,8 +2,7 @@ import assert from 'assert';
 
 import fs from 'fs-extra';
 import { bunyan } from '@expo/logger';
-import { BuildStepEnv } from '@expo/steps';
-import spawn, { SpawnPromise, SpawnResult } from '@expo/turtle-spawn';
+import { BuildStepEnv, SpawnPromise, SpawnResult, spawnAsync } from '@expo/steps';
 import { Android } from '@expo/eas-build-job';
 
 export async function runGradleCommand({
@@ -20,9 +19,10 @@ export async function runGradleCommand({
   extraEnv?: BuildStepEnv;
 }): Promise<void> {
   logger.info(`Running 'gradlew ${gradleCommand}' in ${androidDir}`);
-  const spawnPromise = spawn('bash', ['-c', `sh gradlew ${gradleCommand}`], {
+  const spawnPromise = spawnAsync('bash', ['-c', `sh gradlew ${gradleCommand}`], {
     cwd: androidDir,
     logger,
+    stdio: 'pipe',
     lineTransformer: (line?: string) => {
       if (!line || /^\.+$/.exec(line)) {
         return null;
@@ -72,7 +72,7 @@ function adjustOOMScore(spawnPromise: SpawnPromise<SpawnResult>, logger: bunyan)
 
 async function getChildrenPidsAsync(parentPids: number[]): Promise<number[]> {
   try {
-    const result = await spawn('pgrep', ['-P', parentPids.join(',')], {
+    const result = await spawnAsync('pgrep', ['-P', parentPids.join(',')], {
       stdio: 'pipe',
     });
     return result.stdout

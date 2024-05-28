@@ -2,8 +2,13 @@ import assert from 'assert';
 
 import { Platform } from '@expo/config';
 import { BuildJob } from '@expo/eas-build-job';
-import { BuildFunction, BuildStepInput, BuildStepInputValueTypeName } from '@expo/steps';
-import spawn from '@expo/turtle-spawn';
+import {
+  BuildFunction,
+  BuildStepInput,
+  BuildStepInputValueTypeName,
+  SpawnOptions,
+  spawnAsync,
+} from '@expo/steps';
 
 import { PackageManager, resolvePackageManager } from '../../utils/packageManager';
 
@@ -43,9 +48,10 @@ export function createPrebuildBuildFunction(): BuildFunction {
         clean: inputs.clean.value as boolean,
       });
       const argsWithExpo = ['expo', ...prebuildCommandArgs];
-      const options = {
+      const options: SpawnOptions = {
         cwd: stepCtx.workingDirectory,
         logger,
+        stdio: 'pipe',
         env: {
           EXPO_IMAGE_UTILS_NO_SHARP: '1',
           ...env,
@@ -53,13 +59,13 @@ export function createPrebuildBuildFunction(): BuildFunction {
         },
       };
       if (packageManager === PackageManager.NPM) {
-        await spawn('npx', argsWithExpo, options);
+        await spawnAsync('npx', argsWithExpo, options);
       } else if (packageManager === PackageManager.YARN) {
-        await spawn('yarn', argsWithExpo, options);
+        await spawnAsync('yarn', argsWithExpo, options);
       } else if (packageManager === PackageManager.PNPM) {
-        await spawn('pnpm', argsWithExpo, options);
+        await spawnAsync('pnpm', argsWithExpo, options);
       } else if (packageManager === PackageManager.BUN) {
-        await spawn('bun', argsWithExpo, options);
+        await spawnAsync('bun', argsWithExpo, options);
       } else {
         throw new Error(`Unsupported package manager: ${packageManager}`);
       }

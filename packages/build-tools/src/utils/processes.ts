@@ -1,8 +1,8 @@
-import spawn from '@expo/turtle-spawn';
+import { spawnAsync } from '@expo/steps';
 
 async function getChildrenPidsAsync(parentPids: number[]): Promise<number[]> {
   try {
-    const result = await spawn('pgrep', ['-P', parentPids.join(',')], {
+    const result = await spawnAsync('pgrep', ['-P', parentPids.join(',')], {
       stdio: 'pipe',
     });
     return result.stdout

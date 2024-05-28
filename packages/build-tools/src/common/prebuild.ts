@@ -1,6 +1,6 @@
 import { BuildJob } from '@expo/eas-build-job';
-import { SpawnOptions } from '@expo/turtle-spawn';
 import { bunyan } from '@expo/logger';
+import { SpawnOptions } from '@expo/steps';
 
 import { BuildContext } from '../context';
 import { runExpoCliCommand } from '../utils/project';
@@ -18,6 +18,7 @@ export async function prebuildAsync<TJob extends BuildJob>(
   const spawnOptions: SpawnOptions = {
     cwd: workingDir,
     logger,
+    stdio: 'pipe',
     env: {
       EXPO_IMAGE_UTILS_NO_SHARP: '1',
       ...options?.extraEnvs,
@@ -30,6 +31,7 @@ export async function prebuildAsync<TJob extends BuildJob>(
   const installDependenciesSpawnPromise = (
     await installDependenciesAsync(ctx, {
       logger,
+      stdio: 'pipe',
       cwd: resolvePackagerDir(ctx),
     })
   ).spawnPromise;

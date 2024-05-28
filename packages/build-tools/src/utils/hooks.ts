@@ -1,5 +1,5 @@
 import { BuildJob } from '@expo/eas-build-job';
-import spawn from '@expo/turtle-spawn';
+import { spawnAsync } from '@expo/steps';
 
 import { BuildContext } from '../context';
 
@@ -34,9 +34,10 @@ export async function runHookIfPresent<TJob extends BuildJob>(
       (await isUsingYarn2(projectDir)) && hook === Hook.PRE_INSTALL
         ? PackageManager.NPM
         : ctx.packageManager;
-    await spawn(packageManager, ['run', hook], {
+    await spawnAsync(packageManager, ['run', hook], {
       cwd: projectDir,
       logger: ctx.logger,
+      stdio: 'pipe',
       env: {
         ...ctx.env,
         ...extraEnvs,

@@ -1,16 +1,20 @@
 import { ExpoConfig } from '@expo/config';
 import { Android } from '@expo/eas-build-job';
-import spawn from '@expo/turtle-spawn';
+import { spawnAsync } from '@expo/steps';
 import { instance, mock, when } from 'ts-mockito';
 
 import { BuildContext } from '../../context';
 import { PackageManager } from '../packageManager';
 import { runExpoCliCommand } from '../project';
 
-jest.mock('@expo/turtle-spawn', () => ({
-  __esModule: true,
-  default: jest.fn(),
-}));
+jest.mock('@expo/steps', () => {
+  const spawnAsync = jest.fn();
+  return {
+    ...jest.requireActual('@expo/steps'),
+    spawnAsync,
+    __esModule: true,
+  };
+});
 
 describe(runExpoCliCommand, () => {
   describe('Expo SDK >= 46', () => {
@@ -25,7 +29,7 @@ describe(runExpoCliCommand, () => {
       const ctx = instance(mockCtx);
 
       void runExpoCliCommand(ctx, ['doctor'], {});
-      expect(spawn).toHaveBeenCalledWith('npx', ['expo', 'doctor'], expect.any(Object));
+      expect(spawnAsync).toHaveBeenCalledWith('npx', ['expo', 'doctor'], expect.any(Object));
     });
 
     it('spawns expo via "yarn" when package manager is yarn', () => {
@@ -39,7 +43,7 @@ describe(runExpoCliCommand, () => {
       const ctx = instance(mockCtx);
 
       void runExpoCliCommand(ctx, ['doctor'], {});
-      expect(spawn).toHaveBeenCalledWith('npx', ['expo', 'doctor'], expect.any(Object));
+      expect(spawnAsync).toHaveBeenCalledWith('npx', ['expo', 'doctor'], expect.any(Object));
     });
 
     it('spawns expo via "pnpm" when package manager is pnpm', () => {
@@ -53,7 +57,7 @@ describe(runExpoCliCommand, () => {
       const ctx = instance(mockCtx);
 
       void runExpoCliCommand(ctx, ['doctor'], {});
-      expect(spawn).toHaveBeenCalledWith('pnpm', ['expo', 'doctor'], expect.any(Object));
+      expect(spawnAsync).toHaveBeenCalledWith('pnpm', ['expo', 'doctor'], expect.any(Object));
     });
 
     it('spawns expo via "bun" when package manager is bun', () => {
@@ -67,7 +71,7 @@ describe(runExpoCliCommand, () => {
       const ctx = instance(mockCtx);
 
       void runExpoCliCommand(ctx, ['doctor'], {});
-      expect(spawn).toHaveBeenCalledWith('bun', ['expo', 'doctor'], expect.any(Object));
+      expect(spawnAsync).toHaveBeenCalledWith('bun', ['expo', 'doctor'], expect.any(Object));
     });
   });
 });

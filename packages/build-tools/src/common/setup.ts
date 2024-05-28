@@ -1,12 +1,12 @@
 import path from 'path';
 
-import spawn, { SpawnResult } from '@expo/turtle-spawn';
 import fs from 'fs-extra';
 import { BuildJob, BuildPhase, Ios, Job, Platform } from '@expo/eas-build-job';
 import { BuildTrigger } from '@expo/eas-build-job/dist/common';
 import nullthrows from 'nullthrows';
 import { ExpoConfig } from '@expo/config';
 import { UserFacingError } from '@expo/eas-build-job/dist/errors';
+import { SpawnResult, spawnAsync } from '@expo/steps';
 
 import { BuildContext } from '../context';
 import { deleteXcodeEnvLocalIfExistsAsync } from '../ios/xcodeEnv';
@@ -115,9 +115,10 @@ async function runExpoDoctor<TJob extends Job>(ctx: BuildContext<TJob>): Promise
   const isAtLeastNpm7 = await isAtLeastNpm7Async();
   try {
     const argsPrefix = isAtLeastNpm7 ? ['-y'] : [];
-    const promise = spawn('npx', [...argsPrefix, 'expo-doctor'], {
+    const promise = spawnAsync('npx', [...argsPrefix, 'expo-doctor'], {
       cwd: ctx.getReactNativeProjectDirectory(),
       logger: ctx.logger,
+      stdio: 'pipe',
       env: ctx.env,
     });
     timeout = setTimeout(async () => {
@@ -154,6 +155,7 @@ async function runInstallDependenciesAsync<TJob extends Job>(
     const installDependenciesSpawnPromise = (
       await installDependenciesAsync(ctx, {
         logger: ctx.logger,
+        stdio: 'pipe',
         infoCallbackFn: () => {
           if (warnTimeout) {
             warnTimeout.refresh();

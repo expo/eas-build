@@ -1,9 +1,9 @@
 import os from 'os';
 import path from 'path';
 
-import spawn from '@expo/turtle-spawn';
 import { v4 as uuid } from 'uuid';
 import { bunyan } from '@expo/logger';
+import { spawnAsync } from '@expo/steps';
 
 import { runFastlane } from '../fastlane';
 
@@ -88,7 +88,7 @@ export default class Keychain {
   }
 
   public async cleanUpKeychains(logger: bunyan): Promise<void> {
-    const { stdout } = await spawn('security', ['list-keychains'], { stdio: 'pipe' });
+    const { stdout } = await spawnAsync('security', ['list-keychains'], { stdio: 'pipe' });
     const keychainList = (/"(.*)"/g.exec(stdout) ?? ([] as string[])).map((i) =>
       i.slice(1, i.length - 1)
     );
@@ -101,7 +101,7 @@ export default class Keychain {
   }
 
   private async findIdentitiesByTeamId(teamId: string): Promise<string> {
-    const { output } = await spawn(
+    const { output } = await spawnAsync(
       'security',
       ['find-identity', '-v', '-s', `(${teamId})`, this.keychainPath],
       {

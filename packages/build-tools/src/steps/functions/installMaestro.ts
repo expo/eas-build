@@ -10,8 +10,8 @@ import {
   BuildStepGlobalContext,
   BuildStepInput,
   BuildStepInputValueTypeName,
+  spawnAsync,
 } from '@expo/steps';
-import spawn from '@expo/turtle-spawn';
 import { bunyan } from '@expo/logger';
 
 export function createInstallMaestroBuildFunction(): BuildFunction {
@@ -111,7 +111,7 @@ export function createInstallMaestroBuildFunction(): BuildFunction {
 
 async function getMaestroVersion({ env }: { env: BuildStepEnv }): Promise<string | null> {
   try {
-    const maestroVersion = await spawn('maestro', ['--version'], { stdio: 'pipe', env });
+    const maestroVersion = await spawnAsync('maestro', ['--version'], { stdio: 'pipe', env });
     return maestroVersion.stdout.trim();
   } catch {
     return null;
@@ -144,8 +144,9 @@ async function installMaestro({
       'Failed to infer directory to install Maestro in: $HOME environment variable is empty.'
     );
     const maestroDir = path.join(env.HOME, '.maestro');
-    await spawn(installMaestroScriptFilePath, [], {
+    await spawnAsync(installMaestroScriptFilePath, [], {
       logger,
+      stdio: 'pipe',
       env: {
         ...env,
         MAESTRO_DIR: maestroDir,
@@ -168,7 +169,7 @@ async function installMaestro({
 
 async function isIdbInstalled({ env }: { env: BuildStepEnv }): Promise<boolean> {
   try {
-    await spawn('idb', ['-h'], { ignoreStdio: true, env });
+    await spawnAsync('idb', ['-h'], { env, stdio: 'ignore' });
     return true;
   } catch {
     return false;
@@ -191,19 +192,21 @@ async function installIdbFromBrew({
     HOMEBREW_NO_INSTALL_CLEANUP: '1',
   };
 
-  await spawn(brewPath, ['tap', 'facebook/fb'], {
+  await spawnAsync(brewPath, ['tap', 'facebook/fb'], {
     env: localEnv,
     logger,
+    stdio: 'pipe',
   });
-  await spawn(brewPath, ['install', 'idb-companion'], {
+  await spawnAsync(brewPath, ['install', 'idb-companion'], {
     env: localEnv,
     logger,
+    stdio: 'pipe',
   });
 }
 
 async function isJavaInstalled({ env }: { env: BuildStepEnv }): Promise<boolean> {
   try {
-    await spawn('java', ['-version'], { ignoreStdio: true, env });
+    await spawnAsync('java', ['-version'], { stdio: 'ignore', env });
     return true;
   } catch {
     return false;
@@ -230,18 +233,18 @@ async function installJavaFromGcs({
   try {
     logger.info('Downloading Java installer');
     // This is simpler than piping body into a write stream with node-fetch.
-    await spawn('curl', ['--output', installerPath, downloadUrl], { env });
+    await spawnAsync('curl', ['--output', installerPath, downloadUrl], { env });
 
     await fs.promises.mkdir(installerMountDirectory);
     logger.info('Mounting Java installer');
-    await spawn(
+    await spawnAsync(
       'hdiutil',
       ['attach', installerPath, '-noverify', '-mountpoint', installerMountDirectory],
       { env }
     );
 
     logger.info('Installing Java');
-    await spawn(
+    await spawnAsync(
       'sudo',
       [
         'installer',
@@ -255,7 +258,7 @@ async function installJavaFromGcs({
   } finally {
     try {
       // We need to unmount to remove, otherwise we get "resource busy"
-      await spawn('hdiutil', ['detach', installerMountDirectory], { env });
+      await spawnAsync('hdiutil', ['detach', installerMountDirectory], { env });
     } catch {}
 
     await fs.promises.rm(tempDirectory, { force: true, recursive: true });
