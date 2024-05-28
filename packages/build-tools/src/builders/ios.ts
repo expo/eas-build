@@ -20,9 +20,15 @@ import { resolveArtifactPath, resolveBuildConfiguration, resolveScheme } from '.
 import { setupAsync } from '../common/setup';
 import { prebuildAsync } from '../common/prebuild';
 import { prepareExecutableAsync } from '../utils/prepareBuildExecutable';
+import { getParentAndDescendantProcessPidsAsync } from '../utils/processes';
 
 import { runBuilderWithHooksAsync } from './common';
 import { runCustomBuildAsync } from './custom';
+
+const INSTALL_PODS_WARN_TIMEOUT_MS = 15 * 60 * 1000; // 15 minutes
+const INSTALL_PODS_KILL_TIMEOUT_MS = 30 * 60 * 1000; // 30 minutes
+
+class InstallPodsTimeoutError extends Error {}
 
 export default async function iosBuilder(ctx: BuildContext<Ios.Job>): Promise<Artifacts> {
   if (ctx.job.mode === BuildMode.BUILD) {
@@ -70,7 +76,7 @@ async function buildAsync(ctx: BuildContext<Ios.Job>): Promise<void> {
     });
 
     await ctx.runBuildPhase(BuildPhase.INSTALL_PODS, async () => {
-      await installPods(ctx);
+      await runInstallPodsAsync(ctx);
     });
 
     await ctx.runBuildPhase(BuildPhase.POST_INSTALL_HOOK, async () => {
@@ -210,4 +216,54 @@ async function resignAsync(ctx: BuildContext<Ios.Job>): Promise<Artifacts> {
     throw new Error('Builder must upload application archive');
   }
   return ctx.artifacts;
+}
+
+async function runInstallPodsAsync(ctx: BuildContext<Ios.Job>): Promise<void> {
+  let warnTimeout: NodeJS.Timeout | undefined;
+  let killTimeout: NodeJS.Timeout | undefined;
+  let timedOutToKill: boolean = false;
+  try {
+    const installPodsSpawnPromise = (
+      await installPods(ctx, {
+        infoCallbackFn: () => {
+          warnTimeout?.refresh();
+          killTimeout?.refresh();
+        },
+      })
+    ).spawnPromise;
+    warnTimeout = setTimeout(() => {
+      ctx.logger.warn(
+        '"Install pods" phase takes longer then expected and it did not produce any logs in the past 15 minutes'
+      );
+    }, INSTALL_PODS_WARN_TIMEOUT_MS);
+
+    killTimeout = setTimeout(async () => {
+      timedOutToKill = true;
+      ctx.logger.error(
+        '"Install pods" phase takes a very long time and it did not produce any logs in the past 30 minutes. Most likely an unexpected error happened which caused the process to hang and it will be terminated'
+      );
+      const ppid = nullthrows(installPodsSpawnPromise.child.pid);
+      const pids = await getParentAndDescendantProcessPidsAsync(ppid);
+      pids.forEach((pid) => {
+        process.kill(pid);
+      });
+      ctx.reportError?.('"Install pods" phase takes a very long time', undefined, {
+        extras: { buildId: ctx.env.EAS_BUILD_ID },
+      });
+    }, INSTALL_PODS_KILL_TIMEOUT_MS);
+
+    await installPodsSpawnPromise;
+  } catch (err: any) {
+    if (timedOutToKill) {
+      throw new InstallPodsTimeoutError('"Install pods" phase was inactive for over 30 minutes');
+    }
+    throw err;
+  } finally {
+    if (warnTimeout) {
+      clearTimeout(warnTimeout);
+    }
+    if (killTimeout) {
+      clearTimeout(killTimeout);
+    }
+  }
 }
