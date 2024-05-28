@@ -25,8 +25,8 @@ import { getParentAndDescendantProcessPidsAsync } from '../utils/processes';
 import { runBuilderWithHooksAsync } from './common';
 import { runCustomBuildAsync } from './custom';
 
-const INSTALL_PODS_WARN_TIMEOUT_MS = 15 * 60 * 1000;
-const INSTALL_PODS_KILL_TIMEOUT_MS = 30 * 60 * 1000;
+const INSTALL_PODS_WARN_TIMEOUT_MS = 15 * 60 * 1000; // 15 minutes
+const INSTALL_PODS_KILL_TIMEOUT_MS = 30 * 60 * 1000; // 30 minutes
 
 class InstallPodsTimeoutError extends Error {}
 
