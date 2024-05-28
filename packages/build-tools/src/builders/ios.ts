@@ -226,12 +226,8 @@ async function runInstallPodsAsync(ctx: BuildContext<Ios.Job>): Promise<void> {
     const installPodsSpawnPromise = (
       await installPods(ctx, {
         infoCallbackFn: () => {
-          if (warnTimeout) {
-            warnTimeout.refresh();
-          }
-          if (killTimeout) {
-            killTimeout.refresh();
-          }
+          warnTimeout?.refresh();
+          killTimeout?.refresh();
         },
       })
     ).spawnPromise;
