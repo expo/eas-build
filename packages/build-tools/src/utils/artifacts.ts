@@ -90,7 +90,11 @@ export async function maybeFindAndUploadBuildArtifacts(
         )
       )
     ).flat();
-    logger.info(`Build artifacts: ${buildArtifacts.join(', ')}`);
+    const artifactsSizes = await getArtifactsSizes(buildArtifacts);
+    logger.info(`Build artifacts:`);
+    for (const [path, size] of Object.entries(artifactsSizes)) {
+      logger.info(`  - ${path} (${formatBytes(size)})`);
+    }
     logger.info('Uploading build artifacts...');
     await ctx.uploadArtifact({
       artifact: {
@@ -117,7 +121,11 @@ export async function uploadApplicationArchive(
   }
 ): Promise<void> {
   const applicationArchives = await findArtifacts({ rootDir, patternOrPath, logger });
-  logger.info(`Application archives: ${applicationArchives.join(', ')}`);
+  const artifactsSizes = await getArtifactsSizes(applicationArchives);
+  logger.info(`Application archives:`);
+  for (const [path, size] of Object.entries(artifactsSizes)) {
+    logger.info(`  - ${path} (${formatBytes(size)})`);
+  }
   logger.info('Uploading application archive...');
   await ctx.uploadArtifact({
     artifact: {
@@ -126,4 +134,46 @@ export async function uploadApplicationArchive(
     },
     logger,
   });
+}
+
+async function getArtifactsSizes(artifacts: string[]): Promise<Record<string, number>> {
+  const artifactsSizes: Record<string, number> = {};
+  await Promise.all(
+    artifacts.map(async (artifact) => {
+      const { size } = await fs.stat(artifact);
+      artifactsSizes[artifact] = size;
+    })
+  );
+  return artifactsSizes;
+}
+
+// same as in
+// https://github.com/expo/eas-cli/blob/f0e3b648a1634266e7d723bd49a84866ab9b5801/packages/eas-cli/src/utils/files.ts#L33-L60
+export function formatBytes(bytes: number): string {
+  if (bytes === 0) {
+    return `0`;
+  }
+  let multiplier = 1;
+  if (bytes < 1024 * multiplier) {
+    return `${Math.floor(bytes)} B`;
+  }
+  multiplier *= 1024;
+  if (bytes < 102.4 * multiplier) {
+    return `${(bytes / multiplier).toFixed(1)} KB`;
+  }
+  if (bytes < 1024 * multiplier) {
+    return `${Math.floor(bytes / 1024)} KB`;
+  }
+  multiplier *= 1024;
+  if (bytes < 102.4 * multiplier) {
+    return `${(bytes / multiplier).toFixed(1)} MB`;
+  }
+  if (bytes < 1024 * multiplier) {
+    return `${Math.floor(bytes / multiplier)} MB`;
+  }
+  multiplier *= 1024;
+  if (bytes < 102.4 * multiplier) {
+    return `${(bytes / multiplier).toFixed(1)} GB`;
+  }
+  return `${Math.floor(bytes / 1024)} GB`;
 }
