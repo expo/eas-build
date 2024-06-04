@@ -90,7 +90,11 @@ export async function maybeFindAndUploadBuildArtifacts(
         )
       )
     ).flat();
-    logger.info(`Build artifacts: ${buildArtifacts.join(', ')}`);
+    const artifactsSizes = await getArtifactsSizes(buildArtifacts);
+    logger.info(`Build artifacts:`);
+    for (const [path, size] of Object.entries(artifactsSizes)) {
+      logger.info(`  - ${path} (${(size / 1024 / 1024).toFixed(2)} MB)`);
+    }
     logger.info('Uploading build artifacts...');
     await ctx.uploadArtifact({
       artifact: {
@@ -117,7 +121,11 @@ export async function uploadApplicationArchive(
   }
 ): Promise<void> {
   const applicationArchives = await findArtifacts({ rootDir, patternOrPath, logger });
-  logger.info(`Application archives: ${applicationArchives.join(', ')}`);
+  const artifactsSizes = await getArtifactsSizes(applicationArchives);
+  logger.info(`Application archives:`);
+  for (const [path, size] of Object.entries(artifactsSizes)) {
+    logger.info(`  - ${path} (${(size / 1024 / 1024).toFixed(2)} MB)`);
+  }
   logger.info('Uploading application archive...');
   await ctx.uploadArtifact({
     artifact: {
@@ -126,4 +134,15 @@ export async function uploadApplicationArchive(
     },
     logger,
   });
+}
+
+async function getArtifactsSizes(artifacts: string[]): Promise<Record<string, number>> {
+  const artifactsSizes: Record<string, number> = {};
+  await Promise.all(
+    artifacts.map(async (artifact) => {
+      const { size } = await fs.stat(artifact);
+      artifactsSizes[artifact] = size;
+    })
+  );
+  return artifactsSizes;
 }
