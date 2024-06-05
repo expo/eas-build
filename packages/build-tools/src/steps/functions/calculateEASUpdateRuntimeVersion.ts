@@ -8,9 +8,8 @@ import {
 
 import { resolveRuntimeVersionForExpoUpdatesIfConfiguredAsync } from '../../utils/expoUpdates';
 import { readAppConfig } from '../../utils/appConfig';
-import { CustomBuildContext } from '../../customBuildContext';
 
-export function calculateEASUpdateRuntimeVersionFunction(ctx: CustomBuildContext): BuildFunction {
+export function calculateEASUpdateRuntimeVersionFunction(): BuildFunction {
   return new BuildFunction({
     namespace: 'eas',
     id: 'calculate_eas_update_runtime_version',
@@ -18,15 +17,15 @@ export function calculateEASUpdateRuntimeVersionFunction(ctx: CustomBuildContext
     inputProviders: [
       BuildStepInput.createProvider({
         id: 'platform',
-        defaultValue: ctx.job.platform,
-        required: !ctx.job.platform,
+        required: false,
         allowedValueTypeName: BuildStepInputValueTypeName.STRING,
+        allowedValues: [Platform.ANDROID, Platform.IOS],
       }),
       BuildStepInput.createProvider({
         id: 'workflow',
-        defaultValue: ctx.job.type,
-        required: !ctx.job.type,
+        required: false,
         allowedValueTypeName: BuildStepInputValueTypeName.STRING,
+        allowedValues: [Workflow.GENERIC, Workflow.MANAGED],
       }),
     ],
     outputProviders: [
@@ -52,8 +51,8 @@ export function calculateEASUpdateRuntimeVersionFunction(ctx: CustomBuildContext
         cwd: stepCtx.workingDirectory,
         logger: stepCtx.logger,
         appConfig,
-        platform: inputs.platform.value as Platform,
-        workflow: inputs.workflow.value as Workflow,
+        platform: (inputs.platform.value as Platform) ?? stepCtx.global.staticContext.job.platform,
+        workflow: (inputs.workflow.value as Workflow) ?? stepCtx.global.staticContext.job.type,
         env,
       });
       if (resolvedRuntimeVersion) {
