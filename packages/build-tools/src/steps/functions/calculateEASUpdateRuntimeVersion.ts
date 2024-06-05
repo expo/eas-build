@@ -19,13 +19,11 @@ export function calculateEASUpdateRuntimeVersionFunction(): BuildFunction {
         id: 'platform',
         required: false,
         allowedValueTypeName: BuildStepInputValueTypeName.STRING,
-        allowedValues: [Platform.ANDROID, Platform.IOS],
       }),
       BuildStepInput.createProvider({
         id: 'workflow',
         required: false,
         allowedValueTypeName: BuildStepInputValueTypeName.STRING,
-        allowedValues: [Workflow.GENERIC, Workflow.MANAGED],
       }),
     ],
     outputProviders: [
@@ -47,12 +45,34 @@ export function calculateEASUpdateRuntimeVersionFunction(): BuildFunction {
         logger: stepCtx.logger,
         sdkVersion: stepCtx.global.staticContext.metadata?.sdkVersion,
       }).exp;
+
+      const platform =
+        (inputs.platform.value as Platform) ?? stepCtx.global.staticContext.job.platform;
+      const workflow = (inputs.workflow.value as Workflow) ?? stepCtx.global.staticContext.job.type;
+
+      if (![Platform.ANDROID, Platform.IOS].includes(platform)) {
+        throw new Error(
+          `Unsupported platform: ${platform}. Platform must be "${Platform.ANDROID}" or "${Platform.IOS}"`
+        );
+      }
+
+      if (![Workflow.GENERIC, Workflow.MANAGED].includes(workflow)) {
+        if (workflow === Workflow.UNKNOWN) {
+          throw new Error(
+            `Detected ${Workflow.UNKNOWN} workflow. Please make sure to run the eas/resolve_build_config step before running this step.`
+          );
+        }
+        throw new Error(
+          `Unsupported workflow: ${workflow}. Workflow must be "${Workflow.GENERIC}" or "${Workflow.MANAGED}"`
+        );
+      }
+
       const resolvedRuntimeVersion = await resolveRuntimeVersionForExpoUpdatesIfConfiguredAsync({
         cwd: stepCtx.workingDirectory,
         logger: stepCtx.logger,
         appConfig,
-        platform: (inputs.platform.value as Platform) ?? stepCtx.global.staticContext.job.platform,
-        workflow: (inputs.workflow.value as Workflow) ?? stepCtx.global.staticContext.job.type,
+        platform,
+        workflow,
         env,
       });
       if (resolvedRuntimeVersion) {
