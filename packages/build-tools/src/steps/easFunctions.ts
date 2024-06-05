@@ -51,7 +51,7 @@ export function getEasFunctions(ctx: CustomBuildContext): BuildFunction[] {
     createInstallPodsBuildFunction(),
     createSendSlackMessageFunction(),
 
-    calculateEASUpdateRuntimeVersionFunction(ctx),
+    calculateEASUpdateRuntimeVersionFunction(),
 
     createRepackBuildFunction(),
   ];

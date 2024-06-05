@@ -68,11 +68,10 @@ function createStepsForIosSimulatorBuild({
   globalCtx,
   buildToolsContext,
 }: HelperFunctionsInput): BuildStep[] {
-  const calculateEASUpdateRuntimeVersion = calculateEASUpdateRuntimeVersionFunction(
-    buildToolsContext
-  ).createBuildStepFromFunctionCall(globalCtx, {
-    id: 'calculate_eas_update_runtime_version',
-  });
+  const calculateEASUpdateRuntimeVersion =
+    calculateEASUpdateRuntimeVersionFunction().createBuildStepFromFunctionCall(globalCtx, {
+      id: 'calculate_eas_update_runtime_version',
+    });
   const installPods = createInstallPodsBuildFunction().createBuildStepFromFunctionCall(globalCtx, {
     workingDirectory: './ios',
   });
@@ -118,11 +117,10 @@ function createStepsForIosBuildWithCredentials({
     resolveAppleTeamIdFromCredentialsFunction().createBuildStepFromFunctionCall(globalCtx, {
       id: 'resolve_apple_team_id_from_credentials',
     });
-  const calculateEASUpdateRuntimeVersion = calculateEASUpdateRuntimeVersionFunction(
-    buildToolsContext
-  ).createBuildStepFromFunctionCall(globalCtx, {
-    id: 'calculate_eas_update_runtime_version',
-  });
+  const calculateEASUpdateRuntimeVersion =
+    calculateEASUpdateRuntimeVersionFunction().createBuildStepFromFunctionCall(globalCtx, {
+      id: 'calculate_eas_update_runtime_version',
+    });
   const prebuildStep = createPrebuildBuildFunction().createBuildStepFromFunctionCall(globalCtx, {
     callInputs: {
       apple_team_id: '${ steps.resolve_apple_team_id_from_credentials.apple_team_id }',
@@ -180,11 +178,10 @@ function createStepsForAndroidBuildWithoutCredentials({
   globalCtx,
   buildToolsContext,
 }: HelperFunctionsInput): BuildStep[] {
-  const calculateEASUpdateRuntimeVersion = calculateEASUpdateRuntimeVersionFunction(
-    buildToolsContext
-  ).createBuildStepFromFunctionCall(globalCtx, {
-    id: 'calculate_eas_update_runtime_version',
-  });
+  const calculateEASUpdateRuntimeVersion =
+    calculateEASUpdateRuntimeVersionFunction().createBuildStepFromFunctionCall(globalCtx, {
+      id: 'calculate_eas_update_runtime_version',
+    });
   const configureEASUpdate =
     configureEASUpdateIfInstalledFunction().createBuildStepFromFunctionCall(globalCtx, {
       callInputs: {
@@ -221,11 +218,10 @@ function createStepsForAndroidBuildWithCredentials({
   globalCtx,
   buildToolsContext,
 }: HelperFunctionsInput): BuildStep[] {
-  const calculateEASUpdateRuntimeVersion = calculateEASUpdateRuntimeVersionFunction(
-    buildToolsContext
-  ).createBuildStepFromFunctionCall(globalCtx, {
-    id: 'calculate_eas_update_runtime_version',
-  });
+  const calculateEASUpdateRuntimeVersion =
+    calculateEASUpdateRuntimeVersionFunction().createBuildStepFromFunctionCall(globalCtx, {
+      id: 'calculate_eas_update_runtime_version',
+    });
   const configureEASUpdate =
     configureEASUpdateIfInstalledFunction().createBuildStepFromFunctionCall(globalCtx, {
       callInputs: {
