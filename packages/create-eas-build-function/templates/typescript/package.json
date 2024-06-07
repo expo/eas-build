@@ -10,7 +10,7 @@
   "keywords": [],
   "author": "",
   "devDependencies": {
-    "@types/node": "20.11.0",
+    "@types/node": "20.14.2",
     "typescript": "^5.3.3",
     "@expo/steps": "^1.0.75"
   }
