@@ -36,10 +36,10 @@
     "@expo/steps": "1.0.114"
   },
   "devDependencies": {
-    "@expo/package-manager": "^1.0.2",
+    "@expo/package-manager": "^1.5.2",
     "@jest/globals": "^29.7.0",
-    "@types/jest": "^29.5.11",
-    "@types/node": "20.11.0",
+    "@types/jest": "^29.5.12",
+    "@types/node": "20.14.2",
     "@types/prompts": "^2.4.9",
     "@vercel/ncc": "^0.38.1",
     "chalk": "4.1.2",
@@ -47,14 +47,14 @@
     "ora": "^6.3.1",
     "prompts": "^2.4.2",
     "ts-node": "^10.9.2",
-    "typescript": "^5.3.3",
+    "typescript": "^5.4.5",
     "update-check": "^1.5.4"
   },
   "publishConfig": {
     "access": "public"
   },
   "volta": {
-    "node": "20.11.0",
+    "node": "20.14.0",
     "yarn": "1.22.21"
   }
 }
