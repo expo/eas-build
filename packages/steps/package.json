@@ -45,7 +45,7 @@
     "typescript": "^5.4.5"
   },
   "engines": {
-    "node": ">=16.0.0"
+    "node": ">=18"
   },
   "dependencies": {
     "@expo/eas-build-job": "1.0.114",
