@@ -1,6 +1,6 @@
 {
   "name": "@expo/logger",
-  "version": "1.0.57",
+  "version": "1.0.117",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "files": [
