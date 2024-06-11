@@ -106,7 +106,8 @@ async function buildAsync(ctx: BuildContext<Ios.Job>): Promise<void> {
 
     await ctx.runBuildPhase(BuildPhase.CONFIGURE_EXPO_UPDATES, async () => {
       await configureExpoUpdatesIfInstalledAsync(ctx, {
-        resolvedRuntimeVersion: resolvedExpoUpdatesRuntimeVersion,
+        resolvedRuntimeVersion: resolvedExpoUpdatesRuntimeVersion?.runtimeVersion ?? null,
+        resolvedFingerprintSources: resolvedExpoUpdatesRuntimeVersion?.fingerprintSources ?? null,
       });
     });
 
@@ -118,8 +119,13 @@ async function buildAsync(ctx: BuildContext<Ios.Job>): Promise<void> {
         scheme,
         buildConfiguration,
         entitlements,
-        ...(resolvedExpoUpdatesRuntimeVersion
-          ? { extraEnv: { EXPO_UPDATES_FINGERPRINT_OVERRIDE: resolvedExpoUpdatesRuntimeVersion } }
+        ...(resolvedExpoUpdatesRuntimeVersion?.runtimeVersion
+          ? {
+              extraEnv: {
+                EXPO_UPDATES_FINGERPRINT_OVERRIDE:
+                  resolvedExpoUpdatesRuntimeVersion?.runtimeVersion,
+              },
+            }
           : null),
       });
     });

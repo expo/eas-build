@@ -76,7 +76,9 @@ export function calculateEASUpdateRuntimeVersionFunction(): BuildFunction {
         env,
       });
       if (resolvedRuntimeVersion) {
-        outputs.resolved_eas_update_runtime_version.set(resolvedRuntimeVersion);
+        outputs.resolved_eas_update_runtime_version.set(
+          resolvedRuntimeVersion.runtimeVersion ?? undefined
+        );
       } else {
         stepCtx.logger.info('Skipped because EAS Update is not configured');
       }

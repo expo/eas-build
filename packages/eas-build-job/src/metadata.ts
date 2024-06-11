@@ -55,6 +55,11 @@ export type Metadata = {
   runtimeVersion?: string;
 
   /**
+   * Sources used to calculate the project fingerprint (for Expo Updates)
+   */
+  fingerprintSources?: object[];
+
+  /**
    * Version of the react-native package used in the project.
    */
   reactNativeVersion?: string;
@@ -173,6 +178,7 @@ export const MetadataSchema = Joi.object({
   credentialsSource: Joi.string().valid('local', 'remote'),
   sdkVersion: Joi.string(),
   runtimeVersion: Joi.string(),
+  fingerprintSources: Joi.array(),
   reactNativeVersion: Joi.string(),
   channel: Joi.string(),
   appName: Joi.string(),

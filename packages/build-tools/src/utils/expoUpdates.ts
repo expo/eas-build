@@ -5,6 +5,7 @@ import semver from 'semver';
 import { ExpoConfig } from '@expo/config';
 import { bunyan } from '@expo/logger';
 import { BuildStepEnv } from '@expo/steps';
+import { FingerprintSource, diffFingerprints } from '@expo/fingerprint';
 
 import {
   androidSetRuntimeVersionNativelyAsync,
@@ -77,7 +78,10 @@ export async function configureEASExpoUpdatesAsync(ctx: BuildContext<BuildJob>):
 
 export async function configureExpoUpdatesIfInstalledAsync(
   ctx: BuildContext<BuildJob>,
-  { resolvedRuntimeVersion }: { resolvedRuntimeVersion: string | null }
+  {
+    resolvedRuntimeVersion,
+    resolvedFingerprintSources,
+  }: { resolvedRuntimeVersion: string | null; resolvedFingerprintSources?: object[] | null }
 ): Promise<void> {
   const expoUpdatesPackageVersion = await getExpoUpdatesPackageVersionIfInstalledAsync(
     ctx.getReactNativeProjectDirectory(),
@@ -96,6 +100,38 @@ export async function configureExpoUpdatesIfInstalledAsync(
     ctx.logger.warn(
       "If you're using conditional app configs, e.g. depending on an environment variable, make sure to set the variable in eas.json or configure it with EAS Secret."
     );
+    if (ctx.metadata?.fingerprintSources && resolvedFingerprintSources && resolvedRuntimeVersion) {
+      const differences = diffFingerprints(
+        {
+          hash: ctx.metadata.runtimeVersion,
+          sources: ctx.metadata.fingerprintSources as FingerprintSource[],
+        },
+        {
+          hash: resolvedRuntimeVersion,
+          sources: resolvedFingerprintSources as FingerprintSource[],
+        }
+      );
+      ctx.logger.warn('Differences between local and resolved fingerprint:');
+      ctx.logger.warn(
+        JSON.stringify(
+          differences,
+          (key, value) => {
+            if (key === 'contents') {
+              try {
+                const item = JSON.parse(value);
+                return item;
+              } catch {
+                return value;
+              }
+            }
+            return value;
+          },
+          ' '
+        )
+      );
+    } else {
+      ctx.logger.warn(`Could not find fingerprint sources`);
+    }
   }
 
   if (isEASUpdateConfigured(ctx)) {
@@ -149,7 +185,7 @@ export async function resolveRuntimeVersionForExpoUpdatesIfConfiguredAsync({
   workflow: Workflow;
   logger: bunyan;
   env: BuildStepEnv;
-}): Promise<string | null> {
+}): Promise<{ runtimeVersion: string | null; fingerprintSources: object[] | null } | null> {
   const expoUpdatesPackageVersion = await getExpoUpdatesPackageVersionIfInstalledAsync(cwd, logger);
   if (expoUpdatesPackageVersion === null) {
     return null;
