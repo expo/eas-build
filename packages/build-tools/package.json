@@ -27,7 +27,6 @@
     "@expo/downloader": "1.0.117",
     "@expo/eas-build-job": "1.0.117",
     "@expo/env": "^0.3.0",
-    "@expo/fingerprint": "^0.9.0",
     "@expo/logger": "1.0.117",
     "@expo/package-manager": "1.5.2",
     "@expo/plist": "^0.1.3",

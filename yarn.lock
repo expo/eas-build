@@ -737,20 +737,6 @@
     p-limit "^3.1.0"
     resolve-from "^5.0.0"
 
-"@expo/fingerprint@^0.9.0":
-  version "0.9.0"
-  resolved "https://registry.yarnpkg.com/@expo/fingerprint/-/fingerprint-0.9.0.tgz#04ab33a2c9d00d010608144e552bb827f48cf36f"
-  integrity sha512-kSZ6gkTS9/+PxHmrFimRQINPFfvwDuENzSuRJul+Mdni9iJBnKODHLbWjAoG6GDnMOhSJ5AEdzjJeRalCmtwxw==
-  dependencies:
-    "@expo/spawn-async" "^1.7.2"
-    chalk "^4.1.2"
-    debug "^4.3.4"
-    find-up "^5.0.0"
-    minimatch "^3.0.4"
-    p-limit "^3.1.0"
-    resolve-from "^5.0.0"
-    semver "^7.6.0"
-
 "@expo/json-file@^8.2.37":
   version "8.2.37"
   resolved "https://registry.yarnpkg.com/@expo/json-file/-/json-file-8.2.37.tgz#9c02d3b42134907c69cc0a027b18671b69344049"

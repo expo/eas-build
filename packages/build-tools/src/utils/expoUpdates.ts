@@ -5,7 +5,6 @@ import semver from 'semver';
 import { ExpoConfig } from '@expo/config';
 import { bunyan } from '@expo/logger';
 import { BuildStepEnv } from '@expo/steps';
-import { FingerprintSource, diffFingerprints } from '@expo/fingerprint';
 
 import {
   androidSetRuntimeVersionNativelyAsync,
@@ -23,6 +22,7 @@ import { BuildContext } from '../context';
 
 import getExpoUpdatesPackageVersionIfInstalledAsync from './getExpoUpdatesPackageVersionIfInstalledAsync';
 import { resolveRuntimeVersionAsync } from './resolveRuntimeVersionAsync';
+import { FingerprintSource, diffFingerprints } from './fingerprint';
 
 export async function setRuntimeVersionNativelyAsync(
   ctx: BuildContext<Job>,
