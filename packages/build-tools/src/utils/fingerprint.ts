@@ -83,3 +83,21 @@ export function diffFingerprints(
     );
   });
 }
+
+export function stringifyFingerprintSources(sources: FingerprintSource[]): string {
+  return JSON.stringify(
+    sources,
+    (key, value) => {
+      if (key === 'contents') {
+        try {
+          const item = JSON.parse(value);
+          return item;
+        } catch {
+          return value;
+        }
+      }
+      return value;
+    },
+    ' '
+  );
+}

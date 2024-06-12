@@ -22,7 +22,7 @@ import { BuildContext } from '../context';
 
 import getExpoUpdatesPackageVersionIfInstalledAsync from './getExpoUpdatesPackageVersionIfInstalledAsync';
 import { resolveRuntimeVersionAsync } from './resolveRuntimeVersionAsync';
-import { FingerprintSource, diffFingerprints } from './fingerprint';
+import { FingerprintSource, diffFingerprints, stringifyFingerprintSources } from './fingerprint';
 
 export async function setRuntimeVersionNativelyAsync(
   ctx: BuildContext<Job>,
@@ -92,45 +92,36 @@ export async function configureExpoUpdatesIfInstalledAsync(
   }
 
   const appConfigRuntimeVersion = ctx.job.version?.runtimeVersion ?? resolvedRuntimeVersion;
+
   if (ctx.metadata?.runtimeVersion && ctx.metadata.runtimeVersion !== appConfigRuntimeVersion) {
     ctx.markBuildPhaseHasWarnings();
-    ctx.logger.warn(
-      `Runtime version from the app config evaluated on your local machine (${ctx.metadata.runtimeVersion}) does not match the one resolved here (${appConfigRuntimeVersion}).`
-    );
-    ctx.logger.warn(
-      "If you're using conditional app configs, e.g. depending on an environment variable, make sure to set the variable in eas.json or configure it with EAS Secret."
-    );
+    ctx.logger.warn('Runtime version mismatch');
+    ctx.logger.warn(`Runtime version on your local machine: ${ctx.metadata.runtimeVersion}`);
+    ctx.logger.warn(`Runtime version calculated on EAS: ${appConfigRuntimeVersion}`);
+
     if (ctx.metadata?.fingerprintSources && resolvedFingerprintSources && resolvedRuntimeVersion) {
-      const differences = diffFingerprints(
-        {
-          hash: ctx.metadata.runtimeVersion,
-          sources: ctx.metadata.fingerprintSources as FingerprintSource[],
-        },
-        {
-          hash: resolvedRuntimeVersion,
-          sources: resolvedFingerprintSources as FingerprintSource[],
-        }
-      );
-      ctx.logger.warn('Differences between local and resolved fingerprint:');
-      ctx.logger.warn(
-        JSON.stringify(
-          differences,
-          (key, value) => {
-            if (key === 'contents') {
-              try {
-                const item = JSON.parse(value);
-                return item;
-              } catch {
-                return value;
-              }
-            }
-            return value;
-          },
-          ' '
-        )
-      );
-    } else {
-      ctx.logger.warn(`Could not find fingerprint sources`);
+      const localFingerprint = {
+        hash: ctx.metadata.runtimeVersion,
+        sources: ctx.metadata.fingerprintSources as FingerprintSource[],
+      };
+      const easFingerprint = {
+        hash: resolvedRuntimeVersion,
+        sources: resolvedFingerprintSources as FingerprintSource[],
+      };
+      const filesAdded = diffFingerprints(localFingerprint, easFingerprint);
+      const filesRemoved = diffFingerprints(localFingerprint, easFingerprint);
+
+      if (filesAdded.length) {
+        ctx.logger.warn(
+          'The following sources exist on EAS, but not where the build was triggered:'
+        );
+        ctx.logger.warn(stringifyFingerprintSources(filesAdded));
+      }
+
+      if (filesRemoved.length) {
+        ctx.logger.warn('The following sources on your local machine, but not on EAS:');
+        ctx.logger.warn(stringifyFingerprintSources(filesAdded));
+      }
     }
   }
 
