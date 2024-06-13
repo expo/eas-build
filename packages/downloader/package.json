@@ -20,7 +20,7 @@
   "license": "BUSL-1.1",
   "dependencies": {
     "fs-extra": "^11.2.0",
-    "got": "11.8.3"
+    "got": "11.8.5"
   },
   "devDependencies": {
     "@types/fs-extra": "^11.0.4",
