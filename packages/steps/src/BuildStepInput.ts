@@ -132,22 +132,7 @@ export class BuildStepInput<
       );
       returnValue = this.parseInputValueToAllowedType(valueInterpolatedWithOutputsAndGlobalContext);
     }
-    return this.fixEscapeCharacters(returnValue);
-  }
-
-  private fixEscapeCharacters(
-    input: BuildStepInputValueTypeWithRequired<T, R>
-  ): BuildStepInputValueTypeWithRequired<T, R> {
-    if (typeof input === 'string') {
-      return input.replace(/\\n/g, '\n') as BuildStepInputValueTypeWithRequired<T, R>;
-    } else if (typeof input === 'object') {
-      for (const property of Object.keys(input)) {
-        input[property] = this.fixEscapeCharacters(input[property]);
-      }
-      return input;
-    } else {
-      return input;
-    }
+    return returnValue;
   }
 
   public get rawValue(): BuildStepInputValueType<T> | undefined {
@@ -217,7 +202,7 @@ export class BuildStepInput<
       return value as BuildStepInputValueTypeWithRequired<T, R>;
     }
     if (this.allowedValueTypeName === BuildStepInputValueTypeName.STRING) {
-      return value as BuildStepInputValueTypeWithRequired<T, R>;
+      return this.parseInputValueToString(value) as BuildStepInputValueTypeWithRequired<T, R>;
     } else if (this.allowedValueTypeName === BuildStepInputValueTypeName.NUMBER) {
       return this.parseInputValueToNumber(value) as BuildStepInputValueTypeWithRequired<T, R>;
     } else if (this.allowedValueTypeName === BuildStepInputValueTypeName.BOOLEAN) {
@@ -225,6 +210,19 @@ export class BuildStepInput<
     } else {
       return this.parseInputValueToObject(value) as BuildStepInputValueTypeWithRequired<T, R>;
     }
+  }
+
+  private parseInputValueToString(value: string): string {
+    let parsedValue = value;
+    try {
+      parsedValue = JSON.parse(`"${value}"`);
+    } catch (err) {
+      // in case of SyntaxError return raw string
+      if (!(err instanceof SyntaxError)) {
+        throw err;
+      }
+    }
+    return parsedValue;
   }
 
   private parseInputValueToNumber(value: string): number {
