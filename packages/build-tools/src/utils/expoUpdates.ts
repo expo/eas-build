@@ -22,7 +22,7 @@ import { BuildContext } from '../context';
 
 import getExpoUpdatesPackageVersionIfInstalledAsync from './getExpoUpdatesPackageVersionIfInstalledAsync';
 import { resolveRuntimeVersionAsync } from './resolveRuntimeVersionAsync';
-import { FingerprintSource, diffFingerprints, stringifyFingerprintSources } from './fingerprint';
+import { FingerprintSource, diffFingerprints, stringifyFingerprintDiff } from './fingerprint';
 
 export async function setRuntimeVersionNativelyAsync(
   ctx: BuildContext<Job>,
@@ -108,19 +108,11 @@ export async function configureExpoUpdatesIfInstalledAsync(
         hash: resolvedRuntimeVersion,
         sources: resolvedFingerprintSources as FingerprintSource[],
       };
-      const filesAdded = diffFingerprints(localFingerprint, easFingerprint);
-      const filesRemoved = diffFingerprints(localFingerprint, easFingerprint);
+      const changes = diffFingerprints(localFingerprint, easFingerprint);
 
-      if (filesAdded.length) {
-        ctx.logger.warn(
-          'The following sources exist on EAS, but not where the build was triggered:'
-        );
-        ctx.logger.warn(stringifyFingerprintSources(filesAdded));
-      }
-
-      if (filesRemoved.length) {
-        ctx.logger.warn('The following sources on your local machine, but not on EAS:');
-        ctx.logger.warn(stringifyFingerprintSources(filesAdded));
+      if (changes.length) {
+        ctx.logger.warn('Following changes were found between your local and EAS fingerprints:');
+        ctx.logger.warn(stringifyFingerprintDiff(changes));
       }
     }
   }

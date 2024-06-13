@@ -73,20 +73,92 @@ export interface DebugInfoContents {
 
 export type DebugInfo = DebugInfoFile | DebugInfoDir | DebugInfoContents;
 
+export interface FingerprintDiffItem {
+  /**
+   * The operation type of the diff item.
+   */
+  op: 'added' | 'removed' | 'changed';
+
+  /**
+   * The source of the diff item.
+   *   - When type is 'added', the source is the new source.
+   *   - When type is 'removed', the source is the old source.
+   *   - When type is 'changed', the source is the new source.
+   */
+  source: FingerprintSource;
+}
+
+const typeOrder = {
+  file: 0,
+  dir: 1,
+  contents: 2,
+};
+
+/**
+ * Comparator between two sources.
+ * This is useful for sorting sources in a consistent order.
+ * @returns:
+ *  == 0 if a and b are equal,
+ *  < 0 if a is less than b,
+ *  > 0 if a is greater than b.
+ */
+export function compareSource(a: HashSource, b: HashSource): number {
+  const typeResult = typeOrder[a.type] - typeOrder[b.type];
+  if (typeResult === 0) {
+    if (a.type === 'file' && b.type === 'file') {
+      return a.filePath.localeCompare(b.filePath);
+    } else if (a.type === 'dir' && b.type === 'dir') {
+      return a.filePath.localeCompare(b.filePath);
+    } else if (a.type === 'contents' && b.type === 'contents') {
+      return a.id.localeCompare(b.id);
+    }
+  }
+  return typeResult;
+}
+
 export function diffFingerprints(
   fingerprint1: Fingerprint,
   fingerprint2: Fingerprint
-): FingerprintSource[] {
-  return fingerprint2.sources.filter((newItem) => {
-    return !fingerprint1.sources.find(
-      (item) => item.type === newItem.type && item.hash === newItem.hash
-    );
-  });
+): FingerprintDiffItem[] {
+  let index1 = 0;
+  let index2 = 0;
+  const diff: FingerprintDiffItem[] = [];
+
+  while (index1 < fingerprint1.sources.length && index2 < fingerprint2.sources.length) {
+    const source1 = fingerprint1.sources[index1];
+    const source2 = fingerprint2.sources[index2];
+
+    const compareResult = compareSource(source1, source2);
+    if (compareResult === 0) {
+      if (source1.hash !== source2.hash) {
+        diff.push({ op: 'changed', source: source2 });
+      }
+      ++index1;
+      ++index2;
+    } else if (compareResult < 0) {
+      diff.push({ op: 'removed', source: source1 });
+      ++index1;
+    } else {
+      diff.push({ op: 'added', source: source2 });
+      ++index2;
+    }
+  }
+
+  while (index1 < fingerprint1.sources.length) {
+    diff.push({ op: 'removed', source: fingerprint1.sources[index1] });
+    ++index1;
+  }
+  while (index2 < fingerprint2.sources.length) {
+    diff.push({ op: 'added', source: fingerprint2.sources[index2] });
+    ++index2;
+  }
+
+  return diff;
 }
 
-export function stringifyFingerprintSources(sources: FingerprintSource[]): string {
+export function stringifyFingerprintDiff(fingerprintDiff: FingerprintDiffItem[]): string {
   return JSON.stringify(
-    sources,
+    fingerprintDiff,
     (key, value) => {
       if (key === 'contents') {
         try {
