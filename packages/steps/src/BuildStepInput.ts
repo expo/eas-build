@@ -213,16 +213,7 @@ export class BuildStepInput<
   }
 
   private parseInputValueToString(value: string): string {
-    let parsedValue = value;
-    try {
-      parsedValue = JSON.parse(`"${value}"`);
-    } catch (err) {
-      // in case of SyntaxError return raw string
-      if (!(err instanceof SyntaxError)) {
-        throw err;
-      }
-    }
-    return parsedValue;
+    return JSON.parse(`"${value}"`);
   }
 
   private parseInputValueToNumber(value: string): number {

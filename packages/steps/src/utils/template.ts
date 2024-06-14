@@ -123,16 +123,8 @@ function interpolate(
   let result = templateString;
   for (const match of matched) {
     const [, path] = nullthrows(match.match(regex));
-    let parsedValue =
-      typeof varsOrFn === 'function' ? varsOrFn(path) : varsOrFn[path.split('.')[1]];
-    try {
-      parsedValue = JSON.parse(`"${parsedValue}"`);
-    } catch (err) {
-      if (!(err instanceof SyntaxError)) {
-        throw err;
-      }
-    }
-    result = result.replace(match, parsedValue);
+    const value = typeof varsOrFn === 'function' ? varsOrFn(path) : varsOrFn[path.split('.')[1]];
+    result = result.replace(match, value);
   }
   return result;
 }
