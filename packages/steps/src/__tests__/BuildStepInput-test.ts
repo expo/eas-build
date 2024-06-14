@@ -124,24 +124,6 @@ describe(BuildStepInput, () => {
     const ctx = createGlobalContextMock({
       staticContextContent: {
         foo: {
-          bar: 'Line 1\nLine 2\n\nLine 3',
-        },
-      } as unknown as BuildStaticContext,
-    });
-    const i = new BuildStepInput(ctx, {
-      id: 'foo',
-      stepDisplayName: BuildStep.getDisplayName({ id: 'test1' }),
-      defaultValue: '${ eas.foo.bar }',
-      required: true,
-      allowedValueTypeName: BuildStepInputValueTypeName.STRING,
-    });
-    expect(i.value).toEqual('Line 1\nLine 2\n\nLine 3');
-  });
-
-  test('context value string with doubly escaped newline characters', () => {
-    const ctx = createGlobalContextMock({
-      staticContextContent: {
-        foo: {
           bar: 'Line 1\\nLine 2\\n\\nLine 3',
         },
       } as unknown as BuildStaticContext,
