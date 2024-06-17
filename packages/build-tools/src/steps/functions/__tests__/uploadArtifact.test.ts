@@ -73,7 +73,7 @@ describe(createUploadArtifactBuildFunction, () => {
           path: [
             path.join('Build', 'Products', '*simulator', '*.app'),
             path.relative(tempDir, directArtifactPath),
-          ].join('\\n'),
+          ].join('\n'),
         },
       });
 
