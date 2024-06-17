@@ -2,7 +2,7 @@ import path from 'path';
 
 import { bunyan } from '@expo/logger';
 import fs from 'fs-extra';
-import tar from 'tar';
+import * as tar from 'tar';
 
 import config from './config';
 

@@ -1999,14 +1999,6 @@
   resolved "https://registry.yarnpkg.com/@types/stack-utils/-/stack-utils-2.0.0.tgz#7036640b4e21cc2f259ae826ce843d277dad8cff"
   integrity sha512-RJJrrySY7A8havqpGObOB4W92QXKJo63/jFLLgpvOtsGUqbQZ9Sbgl35KMm1DjC6j7AvmmU2bIno+3IyEaemaw==
 
-"@types/tar@^6.1.13":
-  version "6.1.13"
-  resolved "https://registry.yarnpkg.com/@types/tar/-/tar-6.1.13.tgz#9b5801c02175344101b4b91086ab2bbc8e93a9b6"
-  integrity sha512-IznnlmU5f4WcGTh2ltRu/Ijpmk8wiWXfF0VA4s+HPjHZgvFggk1YaIkbo5krX/zUCzWF8N/l4+W/LNxnvAJ8nw==
-  dependencies:
-    "@types/node" "*"
-    minipass "^4.0.0"
-
 "@types/uuid@^9.0.7":
   version "9.0.7"
   resolved "https://registry.yarnpkg.com/@types/uuid/-/uuid-9.0.7.tgz#b14cebc75455eeeb160d5fe23c2fcc0c64f724d8"
