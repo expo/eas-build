@@ -5,6 +5,7 @@ import semver from 'semver';
 import { ExpoConfig } from '@expo/config';
 import { bunyan } from '@expo/logger';
 import { BuildStepEnv } from '@expo/steps';
+import fetch from 'node-fetch';
 
 import {
   androidSetRuntimeVersionNativelyAsync,
@@ -99,20 +100,29 @@ export async function configureExpoUpdatesIfInstalledAsync(
     ctx.logger.warn(`Runtime version on your local machine: ${ctx.metadata.runtimeVersion}`);
     ctx.logger.warn(`Runtime version calculated on EAS: ${appConfigRuntimeVersion}`);
 
-    if (ctx.metadata?.fingerprintSources && resolvedFingerprintSources && resolvedRuntimeVersion) {
-      const localFingerprint = {
-        hash: ctx.metadata.runtimeVersion,
-        sources: ctx.metadata.fingerprintSources as FingerprintSource[],
-      };
-      const easFingerprint = {
-        hash: resolvedRuntimeVersion,
-        sources: resolvedFingerprintSources as FingerprintSource[],
-      };
-      const changes = diffFingerprints(localFingerprint, easFingerprint);
+    if (
+      ctx.metadata?.projectFingerprintUrl &&
+      resolvedFingerprintSources &&
+      resolvedRuntimeVersion
+    ) {
+      try {
+        const result = await fetch(ctx.metadata?.projectFingerprintUrl);
 
-      if (changes.length) {
-        ctx.logger.warn('Following changes were found between your local and EAS fingerprints:');
-        ctx.logger.warn(stringifyFingerprintDiff(changes));
+        const localFingerprint = await result.json();
+
+        const easFingerprint = {
+          hash: resolvedRuntimeVersion,
+          sources: resolvedFingerprintSources as FingerprintSource[],
+        };
+
+        const changes = diffFingerprints(localFingerprint, easFingerprint);
+
+        if (changes.length) {
+          ctx.logger.warn('Difference between local and EAS fingerprints:');
+          ctx.logger.warn(stringifyFingerprintDiff(changes));
+        }
+      } catch (error) {
+        ctx.logger.warn('Failed to compare fingerprints', error);
       }
     }
   }
