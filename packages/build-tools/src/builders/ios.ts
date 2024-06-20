@@ -107,7 +107,6 @@ async function buildAsync(ctx: BuildContext<Ios.Job>): Promise<void> {
     await ctx.runBuildPhase(BuildPhase.CONFIGURE_EXPO_UPDATES, async () => {
       await configureExpoUpdatesIfInstalledAsync(ctx, {
         resolvedRuntimeVersion: resolvedExpoUpdatesRuntimeVersion?.runtimeVersion ?? null,
-        resolvedFingerprintSources: resolvedExpoUpdatesRuntimeVersion?.fingerprintSources ?? null,
       });
     });
 
