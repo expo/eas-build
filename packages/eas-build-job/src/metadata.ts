@@ -57,7 +57,7 @@ export type Metadata = {
   /**
    * The location of the fingerprint file on GCS if one exists
    */
-  fingerprintGCSLocation?: string;
+  fingerprintGCSBucketKey?: string;
 
   /**
    * Signed url for fingerprint
@@ -183,7 +183,7 @@ export const MetadataSchema = Joi.object({
   credentialsSource: Joi.string().valid('local', 'remote'),
   sdkVersion: Joi.string(),
   runtimeVersion: Joi.string(),
-  fingerprintGCSLocation: Joi.string(),
+  fingerprintGCSBucketKey: Joi.string(),
   projectFingerprintUrl: Joi.string(),
   reactNativeVersion: Joi.string(),
   channel: Joi.string(),
