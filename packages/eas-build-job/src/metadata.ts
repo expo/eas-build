@@ -2,6 +2,17 @@ import Joi from 'joi';
 
 import { Workflow } from './common';
 
+enum FingerprintSourceType {
+  'GCS' = 'GCS',
+  'PATH' = 'PATH',
+  'URL' = 'URL',
+}
+
+type FingerprintSource =
+  | { type: FingerprintSourceType.GCS; bucketKey: string }
+  | { type: FingerprintSourceType.PATH; path: string }
+  | { type: FingerprintSourceType.URL; url: string };
+
 export type Metadata = {
   /**
    * Tracking context
@@ -53,6 +64,11 @@ export type Metadata = {
    * Runtime version (for Expo Updates)
    */
   runtimeVersion?: string;
+
+  /**
+   * The location of the fingerprint file if one exists
+   */
+  fingerprintSource?: FingerprintSource;
 
   /**
    * Version of the react-native package used in the project.
@@ -161,6 +177,30 @@ export type Metadata = {
   customNodeVersion?: string;
 };
 
+export const FingerprintSourceSchema = Joi.object<FingerprintSource>({
+  type: Joi.string()
+    .valid(...Object.values(FingerprintSourceType))
+    .required(),
+})
+  .when(Joi.object({ type: FingerprintSourceType.GCS }).unknown(), {
+    then: Joi.object({
+      type: Joi.string().valid(FingerprintSourceType.GCS).required(),
+      bucketKey: Joi.string().required(),
+    }),
+  })
+  .when(Joi.object({ type: FingerprintSourceType.PATH }).unknown(), {
+    then: Joi.object({
+      type: Joi.string().valid(FingerprintSourceType.PATH).required(),
+      path: Joi.string().required(),
+    }),
+  })
+  .when(Joi.object({ type: FingerprintSourceType.URL }).unknown(), {
+    then: Joi.object({
+      type: Joi.string().valid(FingerprintSourceType.URL).required(),
+      url: Joi.string().required(),
+    }),
+  });
+
 export const MetadataSchema = Joi.object({
   trackingContext: Joi.object()
     .pattern(Joi.string(), [Joi.string(), Joi.number(), Joi.boolean()])
@@ -173,6 +213,7 @@ export const MetadataSchema = Joi.object({
   credentialsSource: Joi.string().valid('local', 'remote'),
   sdkVersion: Joi.string(),
   runtimeVersion: Joi.string(),
+  fingerprintSource: FingerprintSourceSchema,
   reactNativeVersion: Joi.string(),
   channel: Joi.string(),
   appName: Joi.string(),
