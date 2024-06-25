@@ -31,7 +31,7 @@ export async function runGradleCommand(
 ): Promise<void> {
   logger.info(`Running 'gradlew ${gradleCommand}' in ${androidDir}`);
   await fs.chmod(path.join(androidDir, 'gradlew'), 0o755);
-  const spawnPromise = spawn('./gradlew', [gradleCommand], {
+  const spawnPromise = spawn('bash', ['-c', `./gradlew ${gradleCommand}`], {
     cwd: androidDir,
     logger,
     lineTransformer: (line?: string) => {
