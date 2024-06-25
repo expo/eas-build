@@ -2,13 +2,13 @@ import Joi from 'joi';
 
 import { Workflow } from './common';
 
-enum FingerprintSourceType {
+export enum FingerprintSourceType {
   'GCS' = 'GCS',
   'PATH' = 'PATH',
   'URL' = 'URL',
 }
 
-type FingerprintSource =
+export type FingerprintSource =
   | { type: FingerprintSourceType.GCS; bucketKey: string }
   | { type: FingerprintSourceType.PATH; path: string }
   | { type: FingerprintSourceType.URL; url: string };
@@ -177,7 +177,7 @@ export type Metadata = {
   customNodeVersion?: string;
 };
 
-export const FingerprintSourceSchema = Joi.object<FingerprintSource>({
+const FingerprintSourceSchema = Joi.object<FingerprintSource>({
   type: Joi.string()
     .valid(...Object.values(FingerprintSourceType))
     .required(),
@@ -197,7 +197,7 @@ export const FingerprintSourceSchema = Joi.object<FingerprintSource>({
   .when(Joi.object({ type: FingerprintSourceType.URL }).unknown(), {
     then: Joi.object({
       type: Joi.string().valid(FingerprintSourceType.URL).required(),
-      url: Joi.string().required(),
+      url: Joi.string().uri().required(),
     }),
   });
 

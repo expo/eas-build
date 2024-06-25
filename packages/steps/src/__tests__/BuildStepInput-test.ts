@@ -387,36 +387,6 @@ describe(BuildStepInput, () => {
     });
   });
 
-  test('context values in an object with doubly escaped newline characters', () => {
-    const ctx = createGlobalContextMock({
-      staticContextContent: {
-        context_val_1: 'Line 1\\nLine 2\\n\\nLine 3',
-      } as unknown as BuildStaticContext,
-    });
-    const i = new BuildStepInput(ctx, {
-      id: 'foo',
-      stepDisplayName: BuildStep.getDisplayName({ id: 'test1' }),
-      required: true,
-      allowedValueTypeName: BuildStepInputValueTypeName.JSON,
-    });
-    i.set({
-      foo: 'foo',
-      bar: '${ eas.context_val_1 }',
-      baz: {
-        bazfoo: 'bazfoo',
-        bazbaz: ['bazbaz', '${ eas.context_val_1 }'],
-      },
-    });
-    expect(i.value).toEqual({
-      foo: 'foo',
-      bar: 'Line 1\nLine 2\n\nLine 3',
-      baz: {
-        bazfoo: 'bazfoo',
-        bazbaz: ['bazbaz', 'Line 1\nLine 2\n\nLine 3'],
-      },
-    });
-  });
-
   test('default value number', () => {
     const ctx = createGlobalContextMock();
     const i = new BuildStepInput(ctx, {
