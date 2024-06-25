@@ -8,7 +8,7 @@ enum FingerprintSourceType {
   'URL' = 'URL',
 }
 
-type FingerprintSource =
+export type FingerprintSource =
   | { type: FingerprintSourceType.GCS; bucketKey: string }
   | { type: FingerprintSourceType.PATH; path: string }
   | { type: FingerprintSourceType.URL; url: string };
