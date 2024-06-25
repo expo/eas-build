@@ -1,4 +1,5 @@
 import assert from 'assert';
+import path from 'path';
 
 import fs from 'fs-extra';
 import { bunyan } from '@expo/logger';
@@ -20,7 +21,8 @@ export async function runGradleCommand({
   extraEnv?: BuildStepEnv;
 }): Promise<void> {
   logger.info(`Running 'gradlew ${gradleCommand}' in ${androidDir}`);
-  const spawnPromise = spawn('bash', ['-c', `sh gradlew ${gradleCommand}`], {
+  await fs.chmod(path.join(androidDir, 'gradlew'), 0o755);
+  const spawnPromise = spawn('bash', ['-c', `./gradlew ${gradleCommand}`], {
     cwd: androidDir,
     logger,
     lineTransformer: (line?: string) => {
