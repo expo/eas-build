@@ -13,7 +13,7 @@ export {
   Platform,
   Cache,
 } from './common';
-export { Metadata, sanitizeMetadata } from './metadata';
+export { Metadata, sanitizeMetadata, FingerprintSource, FingerprintSourceType } from './metadata';
 export * from './job';
 export * from './logs';
 export * as errors from './errors';
