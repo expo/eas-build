@@ -1,4 +1,4 @@
-import { Metadata, MetadataSchema } from '../metadata';
+import { FingerprintSourceType, Metadata, MetadataSchema } from '../metadata';
 
 const validMetadata: Metadata = {
   appName: 'testapp',
@@ -110,7 +110,8 @@ describe('MetadataSchema', () => {
     const metadata: Metadata = {
       ...validMetadata,
       fingerprintSource: {
-        type: 'GCS' as any,
+        type: FingerprintSourceType.GCS,
+        // @ts-expect-error TypeScript is too smart. Need to ignore this for the failing test
         url: 'development/8a9c5554-cfbe-4b4c-814c-c476a1047db9/fd6f8af4-7293-46bd-bec7-3fe639f4fd3e',
       },
     };

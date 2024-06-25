@@ -2,7 +2,7 @@ import Joi from 'joi';
 
 import { Workflow } from './common';
 
-enum FingerprintSourceType {
+export enum FingerprintSourceType {
   'GCS' = 'GCS',
   'PATH' = 'PATH',
   'URL' = 'URL',
