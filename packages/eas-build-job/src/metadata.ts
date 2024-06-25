@@ -197,7 +197,7 @@ export const FingerprintSourceSchema = Joi.object<FingerprintSource>({
   .when(Joi.object({ type: FingerprintSourceType.URL }).unknown(), {
     then: Joi.object({
       type: Joi.string().valid(FingerprintSourceType.URL).required(),
-      url: Joi.string().required(),
+      url: Joi.string().uri().required(),
     }),
   });
 
