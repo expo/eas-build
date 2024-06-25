@@ -177,7 +177,7 @@ export type Metadata = {
   customNodeVersion?: string;
 };
 
-export const FingerprintSourceSchema = Joi.object<FingerprintSource>({
+const FingerprintSourceSchema = Joi.object<FingerprintSource>({
   type: Joi.string()
     .valid(...Object.values(FingerprintSourceType))
     .required(),
