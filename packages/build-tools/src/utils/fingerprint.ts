@@ -1,3 +1,8 @@
+/**
+ * DO NOT EDIT unless the same change is made in `@expo/fingerprint`
+ * The diffFingerprints function is a copy/paste from https://github.com/expo/expo/pull/29709
+ */
+
 export type FingerprintSource = HashSource & {
   /**
    * Hash value of the `source`.
