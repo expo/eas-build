@@ -103,7 +103,6 @@ export async function configureExpoUpdatesIfInstalledAsync(
 
     if (ctx.metadata?.fingerprintSource && resolvedFingerprintSources && resolvedRuntimeVersion) {
       try {
-
         const fingerprintSource = ctx.metadata?.fingerprintSource;
 
         if (fingerprintSource.type === FingerprintSourceType.URL) {
