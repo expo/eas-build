@@ -5,7 +5,8 @@ import semver from 'semver';
 import { ExpoConfig } from '@expo/config';
 import { bunyan } from '@expo/logger';
 import { BuildStepEnv } from '@expo/steps';
-// import fetch from 'node-fetch';
+import fetch from 'node-fetch';
+import { FingerprintSourceType } from '@expo/eas-build-job/dist/metadata';
 
 import {
   androidSetRuntimeVersionNativelyAsync,
@@ -23,7 +24,7 @@ import { BuildContext } from '../context';
 
 import getExpoUpdatesPackageVersionIfInstalledAsync from './getExpoUpdatesPackageVersionIfInstalledAsync';
 import { resolveRuntimeVersionAsync } from './resolveRuntimeVersionAsync';
-// import { FingerprintSource, diffFingerprints, stringifyFingerprintDiff } from './fingerprint';
+import { FingerprintSource, diffFingerprints, stringifyFingerprintDiff } from './fingerprint';
 
 export async function setRuntimeVersionNativelyAsync(
   ctx: BuildContext<Job>,
@@ -102,23 +103,24 @@ export async function configureExpoUpdatesIfInstalledAsync(
 
     if (ctx.metadata?.fingerprintSource && resolvedFingerprintSources && resolvedRuntimeVersion) {
       try {
-        ctx.logger.warn('TODO: fetch from bucket OR from path');
-        ctx.logger.warn(
-          'fingerprintSource',
-          JSON.stringify(ctx.metadata?.fingerprintSource, null, ' ')
-        );
 
-        // const result = await fetch(ctx.metadata?.projectFingerprintUrl);
-        // const localFingerprint = await result.json();
-        // const easFingerprint = {
-        //   hash: resolvedRuntimeVersion,
-        //   sources: resolvedFingerprintSources as FingerprintSource[],
-        // };
-        // const changes = diffFingerprints(localFingerprint, easFingerprint);
-        // if (changes.length) {
-        //   ctx.logger.warn('Difference between local and EAS fingerprints:');
-        //   ctx.logger.warn(stringifyFingerprintDiff(changes));
-        // }
+        const fingerprintSource = ctx.metadata?.fingerprintSource;
+
+        if (fingerprintSource.type === FingerprintSourceType.URL) {
+          const result = await fetch(fingerprintSource.url);
+          const localFingerprint = await result.json();
+          const easFingerprint = {
+            hash: resolvedRuntimeVersion,
+            sources: resolvedFingerprintSources as FingerprintSource[],
+          };
+          const changes = diffFingerprints(localFingerprint, easFingerprint);
+          if (changes.length) {
+            ctx.logger.warn('Difference between local and EAS fingerprints:');
+            ctx.logger.warn(stringifyFingerprintDiff(changes));
+          }
+        } else if (fingerprintSource.type === FingerprintSourceType.PATH) {
+          // TODO(Kadi): handle local fingerprint path files
+        }
       } catch (error) {
         ctx.logger.warn('Failed to compare fingerprints', error);
       }
