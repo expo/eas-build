@@ -211,7 +211,7 @@ export async function resolveRuntimeVersionForExpoUpdatesIfConfiguredAsync({
     env,
   });
 
-  logger.info(`Resolved runtime version: ${resolvedRuntimeVersion}`);
+  logger.info(`Resolved runtime version: ${resolvedRuntimeVersion?.runtimeVersion}`);
   return resolvedRuntimeVersion;
 }
 
