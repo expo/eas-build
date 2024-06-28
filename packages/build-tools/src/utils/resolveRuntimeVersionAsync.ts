@@ -6,6 +6,7 @@ import { BuildStepEnv } from '@expo/steps';
 
 import { ExpoUpdatesCLIModuleNotFoundError, expoUpdatesCommandAsync } from './expoUpdatesCli';
 import { isModernExpoUpdatesCLIWithRuntimeVersionCommandSupported } from './expoUpdates';
+import { FingerprintSource } from './fingerprint';
 
 export async function resolveRuntimeVersionAsync({
   exp,
@@ -23,7 +24,10 @@ export async function resolveRuntimeVersionAsync({
   logger: bunyan;
   expoUpdatesPackageVersion: string;
   env: BuildStepEnv;
-}): Promise<{ runtimeVersion: string | null; fingerprintSources: object[] | null } | null> {
+}): Promise<{
+  runtimeVersion: string | null;
+  fingerprintSources: FingerprintSource[] | null;
+} | null> {
   if (!isModernExpoUpdatesCLIWithRuntimeVersionCommandSupported(expoUpdatesPackageVersion)) {
     logger.debug('Using expo-updates config plugin for runtime version resolution');
     // fall back to the previous behavior (using the @expo/config-plugins eas-cli dependency rather

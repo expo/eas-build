@@ -88,7 +88,10 @@ export async function configureExpoUpdatesIfInstalledAsync(
   {
     resolvedRuntimeVersion,
     resolvedFingerprintSources,
-  }: { resolvedRuntimeVersion: string | null; resolvedFingerprintSources?: object[] | null }
+  }: {
+    resolvedRuntimeVersion: string | null;
+    resolvedFingerprintSources?: FingerprintSource[] | null;
+  }
 ): Promise<void> {
   const expoUpdatesPackageVersion = await getExpoUpdatesPackageVersionIfInstalledAsync(
     ctx.getReactNativeProjectDirectory(),
@@ -108,7 +111,7 @@ export async function configureExpoUpdatesIfInstalledAsync(
 
     if (ctx.metadata?.fingerprintSource && resolvedFingerprintSources && resolvedRuntimeVersion) {
       try {
-        const fingerprintSource = ctx.metadata?.fingerprintSource;
+        const fingerprintSource = ctx.metadata.fingerprintSource;
 
         let localFingerprint: Fingerprint | null = null;
 
@@ -124,7 +127,7 @@ export async function configureExpoUpdatesIfInstalledAsync(
         if (localFingerprint) {
           const easFingerprint = {
             hash: resolvedRuntimeVersion,
-            sources: resolvedFingerprintSources as FingerprintSource[],
+            sources: resolvedFingerprintSources,
           };
           const changes = diffFingerprints(localFingerprint, easFingerprint);
           if (changes.length) {
@@ -189,7 +192,10 @@ export async function resolveRuntimeVersionForExpoUpdatesIfConfiguredAsync({
   workflow: Workflow;
   logger: bunyan;
   env: BuildStepEnv;
-}): Promise<{ runtimeVersion: string | null; fingerprintSources: object[] | null } | null> {
+}): Promise<{
+  runtimeVersion: string | null;
+  fingerprintSources: FingerprintSource[] | null;
+} | null> {
   const expoUpdatesPackageVersion = await getExpoUpdatesPackageVersionIfInstalledAsync(cwd, logger);
   if (expoUpdatesPackageVersion === null) {
     return null;
