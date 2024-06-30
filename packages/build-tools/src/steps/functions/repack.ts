@@ -114,7 +114,10 @@ export function createRepackBuildFunction(): BuildFunction {
             keyStorePath,
             keyStorePassword: `pass:${stepsCtx.global.staticContext.job.secrets.buildCredentials.keystore.keystorePassword}`,
             keyAlias: stepsCtx.global.staticContext.job.secrets.buildCredentials.keystore.keyAlias,
-            keyPassword: `pass:${stepsCtx.global.staticContext.job.secrets.buildCredentials.keystore.keyPassword}`,
+            keyPassword: stepsCtx.global.staticContext.job.secrets.buildCredentials.keystore
+              .keyPassword
+              ? `pass:${stepsCtx.global.staticContext.job.secrets.buildCredentials.keystore.keyPassword}`
+              : undefined,
           };
         }
 
