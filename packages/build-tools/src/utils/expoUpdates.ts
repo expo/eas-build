@@ -83,15 +83,14 @@ export async function configureEASExpoUpdatesAsync(ctx: BuildContext<BuildJob>):
   await setChannelNativelyAsync(ctx);
 }
 
+type ResolvedRuntime = {
+  resolvedRuntimeVersion: string | null;
+  resolvedFingerprintSources?: FingerprintSource[] | null;
+};
+
 export async function configureExpoUpdatesIfInstalledAsync(
   ctx: BuildContext<BuildJob>,
-  {
-    resolvedRuntimeVersion,
-    resolvedFingerprintSources,
-  }: {
-    resolvedRuntimeVersion: string | null;
-    resolvedFingerprintSources?: FingerprintSource[] | null;
-  }
+  resolvedRuntime: ResolvedRuntime
 ): Promise<void> {
   const expoUpdatesPackageVersion = await getExpoUpdatesPackageVersionIfInstalledAsync(
     ctx.getReactNativeProjectDirectory(),
@@ -101,7 +100,8 @@ export async function configureExpoUpdatesIfInstalledAsync(
     return;
   }
 
-  const appConfigRuntimeVersion = ctx.job.version?.runtimeVersion ?? resolvedRuntimeVersion;
+  const appConfigRuntimeVersion =
+    ctx.job.version?.runtimeVersion ?? resolvedRuntime.resolvedRuntimeVersion;
 
   if (ctx.metadata?.runtimeVersion && ctx.metadata.runtimeVersion !== appConfigRuntimeVersion) {
     ctx.markBuildPhaseHasWarnings();
@@ -109,36 +109,7 @@ export async function configureExpoUpdatesIfInstalledAsync(
     ctx.logger.warn(`Runtime version on your local machine: ${ctx.metadata.runtimeVersion}`);
     ctx.logger.warn(`Runtime version calculated on EAS: ${appConfigRuntimeVersion}`);
 
-    if (ctx.metadata?.fingerprintSource && resolvedFingerprintSources && resolvedRuntimeVersion) {
-      try {
-        const fingerprintSource = ctx.metadata.fingerprintSource;
-
-        let localFingerprint: Fingerprint | null = null;
-
-        if (fingerprintSource.type === FingerprintSourceType.URL) {
-          const result = await fetch(fingerprintSource.url);
-          localFingerprint = await result.json();
-        } else if (fingerprintSource.type === FingerprintSourceType.PATH) {
-          localFingerprint = await fs.readJson(fingerprintSource.path);
-        } else {
-          ctx.logger.warn(`Invalid fingerprint source type: ${fingerprintSource.type}`);
-        }
-
-        if (localFingerprint) {
-          const easFingerprint = {
-            hash: resolvedRuntimeVersion,
-            sources: resolvedFingerprintSources,
-          };
-          const changes = diffFingerprints(localFingerprint, easFingerprint);
-          if (changes.length) {
-            ctx.logger.warn('Difference between local and EAS fingerprints:');
-            ctx.logger.warn(stringifyFingerprintDiff(changes));
-          }
-        }
-      } catch (error) {
-        ctx.logger.warn('Failed to compare fingerprints', error);
-      }
-    }
+    await logDiffFingerprints({ resolvedRuntime, ctx });
   }
 
   if (isEASUpdateConfigured(ctx)) {
@@ -265,4 +236,44 @@ export function isModernExpoUpdatesCLIWithRuntimeVersionCommandSupported(
 
   // Anything SDK 51 or greater uses the expo-updates CLI
   return semver.gte(expoUpdatesPackageVersion, '0.25.4');
+}
+
+async function logDiffFingerprints({
+  resolvedRuntime,
+  ctx,
+}: {
+  resolvedRuntime: ResolvedRuntime;
+  ctx: BuildContext<BuildJob>;
+}): Promise<void> {
+  const { resolvedRuntimeVersion, resolvedFingerprintSources } = resolvedRuntime;
+  if (ctx.metadata?.fingerprintSource && resolvedFingerprintSources && resolvedRuntimeVersion) {
+    try {
+      const fingerprintSource = ctx.metadata.fingerprintSource;
+
+      let localFingerprint: Fingerprint | null = null;
+
+      if (fingerprintSource.type === FingerprintSourceType.URL) {
+        const result = await fetch(fingerprintSource.url);
+        localFingerprint = await result.json();
+      } else if (fingerprintSource.type === FingerprintSourceType.PATH) {
+        localFingerprint = await fs.readJson(fingerprintSource.path);
+      } else {
+        ctx.logger.warn(`Invalid fingerprint source type: ${fingerprintSource.type}`);
+      }
+
+      if (localFingerprint) {
+        const easFingerprint = {
+          hash: resolvedRuntimeVersion,
+          sources: resolvedFingerprintSources,
+        };
+        const changes = diffFingerprints(localFingerprint, easFingerprint);
+        if (changes.length) {
+          ctx.logger.warn('Difference between local and EAS fingerprints:');
+          ctx.logger.warn(stringifyFingerprintDiff(changes));
+        }
+      }
+    } catch (error) {
+      ctx.logger.warn('Failed to compare fingerprints', error);
+    }
+  }
 }
