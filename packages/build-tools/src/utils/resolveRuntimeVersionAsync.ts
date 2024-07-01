@@ -6,6 +6,7 @@ import { BuildStepEnv } from '@expo/steps';
 
 import { ExpoUpdatesCLIModuleNotFoundError, expoUpdatesCommandAsync } from './expoUpdatesCli';
 import { isModernExpoUpdatesCLIWithRuntimeVersionCommandSupported } from './expoUpdates';
+import { FingerprintSource } from './fingerprint';
 
 export async function resolveRuntimeVersionAsync({
   exp,
@@ -23,12 +24,18 @@ export async function resolveRuntimeVersionAsync({
   logger: bunyan;
   expoUpdatesPackageVersion: string;
   env: BuildStepEnv;
-}): Promise<string | null> {
+}): Promise<{
+  runtimeVersion: string | null;
+  fingerprintSources: FingerprintSource[] | null;
+} | null> {
   if (!isModernExpoUpdatesCLIWithRuntimeVersionCommandSupported(expoUpdatesPackageVersion)) {
     logger.debug('Using expo-updates config plugin for runtime version resolution');
     // fall back to the previous behavior (using the @expo/config-plugins eas-cli dependency rather
     // than the versioned @expo/config-plugins dependency in the project)
-    return await Updates.getRuntimeVersionNullableAsync(projectDir, exp, platform);
+    return {
+      runtimeVersion: await Updates.getRuntimeVersionNullableAsync(projectDir, exp, platform),
+      fingerprintSources: null,
+    };
   }
 
   try {
@@ -48,7 +55,10 @@ export async function resolveRuntimeVersionAsync({
     logger.debug('runtimeversion:resolve output:');
     logger.debug(resolvedRuntimeVersionJSONResult);
 
-    return runtimeVersionResult.runtimeVersion ?? null;
+    return {
+      runtimeVersion: runtimeVersionResult.runtimeVersion ?? null,
+      fingerprintSources: runtimeVersionResult.fingerprintSources ?? null,
+    };
   } catch (e: any) {
     // if expo-updates is not installed, there's no need for a runtime version in the build
     if (e instanceof ExpoUpdatesCLIModuleNotFoundError) {

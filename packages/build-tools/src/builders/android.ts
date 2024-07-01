@@ -93,7 +93,8 @@ async function buildAsync(ctx: BuildContext<Android.Job>): Promise<void> {
   }
   await ctx.runBuildPhase(BuildPhase.CONFIGURE_EXPO_UPDATES, async () => {
     await configureExpoUpdatesIfInstalledAsync(ctx, {
-      resolvedRuntimeVersion: resolvedExpoUpdatesRuntimeVersion,
+      resolvedRuntimeVersion: resolvedExpoUpdatesRuntimeVersion?.runtimeVersion ?? null,
+      resolvedFingerprintSources: resolvedExpoUpdatesRuntimeVersion?.fingerprintSources ?? null,
     });
   });
 
@@ -106,10 +107,10 @@ async function buildAsync(ctx: BuildContext<Android.Job>): Promise<void> {
       logger: ctx.logger,
       gradleCommand,
       androidDir: path.join(ctx.getReactNativeProjectDirectory(), 'android'),
-      ...(resolvedExpoUpdatesRuntimeVersion
+      ...(resolvedExpoUpdatesRuntimeVersion?.runtimeVersion
         ? {
             extraEnv: {
-              EXPO_UPDATES_FINGERPRINT_OVERRIDE: resolvedExpoUpdatesRuntimeVersion,
+              EXPO_UPDATES_FINGERPRINT_OVERRIDE: resolvedExpoUpdatesRuntimeVersion.runtimeVersion,
               EXPO_UPDATES_WORKFLOW_OVERRIDE: ctx.job.type,
             },
           }
