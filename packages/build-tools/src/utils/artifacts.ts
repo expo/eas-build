@@ -140,8 +140,17 @@ async function getArtifactsSizes(artifacts: string[]): Promise<Record<string, nu
   const artifactsSizes: Record<string, number> = {};
   await Promise.all(
     artifacts.map(async (artifact) => {
-      const { size } = await fs.stat(artifact);
-      artifactsSizes[artifact] = size;
+      const stat = await fs.stat(artifact);
+      if (!stat.isDirectory()) {
+        artifactsSizes[artifact] = stat.size;
+      } else {
+        const files = await fg('**/*', { cwd: artifact, onlyFiles: true });
+        let size = 0;
+        for (const file of files) {
+          size += (await fs.stat(path.join(artifact, file))).size;
+        }
+        artifactsSizes[artifact] = size;
+      }
     })
   );
   return artifactsSizes;
