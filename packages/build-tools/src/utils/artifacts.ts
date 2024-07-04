@@ -145,11 +145,10 @@ async function getArtifactsSizes(artifacts: string[]): Promise<Record<string, nu
         artifactsSizes[artifact] = stat.size;
       } else {
         const files = await fg('**/*', { cwd: artifact, onlyFiles: true });
-        let size = 0;
-        for (const file of files) {
-          size += (await fs.stat(path.join(artifact, file))).size;
-        }
-        artifactsSizes[artifact] = size;
+        const sizes = await Promise.all(
+          files.map(async (file) => (await fs.stat(path.join(artifact, file))).size)
+        );
+        artifactsSizes[artifact] = sizes.reduce((acc, size) => acc + size, 0);
       }
     })
   );
