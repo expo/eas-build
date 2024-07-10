@@ -4,6 +4,7 @@ import fs from 'fs-extra';
 import fg from 'fast-glob';
 import { bunyan } from '@expo/logger';
 import { ManagedArtifactType, Job, BuildJob } from '@expo/eas-build-job';
+import promiseLimit from 'promise-limit';
 
 import { BuildContext } from '../context';
 
@@ -148,7 +149,7 @@ async function getArtifactsSizes(artifacts: string[]): Promise<Record<string, nu
   return artifactsSizes;
 }
 
-async function getArtifactSize(artifact: string, batchSize = 100): Promise<number | undefined> {
+async function getArtifactSize(artifact: string): Promise<number | undefined> {
   try {
     const stat = await fs.stat(artifact);
     if (!stat.isDirectory()) {
@@ -160,16 +161,13 @@ async function getArtifactSize(artifact: string, batchSize = 100): Promise<numbe
         return undefined;
       }
 
-      let size = 0;
-      for (let i = 0; i < files.length; i += batchSize) {
-        const batch = files.slice(i, i + batchSize);
-        const sizes = await Promise.all(
-          batch.map(async (file) => (await fs.stat(path.join(artifact, file))).size)
-        );
-        size += sizes.reduce((acc, size) => acc + size, 0);
-      }
-
-      return size;
+      const getFileSizePromiseLimit = promiseLimit<number>(100);
+      const sizes = await Promise.all(
+        files.map((file) =>
+          getFileSizePromiseLimit(async () => (await fs.stat(path.join(artifact, file))).size)
+        )
+      );
+      return sizes.reduce((acc, size) => acc + size, 0);
     }
   } catch {
     return undefined;
