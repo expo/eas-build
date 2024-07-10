@@ -276,8 +276,11 @@ export class BuildContext<TJob extends Job = Job> {
 
   public getReactNativeProjectDirectory(baseDirectory = this.buildDirectory): string {
     if (!this.job.platform) {
-      // Generic jobs start from base directory.
-      return baseDirectory;
+      return path.join(
+        baseDirectory,
+        // NOTE: We may want to add projectRootDirectory to generic jobs in the future.
+        this.job.builderEnvironment.env.__EXPO_RELATIVE_BASE_DIRECTORY || '.'
+      );
     }
 
     return path.join(baseDirectory, this.job.projectRootDirectory ?? '.');
