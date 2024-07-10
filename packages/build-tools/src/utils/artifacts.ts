@@ -92,8 +92,9 @@ export async function maybeFindAndUploadBuildArtifacts(
     ).flat();
     const artifactsSizes = await getArtifactsSizes(buildArtifacts);
     logger.info(`Build artifacts:`);
-    for (const [path, size] of Object.entries(artifactsSizes)) {
-      logger.info(`  - ${path} (${formatBytes(size)})`);
+    for (const artifactPath of buildArtifacts) {
+      const maybeSize = artifactsSizes[artifactPath];
+      logger.info(`  - ${artifactPath}${maybeSize ? ` (${formatBytes(maybeSize)})` : ''}`);
     }
     logger.info('Uploading build artifacts...');
     await ctx.uploadArtifact({
@@ -123,8 +124,9 @@ export async function uploadApplicationArchive(
   const applicationArchives = await findArtifacts({ rootDir, patternOrPath, logger });
   const artifactsSizes = await getArtifactsSizes(applicationArchives);
   logger.info(`Application archives:`);
-  for (const [path, size] of Object.entries(artifactsSizes)) {
-    logger.info(`  - ${path} (${formatBytes(size)})`);
+  for (const artifactPath of applicationArchives) {
+    const maybeSize = artifactsSizes[artifactPath];
+    logger.info(`  - ${artifactPath}${maybeSize ? ` (${formatBytes(maybeSize)})` : ''}`);
   }
   logger.info('Uploading application archive...');
   await ctx.uploadArtifact({
@@ -136,28 +138,47 @@ export async function uploadApplicationArchive(
   });
 }
 
-async function getArtifactsSizes(artifacts: string[]): Promise<Record<string, number>> {
-  const artifactsSizes: Record<string, number> = {};
+async function getArtifactsSizes(artifacts: string[]): Promise<Record<string, number | undefined>> {
+  const artifactsSizes: Record<string, number | undefined> = {};
   await Promise.all(
     artifacts.map(async (artifact) => {
-      const stat = await fs.stat(artifact);
-      if (!stat.isDirectory()) {
-        artifactsSizes[artifact] = stat.size;
-      } else {
-        const files = await fg('**/*', { cwd: artifact, onlyFiles: true });
-        const sizes = await Promise.all(
-          files.map(async (file) => (await fs.stat(path.join(artifact, file))).size)
-        );
-        artifactsSizes[artifact] = sizes.reduce((acc, size) => acc + size, 0);
-      }
+      artifactsSizes[artifact] = await getArtifactSize(artifact);
     })
   );
   return artifactsSizes;
 }
 
+async function getArtifactSize(artifact: string, batchSize = 100): Promise<number | undefined> {
+  try {
+    const stat = await fs.stat(artifact);
+    if (!stat.isDirectory()) {
+      return stat.size;
+    } else {
+      const files = await fg('**/*', { cwd: artifact, onlyFiles: true });
+
+      if (files.length > 100_000) {
+        return undefined;
+      }
+
+      let size = 0;
+      for (let i = 0; i < files.length; i += batchSize) {
+        const batch = files.slice(i, i + batchSize);
+        const sizes = await Promise.all(
+          batch.map(async (file) => (await fs.stat(path.join(artifact, file))).size)
+        );
+        size += sizes.reduce((acc, size) => acc + size, 0);
+      }
+
+      return size;
+    }
+  } catch {
+    return undefined;
+  }
+}
+
 // same as in
 // https://github.com/expo/eas-cli/blob/f0e3b648a1634266e7d723bd49a84866ab9b5801/packages/eas-cli/src/utils/files.ts#L33-L60
-export function formatBytes(bytes: number): string {
+function formatBytes(bytes: number): string {
   if (bytes === 0) {
     return `0`;
   }
