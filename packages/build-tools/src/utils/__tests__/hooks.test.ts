@@ -26,7 +26,7 @@ describe(runHookIfPresent, () => {
     vol.reset();
     (spawn as jest.Mock).mockReset();
 
-    ctx = new BuildContext({ projectRootDirectory: '.' } as BuildJob, {
+    ctx = new BuildContext({ projectRootDirectory: '.', platform: 'android' } as BuildJob, {
       workingdir: '/workingdir',
       logBuffer: { getLogs: () => [], getPhaseLogs: () => [] },
       logger: loggerMock as any,
