@@ -2,8 +2,9 @@ import path from 'path';
 
 import fs from 'fs-extra';
 import fg from 'fast-glob';
-import { bunyan } from '@expo/logger';
+import { bunyan, PipeMode } from '@expo/logger';
 import { ManagedArtifactType, Job, BuildJob } from '@expo/eas-build-job';
+import spawnAsync from '@expo/turtle-spawn';
 
 import { BuildContext } from '../context';
 
@@ -92,8 +93,9 @@ export async function maybeFindAndUploadBuildArtifacts(
     ).flat();
     const artifactsSizes = await getArtifactsSizes(buildArtifacts);
     logger.info(`Build artifacts:`);
-    for (const [path, size] of Object.entries(artifactsSizes)) {
-      logger.info(`  - ${path} (${formatBytes(size)})`);
+    for (const artifactPath of buildArtifacts) {
+      const maybeSize = artifactsSizes[artifactPath];
+      logger.info(`  - ${artifactPath}${maybeSize ? ` (${formatBytes(maybeSize)})` : ''}`);
     }
     logger.info('Uploading build artifacts...');
     await ctx.uploadArtifact({
@@ -123,8 +125,9 @@ export async function uploadApplicationArchive(
   const applicationArchives = await findArtifacts({ rootDir, patternOrPath, logger });
   const artifactsSizes = await getArtifactsSizes(applicationArchives);
   logger.info(`Application archives:`);
-  for (const [path, size] of Object.entries(artifactsSizes)) {
-    logger.info(`  - ${path} (${formatBytes(size)})`);
+  for (const artifactPath of applicationArchives) {
+    const maybeSize = artifactsSizes[artifactPath];
+    logger.info(`  - ${artifactPath}${maybeSize ? ` (${formatBytes(maybeSize)})` : ''}`);
   }
   logger.info('Uploading application archive...');
   await ctx.uploadArtifact({
@@ -136,20 +139,20 @@ export async function uploadApplicationArchive(
   });
 }
 
-async function getArtifactsSizes(artifacts: string[]): Promise<Record<string, number>> {
+/**
+ * @returns a map of artifact paths to their sizes in bytes
+ */
+async function getArtifactsSizes(artifacts: string[]): Promise<Record<string, number | undefined>> {
   const artifactsSizes: Record<string, number> = {};
   await Promise.all(
     artifacts.map(async (artifact) => {
-      const stat = await fs.stat(artifact);
-      if (!stat.isDirectory()) {
-        artifactsSizes[artifact] = stat.size;
-      } else {
-        const files = await fg('**/*', { cwd: artifact, onlyFiles: true });
-        const sizes = await Promise.all(
-          files.map(async (file) => (await fs.stat(path.join(artifact, file))).size)
-        );
-        artifactsSizes[artifact] = sizes.reduce((acc, size) => acc + size, 0);
-      }
+      try {
+        const { stdout } = await spawnAsync('du', ['-sk', artifact], {
+          mode: PipeMode.COMBINED,
+        });
+        const size = parseInt(stdout.split('\t')[0], 10) * 1024;
+        artifactsSizes[artifact] = size;
+      } catch {}
     })
   );
   return artifactsSizes;
