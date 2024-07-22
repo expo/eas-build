@@ -1,10 +1,10 @@
 import { z } from 'zod';
 
-export const CustomJobShellZ = z.enum(['sh', 'bash']);
+export const CustomJobStepShellZ = z.enum(['sh', 'bash']);
 
-export type CustomJobShell = z.infer<typeof CustomJobShellZ>;
+export type CustomJobStepShell = z.infer<typeof CustomJobStepShellZ>;
 
-export const CommonCustomJobStepZ = z.object({
+const CommonCustomJobStepZ = z.object({
   /**
    * Unique identifier for the step.
    *
@@ -48,7 +48,6 @@ export const CommonCustomJobStepZ = z.object({
 });
 
 export const CustomJobStepWithUsesFieldZ = CommonCustomJobStepZ.extend({
-  ...CommonCustomJobStepZ.shape,
   /**
    * The custom EAS function to run as a step.
    * It can be a function provided by EAS or a custom function defined by the user.
@@ -103,7 +102,7 @@ export const CustomJobStepWithRunFieldZ = CommonCustomJobStepZ.extend({
    *
    * @default 'bash'
    */
-  shell: CustomJobShellZ.optional(),
+  shell: CustomJobStepShellZ.optional(),
 });
 
 export const CustomJobStepZ = z.union([CustomJobStepWithUsesFieldZ, CustomJobStepWithRunFieldZ]);
