@@ -1,3 +1,5 @@
+import path from 'path';
+
 import { BuildFunction, BuildStepEnv } from '@expo/steps';
 import { BuildStepContext } from '@expo/steps/dist_esm/BuildStepContext';
 import spawn from '@expo/turtle-spawn';
@@ -27,6 +29,17 @@ export async function installNodeModules(
   const { logger } = stepCtx;
   const packageManager = resolvePackageManager(stepCtx.workingDirectory);
   const packagerRunDir = findPackagerRootDir(stepCtx.workingDirectory);
+
+  if (packagerRunDir !== stepCtx.workingDirectory) {
+    const relativeReactNativeProjectDirectory = path.relative(
+      stepCtx.global.projectTargetDirectory,
+      stepCtx.workingDirectory
+    );
+    logger.info(
+      `We detected that '${relativeReactNativeProjectDirectory}' is a ${packageManager} workspace`
+    );
+  }
+
   let args = ['install'];
   if (packageManager === PackageManager.PNPM) {
     args = ['install', '--no-frozen-lockfile'];
