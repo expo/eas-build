@@ -34,7 +34,7 @@ export function createPrebuildBuildFunction(): BuildFunction {
     fn: async (stepCtx, { inputs, env }) => {
       const { logger } = stepCtx;
       const appleTeamId = inputs.apple_team_id.value as string | undefined;
-      const packageManager = resolvePackageManager(stepCtx.global.projectTargetDirectory);
+      const packageManager = resolvePackageManager(stepCtx.workingDirectory);
 
       assert(stepCtx.global.staticContext.job, 'Job is not defined');
       const job = stepCtx.global.staticContext.job;
