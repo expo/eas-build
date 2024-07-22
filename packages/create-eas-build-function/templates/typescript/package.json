@@ -11,8 +11,8 @@
   "author": "",
   "devDependencies": {
     "@vercel/ncc": "^0.38.1",
-    "@types/node": "20.14.2",
-    "typescript": "^5.3.3",
-    "@expo/steps": "^1.0.75"
+    "@types/node": "20.14.11",
+    "typescript": "^5.5.3",
+    "@expo/steps": "^1.0.119"
   }
 }
