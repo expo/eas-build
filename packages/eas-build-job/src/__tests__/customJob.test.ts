@@ -30,7 +30,7 @@ describe('CustomJobStepZ', () => {
       run: 'echo Hello, world!',
       uses: 'eas/build',
     };
-    expect(() => CustomJobStepZ.parse(step)).toThrow('Unrecognized key');
+    expect(() => CustomJobStepZ.parse(step)).toThrow('Invalid input');
   });
 
   it('errors when step is neither script nor function step', () => {

@@ -69,6 +69,9 @@ export const CustomJobFunctionStepZ = CommonCustomJobStepZ.extend({
    *  arg4: '${{ steps.step1.outputs.test }}'
    */
   with: z.record(z.unknown()).optional(),
+
+  run: z.never().optional(),
+  shell: z.never().optional(),
 }).strict();
 
 export type CustomJobFunctionStep = z.infer<typeof CustomJobFunctionStepZ>;
@@ -96,6 +99,9 @@ export const CustomJobScriptStepZ = CommonCustomJobStepZ.extend({
    * @default 'bash'
    */
   shell: z.string().optional(),
+
+  uses: z.never().optional(),
+  with: z.never().optional(),
 }).strict();
 
 export type CustomJobScriptStep = z.infer<typeof CustomJobScriptStepZ>;
