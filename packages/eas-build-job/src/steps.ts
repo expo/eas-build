@@ -1,11 +1,11 @@
 import { z } from 'zod';
 
-const CommonCustomJobStepZ = z.object({
+const CommonStepZ = z.object({
   /**
    * Unique identifier for the step.
    *
    * @example
-   * id: 'step1'
+   * id: step1
    */
   id: z.string().optional(),
   /**
@@ -13,7 +13,7 @@ const CommonCustomJobStepZ = z.object({
    * Based on the GitHub Actions job step `if` field (https://docs.github.com/en/actions/using-workflows/workflow-syntax-for-github-actions#jobsjob_idstepsif).
    *
    * @example
-   * if: '${{ steps.step1.outputs.test == 'test' }}'
+   * if: ${{ steps.step1.outputs.test == 'test' }}
    */
   if: z.string().optional(),
   /**
@@ -27,9 +27,9 @@ const CommonCustomJobStepZ = z.object({
    * The working directory to run the step in.
    *
    * @example
-   * working-directory: './my-working-directory'
+   * working_directory: ./my-working-directory
    *
-   * @default '.' (the root of the repository)
+   * @default depends on the project settings
    */
   working_directory: z.string().optional(),
   /**
@@ -37,22 +37,22 @@ const CommonCustomJobStepZ = z.object({
    *
    * @example
    * env:
-   *  MY_ENV_VAR: 'my-value'
-   *  ANOTHER_ENV_VAR: 'another-value'
+   *   MY_ENV_VAR: my-value
+   *   ANOTHER_ENV_VAR: another-value
    */
   env: z.record(z.string()).optional(),
 });
 
-export const CustomJobFunctionStepZ = CommonCustomJobStepZ.extend({
+export const FunctionStepZ = CommonStepZ.extend({
   /**
    * The custom EAS function to run as a step.
    * It can be a function provided by EAS or a custom function defined by the user.
    *
    * @example
-   * uses: 'eas/build'
+   * uses: eas/build
    *
    * @example
-   * uses: 'my-custom-function'
+   * uses: my-custom-function
    */
   uses: z.string(),
   /**
@@ -60,28 +60,28 @@ export const CustomJobFunctionStepZ = CommonCustomJobStepZ.extend({
    *
    * @example
    * with:
-   *  arg1: 'value1'
-   *  arg2: ['ala', 'ma', 'kota']
-   *  arg3:
-   *   key1: 'value1'
-   *   key2:
-   *    - 'value1'
-   *  arg4: '${{ steps.step1.outputs.test }}'
+   *   arg1: value1
+   *   arg2: ['ala', 'ma', 'kota']
+   *   arg3:
+   *     key1: value1
+   *     key2:
+   *      - value1
+   *   arg4: ${{ steps.step1.outputs.test }}
    */
   with: z.record(z.unknown()).optional(),
 
   run: z.never().optional(),
   shell: z.never().optional(),
-}).strict();
+});
 
-export type CustomJobFunctionStep = z.infer<typeof CustomJobFunctionStepZ>;
+export type FunctionStep = z.infer<typeof FunctionStepZ>;
 
-export const CustomJobScriptStepZ = CommonCustomJobStepZ.extend({
+export const ScriptStepZ = CommonStepZ.extend({
   /**
    * The command-line programs to run as a step.
    *
    * @example
-   * run: 'echo Hello, world!'
+   * run: echo Hello, world!
    *
    * @example
    * run: |
@@ -102,11 +102,11 @@ export const CustomJobScriptStepZ = CommonCustomJobStepZ.extend({
 
   uses: z.never().optional(),
   with: z.never().optional(),
-}).strict();
+});
 
-export type CustomJobScriptStep = z.infer<typeof CustomJobScriptStepZ>;
+export type ScriptStep = z.infer<typeof ScriptStepZ>;
 
-export const CustomJobStepZ = z.union([CustomJobScriptStepZ, CustomJobFunctionStepZ]);
+export const StepZ = z.discriminatedUnion('run', [ScriptStepZ, FunctionStepZ]);
 
 /**
  * Structure of a custom EAS job step.
@@ -118,18 +118,18 @@ export const CustomJobStepZ = z.union([CustomJobScriptStepZ, CustomJobFunctionSt
  *
  * * @example
  * steps:
- *  - uses: 'eas/maestro-test'
- *    id: 'step1'
- *    name: 'Step 1'
+ *  - uses: eas/maestro-test
+ *    id: step1
+ *    name: Step 1
  *    with:
- *     flow_path: |
+ *      flow_path: |
  *        maestro/sign_in.yaml
  *        maestro/create_post.yaml
  *        maestro/sign_out.yaml
- *  - run: 'echo Hello, world!'
+ *  - run: echo Hello, world!
  */
-export type CustomJobStep = z.infer<typeof CustomJobStepZ>;
+export type Step = z.infer<typeof StepZ>;
 
-export const CustomJobStepsZ = z.array(CustomJobStepZ);
+export const StepsZ = z.array(StepZ);
 
-export type CustomJobSteps = z.infer<typeof CustomJobStepsZ>;
+export type Steps = z.infer<typeof StepsZ>;

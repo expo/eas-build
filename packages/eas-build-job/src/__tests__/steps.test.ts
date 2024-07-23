@@ -1,12 +1,12 @@
-import { CustomJobStepZ } from '../customJob';
+import { StepZ } from '../steps';
 
-describe('CustomJobStepZ', () => {
+describe('StepZ', () => {
   it('accepts valid script step', () => {
     const step = {
       run: 'echo Hello, world!',
       shell: 'sh',
     };
-    expect(CustomJobStepZ.parse(step)).toEqual(step);
+    expect(StepZ.parse(step)).toEqual(step);
   });
 
   it('accepts valid function step', () => {
@@ -22,7 +22,7 @@ describe('CustomJobStepZ', () => {
         arg4: '${{ steps.step1.outputs.test }}',
       },
     };
-    expect(CustomJobStepZ.parse(step)).toEqual(step);
+    expect(StepZ.parse(step)).toEqual(step);
   });
 
   it('errors when step is both script and function step', () => {
@@ -30,7 +30,7 @@ describe('CustomJobStepZ', () => {
       run: 'echo Hello, world!',
       uses: 'eas/build',
     };
-    expect(() => CustomJobStepZ.parse(step)).toThrow('Invalid input');
+    expect(() => StepZ.parse(step)).toThrow('Invalid input');
   });
 
   it('errors when step is neither script nor function step', () => {
@@ -38,7 +38,7 @@ describe('CustomJobStepZ', () => {
       id: 'step1',
       name: 'Step 1',
     };
-    expect(() => CustomJobStepZ.parse(step)).toThrow('Invalid input');
+    expect(() => StepZ.parse(step)).toThrow('Invalid input');
   });
 
   it('valid step with all properties', () => {
@@ -52,6 +52,6 @@ describe('CustomJobStepZ', () => {
         KEY1: 'value1',
       },
     };
-    expect(CustomJobStepZ.parse(step)).toEqual(step);
+    expect(StepZ.parse(step)).toEqual(step);
   });
 });

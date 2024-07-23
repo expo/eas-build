@@ -47,19 +47,18 @@ describe('Generic.JobZ', () => {
       customBuildConfig: {
         path: 'path/to/custom-build-config.yml',
       },
-      customJob: {
-        steps: [
-          {
-            id: 'step1',
-            name: 'Step 1',
-            run: 'echo Hello, world!',
-            shell: 'sh',
-            env: {
-              KEY1: 'value1',
-            },
+      steps: [
+        {
+          id: 'step1',
+          name: 'Step 1',
+          run: 'echo Hello, world!',
+          shell: 'sh',
+          env: {
+            KEY1: 'value1',
           },
-        ],
-      },
+        },
+      ],
+
       secrets: {
         robotAccessToken: 'token',
         environmentSecrets: [
