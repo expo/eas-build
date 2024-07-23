@@ -20,3 +20,4 @@ export * as errors from './errors';
 export * from './artifacts';
 export * from './context';
 export * from './generic';
+export * from './customJob';
