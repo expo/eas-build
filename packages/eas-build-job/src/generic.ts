@@ -2,6 +2,7 @@ import { z } from 'zod';
 import { LoggerLevel } from '@expo/logger';
 
 import { ArchiveSourceSchemaZ, BuildTrigger, EnvironmentSecretZ } from './common';
+import { CustomJobStepsZ } from './customJob';
 
 export namespace Generic {
   const BuilderEnvironmentSchemaZ = z.object({
@@ -22,9 +23,15 @@ export namespace Generic {
   export type Job = z.infer<typeof JobZ>;
   export const JobZ = z.object({
     projectArchive: ArchiveSourceSchemaZ,
+    // TODO: remove this once we pass all of the jobs to Turtle as objects
     customBuildConfig: z.object({
       path: z.string(),
     }),
+    customJob: z
+      .object({
+        steps: CustomJobStepsZ,
+      })
+      .optional(),
     secrets: z.object({
       robotAccessToken: z.string(),
       environmentSecrets: z.array(EnvironmentSecretZ),

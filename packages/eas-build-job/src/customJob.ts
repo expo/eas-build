@@ -1,9 +1,5 @@
 import { z } from 'zod';
 
-export const CustomJobStepShellZ = z.enum(['sh', 'bash']);
-
-export type CustomJobStepShell = z.infer<typeof CustomJobStepShellZ>;
-
 const CommonCustomJobStepZ = z.object({
   /**
    * Unique identifier for the step.
@@ -35,7 +31,7 @@ const CommonCustomJobStepZ = z.object({
    *
    * @default '.' (the root of the repository)
    */
-  'working-directory': z.string().optional(),
+  working_directory: z.string().optional(),
   /**
    * Env variables override for the step.
    *
@@ -47,7 +43,7 @@ const CommonCustomJobStepZ = z.object({
   env: z.record(z.string()).optional(),
 });
 
-export const CustomJobStepWithUsesFieldZ = CommonCustomJobStepZ.extend({
+export const CustomJobFunctionStepZ = CommonCustomJobStepZ.extend({
   /**
    * The custom EAS function to run as a step.
    * It can be a function provided by EAS or a custom function defined by the user.
@@ -72,15 +68,12 @@ export const CustomJobStepWithUsesFieldZ = CommonCustomJobStepZ.extend({
    *    - 'value1'
    *  arg4: '${{ steps.step1.outputs.test }}'
    */
-  with: z
-    .record(
-      z.string(),
-      z.union([z.string(), z.number(), z.boolean(), z.record(z.string(), z.any())])
-    )
-    .optional(),
-});
+  with: z.record(z.unknown()).optional(),
+}).strict();
 
-export const CustomJobStepWithRunFieldZ = CommonCustomJobStepZ.extend({
+export type CustomJobFunctionStep = z.infer<typeof CustomJobFunctionStepZ>;
+
+export const CustomJobScriptStepZ = CommonCustomJobStepZ.extend({
   /**
    * The command-line programs to run as a step.
    *
@@ -102,58 +95,35 @@ export const CustomJobStepWithRunFieldZ = CommonCustomJobStepZ.extend({
    *
    * @default 'bash'
    */
-  shell: CustomJobStepShellZ.optional(),
-});
+  shell: z.string().optional(),
+}).strict();
 
-export const CustomJobStepZ = z.union([CustomJobStepWithUsesFieldZ, CustomJobStepWithRunFieldZ]);
+export type CustomJobScriptStep = z.infer<typeof CustomJobScriptStepZ>;
+
+export const CustomJobStepZ = z.union([CustomJobScriptStepZ, CustomJobFunctionStepZ]);
 
 /**
  * Structure of a custom EAS job step.
+ *
  * GHA step fields skipped here:
  * - `with.entrypoint`
  * - `continue-on-error`
  * - `timeout-minutes`
+ *
+ * * @example
+ * steps:
+ *  - uses: 'eas/maestro-test'
+ *    id: 'step1'
+ *    name: 'Step 1'
+ *    with:
+ *     flow_path: |
+ *        maestro/sign_in.yaml
+ *        maestro/create_post.yaml
+ *        maestro/sign_out.yaml
+ *  - run: 'echo Hello, world!'
  */
 export type CustomJobStep = z.infer<typeof CustomJobStepZ>;
 
-export const CustomJobZ = z.object({
-  /**
-   * Structure of a custom EAS job steps.
-   *
-   * @example
-   * steps:
-   *  - uses: 'eas/maestro-test'
-   *    id: 'step1'
-   *    name: 'Step 1'
-   *    with:
-   *     flow_path: |
-   *        maestro/sign_in.yaml
-   *        maestro/create_post.yaml
-   *        maestro/sign_out.yaml
-   *  - run: 'echo Hello, world!'
-   */
-  steps: z.array(CustomJobStepZ),
-});
+export const CustomJobStepsZ = z.array(CustomJobStepZ);
 
-/**
- * Structure of a custom EAS job.
- * Based on the GitHub Actions job structure (https://docs.github.com/en/actions/using-workflows/workflow-syntax-for-github-actions#jobsjob_id) that our users are familiar with, plus some additional modifications.
- * GHA job fields skipped here:
- * - `needs` (should be handled on WWW level)
- * - `if` (should be handled on WWW level)
- * - `permissions` (won't be supported for now)
- * - `runs-on` (will be passed as resource class in the top level Job object)
- * - `environment` (resolved environment variables for given environment should be passed in the top level Job object)
- * - `concurrency` (should be handled on WWW level)
- * - `timeout-minutes` TODO
- * - `defaults` TODO
- * - `strategy` (should be handled on WWW level)
- * - outputs TODO
- * - `continue-on-error` (should be handled on WWW level)
- * - `container` (won't be supported for now)
- * - `services` (won't be supported for now)
- * - `uses` ???
- * - `with` ???
- * - `secrets` (should be handled on WWW level)
- */
-export type CustomJob = z.infer<typeof CustomJobZ>;
+export type CustomJobSteps = z.infer<typeof CustomJobStepsZ>;
