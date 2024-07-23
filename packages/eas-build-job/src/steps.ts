@@ -106,7 +106,7 @@ export const ScriptStepZ = CommonStepZ.extend({
 
 export type ScriptStep = z.infer<typeof ScriptStepZ>;
 
-export const StepZ = z.discriminatedUnion('run', [ScriptStepZ, FunctionStepZ]);
+export const StepZ = z.union([ScriptStepZ, FunctionStepZ]);
 
 /**
  * Structure of a custom EAS job step.
