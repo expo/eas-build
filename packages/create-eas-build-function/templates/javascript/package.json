@@ -5,9 +5,9 @@
   "type": "commonjs",
   "devDependencies": {
     "@vercel/ncc": "^0.38.1",
-    "@babel/cli": "^7.23.9",
-    "@babel/core": "^7.23.9",
-    "@babel/preset-env": "^7.23.9"
+    "@babel/cli": "^7.24.8",
+    "@babel/core": "^7.24.9",
+    "@babel/preset-env": "^7.24.8"
   },
   "scripts": {
     "babel": "babel src --out-dir babel",
