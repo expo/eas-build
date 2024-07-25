@@ -1,4 +1,4 @@
-import { StepZ } from '../steps';
+import { StepZ } from '../step';
 
 describe('StepZ', () => {
   it('accepts valid script step', () => {

@@ -11,9 +11,6 @@ const CommonStepZ = z.object({
   /**
    * Expression that determines whether the step should run.
    * Based on the GitHub Actions job step `if` field (https://docs.github.com/en/actions/using-workflows/workflow-syntax-for-github-actions#jobsjob_idstepsif).
-   *
-   * @example
-   * if: ${{ steps.step1.outputs.test == 'test' }}
    */
   if: z.string().optional(),
   /**
@@ -76,7 +73,7 @@ export const FunctionStepZ = CommonStepZ.extend({
 
 export type FunctionStep = z.infer<typeof FunctionStepZ>;
 
-export const ScriptStepZ = CommonStepZ.extend({
+export const ShellStepZ = CommonStepZ.extend({
   /**
    * The command-line programs to run as a step.
    *
@@ -104,9 +101,9 @@ export const ScriptStepZ = CommonStepZ.extend({
   with: z.never().optional(),
 });
 
-export type ScriptStep = z.infer<typeof ScriptStepZ>;
+export type ShellStep = z.infer<typeof ShellStepZ>;
 
-export const StepZ = z.union([ScriptStepZ, FunctionStepZ]);
+export const StepZ = z.union([ShellStepZ, FunctionStepZ]);
 
 /**
  * Structure of a custom EAS job step.
@@ -129,7 +126,3 @@ export const StepZ = z.union([ScriptStepZ, FunctionStepZ]);
  *  - run: echo Hello, world!
  */
 export type Step = z.infer<typeof StepZ>;
-
-export const StepsZ = z.array(StepZ);
-
-export type Steps = z.infer<typeof StepsZ>;
