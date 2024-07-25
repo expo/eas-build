@@ -2,6 +2,7 @@ import { z } from 'zod';
 import { LoggerLevel } from '@expo/logger';
 
 import { ArchiveSourceSchemaZ, BuildTrigger, EnvironmentSecretZ } from './common';
+import { StepZ } from './step';
 
 export namespace Generic {
   const BuilderEnvironmentSchemaZ = z.object({
@@ -25,6 +26,7 @@ export namespace Generic {
     customBuildConfig: z.object({
       path: z.string(),
     }),
+    steps: z.array(StepZ).optional(),
     secrets: z.object({
       robotAccessToken: z.string(),
       environmentSecrets: z.array(EnvironmentSecretZ),
