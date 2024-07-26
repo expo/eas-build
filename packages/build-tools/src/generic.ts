@@ -2,7 +2,7 @@ import fs from 'fs';
 import path from 'path';
 
 import { BuildPhase, Generic } from '@expo/eas-build-job';
-import { BuildConfigParser, BuildStepGlobalContext, errors } from '@expo/steps';
+import { BuildConfigParser, BuildStepGlobalContext, errors, StepConfigParser } from '@expo/steps';
 import nullthrows from 'nullthrows';
 
 import { BuildContext } from './context';
@@ -26,11 +26,17 @@ export async function runGenericJobAsync(ctx: BuildContext<Generic.Job>): Promis
 
   const globalContext = new BuildStepGlobalContext(customBuildCtx, false);
 
-  const parser = new BuildConfigParser(globalContext, {
-    externalFunctions: getEasFunctions(customBuildCtx),
-    externalFunctionGroups: getEasFunctionGroups(customBuildCtx),
-    configPath,
-  });
+  const parser = ctx.job.steps
+    ? new StepConfigParser(globalContext, {
+        externalFunctions: getEasFunctions(customBuildCtx),
+        externalFunctionGroups: getEasFunctionGroups(customBuildCtx),
+        steps: ctx.job.steps,
+      })
+    : new BuildConfigParser(globalContext, {
+        externalFunctions: getEasFunctions(customBuildCtx),
+        externalFunctionGroups: getEasFunctionGroups(customBuildCtx),
+        configPath,
+      });
 
   const workflow = await ctx.runBuildPhase(BuildPhase.PARSE_CUSTOM_WORKFLOW_CONFIG, async () => {
     try {

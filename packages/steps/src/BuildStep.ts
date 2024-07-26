@@ -21,7 +21,7 @@ import {
   saveScriptToTemporaryFileAsync,
 } from './BuildTemporaryFiles.js';
 import { spawnAsync } from './utils/shell/spawn.js';
-import { interpolateWithInputs } from './utils/template.js';
+import { interpolateWithInputs, interpolateWithOutputs } from './utils/template.js';
 import { BuildStepRuntimeError } from './errors.js';
 import { BuildStepEnv } from './BuildStepEnv.js';
 import { BuildRuntimePlatform } from './BuildRuntimePlatform.js';
@@ -413,8 +413,10 @@ export class BuildStep extends BuildStepOutputAccessor {
       },
       {} as Record<string, string>
     );
-    const valueInterpolatedWithGlobalContext = this.ctx.global.interpolate(template);
-    return interpolateWithInputs(valueInterpolatedWithGlobalContext, vars);
+    return interpolateWithOutputs(
+      interpolateWithInputs(this.ctx.global.interpolate(template), vars),
+      (path) => this.ctx.global.getStepOutputValue(path) ?? ''
+    );
   }
 
   private async collectAndValidateOutputsAsync(outputsDir: string): Promise<void> {

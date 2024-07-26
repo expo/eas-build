@@ -12,7 +12,7 @@ import {
   isBuildStepCommandRun,
   isBuildStepFunctionCall,
   readRawBuildConfigAsync,
-  readAndValidateBuildConfigAsync,
+  readAndValidateBuildConfigFromPathAsync,
   validateConfig,
   BuildFunctionsConfigFileSchema,
   BuildConfigSchema,
@@ -28,9 +28,9 @@ import { getError, getErrorAsync } from './utils/error.js';
 
 const __dirname = url.fileURLToPath(new URL('.', import.meta.url));
 
-describe(readAndValidateBuildConfigAsync, () => {
+describe(readAndValidateBuildConfigFromPathAsync, () => {
   test('valid custom build config', async () => {
-    const config = await readAndValidateBuildConfigAsync(
+    const config = await readAndValidateBuildConfigFromPathAsync(
       path.join(__dirname, './fixtures/build.yml'),
       {
         externalFunctionIds: [],
@@ -46,7 +46,7 @@ describe(readAndValidateBuildConfigAsync, () => {
     expect(config.build.steps[5].run.if).toBe('${ always() }');
   });
   test('valid custom build config with imports', async () => {
-    const config = await readAndValidateBuildConfigAsync(
+    const config = await readAndValidateBuildConfigFromPathAsync(
       path.join(__dirname, './fixtures/build-with-import.yml'),
       {
         externalFunctionIds: [],
@@ -70,7 +70,7 @@ describe(readAndValidateBuildConfigAsync, () => {
     expect(config.functions?.say_hi_wojtek).toBeDefined();
   });
   test('import cycle does not result in infinite loop', async () => {
-    const config = await readAndValidateBuildConfigAsync(
+    const config = await readAndValidateBuildConfigFromPathAsync(
       path.join(__dirname, './fixtures/build-with-import-cycle.yml'),
       {
         externalFunctionIds: [],
@@ -83,7 +83,7 @@ describe(readAndValidateBuildConfigAsync, () => {
     expect(config.functions?.say_hi).toBeDefined();
   });
   test('function precedence', async () => {
-    const config = await readAndValidateBuildConfigAsync(
+    const config = await readAndValidateBuildConfigFromPathAsync(
       path.join(__dirname, './fixtures/build-with-import.yml'),
       {
         externalFunctionIds: [],
