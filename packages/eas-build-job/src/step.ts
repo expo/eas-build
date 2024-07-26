@@ -70,10 +70,11 @@ export const FunctionStepZ = CommonStepZ.extend({
    *      - value1
    *   arg4: ${{ steps.step1.outputs.test }}
    */
-  with: z.record(z.any()).optional(),
+  with: z.record(z.union([z.string(), z.number(), z.record(z.any())])).optional(),
 
   run: z.never().optional(),
   shell: z.never().optional(),
+  outputs: z.never().optional(),
 });
 
 export type FunctionStep = z.infer<typeof FunctionStepZ>;
@@ -101,6 +102,17 @@ export const ShellStepZ = CommonStepZ.extend({
    * @default 'bash'
    */
   shell: z.string().optional(),
+  /**
+   * The outputs of the step.
+   *
+   * @example
+   * outputs:
+   *  - name: my_output
+   *    required: true
+   *  - name: my_optional_output
+   *    required: false
+   *  - name: my_optional_output_without_required
+   */
   outputs: z.array(StepOutputZ).optional(),
 
   uses: z.never().optional(),
@@ -134,7 +146,7 @@ export const StepZ = z.union([ShellStepZ, FunctionStepZ]);
 export type Step = z.infer<typeof StepZ>;
 
 export function validateSteps(maybeSteps: unknown): Step[] {
-  const steps = z.array(StepZ).parse(maybeSteps);
+  const steps = z.array(StepZ).min(1).parse(maybeSteps);
   return steps;
 }
 

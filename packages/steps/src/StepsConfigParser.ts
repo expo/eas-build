@@ -21,7 +21,7 @@ import { AbstractConfigParser } from './AbstractConfigParser.js';
 import { BuildConfigError } from './errors.js';
 import { BuildStepOutput } from './BuildStepOutput.js';
 
-export class StepConfigParser extends AbstractConfigParser {
+export class StepsConfigParser extends AbstractConfigParser {
   private readonly steps: Step[];
 
   constructor(
@@ -49,7 +49,7 @@ export class StepConfigParser extends AbstractConfigParser {
     buildFunctionById: BuildFunctionById;
   }> {
     const validatedSteps = validateSteps(this.steps);
-    this.validateAllFunctionsExist(validatedSteps, {
+    StepsConfigParser.validateAllFunctionsExist(validatedSteps, {
       externalFunctionIds: this.getExternalFunctionFullIds(),
       externalFunctionGroupIds: this.getExternalFunctionGroupFullIds(),
     });
@@ -180,7 +180,7 @@ export class StepConfigParser extends AbstractConfigParser {
     );
   }
 
-  public validateAllFunctionsExist(
+  private static validateAllFunctionsExist(
     steps: Step[],
     {
       externalFunctionIds,
