@@ -2,8 +2,7 @@ import fs from 'fs';
 import path from 'path';
 
 import { BuildPhase, Generic } from '@expo/eas-build-job';
-import { BuildConfigParser, BuildStepGlobalContext, errors } from '@expo/steps';
-import nullthrows from 'nullthrows';
+import { BuildConfigParser, BuildStepGlobalContext, errors, StepsConfigParser } from '@expo/steps';
 
 import { BuildContext } from './context';
 import { prepareProjectSourcesAsync } from './common/projectSources';
@@ -18,19 +17,22 @@ export async function runGenericJobAsync(ctx: BuildContext<Generic.Job>): Promis
 
   await addEasWorkflows(customBuildCtx);
 
-  const relativeConfigPath = nullthrows(
-    ctx.job.customBuildConfig?.path,
-    'Missing job definition file path.'
-  );
-  const configPath = path.join(customBuildCtx.projectSourceDirectory, relativeConfigPath);
-
   const globalContext = new BuildStepGlobalContext(customBuildCtx, false);
 
-  const parser = new BuildConfigParser(globalContext, {
-    externalFunctions: getEasFunctions(customBuildCtx),
-    externalFunctionGroups: getEasFunctionGroups(customBuildCtx),
-    configPath,
-  });
+  const parser = ctx.job.steps
+    ? new StepsConfigParser(globalContext, {
+        externalFunctions: getEasFunctions(customBuildCtx),
+        externalFunctionGroups: getEasFunctionGroups(customBuildCtx),
+        steps: ctx.job.steps,
+      })
+    : new BuildConfigParser(globalContext, {
+        externalFunctions: getEasFunctions(customBuildCtx),
+        externalFunctionGroups: getEasFunctionGroups(customBuildCtx),
+        configPath: path.join(
+          customBuildCtx.projectSourceDirectory,
+          ctx.job.customBuildConfig.path
+        ),
+      });
 
   const workflow = await ctx.runBuildPhase(BuildPhase.PARSE_CUSTOM_WORKFLOW_CONFIG, async () => {
     try {

@@ -266,7 +266,7 @@ interface BuildConfigValidationParams {
   skipNamespacedFunctionsOrFunctionGroupsCheck?: boolean;
 }
 
-export async function readAndValidateBuildConfigAsync(
+export async function readAndValidateBuildConfigFromPathAsync(
   configPath: string,
   params: BuildConfigValidationParams = {}
 ): Promise<BuildConfig> {

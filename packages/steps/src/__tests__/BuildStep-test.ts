@@ -18,6 +18,7 @@ import { nullthrows } from '../utils/nullthrows.js';
 import { BuildRuntimePlatform } from '../BuildRuntimePlatform.js';
 import { spawnAsync } from '../utils/shell/spawn.js';
 import { BuildStepEnv } from '../BuildStepEnv.js';
+import { BuildFunction } from '../BuildFunction.js';
 
 import { createGlobalContextMock } from './utils/context.js';
 import { createMockLogger } from './utils/logger.js';
@@ -342,6 +343,40 @@ describe(BuildStep, () => {
         });
         await step.executeAsync();
         expect(step.getOutputValueByName('foo2')).toBe('bar linux {"foo":"bar","baz":[1,"aaa"]}');
+      });
+
+      it('interpolates the outputs in command template', async () => {
+        const stepWithOutput = new BuildFunction({
+          id: 'func',
+          fn: (_ctx, { outputs }) => {
+            outputs.foo.set('bar');
+          },
+          outputProviders: [
+            BuildStepOutput.createProvider({
+              id: 'foo',
+              required: true,
+            }),
+          ],
+        }).createBuildStepFromFunctionCall(baseStepCtx, {
+          id: 'step1',
+        });
+        await stepWithOutput.executeAsync();
+        expect(stepWithOutput.getOutputValueByName('foo')).toBe('bar');
+
+        const step = new BuildStep(baseStepCtx, {
+          id: 'step2',
+          command: "set-output foo2 '${ steps.step1.foo }'",
+          displayName: 'Step 2',
+          outputs: [
+            new BuildStepOutput(baseStepCtx, {
+              id: 'foo2',
+              stepDisplayName: 'Step 2',
+              required: true,
+            }),
+          ],
+        });
+        await step.executeAsync();
+        expect(step.getOutputValueByName('foo2')).toBe('bar');
       });
 
       it('collects the outputs after calling the script', async () => {

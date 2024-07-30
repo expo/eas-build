@@ -1,5 +1,10 @@
 import { z } from 'zod';
 
+const StepOutputZ = z.object({
+  name: z.string(),
+  required: z.boolean().optional(),
+});
+
 const CommonStepZ = z.object({
   /**
    * Unique identifier for the step.
@@ -65,10 +70,11 @@ export const FunctionStepZ = CommonStepZ.extend({
    *      - value1
    *   arg4: ${{ steps.step1.outputs.test }}
    */
-  with: z.record(z.unknown()).optional(),
+  with: z.record(z.union([z.string(), z.number(), z.record(z.any())], z.boolean())).optional(),
 
   run: z.never().optional(),
   shell: z.never().optional(),
+  outputs: z.never().optional(),
 });
 
 export type FunctionStep = z.infer<typeof FunctionStepZ>;
@@ -96,6 +102,18 @@ export const ShellStepZ = CommonStepZ.extend({
    * @default 'bash'
    */
   shell: z.string().optional(),
+  /**
+   * The outputs of the step.
+   *
+   * @example
+   * outputs:
+   *  - name: my_output
+   *    required: true
+   *  - name: my_optional_output
+   *    required: false
+   *  - name: my_optional_output_without_required
+   */
+  outputs: z.array(StepOutputZ).optional(),
 
   uses: z.never().optional(),
   with: z.never().optional(),
@@ -126,3 +144,16 @@ export const StepZ = z.union([ShellStepZ, FunctionStepZ]);
  *  - run: echo Hello, world!
  */
 export type Step = z.infer<typeof StepZ>;
+
+export function validateSteps(maybeSteps: unknown): Step[] {
+  const steps = z.array(StepZ).min(1).parse(maybeSteps);
+  return steps;
+}
+
+export function isStepShellStep(step: Step): step is ShellStep {
+  return step.run !== undefined;
+}
+
+export function isStepFunctionStep(step: Step): step is FunctionStep {
+  return step.uses !== undefined;
+}

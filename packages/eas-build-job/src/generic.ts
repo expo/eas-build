@@ -21,12 +21,8 @@ export namespace Generic {
   });
 
   export type Job = z.infer<typeof JobZ>;
-  export const JobZ = z.object({
+  const CommonJobZ = z.object({
     projectArchive: ArchiveSourceSchemaZ,
-    customBuildConfig: z.object({
-      path: z.string(),
-    }),
-    steps: z.array(StepZ).optional(),
     secrets: z.object({
       robotAccessToken: z.string(),
       environmentSecrets: z.array(EnvironmentSecretZ),
@@ -39,4 +35,17 @@ export namespace Generic {
     triggeredBy: z.literal(BuildTrigger.GIT_BASED_INTEGRATION),
     loggerLevel: z.nativeEnum(LoggerLevel).optional(),
   });
+
+  export const JobZ = z.union([
+    CommonJobZ.extend({
+      customBuildConfig: z.object({
+        path: z.string(),
+      }),
+      steps: z.never().optional(),
+    }),
+    CommonJobZ.extend({
+      customBuildConfig: z.never().optional(),
+      steps: z.array(StepZ).min(1),
+    }),
+  ]);
 }

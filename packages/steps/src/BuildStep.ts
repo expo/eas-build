@@ -21,7 +21,7 @@ import {
   saveScriptToTemporaryFileAsync,
 } from './BuildTemporaryFiles.js';
 import { spawnAsync } from './utils/shell/spawn.js';
-import { interpolateWithInputs } from './utils/template.js';
+import { interpolateWithInputs, interpolateWithOutputs } from './utils/template.js';
 import { BuildStepRuntimeError } from './errors.js';
 import { BuildStepEnv } from './BuildStepEnv.js';
 import { BuildRuntimePlatform } from './BuildRuntimePlatform.js';
@@ -333,7 +333,10 @@ export class BuildStep extends BuildStepOutputAccessor {
     assert(this.command, 'Command must be defined.');
 
     try {
-      const command = this.interpolateInputsAndGlobalContextInTemplate(this.command, this.inputs);
+      const command = this.interpolateInputsOutputsAndGlobalContextInTemplate(
+        this.command,
+        this.inputs
+      );
       this.ctx.logger.debug(`Interpolated inputs in the command template`);
 
       const outputsDir = await createTemporaryOutputsDirectoryAsync(this.ctx.global, this.id);
@@ -396,12 +399,15 @@ export class BuildStep extends BuildStepOutputAccessor {
     }
   }
 
-  private interpolateInputsAndGlobalContextInTemplate(
+  private interpolateInputsOutputsAndGlobalContextInTemplate(
     template: string,
     inputs?: BuildStepInput[]
   ): string {
     if (!inputs) {
-      return this.ctx.global.interpolate(template);
+      return interpolateWithOutputs(
+        this.ctx.global.interpolate(template),
+        (path) => this.ctx.global.getStepOutputValue(path) ?? ''
+      );
     }
     const vars = inputs.reduce(
       (acc, input) => {
@@ -413,8 +419,10 @@ export class BuildStep extends BuildStepOutputAccessor {
       },
       {} as Record<string, string>
     );
-    const valueInterpolatedWithGlobalContext = this.ctx.global.interpolate(template);
-    return interpolateWithInputs(valueInterpolatedWithGlobalContext, vars);
+    return interpolateWithOutputs(
+      interpolateWithInputs(this.ctx.global.interpolate(template), vars),
+      (path) => this.ctx.global.getStepOutputValue(path) ?? ''
+    );
   }
 
   private async collectAndValidateOutputsAsync(outputsDir: string): Promise<void> {

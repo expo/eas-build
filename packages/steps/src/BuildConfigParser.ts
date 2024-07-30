@@ -15,7 +15,7 @@ import {
   isBuildStepBareCommandRun,
   isBuildStepBareFunctionOrFunctionGroupCall,
   isBuildStepCommandRun,
-  readAndValidateBuildConfigAsync,
+  readAndValidateBuildConfigFromPathAsync,
 } from './BuildConfig.js';
 import { BuildFunction, BuildFunctionById } from './BuildFunction.js';
 import { BuildStep } from './BuildStep.js';
@@ -26,24 +26,18 @@ import {
 } from './BuildStepInput.js';
 import { BuildStepGlobalContext } from './BuildStepContext.js';
 import { BuildStepOutput, BuildStepOutputProvider } from './BuildStepOutput.js';
-import { BuildWorkflow } from './BuildWorkflow.js';
-import { BuildWorkflowValidator } from './BuildWorkflowValidator.js';
 import { BuildConfigError } from './errors.js';
-import { duplicates } from './utils/expodash/duplicates.js';
-import { uniq } from './utils/expodash/uniq.js';
 import {
   BuildFunctionGroup,
   BuildFunctionGroupById,
   createBuildFunctionGroupByIdMapping,
 } from './BuildFunctionGroup.js';
+import { AbstractConfigParser } from './AbstractConfigParser.js';
 
-export class BuildConfigParser {
+export class BuildConfigParser extends AbstractConfigParser {
   private readonly configPath: string;
-  private readonly externalFunctions?: BuildFunction[];
-  private readonly externalFunctionGroups?: BuildFunctionGroup[];
-
   constructor(
-    private readonly ctx: BuildStepGlobalContext,
+    ctx: BuildStepGlobalContext,
     {
       configPath,
       externalFunctions,
@@ -54,16 +48,19 @@ export class BuildConfigParser {
       externalFunctionGroups?: BuildFunctionGroup[];
     }
   ) {
-    this.validateExternalFunctions(externalFunctions);
-    this.validateExternalFunctionGroups(externalFunctionGroups);
+    super(ctx, {
+      externalFunctions,
+      externalFunctionGroups,
+    });
 
     this.configPath = configPath;
-    this.externalFunctions = externalFunctions;
-    this.externalFunctionGroups = externalFunctionGroups;
   }
 
-  public async parseAsync(): Promise<BuildWorkflow> {
-    const config = await readAndValidateBuildConfigAsync(this.configPath, {
+  protected async parseConfigToBuildStepsAndBuildFunctionByIdMappingAsync(): Promise<{
+    buildSteps: BuildStep[];
+    buildFunctionById: BuildFunctionById;
+  }> {
+    const config = await readAndValidateBuildConfigFromPathAsync(this.configPath, {
       externalFunctionIds: this.getExternalFunctionFullIds(),
       externalFunctionGroupsIds: this.getExternalFunctionGroupFullIds(),
     });
@@ -81,9 +78,10 @@ export class BuildConfigParser {
         ...this.createBuildStepFromConfig(stepConfig, buildFunctions, buildFunctionGroups)
       );
     }
-    const workflow = new BuildWorkflow(this.ctx, { buildSteps, buildFunctions });
-    await new BuildWorkflowValidator(workflow).validateAsync();
-    return workflow;
+    return {
+      buildSteps,
+      buildFunctionById: buildFunctions,
+    };
   }
 
   private createBuildStepFromConfig(
@@ -362,54 +360,6 @@ export class BuildConfigParser {
       }
     }
     return result;
-  }
-
-  private validateExternalFunctions(externalFunctions?: BuildFunction[]): void {
-    if (externalFunctions === undefined) {
-      return;
-    }
-    const externalFunctionIds = externalFunctions.map((f) => f.getFullId());
-    const duplicatedExternalFunctionIds = duplicates(externalFunctionIds);
-    if (duplicatedExternalFunctionIds.length === 0) {
-      return;
-    }
-    throw new BuildConfigError(
-      `Provided external functions with duplicated IDs: ${duplicatedExternalFunctionIds
-        .map((id) => `"${id}"`)
-        .join(', ')}`
-    );
-  }
-
-  private validateExternalFunctionGroups(externalFunctionGroups?: BuildFunctionGroup[]): void {
-    if (externalFunctionGroups === undefined) {
-      return;
-    }
-    const externalFunctionGroupIds = externalFunctionGroups.map((f) => f.getFullId());
-    const duplicatedExternalFunctionGroupIds = duplicates(externalFunctionGroupIds);
-    if (duplicatedExternalFunctionGroupIds.length === 0) {
-      return;
-    }
-    throw new BuildConfigError(
-      `Provided external function groups with duplicated IDs: ${duplicatedExternalFunctionGroupIds
-        .map((id) => `"${id}"`)
-        .join(', ')}`
-    );
-  }
-
-  private getExternalFunctionFullIds(): string[] {
-    if (this.externalFunctions === undefined) {
-      return [];
-    }
-    const ids = this.externalFunctions.map((f) => f.getFullId());
-    return uniq(ids);
-  }
-
-  private getExternalFunctionGroupFullIds(): string[] {
-    if (this.externalFunctionGroups === undefined) {
-      return [];
-    }
-    const ids = this.externalFunctionGroups.map((f) => f.getFullId());
-    return uniq(ids);
   }
 }
 
