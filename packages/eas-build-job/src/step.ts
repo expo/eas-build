@@ -151,9 +151,9 @@ export function validateSteps(maybeSteps: unknown): Step[] {
 }
 
 export function isStepShellStep(step: Step): step is ShellStep {
-  return ShellStepZ.safeParse(step).success;
+  return step.run !== undefined;
 }
 
 export function isStepFunctionStep(step: Step): step is FunctionStep {
-  return FunctionStepZ.safeParse(step).success;
+  return step.uses !== undefined;
 }
