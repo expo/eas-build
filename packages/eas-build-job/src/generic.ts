@@ -20,7 +20,6 @@ export namespace Generic {
     cocoapods: z.string().optional(),
   });
 
-  export type Job = z.infer<typeof JobZ>;
   const CommonJobZ = z.object({
     projectArchive: ArchiveSourceSchemaZ,
     secrets: z.object({
@@ -36,16 +35,21 @@ export namespace Generic {
     loggerLevel: z.nativeEnum(LoggerLevel).optional(),
   });
 
-  export const JobZ = z.union([
-    CommonJobZ.extend({
-      customBuildConfig: z.object({
-        path: z.string(),
-      }),
-      steps: z.never().optional(),
+  const PathJobZ = CommonJobZ.extend({
+    customBuildConfig: z.object({
+      path: z.string(),
     }),
-    CommonJobZ.extend({
-      customBuildConfig: z.never().optional(),
-      steps: z.array(StepZ).min(1),
-    }),
-  ]);
+    steps: z.never().optional(),
+  });
+
+  const StepsJobZ = CommonJobZ.extend({
+    customBuildConfig: z.never().optional(),
+    steps: z.array(StepZ).min(1),
+  });
+
+  export type Job = z.infer<typeof JobZ>;
+  export const JobZ = z.union([PathJobZ, StepsJobZ]);
+
+  export type PartialJob = z.infer<typeof PartialJobZ>;
+  export const PartialJobZ = z.union([PathJobZ.partial(), StepsJobZ.partial()]);
 }
