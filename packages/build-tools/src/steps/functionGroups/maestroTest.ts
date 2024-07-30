@@ -24,6 +24,11 @@ export function createEasMaestroTestFunctionGroup(
         id: 'flow_path',
         required: true,
       }),
+      BuildStepInput.createProvider({
+        allowedValueTypeName: BuildStepInputValueTypeName.STRING,
+        id: 'app_path',
+        required: false,
+      }),
     ],
     createBuildStepsFromFunctionGroupCall: (globalCtx, { inputs }) => {
       const steps: BuildStep[] = [
@@ -34,6 +39,7 @@ export function createEasMaestroTestFunctionGroup(
         steps.push(
           createStartIosSimulatorBuildFunction().createBuildStepFromFunctionCall(globalCtx)
         );
+        const searchPath = inputs.app_path.value ?? 'ios/build/Build/Products/*simulator/*.app';
         steps.push(
           new BuildStep(globalCtx, {
             id: BuildStep.getNewId(),
@@ -44,7 +50,7 @@ export function createEasMaestroTestFunctionGroup(
               # SEARCH_PATH literally if there are no matching files.
               shopt -s nullglob
 
-              SEARCH_PATH="ios/build/Build/Products/*simulator/*.app"
+              SEARCH_PATH="${searchPath}"
               FILES_FOUND=false
 
               for APP_PATH in $SEARCH_PATH; do
@@ -52,7 +58,7 @@ export function createEasMaestroTestFunctionGroup(
                 echo "Installing \\"$APP_PATH\\""
                 xcrun simctl install booted "$APP_PATH"
               done
-              
+
               if ! $FILES_FOUND; then
                 echo "No files found matching \\"$SEARCH_PATH\\". Are you sure you've built a Simulator app?"
                 exit 1
@@ -64,6 +70,7 @@ export function createEasMaestroTestFunctionGroup(
         steps.push(
           createStartAndroidEmulatorBuildFunction().createBuildStepFromFunctionCall(globalCtx)
         );
+        const searchPath = inputs.app_path.value ?? 'android/app/build/outputs/**/*.apk';
         steps.push(
           new BuildStep(globalCtx, {
             id: BuildStep.getNewId(),
@@ -76,7 +83,7 @@ export function createEasMaestroTestFunctionGroup(
               # SEARCH_PATH literally if there are no matching files.
               shopt -s nullglob
 
-              SEARCH_PATH="android/app/build/outputs/**/*.apk"
+              SEARCH_PATH="${searchPath}"
               FILES_FOUND=false
 
               for APP_PATH in $SEARCH_PATH; do
@@ -84,7 +91,7 @@ export function createEasMaestroTestFunctionGroup(
                 echo "Installing \\"$APP_PATH\\""
                 adb install "$APP_PATH"
               done
-              
+
               if ! $FILES_FOUND; then
                 echo "No files found matching \\"$SEARCH_PATH\\". Are you sure you've built an Emulator app?"
                 exit 1
