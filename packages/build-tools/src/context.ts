@@ -178,14 +178,16 @@ export class BuildContext<TJob extends Job = Job> {
     {
       doNotMarkStart = false,
       doNotMarkEnd = false,
+      phaseDisplayName,
     }: {
       doNotMarkStart?: boolean;
       doNotMarkEnd?: boolean;
+      phaseDisplayName?: string;
     } = {}
   ): Promise<T> {
     let startTimestamp = Date.now();
     try {
-      this.setBuildPhase(buildPhase, { doNotMarkStart });
+      this.setBuildPhase(buildPhase, { doNotMarkStart, phaseDisplayName });
       startTimestamp = Date.now();
       const result = await phase();
       const durationMs = Date.now() - startTimestamp;
@@ -286,7 +288,13 @@ export class BuildContext<TJob extends Job = Job> {
     return path.join(baseDirectory, this.job.projectRootDirectory ?? '.');
   }
 
-  private setBuildPhase(buildPhase: BuildPhase, { doNotMarkStart = false } = {}): void {
+  private setBuildPhase(
+    buildPhase: BuildPhase,
+    {
+      doNotMarkStart = false,
+      phaseDisplayName,
+    }: { doNotMarkStart?: boolean; phaseDisplayName?: string } = {}
+  ): void {
     if (this.buildPhase) {
       if (this.buildPhase === buildPhase) {
         return;
@@ -299,7 +307,9 @@ export class BuildContext<TJob extends Job = Job> {
       }
     }
     this.buildPhase = buildPhase;
-    this.logger = this.defaultLogger.child({ phase: buildPhase });
+    this.logger = this.defaultLogger.child({
+      phase: phaseDisplayName ?? buildPhase,
+    });
     if (!doNotMarkStart) {
       this.logger.info({ marker: LogMarker.START_PHASE }, `Start phase: ${this.buildPhase}`);
     }
