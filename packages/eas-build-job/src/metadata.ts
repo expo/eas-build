@@ -177,9 +177,9 @@ export type Metadata = {
   customNodeVersion?: string;
 
   /**
-   * Environment variables that should be set for the build.
+   * EAS env vars environment chosen for the job
    */
-  environment?: 'production' | 'preview' |'development';
+  environment?: 'production' | 'preview' | 'development';
 };
 
 const FingerprintSourceSchema = Joi.object<FingerprintSource>({
