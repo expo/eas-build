@@ -179,7 +179,7 @@ export type Metadata = {
   /**
    * Environment variables that should be set for the build.
    */
-  environment?: string;
+  environment?: 'production' | 'preview' |'development';
 };
 
 const FingerprintSourceSchema = Joi.object<FingerprintSource>({
