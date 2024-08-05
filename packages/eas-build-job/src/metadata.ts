@@ -175,6 +175,11 @@ export type Metadata = {
    * Custom node version selected by user for the build. If user didn't select any node version and wants to use default it will be undefined.
    */
   customNodeVersion?: string;
+
+  /**
+   * EAS env vars environment chosen for the job
+   */
+  environment?: 'production' | 'preview' | 'development';
 };
 
 const FingerprintSourceSchema = Joi.object<FingerprintSource>({
@@ -233,6 +238,7 @@ export const MetadataSchema = Joi.object({
   simulator: Joi.boolean(),
   selectedImage: Joi.string(),
   customNodeVersion: Joi.string(),
+  environment: Joi.string().valid('production', 'preview', 'development'),
 });
 
 export function sanitizeMetadata(metadata: object): Metadata {
