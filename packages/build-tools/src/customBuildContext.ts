@@ -110,7 +110,11 @@ export class CustomBuildContext<TJob extends Job = Job> implements ExternalBuild
         'Updating job information is only allowed when build was triggered by a git-based integration.'
       );
     }
-    this.job = { ...job, triggeredBy: this.job.triggeredBy };
+    this.job = {
+      ...job,
+      triggeredBy: this.job.triggeredBy,
+      ...(this.job.platform ? { expoBuildUrl: this.job.expoBuildUrl } : null),
+    };
     this.metadata = metadata;
   }
 }
