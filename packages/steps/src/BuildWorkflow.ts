@@ -19,7 +19,18 @@ export class BuildWorkflow {
     let maybeError: Error | null = null;
     let hasAnyPreviousStepFailed = false;
     for (const step of this.buildSteps) {
-      if (step.shouldExecuteStep(hasAnyPreviousStepFailed)) {
+      let shouldExecuteStep = false;
+      try {
+        shouldExecuteStep = step.shouldExecuteStep(hasAnyPreviousStepFailed);
+      } catch (err: any) {
+        step.ctx.logger.error({ err });
+        step.ctx.logger.error(
+          `Runner failed to evaluate if it should execute step "${step.displayName}"`
+        );
+        maybeError = maybeError ?? err;
+        hasAnyPreviousStepFailed = true;
+      }
+      if (shouldExecuteStep) {
         try {
           await step.executeAsync();
         } catch (err: any) {
