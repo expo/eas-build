@@ -247,7 +247,11 @@ export class BuildContext<TJob extends Job = Job> {
         'Updating job information is only allowed when build was triggered by a git-based integration.'
       );
     }
-    this._job = { ...job, triggeredBy: this._job.triggeredBy };
+    this._job = {
+      ...job,
+      triggeredBy: this._job.triggeredBy,
+      ...(this._job.platform ? { expoBuildUrl: this._job.expoBuildUrl } : null),
+    };
     this._metadata = metadata;
   }
 
