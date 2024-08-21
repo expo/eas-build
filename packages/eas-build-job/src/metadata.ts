@@ -8,10 +8,11 @@ export enum FingerprintSourceType {
   'URL' = 'URL',
 }
 
-export type FingerprintSource =
+export type FingerprintSource = { isDebugFingerprint?: boolean } & (
   | { type: FingerprintSourceType.GCS; bucketKey: string }
   | { type: FingerprintSourceType.PATH; path: string }
-  | { type: FingerprintSourceType.URL; url: string };
+  | { type: FingerprintSourceType.URL; url: string }
+);
 
 export type Metadata = {
   /**
@@ -186,6 +187,7 @@ const FingerprintSourceSchema = Joi.object<FingerprintSource>({
   type: Joi.string()
     .valid(...Object.values(FingerprintSourceType))
     .required(),
+  isDebugFingerprint: Joi.boolean(),
 })
   .when(Joi.object({ type: FingerprintSourceType.GCS }).unknown(), {
     then: Joi.object({
