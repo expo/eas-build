@@ -75,9 +75,10 @@ describe('MetadataSchema', () => {
     const metadata: Metadata = {
       ...validMetadata,
       fingerprintSource: {
-        type: 'GCS' as any,
+        type: FingerprintSourceType.GCS,
         bucketKey:
           'development/8a9c5554-cfbe-4b4c-814c-c476a1047db9/fd6f8af4-7293-46bd-bec7-3fe639f4fd3e',
+        isDebugFingerprint: true,
       },
     };
     const { value, error } = MetadataSchema.validate(metadata, {
