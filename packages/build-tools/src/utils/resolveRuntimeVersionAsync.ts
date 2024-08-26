@@ -1,3 +1,5 @@
+import { EOL } from 'os';
+
 import { ExpoConfig } from '@expo/config';
 import { Updates } from '@expo/config-plugins';
 import { bunyan } from '@expo/logger';
@@ -50,7 +52,12 @@ export async function resolveRuntimeVersionAsync({
         env,
       }
     );
-    const runtimeVersionResult = JSON.parse(resolvedRuntimeVersionJSONResult);
+
+    const splitRuntimeVersionResult = resolvedRuntimeVersionJSONResult.split(EOL);
+
+    const runtimeVersionResult = JSON.parse(
+      splitRuntimeVersionResult[splitRuntimeVersionResult.length - 1]
+    );
 
     logger.debug('runtimeversion:resolve output:');
     logger.debug(resolvedRuntimeVersionJSONResult);
