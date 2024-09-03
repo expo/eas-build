@@ -23,10 +23,12 @@ export async function buildAndroidAsync(
     logger,
     logBuffer,
     uploadArtifact: async ({ artifact, logger }) => {
-      if (artifact.type !== ManagedArtifactType.APPLICATION_ARCHIVE) {
-        return null;
-      } else {
+      if (artifact.type === ManagedArtifactType.APPLICATION_ARCHIVE) {
         return await prepareArtifacts(artifact.paths, logger);
+      } else if (artifact.type === ManagedArtifactType.BUILD_ARTIFACTS) {
+        return await prepareArtifacts(artifact.paths, logger);
+      } else {
+        return null;
       }
     },
     env,
