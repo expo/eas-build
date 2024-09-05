@@ -57,7 +57,7 @@ describe('Publish Update job', () => {
     });
     const stepsResult = await stepsParser.parseAsync();
     const configParser = new BuildConfigParser(ctx, {
-      configPath: path.join(__dirname, './fixtures/update-publish-as-custom-config.yml'),
+      configPath: path.join(__dirname, './fixtures/publish-update-job-as-config.yml'),
       externalFunctions,
     });
     const configResult = await configParser.parseAsync();
