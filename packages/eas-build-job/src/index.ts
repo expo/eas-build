@@ -21,3 +21,4 @@ export * from './artifacts';
 export * from './context';
 export * from './generic';
 export * from './step';
+export * from './submission-config';
