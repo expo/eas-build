@@ -97,6 +97,7 @@ describe(BuildStep, () => {
     it('calls ctx.registerStep with the new object', () => {
       const mockCtx = mock<BuildStepGlobalContext>();
       when(mockCtx.baseLogger).thenReturn(createMockLogger());
+      when(mockCtx.stepsInternalBuildDirectory).thenReturn('temp-dir');
       const ctx = instance(mockCtx);
 
       const id = 'test1';

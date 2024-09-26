@@ -275,6 +275,11 @@ export class BuildStep extends BuildStepOutputAccessor {
         await this.collectAndUpdateEnvsAsync(this.envsDir);
         this.ctx.logger.debug('Finished collecting output parameters');
       } catch (error) {
+        // If the step succeeded, we expect the outputs to be collected successfully.
+        if (this.status === BuildStepStatus.SUCCESS) {
+          throw error;
+        }
+
         this.ctx.logger.debug({ error }, 'Failed to collect output parameters');
       }
 
