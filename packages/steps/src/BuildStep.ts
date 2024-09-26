@@ -16,8 +16,8 @@ import { BIN_PATH } from './utils/shell/bin.js';
 import { getDefaultShell, getShellCommandAndArgs } from './utils/shell/command.js';
 import {
   cleanUpStepTemporaryDirectoriesAsync,
-  createTemporaryEnvsDirectoryAsync,
-  createTemporaryOutputsDirectoryAsync,
+  getTemporaryEnvsDirPath,
+  getTemporaryOutputsDirPath,
   saveScriptToTemporaryFileAsync,
 } from './BuildTemporaryFiles.js';
 import { spawnAsync } from './utils/shell/spawn.js';
@@ -128,6 +128,8 @@ export class BuildStep extends BuildStepOutputAccessor {
   public readonly stepEnvOverrides: BuildStepEnv;
   public readonly ifCondition?: string;
   public status: BuildStepStatus;
+  private readonly outputsDir: string;
+  private readonly envsDir: string;
 
   private readonly internalId: string;
   private readonly inputById: BuildStepInputById;
@@ -224,6 +226,9 @@ export class BuildStep extends BuildStepOutputAccessor {
     this.ctx = ctx.stepCtx({ logger, relativeWorkingDirectory: maybeWorkingDirectory });
     this.stepEnvOverrides = env ?? {};
 
+    this.outputsDir = getTemporaryOutputsDirPath(ctx, this.id);
+    this.envsDir = getTemporaryEnvsDirPath(ctx, this.id);
+
     ctx.registerStep(this);
   }
 
@@ -235,10 +240,18 @@ export class BuildStep extends BuildStepOutputAccessor {
       );
       this.status = BuildStepStatus.IN_PROGRESS;
 
+      await fs.mkdir(this.outputsDir, { recursive: true });
+      this.ctx.logger.debug(`Created temporary directory for step outputs: ${this.outputsDir}`);
+
+      await fs.mkdir(this.envsDir, { recursive: true });
+      this.ctx.logger.debug(
+        `Created temporary directory for step environment variables: ${this.envsDir}`
+      );
+
       if (this.command !== undefined) {
         await this.executeCommandAsync();
       } else {
-        await this.exectuteFnAsync();
+        await this.executeFnAsync();
       }
 
       this.ctx.logger.info(
@@ -256,23 +269,17 @@ export class BuildStep extends BuildStepOutputAccessor {
       throw err;
     } finally {
       this.executed = true;
-    }
-  }
 
-  public hasOutputParameter(name: string): boolean {
-    return name in this.outputById;
-  }
+      try {
+        await this.collectAndValidateOutputsAsync(this.outputsDir);
+        await this.collectAndUpdateEnvsAsync(this.envsDir);
+        this.ctx.logger.debug('Finished collecting output parameters');
+      } catch (error) {
+        this.ctx.logger.debug({ error }, 'Failed to collect output parameters');
+      }
 
-  public getOutputValueByName(name: string): string | undefined {
-    if (!this.executed) {
-      throw new BuildStepRuntimeError(
-        `Failed getting output "${name}" from step "${this.displayName}". The step has not been executed yet.`
-      );
+      await cleanUpStepTemporaryDirectoriesAsync(this.ctx.global, this.id);
     }
-    if (!this.hasOutputParameter(name)) {
-      throw new BuildStepRuntimeError(`Step "${this.displayName}" does not have output "${name}".`);
-    }
-    return this.outputById[name].value;
   }
 
   public canBeRunOnRuntimePlatform(): boolean {
@@ -299,7 +306,7 @@ export class BuildStep extends BuildStepOutputAccessor {
         failure: () => hasAnyPreviousStepsFailed,
         always: () => true,
         never: () => false,
-        env: this.effectiveEnv,
+        env: this.getScriptEnv(),
         inputs:
           this.inputs?.reduce(
             (acc, input) => {
@@ -332,71 +339,39 @@ export class BuildStep extends BuildStepOutputAccessor {
   private async executeCommandAsync(): Promise<void> {
     assert(this.command, 'Command must be defined.');
 
-    try {
-      const command = this.interpolateInputsOutputsAndGlobalContextInTemplate(
-        this.command,
-        this.inputs
-      );
-      this.ctx.logger.debug(`Interpolated inputs in the command template`);
+    const command = this.interpolateInputsOutputsAndGlobalContextInTemplate(
+      this.command,
+      this.inputs
+    );
+    this.ctx.logger.debug(`Interpolated inputs in the command template`);
 
-      const outputsDir = await createTemporaryOutputsDirectoryAsync(this.ctx.global, this.id);
-      this.ctx.logger.debug(`Created temporary directory for step outputs: ${outputsDir}`);
+    const scriptPath = await saveScriptToTemporaryFileAsync(this.ctx.global, this.id, command);
+    this.ctx.logger.debug(`Saved script to ${scriptPath}`);
 
-      const envsDir = await createTemporaryEnvsDirectoryAsync(this.ctx.global, this.id);
-      this.ctx.logger.debug(
-        `Created temporary directory for step environment variables: ${outputsDir}`
-      );
-
-      const scriptPath = await saveScriptToTemporaryFileAsync(this.ctx.global, this.id, command);
-      this.ctx.logger.debug(`Saved script to ${scriptPath}`);
-
-      const { command: shellCommand, args } = getShellCommandAndArgs(this.shell, scriptPath);
-      this.ctx.logger.debug(
-        `Executing script: ${shellCommand}${args !== undefined ? ` ${args.join(' ')}` : ''}`
-      );
-      await spawnAsync(shellCommand, args ?? [], {
-        cwd: this.ctx.workingDirectory,
-        logger: this.ctx.logger,
-        env: this.getScriptEnv({ outputsDir, envsDir }),
-        // stdin is /dev/null, std{out,err} are piped into logger.
-        stdio: ['ignore', 'pipe', 'pipe'],
-      });
-      this.ctx.logger.debug(`Script completed successfully`);
-
-      await this.collectAndValidateOutputsAsync(outputsDir);
-      await this.collectAndUpdateEnvsAsync(envsDir);
-      this.ctx.logger.debug('Finished collecting output paramters');
-    } finally {
-      await cleanUpStepTemporaryDirectoriesAsync(this.ctx.global, this.id);
-    }
+    const { command: shellCommand, args } = getShellCommandAndArgs(this.shell, scriptPath);
+    this.ctx.logger.debug(
+      `Executing script: ${shellCommand}${args !== undefined ? ` ${args.join(' ')}` : ''}`
+    );
+    await spawnAsync(shellCommand, args ?? [], {
+      cwd: this.ctx.workingDirectory,
+      logger: this.ctx.logger,
+      env: this.getScriptEnv(),
+      // stdin is /dev/null, std{out,err} are piped into logger.
+      stdio: ['ignore', 'pipe', 'pipe'],
+    });
+    this.ctx.logger.debug(`Script completed successfully`);
   }
 
-  private async exectuteFnAsync(): Promise<void> {
+  private async executeFnAsync(): Promise<void> {
     assert(this.fn, 'Function (fn) must be defined');
 
-    try {
-      const outputsDir = await createTemporaryOutputsDirectoryAsync(this.ctx.global, this.id);
-      this.ctx.logger.debug(`Created temporary directory for step outputs: ${outputsDir}`);
+    await this.fn(this.ctx, {
+      inputs: this.inputById,
+      outputs: this.outputById,
+      env: this.getScriptEnv(),
+    });
 
-      const envsDir = await createTemporaryEnvsDirectoryAsync(this.ctx.global, this.id);
-      this.ctx.logger.debug(
-        `Created temporary directory for step environment variables: ${outputsDir}`
-      );
-
-      await this.fn(this.ctx, {
-        inputs: this.inputById,
-        outputs: this.outputById,
-        env: this.getScriptEnv({ outputsDir, envsDir }),
-      });
-
-      this.ctx.logger.debug(`Script completed successfully`);
-
-      await this.collectAndValidateOutputsAsync(outputsDir);
-      await this.collectAndUpdateEnvsAsync(envsDir);
-      this.ctx.logger.debug('Finished collecting output paramters');
-    } finally {
-      await cleanUpStepTemporaryDirectoriesAsync(this.ctx.global, this.id);
-    }
+    this.ctx.logger.debug(`Script completed successfully`);
   }
 
   private interpolateInputsOutputsAndGlobalContextInTemplate(
@@ -478,24 +453,14 @@ export class BuildStep extends BuildStepOutputAccessor {
     });
   }
 
-  private get effectiveEnv(): Record<string, unknown> {
-    return { ...this.ctx.global.env, ...this.stepEnvOverrides };
-  }
-
-  private getScriptEnv({
-    envsDir,
-    outputsDir,
-  }: {
-    envsDir: string;
-    outputsDir: string;
-  }): Record<string, string> {
-    const env = this.effectiveEnv;
-    const currentPath = env.PATH ?? process.env.PATH;
+  private getScriptEnv(): Record<string, string> {
+    const effectiveEnv = { ...this.ctx.global.env, ...this.stepEnvOverrides };
+    const currentPath = effectiveEnv.PATH ?? process.env.PATH;
     const newPath = currentPath ? `${BIN_PATH}:${currentPath}` : BIN_PATH;
     return {
-      ...env,
-      __EXPO_STEPS_OUTPUTS_DIR: outputsDir,
-      __EXPO_STEPS_ENVS_DIR: envsDir,
+      ...effectiveEnv,
+      __EXPO_STEPS_OUTPUTS_DIR: this.outputsDir,
+      __EXPO_STEPS_ENVS_DIR: this.envsDir,
       __EXPO_STEPS_WORKING_DIRECTORY: this.ctx.workingDirectory,
       PATH: newPath,
     };
