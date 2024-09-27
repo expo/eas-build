@@ -120,7 +120,7 @@ export class BuildStep extends BuildStepOutputAccessor {
   public readonly displayName: string;
   public readonly supportedRuntimePlatforms?: BuildRuntimePlatform[];
   public readonly inputs?: BuildStepInput[];
-  public readonly outputs?: BuildStepOutput[];
+  public readonly outputById: BuildStepOutputById;
   public readonly command?: string;
   public readonly fn?: BuildStepFunction;
   public readonly shell: string;
@@ -133,7 +133,6 @@ export class BuildStep extends BuildStepOutputAccessor {
 
   private readonly internalId: string;
   private readonly inputById: BuildStepInputById;
-  protected readonly outputById: BuildStepOutputById;
   protected executed = false;
 
   public static getNewId(userDefinedId?: string): string {
@@ -207,7 +206,6 @@ export class BuildStep extends BuildStepOutputAccessor {
     this.displayName = displayName;
     this.supportedRuntimePlatforms = maybeSupportedRuntimePlatforms;
     this.inputs = inputs;
-    this.outputs = outputs;
     this.inputById = makeBuildStepInputByIdMap(inputs);
     this.outputById = outputById;
     this.fn = fn;
@@ -426,7 +424,7 @@ export class BuildStep extends BuildStepOutputAccessor {
     }
 
     const nonSetRequiredOutputIds: string[] = [];
-    for (const output of this.outputs ?? []) {
+    for (const output of Object.values(this.outputById)) {
       try {
         const value = output.value;
         this.ctx.logger.debug(`Output parameter "${output.id}" is set to "${value}"`);
