@@ -410,6 +410,16 @@ export class BuildStep extends BuildStepOutputAccessor {
     for (const outputId of files) {
       if (!(outputId in this.outputById)) {
         nonDefinedOutputIds.push(outputId);
+        const newOutput = new BuildStepOutput(this.ctx.global, {
+          id: outputId,
+          stepDisplayName: this.displayName,
+          required: false,
+        });
+        const file = path.join(outputsDir, outputId);
+        const rawContents = await fs.readFile(file, 'utf-8');
+        const value = rawContents.trim();
+        newOutput.set(value);
+        this.outputById[outputId] = newOutput;
       } else {
         const file = path.join(outputsDir, outputId);
         const rawContents = await fs.readFile(file, 'utf-8');
