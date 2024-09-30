@@ -278,7 +278,7 @@ export class BuildStep extends BuildStepOutputAccessor {
           throw error;
         }
 
-        this.ctx.logger.debug({ error }, 'Failed to collect output parameters');
+        this.ctx.logger.debug({ err: error }, 'Failed to collect output parameters');
       }
 
       await cleanUpStepTemporaryDirectoriesAsync(this.ctx.global, this.id);
