@@ -268,11 +268,11 @@ describe(BuildConfigParser, () => {
       expect(step1.command).toMatchSnapshot();
       expect(step1.ctx.workingDirectory).toBe(ctx.defaultWorkingDirectory);
       expect(step1.shell).toBe(getDefaultShell());
-      expect(step1.outputs).toBeDefined();
-      expect(step1.outputs?.[0].id).toBe('first_name');
-      expect(step1.outputs?.[0].required).toBe(true);
-      expect(step1.outputs?.[1].id).toBe('last_name');
-      expect(step1.outputs?.[1].required).toBe(true);
+      const { first_name, last_name } = step1.outputById;
+      expect(first_name.id).toBe('first_name');
+      expect(first_name.required).toBe(true);
+      expect(last_name.id).toBe('last_name');
+      expect(last_name.required).toBe(true);
 
       // - run:
       //     outputs:
@@ -292,15 +292,15 @@ describe(BuildConfigParser, () => {
       expect(step2.command).toMatchSnapshot();
       expect(step2.ctx.workingDirectory).toBe(ctx.defaultWorkingDirectory);
       expect(step2.shell).toBe(getDefaultShell());
-      expect(step2.outputs).toBeDefined();
-      expect(step2.outputs?.[0].id).toBe('first_name');
-      expect(step2.outputs?.[0].required).toBe(true);
-      expect(step2.outputs?.[1].id).toBe('middle_name');
-      expect(step2.outputs?.[1].required).toBe(false);
-      expect(step2.outputs?.[2].id).toBe('last_name');
-      expect(step2.outputs?.[2].required).toBe(true);
-      expect(step2.outputs?.[3].id).toBe('nickname');
-      expect(step2.outputs?.[3].required).toBe(true);
+      const step2Outputs = step2.outputById;
+      expect(step2Outputs.first_name.id).toBe('first_name');
+      expect(step2Outputs.first_name.required).toBe(true);
+      expect(step2Outputs.middle_name.id).toBe('middle_name');
+      expect(step2Outputs.middle_name.required).toBe(false);
+      expect(step2Outputs.last_name.id).toBe('last_name');
+      expect(step2Outputs.last_name.required).toBe(true);
+      expect(step2Outputs.nickname.id).toBe('nickname');
+      expect(step2Outputs.nickname.required).toBe(true);
     });
 
     it('parses functions and function calls', async () => {
@@ -390,8 +390,9 @@ describe(BuildConfigParser, () => {
       expect(step4.command).toBe('set-output value 6');
       expect(step4.ctx.workingDirectory).toBe(ctx.defaultWorkingDirectory);
       expect(step4.shell).toBe(getDefaultShell());
-      expect(step4.outputs?.[0].id).toBe('value');
-      expect(step4.outputs?.[0].required).toBe(true);
+      const { value } = step4.outputById;
+      expect(value.id).toBe('value');
+      expect(value.required).toBe(true);
       expect(step4.stepEnvOverrides).toMatchObject({});
 
       // - print:

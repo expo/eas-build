@@ -78,8 +78,8 @@ function assertStepsAreMatching(step1: BuildStep, step2: BuildStep): void {
     expect(step1.displayName).toMatch(UUID_REGEX);
     expect(step2.displayName).toMatch(UUID_REGEX);
   }
-  expect(step1.inputs).toEqual(step2.inputs);
-  expect(step1.outputs).toEqual(step2.outputs);
+  expect(step1.inputs).toStrictEqual(step2.inputs);
+  expect(step1.outputById).toStrictEqual(step2.outputById);
   expect(step1.command?.trim()).toEqual(step2.command?.trim());
   expect(step1.fn).toEqual(step2.fn);
 }

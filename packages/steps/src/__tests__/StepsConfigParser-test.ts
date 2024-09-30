@@ -280,7 +280,7 @@ describe(StepsConfigParser, () => {
       expect(step1.ctx.workingDirectory).toBe(ctx.defaultWorkingDirectory);
       expect(step1.stepEnvOverrides).toEqual({});
       expect(step1.inputs).toBeUndefined();
-      expect(step1.outputs).toBeUndefined();
+      expect(step1.outputById).toStrictEqual({});
       expect(step1.ifCondition).toBeUndefined();
 
       const step2 = result.buildSteps[1];
@@ -293,7 +293,7 @@ describe(StepsConfigParser, () => {
         a: 'b',
       });
       expect(step2.inputs).toBeUndefined();
-      expect(step2.outputs).toBeUndefined();
+      expect(step2.outputById).toStrictEqual({});
       expect(step2.ifCondition).toBeUndefined();
 
       const step3 = result.buildSteps[2];
@@ -307,10 +307,14 @@ describe(StepsConfigParser, () => {
         KEY1: 'value1',
       });
       expect(step3.inputs).toBeUndefined();
-      expect(step3.outputs).toBeDefined();
-      expect(step3.outputs).toHaveLength(3);
-      assert(step3.outputs);
-      const [output1, output2, output3] = step3.outputs;
+      expect(step3.outputById).toBeDefined();
+      expect(Object.keys(step3.outputById)).toHaveLength(3);
+      assert(step3.outputById);
+      const {
+        my_output: output1,
+        my_optional_output: output2,
+        my_optional_output_without_required: output3,
+      } = step3.outputById;
       expect(output1.id).toBe('my_output');
       expect(output1.required).toBe(true);
       expect(output2.id).toBe('my_optional_output');
@@ -364,7 +368,7 @@ describe(StepsConfigParser, () => {
       expect(input4.defaultValue).toBeUndefined();
       expect(input4.rawValue).toBe('${ step3.my_output }');
       expect(input4.required).toBe(true);
-      expect(step4.outputs).toBeUndefined();
+      expect(step4.outputById).toStrictEqual({});
       expect(step4.ifCondition).toBe('${ ctx.job.platform } == "android"');
     });
   });

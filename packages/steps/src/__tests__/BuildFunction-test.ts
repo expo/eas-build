@@ -201,8 +201,8 @@ describe(BuildFunction, () => {
       expect(step.inputs?.[0].id).toBe('input1');
       expect(step.inputs?.[1].id).toBe('input2');
       expect(step.inputs?.[2].id).toBe('input3');
-      expect(step.outputs?.[0].id).toBe('output1');
-      expect(step.outputs?.[1].id).toBe('output2');
+      expect(step.outputById.output1).toBeDefined();
+      expect(step.outputById.output2).toBeDefined();
     });
     it('passes values to build inputs', () => {
       const ctx = createGlobalContextMock();
