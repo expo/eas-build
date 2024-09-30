@@ -3,7 +3,7 @@ import os from 'os';
 
 import {
   cleanUpStepTemporaryDirectoriesAsync,
-  createTemporaryOutputsDirectoryAsync,
+  getTemporaryOutputsDirPath,
   saveScriptToTemporaryFileAsync,
 } from '../BuildTemporaryFiles.js';
 
@@ -23,24 +23,12 @@ describe(saveScriptToTemporaryFileAsync, () => {
   });
 });
 
-describe(createTemporaryOutputsDirectoryAsync, () => {
-  it('creates a temporary directory for output values', async () => {
-    const ctx = createGlobalContextMock();
-    const outputsPath = await createTemporaryOutputsDirectoryAsync(ctx, 'foo');
-    await expect(fs.stat(outputsPath)).resolves.not.toThrow();
-  });
-  it('creates a temporary directory inside os.tmpdir()', async () => {
-    const ctx = createGlobalContextMock();
-    const outputsPath = await createTemporaryOutputsDirectoryAsync(ctx, 'foo');
-    expect(outputsPath.startsWith(os.tmpdir())).toBe(true);
-  });
-});
-
 describe(cleanUpStepTemporaryDirectoriesAsync, () => {
   it('removes the step temporary directories', async () => {
     const ctx = createGlobalContextMock();
     const scriptPath = await saveScriptToTemporaryFileAsync(ctx, 'foo', 'echo 123');
-    const outputsPath = await createTemporaryOutputsDirectoryAsync(ctx, 'foo');
+    const outputsPath = getTemporaryOutputsDirPath(ctx, 'foo');
+    await fs.mkdir(outputsPath, { recursive: true });
     await expect(fs.stat(scriptPath)).resolves.toBeTruthy();
     await expect(fs.stat(outputsPath)).resolves.toBeTruthy();
     await cleanUpStepTemporaryDirectoriesAsync(ctx, 'foo');

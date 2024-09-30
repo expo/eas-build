@@ -2,7 +2,14 @@ import fs from 'fs';
 import path from 'path';
 
 import { BuildPhase, Generic } from '@expo/eas-build-job';
-import { BuildConfigParser, BuildStepGlobalContext, errors, StepsConfigParser } from '@expo/steps';
+import {
+  BuildConfigParser,
+  BuildStepGlobalContext,
+  BuildWorkflow,
+  errors,
+  StepsConfigParser,
+} from '@expo/steps';
+import { Result, asyncResult } from '@expo/results';
 
 import { BuildContext } from './context';
 import { prepareProjectSourcesAsync } from './common/projectSources';
@@ -10,7 +17,9 @@ import { getEasFunctions } from './steps/easFunctions';
 import { CustomBuildContext } from './customBuildContext';
 import { getEasFunctionGroups } from './steps/easFunctionGroups';
 
-export async function runGenericJobAsync(ctx: BuildContext<Generic.Job>): Promise<void> {
+export async function runGenericJobAsync(
+  ctx: BuildContext<Generic.Job>
+): Promise<{ runResult: Result<void>; buildWorkflow: BuildWorkflow }> {
   const customBuildCtx = new CustomBuildContext(ctx);
 
   await prepareProjectSourcesAsync(ctx, customBuildCtx.projectSourceDirectory);
@@ -48,7 +57,9 @@ export async function runGenericJobAsync(ctx: BuildContext<Generic.Job>): Promis
     }
   });
 
-  await workflow.executeAsync();
+  const runResult = await asyncResult(workflow.executeAsync());
+
+  return { runResult, buildWorkflow: workflow };
 }
 
 export async function addEasWorkflows(customBuildCtx: CustomBuildContext): Promise<void> {

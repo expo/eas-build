@@ -40,11 +40,13 @@ export namespace Generic {
       path: z.string(),
     }),
     steps: z.never().optional(),
+    outputs: z.never().optional(),
   });
 
   const StepsJobZ = CommonJobZ.extend({
     customBuildConfig: z.never().optional(),
     steps: z.array(StepZ).min(1),
+    outputs: z.record(z.string()).optional(),
   });
 
   export type Job = z.infer<typeof JobZ>;

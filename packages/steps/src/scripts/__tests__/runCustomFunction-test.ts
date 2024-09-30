@@ -10,8 +10,8 @@ import { BuildStepOutput } from '../../BuildStepOutput.js';
 import { createStepContextMock } from '../../__tests__/utils/context.js';
 import {
   cleanUpStepTemporaryDirectoriesAsync,
-  createTemporaryEnvsDirectoryAsync,
-  createTemporaryOutputsDirectoryAsync,
+  getTemporaryEnvsDirPath,
+  getTemporaryOutputsDirPath,
 } from '../../BuildTemporaryFiles.js';
 import { BIN_PATH } from '../../utils/shell/bin.js';
 import { createCustomFunctionCall } from '../../utils/customFunction.js';
@@ -67,8 +67,11 @@ describe('runCustomFunction', () => {
     inputs.obj.set({ foo: 'bar' });
 
     try {
-      const outputsDir = await createTemporaryOutputsDirectoryAsync(ctx.global, 'test');
-      const envsDir = await createTemporaryEnvsDirectoryAsync(ctx.global, 'test');
+      const outputsDir = getTemporaryOutputsDirPath(ctx.global, 'test');
+      const envsDir = getTemporaryEnvsDirPath(ctx.global, 'test');
+
+      await fs.mkdir(outputsDir, { recursive: true });
+      await fs.mkdir(envsDir, { recursive: true });
 
       const currentPath = process.env.PATH;
       const newPath = currentPath ? `${BIN_PATH}:${currentPath}` : BIN_PATH;

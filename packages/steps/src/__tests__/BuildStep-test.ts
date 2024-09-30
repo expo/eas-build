@@ -97,6 +97,7 @@ describe(BuildStep, () => {
     it('calls ctx.registerStep with the new object', () => {
       const mockCtx = mock<BuildStepGlobalContext>();
       when(mockCtx.baseLogger).thenReturn(createMockLogger());
+      when(mockCtx.stepsInternalBuildDirectory).thenReturn('temp-dir');
       const ctx = instance(mockCtx);
 
       const id = 'test1';
@@ -397,7 +398,7 @@ describe(BuildStep, () => {
           command,
         });
         await step.executeAsync();
-        const abc = nullthrows(step.outputs).find((output) => output.id === 'abc');
+        const abc = nullthrows(step.outputById.abc);
         expect(abc?.value).toBe('123');
       });
 
@@ -453,7 +454,7 @@ describe(BuildStep, () => {
           fn,
         });
         await step.executeAsync();
-        const abc = nullthrows(step.outputs).find((output) => output.id === 'abc');
+        const abc = nullthrows(step.outputById.abc);
         expect(abc?.value).toBe('123');
       });
 
@@ -475,7 +476,7 @@ describe(BuildStep, () => {
           command,
         });
         await step.executeAsync();
-        const abc = nullthrows(step.outputs).find((output) => output.id === 'abc');
+        const abc = nullthrows(step.outputById.abc);
         expect(abc?.value).toBe('d o m i n i k');
       });
 
