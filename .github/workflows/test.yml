@@ -13,9 +13,9 @@ jobs:
         node: ['18', '20', '22']
     name: Test with Node ${{ matrix.node }} on Linux
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v4
       - name: Setup node
-        uses: actions/setup-node@v1
+        uses: actions/setup-node@v4
         with:
           node-version: ${{ matrix.node }}
       - name: Setup ncc
