@@ -96,6 +96,7 @@ export class CustomBuildContext<TJob extends Job = Job> implements ExternalBuild
   public staticContext(): Omit<StaticJobInterpolationContext, 'steps'> {
     return {
       ...this.job.workflowInterpolationContext,
+      expoApiServerURL: this.env.__API_SERVER_URL,
       job: this.job,
       metadata: this.metadata ?? null,
       env: this.env,
