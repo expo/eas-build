@@ -6,4 +6,5 @@ export type BuildStaticContext = {
   job: Job;
   metadata: Metadata | null;
   env: Env;
+  expoApiServerURL: string;
 };

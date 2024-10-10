@@ -94,6 +94,7 @@ export class CustomBuildContext<TJob extends Job = Job> implements ExternalBuild
 
   public staticContext(): BuildStaticContext {
     return {
+      expoApiServerURL: this.env.__API_SERVER_URL,
       job: this.job,
       metadata: this.metadata ?? null,
       env: this.env,
