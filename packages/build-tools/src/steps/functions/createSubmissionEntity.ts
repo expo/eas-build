@@ -62,6 +62,12 @@ export function createSubmissionEntityFunction(): BuildFunction {
         return;
       }
 
+      const workflowJobId = stepsCtx.global.staticContext.env.__WORKFLOW_JOB_ID;
+      if (!workflowJobId) {
+        stepsCtx.logger.error('Failed to create submission entity: no workflow job ID found');
+        return;
+      }
+
       // This is supposed to provide fallback for `''` -> `undefined`.
       // We _not_ want to use nullish coalescing.
       /* eslint-disable @typescript-eslint/prefer-nullish-coalescing */
@@ -84,6 +90,7 @@ export function createSubmissionEntityFunction(): BuildFunction {
               'Content-Type': 'application/json',
             },
             body: JSON.stringify({
+              workflowJobId,
               turtleBuildId: buildId,
               // We can pass mixed object here because the configs are disjoint.
               config: {
