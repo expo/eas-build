@@ -33,6 +33,7 @@ export class CliContextProvider implements ExternalBuildContextProvider {
       job: {} as Job,
       metadata: {} as Metadata,
       env: this.env as Env,
+      expoApiServerURL: 'http://api.expo.test',
     };
   }
   public updateEnv(env: BuildStepEnv): void {
