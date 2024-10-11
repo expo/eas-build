@@ -165,3 +165,38 @@ export interface BuildPhaseStats {
   result: BuildPhaseResult;
   durationMs: number;
 }
+
+export const StaticWorkflowInterpolationContextZ = z.object({
+  needs: z.record(
+    z.string(),
+    z.object({
+      status: z.string(),
+      outputs: z.record(z.string(), z.string().nullable()),
+    })
+  ),
+  github: z
+    .object({
+      event_name: z.enum(['push', 'pull_request', 'workflow_dispatch']),
+      sha: z.string(),
+      ref: z.string(),
+    })
+    // We need to .optional() to support jobs that are not triggered by a GitHub event.
+    .optional(),
+  env: z.record(z.string()),
+});
+
+export type StaticWorkflowInterpolationContext = z.infer<
+  typeof StaticWorkflowInterpolationContextZ
+>;
+
+export type DynamicInterpolationContext = {
+  success: () => boolean;
+  failure: () => boolean;
+  always: () => boolean;
+  never: () => boolean;
+  fromJSON: (value: string) => unknown;
+  toJSON: (value: unknown) => string;
+};
+
+export type WorkflowInterpolationContext = StaticWorkflowInterpolationContext &
+  DynamicInterpolationContext;

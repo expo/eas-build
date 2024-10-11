@@ -12,6 +12,7 @@ export {
   Workflow,
   Platform,
   Cache,
+  WorkflowInterpolationContext,
 } from './common';
 export { Metadata, sanitizeMetadata, FingerprintSource, FingerprintSourceType } from './metadata';
 export * from './job';

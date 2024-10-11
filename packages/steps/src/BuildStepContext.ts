@@ -1,7 +1,7 @@
 import os from 'os';
 import path from 'path';
 
-import { BuildStaticContext } from '@expo/eas-build-job';
+import { StaticJobInterpolationContext } from '@expo/eas-build-job';
 import { bunyan } from '@expo/logger';
 import { v4 as uuidv4 } from 'uuid';
 
@@ -25,7 +25,8 @@ interface SerializedExternalBuildContextProvider {
   defaultWorkingDirectory: string;
   buildLogsDirectory: string;
   runtimePlatform: BuildRuntimePlatform;
-  staticContext: BuildStaticContext;
+  // We omit steps, because they should be calculated live based on global context.
+  staticContext: Omit<StaticJobInterpolationContext, 'steps'>;
   env: BuildStepEnv;
 }
 
@@ -37,7 +38,7 @@ export interface ExternalBuildContextProvider {
   readonly runtimePlatform: BuildRuntimePlatform;
   readonly logger: bunyan;
 
-  readonly staticContext: () => BuildStaticContext;
+  readonly staticContext: () => Omit<StaticJobInterpolationContext, 'steps'>;
 
   readonly env: BuildStepEnv;
   updateEnv(env: BuildStepEnv): void;
@@ -88,8 +89,22 @@ export class BuildStepGlobalContext {
     return this.provider.env;
   }
 
-  public get staticContext(): BuildStaticContext {
-    return this.provider.staticContext();
+  public get staticContext(): StaticJobInterpolationContext {
+    return {
+      ...this.provider.staticContext(),
+      steps: Object.fromEntries(
+        Object.values(this.stepById).map((step) => [
+          step.id,
+          {
+            outputs: Object.fromEntries(
+              step.outputs.map((output) => {
+                return [output.id, output.rawValue];
+              })
+            ),
+          },
+        ])
+      ),
+    };
   }
 
   public updateEnv(updatedEnv: BuildStepEnv): void {
@@ -98,10 +113,6 @@ export class BuildStepGlobalContext {
 
   public registerStep(step: BuildStep): void {
     this.stepById[step.id] = step;
-  }
-
-  public get steps(): BuildStepOutputAccessor[] {
-    return Object.values(this.stepById);
   }
 
   public getStepOutputValue(path: string): string | undefined {

@@ -1,6 +1,6 @@
 import os from 'os';
 
-import { BuildStaticContext } from '@expo/eas-build-job';
+import { JobInterpolationContext } from '@expo/eas-build-job';
 import { instance, mock, when } from 'ts-mockito';
 
 import { BuildStep } from '../BuildStep.js';
@@ -23,7 +23,7 @@ describe(BuildStepGlobalContext, () => {
           '/another/non/existent/path',
           '/working/dir/path',
           '/non/existent/path',
-          {} as unknown as BuildStaticContext
+          {} as unknown as JobInterpolationContext
         ),
         false
       );
@@ -42,7 +42,7 @@ describe(BuildStepGlobalContext, () => {
           projectTargetDirectory,
           workingDirectory,
           '/non/existent/path',
-          {} as unknown as BuildStaticContext
+          {} as unknown as JobInterpolationContext
         ),
         false
       );
@@ -60,7 +60,7 @@ describe(BuildStepGlobalContext, () => {
           projectTargetDirectory,
           workingDirectory,
           '/non/existent/path',
-          {} as unknown as BuildStaticContext
+          {} as unknown as JobInterpolationContext
         ),
         false
       );
@@ -82,7 +82,7 @@ describe(BuildStepGlobalContext, () => {
         projectSourceDirectory: '/a/b/c',
         projectTargetDirectory: '/d/e/f',
         relativeWorkingDirectory: 'i',
-        staticContextContent: { a: 1 } as unknown as BuildStaticContext,
+        staticContextContent: { a: 1 } as unknown as JobInterpolationContext,
       });
       expect(ctx.serialize()).toEqual(
         expect.objectContaining({
@@ -114,7 +114,7 @@ describe(BuildStepGlobalContext, () => {
             defaultWorkingDirectory: '/g/h/i',
             buildLogsDirectory: '/j/k/l',
             runtimePlatform: BuildRuntimePlatform.DARWIN,
-            staticContext: { a: 1 } as unknown as BuildStaticContext,
+            staticContext: { a: 1 } as unknown as JobInterpolationContext,
             env: {},
           },
           skipCleanup: true,

@@ -1,4 +1,4 @@
-import { BuildStaticContext } from '@expo/eas-build-job';
+import { JobInterpolationContext } from '@expo/eas-build-job';
 
 import { BuildStepRuntimeError } from '../errors.js';
 import { BuildStep } from '../BuildStep.js';
@@ -126,7 +126,7 @@ describe(BuildStepInput, () => {
         foo: {
           bar: 'Line 1\nLine 2\n\nLine 3',
         },
-      } as unknown as BuildStaticContext,
+      } as unknown as JobInterpolationContext,
     });
     const i = new BuildStepInput(ctx, {
       id: 'foo',
@@ -144,7 +144,7 @@ describe(BuildStepInput, () => {
         foo: {
           bar: 'Line 1\\nLine 2\\n\\nLine 3',
         },
-      } as unknown as BuildStaticContext,
+      } as unknown as JobInterpolationContext,
     });
     const i = new BuildStepInput(ctx, {
       id: 'foo',
@@ -169,7 +169,7 @@ describe(BuildStepInput, () => {
             },
           ],
         },
-      } as unknown as BuildStaticContext,
+      } as unknown as JobInterpolationContext,
     });
     const i = new BuildStepInput<BuildStepInputValueTypeName>(ctx, {
       id: 'foo',
@@ -196,7 +196,7 @@ describe(BuildStepInput, () => {
             },
           ],
         },
-      } as unknown as BuildStaticContext,
+      } as unknown as JobInterpolationContext,
     });
     const i = new BuildStepInput<BuildStepInputValueTypeName>(ctx, {
       id: 'foo',
@@ -223,7 +223,7 @@ describe(BuildStepInput, () => {
             },
           ],
         },
-      } as unknown as BuildStaticContext,
+      } as unknown as JobInterpolationContext,
     });
     const i = new BuildStepInput<BuildStepInputValueTypeName>(ctx, {
       id: 'foo',
@@ -250,7 +250,7 @@ describe(BuildStepInput, () => {
             },
           ],
         },
-      } as unknown as BuildStaticContext,
+      } as unknown as JobInterpolationContext,
     });
     const i = new BuildStepInput<BuildStepInputValueTypeName>(ctx, {
       id: 'foo',
@@ -279,7 +279,7 @@ describe(BuildStepInput, () => {
             },
           ],
         },
-      } as unknown as BuildStaticContext,
+      } as unknown as JobInterpolationContext,
     });
     const i = new BuildStepInput<BuildStepInputValueTypeName>(ctx, {
       id: 'foo',
@@ -308,7 +308,7 @@ describe(BuildStepInput, () => {
             },
           ],
         },
-      } as unknown as BuildStaticContext,
+      } as unknown as JobInterpolationContext,
     });
     const i = new BuildStepInput<BuildStepInputValueTypeName>(ctx, {
       id: 'foo',
@@ -329,7 +329,7 @@ describe(BuildStepInput, () => {
         context_val_2: {
           in_val_1: 'in_val_1',
         },
-      } as unknown as BuildStaticContext,
+      } as unknown as JobInterpolationContext,
     });
     const i = new BuildStepInput(ctx, {
       id: 'foo',
@@ -361,7 +361,7 @@ describe(BuildStepInput, () => {
     const ctx = createGlobalContextMock({
       staticContextContent: {
         context_val_1: 'Line 1\nLine 2\n\nLine 3',
-      } as unknown as BuildStaticContext,
+      } as unknown as JobInterpolationContext,
     });
     const i = new BuildStepInput(ctx, {
       id: 'foo',

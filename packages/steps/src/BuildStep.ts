@@ -3,6 +3,7 @@ import fs from 'fs/promises';
 import path from 'path';
 
 import { v4 as uuidv4 } from 'uuid';
+import { JobInterpolationContext } from '@expo/eas-build-job';
 
 import { BuildStepContext, BuildStepGlobalContext } from './BuildStepContext.js';
 import { BuildStepInput, BuildStepInputById, makeBuildStepInputByIdMap } from './BuildStepInput.js';
@@ -26,6 +27,7 @@ import { BuildStepRuntimeError } from './errors.js';
 import { BuildStepEnv } from './BuildStepEnv.js';
 import { BuildRuntimePlatform } from './BuildRuntimePlatform.js';
 import { jsepEval } from './utils/jsepEval.js';
+import { interpolateJobContext } from './interpolation.js';
 
 export enum BuildStepStatus {
   NEW = 'new',
@@ -68,6 +70,10 @@ export class BuildStepOutputAccessor {
     protected readonly executed: boolean,
     protected readonly outputById: BuildStepOutputById
   ) {}
+
+  public get outputs(): BuildStepOutput[] {
+    return Object.values(this.outputById);
+  }
 
   public getOutputValueByName(name: string): string | undefined {
     if (!this.executed) {
@@ -341,11 +347,30 @@ export class BuildStep extends BuildStepOutputAccessor {
     );
   }
 
+  private getInterpolationContext(): JobInterpolationContext {
+    const hasAnyPreviousStepFailed = this.ctx.global.hasAnyPreviousStepFailed;
+
+    return {
+      ...this.ctx.global.staticContext,
+      always: () => true,
+      never: () => false,
+      success: () => !hasAnyPreviousStepFailed,
+      failure: () => hasAnyPreviousStepFailed,
+      env: this.getScriptEnv(),
+      fromJSON: (json: string) => JSON.parse(json),
+      toJSON: (value: unknown) => JSON.stringify(value),
+    };
+  }
   private async executeCommandAsync(): Promise<void> {
     assert(this.command, 'Command must be defined.');
 
+    const interpolatedCommand = interpolateJobContext({
+      target: this.command,
+      context: this.getInterpolationContext(),
+    });
+
     const command = this.interpolateInputsOutputsAndGlobalContextInTemplate(
-      this.command,
+      `${interpolatedCommand}`,
       this.inputs
     );
     this.ctx.logger.debug(`Interpolated inputs in the command template`);

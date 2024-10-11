@@ -14,6 +14,7 @@ import {
   EnvironmentSecret,
   BuildTrigger,
   BuildMode,
+  StaticWorkflowInterpolationContext,
 } from './common';
 
 export interface Keystore {
@@ -110,6 +111,8 @@ export interface Job {
     submitProfile?: string;
   };
   loggerLevel?: LoggerLevel;
+
+  workflowInterpolationContext?: StaticWorkflowInterpolationContext;
 }
 
 const SecretsSchema = Joi.object({
@@ -175,4 +178,6 @@ export const JobSchema = Joi.object({
     submitProfile: Joi.string(),
   }),
   loggerLevel: Joi.string().valid(...Object.values(LoggerLevel)),
+
+  workflowInterpolationContext: Joi.any(),
 });
