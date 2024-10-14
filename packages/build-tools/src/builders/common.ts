@@ -31,7 +31,10 @@ export async function runBuilderWithHooksAsync<T extends BuildJob>(
         });
       });
 
-      if (ctx.job.platform === Platform.IOS) {
+      if (
+        ctx.job.platform === Platform.IOS &&
+        (!buildSuccess || (buildSuccess && ctx.shouldUploadXcodeBuildLogsOnSuccess))
+      ) {
         await findAndUploadXcodeBuildLogsAsync(ctx as BuildContext<Ios.Job>, {
           logger: ctx.logger,
         });
