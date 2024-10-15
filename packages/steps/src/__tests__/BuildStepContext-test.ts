@@ -107,7 +107,21 @@ describe(BuildStepGlobalContext, () => {
       const ctx = BuildStepGlobalContext.deserialize(
         {
           stepsInternalBuildDirectory: '/m/n/o',
-          stepById: {},
+          stepById: {
+            build_ios: {
+              id: 'build_ios',
+              executed: true,
+              outputById: {
+                build_id: {
+                  id: 'build_id',
+                  stepDisplayName: 'build_ios',
+                  required: true,
+                  value: 'build_id_value',
+                },
+              },
+              displayName: 'build_ios',
+            },
+          },
           provider: {
             projectSourceDirectory: '/a/b/c',
             projectTargetDirectory: '/d/e/f',
@@ -129,7 +143,16 @@ describe(BuildStepGlobalContext, () => {
       expect(ctx.projectSourceDirectory).toBe('/a/b/c');
       expect(ctx.projectTargetDirectory).toBe('/d/e/f');
       expect(ctx.buildLogsDirectory).toBe('/j/k/l');
-      expect(ctx.staticContext).toEqual({ a: 1 });
+      expect(ctx.staticContext).toEqual({
+        a: 1,
+        steps: {
+          build_ios: {
+            outputs: {
+              build_id: 'build_id_value',
+            },
+          },
+        },
+      });
       expect(ctx.env).toEqual({});
       expect(ctx.skipCleanup).toBe(true);
     });
