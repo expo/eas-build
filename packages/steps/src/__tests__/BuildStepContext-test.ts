@@ -1,6 +1,6 @@
 import os from 'os';
 
-import { BuildStaticContext } from '@expo/eas-build-job';
+import { JobInterpolationContext } from '@expo/eas-build-job';
 import { instance, mock, when } from 'ts-mockito';
 
 import { BuildStep } from '../BuildStep.js';
@@ -23,7 +23,7 @@ describe(BuildStepGlobalContext, () => {
           '/another/non/existent/path',
           '/working/dir/path',
           '/non/existent/path',
-          {} as unknown as BuildStaticContext
+          {} as unknown as JobInterpolationContext
         ),
         false
       );
@@ -42,7 +42,7 @@ describe(BuildStepGlobalContext, () => {
           projectTargetDirectory,
           workingDirectory,
           '/non/existent/path',
-          {} as unknown as BuildStaticContext
+          {} as unknown as JobInterpolationContext
         ),
         false
       );
@@ -60,7 +60,7 @@ describe(BuildStepGlobalContext, () => {
           projectTargetDirectory,
           workingDirectory,
           '/non/existent/path',
-          {} as unknown as BuildStaticContext
+          {} as unknown as JobInterpolationContext
         ),
         false
       );
@@ -82,7 +82,7 @@ describe(BuildStepGlobalContext, () => {
         projectSourceDirectory: '/a/b/c',
         projectTargetDirectory: '/d/e/f',
         relativeWorkingDirectory: 'i',
-        staticContextContent: { a: 1 } as unknown as BuildStaticContext,
+        staticContextContent: { a: 1 } as unknown as JobInterpolationContext,
       });
       expect(ctx.serialize()).toEqual(
         expect.objectContaining({
@@ -107,14 +107,28 @@ describe(BuildStepGlobalContext, () => {
       const ctx = BuildStepGlobalContext.deserialize(
         {
           stepsInternalBuildDirectory: '/m/n/o',
-          stepById: {},
+          stepById: {
+            build_ios: {
+              id: 'build_ios',
+              executed: true,
+              outputById: {
+                build_id: {
+                  id: 'build_id',
+                  stepDisplayName: 'build_ios',
+                  required: true,
+                  value: 'build_id_value',
+                },
+              },
+              displayName: 'build_ios',
+            },
+          },
           provider: {
             projectSourceDirectory: '/a/b/c',
             projectTargetDirectory: '/d/e/f',
             defaultWorkingDirectory: '/g/h/i',
             buildLogsDirectory: '/j/k/l',
             runtimePlatform: BuildRuntimePlatform.DARWIN,
-            staticContext: { a: 1 } as unknown as BuildStaticContext,
+            staticContext: { a: 1 } as unknown as JobInterpolationContext,
             env: {},
           },
           skipCleanup: true,
@@ -129,7 +143,16 @@ describe(BuildStepGlobalContext, () => {
       expect(ctx.projectSourceDirectory).toBe('/a/b/c');
       expect(ctx.projectTargetDirectory).toBe('/d/e/f');
       expect(ctx.buildLogsDirectory).toBe('/j/k/l');
-      expect(ctx.staticContext).toEqual({ a: 1 });
+      expect(ctx.staticContext).toEqual({
+        a: 1,
+        steps: {
+          build_ios: {
+            outputs: {
+              build_id: 'build_id_value',
+            },
+          },
+        },
+      });
       expect(ctx.env).toEqual({});
       expect(ctx.skipCleanup).toBe(true);
     });

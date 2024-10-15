@@ -4,12 +4,12 @@ import path from 'path';
 import {
   BuildJob,
   BuildPhase,
-  BuildStaticContext,
   BuildTrigger,
   Env,
   Job,
   Metadata,
   Platform,
+  StaticJobInterpolationContext,
 } from '@expo/eas-build-job';
 import { bunyan } from '@expo/logger';
 import { ExternalBuildContextProvider, BuildRuntimePlatform } from '@expo/steps';
@@ -92,8 +92,10 @@ export class CustomBuildContext<TJob extends Job = Job> implements ExternalBuild
     return this._env;
   }
 
-  public staticContext(): BuildStaticContext {
+  // We omit steps, because CustomBuildContext does not have steps.
+  public staticContext(): Omit<StaticJobInterpolationContext, 'steps'> {
     return {
+      ...this.job.workflowInterpolationContext,
       job: this.job,
       metadata: this.metadata ?? null,
       env: this.env,

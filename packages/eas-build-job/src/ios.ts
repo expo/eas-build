@@ -124,6 +124,8 @@ export interface Job {
     submitProfile?: string;
   };
   loggerLevel?: LoggerLevel;
+
+  workflowInterpolationContext?: never;
 }
 
 const SecretsSchema = Joi.object({

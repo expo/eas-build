@@ -1,7 +1,12 @@
 import { z } from 'zod';
 import { LoggerLevel } from '@expo/logger';
 
-import { ArchiveSourceSchemaZ, BuildTrigger, EnvironmentSecretZ } from './common';
+import {
+  ArchiveSourceSchemaZ,
+  BuildTrigger,
+  EnvironmentSecretZ,
+  StaticWorkflowInterpolationContextZ,
+} from './common';
 import { StepZ } from './step';
 
 export namespace Generic {
@@ -33,6 +38,7 @@ export namespace Generic {
     type: z.never().optional(),
     triggeredBy: z.literal(BuildTrigger.GIT_BASED_INTEGRATION),
     loggerLevel: z.nativeEnum(LoggerLevel).optional(),
+    workflowInterpolationContext: StaticWorkflowInterpolationContextZ.optional(),
   });
 
   const PathJobZ = CommonJobZ.extend({
