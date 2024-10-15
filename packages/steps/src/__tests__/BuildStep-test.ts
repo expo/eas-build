@@ -1017,14 +1017,14 @@ describe(BuildStep.deserialize, () => {
 describe(BuildStep.prototype.shouldExecuteStep, () => {
   it('returns true when if condition is always and previous steps failed', () => {
     const ctx = createGlobalContextMock();
+    ctx.markAsFailed();
     const step = new BuildStep(ctx, {
       id: 'test1',
       displayName: 'Test 1',
       command: 'echo 123',
       ifCondition: '${ always() }',
     });
-    const hasAnyPreviousStepsFailed = true;
-    expect(step.shouldExecuteStep(hasAnyPreviousStepsFailed)).toBe(true);
+    expect(step.shouldExecuteStep()).toBe(true);
   });
 
   it('returns true when if condition is always and previous steps have not failed', () => {
@@ -1035,20 +1035,19 @@ describe(BuildStep.prototype.shouldExecuteStep, () => {
       command: 'echo 123',
       ifCondition: '${ always() }',
     });
-    const hasAnyPreviousStepsFailed = false;
-    expect(step.shouldExecuteStep(hasAnyPreviousStepsFailed)).toBe(true);
+    expect(step.shouldExecuteStep()).toBe(true);
   });
 
   it('returns false when if condition is success and previous steps failed', () => {
     const ctx = createGlobalContextMock();
+    ctx.markAsFailed();
     const step = new BuildStep(ctx, {
       id: 'test1',
       displayName: 'Test 1',
       command: 'echo 123',
       ifCondition: '${ success() }',
     });
-    const hasAnyPreviousStepsFailed = true;
-    expect(step.shouldExecuteStep(hasAnyPreviousStepsFailed)).toBe(false);
+    expect(step.shouldExecuteStep()).toBe(false);
   });
 
   it('returns true when a dynamic expression matches', () => {
@@ -1065,7 +1064,7 @@ describe(BuildStep.prototype.shouldExecuteStep, () => {
       },
       ifCondition: '${ env.NODE_ENV === "production" && env.LOCAL_ENV === "true" }',
     });
-    expect(step.shouldExecuteStep(false)).toBe(true);
+    expect(step.shouldExecuteStep()).toBe(true);
   });
 
   it('returns true when a simplified dynamic expression matches', () => {
@@ -1079,7 +1078,7 @@ describe(BuildStep.prototype.shouldExecuteStep, () => {
       },
       ifCondition: "env.NODE_ENV === 'production'",
     });
-    expect(step.shouldExecuteStep(false)).toBe(true);
+    expect(step.shouldExecuteStep()).toBe(true);
   });
 
   it('returns true when an input matches', () => {
@@ -1102,7 +1101,7 @@ describe(BuildStep.prototype.shouldExecuteStep, () => {
       ],
       ifCondition: 'inputs.foo1 === "bar"',
     });
-    expect(step.shouldExecuteStep(false)).toBe(true);
+    expect(step.shouldExecuteStep()).toBe(true);
   });
 
   it('returns true when an eas value matches', () => {
@@ -1113,7 +1112,7 @@ describe(BuildStep.prototype.shouldExecuteStep, () => {
       command: 'echo 123',
       ifCondition: 'eas.runtimePlatform === "linux"',
     });
-    expect(step.shouldExecuteStep(false)).toBe(true);
+    expect(step.shouldExecuteStep()).toBe(true);
   });
 
   it('returns true when if condition is success and previous steps have not failed', () => {
@@ -1124,20 +1123,19 @@ describe(BuildStep.prototype.shouldExecuteStep, () => {
       command: 'echo 123',
       ifCondition: '${ success() }',
     });
-    const hasAnyPreviousStepsFailed = false;
-    expect(step.shouldExecuteStep(hasAnyPreviousStepsFailed)).toBe(true);
+    expect(step.shouldExecuteStep()).toBe(true);
   });
 
   it('returns true when if condition is failure and previous steps failed', () => {
     const ctx = createGlobalContextMock();
+    ctx.markAsFailed();
     const step = new BuildStep(ctx, {
       id: 'test1',
       displayName: 'Test 1',
       command: 'echo 123',
       ifCondition: '${ failure() }',
     });
-    const hasAnyPreviousStepsFailed = true;
-    expect(step.shouldExecuteStep(hasAnyPreviousStepsFailed)).toBe(true);
+    expect(step.shouldExecuteStep()).toBe(true);
   });
 
   it('returns false when if condition is failure and previous steps have not failed', () => {
@@ -1148,7 +1146,6 @@ describe(BuildStep.prototype.shouldExecuteStep, () => {
       command: 'echo 123',
       ifCondition: '${ failure() }',
     });
-    const hasAnyPreviousStepsFailed = false;
-    expect(step.shouldExecuteStep(hasAnyPreviousStepsFailed)).toBe(false);
+    expect(step.shouldExecuteStep()).toBe(false);
   });
 });

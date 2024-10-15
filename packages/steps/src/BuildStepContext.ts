@@ -55,7 +55,7 @@ export class BuildStepGlobalContext {
   public readonly runtimePlatform: BuildRuntimePlatform;
   public readonly baseLogger: bunyan;
   private didCheckOut = false;
-
+  private _hasAnyPreviousStepFailed = false;
   private stepById: Record<string, BuildStepOutputAccessor> = {};
 
   constructor(
@@ -65,6 +65,7 @@ export class BuildStepGlobalContext {
     this.stepsInternalBuildDirectory = path.join(os.tmpdir(), 'eas-build', uuidv4());
     this.runtimePlatform = provider.runtimePlatform;
     this.baseLogger = provider.logger;
+    this._hasAnyPreviousStepFailed = false;
   }
 
   public get projectSourceDirectory(): string {
@@ -99,6 +100,10 @@ export class BuildStepGlobalContext {
     this.stepById[step.id] = step;
   }
 
+  public get steps(): BuildStepOutputAccessor[] {
+    return Object.values(this.stepById);
+  }
+
   public getStepOutputValue(path: string): string | undefined {
     const { stepId, outputId } = parseOutputPath(path);
     if (!(stepId in this.stepById)) {
@@ -131,6 +136,14 @@ export class BuildStepGlobalContext {
     logger.info(
       `Changing default working directory to ${this.defaultWorkingDirectory} (was ${this.projectTargetDirectory})`
     );
+  }
+
+  public get hasAnyPreviousStepFailed(): boolean {
+    return this._hasAnyPreviousStepFailed;
+  }
+
+  public markAsFailed(): void {
+    this._hasAnyPreviousStepFailed = true;
   }
 
   public wasCheckedOut(): boolean {
