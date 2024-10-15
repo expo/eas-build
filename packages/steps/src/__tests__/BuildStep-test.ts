@@ -4,7 +4,6 @@ import path from 'path';
 import { jest } from '@jest/globals';
 import { instance, mock, verify, when } from 'ts-mockito';
 import { v4 as uuidv4 } from 'uuid';
-import { StaticJobInterpolationContext } from '@expo/eas-build-job';
 
 import { BuildStep, BuildStepFunction, BuildStepStatus } from '../BuildStep.js';
 import {
@@ -63,7 +62,6 @@ describe(BuildStep, () => {
     it('throws when neither command nor fn is set', () => {
       const mockCtx = mock<BuildStepGlobalContext>();
       when(mockCtx.baseLogger).thenReturn(createMockLogger());
-      when(mockCtx.staticContext).thenReturn({ job: {} } as StaticJobInterpolationContext);
       const ctx = instance(mockCtx);
       expect(() => {
         const id = 'test1';

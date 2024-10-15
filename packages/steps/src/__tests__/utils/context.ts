@@ -25,12 +25,12 @@ export class MockContextProvider implements ExternalBuildContextProvider {
     public readonly projectTargetDirectory: string,
     public readonly defaultWorkingDirectory: string,
     public readonly buildLogsDirectory: string,
-    public readonly staticContextContent: StaticJobInterpolationContext
+    public readonly staticContextContent: Omit<StaticJobInterpolationContext, 'steps'>
   ) {}
   public get env(): BuildStepEnv {
     return this._env;
   }
-  public staticContext(): StaticJobInterpolationContext {
+  public staticContext(): Omit<StaticJobInterpolationContext, 'steps'> {
     return { ...this.staticContextContent };
   }
   public updateEnv(env: BuildStepEnv): void {
@@ -96,10 +96,7 @@ export function createGlobalContextMock({
         ? path.resolve(resolvedProjectTargetDirectory, relativeWorkingDirectory)
         : resolvedProjectTargetDirectory,
       '/non/existent/dir',
-      staticContextContent ??
-        ({
-          job: {},
-        } as JobInterpolationContext)
+      staticContextContent ?? ({} as JobInterpolationContext)
     ),
     skipCleanup ?? false
   );

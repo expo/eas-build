@@ -1,6 +1,6 @@
 import path from 'path';
 
-import { Job, StaticJobInterpolationContext } from '@expo/eas-build-job';
+import { Env, Job, Metadata, StaticJobInterpolationContext } from '@expo/eas-build-job';
 import { bunyan, createLogger } from '@expo/logger';
 
 import { BuildConfigParser } from '../BuildConfigParser.js';
@@ -28,12 +28,11 @@ export class CliContextProvider implements ExternalBuildContextProvider {
   public get env(): BuildStepEnv {
     return this._env;
   }
-  public staticContext(): StaticJobInterpolationContext {
+  public staticContext(): Omit<StaticJobInterpolationContext, 'steps'> {
     return {
-      env: this.env as Record<string, string>,
-      job: {} as unknown as Job,
-      metadata: null,
-      steps: {},
+      job: {} as Job,
+      metadata: {} as Metadata,
+      env: this.env as Env,
     };
   }
   public updateEnv(env: BuildStepEnv): void {
