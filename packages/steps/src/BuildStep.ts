@@ -292,9 +292,11 @@ export class BuildStep extends BuildStepOutputAccessor {
     );
   }
 
-  public shouldExecuteStep(hasAnyPreviousStepsFailed: boolean): boolean {
+  public shouldExecuteStep(): boolean {
+    const hasAnyPreviousStepFailed = this.ctx.global.hasAnyPreviousStepFailed;
+
     if (!this.ifCondition) {
-      return !hasAnyPreviousStepsFailed;
+      return !hasAnyPreviousStepFailed;
     }
 
     let ifCondition = this.ifCondition;
@@ -305,8 +307,8 @@ export class BuildStep extends BuildStepOutputAccessor {
 
     return Boolean(
       jsepEval(ifCondition, {
-        success: () => !hasAnyPreviousStepsFailed,
-        failure: () => hasAnyPreviousStepsFailed,
+        success: () => !hasAnyPreviousStepFailed,
+        failure: () => hasAnyPreviousStepFailed,
         always: () => true,
         never: () => false,
         env: this.getScriptEnv(),
