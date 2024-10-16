@@ -104,12 +104,23 @@ export async function configureExpoUpdatesIfInstalledAsync(
     ctx.job.version?.runtimeVersion ?? resolvedRuntime.resolvedRuntimeVersion;
 
   if (ctx.metadata?.runtimeVersion && ctx.metadata.runtimeVersion !== appConfigRuntimeVersion) {
-    ctx.markBuildPhaseHasWarnings();
-    ctx.logger.warn('Runtime version mismatch');
-    ctx.logger.warn(`Runtime version on your local machine: ${ctx.metadata.runtimeVersion}`);
-    ctx.logger.warn(`Runtime version calculated on EAS: ${appConfigRuntimeVersion}`);
+    ctx.logger.warn(
+      `
+Runtime version mismatch:
+- Runtime version calculated on local machine: ${ctx.metadata.runtimeVersion}
+- Runtime version calculated on EAS: ${appConfigRuntimeVersion}
 
+This may be due to one or more factors:
+- Differing result of conditional app config (app.config.js) evaluation for runtime version resolution.
+- Differing fingerprint when using fingerprint runtime version policy. If applicable, see fingerprint diff below.
+
+This would cause any updates published on the local machine to not be compatible with this build.
+`
+    );
     await logDiffFingerprints({ resolvedRuntime, ctx });
+    throw new Error(
+      'Runtime version calculated on local machine not equal to runtime version calculated during build.'
+    );
   }
 
   if (isEASUpdateConfigured(ctx)) {
