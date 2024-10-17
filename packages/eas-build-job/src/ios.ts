@@ -126,6 +126,9 @@ export interface Job {
   loggerLevel?: LoggerLevel;
 
   workflowInterpolationContext?: never;
+
+  initiatingUserId?: string;
+  appId?: string;
 }
 
 const SecretsSchema = Joi.object({
@@ -211,4 +214,7 @@ export const JobSchema = Joi.object({
     submitProfile: Joi.string(),
   }),
   loggerLevel: Joi.string().valid(...Object.values(LoggerLevel)),
+
+  initiatingUserId: Joi.string(),
+  appId: Joi.string(),
 });

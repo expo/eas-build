@@ -39,6 +39,9 @@ export namespace Generic {
     triggeredBy: z.literal(BuildTrigger.GIT_BASED_INTEGRATION),
     loggerLevel: z.nativeEnum(LoggerLevel).optional(),
     workflowInterpolationContext: StaticWorkflowInterpolationContextZ.optional(),
+
+    initiatingUserId: z.string().optional(),
+    appId: z.string().optional(),
   });
 
   const PathJobZ = CommonJobZ.extend({
