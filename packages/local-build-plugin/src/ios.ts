@@ -1,4 +1,4 @@
-import { Ios, BuildPhase, Env, isManagedArtifact } from '@expo/eas-build-job';
+import { Ios, BuildPhase, Env, isManagedArtifact, ManagedArtifactType } from '@expo/eas-build-job';
 import { Builders, BuildContext, Artifacts } from '@expo/build-tools';
 import omit from 'lodash/omit';
 
@@ -24,6 +24,12 @@ export async function buildIosAsync(
     logBuffer,
     uploadArtifact: async ({ artifact, logger }) => {
       if (isManagedArtifact(artifact)) {
+        if (
+          artifact.type === ManagedArtifactType.XCODE_BUILD_LOGS &&
+          artifact.runStatus !== 'errored'
+        ) {
+          return null;
+        }
         return await prepareArtifacts({
           artifactPaths: artifact.paths,
           logger,
@@ -36,7 +42,6 @@ export async function buildIosAsync(
     env,
     metadata,
     skipNativeBuild: config.skipNativeBuild,
-    shouldUploadXcodeBuildLogsOnSuccess: false,
   });
 
   await ctx.runBuildPhase(BuildPhase.START_BUILD, async () => {

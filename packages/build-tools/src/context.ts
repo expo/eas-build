@@ -38,8 +38,13 @@ export interface LogBuffer {
 
 export type ArtifactToUpload =
   | {
-      type: ManagedArtifactType;
+      type: ManagedArtifactType.APPLICATION_ARCHIVE | ManagedArtifactType.BUILD_ARTIFACTS;
       paths: string[];
+    }
+  | {
+      type: ManagedArtifactType.XCODE_BUILD_LOGS;
+      paths: string[];
+      runStatus: 'success' | 'errored';
     }
   | {
       type: GenericArtifactType;
@@ -62,7 +67,6 @@ export interface BuildContextOptions {
   reportBuildPhaseStats?: (stats: BuildPhaseStats) => void;
   skipNativeBuild?: boolean;
   metadata?: Metadata;
-  shouldUploadXcodeBuildLogsOnSuccess?: boolean;
 }
 
 export class SkipNativeBuildError extends Error {}
@@ -78,7 +82,6 @@ export class BuildContext<TJob extends Job = Job> {
     options?: { tags?: Record<string, string>; extras?: Record<string, string> }
   ) => void;
   public readonly skipNativeBuild?: boolean;
-  public readonly shouldUploadXcodeBuildLogsOnSuccess: boolean;
   public artifacts: Artifacts = {};
 
   private _env: Env;
@@ -100,7 +103,6 @@ export class BuildContext<TJob extends Job = Job> {
     this.cacheManager = options.cacheManager;
     this._uploadArtifact = options.uploadArtifact;
     this.reportError = options.reportError;
-    this.shouldUploadXcodeBuildLogsOnSuccess = options.shouldUploadXcodeBuildLogsOnSuccess ?? true; // default to true if not provided
 
     const shouldApplyRepackOverrides = job.platform && job.mode === BuildMode.REPACK;
     this._job = {

@@ -9,7 +9,7 @@ import { BuildContext } from '../context';
 
 export async function findAndUploadXcodeBuildLogsAsync(
   ctx: BuildContext<Ios.Job>,
-  { logger }: { logger: bunyan }
+  { logger, runStatus }: { logger: bunyan; runStatus: 'success' | 'errored' }
 ): Promise<void> {
   try {
     const xcodeBuildLogsPath = await findXcodeBuildLogsPathAsync(ctx.buildLogsDirectory);
@@ -18,6 +18,7 @@ export async function findAndUploadXcodeBuildLogsAsync(
         artifact: {
           type: ManagedArtifactType.XCODE_BUILD_LOGS,
           paths: [xcodeBuildLogsPath],
+          runStatus,
         },
         logger,
       });
