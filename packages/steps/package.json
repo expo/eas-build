@@ -1,7 +1,7 @@
 {
   "name": "@expo/steps",
   "type": "module",
-  "version": "1.0.138",
+  "version": "1.0.139",
   "main": "./dist_commonjs/index.cjs",
   "types": "./dist_esm/index.d.ts",
   "exports": {
@@ -48,7 +48,7 @@
     "node": ">=18"
   },
   "dependencies": {
-    "@expo/eas-build-job": "1.0.138",
+    "@expo/eas-build-job": "1.0.139",
     "@expo/logger": "1.0.117",
     "@expo/spawn-async": "^1.7.2",
     "arg": "^5.0.2",
