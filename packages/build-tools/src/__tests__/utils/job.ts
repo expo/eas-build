@@ -1,3 +1,5 @@
+import { randomUUID } from 'crypto';
+
 import {
   ArchiveSourceType,
   BuildMode,
@@ -43,5 +45,7 @@ export function createTestIosJob({
     secrets: {
       buildCredentials,
     },
+    appId: randomUUID(),
+    initiatingUserId: randomUUID(),
   };
 }
