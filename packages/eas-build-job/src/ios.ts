@@ -89,7 +89,7 @@ export interface Job {
   };
   secrets?: BuildSecrets;
   builderEnvironment?: BuilderEnvironment;
-  cache: Cache;
+  cache?: Cache;
   developmentClient?: boolean;
   simulator?: boolean;
   version?: {
