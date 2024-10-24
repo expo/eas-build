@@ -16,10 +16,13 @@ import {
 import { uploadApplicationArchive } from '../utils/artifacts';
 import { Hook, runHookIfPresent } from '../utils/hooks';
 import { restoreCredentials } from '../android/credentials';
-import { configureBuildGradle } from '../android/gradleConfig';
 import { setupAsync } from '../common/setup';
 import { prebuildAsync } from '../common/prebuild';
 import { prepareExecutableAsync } from '../utils/prepareBuildExecutable';
+import {
+  injectConfigureVersionGradleConfig,
+  injectCredentialsGradleConfig,
+} from '../steps/utils/android/gradleConfig';
 
 import { runBuilderWithHooksAsync } from './common';
 import { runCustomBuildAsync } from './custom';
@@ -88,9 +91,23 @@ async function buildAsync(ctx: BuildContext<Android.Job>): Promise<void> {
   ) {
     await ctx.runBuildPhase(BuildPhase.PREPARE_CREDENTIALS, async () => {
       await restoreCredentials(ctx);
-      await configureBuildGradle(ctx);
+      await injectCredentialsGradleConfig(ctx.logger, ctx.getReactNativeProjectDirectory());
     });
   }
+
+  if (Boolean(ctx.job.version?.versionCode) || Boolean(ctx.job.version?.versionName)) {
+    await ctx.runBuildPhase(
+      BuildPhase.CUSTOM,
+      async () => {
+        await injectConfigureVersionGradleConfig(ctx.logger, ctx.getReactNativeProjectDirectory(), {
+          versionCode: ctx.job.version?.versionCode,
+          versionName: ctx.job.version?.versionName,
+        });
+      },
+      {}
+    );
+  }
+
   await ctx.runBuildPhase(BuildPhase.CONFIGURE_EXPO_UPDATES, async () => {
     await configureExpoUpdatesIfInstalledAsync(ctx, {
       resolvedRuntimeVersion: resolvedExpoUpdatesRuntimeVersion?.runtimeVersion ?? null,
