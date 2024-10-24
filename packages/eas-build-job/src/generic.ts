@@ -40,8 +40,8 @@ export namespace Generic {
     loggerLevel: z.nativeEnum(LoggerLevel).optional(),
     workflowInterpolationContext: StaticWorkflowInterpolationContextZ.optional(),
 
-    initiatingUserId: z.string().optional(),
-    appId: z.string().optional(),
+    initiatingUserId: z.string(),
+    appId: z.string(),
   });
 
   const PathJobZ = CommonJobZ.extend({

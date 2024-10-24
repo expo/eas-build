@@ -1,3 +1,5 @@
+import { randomUUID } from 'crypto';
+
 import Joi from 'joi';
 import { LoggerLevel } from '@expo/logger';
 
@@ -47,6 +49,8 @@ describe('Ios.JobSchema', () => {
         },
       },
       expoBuildUrl: 'https://expo.dev/fake/build/url',
+      initiatingUserId: randomUUID(),
+      appId: randomUUID(),
     };
 
     const { value, error } = Ios.JobSchema.validate(genericJob, joiOptions);
@@ -71,6 +75,8 @@ describe('Ios.JobSchema', () => {
           url: 'http://localhost:3000/a.ipa',
         },
       },
+      initiatingUserId: randomUUID(),
+      appId: randomUUID(),
     };
 
     const { value, error } = Ios.JobSchema.validate(genericJob, joiOptions);
@@ -92,6 +98,8 @@ describe('Ios.JobSchema', () => {
       customBuildConfig: {
         path: 'production.ios.yml',
       },
+      initiatingUserId: randomUUID(),
+      appId: randomUUID(),
     };
 
     const { value, error } = Ios.JobSchema.validate(customBuildJob, joiOptions);
@@ -112,6 +120,8 @@ describe('Ios.JobSchema', () => {
       customBuildConfig: {
         path: 'production.ios.yml',
       },
+      initiatingUserId: randomUUID(),
+      appId: randomUUID(),
     };
 
     const { value, error } = Ios.JobSchema.validate(customBuildJob, joiOptions);
@@ -131,6 +141,8 @@ describe('Ios.JobSchema', () => {
         url: 'url',
       },
       projectRootDirectory: '.',
+      initiatingUserId: randomUUID(),
+      appId: randomUUID(),
       uknownField: 'field',
     };
 
@@ -162,6 +174,8 @@ describe('Ios.JobSchema', () => {
           ENV_VAR: '123',
         },
       },
+      initiatingUserId: randomUUID(),
+      appId: randomUUID(),
     };
 
     const { value, error } = Ios.JobSchema.validate(managedJob, joiOptions);
@@ -181,6 +195,8 @@ describe('Ios.JobSchema', () => {
         url: 'url',
       },
       projectRootDirectory: 312,
+      initiatingUserId: randomUUID(),
+      appId: randomUUID(),
       uknownField: 'field',
     };
 
@@ -205,6 +221,8 @@ describe('Ios.JobSchema', () => {
         url: 'http://localhost:3000',
       },
       projectRootDirectory: '.',
+      initiatingUserId: randomUUID(),
+      appId: randomUUID(),
     };
 
     const { value, error } = Ios.JobSchema.validate(managedJob, joiOptions);
@@ -229,6 +247,8 @@ describe('Ios.JobSchema', () => {
       secrets: {
         buildCredentials,
       },
+      initiatingUserId: randomUUID(),
+      appId: randomUUID(),
     };
     const { value, error } = Ios.JobSchema.validate(job, joiOptions);
     expect(value).toMatchObject(job);
@@ -249,6 +269,8 @@ describe('Ios.JobSchema', () => {
         buildCredentials,
       },
       loggerLevel: LoggerLevel.INFO,
+      initiatingUserId: randomUUID(),
+      appId: randomUUID(),
     };
     const { value, error } = Ios.JobSchema.validate(job, joiOptions);
     expect(value).toMatchObject(job);
@@ -268,6 +290,8 @@ describe('Ios.JobSchema', () => {
       secrets: {
         buildCredentials,
       },
+      initiatingUserId: randomUUID(),
+      appId: randomUUID(),
     };
     const { value, error } = Ios.JobSchema.validate(job, joiOptions);
     expect(value).toMatchObject(job);

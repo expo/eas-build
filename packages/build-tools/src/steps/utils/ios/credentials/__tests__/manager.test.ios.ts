@@ -1,4 +1,5 @@
 import assert from 'assert';
+import { randomUUID } from 'crypto';
 
 import { ArchiveSourceType, Ios, Platform, Workflow } from '@expo/eas-build-job';
 import { BuildMode, BuildTrigger } from '@expo/eas-build-job/dist/common';
@@ -47,6 +48,8 @@ function createTestIosJob({
     secrets: {
       buildCredentials,
     },
+    appId: randomUUID(),
+    initiatingUserId: randomUUID(),
   };
 }
 

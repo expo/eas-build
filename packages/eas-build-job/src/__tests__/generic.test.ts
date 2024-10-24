@@ -1,9 +1,11 @@
+import { randomUUID } from 'crypto';
+
 import { ArchiveSourceType, BuildTrigger, EnvironmentSecretType } from '../common';
 import { Generic } from '../generic';
 
 describe('Generic.JobZ', () => {
   it('accepts valid customBuildConfig.path job', () => {
-    const job = {
+    const job: Generic.Job = {
       projectArchive: {
         type: ArchiveSourceType.GIT,
         repositoryUrl: 'https://github.com/expo/expo.git',
@@ -32,12 +34,14 @@ describe('Generic.JobZ', () => {
         },
       },
       triggeredBy: BuildTrigger.GIT_BASED_INTEGRATION,
+      appId: randomUUID(),
+      initiatingUserId: randomUUID(),
     };
     expect(Generic.JobZ.parse(job)).toEqual(job);
   });
 
   it('accepts valid steps job', () => {
-    const job = {
+    const job: Generic.Job = {
       projectArchive: {
         type: ArchiveSourceType.GIT,
         repositoryUrl: 'https://github.com/expo/expo.git',
@@ -74,12 +78,14 @@ describe('Generic.JobZ', () => {
         },
       },
       triggeredBy: BuildTrigger.GIT_BASED_INTEGRATION,
+      appId: randomUUID(),
+      initiatingUserId: randomUUID(),
     };
     expect(Generic.JobZ.parse(job)).toEqual(job);
   });
 
   it('errors when neither customBuildConfig.path nor steps are provided', () => {
-    const job = {
+    const job: Omit<Generic.Job, 'customBuildConfig' | 'steps'> = {
       projectArchive: {
         type: ArchiveSourceType.GIT,
         repositoryUrl: 'https://github.com/expo/expo.git',
@@ -105,12 +111,17 @@ describe('Generic.JobZ', () => {
         },
       },
       triggeredBy: BuildTrigger.GIT_BASED_INTEGRATION,
+      appId: randomUUID(),
+      initiatingUserId: randomUUID(),
     };
     expect(() => Generic.JobZ.parse(job)).toThrow('Invalid input');
   });
 
   it('errors when both customBuildConfig.path and steps are provided', () => {
-    const job = {
+    const job: Omit<Generic.Job, 'customBuildConfig' | 'steps'> & {
+      customBuildConfig: NonNullable<Generic.Job['customBuildConfig']>;
+      steps: NonNullable<Generic.Job['steps']>;
+    } = {
       projectArchive: {
         type: ArchiveSourceType.GIT,
         repositoryUrl: 'https://github.com/expo/expo.git',
@@ -150,6 +161,8 @@ describe('Generic.JobZ', () => {
           },
         },
       ],
+      appId: randomUUID(),
+      initiatingUserId: randomUUID(),
     };
     expect(() => Generic.JobZ.parse(job)).toThrow('Invalid input');
   });

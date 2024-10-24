@@ -1,3 +1,5 @@
+import { randomUUID } from 'crypto';
+
 import Joi from 'joi';
 import { LoggerLevel } from '@expo/logger';
 
@@ -45,6 +47,8 @@ describe('Android.JobSchema', () => {
         },
       },
       expoBuildUrl: 'https://expo.dev/fake/build/url',
+      initiatingUserId: randomUUID(),
+      appId: randomUUID(),
     };
 
     const { value, error } = Android.JobSchema.validate(genericJob, joiOptions);
@@ -75,6 +79,8 @@ describe('Android.JobSchema', () => {
           SOME_ENV: '123',
         },
       },
+      initiatingUserId: randomUUID(),
+      appId: randomUUID(),
     };
 
     const { value, error } = Android.JobSchema.validate(genericJob, joiOptions);
@@ -94,6 +100,8 @@ describe('Android.JobSchema', () => {
       gradleCommand: 1,
       uknownField: 'field',
       projectRootDirectory: '.',
+      initiatingUserId: randomUUID(),
+      appId: randomUUID(),
     };
 
     const { value, error } = Android.JobSchema.validate(genericJob, joiOptions);
@@ -125,6 +133,8 @@ describe('Android.JobSchema', () => {
           SOME_ENV: '123',
         },
       },
+      initiatingUserId: randomUUID(),
+      appId: randomUUID(),
     };
 
     const { value, error } = Android.JobSchema.validate(managedJob, joiOptions);
@@ -144,6 +154,8 @@ describe('Android.JobSchema', () => {
         url: 'url',
       },
       projectRootDirectory: '.',
+      initiatingUserId: randomUUID(),
+      appId: randomUUID(),
       uknownField: 'field',
     };
 
@@ -167,6 +179,8 @@ describe('Android.JobSchema', () => {
         url: 'http://localhost:3000',
       },
       projectRootDirectory: '.',
+      initiatingUserId: randomUUID(),
+      appId: randomUUID(),
     };
 
     const { value, error } = Android.JobSchema.validate(managedJob, joiOptions);
@@ -192,6 +206,8 @@ describe('Android.JobSchema', () => {
       builderEnvironment: {
         image: 'default',
       },
+      initiatingUserId: randomUUID(),
+      appId: randomUUID(),
     };
 
     const { error } = Android.JobSchema.validate(managedJob, joiOptions);
@@ -211,6 +227,8 @@ describe('Android.JobSchema', () => {
       customBuildConfig: {
         path: 'production.android.yml',
       },
+      initiatingUserId: randomUUID(),
+      appId: randomUUID(),
     };
 
     const { value, error } = Android.JobSchema.validate(customBuildJob, joiOptions);
@@ -233,6 +251,8 @@ describe('Android.JobSchema', () => {
         submitProfile: 'default',
       },
       secrets,
+      initiatingUserId: randomUUID(),
+      appId: randomUUID(),
     };
     const { value, error } = Android.JobSchema.validate(job, joiOptions);
     expect(value).toMatchObject(job);
@@ -251,6 +271,8 @@ describe('Android.JobSchema', () => {
       projectRootDirectory: '.',
       secrets,
       loggerLevel: LoggerLevel.DEBUG,
+      initiatingUserId: randomUUID(),
+      appId: randomUUID(),
     };
     const { value, error } = Android.JobSchema.validate(job, joiOptions);
     expect(value).toMatchObject(job);
@@ -268,6 +290,8 @@ describe('Android.JobSchema', () => {
       },
       projectRootDirectory: '.',
       secrets,
+      initiatingUserId: randomUUID(),
+      appId: randomUUID(),
     };
     const { value, error } = Android.JobSchema.validate(job, joiOptions);
     expect(value).toMatchObject(job);

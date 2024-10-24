@@ -89,7 +89,7 @@ export interface Job {
   };
   secrets?: BuildSecrets;
   builderEnvironment?: BuilderEnvironment;
-  cache: Cache;
+  cache?: Cache;
   developmentClient?: boolean;
   simulator?: boolean;
   version?: {
@@ -127,8 +127,8 @@ export interface Job {
 
   workflowInterpolationContext?: never;
 
-  initiatingUserId?: string;
-  appId?: string;
+  initiatingUserId: string;
+  appId: string;
 }
 
 const SecretsSchema = Joi.object({
@@ -215,6 +215,6 @@ export const JobSchema = Joi.object({
   }),
   loggerLevel: Joi.string().valid(...Object.values(LoggerLevel)),
 
-  initiatingUserId: Joi.string(),
-  appId: Joi.string(),
+  initiatingUserId: Joi.string().required(),
+  appId: Joi.string().required(),
 });
