@@ -10,9 +10,9 @@ jobs:
     runs-on: macos-latest
     name: Test with Node 20 on macOS
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v4
       - name: Setup node
-        uses: actions/setup-node@v1
+        uses: actions/setup-node@v4
         with:
           node-version: 20
       - name: Setup ncc
