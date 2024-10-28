@@ -1,5 +1,5 @@
 import Joi from 'joi';
-import { LoggerLevel } from '@expo/logger';
+import LoggerLevel from '@expo/logger/dist/level';
 
 import {
   ArchiveSource,

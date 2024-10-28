@@ -1,7 +1,7 @@
 import { randomUUID } from 'crypto';
 
 import Joi from 'joi';
-import { LoggerLevel } from '@expo/logger';
+import LoggerLevel from '@expo/logger/dist/level';
 
 import * as Android from '../android';
 import { ArchiveSourceType, BuildMode, BuildTrigger, Platform, Workflow } from '../common';

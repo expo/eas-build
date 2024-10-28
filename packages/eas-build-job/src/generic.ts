@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { LoggerLevel } from '@expo/logger';
+import LoggerLevel from '@expo/logger/dist/level';
 
 import {
   ArchiveSourceSchemaZ,
