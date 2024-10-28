@@ -1,5 +1,6 @@
 import { BuildFunctionGroup, BuildStep, BuildStepGlobalContext } from '@expo/steps';
 import { BuildJob, Platform } from '@expo/eas-build-job';
+import semver from 'semver';
 
 import { createCheckoutBuildFunction } from '../functions/checkout';
 import { createInstallNodeModulesBuildFunction } from '../functions/installNodeModules';
@@ -19,6 +20,7 @@ import { configureAndroidVersionFunction } from '../functions/configureAndroidVe
 import { createSetUpNpmrcBuildFunction } from '../functions/useNpmToken';
 import { createResolveBuildConfigBuildFunction } from '../functions/resolveBuildConfig';
 import { calculateEASUpdateRuntimeVersionFunction } from '../functions/calculateEASUpdateRuntimeVersion';
+import { eagerBundleBuildFunction } from '../functions/eagerBundle';
 
 interface HelperFunctionsInput {
   globalCtx: BuildStepGlobalContext;
@@ -101,6 +103,17 @@ function createStepsForIosSimulatorBuild({
     calculateEASUpdateRuntimeVersion,
     installPods,
     configureEASUpdate,
+    ...(globalCtx.staticContext.metadata?.sdkVersion &&
+    semver.satisfies(globalCtx.staticContext.metadata?.sdkVersion, '>=52')
+      ? [
+          eagerBundleBuildFunction().createBuildStepFromFunctionCall(globalCtx, {
+            callInputs: {
+              resolved_eas_update_runtime_version:
+                '${ steps.calculate_eas_update_runtime_version.resolved_eas_update_runtime_version }',
+            },
+          }),
+        ]
+      : []),
     generateGymfileFromTemplateFunction().createBuildStepFromFunctionCall(globalCtx),
     runFastlane,
     createFindAndUploadBuildArtifactsBuildFunction(
@@ -166,6 +179,17 @@ function createStepsForIosBuildWithCredentials({
     configureEASUpdate,
     configureIosCredentialsFunction().createBuildStepFromFunctionCall(globalCtx),
     configureIosVersionFunction().createBuildStepFromFunctionCall(globalCtx),
+    ...(globalCtx.staticContext.metadata?.sdkVersion &&
+    semver.satisfies(globalCtx.staticContext.metadata?.sdkVersion, '>=52')
+      ? [
+          eagerBundleBuildFunction().createBuildStepFromFunctionCall(globalCtx, {
+            callInputs: {
+              resolved_eas_update_runtime_version:
+                '${ steps.calculate_eas_update_runtime_version.resolved_eas_update_runtime_version }',
+            },
+          }),
+        ]
+      : []),
     generateGymfile,
     runFastlane,
     createFindAndUploadBuildArtifactsBuildFunction(
@@ -207,6 +231,17 @@ function createStepsForAndroidBuildWithoutCredentials({
     createPrebuildBuildFunction().createBuildStepFromFunctionCall(globalCtx),
     calculateEASUpdateRuntimeVersion,
     configureEASUpdate,
+    ...(globalCtx.staticContext.metadata?.sdkVersion &&
+    semver.satisfies(globalCtx.staticContext.metadata?.sdkVersion, '>=52')
+      ? [
+          eagerBundleBuildFunction().createBuildStepFromFunctionCall(globalCtx, {
+            callInputs: {
+              resolved_eas_update_runtime_version:
+                '${ steps.calculate_eas_update_runtime_version.resolved_eas_update_runtime_version }',
+            },
+          }),
+        ]
+      : []),
     runGradle,
     createFindAndUploadBuildArtifactsBuildFunction(
       buildToolsContext
@@ -250,6 +285,17 @@ function createStepsForAndroidBuildWithCredentials({
     injectAndroidCredentialsFunction().createBuildStepFromFunctionCall(globalCtx),
     configureAndroidVersionFunction().createBuildStepFromFunctionCall(globalCtx),
     runGradle,
+    ...(globalCtx.staticContext.metadata?.sdkVersion &&
+    semver.satisfies(globalCtx.staticContext.metadata?.sdkVersion, '>=52')
+      ? [
+          eagerBundleBuildFunction().createBuildStepFromFunctionCall(globalCtx, {
+            callInputs: {
+              resolved_eas_update_runtime_version:
+                '${ steps.calculate_eas_update_runtime_version.resolved_eas_update_runtime_version }',
+            },
+          }),
+        ]
+      : []),
     createFindAndUploadBuildArtifactsBuildFunction(
       buildToolsContext
     ).createBuildStepFromFunctionCall(globalCtx),
