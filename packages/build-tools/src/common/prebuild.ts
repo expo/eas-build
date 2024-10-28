@@ -26,7 +26,11 @@ export async function prebuildAsync<TJob extends BuildJob>(
   };
 
   const prebuildCommandArgs = getPrebuildCommandArgs(ctx);
-  await runExpoCliCommand(ctx, prebuildCommandArgs, spawnOptions);
+  await runExpoCliCommand({
+    args: prebuildCommandArgs,
+    options: spawnOptions,
+    packageManager: ctx.packageManager,
+  });
   const installDependenciesSpawnPromise = (
     await installDependenciesAsync(ctx, {
       logger,

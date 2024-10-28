@@ -24,7 +24,7 @@ describe(runExpoCliCommand, () => {
       when(mockCtx.appConfig).thenReturn(expoConfig);
       const ctx = instance(mockCtx);
 
-      void runExpoCliCommand(ctx, ['doctor'], {});
+      void runExpoCliCommand({ args: ['doctor'], options: {}, packageManager: ctx.packageManager });
       expect(spawn).toHaveBeenCalledWith('npx', ['expo', 'doctor'], expect.any(Object));
     });
 
@@ -38,7 +38,7 @@ describe(runExpoCliCommand, () => {
       when(mockCtx.appConfig).thenReturn(expoConfig);
       const ctx = instance(mockCtx);
 
-      void runExpoCliCommand(ctx, ['doctor'], {});
+      void runExpoCliCommand({ args: ['doctor'], options: {}, packageManager: ctx.packageManager });
       expect(spawn).toHaveBeenCalledWith('npx', ['expo', 'doctor'], expect.any(Object));
     });
 
@@ -52,7 +52,7 @@ describe(runExpoCliCommand, () => {
       when(mockCtx.appConfig).thenReturn(expoConfig);
       const ctx = instance(mockCtx);
 
-      void runExpoCliCommand(ctx, ['doctor'], {});
+      void runExpoCliCommand({ args: ['doctor'], options: {}, packageManager: ctx.packageManager });
       expect(spawn).toHaveBeenCalledWith('pnpm', ['expo', 'doctor'], expect.any(Object));
     });
 
@@ -66,7 +66,7 @@ describe(runExpoCliCommand, () => {
       when(mockCtx.appConfig).thenReturn(expoConfig);
       const ctx = instance(mockCtx);
 
-      void runExpoCliCommand(ctx, ['doctor'], {});
+      void runExpoCliCommand({ args: ['doctor'], options: {}, packageManager: ctx.packageManager });
       expect(spawn).toHaveBeenCalledWith('bun', ['expo', 'doctor'], expect.any(Object));
     });
   });

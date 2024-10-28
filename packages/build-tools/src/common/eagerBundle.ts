@@ -1,0 +1,29 @@
+import { Env, Platform } from '@expo/eas-build-job';
+import { bunyan } from '@expo/logger';
+
+import { runExpoCliCommand } from '../utils/project';
+import { PackageManager } from '../utils/packageManager';
+
+export async function eagerBundleAsync({
+  platform,
+  workingDir,
+  logger,
+  env,
+  packageManager,
+}: {
+  platform: Platform;
+  workingDir: string;
+  logger: bunyan;
+  env: Env;
+  packageManager: PackageManager;
+}): Promise<void> {
+  await runExpoCliCommand({
+    args: ['export:embed', '--eager', '--platform', platform],
+    options: {
+      cwd: workingDir,
+      logger,
+      env,
+    },
+    packageManager,
+  });
+}

@@ -3,6 +3,7 @@ import { IOSConfig } from '@expo/config-plugins';
 import { ManagedArtifactType, BuildMode, BuildPhase, Ios, Workflow } from '@expo/eas-build-job';
 import fs from 'fs-extra';
 import nullthrows from 'nullthrows';
+import semver from 'semver';
 
 import { Artifacts, BuildContext } from '../context';
 import {
@@ -21,6 +22,7 @@ import { setupAsync } from '../common/setup';
 import { prebuildAsync } from '../common/prebuild';
 import { prepareExecutableAsync } from '../utils/prepareBuildExecutable';
 import { getParentAndDescendantProcessPidsAsync } from '../utils/processes';
+import { eagerBundleAsync } from '../common/eagerBundle';
 
 import { runBuilderWithHooksAsync } from './common';
 import { runCustomBuildAsync } from './custom';
@@ -111,6 +113,27 @@ async function buildAsync(ctx: BuildContext<Ios.Job>): Promise<void> {
       });
     });
 
+    if (ctx.metadata?.sdkVersion && semver.satisfies(ctx.metadata?.sdkVersion, '>=52')) {
+      await ctx.runBuildPhase(BuildPhase.EAGER_BUNDLE, async () => {
+        await eagerBundleAsync({
+          platform: ctx.job.platform,
+          workingDir: ctx.getReactNativeProjectDirectory(),
+          logger: ctx.logger,
+          env: {
+            ...ctx.env,
+            ...(resolvedExpoUpdatesRuntimeVersion?.runtimeVersion
+              ? {
+                  EXPO_UPDATES_FINGERPRINT_OVERRIDE:
+                    resolvedExpoUpdatesRuntimeVersion?.runtimeVersion,
+                  EXPO_UPDATES_WORKFLOW_OVERRIDE: ctx.job.type,
+                }
+              : null),
+          },
+          packageManager: ctx.packageManager,
+        });
+      });
+    }
+
     await ctx.runBuildPhase(BuildPhase.RUN_FASTLANE, async () => {
       const scheme = resolveScheme(ctx);
       const entitlements = await readEntitlementsAsync(ctx, { scheme, buildConfiguration });
@@ -124,6 +147,7 @@ async function buildAsync(ctx: BuildContext<Ios.Job>): Promise<void> {
               extraEnv: {
                 EXPO_UPDATES_FINGERPRINT_OVERRIDE:
                   resolvedExpoUpdatesRuntimeVersion?.runtimeVersion,
+                EXPO_UPDATES_WORKFLOW_OVERRIDE: ctx.job.type,
               },
             }
           : null),

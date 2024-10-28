@@ -2,6 +2,7 @@ import path from 'path';
 
 import { Android, BuildMode, BuildPhase, Workflow } from '@expo/eas-build-job';
 import nullthrows from 'nullthrows';
+import semver from 'semver';
 
 import { Artifacts, BuildContext, SkipNativeBuildError } from '../context';
 import {
@@ -20,6 +21,7 @@ import { configureBuildGradle } from '../android/gradleConfig';
 import { setupAsync } from '../common/setup';
 import { prebuildAsync } from '../common/prebuild';
 import { prepareExecutableAsync } from '../utils/prepareBuildExecutable';
+import { eagerBundleAsync } from '../common/eagerBundle';
 
 import { runBuilderWithHooksAsync } from './common';
 import { runCustomBuildAsync } from './custom';
@@ -101,6 +103,28 @@ async function buildAsync(ctx: BuildContext<Android.Job>): Promise<void> {
   if (ctx.skipNativeBuild) {
     throw new SkipNativeBuildError('Skipping Gradle build');
   }
+
+  if (ctx.metadata?.sdkVersion && semver.satisfies(ctx.metadata?.sdkVersion, '>=52')) {
+    await ctx.runBuildPhase(BuildPhase.EAGER_BUNDLE, async () => {
+      await eagerBundleAsync({
+        platform: ctx.job.platform,
+        workingDir: ctx.getReactNativeProjectDirectory(),
+        logger: ctx.logger,
+        env: {
+          ...ctx.env,
+          ...(resolvedExpoUpdatesRuntimeVersion?.runtimeVersion
+            ? {
+                EXPO_UPDATES_FINGERPRINT_OVERRIDE:
+                  resolvedExpoUpdatesRuntimeVersion?.runtimeVersion,
+                EXPO_UPDATES_WORKFLOW_OVERRIDE: ctx.job.type,
+              }
+            : null),
+        },
+        packageManager: ctx.packageManager,
+      });
+    });
+  }
+
   await ctx.runBuildPhase(BuildPhase.RUN_GRADLEW, async () => {
     const gradleCommand = resolveGradleCommand(ctx.job);
     await runGradleCommand(ctx, {
