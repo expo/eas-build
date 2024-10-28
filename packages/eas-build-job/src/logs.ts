@@ -17,6 +17,7 @@ export enum BuildPhase {
   PREPARE_CREDENTIALS = 'PREPARE_CREDENTIALS',
   CALCULATE_EXPO_UPDATES_RUNTIME_VERSION = 'CALCULATE_EXPO_UPDATES_RUNTIME_VERSION',
   CONFIGURE_EXPO_UPDATES = 'CONFIGURE_EXPO_UPDATES',
+  EAGER_BUNDLE = 'EAGER_BUNDLE',
   SAVE_CACHE = 'SAVE_CACHE',
   /**
    * @deprecated
@@ -78,6 +79,7 @@ export const buildPhaseDisplayName: Record<BuildPhase, string> = {
   [BuildPhase.PREPARE_CREDENTIALS]: 'Prepare credentials',
   [BuildPhase.CALCULATE_EXPO_UPDATES_RUNTIME_VERSION]: 'Calculate expo-updates runtime version',
   [BuildPhase.CONFIGURE_EXPO_UPDATES]: 'Configure expo-updates',
+  [BuildPhase.EAGER_BUNDLE]: 'Eager bundle',
   [BuildPhase.SAVE_CACHE]: 'Save cache',
   [BuildPhase.UPLOAD_ARTIFACTS]: 'Upload artifacts',
   [BuildPhase.UPLOAD_APPLICATION_ARCHIVE]: 'Upload application archive',
@@ -137,6 +139,7 @@ export const buildPhaseWebsiteId: Record<BuildPhase, string> = {
   [BuildPhase.PREPARE_CREDENTIALS]: 'prepare-credentials',
   [BuildPhase.CALCULATE_EXPO_UPDATES_RUNTIME_VERSION]: 'calculate-expo-updates-runtime-version',
   [BuildPhase.CONFIGURE_EXPO_UPDATES]: 'configure-expo-updates',
+  [BuildPhase.EAGER_BUNDLE]: 'eager-bundle',
   [BuildPhase.SAVE_CACHE]: 'save-cache',
   [BuildPhase.UPLOAD_ARTIFACTS]: 'upload-artifacts',
   [BuildPhase.UPLOAD_APPLICATION_ARCHIVE]: 'upload-application-archive',
