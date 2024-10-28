@@ -155,7 +155,12 @@ function validateEasBuildInternalResult<TJob extends BuildJob>({
   if (error) {
     throw error;
   }
-  const newJob = sanitizeBuildJob(value.job) as TJob;
+  const newJob = sanitizeBuildJob({
+    ...value.job,
+    // We want to retain values that we have set on the job.
+    appId: oldJob.appId,
+    initiatingUserId: oldJob.initiatingUserId,
+  }) as TJob;
   assert(newJob.platform === oldJob.platform, 'eas-cli returned a job for a wrong platform');
   const newMetadata = sanitizeMetadata(value.metadata);
   return { newJob, newMetadata };
