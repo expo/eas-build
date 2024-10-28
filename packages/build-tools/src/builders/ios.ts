@@ -115,15 +115,20 @@ async function buildAsync(ctx: BuildContext<Ios.Job>): Promise<void> {
 
     if (ctx.metadata?.sdkVersion && semver.satisfies(ctx.metadata?.sdkVersion, '>=52')) {
       await ctx.runBuildPhase(BuildPhase.EAGER_BUNDLE, async () => {
-        await eagerBundleAsync(ctx, {
-          ...(resolvedExpoUpdatesRuntimeVersion?.runtimeVersion
-            ? {
-                extraEnv: {
+        await eagerBundleAsync({
+          platform: ctx.job.platform,
+          workingDir: ctx.getReactNativeProjectDirectory(),
+          logger: ctx.logger,
+          env: {
+            ...ctx.env,
+            ...(resolvedExpoUpdatesRuntimeVersion?.runtimeVersion
+              ? {
                   EXPO_UPDATES_FINGERPRINT_OVERRIDE:
                     resolvedExpoUpdatesRuntimeVersion?.runtimeVersion,
-                },
-              }
-            : null),
+                }
+              : null),
+          },
+          packageManager: ctx.packageManager,
         });
       });
     }

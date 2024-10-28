@@ -1,18 +1,29 @@
-import { BuildJob, Env } from '@expo/eas-build-job';
+import { Env, Platform } from '@expo/eas-build-job';
+import { bunyan } from '@expo/logger';
 
 import { runExpoCliCommand } from '../utils/project';
-import { BuildContext } from '../context';
+import { PackageManager } from '../utils/packageManager';
 
-export async function eagerBundleAsync<TJob extends BuildJob>(
-  ctx: BuildContext<TJob>,
-  options?: { extraEnv?: Env }
-): Promise<void> {
-  await runExpoCliCommand(ctx, ['export:embed', '--eager', '--platform', ctx.job.platform], {
-    cwd: ctx.getReactNativeProjectDirectory(),
-    logger: ctx.logger,
-    env: {
-      ...ctx.env,
-      ...options?.extraEnv,
+export async function eagerBundleAsync({
+  platform,
+  workingDir,
+  logger,
+  env,
+  packageManager,
+}: {
+  platform: Platform;
+  workingDir: string;
+  logger: bunyan;
+  env: Env;
+  packageManager: PackageManager;
+}): Promise<void> {
+  await runExpoCliCommand({
+    args: ['export:embed', '--eager', '--platform', platform],
+    options: {
+      cwd: workingDir,
+      logger,
+      env,
     },
+    packageManager,
   });
 }

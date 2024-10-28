@@ -1,10 +1,8 @@
 import path from 'path';
 
-import { Job } from '@expo/eas-build-job';
 import spawn, { SpawnOptions, SpawnPromise, SpawnResult } from '@expo/turtle-spawn';
 import fs from 'fs-extra';
 
-import { BuildContext } from '../context';
 import { findPackagerRootDir, PackageManager } from '../utils/packageManager';
 
 /**
@@ -16,22 +14,26 @@ export async function isUsingYarn2(projectDir: string): Promise<boolean> {
   return (await fs.pathExists(yarnrcPath)) || (await fs.pathExists(yarnrcRootPath));
 }
 
-export function runExpoCliCommand<TJob extends Job>(
-  ctx: BuildContext<TJob>,
-  args: string[],
-  options: SpawnOptions
-): SpawnPromise<SpawnResult> {
+export function runExpoCliCommand({
+  packageManager,
+  args,
+  options,
+}: {
+  packageManager: PackageManager;
+  args: string[];
+  options: SpawnOptions;
+}): SpawnPromise<SpawnResult> {
   const argsWithExpo = ['expo', ...args];
-  if (ctx.packageManager === PackageManager.NPM) {
+  if (packageManager === PackageManager.NPM) {
     return spawn('npx', argsWithExpo, options);
-  } else if (ctx.packageManager === PackageManager.YARN) {
+  } else if (packageManager === PackageManager.YARN) {
     return spawn('yarn', argsWithExpo, options);
-  } else if (ctx.packageManager === PackageManager.PNPM) {
+  } else if (packageManager === PackageManager.PNPM) {
     return spawn('pnpm', argsWithExpo, options);
-  } else if (ctx.packageManager === PackageManager.BUN) {
+  } else if (packageManager === PackageManager.BUN) {
     return spawn('bun', argsWithExpo, options);
   } else {
-    throw new Error(`Unsupported package manager: ${ctx.packageManager}`);
+    throw new Error(`Unsupported package manager: ${packageManager}`);
   }
 }
 
