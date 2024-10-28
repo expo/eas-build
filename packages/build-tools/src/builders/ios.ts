@@ -125,6 +125,7 @@ async function buildAsync(ctx: BuildContext<Ios.Job>): Promise<void> {
               ? {
                   EXPO_UPDATES_FINGERPRINT_OVERRIDE:
                     resolvedExpoUpdatesRuntimeVersion?.runtimeVersion,
+                  EXPO_UPDATES_WORKFLOW_OVERRIDE: ctx.job.type,
                 }
               : null),
           },
@@ -146,6 +147,7 @@ async function buildAsync(ctx: BuildContext<Ios.Job>): Promise<void> {
               extraEnv: {
                 EXPO_UPDATES_FINGERPRINT_OVERRIDE:
                   resolvedExpoUpdatesRuntimeVersion?.runtimeVersion,
+                EXPO_UPDATES_WORKFLOW_OVERRIDE: ctx.job.type,
               },
             }
           : null),

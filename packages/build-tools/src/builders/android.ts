@@ -116,6 +116,7 @@ async function buildAsync(ctx: BuildContext<Android.Job>): Promise<void> {
             ? {
                 EXPO_UPDATES_FINGERPRINT_OVERRIDE:
                   resolvedExpoUpdatesRuntimeVersion?.runtimeVersion,
+                EXPO_UPDATES_WORKFLOW_OVERRIDE: ctx.job.type,
               }
             : null),
         },
