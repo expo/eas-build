@@ -8,7 +8,7 @@ export function eagerBundleBuildFunction(): BuildFunction {
   return new BuildFunction({
     namespace: 'eas',
     id: 'eager_bundle',
-    name: 'Eager bundle',
+    name: 'Bundle JavaScript',
     inputProviders: [
       BuildStepInput.createProvider({
         id: 'resolved_eas_update_runtime_version',
