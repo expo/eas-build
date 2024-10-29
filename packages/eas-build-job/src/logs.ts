@@ -79,7 +79,7 @@ export const buildPhaseDisplayName: Record<BuildPhase, string> = {
   [BuildPhase.PREPARE_CREDENTIALS]: 'Prepare credentials',
   [BuildPhase.CALCULATE_EXPO_UPDATES_RUNTIME_VERSION]: 'Calculate expo-updates runtime version',
   [BuildPhase.CONFIGURE_EXPO_UPDATES]: 'Configure expo-updates',
-  [BuildPhase.EAGER_BUNDLE]: 'Eager bundle',
+  [BuildPhase.EAGER_BUNDLE]: 'Bundle JavaScript',
   [BuildPhase.SAVE_CACHE]: 'Save cache',
   [BuildPhase.UPLOAD_ARTIFACTS]: 'Upload artifacts',
   [BuildPhase.UPLOAD_APPLICATION_ARCHIVE]: 'Upload application archive',
