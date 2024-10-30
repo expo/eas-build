@@ -113,7 +113,11 @@ async function buildAsync(ctx: BuildContext<Ios.Job>): Promise<void> {
       });
     });
 
-    if (ctx.metadata?.sdkVersion && semver.satisfies(ctx.metadata?.sdkVersion, '>=52')) {
+    if (
+      !ctx.env.EAS_BUILD_DISABLE_BUNDLE_JAVASCRIPT_STEP &&
+      ctx.metadata?.sdkVersion &&
+      semver.satisfies(ctx.metadata?.sdkVersion, '>=52')
+    ) {
       await ctx.runBuildPhase(BuildPhase.EAGER_BUNDLE, async () => {
         await eagerBundleAsync({
           platform: ctx.job.platform,
