@@ -5,6 +5,7 @@ const validMetadata: Metadata = {
   appVersion: '1.0.0',
   appBuildVersion: '123',
   runtimeVersion: '3.2.1',
+  fingerprintHash: '752e99d2b8fde1bf07ebb8af1b4a3c26a6703943',
   cliVersion: '1.2.3',
   buildProfile: 'release',
   credentialsSource: 'remote',

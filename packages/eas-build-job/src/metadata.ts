@@ -225,6 +225,7 @@ export const MetadataSchema = Joi.object({
   credentialsSource: Joi.string().valid('local', 'remote'),
   sdkVersion: Joi.string(),
   runtimeVersion: Joi.string(),
+  fingerprintHash: Joi.string(),
   fingerprintSource: FingerprintSourceSchema,
   reactNativeVersion: Joi.string(),
   channel: Joi.string(),
