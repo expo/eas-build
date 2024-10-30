@@ -67,6 +67,11 @@ export type Metadata = {
   runtimeVersion?: string;
 
   /**
+   * Fingerprint hash of a project's native dependencies
+   */
+  fingerprintHash?: string;
+
+  /**
    * The location of the fingerprint file if one exists
    */
   fingerprintSource?: FingerprintSource;
