@@ -67,6 +67,11 @@ export type Metadata = {
   runtimeVersion?: string;
 
   /**
+   * Fingerprint hash of a project's native dependencies
+   */
+  fingerprintHash?: string;
+
+  /**
    * The location of the fingerprint file if one exists
    */
   fingerprintSource?: FingerprintSource;
@@ -220,6 +225,7 @@ export const MetadataSchema = Joi.object({
   credentialsSource: Joi.string().valid('local', 'remote'),
   sdkVersion: Joi.string(),
   runtimeVersion: Joi.string(),
+  fingerprintHash: Joi.string(),
   fingerprintSource: FingerprintSourceSchema,
   reactNativeVersion: Joi.string(),
   channel: Joi.string(),
