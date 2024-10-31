@@ -1,5 +1,8 @@
 import assert from 'assert';
+import os from 'os';
+import path from 'path';
 
+import { v4 as uuidv4 } from 'uuid';
 import { Platform, Job, BuildJob, Workflow, FingerprintSourceType } from '@expo/eas-build-job';
 import semver from 'semver';
 import { ExpoConfig } from '@expo/config';
@@ -24,12 +27,8 @@ import { BuildContext } from '../context';
 
 import getExpoUpdatesPackageVersionIfInstalledAsync from './getExpoUpdatesPackageVersionIfInstalledAsync';
 import { resolveRuntimeVersionAsync } from './resolveRuntimeVersionAsync';
-import {
-  Fingerprint,
-  FingerprintSource,
-  diffFingerprints,
-  stringifyFingerprintDiff,
-} from './fingerprint';
+import { diffFingerprintsAsync } from './diffFingerprintsAsync';
+import { stringifyFingerprintDiff } from './fingerprint';
 
 export async function setRuntimeVersionNativelyAsync(
   ctx: BuildContext<Job>,
@@ -85,7 +84,7 @@ export async function configureEASExpoUpdatesAsync(ctx: BuildContext<BuildJob>):
 
 type ResolvedRuntime = {
   resolvedRuntimeVersion: string | null;
-  resolvedFingerprintSources?: FingerprintSource[] | null;
+  resolvedFingerprintSources?: object[] | null;
 };
 
 export async function configureExpoUpdatesIfInstalledAsync(
@@ -176,7 +175,7 @@ export async function resolveRuntimeVersionForExpoUpdatesIfConfiguredAsync({
   env: BuildStepEnv;
 }): Promise<{
   runtimeVersion: string | null;
-  fingerprintSources: FingerprintSource[] | null;
+  fingerprintSources: object[] | null;
 } | null> {
   const expoUpdatesPackageVersion = await getExpoUpdatesPackageVersionIfInstalledAsync(cwd, logger);
   if (expoUpdatesPackageVersion === null) {
@@ -261,23 +260,34 @@ async function logDiffFingerprints({
     try {
       const fingerprintSource = ctx.metadata.fingerprintSource;
 
-      let localFingerprint: Fingerprint | null = null;
+      let localFingerprintFile: string | null = null;
 
       if (fingerprintSource.type === FingerprintSourceType.URL) {
         const result = await fetch(fingerprintSource.url);
-        localFingerprint = await result.json();
+        const localFingerprintJSON = await result.json();
+        localFingerprintFile = path.join(os.tmpdir(), `eas-build-${uuidv4()}-local-fingerprint`);
+        await fs.writeFile(localFingerprintFile, JSON.stringify(localFingerprintJSON));
       } else if (fingerprintSource.type === FingerprintSourceType.PATH) {
-        localFingerprint = await fs.readJson(fingerprintSource.path);
+        localFingerprintFile = fingerprintSource.path;
       } else {
         ctx.logger.warn(`Invalid fingerprint source type: ${fingerprintSource.type}`);
       }
 
-      if (localFingerprint) {
+      if (localFingerprintFile) {
         const easFingerprint = {
           hash: resolvedRuntimeVersion,
           sources: resolvedFingerprintSources,
         };
-        const changes = diffFingerprints(localFingerprint, easFingerprint);
+        const easFingerprintFile = path.join(os.tmpdir(), `eas-build-${uuidv4()}-eas-fingerprint`);
+        await fs.writeFile(easFingerprintFile, JSON.stringify(easFingerprint));
+
+        const changesJSONString = await diffFingerprintsAsync(
+          ctx.getReactNativeProjectDirectory(),
+          localFingerprintFile,
+          easFingerprintFile,
+          { env: ctx.env, logger: ctx.logger }
+        );
+        const changes = JSON.parse(changesJSONString);
         if (changes.length) {
           ctx.logger.warn('Difference between local and EAS fingerprints:');
           ctx.logger.warn(stringifyFingerprintDiff(changes));

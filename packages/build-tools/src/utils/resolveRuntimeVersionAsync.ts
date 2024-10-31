@@ -6,7 +6,6 @@ import { BuildStepEnv } from '@expo/steps';
 
 import { ExpoUpdatesCLIModuleNotFoundError, expoUpdatesCommandAsync } from './expoUpdatesCli';
 import { isModernExpoUpdatesCLIWithRuntimeVersionCommandSupported } from './expoUpdates';
-import { FingerprintSource } from './fingerprint';
 
 export async function resolveRuntimeVersionAsync({
   exp,
@@ -26,7 +25,7 @@ export async function resolveRuntimeVersionAsync({
   env: BuildStepEnv;
 }): Promise<{
   runtimeVersion: string | null;
-  fingerprintSources: FingerprintSource[] | null;
+  fingerprintSources: object[] | null;
 } | null> {
   if (!isModernExpoUpdatesCLIWithRuntimeVersionCommandSupported(expoUpdatesPackageVersion)) {
     logger.debug('Using expo-updates config plugin for runtime version resolution');
