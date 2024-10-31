@@ -44,29 +44,42 @@ export async function runEasBuildInternalAsync<TJob extends BuildJob>({
     autoSubmitArgs.push('--auto-submit');
   }
 
-  const result = await spawn(
-    cmd,
-    [
-      ...args,
-      'build:internal',
-      '--platform',
-      job.platform,
-      '--profile',
-      buildProfile,
-      ...autoSubmitArgs,
-    ],
-    {
-      cwd,
-      env: {
-        ...env,
-        EXPO_TOKEN: nullthrows(job.secrets, 'Secrets must be defined for non-custom builds')
-          .robotAccessToken,
-        ...extraEnv,
-      },
-      logger,
-      mode: PipeMode.STDERR_ONLY_AS_STDOUT,
-    }
-  );
+  let result;
+  try {
+    result = await spawn(
+      cmd,
+      [
+        ...args,
+        'build:internal',
+        '--platform',
+        job.platform,
+        '--profile',
+        buildProfile,
+        ...autoSubmitArgs,
+      ],
+      {
+        cwd,
+        env: {
+          ...env,
+          EXPO_TOKEN: nullthrows(job.secrets, 'Secrets must be defined for non-custom builds')
+            .robotAccessToken,
+          ...extraEnv,
+        },
+        logger,
+        mode: PipeMode.STDERR_ONLY_AS_STDOUT,
+      }
+    );
+  } catch (err: any) {
+    // Logging of build:internal is weird. We set mode = STDERR_ONLY_AS_STDOUT,
+    // because we don't want to pipe stdout to to the logger as it will contain
+    // the job object with its secrets. However, if the build fails, stderr alone
+    // is often not enough to debug the issue, so we also log stdout in those cases.
+    // It will look awkward (first stderr from pipe, then stdout from here), but
+    // it's better than nothing.
+    logger.error(`${err.stdout}`);
+    throw err;
+  }
+
   const stdout = result.stdout.toString();
   const parsed = JSON.parse(stdout);
   return validateEasBuildInternalResult({
@@ -121,9 +134,9 @@ async function resolveEasCommandPrefixAndEnvAsync(): Promise<{
   const npxArgsPrefix = (await isAtLeastNpm7Async()) ? ['-y'] : [];
   if (process.env.ENVIRONMENT === 'development') {
     return {
-      cmd: process.env.EAS_BUILD_INTERNAL_EXECUTABLE ?? `eas`,
-      args: [],
-      extraEnv: { EXPO_LOCAL: '1' },
+      cmd: 'npx',
+      args: [...npxArgsPrefix, `eas-cli@${EAS_CLI_STAGING_NPM_TAG}`],
+      extraEnv: {},
     };
   } else if (process.env.ENVIRONMENT === 'staging') {
     return {
