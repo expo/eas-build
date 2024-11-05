@@ -18,7 +18,7 @@ export async function eagerBundleAsync({
   packageManager: PackageManager;
 }): Promise<void> {
   await runExpoCliCommand({
-    args: ['export:embed', '--eager', '--platform', platform],
+    args: ['export:embed', '--eager', '--platform', platform, '--dev', 'false'],
     options: {
       cwd: workingDir,
       logger,
