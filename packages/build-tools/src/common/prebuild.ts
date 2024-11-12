@@ -35,6 +35,7 @@ export async function prebuildAsync<TJob extends BuildJob>(
     await installDependenciesAsync(ctx, {
       logger,
       cwd: resolvePackagerDir(ctx),
+      withoutFrozenLockfile: true, // prebuild should can modify package.json in some cases
     })
   ).spawnPromise;
   await installDependenciesSpawnPromise;
