@@ -12,6 +12,7 @@ type StaticJobOnlyInterpolationContext = {
       outputs: Record<string, string | undefined>;
     }
   >;
+  expoApiServerURL: string;
 };
 
 export type StaticJobInterpolationContext =

@@ -27,6 +27,7 @@ import { createResolveBuildConfigBuildFunction } from './functions/resolveBuildC
 import { calculateEASUpdateRuntimeVersionFunction } from './functions/calculateEASUpdateRuntimeVersion';
 import { createRepackBuildFunction } from './functions/repack';
 import { eagerBundleBuildFunction } from './functions/eagerBundle';
+import { createSubmissionEntityFunction } from './functions/createSubmissionEntity';
 
 export function getEasFunctions(ctx: CustomBuildContext): BuildFunction[] {
   const functions = [
@@ -56,6 +57,8 @@ export function getEasFunctions(ctx: CustomBuildContext): BuildFunction[] {
     calculateEASUpdateRuntimeVersionFunction(),
 
     createRepackBuildFunction(),
+
+    createSubmissionEntityFunction(),
   ];
 
   if (ctx.hasBuildJob()) {
