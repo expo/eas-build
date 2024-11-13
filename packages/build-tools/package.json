@@ -22,8 +22,8 @@
   "bugs": "https://github.com/expo/eas-build/issues",
   "license": "BUSL-1.1",
   "dependencies": {
-    "@expo/config": "9.0.3",
-    "@expo/config-plugins": "8.0.8",
+    "@expo/config": "10.0.3",
+    "@expo/config-plugins": "9.0.9",
     "@expo/downloader": "1.0.118",
     "@expo/eas-build-job": "1.0.148",
     "@expo/env": "^0.3.0",
