@@ -1,9 +1,13 @@
 // https://github.com/Sensative/jsep-eval/blob/master/src/jsep-eval.js
+// - migrated to TypeScript
+// - small refactoring (splitting operators into unary/binary)
+// - lack of LogicalExpression we don't need, because our version of JSEP does not expose it
+// - lack of Promise wrapper we don't need
 
 import assert from 'assert';
 
-import get from 'lodash.get';
 import jsep from 'jsep';
+import get from 'lodash.get';
 
 const binaryOperatorFunctions = {
   '===': (a: any, b: any) => a === b,
@@ -49,10 +53,7 @@ function isValid<T extends jsep.ExpressionType>(
   return types.includes(expression.type as T);
 }
 
-const getParameterPath = (
-  node: jsep.MemberExpression,
-  context: Record<string, unknown>
-): string => {
+function getParameterPath(node: jsep.MemberExpression, context: Record<string, unknown>): string {
   // it's a MEMBER expression
   // EXAMPLES:  a[b] (computed)
   //            a.b (not computed)
@@ -87,9 +88,9 @@ const getParameterPath = (
     const propertyPath = getParameterPath(property, context);
     return (objectPath ? objectPath + '.' : '') + propertyPath;
   }
-};
+}
 
-const evaluateExpressionNode = (node: jsep.Expression, context: Record<string, unknown>): any => {
+function evaluateExpressionNode(node: jsep.Expression, context: Record<string, unknown>): unknown {
   switch (node.type as jsep.ExpressionType) {
     case 'Literal': {
       return (node as jsep.Literal).value;
@@ -144,6 +145,7 @@ const evaluateExpressionNode = (node: jsep.Expression, context: Record<string, u
       }
       const callee = evaluateExpressionNode(callNode.callee, context);
       const args = callNode.arguments.map((arg) => evaluateExpressionNode(arg, context));
+      assert(typeof callee === 'function', 'Expected a function');
       // eslint-disable-next-line prefer-spread
       return callee.apply(null, args);
     }
@@ -162,16 +164,16 @@ const evaluateExpressionNode = (node: jsep.Expression, context: Record<string, u
     }
     case 'ArrayExpression': {
       const elements = (node as jsep.ArrayExpression).elements.map((el) =>
-        evaluateExpressionNode(el, context)
+        el ? evaluateExpressionNode(el, context) : null
       );
       return elements;
     }
     default:
       throw new Error(`Unsupported expression type: ${node.type}`);
   }
-};
+}
 
-export const jsepEval = (expression: string, context?: Record<string, unknown>): any => {
+export function jsepEval(expression: string, context?: Record<string, unknown>): unknown {
   const tree = jsep(expression);
   return evaluateExpressionNode(tree, context ?? {});
-};
+}
