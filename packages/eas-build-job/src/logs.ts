@@ -87,7 +87,7 @@ export const buildPhaseDisplayName: Record<BuildPhase, string> = {
   [BuildPhase.PREPARE_ARTIFACTS]: 'Prepare artifacts',
   [BuildPhase.CLEAN_UP_CREDENTIALS]: 'Clean up credentials',
   [BuildPhase.COMPLETE_BUILD]: 'Complete build',
-  [BuildPhase.FAIL_BUILD]: 'Fail build',
+  [BuildPhase.FAIL_BUILD]: 'Fail job',
   [BuildPhase.READ_APP_CONFIG]: 'Read app config',
   [BuildPhase.READ_PACKAGE_JSON]: 'Read package.json',
   [BuildPhase.RUN_EXPO_DOCTOR]: 'Run expo doctor',
