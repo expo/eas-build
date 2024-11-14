@@ -81,8 +81,13 @@ function getParameterPath(node: jsep.MemberExpression, context: Record<string, u
     // if computed -> evaluate anew
     const propertyPath = evaluateExpressionNode(property, context);
     return objectPath + '[' + propertyPath + ']';
-  } else if (isValid(property, ['Identifier'])) {
+  } else if (property.type === 'Identifier') {
     return (objectPath ? objectPath + '.' : '') + property.name;
+  } else if (property.type === 'CallExpression') {
+    const propertyPath = evaluateExpressionNode(property, context);
+    return (objectPath ? objectPath + '.' : '') + propertyPath;
+  } else if (property.type === 'Literal') {
+    return (objectPath ? objectPath + '.' : '') + `${property.value}`;
   } else {
     assert(isValid(property, ['MemberExpression']), 'Invalid object type');
     const propertyPath = getParameterPath(property, context);
@@ -140,7 +145,7 @@ function evaluateExpressionNode(node: jsep.Expression, context: Record<string, u
         throw new Error(
           `Invalid function callee type: ${
             callNode.callee.type
-          }. Expected one of ${allowedCalleeTypes.join(', ')}.`
+          }. Expected one of [${allowedCalleeTypes.join(', ')}].`
         );
       }
       const callee = evaluateExpressionNode(callNode.callee, context);
@@ -153,14 +158,27 @@ function evaluateExpressionNode(node: jsep.Expression, context: Record<string, u
       const identifier = (node as jsep.Identifier).name;
       if (!(identifier in context)) {
         throw new Error(
-          `Invalid identifier "${identifier}". Expected one of ${Object.keys(context).join(', ')}`
+          `Invalid identifier "${identifier}". Expected one of [${Object.keys(context).join(
+            ', '
+          )}].`
         );
       }
       return get(context, identifier);
     }
     case 'MemberExpression': {
-      const path = getParameterPath(node as jsep.MemberExpression, context);
-      return get(context, path);
+      const memberNode = node as jsep.MemberExpression;
+      return get(
+        evaluateExpressionNode(memberNode.object, context),
+        getParameterPath(
+          {
+            type: 'MemberExpression',
+            object: { type: 'ThisExpression' },
+            property: memberNode.property,
+            computed: false,
+          } as jsep.MemberExpression,
+          context
+        )
+      );
     }
     case 'ArrayExpression': {
       const elements = (node as jsep.ArrayExpression).elements.map((el) =>

@@ -27,6 +27,9 @@ const TEST_CASES = [
     { success: () => true, env: { NODE_ENV: 'production' } },
   ],
   ['0 == 1 ? "a" : "b"', 'b'],
+  ['fromJSON("{\\"a\\": 1}").a', 1, { fromJSON: JSON.parse }],
+  ['fromJSON("{\\"a\\": 1}")[fromJSON(\'"a"\')]', 1, { fromJSON: JSON.parse }],
+  ['fromJSON(null).a', undefined, { fromJSON: JSON.parse }],
 ] as const;
 
 describe(jsepEval, () => {
