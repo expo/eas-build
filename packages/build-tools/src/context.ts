@@ -250,6 +250,16 @@ export class BuildContext<TJob extends Job = Job> {
     this._job = {
       ...job,
       triggeredBy: this._job.triggeredBy,
+      secrets: {
+        ...this.job.secrets,
+        ...job.secrets,
+        robotAccessToken: job.secrets?.robotAccessToken ?? this.job.secrets?.robotAccessToken,
+        environmentSecrets: [
+          // Latter secrets override former ones.
+          ...(this.job.secrets?.environmentSecrets ?? []),
+          ...(job.secrets?.environmentSecrets ?? []),
+        ],
+      },
       ...(this._job.platform ? { expoBuildUrl: this._job.expoBuildUrl } : null),
     };
     this._metadata = metadata;

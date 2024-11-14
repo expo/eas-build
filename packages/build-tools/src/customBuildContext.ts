@@ -116,6 +116,16 @@ export class CustomBuildContext<TJob extends Job = Job> implements ExternalBuild
     this.job = {
       ...job,
       triggeredBy: this.job.triggeredBy,
+      secrets: {
+        ...this.job.secrets,
+        ...job.secrets,
+        robotAccessToken: job.secrets?.robotAccessToken ?? this.job.secrets?.robotAccessToken,
+        environmentSecrets: [
+          // Latter secrets override former ones.
+          ...(this.job.secrets?.environmentSecrets ?? []),
+          ...(job.secrets?.environmentSecrets ?? []),
+        ],
+      },
       ...(this.job.platform ? { expoBuildUrl: this.job.expoBuildUrl } : null),
     };
     this.metadata = metadata;
