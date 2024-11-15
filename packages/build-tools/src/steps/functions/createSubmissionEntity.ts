@@ -82,7 +82,7 @@ export function createSubmissionEntityFunction(): BuildFunction {
 
       try {
         const response = await retryOnDNSFailure(fetch)(
-          new URL('/v2/app-store-submissions/', stepsCtx.global.staticContext.expoApiServerURL),
+          new URL('/app-store-submissions/', stepsCtx.global.staticContext.expoApiServerURL),
           {
             method: 'POST',
             headers: {
