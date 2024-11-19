@@ -39,10 +39,21 @@ export function createStartAndroidEmulatorBuildFunction(): BuildFunction {
       const deviceName = `${inputs.device_name.value}`;
       const systemImagePackage = `${inputs.system_image_package.value}`;
       logger.info('Making sure system image is installed');
-      await spawn('sdkmanager', [systemImagePackage], {
-        env,
-        logger,
-      });
+      await retryAsync(
+        async () => {
+          await spawn('sdkmanager', [systemImagePackage], {
+            env,
+            logger,
+          });
+        },
+        {
+          logger,
+          retryOptions: {
+            retries: 3, // Retry 3 times
+            retryIntervalMs: 1_000,
+          },
+        }
+      );
 
       logger.info('Creating emulator device');
       const avdManager = spawn(
