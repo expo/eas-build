@@ -162,32 +162,6 @@ describe(uploadJobOutputsToWwwAsync, () => {
       logger,
       reportBuildPhaseStats: () => {},
     } as unknown as BuildContext<Generic.Job>;
-    // const buildContext = createBuildContext({
-    //   job: {
-    //     outputs: {
-    //       fingerprintHash: '${{ steps.setup.outputs.fingerprint_hash }}',
-    //       nodeVersion: '${{ steps.node_setup.outputs.node_version }}',
-    //     },
-    //     builderEnvironment: {
-    //       env: {
-    //         __WORKFLOW_JOB_ID: workflowJobId,
-    //       },
-    //     },
-    //     secrets: {
-    //       robotAccessToken,
-    //     },
-    //   } as unknown as Generic.Job,
-    //   logBuffer: {
-    //     getLogs: () => [],
-    //     getPhaseLogs: () => [],
-    //   },
-    //   analytics: {} as any,
-    //   metadata: {} as any,
-    //   projectId: 'test',
-    //   buildId: 'test',
-    //   buildLogger: createLogger({ name: 'test' }),
-    //   reportBuildPhaseStatsFn: () => {},
-    // });
 
     const fingerprintHashStepOutput = new BuildStepOutput(context, {
       id: 'fingerprint_hash',
