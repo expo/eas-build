@@ -54,6 +54,7 @@ export enum BuildPhase {
   // CUSTOM BUILDS
   PARSE_CUSTOM_WORKFLOW_CONFIG = 'PARSE_CUSTOM_WORKFLOW_CONFIG',
   CUSTOM = 'CUSTOM',
+  COMPLETE_JOB = 'COMPLETE_JOB',
 }
 
 export enum SubmissionPhase {
@@ -114,6 +115,7 @@ export const buildPhaseDisplayName: Record<BuildPhase, string> = {
   // CUSTOM
   [BuildPhase.CUSTOM]: 'Unknown build phase',
   [BuildPhase.PARSE_CUSTOM_WORKFLOW_CONFIG]: 'Parse custom build config',
+  [BuildPhase.COMPLETE_JOB]: 'Complete job',
 };
 
 export const submissionPhaseDisplayName: Record<SubmissionPhase, string> = {
@@ -174,6 +176,7 @@ export const buildPhaseWebsiteId: Record<BuildPhase, string> = {
   // CUSTOM
   [BuildPhase.CUSTOM]: 'custom',
   [BuildPhase.PARSE_CUSTOM_WORKFLOW_CONFIG]: 'parse-custom-workflow-config',
+  [BuildPhase.COMPLETE_JOB]: 'complete-job',
 };
 
 export const submissionPhaseWebsiteId: Record<SubmissionPhase, string> = {
