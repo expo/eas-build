@@ -2,9 +2,10 @@ import { Generic } from '@expo/eas-build-job';
 import { BuildStep, jsepEval } from '@expo/steps';
 import { bunyan } from '@expo/logger';
 import nullthrows from 'nullthrows';
-import fetch from 'node-fetch';
 
 import { BuildContext } from '../context';
+
+import { turtleFetch } from './turtleFetch';
 
 export async function uploadJobOutputsToWwwAsync(
   ctx: BuildContext<Generic.Job>,
@@ -34,21 +35,14 @@ export async function uploadJobOutputsToWwwAsync(
     });
     logger.info('Uploading outputs');
 
-    const response = await fetch(
-      new URL(`workflows/${workflowJobId}`, expoApiV2BaseUrl).toString(),
-      {
-        method: 'PATCH',
-        body: JSON.stringify({ outputs }),
-        headers: {
-          Authorization: `Bearer ${robotAccessToken}`,
-          'Content-Type': 'application/json',
-        },
-        timeout: 20000,
-      }
-    );
-    if (!response.ok) {
-      throw new Error(`[${response.status}] ${response.statusText}`);
-    }
+    await turtleFetch(new URL(`workflows/${workflowJobId}`, expoApiV2BaseUrl).toString(), 'PATCH', {
+      json: { outputs },
+      headers: {
+        Authorization: `Bearer ${robotAccessToken}`,
+      },
+      timeout: 20000,
+      logger,
+    });
   } catch (err) {
     logger.error({ err }, 'Failed to upload outputs');
     throw err;
