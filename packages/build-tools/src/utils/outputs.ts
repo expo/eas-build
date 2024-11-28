@@ -34,15 +34,21 @@ export async function uploadJobOutputsToWwwAsync(
     });
     logger.info('Uploading outputs');
 
-    await fetch(new URL(`workflows/${workflowJobId}`, expoApiV2BaseUrl).toString(), {
-      method: 'PATCH',
-      body: JSON.stringify({ outputs }),
-      headers: {
-        Authorization: `Bearer ${robotAccessToken}`,
-        'Content-Type': 'application/json',
-      },
-      timeout: 20000,
-    });
+    const response = await fetch(
+      new URL(`workflows/${workflowJobId}`, expoApiV2BaseUrl).toString(),
+      {
+        method: 'PATCH',
+        body: JSON.stringify({ outputs }),
+        headers: {
+          Authorization: `Bearer ${robotAccessToken}`,
+          'Content-Type': 'application/json',
+        },
+        timeout: 20000,
+      }
+    );
+    if (!response.ok) {
+      throw new Error(`[${response.status}] ${response.statusText}`);
+    }
   } catch (err) {
     logger.error({ err }, 'Failed to upload outputs');
   }
