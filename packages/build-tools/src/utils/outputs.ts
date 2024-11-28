@@ -51,6 +51,7 @@ export async function uploadJobOutputsToWwwAsync(
     }
   } catch (err) {
     logger.error({ err }, 'Failed to upload outputs');
+    throw err;
   }
 }
 

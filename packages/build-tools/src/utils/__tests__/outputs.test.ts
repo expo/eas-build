@@ -182,6 +182,11 @@ describe(uploadJobOutputsToWwwAsync, () => {
     unusedStepOutput.set('true');
 
     const fetchMock = jest.mocked(fetch);
+    fetchMock.mockResolvedValue({
+      ok: true,
+      status: 200,
+      statusText: 'OK',
+    } as unknown as Response);
     await uploadJobOutputsToWwwAsync(buildContext, {
       steps: [
         new BuildStep(context, {
@@ -269,24 +274,27 @@ describe(uploadJobOutputsToWwwAsync, () => {
       status: 400,
       statusText: 'Request failed',
     } as unknown as Response);
-    await uploadJobOutputsToWwwAsync(buildContext, {
-      steps: [
-        new BuildStep(context, {
-          id: 'setup',
-          displayName: 'test',
-          command: 'test',
-          outputs: [fingerprintHashStepOutput, unusedStepOutput],
-        }),
-        new BuildStep(context, {
-          id: 'node_setup',
-          displayName: 'test2',
-          command: 'test2',
-          outputs: [nodeVersionStepOutput],
-        }),
-      ],
-      logger,
-      expoApiV2BaseUrl: 'http://exp.test/--/api/v2/',
-    });
+    const expectedThrownError = new Error('[400] Request failed');
+    await expect(
+      uploadJobOutputsToWwwAsync(buildContext, {
+        steps: [
+          new BuildStep(context, {
+            id: 'setup',
+            displayName: 'test',
+            command: 'test',
+            outputs: [fingerprintHashStepOutput, unusedStepOutput],
+          }),
+          new BuildStep(context, {
+            id: 'node_setup',
+            displayName: 'test2',
+            command: 'test2',
+            outputs: [nodeVersionStepOutput],
+          }),
+        ],
+        logger,
+        expoApiV2BaseUrl: 'http://exp.test/--/api/v2/',
+      })
+    ).rejects.toThrow(expectedThrownError);
     expect(fetchMock).toHaveBeenCalledWith(
       `http://exp.test/--/api/v2/workflows/${workflowJobId}`, // URL
       expect.objectContaining({
@@ -302,7 +310,7 @@ describe(uploadJobOutputsToWwwAsync, () => {
       })
     );
     expect(loggerErrorSpy).toHaveBeenCalledWith(
-      { err: new Error('[400] Request failed') },
+      { err: expectedThrownError },
       'Failed to upload outputs'
     );
   });
