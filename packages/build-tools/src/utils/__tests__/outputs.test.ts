@@ -106,7 +106,7 @@ describe(getJobOutputsFromSteps, () => {
     expect(
       getJobOutputsFromSteps({
         jobOutputDefinitions: {},
-        interpolationContext: {},
+        interpolationContext: { steps: {} },
       })
     ).toEqual({});
   });
@@ -117,7 +117,7 @@ describe(getJobOutputsFromSteps, () => {
         jobOutputDefinitions: {
           test: '${{ 1 + 1 }}',
         },
-        interpolationContext: {},
+        interpolationContext: { steps: {} },
       })
     ).toEqual({ test: '2' });
 
