@@ -11,7 +11,7 @@ import { createLogger } from '@expo/logger';
 import fetch, { Response } from 'node-fetch';
 
 import {
-  getDynamicValuesFromStep,
+  getStepOutputsAsObject,
   getJobOutputsFromSteps,
   uploadJobOutputsToWwwAsync,
 } from '../outputs';
@@ -40,10 +40,10 @@ const context = new BuildStepGlobalContext(
   false
 );
 
-describe(getDynamicValuesFromStep, () => {
+describe(getStepOutputsAsObject, () => {
   it('returns empty object for outputs of a step with no outputs', () => {
     expect(
-      getDynamicValuesFromStep(
+      getStepOutputsAsObject(
         new BuildStep(context, {
           id: 'test',
           displayName: 'test',
@@ -55,7 +55,7 @@ describe(getDynamicValuesFromStep, () => {
 
   it(`returns outputs from a step when they're defined`, () => {
     expect(
-      getDynamicValuesFromStep(
+      getStepOutputsAsObject(
         new BuildStep(context, {
           id: 'test',
           displayName: 'test',
@@ -89,7 +89,7 @@ describe(getDynamicValuesFromStep, () => {
     output1.set('abc');
     output2.set('true');
     expect(
-      getDynamicValuesFromStep(
+      getStepOutputsAsObject(
         new BuildStep(context, {
           id: 'test',
           displayName: 'test',

@@ -25,9 +25,9 @@ export async function uploadJobOutputsToWwwAsync(
     const robotAccessToken = nullthrows(ctx.job.secrets?.robotAccessToken);
 
     const interpolationContext = {
-      steps: Object.fromEntries(steps.map((step) => [step.id, getDynamicValuesFromStep(step)])),
+      steps: Object.fromEntries(steps.map((step) => [step.id, getStepOutputsAsObject(step)])),
     };
-    logger.info({ dynamicValues: interpolationContext }, 'Using dynamic values');
+    logger.debug({ dynamicValues: interpolationContext }, 'Using dynamic values');
 
     const outputs = getJobOutputsFromSteps({
       jobOutputDefinitions: ctx.job.outputs,
@@ -55,7 +55,9 @@ export function getJobOutputsFromSteps({
   interpolationContext,
 }: {
   jobOutputDefinitions: Record<string, string>;
-  interpolationContext: Record<string, any>;
+  interpolationContext: {
+    steps: Record<string, { outputs: Record<string, string | undefined> } | string>;
+  };
 }): Record<string, string | undefined> {
   const jobOutputs: Record<string, string | undefined> = {};
   for (const [outputKey, outputDefinition] of Object.entries(jobOutputDefinitions)) {
@@ -70,7 +72,7 @@ export function getJobOutputsFromSteps({
 }
 
 /** This is what we'll use to generate an object representing a step. */
-export function getDynamicValuesFromStep(step: BuildStep): {
+export function getStepOutputsAsObject(step: BuildStep): {
   outputs: Record<string, string | undefined>;
 } {
   const outputs = Object.fromEntries(
