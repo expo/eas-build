@@ -56,7 +56,7 @@ export function getJobOutputsFromSteps({
 }: {
   jobOutputDefinitions: Record<string, string>;
   interpolationContext: {
-    steps: Record<string, { outputs: Record<string, string | undefined> } | string>;
+    steps: Record<string, { outputs: Record<string, string | undefined> }>;
   };
 }): Record<string, string | undefined> {
   const jobOutputs: Record<string, string | undefined> = {};
