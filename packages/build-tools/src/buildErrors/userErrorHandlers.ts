@@ -277,6 +277,29 @@ To resolve this issue, downgrade to an older Xcode version using the "image" fie
   },
   {
     platform: Platform.IOS,
+    phase: XCODE_BUILD_PHASE,
+    // MkDir /Users/expo/workingdir/build/packages/apps/NFLNetwork/ios/build/Build/Products/Release-iphonesimulator/expo-dev-launcher/EXDevLauncher.bundle (in target 'expo-dev-launcher-EXDevLauncher' from project 'Pods')
+    // cd /Users/expo/workingdir/build/packages/apps/NFLNetwork/ios/Pods
+    // /bin/mkdir -p /Users/expo/workingdir/build/packages/apps/NFLNetwork/ios/build/Build/Products/Release-iphonesimulator/expo-dev-launcher/EXDevLauncher.bundle
+    // ProcessXCFramework /Users/expo/workingdir/build/packages/video/ios/Vendor/dependency/ProgrammaticAccessLibrary.xcframework /Users/expo/workingdir/build/packages/apps/NFLNetwork/ios/build/Build/Products/Release-iphonesimulator/ProgrammaticAccessLibrary.framework ios simulator
+    // cd /Users/expo/workingdir/build/packages/apps/NFLNetwork/ios
+    // builtin-process-xcframework --xcframework /Users/expo/workingdir/build/packages/video/ios/Vendor/dependency/ProgrammaticAccessLibrary.xcframework --platform ios --environment simulator --target-path /Users/expo/workingdir/build/packages/apps/NFLNetwork/ios/build/Build/Products/Release-iphonesimulator
+    // /Users/expo/workingdir/build/packages/video/ios/Vendor/dependency/ProgrammaticAccessLibrary.xcframework:1:1: error: The signature of “ProgrammaticAccessLibrary.xcframework” cannot be verified.
+    // note: A sealed resource is missing or invalid
+    // note: /Users/expo/workingdir/build/packages/video/ios/Vendor/dependency/ProgrammaticAccessLibrary.xcframework: a sealed resource is missing or invalid
+    // file modified: /Users/expo/workingdir/build/packages/video/ios/Vendor/dependency/ProgrammaticAccessLibrary.xcframework/ios-arm64_x86_64-simulator/ProgrammaticAccessLibrary.framework/ProgrammaticAccessLibrary
+    // file modified: /Users/expo/workingdir/build/packages/video/ios/Vendor/dependency/ProgrammaticAccessLibrary.xcframework/ios-arm64/ProgrammaticAccessLibrary.framework/ProgrammaticAccessLibrary
+    regexp: /error: .+/g,
+    createError: (matchResult) =>
+      new UserFacingError(
+        'XCODE_BUILD_ERROR',
+        `The "Run fastlane" step failed because of an error in the Xcode build process. We automatically detected following errors in your Xcode build logs:\n${matchResult
+          .map((match) => `- ${match.replace('error: ', '')}`)
+          .join('\n')}\nRefer to "Xcode Logs" below for additional, more detailed logs.`
+      ),
+  },
+  {
+    platform: Platform.IOS,
     phase: BuildPhase.RUN_FASTLANE,
     regexp: /.*/,
     createError: () =>
