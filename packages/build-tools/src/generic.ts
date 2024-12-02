@@ -16,9 +16,11 @@ import { prepareProjectSourcesAsync } from './common/projectSources';
 import { getEasFunctions } from './steps/easFunctions';
 import { CustomBuildContext } from './customBuildContext';
 import { getEasFunctionGroups } from './steps/easFunctionGroups';
+import { uploadJobOutputsToWwwAsync } from './utils/outputs';
 
 export async function runGenericJobAsync(
-  ctx: BuildContext<Generic.Job>
+  ctx: BuildContext<Generic.Job>,
+  { expoApiV2BaseUrl }: { expoApiV2BaseUrl: string }
 ): Promise<{ runResult: Result<void>; buildWorkflow: BuildWorkflow }> {
   const customBuildCtx = new CustomBuildContext(ctx);
 
@@ -58,6 +60,14 @@ export async function runGenericJobAsync(
   });
 
   const runResult = await asyncResult(workflow.executeAsync());
+
+  await ctx.runBuildPhase(BuildPhase.COMPLETE_JOB, async () => {
+    await uploadJobOutputsToWwwAsync(ctx, {
+      steps: workflow.buildSteps,
+      logger: ctx.logger,
+      expoApiV2BaseUrl,
+    });
+  });
 
   return { runResult, buildWorkflow: workflow };
 }
