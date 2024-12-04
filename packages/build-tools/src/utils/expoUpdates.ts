@@ -287,10 +287,12 @@ async function logDiffFingerprints({
           easFingerprintFile,
           { env: ctx.env, logger: ctx.logger }
         );
-        const changes = JSON.parse(changesJSONString);
-        if (changes.length) {
-          ctx.logger.warn('Difference between local and EAS fingerprints:');
-          ctx.logger.warn(stringifyFingerprintDiff(changes));
+        if (changesJSONString) {
+          const changes = JSON.parse(changesJSONString);
+          if (changes.length) {
+            ctx.logger.warn('Difference between local and EAS fingerprints:');
+            ctx.logger.warn(stringifyFingerprintDiff(changes));
+          }
         }
       }
     } catch (error) {
