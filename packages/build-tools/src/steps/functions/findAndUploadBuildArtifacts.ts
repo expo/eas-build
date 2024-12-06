@@ -148,6 +148,7 @@ async function uploadXcodeBuildLogs({
     artifact: {
       type: ManagedArtifactType.XCODE_BUILD_LOGS,
       paths: [xcodeBuildLogsPath],
+      runStatus: global.hasAnyPreviousStepFailed ? 'errored' : 'success',
     },
     logger,
   });
