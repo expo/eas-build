@@ -29,6 +29,11 @@ export function createEasMaestroTestFunctionGroup(
         id: 'app_path',
         required: false,
       }),
+      BuildStepInput.createProvider({
+        allowedValueTypeName: BuildStepInputValueTypeName.STRING,
+        id: 'android_emulator_system_image_package',
+        required: false,
+      }),
     ],
     createBuildStepsFromFunctionGroupCall: (globalCtx, { inputs }) => {
       const steps: BuildStep[] = [
@@ -68,7 +73,16 @@ export function createEasMaestroTestFunctionGroup(
         );
       } else if (buildToolsContext.job.platform === Platform.ANDROID) {
         steps.push(
-          createStartAndroidEmulatorBuildFunction().createBuildStepFromFunctionCall(globalCtx)
+          createStartAndroidEmulatorBuildFunction().createBuildStepFromFunctionCall(
+            globalCtx,
+            inputs.android_emulator_system_image_package.value
+              ? {
+                  callInputs: {
+                    system_image_package: inputs.android_emulator_system_image_package.value,
+                  },
+                }
+              : undefined
+          )
         );
         const searchPath = inputs.app_path.value ?? 'android/app/build/outputs/**/*.apk';
         steps.push(
