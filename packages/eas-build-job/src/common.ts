@@ -167,6 +167,13 @@ export interface BuildPhaseStats {
 }
 
 export const StaticWorkflowInterpolationContextZ = z.object({
+  after: z.record(
+    z.string(),
+    z.object({
+      status: z.string(),
+      outputs: z.record(z.string(), z.string().nullable()),
+    })
+  ),
   needs: z.record(
     z.string(),
     z.object({
@@ -179,6 +186,9 @@ export const StaticWorkflowInterpolationContextZ = z.object({
       event_name: z.enum(['push', 'pull_request', 'workflow_dispatch']),
       sha: z.string(),
       ref: z.string(),
+      ref_name: z.string(),
+      ref_type: z.string(),
+      commit_message: z.string(),
     })
     // We need to .optional() to support jobs that are not triggered by a GitHub event.
     .optional(),
