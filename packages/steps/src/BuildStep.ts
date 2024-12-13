@@ -28,6 +28,7 @@ import { BuildStepEnv } from './BuildStepEnv.js';
 import { BuildRuntimePlatform } from './BuildRuntimePlatform.js';
 import { jsepEval } from './utils/jsepEval.js';
 import { interpolateJobContext } from './interpolation.js';
+import { fixEscapeCharactersInRawEnvValue } from './utils/envUtils.js';
 
 export enum BuildStepStatus {
   NEW = 'new',
@@ -484,7 +485,8 @@ export class BuildStep extends BuildStepOutputAccessor {
     const entries = await Promise.all(
       filenames.map(async (basename) => {
         const rawContents = await fs.readFile(path.join(envsDir, basename), 'utf-8');
-        return [basename, rawContents];
+        const updatedContents = fixEscapeCharactersInRawEnvValue(rawContents);
+        return [basename, updatedContents];
       })
     );
     this.ctx.global.updateEnv({
