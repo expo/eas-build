@@ -4,7 +4,7 @@ import spawn from '@expo/turtle-spawn';
 import { BuildContext } from '../context';
 
 import { PackageManager } from './packageManager';
-import { isUsingYarn2, readPackageJson } from './project';
+import { isUsingModernYarnVersion, readPackageJson } from './project';
 
 export enum Hook {
   PRE_INSTALL = 'eas-build-pre-install',
@@ -31,7 +31,7 @@ export async function runHookIfPresent<TJob extends BuildJob>(
     // when using yarn 2, it's not possible to run any scripts before running 'yarn install'
     // use 'npm' in that case
     const packageManager =
-      (await isUsingYarn2(projectDir)) && hook === Hook.PRE_INSTALL
+      (await isUsingModernYarnVersion(projectDir)) && hook === Hook.PRE_INSTALL
         ? PackageManager.NPM
         : ctx.packageManager;
     await spawn(packageManager, ['run', hook], {
