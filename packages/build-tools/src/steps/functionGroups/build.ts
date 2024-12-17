@@ -35,7 +35,6 @@ export function createEasBuildBuildFunctionGroup(
     id: 'build',
     createBuildStepsFromFunctionGroupCall: (globalCtx) => {
       if (buildToolsContext.job.platform === Platform.IOS) {
-        // eslint-disable-next-line @typescript-eslint/prefer-nullish-coalescing
         if (buildToolsContext.job.simulator) {
           return createStepsForIosSimulatorBuild({
             globalCtx,
