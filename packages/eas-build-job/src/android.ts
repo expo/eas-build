@@ -115,6 +115,8 @@ export interface Job {
 
   initiatingUserId: string;
   appId: string;
+
+  environment?: 'production' | 'preview' | 'development';
 }
 
 const SecretsSchema = Joi.object({
@@ -183,4 +185,6 @@ export const JobSchema = Joi.object({
 
   initiatingUserId: Joi.string().required(),
   appId: Joi.string().required(),
+
+  environment: Joi.string().valid('production', 'preview', 'development'),
 });
