@@ -34,6 +34,7 @@ export async function runBuilderWithHooksAsync<T extends BuildJob>(
       if (ctx.job.platform === Platform.IOS) {
         await findAndUploadXcodeBuildLogsAsync(ctx as BuildContext<Ios.Job>, {
           logger: ctx.logger,
+          runStatus: buildSuccess ? 'success' : 'errored',
         });
       }
 
