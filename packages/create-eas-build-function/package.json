@@ -36,7 +36,7 @@
     "@expo/steps": "1.0.156"
   },
   "devDependencies": {
-    "@expo/package-manager": "1.5.2",
+    "@expo/package-manager": "1.7.0",
     "@jest/globals": "^29.7.0",
     "@types/jest": "^29.5.12",
     "@types/node": "20.14.2",
