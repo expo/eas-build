@@ -13,3 +13,6 @@ const fsRm = (path: string, options: object): Promise<void> => {
 };
 
 module.exports = { ...fs.promises, realpath: fsRealpath, rm: fsRm };
+
+// NOTE(cedric): workaround to also mock `node:fs`
+jest.mock('node:fs', () => require('fs'));
