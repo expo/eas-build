@@ -24,3 +24,6 @@ const fsRm = (
 };
 
 module.exports = { ...fs, realpath: fsRealpath, rm: fsRm };
+
+// NOTE(cedric): workaround to also mock `node:fs`
+jest.mock('node:fs', () => require('fs'));
