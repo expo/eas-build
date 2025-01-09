@@ -4,7 +4,7 @@ import spawn from '@expo/turtle-spawn';
 import { BuildContext } from '../context';
 
 import { PackageManager } from './packageManager';
-import { isUsingYarn2, readPackageJson } from './project';
+import { readPackageJson } from './project';
 
 export enum Hook {
   PRE_INSTALL = 'eas-build-pre-install',
@@ -28,10 +28,11 @@ export async function runHookIfPresent<TJob extends BuildJob>(
   const packageJson = readPackageJson(projectDir);
   if (packageJson.scripts?.[hook]) {
     ctx.logger.info(`Script '${hook}' is present in package.json, running it...`);
-    // when using yarn 2, it's not possible to run any scripts before running 'yarn install'
-    // use 'npm' in that case
+    // both yarn v2+ and yarn v1 seem to have issues with running preinstall script in some cases
+    // like doing corepack enable
+    // https://exponent-internal.slack.com/archives/C9PRD479V/p1736426668589209
     const packageManager =
-      (await isUsingYarn2(projectDir)) && hook === Hook.PRE_INSTALL
+      ctx.packageManager === PackageManager.YARN && hook === Hook.PRE_INSTALL
         ? PackageManager.NPM
         : ctx.packageManager;
     await spawn(packageManager, ['run', hook], {
