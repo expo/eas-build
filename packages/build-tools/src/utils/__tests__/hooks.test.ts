@@ -51,10 +51,10 @@ describe(runHookIfPresent, () => {
 
     await runHookIfPresent(ctx, Hook.PRE_INSTALL);
 
-    expect(spawn).toBeCalledWith(PackageManager.YARN, ['run', Hook.PRE_INSTALL], expect.anything());
+    expect(spawn).toBeCalledWith(PackageManager.NPM, ['run', Hook.PRE_INSTALL], expect.anything());
   });
 
-  it('runs the hook with yarn if yarn.lock exists', async () => {
+  it('runs the hook with npm even if yarn.lock exists', async () => {
     vol.fromJSON(
       {
         './package.json': JSON.stringify({
@@ -71,7 +71,7 @@ describe(runHookIfPresent, () => {
 
     await runHookIfPresent(ctx, Hook.PRE_INSTALL);
 
-    expect(spawn).toBeCalledWith(PackageManager.YARN, ['run', Hook.PRE_INSTALL], expect.anything());
+    expect(spawn).toBeCalledWith(PackageManager.NPM, ['run', Hook.PRE_INSTALL], expect.anything());
   });
 
   it('runs the PRE_INSTALL hook using npm when the project uses yarn 2', async () => {
