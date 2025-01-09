@@ -233,9 +233,15 @@ export class BuildStepContext {
   }
 
   public get workingDirectory(): string {
-    return this.relativeWorkingDirectory
-      ? path.resolve(this.ctx.defaultWorkingDirectory, this.relativeWorkingDirectory)
-      : this.ctx.defaultWorkingDirectory;
+    if (!this.relativeWorkingDirectory) {
+      return this.ctx.defaultWorkingDirectory;
+    }
+
+    if (path.isAbsolute(this.relativeWorkingDirectory)) {
+      return path.join(this.ctx.projectTargetDirectory, this.relativeWorkingDirectory);
+    }
+
+    return path.join(this.ctx.defaultWorkingDirectory, this.relativeWorkingDirectory);
   }
 
   public serialize(): SerializedBuildStepContext {
