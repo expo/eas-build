@@ -9,7 +9,7 @@ import {
   PackageManager,
   resolvePackageManager,
 } from '../../utils/packageManager';
-import { isUsingYarn2 } from '../../utils/project';
+import { isUsingModernYarnVersion } from '../../utils/project';
 
 export function createInstallNodeModulesBuildFunction(): BuildFunction {
   return new BuildFunction({
@@ -44,7 +44,7 @@ export async function installNodeModules(
   if (packageManager === PackageManager.PNPM) {
     args = ['install', '--no-frozen-lockfile'];
   } else if (packageManager === PackageManager.YARN) {
-    const isYarn2 = await isUsingYarn2(stepCtx.workingDirectory);
+    const isYarn2 = await isUsingModernYarnVersion(stepCtx.workingDirectory);
     if (isYarn2) {
       args = ['install', '--no-immutable', '--inline-builds'];
     }
