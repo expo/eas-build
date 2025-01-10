@@ -89,7 +89,7 @@ export async function setupAsync<TJob extends BuildJob>(ctx: BuildContext<TJob>)
   }
 
   const hasExpoPackage = !!packageJson.dependencies?.expo;
-  if (hasExpoPackage) {
+  if (!ctx.env.EAS_BUILD_DISABLE_EXPO_DOCTOR_STEP && hasExpoPackage) {
     await ctx.runBuildPhase(BuildPhase.RUN_EXPO_DOCTOR, async () => {
       try {
         const { stdout } = await runExpoDoctor(ctx);
