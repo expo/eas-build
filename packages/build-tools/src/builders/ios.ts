@@ -3,7 +3,6 @@ import { IOSConfig } from '@expo/config-plugins';
 import { ManagedArtifactType, BuildMode, BuildPhase, Ios, Workflow } from '@expo/eas-build-job';
 import fs from 'fs-extra';
 import nullthrows from 'nullthrows';
-import semver from 'semver';
 
 import { Artifacts, BuildContext } from '../context';
 import {
@@ -22,7 +21,7 @@ import { setupAsync } from '../common/setup';
 import { prebuildAsync } from '../common/prebuild';
 import { prepareExecutableAsync } from '../utils/prepareBuildExecutable';
 import { getParentAndDescendantProcessPidsAsync } from '../utils/processes';
-import { eagerBundleAsync } from '../common/eagerBundle';
+import { eagerBundleAsync, shouldUseEagerBundle } from '../common/eagerBundle';
 
 import { runBuilderWithHooksAsync } from './common';
 import { runCustomBuildAsync } from './custom';
@@ -113,12 +112,7 @@ async function buildAsync(ctx: BuildContext<Ios.Job>): Promise<void> {
       });
     });
 
-    if (
-      !ctx.env.EAS_BUILD_DISABLE_BUNDLE_JAVASCRIPT_STEP &&
-      !ctx.metadata?.developmentClient &&
-      ctx.metadata?.sdkVersion &&
-      semver.satisfies(ctx.metadata?.sdkVersion, '>=52')
-    ) {
+    if (!ctx.env.EAS_BUILD_DISABLE_BUNDLE_JAVASCRIPT_STEP && shouldUseEagerBundle(ctx.metadata)) {
       await ctx.runBuildPhase(BuildPhase.EAGER_BUNDLE, async () => {
         await eagerBundleAsync({
           platform: ctx.job.platform,

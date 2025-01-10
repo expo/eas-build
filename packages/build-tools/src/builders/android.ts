@@ -2,7 +2,6 @@ import path from 'path';
 
 import { Android, BuildMode, BuildPhase, Workflow } from '@expo/eas-build-job';
 import nullthrows from 'nullthrows';
-import semver from 'semver';
 
 import { Artifacts, BuildContext, SkipNativeBuildError } from '../context';
 import {
@@ -21,7 +20,7 @@ import { configureBuildGradle } from '../android/gradleConfig';
 import { setupAsync } from '../common/setup';
 import { prebuildAsync } from '../common/prebuild';
 import { prepareExecutableAsync } from '../utils/prepareBuildExecutable';
-import { eagerBundleAsync } from '../common/eagerBundle';
+import { eagerBundleAsync, shouldUseEagerBundle } from '../common/eagerBundle';
 
 import { runBuilderWithHooksAsync } from './common';
 import { runCustomBuildAsync } from './custom';
@@ -104,12 +103,7 @@ async function buildAsync(ctx: BuildContext<Android.Job>): Promise<void> {
     throw new SkipNativeBuildError('Skipping Gradle build');
   }
 
-  if (
-    !ctx.env.EAS_BUILD_DISABLE_BUNDLE_JAVASCRIPT_STEP &&
-    !ctx.metadata?.developmentClient &&
-    ctx.metadata?.sdkVersion &&
-    semver.satisfies(ctx.metadata?.sdkVersion, '>=52')
-  ) {
+  if (!ctx.env.EAS_BUILD_DISABLE_BUNDLE_JAVASCRIPT_STEP && shouldUseEagerBundle(ctx.metadata)) {
     await ctx.runBuildPhase(BuildPhase.EAGER_BUNDLE, async () => {
       await eagerBundleAsync({
         platform: ctx.job.platform,
