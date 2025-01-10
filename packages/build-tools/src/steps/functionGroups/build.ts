@@ -1,6 +1,5 @@
 import { BuildFunctionGroup, BuildStep, BuildStepGlobalContext } from '@expo/steps';
 import { BuildJob, Platform } from '@expo/eas-build-job';
-import semver from 'semver';
 
 import { createCheckoutBuildFunction } from '../functions/checkout';
 import { createInstallNodeModulesBuildFunction } from '../functions/installNodeModules';
@@ -21,6 +20,7 @@ import { createSetUpNpmrcBuildFunction } from '../functions/useNpmToken';
 import { createResolveBuildConfigBuildFunction } from '../functions/resolveBuildConfig';
 import { calculateEASUpdateRuntimeVersionFunction } from '../functions/calculateEASUpdateRuntimeVersion';
 import { eagerBundleBuildFunction } from '../functions/eagerBundle';
+import { shouldUseEagerBundle } from '../../common/eagerBundle';
 
 interface HelperFunctionsInput {
   globalCtx: BuildStepGlobalContext;
@@ -102,8 +102,7 @@ function createStepsForIosSimulatorBuild({
     calculateEASUpdateRuntimeVersion,
     installPods,
     configureEASUpdate,
-    ...(globalCtx.staticContext.metadata?.sdkVersion &&
-    semver.satisfies(globalCtx.staticContext.metadata?.sdkVersion, '>=52')
+    ...(shouldUseEagerBundle(globalCtx.staticContext.metadata)
       ? [
           eagerBundleBuildFunction().createBuildStepFromFunctionCall(globalCtx, {
             callInputs: {
@@ -178,8 +177,7 @@ function createStepsForIosBuildWithCredentials({
     configureEASUpdate,
     configureIosCredentialsFunction().createBuildStepFromFunctionCall(globalCtx),
     configureIosVersionFunction().createBuildStepFromFunctionCall(globalCtx),
-    ...(globalCtx.staticContext.metadata?.sdkVersion &&
-    semver.satisfies(globalCtx.staticContext.metadata?.sdkVersion, '>=52')
+    ...(shouldUseEagerBundle(globalCtx.staticContext.metadata)
       ? [
           eagerBundleBuildFunction().createBuildStepFromFunctionCall(globalCtx, {
             callInputs: {
@@ -230,8 +228,7 @@ function createStepsForAndroidBuildWithoutCredentials({
     createPrebuildBuildFunction().createBuildStepFromFunctionCall(globalCtx),
     calculateEASUpdateRuntimeVersion,
     configureEASUpdate,
-    ...(globalCtx.staticContext.metadata?.sdkVersion &&
-    semver.satisfies(globalCtx.staticContext.metadata?.sdkVersion, '>=52')
+    ...(shouldUseEagerBundle(globalCtx.staticContext.metadata)
       ? [
           eagerBundleBuildFunction().createBuildStepFromFunctionCall(globalCtx, {
             callInputs: {
@@ -284,8 +281,7 @@ function createStepsForAndroidBuildWithCredentials({
     injectAndroidCredentialsFunction().createBuildStepFromFunctionCall(globalCtx),
     configureAndroidVersionFunction().createBuildStepFromFunctionCall(globalCtx),
     runGradle,
-    ...(globalCtx.staticContext.metadata?.sdkVersion &&
-    semver.satisfies(globalCtx.staticContext.metadata?.sdkVersion, '>=52')
+    ...(shouldUseEagerBundle(globalCtx.staticContext.metadata)
       ? [
           eagerBundleBuildFunction().createBuildStepFromFunctionCall(globalCtx, {
             callInputs: {
