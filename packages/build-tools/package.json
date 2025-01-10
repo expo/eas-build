@@ -1,6 +1,6 @@
 {
   "name": "@expo/build-tools",
-  "version": "1.0.160",
+  "version": "1.0.161",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "files": [
@@ -32,7 +32,7 @@
     "@expo/plist": "^0.2.0",
     "@expo/repack-app": "0.0.6",
     "@expo/results": "^1.0.0",
-    "@expo/steps": "1.0.156",
+    "@expo/steps": "1.0.161",
     "@expo/template-file": "1.0.117",
     "@expo/turtle-spawn": "1.0.117",
     "@expo/xcpretty": "^4.3.1",
