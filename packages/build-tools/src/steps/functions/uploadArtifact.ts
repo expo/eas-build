@@ -92,11 +92,19 @@ export function createUploadArtifactBuildFunction(ctx: CustomBuildContext): Buil
         throw result.reason;
       });
 
-      const artifact = {
-        type: parseArtifactTypeInput(`${inputs.type.value}`),
-        paths: artifactPaths,
-        key: inputs.key.value as string,
-      };
+      const artifactType = parseArtifactTypeInput(`${inputs.type.value}`);
+      const artifact =
+        artifactType === ManagedArtifactType.XCODE_BUILD_LOGS
+          ? ({
+              type: artifactType,
+              paths: artifactPaths,
+              runStatus: global.hasAnyPreviousStepFailed ? 'errored' : 'success',
+            } as const)
+          : {
+              type: artifactType,
+              paths: artifactPaths,
+              key: inputs.key.value as string,
+            };
 
       try {
         await ctx.runtimeApi.uploadArtifact({
