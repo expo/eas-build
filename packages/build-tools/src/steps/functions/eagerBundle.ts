@@ -40,7 +40,10 @@ export function eagerBundleBuildFunction(): BuildFunction {
         env: {
           ...env,
           ...(resolvedEASUpdateRuntimeVersion
-            ? { EXPO_UPDATES_FINGERPRINT_OVERRIDE: resolvedEASUpdateRuntimeVersion }
+            ? {
+                EXPO_UPDATES_FINGERPRINT_OVERRIDE: resolvedEASUpdateRuntimeVersion,
+                EXPO_UPDATES_WORKFLOW_OVERRIDE: stepsCtx.global.staticContext.job.type,
+              }
             : null),
         },
         packageManager,

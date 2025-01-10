@@ -102,7 +102,8 @@ function createStepsForIosSimulatorBuild({
     calculateEASUpdateRuntimeVersion,
     installPods,
     configureEASUpdate,
-    ...(globalCtx.staticContext.metadata?.sdkVersion &&
+    ...(!globalCtx.staticContext.metadata?.developmentClient &&
+    globalCtx.staticContext.metadata?.sdkVersion &&
     semver.satisfies(globalCtx.staticContext.metadata?.sdkVersion, '>=52')
       ? [
           eagerBundleBuildFunction().createBuildStepFromFunctionCall(globalCtx, {
@@ -178,7 +179,8 @@ function createStepsForIosBuildWithCredentials({
     configureEASUpdate,
     configureIosCredentialsFunction().createBuildStepFromFunctionCall(globalCtx),
     configureIosVersionFunction().createBuildStepFromFunctionCall(globalCtx),
-    ...(globalCtx.staticContext.metadata?.sdkVersion &&
+    ...(!globalCtx.staticContext.metadata?.developmentClient &&
+    globalCtx.staticContext.metadata?.sdkVersion &&
     semver.satisfies(globalCtx.staticContext.metadata?.sdkVersion, '>=52')
       ? [
           eagerBundleBuildFunction().createBuildStepFromFunctionCall(globalCtx, {
@@ -230,7 +232,8 @@ function createStepsForAndroidBuildWithoutCredentials({
     createPrebuildBuildFunction().createBuildStepFromFunctionCall(globalCtx),
     calculateEASUpdateRuntimeVersion,
     configureEASUpdate,
-    ...(globalCtx.staticContext.metadata?.sdkVersion &&
+    ...(!globalCtx.staticContext.metadata?.developmentClient &&
+    globalCtx.staticContext.metadata?.sdkVersion &&
     semver.satisfies(globalCtx.staticContext.metadata?.sdkVersion, '>=52')
       ? [
           eagerBundleBuildFunction().createBuildStepFromFunctionCall(globalCtx, {
@@ -284,7 +287,8 @@ function createStepsForAndroidBuildWithCredentials({
     injectAndroidCredentialsFunction().createBuildStepFromFunctionCall(globalCtx),
     configureAndroidVersionFunction().createBuildStepFromFunctionCall(globalCtx),
     runGradle,
-    ...(globalCtx.staticContext.metadata?.sdkVersion &&
+    ...(!globalCtx.staticContext.metadata?.developmentClient &&
+    globalCtx.staticContext.metadata?.sdkVersion &&
     semver.satisfies(globalCtx.staticContext.metadata?.sdkVersion, '>=52')
       ? [
           eagerBundleBuildFunction().createBuildStepFromFunctionCall(globalCtx, {
