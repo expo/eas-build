@@ -115,6 +115,7 @@ async function buildAsync(ctx: BuildContext<Ios.Job>): Promise<void> {
 
     if (
       !ctx.env.EAS_BUILD_DISABLE_BUNDLE_JAVASCRIPT_STEP &&
+      !ctx.metadata?.developmentClient &&
       ctx.metadata?.sdkVersion &&
       semver.satisfies(ctx.metadata?.sdkVersion, '>=52')
     ) {
