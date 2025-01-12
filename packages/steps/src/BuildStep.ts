@@ -485,7 +485,7 @@ export class BuildStep extends BuildStepOutputAccessor {
     const entries = await Promise.all(
       filenames.map(async (basename) => {
         const rawContents = await fs.readFile(path.join(envsDir, basename), 'utf-8');
-        const decodedContents = Buffer.from(rawContents, 'base64').toString();
+        const decodedContents = Buffer.from(rawContents, 'base64').toString('utf-8');
         return [basename, decodedContents];
       })
     );
