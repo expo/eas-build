@@ -1,6 +1,7 @@
 import assert from 'assert';
 import fs from 'fs/promises';
 import path from 'path';
+import { Buffer } from 'buffer';
 
 import { v4 as uuidv4 } from 'uuid';
 import { JobInterpolationContext } from '@expo/eas-build-job';
@@ -28,7 +29,6 @@ import { BuildStepEnv } from './BuildStepEnv.js';
 import { BuildRuntimePlatform } from './BuildRuntimePlatform.js';
 import { jsepEval } from './utils/jsepEval.js';
 import { interpolateJobContext } from './interpolation.js';
-import { fixEscapeCharactersInRawEnvValue } from './utils/envUtils.js';
 
 export enum BuildStepStatus {
   NEW = 'new',
@@ -485,8 +485,8 @@ export class BuildStep extends BuildStepOutputAccessor {
     const entries = await Promise.all(
       filenames.map(async (basename) => {
         const rawContents = await fs.readFile(path.join(envsDir, basename), 'utf-8');
-        const updatedContents = fixEscapeCharactersInRawEnvValue(rawContents);
-        return [basename, updatedContents];
+        const decodedContents = Buffer.from(rawContents, 'base64').toString('utf-8');
+        return [basename, decodedContents];
       })
     );
     this.ctx.global.updateEnv({
