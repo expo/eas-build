@@ -24,12 +24,7 @@ export type BuildStepInputValueType<
     ? boolean
     : T extends BuildStepInputValueTypeName.NUMBER
       ? number
-      : Record<string, any>;
-
-export type BuildStepInputValueTypeWithRequired<
-  T extends BuildStepInputValueTypeName = BuildStepInputValueTypeName,
-  R extends boolean = boolean,
-> = R extends true ? BuildStepInputValueType<T> : BuildStepInputValueType<T> | undefined;
+      : Record<string, unknown>;
 
 export type BuildStepInputById = Record<string, BuildStepInput>;
 export type BuildStepInputProvider = (
@@ -42,8 +37,8 @@ interface BuildStepInputProviderParams<
   R extends boolean = boolean,
 > {
   id: string;
-  allowedValues?: BuildStepInputValueType<T>[];
-  defaultValue?: BuildStepInputValueType<T>;
+  allowedValues?: unknown[];
+  defaultValue?: unknown;
   required: R;
   allowedValueTypeName: T;
 }
@@ -53,17 +48,14 @@ interface BuildStepInputParams<T extends BuildStepInputValueTypeName, R extends 
   stepDisplayName: string;
 }
 
-export interface SerializedBuildStepInput<
-  T extends BuildStepInputValueTypeName = BuildStepInputValueTypeName,
-  R extends boolean = boolean,
-> {
+export interface SerializedBuildStepInput {
   id: string;
   stepDisplayName: string;
-  defaultValue?: BuildStepInputValueType<T>;
-  allowedValues?: BuildStepInputValueType<T>[];
+  defaultValue?: unknown;
+  allowedValues?: unknown[];
   allowedValueTypeName: BuildStepInputValueTypeName;
-  required: R;
-  value?: BuildStepInputValueType<T>;
+  required: boolean;
+  value?: unknown;
   ctx: SerializedBuildStepGlobalContext;
 }
 
@@ -73,12 +65,12 @@ export class BuildStepInput<
 > {
   public readonly id: string;
   public readonly stepDisplayName: string;
-  public readonly defaultValue?: BuildStepInputValueType<T>;
-  public readonly allowedValues?: BuildStepInputValueType<T>[];
+  public readonly defaultValue?: unknown;
+  public readonly allowedValues?: unknown[];
   public readonly allowedValueTypeName: T;
   public readonly required: R;
 
-  private _value?: BuildStepInputValueType<T>;
+  private _value?: unknown;
 
   public static createProvider(params: BuildStepInputProviderParams): BuildStepInputProvider {
     return (ctx, stepDisplayName) => new BuildStepInput(ctx, { ...params, stepDisplayName });
@@ -103,7 +95,9 @@ export class BuildStepInput<
     this.allowedValueTypeName = allowedValueTypeName;
   }
 
-  public get value(): BuildStepInputValueTypeWithRequired<T, R> {
+  public get value(): R extends true
+    ? BuildStepInputValueType<T>
+    : BuildStepInputValueType<T> | undefined {
     const rawValue = this._value ?? this.defaultValue;
     if (this.required && rawValue === undefined) {
       throw new BuildStepRuntimeError(
@@ -112,7 +106,10 @@ export class BuildStepInput<
     }
 
     const valueDoesNotRequireInterpolation =
-      rawValue === undefined || typeof rawValue === 'boolean' || typeof rawValue === 'number';
+      rawValue === undefined ||
+      rawValue === null ||
+      typeof rawValue === 'boolean' ||
+      typeof rawValue === 'number';
     let returnValue;
     if (valueDoesNotRequireInterpolation) {
       if (typeof rawValue !== this.allowedValueTypeName && rawValue !== undefined) {
@@ -120,7 +117,7 @@ export class BuildStepInput<
           `Input parameter "${this.id}" for step "${this.stepDisplayName}" must be of type "${this.allowedValueTypeName}".`
         );
       }
-      returnValue = rawValue as BuildStepInputValueTypeWithRequired<T, R>;
+      returnValue = rawValue as BuildStepInputValueType<T>;
     } else {
       // `valueDoesNotRequireInterpolation` checks that `rawValue` is not undefined
       // so this will never be true.
@@ -135,11 +132,11 @@ export class BuildStepInput<
     return returnValue;
   }
 
-  public get rawValue(): BuildStepInputValueType<T> | undefined {
+  public get rawValue(): unknown {
     return this._value ?? this.defaultValue;
   }
 
-  public set(value: BuildStepInputValueType<T> | undefined): BuildStepInput {
+  public set(value: unknown): BuildStepInput {
     if (this.required && value === undefined) {
       throw new BuildStepRuntimeError(
         `Input parameter "${this.id}" for step "${this.stepDisplayName}" is required.`
@@ -165,7 +162,7 @@ export class BuildStepInput<
     );
   }
 
-  public serialize(): SerializedBuildStepInput<T, R> {
+  public serialize(): SerializedBuildStepInput {
     return {
       id: this.id,
       stepDisplayName: this.stepDisplayName,
@@ -195,20 +192,18 @@ export class BuildStepInput<
     return input;
   }
 
-  private parseInputValueToAllowedType(
-    value: string | object
-  ): BuildStepInputValueTypeWithRequired<T, R> {
+  private parseInputValueToAllowedType(value: string | object): BuildStepInputValueType<T> {
     if (typeof value === 'object') {
-      return value as BuildStepInputValueTypeWithRequired<T, R>;
+      return value as BuildStepInputValueType<T>;
     }
     if (this.allowedValueTypeName === BuildStepInputValueTypeName.STRING) {
-      return this.parseInputValueToString(value) as BuildStepInputValueTypeWithRequired<T, R>;
+      return this.parseInputValueToString(value) as BuildStepInputValueType<T>;
     } else if (this.allowedValueTypeName === BuildStepInputValueTypeName.NUMBER) {
-      return this.parseInputValueToNumber(value) as BuildStepInputValueTypeWithRequired<T, R>;
+      return this.parseInputValueToNumber(value) as BuildStepInputValueType<T>;
     } else if (this.allowedValueTypeName === BuildStepInputValueTypeName.BOOLEAN) {
-      return this.parseInputValueToBoolean(value) as BuildStepInputValueTypeWithRequired<T, R>;
+      return this.parseInputValueToBoolean(value) as BuildStepInputValueType<T>;
     } else {
-      return this.parseInputValueToObject(value) as BuildStepInputValueTypeWithRequired<T, R>;
+      return this.parseInputValueToObject(value) as BuildStepInputValueType<T>;
     }
   }
 

@@ -33,6 +33,8 @@ describe('StepZ', () => {
           key2: ['value1'],
         },
         arg4: '${{ steps.step1.outputs.test }}',
+        arg5: true,
+        arg6: [1, 2, 3],
       },
     };
     expect(StepZ.parse(step)).toEqual(step);
