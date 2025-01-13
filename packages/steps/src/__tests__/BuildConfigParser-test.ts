@@ -179,7 +179,9 @@ describe(BuildConfigParser, () => {
       expect(step5.id).toMatch(UUID_REGEX);
       expect(step5.name).toBe('List files in another directory');
       expect(step5.command).toBe('ls -la');
-      expect(step5.ctx.workingDirectory).toBe('/home/dsokal');
+      expect(step5.ctx.workingDirectory).toBe(
+        path.join(ctx.projectTargetDirectory, '/home/dsokal')
+      );
       expect(step5.shell).toBe(getDefaultShell());
       expect(step5.stepEnvOverrides).toMatchObject({});
 

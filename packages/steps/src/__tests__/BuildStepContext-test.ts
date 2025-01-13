@@ -1,3 +1,4 @@
+import path from 'path';
 import os from 'os';
 
 import { JobInterpolationContext } from '@expo/eas-build-job';
@@ -194,14 +195,28 @@ describe(BuildStepGlobalContext, () => {
       expect(childCtx.logger).toBe(logger2);
     });
     it('can override working directory', () => {
-      const workingDirectoryOverride = '/d/e/f';
-      const ctx = createGlobalContextMock();
-      const childCtx = ctx.stepCtx({
-        relativeWorkingDirectory: workingDirectoryOverride,
+      const ctx = createGlobalContextMock({
+        relativeWorkingDirectory: 'apps/mobile',
+      });
+      ctx.markAsCheckedOut(ctx.baseLogger);
+
+      const relativeChildCtx = ctx.stepCtx({
+        relativeWorkingDirectory: 'scripts',
         logger: ctx.baseLogger,
       });
-      expect(ctx.defaultWorkingDirectory).not.toBe(childCtx.workingDirectory);
-      expect(childCtx.workingDirectory).toBe(workingDirectoryOverride);
+      expect(ctx.defaultWorkingDirectory).not.toBe(relativeChildCtx.workingDirectory);
+      expect(relativeChildCtx.workingDirectory).toBe(
+        path.join(ctx.projectTargetDirectory, 'apps/mobile/scripts')
+      );
+
+      const absoluteChildCtx = ctx.stepCtx({
+        relativeWorkingDirectory: '/apps/web',
+        logger: ctx.baseLogger,
+      });
+      expect(ctx.defaultWorkingDirectory).not.toBe(absoluteChildCtx.workingDirectory);
+      expect(absoluteChildCtx.workingDirectory).toBe(
+        path.join(ctx.projectTargetDirectory, 'apps/web')
+      );
     });
   });
 });

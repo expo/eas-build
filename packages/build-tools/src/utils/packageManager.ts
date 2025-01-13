@@ -27,7 +27,7 @@ export function resolvePackageManager(directory: string): PackageManager {
 }
 
 export function findPackagerRootDir(currentDir: string): string {
-  return PackageManagerUtils.findWorkspaceRoot(currentDir) ?? currentDir;
+  return PackageManagerUtils.resolveWorkspaceRoot(currentDir) ?? currentDir;
 }
 
 export async function isAtLeastNpm7Async(): Promise<boolean> {
