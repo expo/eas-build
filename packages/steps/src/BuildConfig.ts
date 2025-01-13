@@ -7,11 +7,7 @@ import YAML from 'yaml';
 
 import { BuildConfigError, BuildWorkflowError } from './errors.js';
 import { BuildRuntimePlatform } from './BuildRuntimePlatform.js';
-import {
-  BuildStepInputValueTypeWithRequired,
-  BuildStepInputValueTypeName,
-  BuildStepInputValueType,
-} from './BuildStepInput.js';
+import { BuildStepInputValueTypeName, BuildStepInputValueType } from './BuildStepInput.js';
 import { BuildStepEnv } from './BuildStepEnv.js';
 import { BUILD_STEP_OR_BUILD_GLOBAL_CONTEXT_REFERENCE_REGEX } from './utils/template.js';
 
@@ -57,7 +53,7 @@ export type BuildFunctionCallConfig = {
   if?: string;
 };
 
-export type BuildStepInputs = Record<string, BuildStepInputValueTypeWithRequired>;
+export type BuildStepInputs = Record<string, unknown>;
 export type BuildStepOutputs = (
   | string
   | {
