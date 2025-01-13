@@ -70,7 +70,7 @@ export const FunctionStepZ = CommonStepZ.extend({
    *      - value1
    *   arg4: ${{ steps.step1.outputs.test }}
    */
-  with: z.record(z.union([z.string(), z.number(), z.record(z.any())], z.boolean())).optional(),
+  with: z.record(z.unknown()).optional(),
 
   run: z.never().optional(),
   shell: z.never().optional(),
