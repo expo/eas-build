@@ -246,7 +246,7 @@ export class BuildStepInput<
     }
   }
 
-  private parseInputValueToObject(value: string): Record<string, any> {
+  private parseInputValueToObject(value: string): unknown {
     try {
       return JSON.parse(value);
     } catch (e: any) {
