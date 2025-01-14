@@ -20,4 +20,8 @@ if [[ "$NAME" == *"="* ]]; then
   exit 1
 fi
 
-echo -n "$VALUE" | base64 > $__EXPO_STEPS_ENVS_DIR/$NAME
+if [[ "$OSTYPE" == "linux"* ]]; then
+  echo -n "$VALUE" | base64 -w 0 > $__EXPO_STEPS_ENVS_DIR/$NAME
+else
+  echo -n "$VALUE" | base64 > $__EXPO_STEPS_ENVS_DIR/$NAME
+fi
