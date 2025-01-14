@@ -25,7 +25,8 @@ export namespace Generic {
     cocoapods: z.string().optional(),
   });
 
-  const CommonJobZ = z.object({
+  export type Job = z.infer<typeof JobZ>;
+  export const JobZ = z.object({
     projectArchive: ArchiveSourceSchemaZ,
     secrets: z.object({
       robotAccessToken: z.string(),
@@ -42,25 +43,11 @@ export namespace Generic {
 
     initiatingUserId: z.string(),
     appId: z.string(),
-  });
 
-  const PathJobZ = CommonJobZ.extend({
-    customBuildConfig: z.object({
-      path: z.string(),
-    }),
-    steps: z.never().optional(),
-    outputs: z.never().optional(),
-  });
-
-  const StepsJobZ = CommonJobZ.extend({
-    customBuildConfig: z.never().optional(),
     steps: z.array(StepZ).min(1),
     outputs: z.record(z.string()).optional(),
   });
 
-  export type Job = z.infer<typeof JobZ>;
-  export const JobZ = z.union([PathJobZ, StepsJobZ]);
-
   export type PartialJob = z.infer<typeof PartialJobZ>;
-  export const PartialJobZ = z.union([PathJobZ.partial(), StepsJobZ.partial()]);
+  export const PartialJobZ = JobZ.partial();
 }
