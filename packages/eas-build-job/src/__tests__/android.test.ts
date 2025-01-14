@@ -214,7 +214,7 @@ describe('Android.JobSchema', () => {
     expect(error?.message).toBe('"buildProfile" is required');
   });
 
-  test('valid custom build job', () => {
+  test('valid custom build job with path', () => {
     const customBuildJob = {
       mode: BuildMode.CUSTOM,
       type: Workflow.UNKNOWN,
@@ -226,6 +226,36 @@ describe('Android.JobSchema', () => {
       projectRootDirectory: '.',
       customBuildConfig: {
         path: 'production.android.yml',
+      },
+      initiatingUserId: randomUUID(),
+      appId: randomUUID(),
+    };
+
+    const { value, error } = Android.JobSchema.validate(customBuildJob, joiOptions);
+    expect(value).toMatchObject(customBuildJob);
+    expect(error).toBeFalsy();
+  });
+
+  test('valid custom build job with steps', () => {
+    const customBuildJob = {
+      mode: BuildMode.CUSTOM,
+      type: Workflow.UNKNOWN,
+      platform: Platform.ANDROID,
+      projectArchive: {
+        type: ArchiveSourceType.URL,
+        url: 'https://expo.dev/builds/123',
+      },
+      projectRootDirectory: '.',
+      customBuildConfig: {
+        steps: [
+          {
+            id: 'step1',
+            name: 'Step 1',
+            run: 'echo Hello, world!',
+            shell: 'sh',
+          },
+        ],
+        outputs: {},
       },
       initiatingUserId: randomUUID(),
       appId: randomUUID(),

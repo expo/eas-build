@@ -15,6 +15,7 @@ import {
   BuildTrigger,
   BuildMode,
 } from './common';
+import { Step, validateSteps } from './step';
 
 export type DistributionType = 'store' | 'internal' | 'simulator';
 
@@ -111,9 +112,17 @@ export interface Job {
 
   username?: string;
 
-  customBuildConfig?: {
-    path: string;
-  };
+  customBuildConfig?:
+    | {
+        path: string;
+        steps?: never;
+        outputs?: never;
+      }
+    | {
+        path?: never;
+        steps: Step[];
+        outputs: Record<string, string>;
+      };
 
   experimental?: {
     prebuildCommand?: string;
@@ -201,8 +210,21 @@ export const JobSchema = Joi.object({
 
   customBuildConfig: Joi.when('mode', {
     is: Joi.string().valid(BuildMode.CUSTOM),
-    then: Joi.object({
-      path: Joi.string(),
+    then: Joi.when('customBuildConfig.path', {
+      is: Joi.string().required(),
+      then: Joi.object({
+        path: Joi.string().required(),
+        steps: Joi.forbidden(),
+        outputs: Joi.forbidden(),
+      }),
+      otherwise: Joi.object({
+        path: Joi.forbidden(),
+        steps: Joi.array()
+          .items(Joi.any())
+          .required()
+          .custom((steps) => validateSteps(steps), 'steps validation'),
+        outputs: Joi.object().pattern(Joi.string(), Joi.string()).required(),
+      }),
     }).required(),
     otherwise: Joi.any().strip(),
   }),
