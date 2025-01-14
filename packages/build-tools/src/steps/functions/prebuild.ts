@@ -1,17 +1,10 @@
-import assert from 'assert';
-
 import { Platform } from '@expo/config';
-import { BuildJob } from '@expo/eas-build-job';
 import { BuildFunction, BuildStepInput, BuildStepInputValueTypeName } from '@expo/steps';
 import spawn from '@expo/turtle-spawn';
 
 import { PackageManager, resolvePackageManager } from '../../utils/packageManager';
 
 import { installNodeModules } from './installNodeModules';
-
-type PrebuildOptions = {
-  clean?: boolean;
-};
 
 export function createPrebuildBuildFunction(): BuildFunction {
   return new BuildFunction({
@@ -30,16 +23,22 @@ export function createPrebuildBuildFunction(): BuildFunction {
         allowedValueTypeName: BuildStepInputValueTypeName.STRING,
         required: false,
       }),
+      BuildStepInput.createProvider({
+        id: 'platform',
+        allowedValueTypeName: BuildStepInputValueTypeName.STRING,
+        required: false,
+      }),
     ],
     fn: async (stepCtx, { inputs, env }) => {
       const { logger } = stepCtx;
       const appleTeamId = inputs.apple_team_id.value as string | undefined;
       const packageManager = resolvePackageManager(stepCtx.workingDirectory);
+      const defaultPlatform = process.platform === 'darwin' ? 'ios' : 'android';
 
-      assert(stepCtx.global.staticContext.job, 'Job is not defined');
       const job = stepCtx.global.staticContext.job;
-      assert(job.platform, 'Prebuild command is not supported in generic jobs.');
-      const prebuildCommandArgs = getPrebuildCommandArgs(job, {
+      const prebuildCommandArgs = getPrebuildCommandArgs({
+        platform: job.platform ?? defaultPlatform,
+        customPrebuildCommand: job.platform ? job.experimental?.prebuildCommand : undefined,
         clean: inputs.clean.value as boolean,
       });
       const argsWithExpo = ['expo', ...prebuildCommandArgs];
@@ -68,22 +67,36 @@ export function createPrebuildBuildFunction(): BuildFunction {
   });
 }
 
-function getPrebuildCommandArgs(job: BuildJob, { clean }: PrebuildOptions): string[] {
-  if (job.experimental?.prebuildCommand) {
-    return sanitizeUserDefinedPrebuildCommand(job.experimental.prebuildCommand, job.platform, {
+function getPrebuildCommandArgs({
+  platform,
+  customPrebuildCommand,
+  clean,
+}: {
+  platform: Platform;
+  customPrebuildCommand?: string;
+  clean: boolean;
+}): string[] {
+  if (customPrebuildCommand) {
+    return sanitizeUserDefinedPrebuildCommand({
+      customPrebuildCommand,
+      platform,
       clean,
     });
   }
-  return ['prebuild', '--no-install', '--platform', job.platform, ...(clean ? ['--clean'] : [])];
+  return ['prebuild', '--no-install', '--platform', platform, ...(clean ? ['--clean'] : [])];
 }
 
 // TODO: deprecate prebuildCommand in eas.json
-function sanitizeUserDefinedPrebuildCommand(
-  userDefinedPrebuildCommand: string,
-  platform: Platform,
-  { clean }: PrebuildOptions
-): string[] {
-  let prebuildCommand = userDefinedPrebuildCommand;
+function sanitizeUserDefinedPrebuildCommand({
+  customPrebuildCommand,
+  platform,
+  clean,
+}: {
+  customPrebuildCommand: string;
+  platform: Platform;
+  clean: boolean;
+}): string[] {
+  let prebuildCommand = customPrebuildCommand;
   if (!prebuildCommand.match(/(?:--platform| -p)/)) {
     prebuildCommand = `${prebuildCommand} --platform ${platform}`;
   }
