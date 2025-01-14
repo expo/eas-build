@@ -129,6 +129,36 @@ describe('Ios.JobSchema', () => {
     expect(error).toBeFalsy();
   });
 
+  test('valid custom build job with steps', () => {
+    const customBuildJob = {
+      mode: BuildMode.CUSTOM,
+      type: Workflow.UNKNOWN,
+      platform: Platform.IOS,
+      projectArchive: {
+        type: ArchiveSourceType.URL,
+        url: 'https://expo.dev/builds/123',
+      },
+      projectRootDirectory: '.',
+      customBuildConfig: {
+        steps: [
+          {
+            id: 'step1',
+            name: 'Step 1',
+            run: 'echo Hello, world!',
+            shell: 'sh',
+          },
+        ],
+        outputs: {},
+      },
+      initiatingUserId: randomUUID(),
+      appId: randomUUID(),
+    };
+
+    const { value, error } = Ios.JobSchema.validate(customBuildJob, joiOptions);
+    expect(value).toMatchObject(customBuildJob);
+    expect(error).toBeFalsy();
+  });
+
   test('invalid generic job', () => {
     const genericJob = {
       secrets: {
