@@ -1,5 +1,7 @@
 import { randomUUID } from 'crypto';
 
+import { ZodError } from 'zod';
+
 import { ArchiveSourceType, BuildTrigger, EnvironmentSecretType } from '../common';
 import { Generic } from '../generic';
 
@@ -119,6 +121,6 @@ describe('Generic.JobZ', () => {
       appId: randomUUID(),
       initiatingUserId: randomUUID(),
     };
-    expect(() => Generic.JobZ.parse(job)).toThrow('Invalid input');
+    expect(() => Generic.JobZ.parse(job)).toThrow(ZodError);
   });
 });
