@@ -14,6 +14,8 @@ import {
   EnvironmentSecret,
   BuildTrigger,
   BuildMode,
+  StaticWorkflowInterpolationContextZ,
+  StaticWorkflowInterpolationContext,
 } from './common';
 import { Step, validateSteps } from './step';
 
@@ -120,7 +122,7 @@ export interface Job {
   };
   loggerLevel?: LoggerLevel;
 
-  workflowInterpolationContext?: never;
+  workflowInterpolationContext?: StaticWorkflowInterpolationContext;
 
   initiatingUserId: string;
   appId: string;
@@ -209,4 +211,8 @@ export const JobSchema = Joi.object({
   appId: Joi.string().required(),
 
   environment: Joi.string().valid('production', 'preview', 'development'),
+
+  workflowInterpolationContext: Joi.object().custom((workflowInterpolationContext) =>
+    StaticWorkflowInterpolationContextZ.optional().parse(workflowInterpolationContext)
+  ),
 });
