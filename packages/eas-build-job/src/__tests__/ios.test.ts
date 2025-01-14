@@ -152,6 +152,28 @@ describe('Ios.JobSchema', () => {
       },
       initiatingUserId: randomUUID(),
       appId: randomUUID(),
+      workflowInterpolationContext: {
+        after: {
+          setup: {
+            status: 'success',
+            outputs: {},
+          },
+        },
+        needs: {
+          setup: {
+            status: 'success',
+            outputs: {},
+          },
+        },
+        github: {
+          event_name: 'push',
+          sha: '123',
+          ref: 'master',
+          ref_name: 'master',
+          ref_type: 'branch',
+        },
+        env: { EXPO_TOKEN: randomUUID() },
+      },
     };
 
     const { value, error } = Ios.JobSchema.validate(customBuildJob, joiOptions);
