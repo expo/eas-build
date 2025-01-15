@@ -250,6 +250,14 @@ export class BuildContext<TJob extends Job = Job> {
     this._job = {
       ...job,
       triggeredBy: this._job.triggeredBy,
+      builderEnvironment: {
+        ...job.builderEnvironment,
+        env: {
+          ...job.builderEnvironment?.env,
+          __EXPO_RELATIVE_BASE_DIRECTORY:
+            this.job.builderEnvironment?.env?.__EXPO_RELATIVE_BASE_DIRECTORY,
+        },
+      },
       secrets: {
         ...this.job.secrets,
         ...job.secrets,
