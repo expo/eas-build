@@ -14,6 +14,11 @@ import {
   EnvironmentSecret,
   BuildTrigger,
   BuildMode,
+  StaticWorkflowInterpolationContextZ,
+  StaticWorkflowInterpolationContext,
+  CustomBuildConfigSchema,
+  JobWithCustomBuildConfig,
+  JobWithSteps,
 } from './common';
 
 export interface Keystore {
@@ -63,7 +68,7 @@ export interface BuildSecrets {
   robotAccessToken?: string;
 }
 
-export interface Job {
+interface IJob {
   mode: BuildMode;
   type: Workflow;
   triggeredBy: BuildTrigger;
@@ -97,10 +102,6 @@ export interface Job {
   buildType?: BuildType;
   username?: string;
 
-  customBuildConfig?: {
-    path: string;
-  };
-
   experimental?: {
     prebuildCommand?: string;
   };
@@ -111,13 +112,15 @@ export interface Job {
   };
   loggerLevel?: LoggerLevel;
 
-  workflowInterpolationContext?: never;
+  workflowInterpolationContext?: StaticWorkflowInterpolationContext;
 
   initiatingUserId: string;
   appId: string;
 
   environment?: 'production' | 'preview' | 'development';
 }
+
+export type Job = IJob & (JobWithCustomBuildConfig | JobWithSteps);
 
 const SecretsSchema = Joi.object({
   buildCredentials: Joi.object({ keystore: KeystoreSchema.required() }),
@@ -165,14 +168,6 @@ export const JobSchema = Joi.object({
   buildType: Joi.string().valid(...Object.values(BuildType)),
   username: Joi.string(),
 
-  customBuildConfig: Joi.when('mode', {
-    is: Joi.string().valid(BuildMode.CUSTOM),
-    then: Joi.object({
-      path: Joi.string(),
-    }).required(),
-    otherwise: Joi.any().strip(),
-  }),
-
   experimental: Joi.object({
     prebuildCommand: Joi.string(),
   }),
@@ -187,4 +182,8 @@ export const JobSchema = Joi.object({
   appId: Joi.string().required(),
 
   environment: Joi.string().valid('production', 'preview', 'development'),
-});
+
+  workflowInterpolationContext: Joi.object().custom((workflowInterpolationContext) =>
+    StaticWorkflowInterpolationContextZ.optional().parse(workflowInterpolationContext)
+  ),
+}).concat(CustomBuildConfigSchema);

@@ -214,7 +214,7 @@ describe('Android.JobSchema', () => {
     expect(error?.message).toBe('"buildProfile" is required');
   });
 
-  test('valid custom build job', () => {
+  test('valid custom build job with path', () => {
     const customBuildJob = {
       mode: BuildMode.CUSTOM,
       type: Workflow.UNKNOWN,
@@ -229,6 +229,56 @@ describe('Android.JobSchema', () => {
       },
       initiatingUserId: randomUUID(),
       appId: randomUUID(),
+    };
+
+    const { value, error } = Android.JobSchema.validate(customBuildJob, joiOptions);
+    expect(value).toMatchObject(customBuildJob);
+    expect(error).toBeFalsy();
+  });
+
+  test('valid custom build job with steps', () => {
+    const customBuildJob = {
+      mode: BuildMode.CUSTOM,
+      type: Workflow.UNKNOWN,
+      platform: Platform.ANDROID,
+      projectArchive: {
+        type: ArchiveSourceType.URL,
+        url: 'https://expo.dev/builds/123',
+      },
+      projectRootDirectory: '.',
+      steps: [
+        {
+          id: 'step1',
+          name: 'Step 1',
+          run: 'echo Hello, world!',
+          shell: 'sh',
+        },
+      ],
+      outputs: {},
+      initiatingUserId: randomUUID(),
+      appId: randomUUID(),
+      workflowInterpolationContext: {
+        after: {
+          setup: {
+            status: 'success',
+            outputs: {},
+          },
+        },
+        needs: {
+          setup: {
+            status: 'success',
+            outputs: {},
+          },
+        },
+        github: {
+          event_name: 'push',
+          sha: '123',
+          ref: 'master',
+          ref_name: 'master',
+          ref_type: 'branch',
+        },
+        env: { EXPO_TOKEN: randomUUID() },
+      },
     };
 
     const { value, error } = Android.JobSchema.validate(customBuildJob, joiOptions);
