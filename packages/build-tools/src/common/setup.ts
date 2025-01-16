@@ -83,6 +83,7 @@ export async function setupAsync<TJob extends BuildJob>(ctx: BuildContext<TJob>)
         env: ctx.env,
         logger: ctx.logger,
         cwd: ctx.getReactNativeProjectDirectory(),
+        projectRootOverride: ctx.env.EAS_NO_VCS ? ctx.buildDirectory : undefined,
       });
       ctx.updateJobInformation(newJob, newMetadata);
     });
