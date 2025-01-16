@@ -23,11 +23,13 @@ export async function runEasBuildInternalAsync<TJob extends BuildJob>({
   logger,
   env,
   cwd,
+  projectRootOverride,
 }: {
   job: TJob;
   logger: bunyan;
   env: BuildStepEnv;
   cwd: string;
+  projectRootOverride?: string;
 }): Promise<{
   newJob: TJob;
   newMetadata: Metadata;
@@ -64,6 +66,7 @@ export async function runEasBuildInternalAsync<TJob extends BuildJob>({
           EXPO_TOKEN: nullthrows(job.secrets, 'Secrets must be defined for non-custom builds')
             .robotAccessToken,
           ...extraEnv,
+          EAS_PROJECT_ROOT: projectRootOverride,
         },
         logger,
         mode: PipeMode.STDERR_ONLY_AS_STDOUT,

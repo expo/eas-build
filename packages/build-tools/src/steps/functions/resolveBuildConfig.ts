@@ -37,6 +37,7 @@ export async function resolveBuildConfigAsync({
       env,
       logger,
       cwd: workingDirectory,
+      projectRootOverride: env.EAS_NO_VCS ? ctx.projectTargetDirectory : undefined,
     });
     ctx.updateJobInformation(newJob, newMetadata);
   }
