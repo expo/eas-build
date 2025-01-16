@@ -139,17 +139,15 @@ describe('Ios.JobSchema', () => {
         url: 'https://expo.dev/builds/123',
       },
       projectRootDirectory: '.',
-      customBuildConfig: {
-        steps: [
-          {
-            id: 'step1',
-            name: 'Step 1',
-            run: 'echo Hello, world!',
-            shell: 'sh',
-          },
-        ],
-        outputs: {},
-      },
+      steps: [
+        {
+          id: 'step1',
+          name: 'Step 1',
+          run: 'echo Hello, world!',
+          shell: 'sh',
+        },
+      ],
+      outputs: {},
       initiatingUserId: randomUUID(),
       appId: randomUUID(),
       workflowInterpolationContext: {

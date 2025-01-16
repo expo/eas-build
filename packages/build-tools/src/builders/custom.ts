@@ -2,7 +2,6 @@ import path from 'path';
 
 import { BuildJob, BuildPhase, BuildTrigger, Ios, Platform } from '@expo/eas-build-job';
 import { BuildConfigParser, BuildStepGlobalContext, StepsConfigParser, errors } from '@expo/steps';
-import nullthrows from 'nullthrows';
 
 import { Artifacts, BuildContext } from '../context';
 import { prepareProjectSourcesAsync } from '../common/projectSources';
@@ -26,26 +25,21 @@ export async function runCustomBuildAsync(ctx: BuildContext<BuildJob>): Promise<
     customBuildCtx.updateEnv(ctx.env);
   }
 
-  const customBuildConfig = nullthrows(
-    ctx.job.customBuildConfig,
-    'Custom build config must be defined for custom builds'
-  );
-
   const globalContext = new BuildStepGlobalContext(customBuildCtx, false);
   const easFunctions = getEasFunctions(customBuildCtx);
   const easFunctionGroups = getEasFunctionGroups(customBuildCtx);
-  const parser = customBuildConfig.steps
+  const parser = ctx.job.steps
     ? new StepsConfigParser(globalContext, {
         externalFunctions: easFunctions,
         externalFunctionGroups: easFunctionGroups,
-        steps: customBuildConfig.steps,
+        steps: ctx.job.steps,
       })
     : new BuildConfigParser(globalContext, {
         externalFunctions: easFunctions,
         externalFunctionGroups: easFunctionGroups,
         configPath: path.join(
           ctx.getReactNativeProjectDirectory(customBuildCtx.projectSourceDirectory),
-          customBuildConfig.path
+          ctx.job.customBuildConfig.path
         ),
       });
   const workflow = await ctx.runBuildPhase(BuildPhase.PARSE_CUSTOM_WORKFLOW_CONFIG, async () => {

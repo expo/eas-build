@@ -16,8 +16,10 @@ import {
   BuildMode,
   StaticWorkflowInterpolationContextZ,
   StaticWorkflowInterpolationContext,
+  CustomBuildConfigSchema,
+  JobWithCustomBuildConfig,
+  JobWithSteps,
 } from './common';
-import { Step, validateSteps } from './step';
 
 export type DistributionType = 'store' | 'internal' | 'simulator';
 
@@ -76,7 +78,7 @@ export interface BuildSecrets {
   robotAccessToken?: string;
 }
 
-export interface Job {
+interface IJob {
   mode: BuildMode;
   type: Workflow;
   triggeredBy: BuildTrigger;
@@ -114,18 +116,6 @@ export interface Job {
 
   username?: string;
 
-  customBuildConfig?:
-    | {
-        path: string;
-        steps?: never;
-        outputs?: never;
-      }
-    | {
-        path?: never;
-        steps: Step[];
-        outputs: Record<string, string>;
-      };
-
   experimental?: {
     prebuildCommand?: string;
   };
@@ -143,6 +133,8 @@ export interface Job {
 
   environment?: 'production' | 'preview' | 'development';
 }
+
+export type Job = IJob & (JobWithCustomBuildConfig | JobWithSteps);
 
 const SecretsSchema = Joi.object({
   buildCredentials: BuildCredentialsSchema,
@@ -210,27 +202,6 @@ export const JobSchema = Joi.object({
 
   username: Joi.string(),
 
-  customBuildConfig: Joi.when('mode', {
-    is: Joi.string().valid(BuildMode.CUSTOM),
-    then: Joi.when('customBuildConfig.path', {
-      is: Joi.string().required(),
-      then: Joi.object({
-        path: Joi.string().required(),
-        steps: Joi.forbidden(),
-        outputs: Joi.forbidden(),
-      }),
-      otherwise: Joi.object({
-        path: Joi.forbidden(),
-        steps: Joi.array()
-          .items(Joi.any())
-          .required()
-          .custom((steps) => validateSteps(steps), 'steps validation'),
-        outputs: Joi.object().pattern(Joi.string(), Joi.string()).required(),
-      }),
-    }).required(),
-    otherwise: Joi.any().strip(),
-  }),
-
   experimental: Joi.object({
     prebuildCommand: Joi.string(),
   }),
@@ -249,4 +220,4 @@ export const JobSchema = Joi.object({
   workflowInterpolationContext: Joi.object().custom((workflowInterpolationContext) =>
     StaticWorkflowInterpolationContextZ.optional().parse(workflowInterpolationContext)
   ),
-});
+}).concat(CustomBuildConfigSchema);

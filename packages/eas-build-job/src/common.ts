@@ -2,6 +2,7 @@ import Joi from 'joi';
 import { z } from 'zod';
 
 import { BuildPhase, BuildPhaseResult } from './logs';
+import { Step, validateSteps } from './step';
 
 export enum BuildMode {
   BUILD = 'build',
@@ -209,3 +210,50 @@ export type DynamicInterpolationContext = {
 
 export type WorkflowInterpolationContext = StaticWorkflowInterpolationContext &
   DynamicInterpolationContext;
+
+export interface JobWithCustomBuildConfig {
+  mode: BuildMode.CUSTOM;
+
+  customBuildConfig: {
+    path: string;
+  };
+
+  steps?: never;
+  outputs?: never;
+}
+
+export interface JobWithSteps {
+  mode: BuildMode.CUSTOM;
+
+  customBuildConfig?: never;
+
+  steps: Step[];
+  outputs: Record<string, string>;
+}
+
+export const CustomBuildConfigSchema = Joi.object().when('.mode', {
+  is: BuildMode.CUSTOM,
+  then: Joi.object().when('.customBuildConfig.path', {
+    is: Joi.exist(),
+    then: Joi.object({
+      customBuildConfig: Joi.object({
+        path: Joi.string().required(),
+      }).required(),
+      steps: Joi.any().strip(),
+      outputs: Joi.any().strip(),
+    }),
+    otherwise: Joi.object({
+      customBuildConfig: Joi.any().strip(),
+      steps: Joi.array()
+        .items(Joi.any())
+        .required()
+        .custom((steps) => validateSteps(steps), 'steps validation'),
+      outputs: Joi.object().pattern(Joi.string(), Joi.string()).required(),
+    }),
+  }),
+  otherwise: Joi.object({
+    customBuildConfig: Joi.any().strip(),
+    steps: Joi.any().strip(),
+    outputs: Joi.any().strip(),
+  }),
+});
