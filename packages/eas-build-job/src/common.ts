@@ -2,7 +2,7 @@ import Joi from 'joi';
 import { z } from 'zod';
 
 import { BuildPhase, BuildPhaseResult } from './logs';
-import { Step, validateSteps } from './step';
+import { validateSteps } from './step';
 
 export enum BuildMode {
   BUILD = 'build',
@@ -210,26 +210,6 @@ export type DynamicInterpolationContext = {
 
 export type WorkflowInterpolationContext = StaticWorkflowInterpolationContext &
   DynamicInterpolationContext;
-
-export interface JobWithCustomBuildConfig {
-  mode: BuildMode.CUSTOM;
-
-  customBuildConfig: {
-    path: string;
-  };
-
-  steps?: never;
-  outputs?: never;
-}
-
-export interface JobWithSteps {
-  mode: BuildMode.CUSTOM;
-
-  customBuildConfig?: never;
-
-  steps: Step[];
-  outputs: Record<string, string>;
-}
 
 export const CustomBuildConfigSchema = Joi.object().when('.mode', {
   is: BuildMode.CUSTOM,

@@ -17,9 +17,8 @@ import {
   StaticWorkflowInterpolationContextZ,
   StaticWorkflowInterpolationContext,
   CustomBuildConfigSchema,
-  JobWithCustomBuildConfig,
-  JobWithSteps,
 } from './common';
+import { Step } from './step';
 
 export type DistributionType = 'store' | 'internal' | 'simulator';
 
@@ -78,7 +77,7 @@ export interface BuildSecrets {
   robotAccessToken?: string;
 }
 
-interface IJob {
+export interface Job {
   mode: BuildMode;
   type: Workflow;
   triggeredBy: BuildTrigger;
@@ -116,6 +115,12 @@ interface IJob {
 
   username?: string;
 
+  customBuildConfig?: {
+    path: string;
+  };
+  steps?: Step[];
+  outputs?: Record<string, string>;
+
   experimental?: {
     prebuildCommand?: string;
   };
@@ -133,8 +138,6 @@ interface IJob {
 
   environment?: 'production' | 'preview' | 'development';
 }
-
-export type Job = IJob & (JobWithCustomBuildConfig | JobWithSteps);
 
 const SecretsSchema = Joi.object({
   buildCredentials: BuildCredentialsSchema,
