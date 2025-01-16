@@ -20,8 +20,6 @@ export async function runGenericJobAsync(
 
   await prepareProjectSourcesAsync(ctx, customBuildCtx.projectSourceDirectory);
 
-  await addEasWorkflows(customBuildCtx);
-
   const globalContext = new BuildStepGlobalContext(customBuildCtx, false);
 
   const parser = new StepsConfigParser(globalContext, {
@@ -55,16 +53,4 @@ export async function runGenericJobAsync(
   });
 
   return { runResult, buildWorkflow: workflow };
-}
-
-export async function addEasWorkflows(customBuildCtx: CustomBuildContext): Promise<void> {
-  await fs.promises.mkdir(path.join(customBuildCtx.projectSourceDirectory, '__eas'), {
-    recursive: true,
-  });
-
-  await fs.promises.cp(
-    path.join(__dirname, '..', 'resources', '__eas'),
-    path.join(customBuildCtx.projectSourceDirectory, '__eas'),
-    { recursive: true }
-  );
 }
