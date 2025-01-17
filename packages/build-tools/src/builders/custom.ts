@@ -1,8 +1,9 @@
+import assert from 'assert';
 import path from 'path';
 
-import { BuildJob, BuildPhase, BuildTrigger, Ios, Platform } from '@expo/eas-build-job';
-import { BuildConfigParser, BuildStepGlobalContext, errors } from '@expo/steps';
 import nullthrows from 'nullthrows';
+import { BuildJob, BuildPhase, BuildTrigger, Ios, Platform } from '@expo/eas-build-job';
+import { BuildConfigParser, BuildStepGlobalContext, StepsConfigParser, errors } from '@expo/steps';
 
 import { Artifacts, BuildContext } from '../context';
 import { prepareProjectSourcesAsync } from '../common/projectSources';
@@ -25,23 +26,32 @@ export async function runCustomBuildAsync(ctx: BuildContext<BuildJob>): Promise<
     ctx.updateEnv(env);
     customBuildCtx.updateEnv(ctx.env);
   }
-  const relativeConfigPath = nullthrows(
-    ctx.job.customBuildConfig?.path,
-    'Custom build config must be defined for custom builds'
-  );
-  const configPath = path.join(
-    ctx.getReactNativeProjectDirectory(customBuildCtx.projectSourceDirectory),
-    relativeConfigPath
+
+  assert(
+    'steps' in ctx.job || 'customBuildConfig' in ctx.job,
+    'Steps or custom build config path are required in custom jobs'
   );
 
   const globalContext = new BuildStepGlobalContext(customBuildCtx, false);
   const easFunctions = getEasFunctions(customBuildCtx);
   const easFunctionGroups = getEasFunctionGroups(customBuildCtx);
-  const parser = new BuildConfigParser(globalContext, {
-    externalFunctions: easFunctions,
-    externalFunctionGroups: easFunctionGroups,
-    configPath,
-  });
+  const parser = ctx.job.steps
+    ? new StepsConfigParser(globalContext, {
+        externalFunctions: easFunctions,
+        externalFunctionGroups: easFunctionGroups,
+        steps: ctx.job.steps,
+      })
+    : new BuildConfigParser(globalContext, {
+        externalFunctions: easFunctions,
+        externalFunctionGroups: easFunctionGroups,
+        configPath: path.join(
+          ctx.getReactNativeProjectDirectory(customBuildCtx.projectSourceDirectory),
+          nullthrows(
+            ctx.job.customBuildConfig?.path,
+            'Steps or custom build config path are required in custom jobs'
+          )
+        ),
+      });
   const workflow = await ctx.runBuildPhase(BuildPhase.PARSE_CUSTOM_WORKFLOW_CONFIG, async () => {
     try {
       return await parser.parseAsync();

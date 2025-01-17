@@ -2,13 +2,7 @@ import fs from 'fs';
 import path from 'path';
 
 import { BuildPhase, Generic } from '@expo/eas-build-job';
-import {
-  BuildConfigParser,
-  BuildStepGlobalContext,
-  BuildWorkflow,
-  errors,
-  StepsConfigParser,
-} from '@expo/steps';
+import { BuildStepGlobalContext, BuildWorkflow, errors, StepsConfigParser } from '@expo/steps';
 import { Result, asyncResult } from '@expo/results';
 
 import { BuildContext } from './context';
@@ -30,20 +24,11 @@ export async function runGenericJobAsync(
 
   const globalContext = new BuildStepGlobalContext(customBuildCtx, false);
 
-  const parser = ctx.job.steps
-    ? new StepsConfigParser(globalContext, {
-        externalFunctions: getEasFunctions(customBuildCtx),
-        externalFunctionGroups: getEasFunctionGroups(customBuildCtx),
-        steps: ctx.job.steps,
-      })
-    : new BuildConfigParser(globalContext, {
-        externalFunctions: getEasFunctions(customBuildCtx),
-        externalFunctionGroups: getEasFunctionGroups(customBuildCtx),
-        configPath: path.join(
-          customBuildCtx.projectSourceDirectory,
-          ctx.job.customBuildConfig.path
-        ),
-      });
+  const parser = new StepsConfigParser(globalContext, {
+    externalFunctions: getEasFunctions(customBuildCtx),
+    externalFunctionGroups: getEasFunctionGroups(customBuildCtx),
+    steps: ctx.job.steps,
+  });
 
   const workflow = await ctx.runBuildPhase(BuildPhase.PARSE_CUSTOM_WORKFLOW_CONFIG, async () => {
     try {
