@@ -1,10 +1,5 @@
 import { z } from 'zod';
 
-const StepOutputZ = z.object({
-  name: z.string(),
-  required: z.boolean().optional(),
-});
-
 const CommonStepZ = z.object({
   /**
    * Unique identifier for the step.
@@ -12,19 +7,24 @@ const CommonStepZ = z.object({
    * @example
    * id: step1
    */
-  id: z.string().optional(),
+  id: z
+    .string()
+    .optional()
+    .describe(
+      `ID of the step. Useful for later referencing the job's outputs. Example: step with id "setup" and an output "platform" will expose its value under "steps.setup.outputs.platform".`
+    ),
   /**
    * Expression that determines whether the step should run.
    * Based on the GitHub Actions job step `if` field (https://docs.github.com/en/actions/using-workflows/workflow-syntax-for-github-actions#jobsjob_idstepsif).
    */
-  if: z.string().optional(),
+  if: z.string().optional().describe('Expression that determines whether the step should run.'),
   /**
    * The name of the step.
    *
    * @example
    * name: 'Step 1'
    */
-  name: z.string().optional(),
+  name: z.string().optional().describe('Name of the step.'),
   /**
    * The working directory to run the step in.
    *
@@ -33,7 +33,12 @@ const CommonStepZ = z.object({
    *
    * @default depends on the project settings
    */
-  working_directory: z.string().optional(),
+  working_directory: z
+    .string()
+    .optional()
+    .describe(
+      `Working directory to run the step in. Relative paths like "./assets" or "assets" are resolved from the app's base directory. Absolute paths like "/apps/mobile" are resolved from the repository root.`
+    ),
   /**
    * Env variables override for the step.
    *
@@ -42,7 +47,10 @@ const CommonStepZ = z.object({
    *   MY_ENV_VAR: my-value
    *   ANOTHER_ENV_VAR: another-value
    */
-  env: z.record(z.string()).optional(),
+  env: z
+    .record(z.string())
+    .optional()
+    .describe('Additional environment variables to set for the step.'),
 });
 
 export const FunctionStepZ = CommonStepZ.extend({
@@ -56,7 +64,11 @@ export const FunctionStepZ = CommonStepZ.extend({
    * @example
    * uses: my-custom-function
    */
-  uses: z.string(),
+  uses: z
+    .string()
+    .describe(
+      'Name of the function to use for this step. See https://docs.expo.dev/custom-builds/schema/#built-in-eas-functions for available functions.'
+    ),
   /**
    * The arguments to pass to the function.
    *
@@ -70,7 +82,7 @@ export const FunctionStepZ = CommonStepZ.extend({
    *      - value1
    *   arg4: ${{ steps.step1.outputs.test }}
    */
-  with: z.record(z.unknown()).optional(),
+  with: z.record(z.unknown()).optional().describe('Inputs to the function.'),
 
   run: z.never().optional(),
   shell: z.never().optional(),
@@ -92,7 +104,7 @@ export const ShellStepZ = CommonStepZ.extend({
    *  npx expo prebuild
    *  pod install
    */
-  run: z.string(),
+  run: z.string().describe('Shell script to run in the step.'),
   /**
    * The shell to run the "run" command with.
    *
@@ -101,7 +113,7 @@ export const ShellStepZ = CommonStepZ.extend({
    *
    * @default 'bash'
    */
-  shell: z.string().optional(),
+  shell: z.string().optional().describe('Shell to run the "run" command with.'),
   /**
    * The outputs of the step.
    *
@@ -113,7 +125,23 @@ export const ShellStepZ = CommonStepZ.extend({
    *    required: false
    *  - name: my_optional_output_without_required
    */
-  outputs: z.array(StepOutputZ).optional(),
+  outputs: z
+    .array(
+      z.preprocess(
+        (input) => {
+          // We allow a shorthand for outputs
+          if (typeof input === 'string') {
+            return { name: input, required: false };
+          }
+          return input;
+        },
+        z.object({
+          name: z.string(),
+          required: z.boolean().optional(),
+        })
+      )
+    )
+    .optional(),
 
   uses: z.never().optional(),
   with: z.never().optional(),

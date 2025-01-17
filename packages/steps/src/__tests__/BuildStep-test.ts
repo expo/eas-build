@@ -1067,6 +1067,20 @@ describe(BuildStep.prototype.shouldExecuteStep, () => {
     expect(step.shouldExecuteStep()).toBe(true);
   });
 
+  it('can use the general interpolation context', () => {
+    const ctx = createGlobalContextMock();
+    ctx.updateEnv({
+      CONFIG_JSON: '{"foo": "bar"}',
+    });
+    const step = new BuildStep(ctx, {
+      id: 'test1',
+      displayName: 'Test 1',
+      command: 'echo 123',
+      ifCondition: 'fromJSON(env.CONFIG_JSON).foo == "bar"',
+    });
+    expect(step.shouldExecuteStep()).toBe(true);
+  });
+
   it('returns true when a simplified dynamic expression matches', () => {
     const ctx = createGlobalContextMock();
     const step = new BuildStep(ctx, {
@@ -1129,23 +1143,27 @@ describe(BuildStep.prototype.shouldExecuteStep, () => {
   it('returns true when if condition is failure and previous steps failed', () => {
     const ctx = createGlobalContextMock();
     ctx.markAsFailed();
-    const step = new BuildStep(ctx, {
-      id: 'test1',
-      displayName: 'Test 1',
-      command: 'echo 123',
-      ifCondition: '${ failure() }',
-    });
-    expect(step.shouldExecuteStep()).toBe(true);
+    for (const ifCondition of ['${ failure() }', '${{ failure() }}']) {
+      const step = new BuildStep(ctx, {
+        id: 'test1',
+        displayName: 'Test 1',
+        command: 'echo 123',
+        ifCondition,
+      });
+      expect(step.shouldExecuteStep()).toBe(true);
+    }
   });
 
   it('returns false when if condition is failure and previous steps have not failed', () => {
     const ctx = createGlobalContextMock();
-    const step = new BuildStep(ctx, {
-      id: 'test1',
-      displayName: 'Test 1',
-      command: 'echo 123',
-      ifCondition: '${ failure() }',
-    });
-    expect(step.shouldExecuteStep()).toBe(false);
+    for (const ifCondition of ['${ failure() }', '${{ failure() }}']) {
+      const step = new BuildStep(ctx, {
+        id: 'test1',
+        displayName: 'Test 1',
+        command: 'echo 123',
+        ifCondition,
+      });
+      expect(step.shouldExecuteStep()).toBe(false);
+    }
   });
 });

@@ -308,17 +308,14 @@ export class BuildStep extends BuildStepOutputAccessor {
 
     let ifCondition = this.ifCondition;
 
-    if (ifCondition.startsWith('${') && ifCondition.endsWith('}')) {
+    if (ifCondition.startsWith('${{') && ifCondition.endsWith('}}')) {
+      ifCondition = ifCondition.slice(3, -2);
+    } else if (ifCondition.startsWith('${') && ifCondition.endsWith('}')) {
       ifCondition = ifCondition.slice(2, -1);
     }
 
     return Boolean(
       jsepEval(ifCondition, {
-        success: () => !hasAnyPreviousStepFailed,
-        failure: () => hasAnyPreviousStepFailed,
-        always: () => true,
-        never: () => false,
-        env: this.getScriptEnv(),
         inputs:
           this.inputs?.reduce(
             (acc, input) => {
@@ -331,6 +328,7 @@ export class BuildStep extends BuildStepOutputAccessor {
           runtimePlatform: this.ctx.global.runtimePlatform,
           ...this.ctx.global.staticContext,
         },
+        ...this.getInterpolationContext(),
       })
     );
   }
