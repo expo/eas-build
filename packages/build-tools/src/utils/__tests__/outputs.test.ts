@@ -132,6 +132,19 @@ describe(getJobOutputsFromSteps, () => {
       })
     ).toEqual({ fingerprint_hash: 'abc' });
   });
+
+  it('defaults missing values to empty string', () => {
+    expect(
+      getJobOutputsFromSteps({
+        jobOutputDefinitions: {
+          fingerprint_hash: '${{ steps.setup.outputs.fingerprint_hash }}',
+        },
+        interpolationContext: {
+          steps: { setup: { outputs: {} } },
+        },
+      })
+    ).toEqual({ fingerprint_hash: '' });
+  });
 });
 
 describe(uploadJobOutputsToWwwAsync, () => {
