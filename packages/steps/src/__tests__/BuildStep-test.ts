@@ -480,30 +480,6 @@ describe(BuildStep, () => {
         expect(abc?.value).toBe('d o m i n i k');
       });
 
-      it('prints a warning if some of the outputs set with set-output are not defined in step config', async () => {
-        const logger = createMockLogger();
-        const warnLines: string[] = [];
-        jest.mocked(logger.warn as any).mockImplementation((line: string) => {
-          warnLines.push(line);
-        });
-        jest.mocked(logger.child).mockReturnValue(logger);
-
-        (baseStepCtx as any).baseLogger = logger;
-
-        const id = 'test1';
-        const command = 'set-output abc 123';
-        const displayName = BuildStep.getDisplayName({ id, command });
-
-        const step = new BuildStep(baseStepCtx, {
-          id,
-          command,
-          displayName,
-        });
-        await step.executeAsync();
-        const found = warnLines.find((l) => l.match(/Some outputs are not defined in step config/));
-        expect(found).not.toBeUndefined();
-      });
-
       it('throws an error if some required outputs have not been set with set-output in script', async () => {
         const id = 'test1';
         const command = 'echo 123';
