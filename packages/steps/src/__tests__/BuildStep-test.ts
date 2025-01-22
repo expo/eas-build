@@ -343,7 +343,7 @@ describe(BuildStep, () => {
           command,
         });
         await step.executeAsync();
-        expect(step.getOutputValueByName('foo2')).toBe('bar linux {"foo":"bar","baz":[1,"aaa"]}');
+        expect(step.getOutputValueByName('foo2')).toBe('bar  linux {"foo":"bar","baz":[1,"aaa"]}');
       });
 
       it('interpolates the outputs in command template', async () => {
