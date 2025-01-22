@@ -521,7 +521,7 @@ describe(BuildStep, () => {
           ],
           command,
         });
-        const error = await getErrorAsync<BuildStepRuntimeError>(async () => step.executeAsync());
+        const error = await getErrorAsync<BuildStepRuntimeError>(() => step.executeAsync());
         expect(error).toBeInstanceOf(BuildStepRuntimeError);
         expect(error.message).toMatch(/Some required outputs have not been set: "abc"/);
       });
