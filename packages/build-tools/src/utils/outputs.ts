@@ -62,7 +62,7 @@ export function getJobOutputsFromSteps({
   const jobOutputs: Record<string, string | undefined> = {};
   for (const [outputKey, outputDefinition] of Object.entries(jobOutputDefinitions)) {
     const outputValue = outputDefinition.replace(/\$\{\{(.+?)\}\}/g, (_match, expression) => {
-      return `${jsepEval(expression, interpolationContext)}`;
+      return `${jsepEval(expression, interpolationContext) ?? ''}`;
     });
 
     jobOutputs[outputKey] = outputValue;
