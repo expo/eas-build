@@ -432,31 +432,20 @@ export class BuildStep extends BuildStepOutputAccessor {
   private async collectAndValidateOutputsAsync(outputsDir: string): Promise<void> {
     const files = await fs.readdir(outputsDir);
 
-    const nonDefinedOutputIds: string[] = [];
     for (const outputId of files) {
       if (!(outputId in this.outputById)) {
-        nonDefinedOutputIds.push(outputId);
         const newOutput = new BuildStepOutput(this.ctx.global, {
           id: outputId,
           stepDisplayName: this.displayName,
           required: false,
         });
-        const file = path.join(outputsDir, outputId);
-        const rawContents = await fs.readFile(file, 'utf-8');
-        const value = rawContents.trim();
-        newOutput.set(value);
         this.outputById[outputId] = newOutput;
-      } else {
-        const file = path.join(outputsDir, outputId);
-        const rawContents = await fs.readFile(file, 'utf-8');
-        const value = rawContents.trim();
-        this.outputById[outputId].set(value);
       }
-    }
 
-    if (nonDefinedOutputIds.length > 0) {
-      const idsString = nonDefinedOutputIds.map((i) => `"${i}"`).join(', ');
-      this.ctx.logger.warn(`Some outputs are not defined in step config: ${idsString}`);
+      const file = path.join(outputsDir, outputId);
+      const rawContents = await fs.readFile(file, 'utf-8');
+      const value = rawContents.trim();
+      this.outputById[outputId].set(value);
     }
 
     const nonSetRequiredOutputIds: string[] = [];
