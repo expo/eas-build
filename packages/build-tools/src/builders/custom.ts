@@ -66,20 +66,29 @@ export async function runCustomBuildAsync(ctx: BuildContext<BuildJob>): Promise<
     }
   });
   try {
-    try {
-      await workflow.executeAsync();
-    } finally {
-      if (!ctx.artifacts.XCODE_BUILD_LOGS && ctx.job.platform === Platform.IOS) {
-        try {
-          await findAndUploadXcodeBuildLogsAsync(ctx as BuildContext<Ios.Job>, {
-            logger: ctx.logger,
-          });
-        } catch {
-          // do nothing, it's a non-breaking error.
-        }
+    await workflow.executeAsync();
+
+    if (!ctx.artifacts.XCODE_BUILD_LOGS && ctx.job.platform === Platform.IOS) {
+      try {
+        await findAndUploadXcodeBuildLogsAsync(ctx as BuildContext<Ios.Job>, {
+          logger: ctx.logger,
+          runStatus: 'success',
+        });
+      } catch {
+        // do nothing, it's a non-breaking error.
       }
     }
   } catch (err: any) {
+    if (!ctx.artifacts.XCODE_BUILD_LOGS && ctx.job.platform === Platform.IOS) {
+      try {
+        await findAndUploadXcodeBuildLogsAsync(ctx as BuildContext<Ios.Job>, {
+          logger: ctx.logger,
+          runStatus: 'errored',
+        });
+      } catch {
+        // do nothing, it's a non-breaking error.
+      }
+    }
     err.artifacts = ctx.artifacts;
     throw err;
   }

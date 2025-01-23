@@ -3,10 +3,19 @@ import path from 'path';
 import { bunyan } from '@expo/logger';
 import fs from 'fs-extra';
 import * as tar from 'tar';
+import { ManagedArtifactType } from '@expo/eas-build-job';
 
 import config from './config';
 
-export async function prepareArtifacts(artifactPaths: string[], logger?: bunyan): Promise<string> {
+export async function prepareArtifacts({
+  artifactPaths,
+  artifactType,
+  logger,
+}: {
+  artifactPaths: string[];
+  artifactType: ManagedArtifactType;
+  logger?: bunyan;
+}): Promise<string> {
   const l = logger?.child({ phase: 'PREPARE_ARTIFACTS' });
   l?.info('Preparing artifacts');
   let suffix;
@@ -35,10 +44,21 @@ export async function prepareArtifacts(artifactPaths: string[], logger?: bunyan)
     suffix = '.tar.gz';
     localPath = archivePath;
   }
-  const artifactName = `build-${Date.now()}${suffix}`;
+  const artifactName =
+    artifactType === ManagedArtifactType.APPLICATION_ARCHIVE
+      ? `build-${Date.now()}${suffix}`
+      : artifactType === ManagedArtifactType.BUILD_ARTIFACTS
+        ? `artifacts-${Date.now()}${suffix}`
+        : `xcode-logs-${Date.now()}${suffix}`;
   const destPath = config.artifactPath ?? path.join(config.artifactsDir, artifactName);
   await fs.copy(localPath, destPath);
-  l?.info({ phase: 'PREPARE_ARTIFACTS' }, `Writing artifacts to ${destPath}`);
+  if (artifactType === ManagedArtifactType.APPLICATION_ARCHIVE) {
+    l?.info({ phase: 'PREPARE_ARTIFACTS' }, `Writing application archive to ${destPath}`);
+  } else if (artifactType === ManagedArtifactType.BUILD_ARTIFACTS) {
+    l?.info({ phase: 'PREPARE_ARTIFACTS' }, `Writing build artifacts to ${destPath}`);
+  } else {
+    l?.info({ phase: 'PREPARE_ARTIFACTS' }, `Writing Xcode logs to ${destPath}`);
+  }
   return destPath;
 }
 

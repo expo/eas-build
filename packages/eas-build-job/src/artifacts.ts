@@ -27,3 +27,14 @@ export const isGenericArtifact = <
   }
   return false;
 };
+
+export const isManagedArtifact = <
+  TSpec extends { type: GenericArtifactType | ManagedArtifactType },
+>(
+  artifactSpec: TSpec
+): artifactSpec is TSpec & { type: ManagedArtifactType } => {
+  if (Object.values(ManagedArtifactType).includes(artifactSpec.type as ManagedArtifactType)) {
+    return true;
+  }
+  return false;
+};

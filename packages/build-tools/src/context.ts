@@ -38,8 +38,13 @@ export interface LogBuffer {
 
 export type ArtifactToUpload =
   | {
-      type: ManagedArtifactType;
+      type: ManagedArtifactType.APPLICATION_ARCHIVE | ManagedArtifactType.BUILD_ARTIFACTS;
       paths: string[];
+    }
+  | {
+      type: ManagedArtifactType.XCODE_BUILD_LOGS;
+      paths: string[];
+      runStatus: 'success' | 'errored';
     }
   | {
       type: GenericArtifactType;
