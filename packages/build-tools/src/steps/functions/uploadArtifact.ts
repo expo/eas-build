@@ -1,6 +1,6 @@
 import assert from 'assert';
 
-import { GenericArtifactType, ManagedArtifactType } from '@expo/eas-build-job';
+import { GenericArtifactType, Job, ManagedArtifactType } from '@expo/eas-build-job';
 import { BuildFunction, BuildStepInput, BuildStepInputValueTypeName } from '@expo/steps';
 
 import { CustomBuildContext } from '../../customBuildContext';
@@ -19,14 +19,13 @@ export function createUploadArtifactBuildFunction(ctx: CustomBuildContext): Buil
     inputProviders: [
       BuildStepInput.createProvider({
         id: 'type',
-        defaultValue: ManagedArtifactType.APPLICATION_ARCHIVE,
         allowedValues: [
           ManagedArtifactType.APPLICATION_ARCHIVE,
           ManagedArtifactType.BUILD_ARTIFACTS,
           ...Object.keys(artifactTypeInputToManagedArtifactType),
           ...Object.values(GenericArtifactType),
         ],
-        required: true,
+        required: false,
         allowedValueTypeName: BuildStepInputValueTypeName.STRING,
       }),
       BuildStepInput.createProvider({
@@ -93,7 +92,10 @@ export function createUploadArtifactBuildFunction(ctx: CustomBuildContext): Buil
       });
 
       const artifact = {
-        type: parseArtifactTypeInput(`${inputs.type.value}`),
+        type: parseArtifactTypeInput({
+          platform: ctx.job.platform,
+          inputValue: `${inputs.type.value ?? ''}`,
+        }),
         paths: artifactPaths,
         key: inputs.key.value as string,
       };
@@ -124,14 +126,25 @@ export function createUploadArtifactBuildFunction(ctx: CustomBuildContext): Buil
  * - snake-caps-case managed artifact types (the mistake)
  * - generic artifact types.
  */
-function parseArtifactTypeInput(input: string): GenericArtifactType | ManagedArtifactType {
+function parseArtifactTypeInput({
+  inputValue,
+  platform,
+}: {
+  inputValue: string;
+  platform: Job['platform'];
+}): GenericArtifactType | ManagedArtifactType {
+  if (!inputValue) {
+    // In build jobs the default artifact type is application-archive.
+    return platform ? ManagedArtifactType.APPLICATION_ARCHIVE : GenericArtifactType.OTHER;
+  }
+
   // Step's allowedValues ensures input is either
   // a key of artifactTypeInputToManagedArtifactType
   // or a value of an artifact type.
-  const translatedManagedArtifactType = artifactTypeInputToManagedArtifactType[input];
+  const translatedManagedArtifactType = artifactTypeInputToManagedArtifactType[inputValue];
   if (translatedManagedArtifactType) {
     return translatedManagedArtifactType;
   }
 
-  return input as GenericArtifactType | ManagedArtifactType;
+  return inputValue as GenericArtifactType | ManagedArtifactType;
 }
