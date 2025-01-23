@@ -444,8 +444,8 @@ export class BuildStep extends BuildStepOutputAccessor {
 
       const file = path.join(outputsDir, outputId);
       const rawContents = await fs.readFile(file, 'utf-8');
-      const value = rawContents.trim();
-      this.outputById[outputId].set(value);
+      const decodedContents = Buffer.from(rawContents, 'base64').toString('utf-8');
+      this.outputById[outputId].set(decodedContents);
     }
 
     const nonSetRequiredOutputIds: string[] = [];

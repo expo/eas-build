@@ -15,4 +15,8 @@ if [[ -z "$NAME" || -z "$VALUE" ]]; then
   exit 2
 fi
 
-echo $VALUE > $__EXPO_STEPS_OUTPUTS_DIR/$NAME
+if [[ "$OSTYPE" == "linux"* ]]; then
+  echo -n "$VALUE" | base64 -w 0 > $__EXPO_STEPS_OUTPUTS_DIR/$NAME
+else
+  echo -n "$VALUE" | base64 > $__EXPO_STEPS_OUTPUTS_DIR/$NAME
+fi
