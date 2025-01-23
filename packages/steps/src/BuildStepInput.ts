@@ -1,6 +1,7 @@
 import assert from 'assert';
 
 import { bunyan } from '@expo/logger';
+import { JobInterpolationContext } from '@expo/eas-build-job';
 
 import { BuildStepGlobalContext, SerializedBuildStepGlobalContext } from './BuildStepContext.js';
 import { BuildStepRuntimeError } from './errors.js';
@@ -96,9 +97,11 @@ export class BuildStepInput<
     this.allowedValueTypeName = allowedValueTypeName;
   }
 
-  public get value(): R extends true
-    ? BuildStepInputValueType<T>
-    : BuildStepInputValueType<T> | undefined {
+  public getValue({
+    interpolationContext,
+  }: {
+    interpolationContext: JobInterpolationContext;
+  }): R extends true ? BuildStepInputValueType<T> : BuildStepInputValueType<T> | undefined {
     const rawValue = this._value ?? this.defaultValue;
     if (this.required && rawValue === undefined) {
       throw new BuildStepRuntimeError(
@@ -125,7 +128,7 @@ export class BuildStepInput<
       assert(rawValue !== undefined);
       const valueInterpolatedWithNewInterpolation = interpolateJobContext({
         target: rawValue,
-        context: this.ctx.jobInterpolationContext,
+        context: interpolationContext,
       }) as string | object;
       const valueInterpolatedWithGlobalContext = this.ctx.interpolate(
         valueInterpolatedWithNewInterpolation

@@ -57,7 +57,8 @@ export class BuildWorkflowValidator {
             : typeof currentStepInput.rawValue;
         if (
           currentStepInput.rawValue !== undefined &&
-          !currentStepInput.isRawValueStepOrContextReference() &&
+          typeof currentStepInput.rawValue === 'string' &&
+          currentStepInput.rawValue.includes('${') &&
           currentType !== currentStepInput.allowedValueTypeName
         ) {
           const error = new BuildConfigError(
@@ -81,9 +82,11 @@ export class BuildWorkflowValidator {
           const error = new BuildConfigError(
             `Input parameter "${currentStepInput.id}" for step "${
               currentStep.displayName
-            }" is set to "${
-              currentStepInput.value
-            }" which is not one of the allowed values: ${nullthrows(currentStepInput.allowedValues)
+            }" is set to "${currentStepInput.getValue({
+              interpolationContext: currentStep.getInterpolationContext(),
+            })}" which is not one of the allowed values: ${nullthrows(
+              currentStepInput.allowedValues
+            )
               .map((i) => `"${i}"`)
               .join(', ')}.`
           );
