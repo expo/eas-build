@@ -117,7 +117,7 @@ export class BuildContext<TJob extends Job = Job> {
                 name: 'Upload build artifact',
                 with: {
                   type: 'application-archive',
-                  path: '${{ steps.download_and_repack_golden_development_client_archive.outputs.repacked_archive_path }}',
+                  path: '${ steps.download_and_repack_golden_development_client_archive.repacked_archive_path }',
                 },
               },
             ],
