@@ -8,6 +8,7 @@ import {
   BUILD_STEP_OR_BUILD_GLOBAL_CONTEXT_REFERENCE_REGEX,
   interpolateWithOutputs,
 } from './utils/template.js';
+import { interpolateJobContext } from './interpolation.js';
 
 export enum BuildStepInputValueTypeName {
   STRING = 'string',
@@ -122,7 +123,13 @@ export class BuildStepInput<
       // `valueDoesNotRequireInterpolation` checks that `rawValue` is not undefined
       // so this will never be true.
       assert(rawValue !== undefined);
-      const valueInterpolatedWithGlobalContext = this.ctx.interpolate(rawValue);
+      const valueInterpolatedWithNewInterpolation = interpolateJobContext({
+        target: rawValue,
+        context: this.ctx.jobInterpolationContext,
+      }) as string | object;
+      const valueInterpolatedWithGlobalContext = this.ctx.interpolate(
+        valueInterpolatedWithNewInterpolation
+      );
       const valueInterpolatedWithOutputsAndGlobalContext = interpolateWithOutputs(
         valueInterpolatedWithGlobalContext,
         (path) => this.ctx.getStepOutputValue(path) ?? ''

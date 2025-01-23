@@ -347,19 +347,12 @@ export class BuildStep extends BuildStepOutputAccessor {
   }
 
   private getInterpolationContext(): JobInterpolationContext {
-    const hasAnyPreviousStepFailed = this.ctx.global.hasAnyPreviousStepFailed;
-
     return {
-      ...this.ctx.global.staticContext,
-      always: () => true,
-      never: () => false,
-      success: () => !hasAnyPreviousStepFailed,
-      failure: () => hasAnyPreviousStepFailed,
+      ...this.ctx.global.jobInterpolationContext,
       env: this.getScriptEnv(),
-      fromJSON: (json: string) => JSON.parse(json),
-      toJSON: (value: unknown) => JSON.stringify(value),
     };
   }
+
   private async executeCommandAsync(): Promise<void> {
     assert(this.command, 'Command must be defined.');
 
