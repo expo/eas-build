@@ -115,7 +115,7 @@ export class BuildContext<TJob extends Job = Job> {
               {
                 uses: 'eas/upload_artifact',
                 name: 'Upload build artifact',
-                inputs: {
+                with: {
                   type: 'application-archive',
                   path: '${{ steps.download_and_repack_golden_development_client_archive.outputs.repacked_archive_path }}',
                 },

@@ -1,6 +1,3 @@
-import fs from 'fs';
-import path from 'path';
-
 import { BuildPhase, Generic } from '@expo/eas-build-job';
 import { BuildStepGlobalContext, BuildWorkflow, errors, StepsConfigParser } from '@expo/steps';
 import { Result, asyncResult } from '@expo/results';

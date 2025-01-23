@@ -12,11 +12,9 @@ import { CustomBuildContext } from '../customBuildContext';
 import { resolveEnvFromBuildProfileAsync } from '../common/easBuildInternal';
 import { getEasFunctionGroups } from '../steps/easFunctionGroups';
 import { findAndUploadXcodeBuildLogsAsync } from '../ios/xcodeBuildLogs';
-import { addEasWorkflows } from '../generic';
 
 export async function runCustomBuildAsync(ctx: BuildContext<BuildJob>): Promise<Artifacts> {
   const customBuildCtx = new CustomBuildContext(ctx);
-  await addEasWorkflows(customBuildCtx);
   await prepareProjectSourcesAsync(ctx, customBuildCtx.projectSourceDirectory);
   if (ctx.job.triggeredBy === BuildTrigger.GIT_BASED_INTEGRATION) {
     // We need to setup envs from eas.json
