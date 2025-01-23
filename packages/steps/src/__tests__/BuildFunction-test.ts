@@ -252,10 +252,11 @@ describe(BuildFunction, () => {
         },
         workingDirectory: ctx.defaultWorkingDirectory,
       });
-      expect(step.inputs?.[0].value).toBe('abc');
-      expect(step.inputs?.[1].value).toBe('def');
-      expect(step.inputs?.[2].value).toBe(false);
-      expect(step.inputs?.[3].value).toMatchObject({
+      const interpolationContext = step.getInterpolationContext();
+      expect(step.inputs?.[0].getValue({ interpolationContext })).toBe('abc');
+      expect(step.inputs?.[1].getValue({ interpolationContext })).toBe('def');
+      expect(step.inputs?.[2].getValue({ interpolationContext })).toBe(false);
+      expect(step.inputs?.[3].getValue({ interpolationContext })).toMatchObject({
         b: 2,
       });
     });

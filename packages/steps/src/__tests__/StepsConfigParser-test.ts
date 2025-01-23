@@ -335,22 +335,23 @@ describe(StepsConfigParser, () => {
       expect(step4.inputs).toBeDefined();
       assert(step4.inputs);
       const [input1, input2, input3, input4] = step4.inputs;
+      const step4InterpolationContext = step4.getInterpolationContext();
       expect(input1.id).toBe('arg1');
-      expect(input1.value).toBe('value1');
+      expect(input1.getValue({ interpolationContext: step4InterpolationContext })).toBe('value1');
       expect(input1.allowedValueTypeName).toBe(BuildStepInputValueTypeName.STRING);
       expect(input1.allowedValues).toBeUndefined();
       expect(input1.defaultValue).toBeUndefined();
       expect(input1.rawValue).toBe('value1');
       expect(input1.required).toBe(true);
       expect(input2.id).toBe('arg2');
-      expect(input2.value).toBe(2);
+      expect(input2.getValue({ interpolationContext: step4InterpolationContext })).toBe(2);
       expect(input2.allowedValueTypeName).toBe(BuildStepInputValueTypeName.NUMBER);
       expect(input2.allowedValues).toBeUndefined();
       expect(input2.defaultValue).toBeUndefined();
       expect(input2.rawValue).toBe(2);
       expect(input2.required).toBe(true);
       expect(input3.id).toBe('arg3');
-      expect(input3.value).toMatchObject({
+      expect(input3.getValue({ interpolationContext: step4InterpolationContext })).toMatchObject({
         key1: 'value1',
         key2: ['value1'],
       });

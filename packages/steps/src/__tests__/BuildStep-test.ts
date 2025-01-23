@@ -5,7 +5,7 @@ import { jest } from '@jest/globals';
 import { instance, mock, verify, when } from 'ts-mockito';
 import { v4 as uuidv4 } from 'uuid';
 
-import { BuildStep, BuildStepFunction, BuildStepStatus } from '../BuildStep.js';
+import { BuildStep, BuildStepStatus } from '../BuildStep.js';
 import {
   BuildStepInput,
   BuildStepInputById,
@@ -623,18 +623,21 @@ describe(BuildStep, () => {
           }),
         ];
 
-        const fn: BuildStepFunction = (_ctx, { inputs, outputs }) => {
-          outputs.abc.set(
-            `${inputs.foo1.value} ${inputs.foo2.value} ${inputs.foo3.value} ${inputs.foo4.value}`
-          );
-        };
-
         const step = new BuildStep(baseStepCtx, {
           id,
           displayName,
           inputs,
           outputs,
-          fn,
+          fn: (_ctx, { inputs, outputs }) => {
+            const interpolationContext = step.getInterpolationContext();
+            outputs.abc.set(
+              `${inputs.foo1.getValue({ interpolationContext })} ${inputs.foo2.getValue({
+                interpolationContext,
+              })} ${inputs.foo3.getValue({ interpolationContext })} ${inputs.foo4.getValue({
+                interpolationContext,
+              })}`
+            );
+          },
         });
 
         await step.executeAsync();

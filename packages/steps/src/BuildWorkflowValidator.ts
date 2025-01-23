@@ -55,10 +55,11 @@ export class BuildWorkflowValidator {
           typeof currentStepInput.rawValue === 'object'
             ? BuildStepInputValueTypeName.JSON
             : typeof currentStepInput.rawValue;
+        const rawValueMayRequireInterpolation =
+          typeof currentStepInput.rawValue === 'string' && currentStepInput.rawValue.includes('${');
         if (
           currentStepInput.rawValue !== undefined &&
-          typeof currentStepInput.rawValue === 'string' &&
-          currentStepInput.rawValue.includes('${') &&
+          !rawValueMayRequireInterpolation &&
           currentType !== currentStepInput.allowedValueTypeName
         ) {
           const error = new BuildConfigError(

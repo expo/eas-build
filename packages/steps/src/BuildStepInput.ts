@@ -109,30 +109,32 @@ export class BuildStepInput<
       );
     }
 
+    const interpolatedValue = interpolateJobContext({
+      target: rawValue,
+      context: interpolationContext,
+    });
+
     const valueDoesNotRequireInterpolation =
-      rawValue === undefined ||
-      rawValue === null ||
-      typeof rawValue === 'boolean' ||
-      typeof rawValue === 'number';
+      interpolatedValue === undefined ||
+      interpolatedValue === null ||
+      typeof interpolatedValue === 'boolean' ||
+      typeof interpolatedValue === 'number';
     let returnValue;
     if (valueDoesNotRequireInterpolation) {
-      if (typeof rawValue !== this.allowedValueTypeName && rawValue !== undefined) {
+      if (
+        typeof interpolatedValue !== this.allowedValueTypeName &&
+        interpolatedValue !== undefined
+      ) {
         throw new BuildStepRuntimeError(
           `Input parameter "${this.id}" for step "${this.stepDisplayName}" must be of type "${this.allowedValueTypeName}".`
         );
       }
-      returnValue = rawValue as BuildStepInputValueType<T>;
+      returnValue = interpolatedValue as BuildStepInputValueType<T>;
     } else {
-      // `valueDoesNotRequireInterpolation` checks that `rawValue` is not undefined
+      // `valueDoesNotRequireInterpolation` checks that `interpolatedValue` is not undefined
       // so this will never be true.
-      assert(rawValue !== undefined);
-      const valueInterpolatedWithNewInterpolation = interpolateJobContext({
-        target: rawValue,
-        context: interpolationContext,
-      }) as string | object;
-      const valueInterpolatedWithGlobalContext = this.ctx.interpolate(
-        valueInterpolatedWithNewInterpolation
-      );
+      assert(interpolatedValue !== undefined);
+      const valueInterpolatedWithGlobalContext = this.ctx.interpolate(interpolatedValue);
       const valueInterpolatedWithOutputsAndGlobalContext = interpolateWithOutputs(
         valueInterpolatedWithGlobalContext,
         (path) => this.ctx.getStepOutputValue(path) ?? ''
@@ -218,15 +220,7 @@ export class BuildStepInput<
   }
 
   private parseInputValueToString(value: string): string {
-    let parsedValue = value;
-    try {
-      parsedValue = JSON.parse(`"${value}"`);
-    } catch (err) {
-      if (!(err instanceof SyntaxError)) {
-        throw err;
-      }
-    }
-    return parsedValue;
+    return `${value}`;
   }
 
   private parseInputValueToNumber(value: string): number {
