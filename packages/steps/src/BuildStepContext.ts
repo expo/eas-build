@@ -1,7 +1,7 @@
 import os from 'os';
 import path from 'path';
 
-import { JobInterpolationContext, StaticJobInterpolationContext } from '@expo/eas-build-job';
+import { StaticJobInterpolationContext } from '@expo/eas-build-job';
 import { bunyan } from '@expo/logger';
 import { v4 as uuidv4 } from 'uuid';
 
@@ -104,25 +104,6 @@ export class BuildStepGlobalContext {
           },
         ])
       ),
-    };
-  }
-
-  public get jobInterpolationContext(): JobInterpolationContext {
-    const hasAnyPreviousStepFailed = this.hasAnyPreviousStepFailed;
-
-    return {
-      ...this.staticContext,
-      always: () => true,
-      never: () => false,
-      success: () => !hasAnyPreviousStepFailed,
-      failure: () => hasAnyPreviousStepFailed,
-      env: Object.fromEntries(
-        Object.entries(this.env).flatMap(([key, value]) =>
-          value !== undefined ? [[key, value]] : []
-        )
-      ),
-      fromJSON: (json: string) => JSON.parse(json),
-      toJSON: (value: unknown) => JSON.stringify(value),
     };
   }
 
