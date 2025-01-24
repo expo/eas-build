@@ -12,6 +12,14 @@ import { createStartIosSimulatorBuildFunction } from '../functions/startIosSimul
 import { createStartAndroidEmulatorBuildFunction } from '../functions/startAndroidEmulator';
 import { createUploadArtifactBuildFunction } from '../functions/uploadArtifact';
 
+export function getEnvFlags(envVars?: Record<string, string>): string {
+  return envVars
+    ? Object.entries(envVars)
+        .map(([key, value]) => `-e ${key}=${value}`)
+        .join(' ')
+    : '';
+}
+
 export function createEasMaestroTestFunctionGroup(
   buildToolsContext: CustomBuildContext
 ): BuildFunctionGroup {
@@ -34,8 +42,14 @@ export function createEasMaestroTestFunctionGroup(
         id: 'android_emulator_system_image_package',
         required: false,
       }),
+      BuildStepInput.createProvider({
+        allowedValueTypeName: BuildStepInputValueTypeName.JSON,
+        id: 'env',
+        required: false,
+      }),
     ],
     createBuildStepsFromFunctionGroupCall: (globalCtx, { inputs }) => {
+
       const steps: BuildStep[] = [
         createInstallMaestroBuildFunction().createBuildStepFromFunctionCall(globalCtx),
       ];
@@ -119,13 +133,15 @@ export function createEasMaestroTestFunctionGroup(
         .split('\n') // It's easy to get an empty line with YAML
         .filter((entry) => entry);
       for (const flowPath of flowPaths) {
+        const envVars = inputs.env?.value as Record<string, string> | undefined;
+        const envFlags = getEnvFlags(envVars);
         steps.push(
           new BuildStep(globalCtx, {
             id: BuildStep.getNewId(),
             name: 'maestro_test',
             ifCondition: '${ always() }',
             displayName: `maestro test ${flowPath}`,
-            command: `maestro test ${flowPath}`,
+            command: `maestro test ${envFlags} ${flowPath}`,
           })
         );
       }
