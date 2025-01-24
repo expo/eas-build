@@ -1,6 +1,3 @@
-import fs from 'fs';
-import path from 'path';
-
 import { BuildPhase, Generic } from '@expo/eas-build-job';
 import { BuildStepGlobalContext, BuildWorkflow, errors, StepsConfigParser } from '@expo/steps';
 import { Result, asyncResult } from '@expo/results';
@@ -19,8 +16,6 @@ export async function runGenericJobAsync(
   const customBuildCtx = new CustomBuildContext(ctx);
 
   await prepareProjectSourcesAsync(ctx, customBuildCtx.projectSourceDirectory);
-
-  await addEasWorkflows(customBuildCtx);
 
   const globalContext = new BuildStepGlobalContext(customBuildCtx, false);
 
@@ -55,16 +50,4 @@ export async function runGenericJobAsync(
   });
 
   return { runResult, buildWorkflow: workflow };
-}
-
-export async function addEasWorkflows(customBuildCtx: CustomBuildContext): Promise<void> {
-  await fs.promises.mkdir(path.join(customBuildCtx.projectSourceDirectory, '__eas'), {
-    recursive: true,
-  });
-
-  await fs.promises.cp(
-    path.join(__dirname, '..', 'resources', '__eas'),
-    path.join(customBuildCtx.projectSourceDirectory, '__eas'),
-    { recursive: true }
-  );
 }

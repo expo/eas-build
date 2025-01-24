@@ -104,9 +104,23 @@ export class BuildContext<TJob extends Job = Job> {
       ...job,
       ...(shouldApplyRepackOverrides
         ? {
-            customBuildConfig: {
-              path: '__eas/repack.yml',
-            },
+            steps: [
+              { uses: 'eas/checkout' },
+              { uses: 'eas/install_node_modules' },
+              { uses: 'eas/resolve_build_config' },
+              {
+                uses: 'eas/__download_and_repack_golden_development_client_archive',
+                id: 'download_and_repack_golden_development_client_archive',
+              },
+              {
+                uses: 'eas/upload_artifact',
+                name: 'Upload build artifact',
+                with: {
+                  type: 'application-archive',
+                  path: '${ steps.download_and_repack_golden_development_client_archive.repacked_archive_path }',
+                },
+              },
+            ],
           }
         : null),
     };
