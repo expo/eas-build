@@ -59,6 +59,21 @@ describe('Maestro Test Commands', () => {
       expect(step.command).toBe(expectedCommands[index]);
     });
   });
+
+  it('generates commands without env vars', () => {
+    const iosContext = createTestContext(Platform.IOS);
+    const androidContext = createTestContext(Platform.ANDROID);
+    const flowPath = 'test.yaml';
+    const expectedCommand = `maestro test ${flowPath}`;
+
+    const iosSteps = getMaestroSteps(createMaestroSteps(iosContext, flowPath, {}));
+    expect(iosSteps).toHaveLength(1);
+    expect(iosSteps[0].command).toBe(expectedCommand);
+
+    const androidSteps = getMaestroSteps(createMaestroSteps(androidContext, flowPath, {}));
+    expect(androidSteps).toHaveLength(1);
+    expect(androidSteps[0].command).toBe(expectedCommand);
+  });
 });
 
 describe('getEnvFlags', () => {

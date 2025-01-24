@@ -20,6 +20,11 @@ export function getEnvFlags(envVars?: Record<string, string>): string {
     : '';
 }
 
+function getMaestroTestCommand(flowPath: string, envVars?: Record<string, string>): string {
+  const envFlags = getEnvFlags(envVars);
+  return envFlags ? `maestro test ${envFlags} ${flowPath}` : `maestro test ${flowPath}`;
+}
+
 export function createEasMaestroTestFunctionGroup(
   buildToolsContext: CustomBuildContext
 ): BuildFunctionGroup {
@@ -49,7 +54,6 @@ export function createEasMaestroTestFunctionGroup(
       }),
     ],
     createBuildStepsFromFunctionGroupCall: (globalCtx, { inputs }) => {
-
       const steps: BuildStep[] = [
         createInstallMaestroBuildFunction().createBuildStepFromFunctionCall(globalCtx),
       ];
@@ -134,14 +138,13 @@ export function createEasMaestroTestFunctionGroup(
         .filter((entry) => entry);
       for (const flowPath of flowPaths) {
         const envVars = inputs.env?.value as Record<string, string> | undefined;
-        const envFlags = getEnvFlags(envVars);
         steps.push(
           new BuildStep(globalCtx, {
             id: BuildStep.getNewId(),
             name: 'maestro_test',
             ifCondition: '${ always() }',
             displayName: `maestro test ${flowPath}`,
-            command: `maestro test ${envFlags} ${flowPath}`,
+            command: getMaestroTestCommand(flowPath, envVars),
           })
         );
       }
