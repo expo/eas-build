@@ -1,40 +1,16 @@
-import path from 'path';
-
-import { Platform } from '@expo/eas-build-job';
 import { BuildStepGlobalContext, BuildStep } from '@expo/steps';
+import { Platform } from '@expo/eas-build-job';
 
 import { createEasMaestroTestFunctionGroup, getEnvFlags } from '../maestroTest';
 import { CustomBuildContext } from '../../../customBuildContext';
-import { createMockLogger } from '../../../__tests__/utils/logger';
-
-export function createMockGlobalContext(): BuildStepGlobalContext {
-  const logger = createMockLogger();
-  const stepContextMock = {
-    logger,
-    workingDirectory: '/fake/path',
-    interpolate: jest.fn().mockImplementation((val) => val),
-    getStepOutputValue: jest.fn().mockImplementation(() => undefined),
-  };
-
-  return {
-    baseLogger: logger,
-    logger,
-    defaultWorkingDirectory: '/fake/path',
-    env: {},
-    stepsInternalBuildDirectory: path.join('/fake/path', 'internal'),
-    stepCtx: jest.fn().mockImplementation(() => stepContextMock),
-    registerStep: jest.fn().mockImplementation((_: BuildStep) => {}),
-    interpolate: stepContextMock.interpolate,
-    getStepOutputValue: stepContextMock.getStepOutputValue,
-  } as unknown as BuildStepGlobalContext;
-}
+import { createGlobalContextMock } from '../../../__tests__/utils/context';
 
 function createTestContext(platform: Platform): {
   globalCtx: BuildStepGlobalContext;
   buildContext: CustomBuildContext;
 } {
   return {
-    globalCtx: createMockGlobalContext(),
+    globalCtx: createGlobalContextMock(),
     buildContext: { job: { platform } } as CustomBuildContext,
   };
 }
