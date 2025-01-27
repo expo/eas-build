@@ -249,4 +249,46 @@ note`;
 - The last one
 Refer to "Xcode Logs" below for additional, more detailed logs.`);
   });
+
+  it('detects MAVEN_CACHE_ERROR correctly', async () => {
+    const err = await resolveBuildPhaseErrorAsync(
+      new Error(),
+      [`https://szymon.pl/maven/cache`],
+      {
+        job: { platform: Platform.ANDROID, mode: BuildMode.BUILD } as Job,
+        phase: BuildPhase.RUN_GRADLEW,
+        env: {
+          EAS_BUILD_MAVEN_CACHE_URL: 'https://szymon.pl/maven/cache',
+        },
+      },
+      '/fake/path'
+    );
+
+    expect(err.errorCode).toBe('MAVEN_CACHE_ERROR');
+    expect(err.userFacingErrorCode).toBe('EAS_BUILD_UNKNOWN_GRADLE_ERROR');
+    expect(err.userFacingMessage).toBe(
+      `Gradle build failed with unknown error. See logs for the "Run gradlew" phase for more information.`
+    );
+  });
+
+  it('does not throw MAVEN_CACHE_ERROR if "Could not find BlurView-version-2.0.3.jar" log is present', async () => {
+    const err = await resolveBuildPhaseErrorAsync(
+      new Error(),
+      [`Could not find BlurView-version-2.0.3.jar sth sthelse https://szymon.pl/maven/cache`],
+      {
+        job: { platform: Platform.ANDROID, mode: BuildMode.BUILD } as Job,
+        phase: BuildPhase.RUN_GRADLEW,
+        env: {
+          EAS_BUILD_MAVEN_CACHE_URL: 'https://szymon.pl/maven/cache',
+        },
+      },
+      '/fake/path'
+    );
+
+    expect(err.errorCode).toBe('EAS_BUILD_UNKNOWN_GRADLE_ERROR');
+    expect(err.userFacingErrorCode).toBe('EAS_BUILD_UNKNOWN_GRADLE_ERROR');
+    expect(err.userFacingMessage).toBe(
+      `Gradle build failed with unknown error. See logs for the "Run gradlew" phase for more information.`
+    );
+  });
 });
