@@ -299,7 +299,11 @@ export const buildErrorHandlers: ErrorHandler<TrackedBuildError>[] = [
     phase: BuildPhase.RUN_GRADLEW,
     regexp: ({ env }: ErrorContext) =>
       env.EAS_BUILD_MAVEN_CACHE_URL
-        ? new RegExp(escapeRegExp(env.EAS_BUILD_MAVEN_CACHE_URL))
+        ? new RegExp(
+            `^(?!.*Could not find BlurView-version-2\\.0\\.3\\.jar).*${escapeRegExp(
+              env.EAS_BUILD_MAVEN_CACHE_URL
+            )}`
+          )
         : undefined,
     createError: () => new TrackedBuildError('MAVEN_CACHE_ERROR', `maven: cache error`),
   },
