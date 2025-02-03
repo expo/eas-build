@@ -13,6 +13,7 @@ export namespace SubmissionConfig {
          */
         ascAppIdentifier: z.string(),
         isVerboseFastlaneEnabled: z.boolean().optional(),
+        groups: z.array(z.string()).optional(),
       })
       .and(
         z.union([
