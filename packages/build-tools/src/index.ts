@@ -19,3 +19,5 @@ export { findAndUploadXcodeBuildLogsAsync } from './ios/xcodeBuildLogs';
 export { Hook, runHookIfPresent } from './utils/hooks';
 
 export * from './generic';
+
+export * from './gcs';
