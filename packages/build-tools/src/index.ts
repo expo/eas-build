@@ -1,6 +1,8 @@
 import * as Builders from './builders';
+import GCS from './gcs/client';
+import GCSLoggerStream from './gcs/LoggerStream';
 
-export { Builders };
+export { Builders, GCS, GCSLoggerStream };
 
 export {
   ArtifactToUpload,
@@ -19,5 +21,3 @@ export { findAndUploadXcodeBuildLogsAsync } from './ios/xcodeBuildLogs';
 export { Hook, runHookIfPresent } from './utils/hooks';
 
 export * from './generic';
-
-export * from './gcs';
