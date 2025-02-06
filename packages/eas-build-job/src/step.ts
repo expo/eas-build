@@ -127,19 +127,14 @@ export const ShellStepZ = CommonStepZ.extend({
    */
   outputs: z
     .array(
-      z.preprocess(
-        (input) => {
-          // We allow a shorthand for outputs
-          if (typeof input === 'string') {
-            return { name: input, required: false };
-          }
-          return input;
-        },
+      z.union([
+        // We allow a shorthand for outputs
+        z.string().transform((name) => ({ name, required: false })),
         z.object({
           name: z.string(),
           required: z.boolean().optional(),
-        })
-      )
+        }),
+      ])
     )
     .optional(),
 
