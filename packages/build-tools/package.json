@@ -36,6 +36,7 @@
     "@expo/template-file": "1.0.117",
     "@expo/turtle-spawn": "1.0.117",
     "@expo/xcpretty": "^4.3.1",
+    "@google-cloud/storage": "^7.11.2",
     "fast-glob": "^3.3.2",
     "fs-extra": "^11.2.0",
     "joi": "^17.13.1",

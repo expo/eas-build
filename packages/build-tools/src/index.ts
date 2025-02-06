@@ -1,6 +1,8 @@
 import * as Builders from './builders';
+import GCS from './gcs/client';
+import GCSLoggerStream from './gcs/LoggerStream';
 
-export { Builders };
+export { Builders, GCS, GCSLoggerStream };
 
 export {
   ArtifactToUpload,
