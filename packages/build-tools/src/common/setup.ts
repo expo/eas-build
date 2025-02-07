@@ -227,7 +227,7 @@ async function validateAppConfigAsync(
       extraMessage = 'Make sure you connected your GitHub repository to the correct Expo project. ';
     } else if (isUsingDynamicConfig) {
       extraMessage =
-        'If you are using environment variables to switch between projects in app.config.js/app.config.ts, make sure those variables are also set inside EAS Build. You can do that using "env" field in eas.json or EAS Secrets. ';
+        'If you are using environment variables to switch between projects in app.config.js/app.config.ts, make sure those variables are also set inside EAS Build. You can do that using "env" field in eas.json or EAS environment variables. ';
     }
     throw new UserFacingError(
       'EAS_BUILD_PROJECT_ID_MISMATCH',

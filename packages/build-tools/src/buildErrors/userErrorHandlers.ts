@@ -69,8 +69,8 @@ export const userErrorHandlers: ErrorHandler<UserFacingError>[] = [
     createError: () =>
       new UserFacingError(
         'EAS_BUILD_MISSING_GOOGLE_SERVICES_JSON_ERROR',
-        '"google-services.json" is missing, make sure that the file exists. Remember that EAS Build only uploads the files tracked by git. Use EAS secrets to provide EAS Build with the file.',
-        'https://docs.expo.dev/build-reference/variables/#how-to-upload-a-secret-file-and'
+        '"google-services.json" is missing, make sure that the file exists. Remember that EAS Build only uploads the files tracked by git. Use EAS environment variables to provide EAS Build with the file.',
+        'https://docs.expo.dev/eas/environment-variables/#file-environment-variables'
       ),
   },
   {
@@ -84,8 +84,8 @@ export const userErrorHandlers: ErrorHandler<UserFacingError>[] = [
     createError: () =>
       new UserFacingError(
         'EAS_BUILD_MISSING_GOOGLE_SERVICES_JSON_ERROR',
-        '"google-services.json" is missing, make sure that the file exists. Remember that EAS Build only uploads the files tracked by git. Use EAS secrets to provide EAS Build with the file.',
-        'https://docs.expo.dev/build-reference/variables/#how-to-upload-a-secret-file-and'
+        '"google-services.json" is missing, make sure that the file exists. Remember that EAS Build only uploads the files tracked by git. Use EAS environment variables to provide EAS Build with the file.',
+        'https://docs.expo.dev/eas/environment-variables/#file-environment-variables'
       ),
   },
   {
@@ -97,8 +97,8 @@ export const userErrorHandlers: ErrorHandler<UserFacingError>[] = [
     createError: () =>
       new UserFacingError(
         'EAS_BUILD_MISSING_GOOGLE_SERVICES_PLIST_ERROR',
-        '"GoogleService-Info.plist" is missing, make sure that the file exists. Remember that EAS Build only uploads the files tracked by git. Use EAS secrets to provide EAS Build with the file.',
-        'https://docs.expo.dev/build-reference/variables/#how-to-upload-a-secret-file-and'
+        '"GoogleService-Info.plist" is missing, make sure that the file exists. Remember that EAS Build only uploads the files tracked by git. Use EAS environment variables to provide EAS Build with the file.',
+        'https://docs.expo.dev/eas/environment-variables/#file-environment-variables'
       ),
   },
   {

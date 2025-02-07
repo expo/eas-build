@@ -40,7 +40,7 @@ export async function configureEASUpdateAsync({
       `Runtime version from the app config evaluated on your local machine (${metadata.runtimeVersion}) does not match the one resolved here (${runtimeVersion}).`
     );
     logger.warn(
-      "If you're using conditional app configs, e.g. depending on an environment variable, make sure to set the variable in eas.json or configure it with EAS Secret."
+      "If you're using conditional app configs, e.g. depending on an environment variable, make sure to set the variable in eas.json or configure it with EAS environment variables."
     );
   }
 
