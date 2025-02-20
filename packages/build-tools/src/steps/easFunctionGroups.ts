@@ -4,12 +4,15 @@ import { CustomBuildContext } from '../customBuildContext';
 
 import { createEasBuildBuildFunctionGroup } from './functionGroups/build';
 import { createEasMaestroTestFunctionGroup } from './functionGroups/maestroTest';
+import { createEasSubmitBuildFunctionGroup } from './functionGroups/submit';
 
 export function getEasFunctionGroups(ctx: CustomBuildContext): BuildFunctionGroup[] {
   const functionGroups = [createEasMaestroTestFunctionGroup(ctx)];
 
   if (ctx.hasBuildJob()) {
-    functionGroups.push(...[createEasBuildBuildFunctionGroup(ctx)]);
+    functionGroups.push(
+      ...[createEasBuildBuildFunctionGroup(ctx), createEasSubmitBuildFunctionGroup(ctx)]
+    );
   }
 
   return functionGroups;
