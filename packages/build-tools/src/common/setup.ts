@@ -93,10 +93,7 @@ export async function setupAsync<TJob extends BuildJob>(ctx: BuildContext<TJob>)
   if (!ctx.env.EAS_BUILD_DISABLE_EXPO_DOCTOR_STEP && hasExpoPackage) {
     await ctx.runBuildPhase(BuildPhase.RUN_EXPO_DOCTOR, async () => {
       try {
-        const { stdout } = await runExpoDoctor(ctx);
-        if (!stdout.match(/Didn't find any issues with the project/)) {
-          ctx.markBuildPhaseHasWarnings();
-        }
+        await runExpoDoctor(ctx);
       } catch (err) {
         if (err instanceof DoctorTimeoutError) {
           ctx.logger.error(err.message);
