@@ -129,7 +129,7 @@ export async function resolveEnvFromBuildProfileAsync<TJob extends BuildJob>(
   return env;
 }
 
-async function resolveEasCommandPrefixAndEnvAsync(): Promise<{
+export async function resolveEasCommandPrefixAndEnvAsync(): Promise<{
   cmd: string;
   args: string[];
   extraEnv: Env;
