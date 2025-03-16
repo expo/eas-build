@@ -76,7 +76,7 @@ export function getStepOutputsAsObject(step: BuildStep): {
   outputs: Record<string, string | undefined>;
 } {
   const outputs = Object.fromEntries(
-    Object.entries(step.outputById).map(([id, output]) => [id, output.value ?? '']) ?? []
+    Object.entries(step.outputById).map(([id, output]) => [id, output.rawValue ?? '']) ?? []
   );
 
   return { outputs };
