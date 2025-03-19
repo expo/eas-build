@@ -189,6 +189,18 @@ export const StaticWorkflowInterpolationContextZ = z.object({
       ref: z.string(),
       ref_name: z.string(),
       ref_type: z.string(),
+      label: z.string().optional(),
+      event: z
+        .object({
+          label: z
+            .object({
+              name: z.string(),
+            })
+            .optional(),
+          schedule: z.string().optional(),
+        })
+        .optional(),
+      schedule: z.string().optional(),
     })
     // We need to .optional() to support jobs that are not triggered by a GitHub event.
     .optional(),
