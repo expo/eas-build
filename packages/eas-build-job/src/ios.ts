@@ -22,20 +22,27 @@ import { Step } from './step';
 
 export type DistributionType = 'store' | 'internal' | 'simulator';
 
-const TargetCredentialsSchema = Joi.object().keys({
+export enum ProvisioningProfileType {
+  MOBILEPROVISION = 'mobileprovision',
+  PROVISIONPROFILE = 'provisionprofile',
+}
+
+export const TargetCredentialsSchema = Joi.object<TargetCredentials>().keys({
   provisioningProfileBase64: Joi.string().required(),
   distributionCertificate: Joi.object({
     dataBase64: Joi.string().required(),
     password: Joi.string().allow('').required(),
   }).required(),
+  provisioningProfileType: Joi.allow(Object.values(ProvisioningProfileType)).required(),
 });
 
 export interface TargetCredentials {
   provisioningProfileBase64: string;
   distributionCertificate: DistributionCertificate;
+  provisioningProfileType: ProvisioningProfileType;
 }
 
-const BuildCredentialsSchema = Joi.object().pattern(
+export const BuildCredentialsSchema = Joi.object<BuildCredentials>().pattern(
   Joi.string().required(),
   TargetCredentialsSchema
 );
