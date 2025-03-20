@@ -29,7 +29,7 @@ export async function uploadJobOutputsToWwwAsync(
     };
     logger.debug({ dynamicValues: interpolationContext }, 'Using dynamic values');
 
-    const outputs = getJobOutputsFromSteps({
+    const outputs = collectJobOutputs({
       jobOutputDefinitions: ctx.staticContext.job.outputs,
       interpolationContext,
     });
@@ -50,7 +50,7 @@ export async function uploadJobOutputsToWwwAsync(
 }
 
 /** Function we use to get outputs of the whole job from steps. */
-export function getJobOutputsFromSteps({
+export function collectJobOutputs({
   jobOutputDefinitions,
   interpolationContext,
 }: {
