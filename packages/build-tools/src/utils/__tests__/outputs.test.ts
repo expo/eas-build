@@ -1,6 +1,6 @@
-import { randomUUID } from 'crypto';
+import { randomBytes, randomUUID } from 'crypto';
 
-import { Generic } from '@expo/eas-build-job';
+import { JobInterpolationContext } from '@expo/eas-build-job';
 import {
   BuildRuntimePlatform,
   BuildStep,
@@ -10,15 +10,17 @@ import {
 import { createLogger } from '@expo/logger';
 import fetch, { Response } from 'node-fetch';
 
-import {
-  getStepOutputsAsObject,
-  getJobOutputsFromSteps,
-  uploadJobOutputsToWwwAsync,
-} from '../outputs';
-import { BuildContext } from '../../context';
+import { collectJobOutputs, uploadJobOutputsToWwwAsync } from '../outputs';
 import { TurtleFetchError } from '../turtleFetch';
 
 jest.mock('node-fetch');
+
+const workflowJobId = randomUUID();
+const robotAccessToken = randomBytes(32).toString('hex');
+
+const env = {
+  __WORKFLOW_JOB_ID: workflowJobId,
+};
 
 const context = new BuildStepGlobalContext(
   {
@@ -28,172 +30,118 @@ const context = new BuildStepGlobalContext(
     defaultWorkingDirectory: 'test',
     runtimePlatform: BuildRuntimePlatform.DARWIN,
     staticContext: () => ({
-      job: {} as any,
+      job: {
+        outputs: {
+          fingerprintHash: '${{ steps.setup.outputs.fingerprint_hash }}',
+          nodeVersion: '${{ steps.node_setup.outputs.node_version }}',
+        },
+        secrets: {
+          robotAccessToken,
+        },
+      } as any,
       metadata: {} as any,
-      env: {} as any,
+      env,
       expoApiServerURL: 'https://api.expo.test',
     }),
-    env: {},
+    env,
     logger: createLogger({ name: 'test' }),
     updateEnv: () => {},
   },
   false
 );
 
-describe(getStepOutputsAsObject, () => {
-  it('returns empty object for outputs of a step with no outputs', () => {
-    expect(
-      getStepOutputsAsObject(
-        new BuildStep(context, {
-          id: 'test',
-          displayName: 'test',
-          command: 'test',
-        })
-      )
-    ).toEqual({ outputs: {} });
-  });
+const fingerprintHashStepOutput = new BuildStepOutput(context, {
+  id: 'fingerprint_hash',
+  stepDisplayName: 'test',
+  required: true,
+});
+fingerprintHashStepOutput.set('mock-fingerprint-hash');
 
-  it(`returns outputs from a step when they're defined`, () => {
-    expect(
-      getStepOutputsAsObject(
-        new BuildStep(context, {
-          id: 'test',
-          displayName: 'test',
-          command: 'test',
-          outputs: [
-            new BuildStepOutput(context, {
-              id: 'test',
-              stepDisplayName: 'test',
-              required: false,
-            }),
-          ],
-        })
-      )
-    ).toEqual({ outputs: { test: '' } });
-
-    const output1 = new BuildStepOutput(context, {
-      id: 'test',
-      stepDisplayName: 'test',
-      required: false,
-    });
-    const output2 = new BuildStepOutput(context, {
-      id: 'test2',
-      stepDisplayName: 'test2',
-      required: true,
-    });
-    const output3 = new BuildStepOutput(context, {
-      id: 'test3',
-      stepDisplayName: 'test3',
-      required: false,
-    });
-    output1.set('abc');
-    output2.set('true');
-    expect(
-      getStepOutputsAsObject(
-        new BuildStep(context, {
-          id: 'test',
-          displayName: 'test',
-          command: 'test',
-          outputs: [output1, output2, output3],
-        })
-      )
-    ).toEqual({ outputs: { test: 'abc', test2: 'true', test3: '' } });
-  });
+const unusedStepOutput = new BuildStepOutput(context, {
+  id: 'test3',
+  stepDisplayName: 'test',
+  required: false,
 });
 
-describe(getJobOutputsFromSteps, () => {
+context.registerStep(
+  new BuildStep(context, {
+    id: 'setup',
+    displayName: 'test',
+    command: 'test',
+    outputs: [fingerprintHashStepOutput, unusedStepOutput],
+  })
+);
+
+const nodeVersionStepOutput = new BuildStepOutput(context, {
+  id: 'node_version',
+  stepDisplayName: 'test2',
+  required: false,
+});
+
+context.registerStep(
+  new BuildStep(context, {
+    id: 'node_setup',
+    displayName: 'test2',
+    command: 'test2',
+    outputs: [nodeVersionStepOutput],
+  })
+);
+
+const interpolationContext: JobInterpolationContext = {
+  ...context.staticContext,
+  always: () => true,
+  never: () => false,
+  success: () => !context.hasAnyPreviousStepFailed,
+  failure: () => context.hasAnyPreviousStepFailed,
+  fromJSON: (json: string) => JSON.parse(json),
+  toJSON: (value: unknown) => JSON.stringify(value),
+};
+
+describe(collectJobOutputs, () => {
   it('returns empty object for outputs of a step with no outputs', () => {
     expect(
-      getJobOutputsFromSteps({
+      collectJobOutputs({
         jobOutputDefinitions: {},
-        interpolationContext: { steps: {} },
+        interpolationContext,
       })
     ).toEqual({});
   });
 
   it('interpolates outputs', () => {
     expect(
-      getJobOutputsFromSteps({
+      collectJobOutputs({
         jobOutputDefinitions: {
           test: '${{ 1 + 1 }}',
         },
-        interpolationContext: { steps: {} },
+        interpolationContext,
       })
     ).toEqual({ test: '2' });
 
     expect(
-      getJobOutputsFromSteps({
+      collectJobOutputs({
         jobOutputDefinitions: {
           fingerprint_hash: '${{ steps.setup.outputs.fingerprint_hash }}',
         },
-        interpolationContext: {
-          steps: { setup: { outputs: { fingerprint_hash: 'abc' } } },
-        },
+        interpolationContext,
       })
-    ).toEqual({ fingerprint_hash: 'abc' });
+    ).toEqual({ fingerprint_hash: 'mock-fingerprint-hash' });
   });
 
   it('defaults missing values to empty string', () => {
     expect(
-      getJobOutputsFromSteps({
+      collectJobOutputs({
         jobOutputDefinitions: {
-          fingerprint_hash: '${{ steps.setup.outputs.fingerprint_hash }}',
+          missing_output: '${{ steps.setup.outputs.missing_output }}',
         },
-        interpolationContext: {
-          steps: { setup: { outputs: {} } },
-        },
+        interpolationContext,
       })
-    ).toEqual({ fingerprint_hash: '' });
+    ).toEqual({ missing_output: '' });
   });
 });
 
 describe(uploadJobOutputsToWwwAsync, () => {
   it('uploads outputs', async () => {
-    const workflowJobId = randomUUID();
-    const robotAccessToken = randomUUID();
-
     const logger = createLogger({ name: 'test' }).child('test');
-    const buildContext = {
-      job: {
-        outputs: {
-          fingerprintHash: '${{ steps.setup.outputs.fingerprint_hash }}',
-          nodeVersion: '${{ steps.node_setup.outputs.node_version }}',
-        },
-        builderEnvironment: {
-          env: {
-            __WORKFLOW_JOB_ID: workflowJobId,
-          },
-        },
-        secrets: {
-          robotAccessToken,
-        },
-      } as unknown as Generic.Job,
-      logBuffer: {
-        getLogs: () => [],
-        getPhaseLogs: () => [],
-      },
-      _metadata: {} as any,
-      logger,
-      reportBuildPhaseStats: () => {},
-    } as unknown as BuildContext<Generic.Job>;
-
-    const fingerprintHashStepOutput = new BuildStepOutput(context, {
-      id: 'fingerprint_hash',
-      stepDisplayName: 'test',
-      required: true,
-    });
-    const nodeVersionStepOutput = new BuildStepOutput(context, {
-      id: 'node_version',
-      stepDisplayName: 'test2',
-      required: false,
-    });
-    const unusedStepOutput = new BuildStepOutput(context, {
-      id: 'test3',
-      stepDisplayName: 'test3',
-      required: false,
-    });
-    fingerprintHashStepOutput.set('mock-fingerprint-hash');
-    unusedStepOutput.set('true');
 
     const fetchMock = jest.mocked(fetch);
     fetchMock.mockResolvedValue({
@@ -201,21 +149,7 @@ describe(uploadJobOutputsToWwwAsync, () => {
       status: 200,
       statusText: 'OK',
     } as unknown as Response);
-    await uploadJobOutputsToWwwAsync(buildContext, {
-      steps: [
-        new BuildStep(context, {
-          id: 'setup',
-          displayName: 'test',
-          command: 'test',
-          outputs: [fingerprintHashStepOutput, unusedStepOutput],
-        }),
-        new BuildStep(context, {
-          id: 'node_setup',
-          displayName: 'test2',
-          command: 'test2',
-          outputs: [nodeVersionStepOutput],
-        }),
-      ],
+    await uploadJobOutputsToWwwAsync(context, {
       logger,
       expoApiV2BaseUrl: 'http://exp.test/--/api/v2/',
     });
@@ -236,51 +170,7 @@ describe(uploadJobOutputsToWwwAsync, () => {
   });
 
   it('outputs upload fails, succeeds on retry', async () => {
-    const workflowJobId = randomUUID();
-    const robotAccessToken = randomUUID();
-
     const logger = createLogger({ name: 'test' }).child('test');
-    const buildContext = {
-      job: {
-        outputs: {
-          fingerprintHash: '${{ steps.setup.outputs.fingerprint_hash }}',
-          nodeVersion: '${{ steps.node_setup.outputs.node_version }}',
-        },
-        builderEnvironment: {
-          env: {
-            __WORKFLOW_JOB_ID: workflowJobId,
-          },
-        },
-        secrets: {
-          robotAccessToken,
-        },
-      } as unknown as Generic.Job,
-      logBuffer: {
-        getLogs: () => [],
-        getPhaseLogs: () => [],
-      },
-      _metadata: {} as any,
-      logger,
-      reportBuildPhaseStats: () => {},
-    } as unknown as BuildContext<Generic.Job>;
-
-    const fingerprintHashStepOutput = new BuildStepOutput(context, {
-      id: 'fingerprint_hash',
-      stepDisplayName: 'test',
-      required: true,
-    });
-    const nodeVersionStepOutput = new BuildStepOutput(context, {
-      id: 'node_version',
-      stepDisplayName: 'test2',
-      required: false,
-    });
-    const unusedStepOutput = new BuildStepOutput(context, {
-      id: 'test3',
-      stepDisplayName: 'test3',
-      required: false,
-    });
-    fingerprintHashStepOutput.set('mock-fingerprint-hash');
-    unusedStepOutput.set('true');
 
     const fetchMock = jest.mocked(fetch);
     fetchMock.mockResolvedValueOnce({
@@ -293,21 +183,7 @@ describe(uploadJobOutputsToWwwAsync, () => {
       status: 200,
       statusText: 'OK',
     } as unknown as Response);
-    await uploadJobOutputsToWwwAsync(buildContext, {
-      steps: [
-        new BuildStep(context, {
-          id: 'setup',
-          displayName: 'test',
-          command: 'test',
-          outputs: [fingerprintHashStepOutput, unusedStepOutput],
-        }),
-        new BuildStep(context, {
-          id: 'node_setup',
-          displayName: 'test2',
-          command: 'test2',
-          outputs: [nodeVersionStepOutput],
-        }),
-      ],
+    await uploadJobOutputsToWwwAsync(context, {
       logger,
       expoApiV2BaseUrl: 'http://exp.test/--/api/v2/',
     });
@@ -328,51 +204,7 @@ describe(uploadJobOutputsToWwwAsync, () => {
   });
 
   it('outputs upload fails', async () => {
-    const workflowJobId = randomUUID();
-    const robotAccessToken = randomUUID();
-
     const logger = createLogger({ name: 'test' }).child('test');
-    const buildContext = {
-      job: {
-        outputs: {
-          fingerprintHash: '${{ steps.setup.outputs.fingerprint_hash }}',
-          nodeVersion: '${{ steps.node_setup.outputs.node_version }}',
-        },
-        builderEnvironment: {
-          env: {
-            __WORKFLOW_JOB_ID: workflowJobId,
-          },
-        },
-        secrets: {
-          robotAccessToken,
-        },
-      } as unknown as Generic.Job,
-      logBuffer: {
-        getLogs: () => [],
-        getPhaseLogs: () => [],
-      },
-      _metadata: {} as any,
-      logger,
-      reportBuildPhaseStats: () => {},
-    } as unknown as BuildContext<Generic.Job>;
-
-    const fingerprintHashStepOutput = new BuildStepOutput(context, {
-      id: 'fingerprint_hash',
-      stepDisplayName: 'test',
-      required: true,
-    });
-    const nodeVersionStepOutput = new BuildStepOutput(context, {
-      id: 'node_version',
-      stepDisplayName: 'test2',
-      required: false,
-    });
-    const unusedStepOutput = new BuildStepOutput(context, {
-      id: 'test3',
-      stepDisplayName: 'test3',
-      required: false,
-    });
-    fingerprintHashStepOutput.set('mock-fingerprint-hash');
-    unusedStepOutput.set('true');
 
     const loggerErrorSpy = jest.spyOn(logger, 'error');
     const fetchMock = jest.mocked(fetch);
@@ -387,21 +219,7 @@ describe(uploadJobOutputsToWwwAsync, () => {
       expectedFetchResponse
     );
     await expect(
-      uploadJobOutputsToWwwAsync(buildContext, {
-        steps: [
-          new BuildStep(context, {
-            id: 'setup',
-            displayName: 'test',
-            command: 'test',
-            outputs: [fingerprintHashStepOutput, unusedStepOutput],
-          }),
-          new BuildStep(context, {
-            id: 'node_setup',
-            displayName: 'test2',
-            command: 'test2',
-            outputs: [nodeVersionStepOutput],
-          }),
-        ],
+      uploadJobOutputsToWwwAsync(context, {
         logger,
         expoApiV2BaseUrl: 'http://exp.test/--/api/v2/',
       })
