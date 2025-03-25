@@ -132,10 +132,11 @@ describe(collectJobOutputs, () => {
       collectJobOutputs({
         jobOutputDefinitions: {
           missing_output: '${{ steps.setup.outputs.missing_output }}',
+          not_set_output: '${{ steps.setup.outputs.test_3 }}',
         },
         interpolationContext,
       })
-    ).toEqual({ missing_output: '' });
+    ).toEqual({ missing_output: '', not_set_output: '' });
   });
 });
 
