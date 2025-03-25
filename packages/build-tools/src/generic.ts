@@ -42,8 +42,7 @@ export async function runGenericJobAsync(
   const runResult = await asyncResult(workflow.executeAsync());
 
   await ctx.runBuildPhase(BuildPhase.COMPLETE_JOB, async () => {
-    await uploadJobOutputsToWwwAsync(ctx, {
-      steps: workflow.buildSteps,
+    await uploadJobOutputsToWwwAsync(globalContext, {
       logger: ctx.logger,
       expoApiV2BaseUrl,
     });
