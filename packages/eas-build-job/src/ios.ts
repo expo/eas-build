@@ -50,6 +50,7 @@ export interface DistributionCertificate {
 export interface BuilderEnvironment {
   image?: string;
   node?: string;
+  corepack?: boolean;
   yarn?: string;
   bun?: string;
   pnpm?: string;
@@ -62,6 +63,7 @@ export interface BuilderEnvironment {
 const BuilderEnvironmentSchema = Joi.object({
   image: Joi.string(),
   node: Joi.string(),
+  corepack: Joi.boolean(),
   yarn: Joi.string(),
   pnpm: Joi.string(),
   bun: Joi.string(),

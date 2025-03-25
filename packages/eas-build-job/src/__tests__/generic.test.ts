@@ -36,6 +36,7 @@ describe('Generic.JobZ', () => {
       builderEnvironment: {
         image: 'macos-sonoma-14.5-xcode-15.4',
         node: '20.15.1',
+        corepack: true,
         env: {
           KEY1: 'value1',
         },
@@ -80,6 +81,7 @@ describe('Generic.JobZ', () => {
       builderEnvironment: {
         image: 'macos-sonoma-14.5-xcode-15.4',
         node: '20.15.1',
+        corepack: false,
         env: {
           KEY1: 'value1',
         },
