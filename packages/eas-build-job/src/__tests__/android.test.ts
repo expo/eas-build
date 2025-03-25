@@ -39,6 +39,7 @@ describe('Android.JobSchema', () => {
       builderEnvironment: {
         image: 'default',
         node: '1.2.3',
+        corepack: true,
         yarn: '2.3.4',
         ndk: '4.5.6',
         bun: '1.0.0',
@@ -72,6 +73,7 @@ describe('Android.JobSchema', () => {
       builderEnvironment: {
         image: 'default',
         node: '1.2.3',
+        corepack: false,
         yarn: '2.3.4',
         ndk: '4.5.6',
         bun: '1.0.0',

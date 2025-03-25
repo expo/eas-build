@@ -42,6 +42,7 @@ export enum BuildType {
 export interface BuilderEnvironment {
   image?: string;
   node?: string;
+  corepack?: boolean;
   pnpm?: string;
   yarn?: string;
   bun?: string;
@@ -52,6 +53,7 @@ export interface BuilderEnvironment {
 const BuilderEnvironmentSchema = Joi.object({
   image: Joi.string(),
   node: Joi.string(),
+  corepack: Joi.boolean(),
   yarn: Joi.string(),
   pnpm: Joi.string(),
   bun: Joi.string(),

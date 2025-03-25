@@ -41,6 +41,7 @@ describe('Ios.JobSchema', () => {
       builderEnvironment: {
         image: 'default',
         node: '1.2.3',
+        corepack: true,
         yarn: '2.3.4',
         fastlane: '3.4.5',
         cocoapods: '4.5.6',

@@ -13,6 +13,7 @@ export namespace Generic {
   const BuilderEnvironmentSchemaZ = z.object({
     image: z.string(),
     node: z.string().optional(),
+    corepack: z.boolean().optional(),
     yarn: z.string().optional(),
     pnpm: z.string().optional(),
     bun: z.string().optional(),
