@@ -138,6 +138,8 @@ async function startAndroidSimulator({
       '-no-boot-anim',
       '-writable-system',
       '-noaudio',
+      '-memory',
+      '8192',
       '-avd',
       deviceName,
       '-prop',
