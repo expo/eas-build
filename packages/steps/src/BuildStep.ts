@@ -319,7 +319,9 @@ export class BuildStep extends BuildStepOutputAccessor {
         inputs:
           this.inputs?.reduce(
             (acc, input) => {
-              acc[input.id] = input.value;
+              acc[input.id] = input.getValue({
+                interpolationContext: this.getInterpolationContext(),
+              });
               return acc;
             },
             {} as Record<string, unknown>
@@ -346,7 +348,7 @@ export class BuildStep extends BuildStepOutputAccessor {
     );
   }
 
-  private getInterpolationContext(): JobInterpolationContext {
+  public getInterpolationContext(): JobInterpolationContext {
     const hasAnyPreviousStepFailed = this.ctx.global.hasAnyPreviousStepFailed;
 
     return {
@@ -415,10 +417,14 @@ export class BuildStep extends BuildStepOutputAccessor {
     }
     const vars = inputs.reduce(
       (acc, input) => {
+        const inputValue = input.getValue({
+          interpolationContext: this.getInterpolationContext(),
+        });
+
         acc[input.id] =
-          typeof input.value === 'object'
-            ? JSON.stringify(input.value)
-            : input.value?.toString() ?? '';
+          typeof inputValue === 'object'
+            ? JSON.stringify(inputValue)
+            : inputValue?.toString() ?? '';
         return acc;
       },
       {} as Record<string, string>

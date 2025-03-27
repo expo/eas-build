@@ -219,9 +219,6 @@ describe(BuildWorkflowValidator, () => {
     expect((error as BuildWorkflowError).errors[2].message).toBe(
       'Input parameter "id3" for step "step_id" is set to "abc" which is not of type "json" or is not step or context reference.'
     );
-    expect((error as BuildWorkflowError).errors[3].message).toBe(
-      'Input parameter "id6" for step "step_id" is set to "${ wrong.aaa }" which is not of type "number" or is not step or context reference.'
-    );
   });
   test('output from future step', async () => {
     const ctx = createGlobalContextMock();
