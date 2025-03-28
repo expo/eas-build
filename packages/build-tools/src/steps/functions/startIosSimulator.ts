@@ -21,6 +21,12 @@ export function createStartIosSimulatorBuildFunction(): BuildFunction {
         required: false,
         allowedValueTypeName: BuildStepInputValueTypeName.STRING,
       }),
+      BuildStepInput.createProvider({
+        id: 'count',
+        required: false,
+        defaultValue: 1,
+        allowedValueTypeName: BuildStepInputValueTypeName.NUMBER,
+      }),
     ],
     fn: async ({ logger }, { inputs, env }) => {
       try {
@@ -71,7 +77,50 @@ export function createStartIosSimulatorBuildFunction(): BuildFunction {
 
       const udid = parseUdidFromBootstatusStdout(bootstatusResult.stdout);
       const device = udid ? await getSimulatorDevice({ udid, env }) : null;
-      logger.info(`${device ? formatSimulatorDevice(device) : deviceIdentifier} is ready.`);
+      const formattedDevice = device ? formatSimulatorDevice(device) : deviceIdentifier;
+      logger.info(`${formattedDevice} is ready.`);
+
+      const count = Number(inputs.count.value ?? 1);
+      if (count > 1) {
+        logger.info(`Requested ${count} Simulators, shutting down ${formattedDevice} for cloning.`);
+        await spawn('xcrun', ['simctl', 'shutdown', deviceIdentifier], {
+          logger,
+          env,
+        });
+
+        for (let i = 0; i < count; i++) {
+          const cloneIdentifier = `eas-simulator-${i + 1}`;
+          logger.info(`Cloning ${formattedDevice} to ${cloneIdentifier}...`);
+
+          await spawn('xcrun', ['simctl', 'clone', deviceIdentifier, cloneIdentifier], {
+            logger,
+            env,
+          });
+
+          await spawn('xcrun', ['simctl', 'bootstatus', cloneIdentifier, '-b'], {
+            logger,
+            env,
+          });
+
+          await retryAsync(
+            async () => {
+              await spawn('xcrun', ['simctl', 'io', cloneIdentifier, 'screenshot', '/dev/null'], {
+                env,
+              });
+            },
+            {
+              retryOptions: {
+                // There's 30 * 60 seconds in 30 minutes, which is the timeout.
+                retries: 30 * 60,
+                retryIntervalMs: 1_000,
+              },
+            }
+          );
+
+          logger.info(`${cloneIdentifier} is ready.`);
+          logger.info('');
+        }
+      }
     },
   });
 }

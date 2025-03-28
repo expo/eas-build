@@ -1,13 +1,15 @@
 import assert from 'assert';
+import fs from 'fs/promises';
 
-import { PipeMode } from '@expo/logger';
+import { PipeMode, bunyan } from '@expo/logger';
 import {
   BuildFunction,
   BuildStepEnv,
   BuildStepInput,
   BuildStepInputValueTypeName,
+  spawnAsync,
 } from '@expo/steps';
-import spawn from '@expo/turtle-spawn';
+import spawn, { SpawnPromise, SpawnResult } from '@expo/turtle-spawn';
 import { v4 as uuidv4 } from 'uuid';
 
 import { retryAsync } from '../../utils/retry';
@@ -33,6 +35,12 @@ export function createStartAndroidEmulatorBuildFunction(): BuildFunction {
         required: false,
         defaultValue: defaultSystemImagePackage,
         allowedValueTypeName: BuildStepInputValueTypeName.STRING,
+      }),
+      BuildStepInput.createProvider({
+        id: 'count',
+        required: false,
+        defaultValue: 1,
+        allowedValueTypeName: BuildStepInputValueTypeName.NUMBER,
       }),
     ],
     fn: async ({ logger }, { inputs, env }) => {
@@ -74,50 +82,85 @@ export function createStartAndroidEmulatorBuildFunction(): BuildFunction {
       const qemuPropId = uuidv4();
 
       logger.info('Starting emulator device');
-      await startAndroidSimulator({ deviceName, qemuPropId, env });
+      const { emulatorPromise } = await startAndroidSimulator({ deviceName, qemuPropId, env });
 
       logger.info('Waiting for emulator to become ready');
-      const serialId = await retryAsync(
-        async () => {
-          const serialId = await getEmulatorSerialId({ qemuPropId, env });
-          assert(serialId, 'Failed to configure emulator: emulator with required ID not found.');
-          return serialId;
-        },
-        {
-          logger,
-          retryOptions: {
-            // Emulators usually take 30 second tops to boot.
-            retries: 60,
-            retryIntervalMs: 1_000,
-          },
-        }
-      );
-
-      await retryAsync(
-        async () => {
-          const { stdout } = await spawn(
-            'adb',
-            ['-s', serialId, 'shell', 'getprop', 'sys.boot_completed'],
-            {
-              env,
-              mode: PipeMode.COMBINED,
-            }
-          );
-
-          if (!stdout.startsWith('1')) {
-            throw new Error('Emulator boot has not completed.');
-          }
-        },
-        {
-          // Retry every second for 3 minutes.
-          retryOptions: {
-            retries: 3 * 60,
-            retryIntervalMs: 1_000,
-          },
-        }
-      );
+      const { serialId } = await ensureEmulatorIsReadyAsync({
+        deviceName,
+        qemuPropId,
+        env,
+        logger,
+      });
 
       logger.info(`${deviceName} is ready.`);
+
+      const count = Number(inputs.count.value ?? 1);
+      if (count > 1) {
+        logger.info(`Requested ${count} emulators, shutting down ${deviceName} for cloning.`);
+        await spawn('adb', ['-s', serialId, 'shell', 'reboot', '-p'], {
+          logger,
+          env,
+        });
+        // Waiting for source emulator to shutdown.
+        await emulatorPromise;
+
+        for (let i = 0; i < count; i++) {
+          const cloneIdentifier = `eas-simulator-${i + 1}`;
+          logger.info(`Cloning ${deviceName} to ${cloneIdentifier}...`);
+          const cloneIniFile = `${process.env.HOME}/.android/avd/${cloneIdentifier}.ini`;
+
+          await fs.rm(`${process.env.HOME}/.android/avd/${cloneIdentifier}.avd`, {
+            recursive: true,
+            force: true,
+          });
+          await fs.rm(cloneIniFile, { force: true });
+
+          await fs.cp(
+            `${process.env.HOME}/.android/avd/${deviceName}.avd`,
+            `${process.env.HOME}/.android/avd/${cloneIdentifier}.avd`,
+            { recursive: true, verbatimSymlinks: true, force: true }
+          );
+
+          await fs.cp(`${process.env.HOME}/.android/avd/${deviceName}.ini`, cloneIniFile, {
+            verbatimSymlinks: true,
+            force: true,
+          });
+
+          const filesToReplaceDeviceNameIn = (
+            await spawnAsync('grep', [
+              '--binary-files=without-match',
+              '--recursive',
+              '--files-with-matches',
+              `${deviceName}`,
+              `${process.env.HOME}/.android/avd/${cloneIdentifier}.avd`,
+            ])
+          ).stdout
+            .split('\n')
+            .filter((file) => file !== '');
+
+          for (const file of [...filesToReplaceDeviceNameIn, cloneIniFile]) {
+            const txtFile = await fs.readFile(file, 'utf-8');
+            const replaceRegex = new RegExp(`${deviceName}`, 'g');
+            const updatedTxtFile = txtFile.replace(replaceRegex, cloneIdentifier);
+            await fs.writeFile(file, updatedTxtFile);
+          }
+
+          const qemuPropId = uuidv4();
+
+          logger.info('Starting emulator device');
+          await startAndroidSimulator({ deviceName: cloneIdentifier, qemuPropId, env });
+
+          logger.info('Waiting for emulator to become ready');
+          await ensureEmulatorIsReadyAsync({
+            deviceName: cloneIdentifier,
+            qemuPropId,
+            env,
+            logger,
+          });
+
+          logger.info(`${cloneIdentifier} is ready.`);
+        }
+      }
     },
   });
 }
@@ -130,7 +173,7 @@ async function startAndroidSimulator({
   deviceName: string;
   qemuPropId: string;
   env: BuildStepEnv;
-}): Promise<void> {
+}): Promise<{ emulatorPromise: SpawnPromise<SpawnResult> }> {
   const emulatorPromise = spawn(
     `${process.env.ANDROID_HOME}/emulator/emulator`,
     [
@@ -140,6 +183,7 @@ async function startAndroidSimulator({
       '-noaudio',
       '-memory',
       '8192',
+      '-no-snapshot-save',
       '-avd',
       deviceName,
       '-prop',
@@ -147,7 +191,7 @@ async function startAndroidSimulator({
     ],
     {
       detached: true,
-      stdio: 'ignore',
+      stdio: 'inherit',
       env,
     }
   );
@@ -156,6 +200,10 @@ async function startAndroidSimulator({
     await emulatorPromise;
   }
   emulatorPromise.child.unref();
+
+  // We don't want to await the SpawnPromise here.
+  // eslint-disable-next-line @typescript-eslint/return-await
+  return { emulatorPromise };
 }
 
 async function getEmulatorSerialId({
@@ -187,4 +235,61 @@ async function getEmulatorSerialId({
   }
 
   return null;
+}
+
+async function ensureEmulatorIsReadyAsync({
+  deviceName,
+  qemuPropId,
+  env,
+  logger,
+}: {
+  deviceName: string;
+  qemuPropId: string;
+  env: BuildStepEnv;
+  logger: bunyan;
+}): Promise<{ serialId: string }> {
+  const serialId = await retryAsync(
+    async () => {
+      const serialId = await getEmulatorSerialId({ qemuPropId, env });
+      assert(
+        serialId,
+        `Failed to configure emulator (${deviceName}): emulator with required ID not found.`
+      );
+      return serialId;
+    },
+    {
+      logger,
+      retryOptions: {
+        // Emulators usually take 30 second tops to boot.
+        retries: 60,
+        retryIntervalMs: 1_000,
+      },
+    }
+  );
+
+  await retryAsync(
+    async () => {
+      const { stdout } = await spawn(
+        'adb',
+        ['-s', serialId, 'shell', 'getprop', 'sys.boot_completed'],
+        {
+          env,
+          mode: PipeMode.COMBINED,
+        }
+      );
+
+      if (!stdout.startsWith('1')) {
+        throw new Error(`Emulator (${deviceName}) boot has not completed.`);
+      }
+    },
+    {
+      // Retry every second for 3 minutes.
+      retryOptions: {
+        retries: 3 * 60,
+        retryIntervalMs: 1_000,
+      },
+    }
+  );
+
+  return { serialId };
 }
