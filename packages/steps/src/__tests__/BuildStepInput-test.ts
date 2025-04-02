@@ -11,6 +11,8 @@ import {
 import { createGlobalContextMock } from './utils/context.js';
 import { createMockLogger } from './utils/logger.js';
 
+const emptyInterpolationContext = {} as JobInterpolationContext;
+
 describe(BuildStepInput, () => {
   test('basic case string', () => {
     const ctx = createGlobalContextMock();
@@ -21,7 +23,7 @@ describe(BuildStepInput, () => {
       allowedValueTypeName: BuildStepInputValueTypeName.STRING,
     });
     i.set('bar');
-    expect(i.value).toBe('bar');
+    expect(i.getValue({ interpolationContext: emptyInterpolationContext })).toBe('bar');
   });
 
   test('basic case boolean', () => {
@@ -33,7 +35,7 @@ describe(BuildStepInput, () => {
       required: true,
     });
     i.set(false);
-    expect(i.value).toBe(false);
+    expect(i.getValue({ interpolationContext: emptyInterpolationContext })).toBe(false);
   });
 
   test('basic case number', () => {
@@ -45,7 +47,7 @@ describe(BuildStepInput, () => {
       required: true,
     });
     i.set(42);
-    expect(i.value).toBe(42);
+    expect(i.getValue({ interpolationContext: emptyInterpolationContext })).toBe(42);
   });
 
   test('basic case json', () => {
@@ -57,7 +59,7 @@ describe(BuildStepInput, () => {
       required: true,
     });
     i.set({ foo: 'bar' });
-    expect(i.value).toEqual({ foo: 'bar' });
+    expect(i.getValue({ interpolationContext: emptyInterpolationContext })).toEqual({ foo: 'bar' });
   });
 
   test('basic case undefined', () => {
@@ -69,7 +71,7 @@ describe(BuildStepInput, () => {
       allowedValueTypeName: BuildStepInputValueTypeName.STRING,
     });
     i.set(undefined);
-    expect(i.value).toBeUndefined();
+    expect(i.getValue({ interpolationContext: emptyInterpolationContext })).toBeUndefined();
   });
 
   test('default value string', () => {
@@ -81,7 +83,7 @@ describe(BuildStepInput, () => {
       allowedValueTypeName: BuildStepInputValueTypeName.STRING,
       required: true,
     });
-    expect(i.value).toBe('baz');
+    expect(i.getValue({ interpolationContext: emptyInterpolationContext })).toBe('baz');
   });
 
   test('default value boolean', () => {
@@ -93,7 +95,7 @@ describe(BuildStepInput, () => {
       allowedValueTypeName: BuildStepInputValueTypeName.BOOLEAN,
       required: true,
     });
-    expect(i.value).toBe(true);
+    expect(i.getValue({ interpolationContext: emptyInterpolationContext })).toBe(true);
   });
 
   test('default value json', () => {
@@ -105,7 +107,9 @@ describe(BuildStepInput, () => {
       allowedValueTypeName: BuildStepInputValueTypeName.JSON,
       required: true,
     });
-    expect(i.value).toEqual({ foo: 'bar' });
+    expect(i.getValue({ interpolationContext: emptyInterpolationContext })).toEqual({
+      foo: 'bar',
+    });
   });
 
   test('context value string', () => {
@@ -117,7 +121,7 @@ describe(BuildStepInput, () => {
       required: true,
       allowedValueTypeName: BuildStepInputValueTypeName.STRING,
     });
-    expect(i.value).toEqual('linux');
+    expect(i.getValue({ interpolationContext: emptyInterpolationContext })).toEqual('linux');
   });
 
   test('context value string with newline characters', () => {
@@ -135,7 +139,9 @@ describe(BuildStepInput, () => {
       required: true,
       allowedValueTypeName: BuildStepInputValueTypeName.STRING,
     });
-    expect(i.value).toEqual('Line 1\nLine 2\n\nLine 3');
+    expect(i.getValue({ interpolationContext: emptyInterpolationContext })).toEqual(
+      'Line 1\nLine 2\n\nLine 3'
+    );
   });
 
   test('context value string with doubly escaped newline characters', () => {
@@ -153,7 +159,31 @@ describe(BuildStepInput, () => {
       required: true,
       allowedValueTypeName: BuildStepInputValueTypeName.STRING,
     });
-    expect(i.value).toEqual('Line 1\nLine 2\n\nLine 3');
+    expect(i.getValue({ interpolationContext: emptyInterpolationContext })).toEqual(
+      'Line 1\\nLine 2\\n\\nLine 3'
+    );
+  });
+
+  it('interpolates correctly', () => {
+    const ctx = createGlobalContextMock();
+    const i = new BuildStepInput(ctx, {
+      id: 'foo',
+      stepDisplayName: BuildStep.getDisplayName({ id: 'test1' }),
+      required: false,
+      allowedValueTypeName: BuildStepInputValueTypeName.STRING,
+    });
+    i.set('${{ env.MY_ENV_VAR }}');
+
+    const step = new BuildStep(ctx, {
+      id: 'test1',
+      displayName: 'test1',
+      inputs: [i],
+      command: '',
+      env: {
+        MY_ENV_VAR: 'bar',
+      },
+    });
+    expect(i.getValue({ interpolationContext: step.getInterpolationContext() })).toEqual('bar');
   });
 
   test('context value number', () => {
@@ -178,7 +208,7 @@ describe(BuildStepInput, () => {
       allowedValueTypeName: BuildStepInputValueTypeName.NUMBER,
       required: true,
     });
-    expect(i.value).toEqual(42);
+    expect(i.getValue({ interpolationContext: emptyInterpolationContext })).toEqual(42);
   });
 
   test('context value boolean', () => {
@@ -205,7 +235,7 @@ describe(BuildStepInput, () => {
       allowedValueTypeName: BuildStepInputValueTypeName.BOOLEAN,
       required: true,
     });
-    expect(i.value).toEqual(false);
+    expect(i.getValue({ interpolationContext: emptyInterpolationContext })).toEqual(false);
   });
 
   test('context value JSON', () => {
@@ -232,7 +262,9 @@ describe(BuildStepInput, () => {
       allowedValueTypeName: BuildStepInputValueTypeName.JSON,
       required: true,
     });
-    expect(i.value).toMatchObject({ bar: [1, 2, 3, { baz: { qux: false } }] });
+    expect(i.getValue({ interpolationContext: emptyInterpolationContext })).toMatchObject({
+      bar: [1, 2, 3, { baz: { qux: false } }],
+    });
   });
 
   test('invalid context value type number', () => {
@@ -259,7 +291,7 @@ describe(BuildStepInput, () => {
       allowedValueTypeName: BuildStepInputValueTypeName.NUMBER,
       required: true,
     });
-    expect(() => i.value).toThrowError(
+    expect(() => i.getValue({ interpolationContext: emptyInterpolationContext })).toThrowError(
       'Input parameter "foo" for step "test1" must be of type "number".'
     );
   });
@@ -288,7 +320,7 @@ describe(BuildStepInput, () => {
       required: true,
       allowedValueTypeName: BuildStepInputValueTypeName.BOOLEAN,
     });
-    expect(() => i.value).toThrowError(
+    expect(() => i.getValue({ interpolationContext: emptyInterpolationContext })).toThrowError(
       'Input parameter "foo" for step "test1" must be of type "boolean".'
     );
   });
@@ -317,7 +349,7 @@ describe(BuildStepInput, () => {
       allowedValueTypeName: BuildStepInputValueTypeName.JSON,
       required: true,
     });
-    expect(() => i.value).toThrowError(
+    expect(() => i.getValue({ interpolationContext: emptyInterpolationContext })).toThrowError(
       'Input parameter "foo" for step "test1" must be of type "json".'
     );
   });
@@ -346,7 +378,7 @@ describe(BuildStepInput, () => {
         bazbaz: ['bazbaz', '${ eas.context_val_1 }', '${ eas.context_val_2.in_val_1 }'],
       },
     });
-    expect(i.value).toEqual({
+    expect(i.getValue({ interpolationContext: emptyInterpolationContext })).toEqual({
       foo: 'foo',
       bar: 'val_1',
       baz: {
@@ -377,7 +409,7 @@ describe(BuildStepInput, () => {
         bazbaz: ['bazbaz', '${ eas.context_val_1 }'],
       },
     });
-    expect(i.value).toEqual({
+    expect(i.getValue({ interpolationContext: emptyInterpolationContext })).toEqual({
       foo: 'foo',
       bar: 'Line 1\nLine 2\n\nLine 3',
       baz: {
@@ -396,7 +428,7 @@ describe(BuildStepInput, () => {
       allowedValueTypeName: BuildStepInputValueTypeName.NUMBER,
       required: true,
     });
-    expect(i.value).toBe(42);
+    expect(i.getValue({ interpolationContext: emptyInterpolationContext })).toBe(42);
   });
 
   test('enforces required policy when reading value', () => {
@@ -409,7 +441,7 @@ describe(BuildStepInput, () => {
     });
     expect(() => {
       // eslint-disable-next-line @typescript-eslint/no-unused-expressions
-      i.value;
+      i.getValue({ interpolationContext: emptyInterpolationContext });
     }).toThrowError(
       new BuildStepRuntimeError(
         'Input parameter "foo" for step "test1" is required but it was not set.'
@@ -428,7 +460,7 @@ describe(BuildStepInput, () => {
     i.set('bar');
     expect(() => {
       // eslint-disable-next-line @typescript-eslint/no-unused-expressions
-      i.value;
+      i.getValue({ interpolationContext: emptyInterpolationContext });
     }).toThrowError(
       new BuildStepRuntimeError('Input parameter "foo" for step "test1" must be of type "boolean".')
     );
@@ -445,7 +477,7 @@ describe(BuildStepInput, () => {
     i.set('${ eas.runtimePlatform }');
     expect(() => {
       // eslint-disable-next-line @typescript-eslint/no-unused-expressions
-      i.value;
+      i.getValue({ interpolationContext: emptyInterpolationContext });
     }).toThrowError('Input parameter "foo" for step "test1" must be of type "json".');
   });
 
@@ -460,7 +492,7 @@ describe(BuildStepInput, () => {
     i.set('${ eas.runtimePlatform }');
     expect(() => {
       // eslint-disable-next-line @typescript-eslint/no-unused-expressions
-      i.value;
+      i.getValue({ interpolationContext: emptyInterpolationContext });
     }).toThrowError(
       new BuildStepRuntimeError('Input parameter "foo" for step "test1" must be of type "number".')
     );
@@ -477,7 +509,7 @@ describe(BuildStepInput, () => {
     i.set('${ eas.runtimePlatform }');
     expect(() => {
       // eslint-disable-next-line @typescript-eslint/no-unused-expressions
-      i.value;
+      i.getValue({ interpolationContext: emptyInterpolationContext });
     }).toThrowError(
       new BuildStepRuntimeError('Input parameter "foo" for step "test1" must be of type "boolean".')
     );
@@ -542,7 +574,7 @@ describe(BuildStepInput, () => {
     expect(input.allowedValueTypeName).toBe(BuildStepInputValueTypeName.STRING);
     expect(input.allowedValues).toEqual(['bar', 'baz']);
     expect(input.required).toBe(true);
-    expect(input.value).toBe('bar');
+    expect(input.getValue({ interpolationContext: emptyInterpolationContext })).toBe('bar');
   });
 });
 
@@ -580,8 +612,8 @@ describe(makeBuildStepInputByIdMap, () => {
     expect(Object.keys(result).length).toBe(3);
     expect(result.foo1).toBeDefined();
     expect(result.foo2).toBeDefined();
-    expect(result.foo1.value).toBe('bar1');
-    expect(result.foo2.value).toBe('bar2');
-    expect(result.foo3.value).toBe(true);
+    expect(result.foo1.getValue({ interpolationContext: emptyInterpolationContext })).toBe('bar1');
+    expect(result.foo2.getValue({ interpolationContext: emptyInterpolationContext })).toBe('bar2');
+    expect(result.foo3.getValue({ interpolationContext: emptyInterpolationContext })).toBe(true);
   });
 });
