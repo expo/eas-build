@@ -51,7 +51,7 @@ export function createFindAndUploadBuildArtifactsBuildFunction(
   });
 }
 
-function resolveIosArtifactPath(job: Ios.Job): string {
+export function resolveIosArtifactPath(job: Ios.Job): string {
   if (job.applicationArchivePath) {
     return job.applicationArchivePath;
   } else if (job.simulator) {
