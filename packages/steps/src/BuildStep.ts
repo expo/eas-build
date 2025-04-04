@@ -29,6 +29,8 @@ import { BuildStepEnv } from './BuildStepEnv.js';
 import { BuildRuntimePlatform } from './BuildRuntimePlatform.js';
 import { jsepEval } from './utils/jsepEval.js';
 import { interpolateJobContext } from './interpolation.js';
+import { nullthrows } from './utils/nullthrows.js';
+import { getParentAndDescendantProcessPidsAsync } from './utils/processes.js';
 
 export enum BuildStepStatus {
   NEW = 'new',
@@ -56,6 +58,10 @@ export type BuildStepFunction = (
 // TODO: move to a place common with tests
 const UUID_REGEX =
   /^[0-9a-fA-F]{8}\b-[0-9a-fA-F]{4}\b-[0-9a-fA-F]{4}\b-[0-9a-fA-F]{4}\b-[0-9a-fA-F]{12}$/;
+
+const BUILD_STEP_WARN_TIMEOUT_MS = 15 * 60 * 1000;
+const BUILD_STEP_KILL_TIMEOUT_MS = 30 * 60 * 1000;
+class BuildStepTimeoutError extends Error {}
 
 export interface SerializedBuildStepOutputAccessor {
   id: string;
@@ -381,13 +387,60 @@ export class BuildStep extends BuildStepOutputAccessor {
     this.ctx.logger.debug(
       `Executing script: ${shellCommand}${args !== undefined ? ` ${args.join(' ')}` : ''}`
     );
-    await spawnAsync(shellCommand, args ?? [], {
-      cwd: this.ctx.workingDirectory,
-      logger: this.ctx.logger,
-      env: this.getScriptEnv(),
-      // stdin is /dev/null, std{out,err} are piped into logger.
-      stdio: ['ignore', 'pipe', 'pipe'],
-    });
+    let warnTimeout: NodeJS.Timeout | undefined;
+    let killTimeout: NodeJS.Timeout | undefined;
+    let killTimedOut: boolean = false;
+    try {
+      const spawnPromise = spawnAsync(shellCommand, args ?? [], {
+        cwd: this.ctx.workingDirectory,
+        logger: this.ctx.logger,
+        env: this.getScriptEnv(),
+        // stdin is /dev/null, std{out,err} are piped into logger.
+        stdio: ['ignore', 'pipe', 'pipe'],
+        infoCallbackFn: () => {
+          if (warnTimeout) {
+            warnTimeout.refresh();
+          }
+          if (killTimeout) {
+            killTimeout.refresh();
+          }
+        },
+      });
+
+      warnTimeout = setTimeout(() => {
+        this.ctx.logger.warn(
+          'Command takes longer then expected and it did not produce any logs in the past 15 minutes. Consider evaluating your command for possible issues'
+        );
+      }, BUILD_STEP_WARN_TIMEOUT_MS);
+
+      killTimeout = setTimeout(async () => {
+        killTimedOut = true;
+        this.ctx.logger.error(
+          'Command takes a very long time and it did not produce any logs in the past 30 minutes. Most likely an unexpected error happened which caused the process to hang and it will be terminated'
+        );
+        const ppid = nullthrows(spawnPromise.child.pid);
+        const pids = await getParentAndDescendantProcessPidsAsync(ppid);
+        pids.forEach((pid) => {
+          process.kill(pid);
+        });
+      }, BUILD_STEP_KILL_TIMEOUT_MS);
+
+      await spawnPromise;
+    } catch (err: any) {
+      if (killTimedOut) {
+        throw new BuildStepTimeoutError(
+          'Command was inactive for over 30 minutes. Please evaluate if it is correct'
+        );
+      }
+      throw err;
+    } finally {
+      if (warnTimeout) {
+        clearTimeout(warnTimeout);
+      }
+      if (killTimeout) {
+        clearTimeout(killTimeout);
+      }
+    }
     this.ctx.logger.debug(`Script completed successfully`);
   }
 
