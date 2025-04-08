@@ -7,6 +7,7 @@ import { BuildTrigger } from '@expo/eas-build-job/dist/common';
 import nullthrows from 'nullthrows';
 import { ExpoConfig } from '@expo/config';
 import { UserFacingError } from '@expo/eas-build-job/dist/errors';
+import semver from 'semver';
 
 import { BuildContext } from '../context';
 import { deleteXcodeEnvLocalIfExistsAsync } from '../ios/xcodeEnv';
@@ -55,8 +56,16 @@ export async function setupAsync<TJob extends BuildJob>(ctx: BuildContext<TJob>)
     return packageJson;
   });
 
+  const sdkVersionFromPackageJson = semver.coerce(packageJson?.dependencies?.expo)?.version;
+  const reactNativeVersionFromPackageJson = semver.coerce(
+    packageJson?.dependencies?.['react-native']
+  )?.version;
+
   await ctx.runBuildPhase(BuildPhase.INSTALL_DEPENDENCIES, async () => {
-    await runInstallDependenciesAsync(ctx);
+    await runInstallDependenciesAsync(ctx, {
+      sdkVersionFromPackageJson,
+      reactNativeVersionFromPackageJson,
+    });
   });
 
   await ctx.runBuildPhase(BuildPhase.READ_APP_CONFIG, async () => {
@@ -143,7 +152,14 @@ async function runExpoDoctor<TJob extends Job>(ctx: BuildContext<TJob>): Promise
 }
 
 async function runInstallDependenciesAsync<TJob extends Job>(
-  ctx: BuildContext<TJob>
+  ctx: BuildContext<TJob>,
+  {
+    sdkVersionFromPackageJson,
+    reactNativeVersionFromPackageJson,
+  }: {
+    sdkVersionFromPackageJson?: string;
+    reactNativeVersionFromPackageJson?: string;
+  }
 ): Promise<void> {
   let warnTimeout: NodeJS.Timeout | undefined;
   let killTimeout: NodeJS.Timeout | undefined;
@@ -161,6 +177,8 @@ async function runInstallDependenciesAsync<TJob extends Job>(
           }
         },
         cwd: resolvePackagerDir(ctx),
+        sdkVersionFromPackageJson,
+        reactNativeVersionFromPackageJson,
       })
     ).spawnPromise;
 
