@@ -381,7 +381,7 @@ export class BuildStep extends BuildStepOutputAccessor {
     this.commandKillTimeout = setTimeout(async () => {
       this.commandTimedOut = true;
       this.ctx.logger.error(
-        'Command takes a very long time and it did not produce any logs in the past 30 minutes. Most likely an unexpected error happened which caused the process to hang and it will be terminated'
+        'Command takes a very long time and it did not produce any logs in the past 30 minutes. Most likely an unexpected error happened which caused the process to hang and it will be terminated.'
       );
       const ppid = nullthrows(spawnPromise.child.pid);
       const pids = await getParentAndDescendantProcessPidsAsync(ppid);
