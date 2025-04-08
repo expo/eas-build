@@ -374,7 +374,7 @@ export class BuildStep extends BuildStepOutputAccessor {
   private setCommandSpawnTimeouts(spawnPromise: SpawnPromise<SpawnResult>): void {
     this.commandWarnTimeout = setTimeout(() => {
       this.ctx.logger.warn(
-        'Command takes longer then expected and it did not produce any logs in the past 15 minutes. Consider evaluating your command for possible issues'
+        'Command takes longer then expected and it did not produce any logs in the past 15 minutes. Consider evaluating your command for possible issues.'
       );
     }, BUILD_STEP_WARN_TIMEOUT_MS);
 
