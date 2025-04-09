@@ -57,6 +57,8 @@ export type BuildStepFunction = (
 const UUID_REGEX =
   /^[0-9a-fA-F]{8}\b-[0-9a-fA-F]{4}\b-[0-9a-fA-F]{4}\b-[0-9a-fA-F]{4}\b-[0-9a-fA-F]{12}$/;
 
+class BuildStepTimeoutError extends Error {}
+
 export interface SerializedBuildStepOutputAccessor {
   id: string;
   executed: boolean;
@@ -360,6 +362,7 @@ export class BuildStep extends BuildStepOutputAccessor {
       toJSON: (value: unknown) => JSON.stringify(value),
     };
   }
+
   private async executeCommandAsync(): Promise<void> {
     assert(this.command, 'Command must be defined.');
 
@@ -387,6 +390,21 @@ export class BuildStep extends BuildStepOutputAccessor {
       env: this.getScriptEnv(),
       // stdin is /dev/null, std{out,err} are piped into logger.
       stdio: ['ignore', 'pipe', 'pipe'],
+      noLogsTimeout: {
+        warn: {
+          timeoutMinutes: 15,
+          message:
+            'Command takes longer then expected and it did not produce any logs in the past 15 minutes. Consider evaluating your command for possible issues.',
+        },
+        kill: {
+          timeoutMinutes: 30,
+          message:
+            'Command takes a very long time and it did not produce any logs in the past 30 minutes. Most likely an unexpected error happened which caused the process to hang and it will be terminated.',
+          errorClass: BuildStepTimeoutError,
+          errorMessage:
+            'Command was inactive for over 30 minutes. Please evaluate if it is correct.',
+        },
+      },
     });
     this.ctx.logger.debug(`Script completed successfully`);
   }
