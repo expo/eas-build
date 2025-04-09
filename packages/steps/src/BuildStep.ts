@@ -5,7 +5,6 @@ import { Buffer } from 'buffer';
 
 import { v4 as uuidv4 } from 'uuid';
 import { JobInterpolationContext } from '@expo/eas-build-job';
-import { SpawnPromise, SpawnResult } from '@expo/spawn-async';
 
 import { BuildStepContext, BuildStepGlobalContext } from './BuildStepContext.js';
 import { BuildStepInput, BuildStepInputById, makeBuildStepInputByIdMap } from './BuildStepInput.js';
@@ -30,8 +29,6 @@ import { BuildStepEnv } from './BuildStepEnv.js';
 import { BuildRuntimePlatform } from './BuildRuntimePlatform.js';
 import { jsepEval } from './utils/jsepEval.js';
 import { interpolateJobContext } from './interpolation.js';
-import { nullthrows } from './utils/nullthrows.js';
-import { getParentAndDescendantProcessPidsAsync } from './utils/processes.js';
 
 export enum BuildStepStatus {
   NEW = 'new',
@@ -60,8 +57,6 @@ export type BuildStepFunction = (
 const UUID_REGEX =
   /^[0-9a-fA-F]{8}\b-[0-9a-fA-F]{4}\b-[0-9a-fA-F]{4}\b-[0-9a-fA-F]{4}\b-[0-9a-fA-F]{12}$/;
 
-const BUILD_STEP_WARN_TIMEOUT_MS = 15 * 60 * 1000;
-const BUILD_STEP_KILL_TIMEOUT_MS = 30 * 60 * 1000;
 class BuildStepTimeoutError extends Error {}
 
 export interface SerializedBuildStepOutputAccessor {
@@ -148,9 +143,6 @@ export class BuildStep extends BuildStepOutputAccessor {
   private readonly internalId: string;
   private readonly inputById: BuildStepInputById;
   protected executed = false;
-  private commandWarnTimeout: NodeJS.Timeout | undefined;
-  private commandKillTimeout: NodeJS.Timeout | undefined;
-  private commandTimedOut: boolean = false;
 
   public static getNewId(userDefinedId?: string): string {
     return userDefinedId ?? uuidv4();
@@ -371,26 +363,6 @@ export class BuildStep extends BuildStepOutputAccessor {
     };
   }
 
-  private setCommandSpawnTimeouts(spawnPromise: SpawnPromise<SpawnResult>): void {
-    this.commandWarnTimeout = setTimeout(() => {
-      this.ctx.logger.warn(
-        'Command takes longer then expected and it did not produce any logs in the past 15 minutes. Consider evaluating your command for possible issues.'
-      );
-    }, BUILD_STEP_WARN_TIMEOUT_MS);
-
-    this.commandKillTimeout = setTimeout(async () => {
-      this.commandTimedOut = true;
-      this.ctx.logger.error(
-        'Command takes a very long time and it did not produce any logs in the past 30 minutes. Most likely an unexpected error happened which caused the process to hang and it will be terminated.'
-      );
-      const ppid = nullthrows(spawnPromise.child.pid);
-      const pids = await getParentAndDescendantProcessPidsAsync(ppid);
-      pids.forEach((pid) => {
-        process.kill(pid);
-      });
-    }, BUILD_STEP_KILL_TIMEOUT_MS);
-  }
-
   private async executeCommandAsync(): Promise<void> {
     assert(this.command, 'Command must be defined.');
 
@@ -412,41 +384,28 @@ export class BuildStep extends BuildStepOutputAccessor {
     this.ctx.logger.debug(
       `Executing script: ${shellCommand}${args !== undefined ? ` ${args.join(' ')}` : ''}`
     );
-    this.commandTimedOut = false;
-    try {
-      const spawnPromise = spawnAsync(shellCommand, args ?? [], {
-        cwd: this.ctx.workingDirectory,
-        logger: this.ctx.logger,
-        env: this.getScriptEnv(),
-        // stdin is /dev/null, std{out,err} are piped into logger.
-        stdio: ['ignore', 'pipe', 'pipe'],
-        infoCallbackFn: () => {
-          if (this.commandWarnTimeout) {
-            this.commandWarnTimeout.refresh();
-          }
-          if (this.commandKillTimeout) {
-            this.commandKillTimeout.refresh();
-          }
+    await spawnAsync(shellCommand, args ?? [], {
+      cwd: this.ctx.workingDirectory,
+      logger: this.ctx.logger,
+      env: this.getScriptEnv(),
+      // stdin is /dev/null, std{out,err} are piped into logger.
+      stdio: ['ignore', 'pipe', 'pipe'],
+      noLogsTimeout: {
+        warn: {
+          timeoutMinutes: 15,
+          message:
+            'Command takes longer then expected and it did not produce any logs in the past 15 minutes. Consider evaluating your command for possible issues.',
         },
-      });
-
-      this.setCommandSpawnTimeouts(spawnPromise);
-      await spawnPromise;
-    } catch (err: any) {
-      if (this.commandTimedOut) {
-        throw new BuildStepTimeoutError(
-          'Command was inactive for over 30 minutes. Please evaluate if it is correct'
-        );
-      }
-      throw err;
-    } finally {
-      if (this.commandWarnTimeout) {
-        clearTimeout(this.commandWarnTimeout);
-      }
-      if (this.commandKillTimeout) {
-        clearTimeout(this.commandKillTimeout);
-      }
-    }
+        kill: {
+          timeoutMinutes: 30,
+          message:
+            'Command takes a very long time and it did not produce any logs in the past 30 minutes. Most likely an unexpected error happened which caused the process to hang and it will be terminated.',
+          errorClass: BuildStepTimeoutError,
+          errorMessage:
+            'Command was inactive for over 30 minutes. Please evaluate if it is correct.',
+        },
+      },
+    });
     this.ctx.logger.debug(`Script completed successfully`);
   }
 

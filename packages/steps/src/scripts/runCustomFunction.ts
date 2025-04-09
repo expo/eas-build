@@ -1,7 +1,7 @@
 import assert from 'assert';
 
 import { createLogger } from '@expo/logger';
-import { SpawnPromise, SpawnResult } from '@expo/spawn-async';
+import { SpawnResult } from '@expo/spawn-async';
 import cloneDeep from 'lodash.clonedeep';
 
 import { BuildStepOutput } from '../BuildStepOutput.js';
@@ -94,7 +94,7 @@ async function runCustomJsFunctionAsync(): Promise<void> {
 
   await customJavascriptFunction(ctx, { inputs, outputs, env });
 
-  const promises: SpawnPromise<SpawnResult>[] = [];
+  const promises: Promise<SpawnResult>[] = [];
   for (const output of Object.values(outputs)) {
     if (output.rawValue) {
       assert(output.value, 'output.value is required');
