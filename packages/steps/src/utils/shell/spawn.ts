@@ -56,6 +56,34 @@ const SPAWN_KILL_TIMEOUT_DEFAULT_MESSAGE =
 const SPAWN_KILL_TIMEOUT_DEFAULT_ERROR_MESSAGE =
   'Command was inactive for over ${minutes} minutes. Please evaluate if it is correct.';
 
+function getWarnTimeoutMessage(noLogsTimeout: NoLogsTimeoutOptions): string {
+  const warnTimeoutMinutes =
+    noLogsTimeout.warn?.timeoutMinutes ?? SPAWN_WARN_TIMEOUT_DEFAULT_MINUTES;
+  return (
+    noLogsTimeout.warn?.message ??
+    SPAWN_WARN_TIMEOUT_DEFAULT_MESSAGE.replace('${minutes}', warnTimeoutMinutes.toString())
+  );
+}
+
+function getKillTimeoutMessage(noLogsTimeout: NoLogsTimeoutOptions): string {
+  const killTimeoutMinutes =
+    noLogsTimeout.kill?.timeoutMinutes ?? SPAWN_KILL_TIMEOUT_DEFAULT_MINUTES;
+  return (
+    noLogsTimeout.kill?.message ??
+    SPAWN_KILL_TIMEOUT_DEFAULT_MESSAGE.replace('${minutes}', killTimeoutMinutes.toString())
+  );
+}
+
+function getKillTimeoutError(noLogsTimeout: NoLogsTimeoutOptions): Error {
+  const spawnKillTimeout =
+    noLogsTimeout?.kill?.timeoutMinutes ?? SPAWN_KILL_TIMEOUT_DEFAULT_MINUTES;
+  const errorMessage =
+    noLogsTimeout?.kill?.errorMessage ??
+    SPAWN_KILL_TIMEOUT_DEFAULT_ERROR_MESSAGE.replace('${minutes}', spawnKillTimeout.toString());
+  const ErrorClass = noLogsTimeout?.kill?.errorClass ?? Error;
+  return new ErrorClass(errorMessage);
+}
+
 export async function spawnAsync(
   command: string,
   args: string[],
@@ -80,13 +108,7 @@ export async function spawnAsync(
         noLogsTimeout.warn.timeoutMinutes ?? SPAWN_WARN_TIMEOUT_DEFAULT_MINUTES;
       spawnWarnTimeout = setTimeout(
         () => {
-          logger.warn(
-            noLogsTimeout.warn?.message ??
-              SPAWN_WARN_TIMEOUT_DEFAULT_MESSAGE.replace(
-                '${minutes}',
-                warnTimeoutMinutes.toString()
-              )
-          );
+          logger.warn(getWarnTimeoutMessage(noLogsTimeout));
         },
         warnTimeoutMinutes * 60 * 1000
       );
@@ -98,13 +120,7 @@ export async function spawnAsync(
       spawnKillTimeout = setTimeout(
         async () => {
           spawnTimedOut = true;
-          logger.error(
-            noLogsTimeout.kill?.message ??
-              SPAWN_KILL_TIMEOUT_DEFAULT_MESSAGE.replace(
-                '${minutes}',
-                killTimeoutMinutes.toString()
-              )
-          );
+          logger.error(getKillTimeoutMessage(noLogsTimeout));
           const ppid = nullthrows(spawnPromise.child.pid);
           const pids = await getParentAndDescendantProcessPidsAsync(ppid);
           pids.forEach((pid) => {
@@ -140,13 +156,7 @@ export async function spawnAsync(
     spawnResult = await spawnPromise;
   } catch (err: any) {
     if (spawnTimedOut) {
-      const spawnKillTimeout =
-        noLogsTimeout?.kill?.timeoutMinutes ?? SPAWN_KILL_TIMEOUT_DEFAULT_MINUTES;
-      const errorMessage =
-        noLogsTimeout?.kill?.errorMessage ??
-        SPAWN_KILL_TIMEOUT_DEFAULT_ERROR_MESSAGE.replace('${minutes}', spawnKillTimeout.toString());
-      const ErrorClass = noLogsTimeout?.kill?.errorClass ?? Error;
-      throw new ErrorClass(errorMessage);
+      throw getKillTimeoutError(noLogsTimeout);
     }
     throw err;
   } finally {
