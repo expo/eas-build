@@ -15,4 +15,3 @@ export * as errors from './errors.js';
 export * from './interpolation.js';
 export * from './utils/shell/spawn.js';
 export * from './utils/jsepEval.js';
-export * from './utils/processes.js';
