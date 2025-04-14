@@ -103,3 +103,10 @@ export class CredentialsDistCertMismatchError extends UserFacingError {
     super('EAS_BUILD_CREDENTIALS_DIST_CERT_MISMATCH', message);
   }
 }
+
+export class SpawnCommandTimeoutError extends UserFacingError {
+  constructor(message?: string | undefined) {
+    const defaultMessage = 'Command timed out.';
+    super('EAS_BUILD_SPAWN_COMMAND_TIMEOUT', message ?? defaultMessage);
+  }
+}

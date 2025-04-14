@@ -4,7 +4,7 @@ import path from 'path';
 import { Buffer } from 'buffer';
 
 import { v4 as uuidv4 } from 'uuid';
-import { JobInterpolationContext } from '@expo/eas-build-job';
+import { JobInterpolationContext, errors } from '@expo/eas-build-job';
 
 import { BuildStepContext, BuildStepGlobalContext } from './BuildStepContext.js';
 import { BuildStepInput, BuildStepInputById, makeBuildStepInputByIdMap } from './BuildStepInput.js';
@@ -57,7 +57,7 @@ export type BuildStepFunction = (
 const UUID_REGEX =
   /^[0-9a-fA-F]{8}\b-[0-9a-fA-F]{4}\b-[0-9a-fA-F]{4}\b-[0-9a-fA-F]{4}\b-[0-9a-fA-F]{12}$/;
 
-class BuildStepTimeoutError extends Error {}
+class BuildStepTimeoutError extends errors.SpawnCommandTimeoutError {}
 
 export interface SerializedBuildStepOutputAccessor {
   id: string;

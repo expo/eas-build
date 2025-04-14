@@ -6,11 +6,12 @@ import spawnAsyncOriginal, {
   SpawnPromise,
   SpawnOptions as SpawnOptionsOriginal,
 } from '@expo/spawn-async';
+import { errors } from '@expo/eas-build-job';
 
 import { nullthrows } from '../nullthrows.js';
 
 interface IErrorClass {
-  new (message?: string | undefined): Error;
+  new (message?: string | undefined): errors.SpawnCommandTimeoutError;
 }
 
 type NoLogsTimeoutOptions = {
@@ -73,13 +74,15 @@ function getKillTimeoutMessage(noLogsTimeout: NoLogsTimeoutOptions): string {
   );
 }
 
-function getKillTimeoutError(noLogsTimeout: NoLogsTimeoutOptions | undefined): Error {
+function getKillTimeoutError(
+  noLogsTimeout: NoLogsTimeoutOptions | undefined
+): errors.SpawnCommandTimeoutError {
   const spawnKillTimeout =
     noLogsTimeout?.kill?.timeoutMinutes ?? SPAWN_KILL_TIMEOUT_DEFAULT_MINUTES;
   const errorMessage =
     noLogsTimeout?.kill?.errorMessage ??
     SPAWN_KILL_TIMEOUT_DEFAULT_ERROR_MESSAGE.replace('${minutes}', spawnKillTimeout.toString());
-  const ErrorClass = noLogsTimeout?.kill?.errorClass ?? Error;
+  const ErrorClass = noLogsTimeout?.kill?.errorClass ?? errors.SpawnCommandTimeoutError;
   return new ErrorClass(errorMessage);
 }
 
