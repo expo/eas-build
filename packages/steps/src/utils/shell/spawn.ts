@@ -8,7 +8,6 @@ import spawnAsyncOriginal, {
 } from '@expo/spawn-async';
 
 import { nullthrows } from '../nullthrows.js';
-import { getParentAndDescendantProcessPidsAsync } from '../processes.js';
 
 interface IErrorClass {
   new (message?: string | undefined): Error;
@@ -122,10 +121,7 @@ export async function spawnAsync(
           spawnTimedOut = true;
           logger.error(getKillTimeoutMessage(noLogsTimeout));
           const ppid = nullthrows(spawnPromise.child.pid);
-          const pids = await getParentAndDescendantProcessPidsAsync(ppid);
-          pids.forEach((pid) => {
-            process.kill(pid);
-          });
+          process.kill(ppid);
         },
         killTimeoutMinutes * 60 * 1000
       );
