@@ -144,6 +144,9 @@ export class BuildStep extends BuildStepOutputAccessor {
   private readonly inputById: BuildStepInputById;
   protected executed = false;
 
+  private readonly noLogsWarnTimeoutMinutes: number;
+  private readonly noLogsKillTimeoutMinutes: number;
+
   public static getNewId(userDefinedId?: string): string {
     return userDefinedId ?? uuidv4();
   }
@@ -190,6 +193,8 @@ export class BuildStep extends BuildStepOutputAccessor {
       supportedRuntimePlatforms: maybeSupportedRuntimePlatforms,
       env,
       ifCondition,
+      noLogsWarnTimeoutMinutes,
+      noLogsKillTimeoutMinutes,
     }: {
       id: string;
       name?: string;
@@ -203,6 +208,8 @@ export class BuildStep extends BuildStepOutputAccessor {
       supportedRuntimePlatforms?: BuildRuntimePlatform[];
       env?: BuildStepEnv;
       ifCondition?: string;
+      noLogsWarnTimeoutMinutes?: number;
+      noLogsKillTimeoutMinutes?: number;
     }
   ) {
     assert(command !== undefined || fn !== undefined, 'Either command or fn must be defined.');
@@ -235,6 +242,9 @@ export class BuildStep extends BuildStepOutputAccessor {
 
     this.outputsDir = getTemporaryOutputsDirPath(ctx, this.id);
     this.envsDir = getTemporaryEnvsDirPath(ctx, this.id);
+
+    this.noLogsWarnTimeoutMinutes = noLogsWarnTimeoutMinutes ?? 15;
+    this.noLogsKillTimeoutMinutes = noLogsKillTimeoutMinutes ?? 30;
 
     ctx.registerStep(this);
   }
@@ -392,12 +402,12 @@ export class BuildStep extends BuildStepOutputAccessor {
       stdio: ['ignore', 'pipe', 'pipe'],
       noLogsTimeout: {
         warn: {
-          timeoutMinutes: 15,
+          timeoutMinutes: this.noLogsWarnTimeoutMinutes,
           message:
             'Command takes longer then expected and it did not produce any logs in the past 15 minutes. Consider evaluating your command for possible issues.',
         },
         kill: {
-          timeoutMinutes: 30,
+          timeoutMinutes: this.noLogsKillTimeoutMinutes,
           message:
             'Command takes a very long time and it did not produce any logs in the past 30 minutes. Most likely an unexpected error happened which caused the process to hang and it will be terminated.',
           errorClass: BuildStepTimeoutError,
