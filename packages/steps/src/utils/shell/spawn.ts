@@ -73,7 +73,7 @@ function getKillTimeoutMessage(noLogsTimeout: NoLogsTimeoutOptions): string {
   );
 }
 
-function getKillTimeoutError(noLogsTimeout: NoLogsTimeoutOptions): Error {
+function getKillTimeoutError(noLogsTimeout: NoLogsTimeoutOptions | undefined): Error {
   const spawnKillTimeout =
     noLogsTimeout?.kill?.timeoutMinutes ?? SPAWN_KILL_TIMEOUT_DEFAULT_MINUTES;
   const errorMessage =
