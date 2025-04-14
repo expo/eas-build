@@ -5,9 +5,9 @@ import spawn, { SpawnPromise, SpawnResult } from '@expo/turtle-spawn';
 import { Android, Env, Job, Platform } from '@expo/eas-build-job';
 import fs from 'fs-extra';
 import { bunyan } from '@expo/logger';
-import { getParentAndDescendantProcessPidsAsync } from '@expo/steps';
 
 import { BuildContext } from '../context';
+import { getParentAndDescendantProcessPidsAsync } from '../utils/processes';
 
 export async function ensureLFLineEndingsInGradlewScript<TJob extends Job>(
   ctx: BuildContext<TJob>

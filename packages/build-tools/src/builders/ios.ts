@@ -3,7 +3,6 @@ import { IOSConfig } from '@expo/config-plugins';
 import { ManagedArtifactType, BuildMode, BuildPhase, Ios, Workflow } from '@expo/eas-build-job';
 import fs from 'fs-extra';
 import nullthrows from 'nullthrows';
-import { getParentAndDescendantProcessPidsAsync } from '@expo/steps';
 
 import { Artifacts, BuildContext } from '../context';
 import {
@@ -21,6 +20,7 @@ import { resolveArtifactPath, resolveBuildConfiguration, resolveScheme } from '.
 import { setupAsync } from '../common/setup';
 import { prebuildAsync } from '../common/prebuild';
 import { prepareExecutableAsync } from '../utils/prepareBuildExecutable';
+import { getParentAndDescendantProcessPidsAsync } from '../utils/processes';
 import { eagerBundleAsync, shouldUseEagerBundle } from '../common/eagerBundle';
 
 import { runBuilderWithHooksAsync } from './common';

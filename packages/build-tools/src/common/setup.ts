@@ -7,7 +7,6 @@ import { BuildTrigger } from '@expo/eas-build-job/dist/common';
 import nullthrows from 'nullthrows';
 import { ExpoConfig } from '@expo/config';
 import { UserFacingError } from '@expo/eas-build-job/dist/errors';
-import { getParentAndDescendantProcessPidsAsync } from '@expo/steps';
 
 import { BuildContext } from '../context';
 import { deleteXcodeEnvLocalIfExistsAsync } from '../ios/xcodeEnv';
@@ -15,6 +14,7 @@ import { Hook, runHookIfPresent } from '../utils/hooks';
 import { setUpNpmrcAsync } from '../utils/npmrc';
 import { isAtLeastNpm7Async } from '../utils/packageManager';
 import { readPackageJson } from '../utils/project';
+import { getParentAndDescendantProcessPidsAsync } from '../utils/processes';
 
 import { prepareProjectSourcesAsync } from './projectSources';
 import { installDependenciesAsync, resolvePackagerDir } from './installDependencies';
