@@ -152,6 +152,10 @@ export function spawnAsync(
     }
   }
   spawnPromise
+    .then(
+      (spawnResult) => spawnResult,
+      (_) => {}
+    )
     .catch((err: any) => {
       if (spawnTimedOut) {
         throw getKillTimeoutError(noLogsTimeout);
