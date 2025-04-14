@@ -83,19 +83,19 @@ function getKillTimeoutError(noLogsTimeout: NoLogsTimeoutOptions | undefined): E
   return new ErrorClass(errorMessage);
 }
 
-export async function spawnAsync(
+// eslint-disable-next-line async-protect/async-suffix
+export function spawnAsync(
   command: string,
   args: string[],
   allOptions: SpawnOptions = {
     stdio: 'inherit',
     cwd: process.cwd(),
   }
-): Promise<SpawnResult> {
+): SpawnPromise<SpawnResult> {
   const { logger, noLogsTimeout, ...options } = allOptions;
   let spawnWarnTimeout: NodeJS.Timeout | undefined;
   let spawnKillTimeout: NodeJS.Timeout | undefined;
   let spawnTimedOut: boolean = false;
-  let spawnResult: SpawnResult;
 
   function setCommandSpawnTimeouts(
     noLogsTimeout: NoLogsTimeoutOptions,
@@ -128,40 +128,41 @@ export async function spawnAsync(
     }
   }
 
-  try {
-    const spawnPromise = spawnAsyncOriginal(command, args, options);
-    if (logger && spawnPromise.child) {
-      if (noLogsTimeout) {
-        const optionsWithCallback = {
-          ...options,
-          infoCallbackFn: () => {
-            if (spawnWarnTimeout) {
-              spawnWarnTimeout.refresh();
-            }
-            if (spawnKillTimeout) {
-              spawnKillTimeout.refresh();
-            }
-          },
-        };
-        pipeSpawnOutput(logger, spawnPromise.child, optionsWithCallback);
-        setCommandSpawnTimeouts(noLogsTimeout, logger, spawnPromise);
-      } else {
-        pipeSpawnOutput(logger, spawnPromise.child, options);
-      }
-    }
-    spawnResult = await spawnPromise;
-  } catch (err: any) {
-    if (spawnTimedOut) {
-      throw getKillTimeoutError(noLogsTimeout);
-    }
-    throw err;
-  } finally {
-    if (spawnWarnTimeout) {
-      clearTimeout(spawnWarnTimeout);
-    }
-    if (spawnKillTimeout) {
-      clearTimeout(spawnKillTimeout);
+  const spawnPromise = spawnAsyncOriginal(command, args, options);
+  if (logger && spawnPromise.child) {
+    if (noLogsTimeout) {
+      const optionsWithCallback = {
+        ...options,
+        infoCallbackFn: () => {
+          if (spawnWarnTimeout) {
+            spawnWarnTimeout.refresh();
+          }
+          if (spawnKillTimeout) {
+            spawnKillTimeout.refresh();
+          }
+        },
+      };
+      pipeSpawnOutput(logger, spawnPromise.child, optionsWithCallback);
+      setCommandSpawnTimeouts(noLogsTimeout, logger, spawnPromise);
+    } else {
+      pipeSpawnOutput(logger, spawnPromise.child, options);
     }
   }
-  return spawnResult;
+  spawnPromise
+    .catch((err: any) => {
+      if (spawnTimedOut) {
+        throw getKillTimeoutError(noLogsTimeout);
+      }
+      throw err;
+    })
+    .finally(() => {
+      if (spawnWarnTimeout) {
+        clearTimeout(spawnWarnTimeout);
+      }
+      if (spawnKillTimeout) {
+        clearTimeout(spawnKillTimeout);
+      }
+    });
+
+  return spawnPromise;
 }
