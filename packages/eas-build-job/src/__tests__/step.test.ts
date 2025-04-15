@@ -66,6 +66,8 @@ describe('StepZ', () => {
       env: {
         KEY1: 'value1',
       },
+      'no-logs-warn-timeout-minutes': 15,
+      'no-logs-kill-timeout-minutes': 30,
     };
     expect(StepZ.parse(step)).toEqual(step);
   });
