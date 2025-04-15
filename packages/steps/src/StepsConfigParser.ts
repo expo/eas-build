@@ -128,6 +128,8 @@ export class StepsConfigParser extends AbstractConfigParser {
       command: step.run,
       env: step.env,
       ifCondition: step.if,
+      noLogsWarnTimeoutMinutes: step['no-logs-warn-timeout-minutes'],
+      noLogsKillTimeoutMinutes: step['no-logs-kill-timeout-minutes'],
     });
   }
 
