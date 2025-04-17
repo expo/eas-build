@@ -49,6 +49,11 @@ export async function installNodeModules(
       args = ['install', '--no-immutable', '--inline-builds'];
     }
   }
+
+  if (env['EAS_VERBOSE'] === '1') {
+    args = [...args, '--verbose'];
+  }
+
   logger.info(`Running "${packageManager} ${args.join(' ')}" in ${packagerRunDir} directory`);
   await spawn(packageManager, args, {
     cwd: packagerRunDir,

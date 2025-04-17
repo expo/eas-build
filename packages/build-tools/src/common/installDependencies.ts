@@ -20,6 +20,9 @@ export async function installDependenciesAsync<TJob extends Job>(
       args = ['install', '--no-immutable', '--inline-builds'];
     }
   }
+  if (ctx.env['EAS_VERBOSE'] === '1') {
+    args = [...args, '--verbose'];
+  }
   logger?.info(`Running "${ctx.packageManager} ${args.join(' ')}" in ${cwd} directory`);
   return {
     spawnPromise: spawn(ctx.packageManager, args, {

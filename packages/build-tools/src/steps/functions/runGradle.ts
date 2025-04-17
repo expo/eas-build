@@ -50,6 +50,7 @@ export function runGradleFunction(): BuildFunction {
         stepCtx.global.staticContext.job,
         inputs.command.value as string | undefined
       );
+
       const resolvedEASUpdateRuntimeVersion = inputs.resolved_eas_update_runtime_version.value as
         | string
         | undefined;
