@@ -215,7 +215,9 @@ async function getEmulatorSerialId({
 
     const [, serialId] = matches;
     // Previously we were using `qemu.uuid` to identify the emulator,
-    // but this does not work for newer emulators (for no apparent reason).
+    // but this does not work for newer emulators, because there is
+    // a limit on properties and custom properties get ignored.
+    // See https://stackoverflow.com/questions/2214377/how-to-get-serial-number-or-id-of-android-emulator-after-it-runs#comment98259121_42038655
     const adbEmuAvdName = await spawn('adb', ['-s', serialId, 'emu', 'avd', 'name'], {
       mode: PipeMode.COMBINED,
       env,
