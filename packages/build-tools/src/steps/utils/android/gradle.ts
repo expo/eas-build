@@ -20,9 +20,11 @@ export async function runGradleCommand({
   env: BuildStepEnv;
   extraEnv?: BuildStepEnv;
 }): Promise<void> {
-  logger.info(`Running 'gradlew ${gradleCommand}' in ${androidDir}`);
+  const verboseFlag = env['EAS_VERBOSE'] === '1' ? '--info' : '';
+
+  logger.info(`Running 'gradlew ${gradleCommand} ${verboseFlag}' in ${androidDir}`);
   await fs.chmod(path.join(androidDir, 'gradlew'), 0o755);
-  const spawnPromise = spawn('bash', ['-c', `./gradlew ${gradleCommand}`], {
+  const spawnPromise = spawn('bash', ['-c', `./gradlew ${gradleCommand} ${verboseFlag}`], {
     cwd: androidDir,
     logger,
     lineTransformer: (line?: string) => {

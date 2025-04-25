@@ -11,8 +11,10 @@ export async function installPods<TJob extends Ios.Job>(
 ): Promise<{ spawnPromise: SpawnPromise<SpawnResult> }> {
   const iosDir = path.join(ctx.getReactNativeProjectDirectory(), 'ios');
 
+  const verboseFlag = ctx.env['EAS_VERBOSE'] === '1' ? ['--verbose'] : [];
+
   return {
-    spawnPromise: spawn('pod', ['install'], {
+    spawnPromise: spawn('pod', ['install', ...verboseFlag], {
       cwd: iosDir,
       logger: ctx.logger,
       env: {
