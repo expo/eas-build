@@ -18,7 +18,7 @@ export async function installDependenciesAsync({
   packageManager: PackageManager;
   env: Record<string, string | undefined>;
   cwd: string;
-  logger?: SpawnOptions['logger'];
+  logger: Exclude<SpawnOptions['logger'], undefined>;
   infoCallbackFn?: SpawnOptions['infoCallbackFn'];
   useFrozenLockfile: boolean;
 }): Promise<{ spawnPromise: SpawnPromise<SpawnResult> }> {
@@ -50,7 +50,7 @@ export async function installDependenciesAsync({
   if (env['EAS_VERBOSE'] === '1') {
     args = [...args, '--verbose'];
   }
-  logger?.info(`Running "${packageManager} ${args.join(' ')}" in ${cwd} directory`);
+  logger.info(`Running "${packageManager} ${args.join(' ')}" in ${cwd} directory`);
   return {
     spawnPromise: spawn(packageManager, args, {
       cwd,

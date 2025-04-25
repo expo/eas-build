@@ -2,15 +2,14 @@ import path from 'path';
 
 import { BuildFunction, BuildStepEnv } from '@expo/steps';
 import { BuildStepContext } from '@expo/steps/dist_esm/BuildStepContext';
-import spawn from '@expo/turtle-spawn';
 
 import {
   findPackagerRootDir,
-  PackageManager,
   resolvePackageManager,
+  shouldUseFrozenLockfile,
 } from '../../utils/packageManager';
-import { isUsingModernYarnVersion } from '../../utils/project';
 import { installDependenciesAsync } from '../../common/installDependencies';
+import { readPackageJson } from '../../utils/project';
 
 export function createInstallNodeModulesBuildFunction(): BuildFunction {
   return new BuildFunction({
@@ -41,12 +40,21 @@ export async function installNodeModules(
     );
   }
 
+  let packageJson = {};
+  try {
+    packageJson = readPackageJson(stepCtx.workingDirectory);
+  } catch {
+    logger.info(
+      `Failed to read package.json. We won't know if we can use frozen lockfile. You can use EAS_NO_FROZEN_LOCKFILE=1 to disable it.`
+    );
+  }
+
   const { spawnPromise } = await installDependenciesAsync({
     packageManager,
     env,
     logger: stepCtx.logger,
     cwd: packagerRunDir,
-    useFrozenLockfile: doDependenciesPreventFrozenLockfile({ packageJson }),
+    useFrozenLockfile: shouldUseFrozenLockfile({ packageJson, env }),
   });
   await spawnPromise;
 }

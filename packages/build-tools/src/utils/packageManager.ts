@@ -59,8 +59,8 @@ export function shouldUseFrozenLockfile({
   const parsedPackageJson = PackageJsonZ.safeParse(packageJson);
   if (!parsedPackageJson.success) {
     // We don't know what the dependencies are,
-    // so we default to NOT using frozen lockfile.
-    return false;
+    // so we default to using frozen lockfile.
+    return true;
   }
 
   const dependencies = parsedPackageJson.data.dependencies;
