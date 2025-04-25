@@ -1,6 +1,5 @@
 import path from 'path';
 
-import semver from 'semver';
 import { Job } from '@expo/eas-build-job';
 import spawn, { SpawnPromise, SpawnResult, SpawnOptions } from '@expo/turtle-spawn';
 
@@ -8,65 +7,56 @@ import { BuildContext } from '../context';
 import { PackageManager, findPackagerRootDir } from '../utils/packageManager';
 import { isUsingModernYarnVersion } from '../utils/project';
 
-export async function installDependenciesAsync<TJob extends Job>(
-  ctx: BuildContext<TJob>,
-  {
-    logger,
-    infoCallbackFn,
-    cwd,
-    sdkVersionFromPackageJson,
-    reactNativeVersionFromPackageJson,
-    withoutFrozenLockfile,
-  }: {
-    logger?: SpawnOptions['logger'];
-    infoCallbackFn?: SpawnOptions['infoCallbackFn'];
-    cwd?: SpawnOptions['cwd'];
-    sdkVersionFromPackageJson?: string;
-    reactNativeVersionFromPackageJson?: string;
-    withoutFrozenLockfile?: boolean;
-  }
-): Promise<{ spawnPromise: SpawnPromise<SpawnResult> }> {
-  const shouldUseFrozenLockfile = Boolean(
-    !withoutFrozenLockfile &&
-      !ctx.env.EAS_NO_FROZEN_LOCKFILE &&
-      ((!!sdkVersionFromPackageJson && semver.satisfies(sdkVersionFromPackageJson, '>=52')) ||
-        (!!reactNativeVersionFromPackageJson &&
-          semver.satisfies(reactNativeVersionFromPackageJson, '>=0.76')))
-  );
-
+export async function installDependenciesAsync({
+  packageManager,
+  env,
+  logger,
+  infoCallbackFn,
+  cwd,
+  useFrozenLockfile,
+}: {
+  packageManager: PackageManager;
+  env: Record<string, string | undefined>;
+  cwd: string;
+  logger?: SpawnOptions['logger'];
+  infoCallbackFn?: SpawnOptions['infoCallbackFn'];
+  useFrozenLockfile: boolean;
+}): Promise<{ spawnPromise: SpawnPromise<SpawnResult> }> {
   let args: string[];
-  switch (ctx.packageManager) {
+  switch (packageManager) {
     case PackageManager.NPM: {
-      args = [shouldUseFrozenLockfile ? 'ci' : 'install'];
+      args = [useFrozenLockfile ? 'ci' : 'install'];
       break;
     }
     case PackageManager.PNPM: {
-      args = ['install', shouldUseFrozenLockfile ? '--frozen-lockfile' : '--no-frozen-lockfile'];
+      args = ['install', useFrozenLockfile ? '--frozen-lockfile' : '--no-frozen-lockfile'];
       break;
     }
     case PackageManager.YARN: {
-      const isYarn2 = await isUsingModernYarnVersion(ctx.getReactNativeProjectDirectory());
-      args = isYarn2
-        ? ['install', shouldUseFrozenLockfile ? '--immutable' : '--no-immutable', '--inline-builds']
-        : ['install', ...(shouldUseFrozenLockfile ? ['--frozen-lockfile'] : [])];
+      const isModernYarnVersion = await isUsingModernYarnVersion(cwd);
+      if (isModernYarnVersion) {
+        args = ['install', '--inline-builds', useFrozenLockfile ? '--immutable' : '--no-immutable'];
+      } else {
+        args = ['install', ...(useFrozenLockfile ? ['--frozen-lockfile'] : [])];
+      }
       break;
     }
     case PackageManager.BUN:
-      args = ['install', ...(shouldUseFrozenLockfile ? ['--frozen-lockfile'] : [])];
+      args = ['install', ...(useFrozenLockfile ? ['--frozen-lockfile'] : [])];
       break;
     default:
-      throw new Error(`Unsupported package manager: ${ctx.packageManager}`);
+      throw new Error(`Unsupported package manager: ${packageManager}`);
   }
-  if (ctx.env['EAS_VERBOSE'] === '1') {
+  if (env['EAS_VERBOSE'] === '1') {
     args = [...args, '--verbose'];
   }
-  logger?.info(`Running "${ctx.packageManager} ${args.join(' ')}" in ${cwd} directory`);
+  logger?.info(`Running "${packageManager} ${args.join(' ')}" in ${cwd} directory`);
   return {
-    spawnPromise: spawn(ctx.packageManager, args, {
+    spawnPromise: spawn(packageManager, args, {
       cwd,
       logger,
       infoCallbackFn,
-      env: ctx.env,
+      env,
     }),
   };
 }

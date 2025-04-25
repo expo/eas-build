@@ -32,10 +32,13 @@ export async function prebuildAsync<TJob extends BuildJob>(
     packageManager: ctx.packageManager,
   });
   const installDependenciesSpawnPromise = (
-    await installDependenciesAsync(ctx, {
+    await installDependenciesAsync({
+      packageManager: ctx.packageManager,
+      env: ctx.env,
       logger,
       cwd: resolvePackagerDir(ctx),
-      withoutFrozenLockfile: true, // prebuild should can modify package.json in some cases
+      // prebuild sometimes modifies package.json, so we don't want to use frozen lockfile
+      useFrozenLockfile: false,
     })
   ).spawnPromise;
   await installDependenciesSpawnPromise;

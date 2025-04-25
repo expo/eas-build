@@ -7,13 +7,12 @@ import { BuildTrigger } from '@expo/eas-build-job/dist/common';
 import nullthrows from 'nullthrows';
 import { ExpoConfig } from '@expo/config';
 import { UserFacingError } from '@expo/eas-build-job/dist/errors';
-import semver from 'semver';
 
 import { BuildContext } from '../context';
 import { deleteXcodeEnvLocalIfExistsAsync } from '../ios/xcodeEnv';
 import { Hook, runHookIfPresent } from '../utils/hooks';
 import { setUpNpmrcAsync } from '../utils/npmrc';
-import { isAtLeastNpm7Async } from '../utils/packageManager';
+import { shouldUseFrozenLockfile, isAtLeastNpm7Async } from '../utils/packageManager';
 import { readPackageJson } from '../utils/project';
 import { getParentAndDescendantProcessPidsAsync } from '../utils/processes';
 
@@ -56,15 +55,9 @@ export async function setupAsync<TJob extends BuildJob>(ctx: BuildContext<TJob>)
     return packageJson;
   });
 
-  const sdkVersionFromPackageJson = semver.coerce(packageJson?.dependencies?.expo)?.version;
-  const reactNativeVersionFromPackageJson = semver.coerce(
-    packageJson?.dependencies?.['react-native']
-  )?.version;
-
   await ctx.runBuildPhase(BuildPhase.INSTALL_DEPENDENCIES, async () => {
     await runInstallDependenciesAsync(ctx, {
-      sdkVersionFromPackageJson,
-      reactNativeVersionFromPackageJson,
+      useFrozenLockfile: shouldUseFrozenLockfile({ packageJson, env: ctx.env }),
     });
   });
 
@@ -154,11 +147,9 @@ async function runExpoDoctor<TJob extends Job>(ctx: BuildContext<TJob>): Promise
 async function runInstallDependenciesAsync<TJob extends Job>(
   ctx: BuildContext<TJob>,
   {
-    sdkVersionFromPackageJson,
-    reactNativeVersionFromPackageJson,
+    useFrozenLockfile,
   }: {
-    sdkVersionFromPackageJson?: string;
-    reactNativeVersionFromPackageJson?: string;
+    useFrozenLockfile: boolean;
   }
 ): Promise<void> {
   let warnTimeout: NodeJS.Timeout | undefined;
@@ -166,7 +157,9 @@ async function runInstallDependenciesAsync<TJob extends Job>(
   let killTimedOut: boolean = false;
   try {
     const installDependenciesSpawnPromise = (
-      await installDependenciesAsync(ctx, {
+      await installDependenciesAsync({
+        packageManager: ctx.packageManager,
+        env: ctx.env,
         logger: ctx.logger,
         infoCallbackFn: () => {
           if (warnTimeout) {
@@ -177,8 +170,7 @@ async function runInstallDependenciesAsync<TJob extends Job>(
           }
         },
         cwd: resolvePackagerDir(ctx),
-        sdkVersionFromPackageJson,
-        reactNativeVersionFromPackageJson,
+        useFrozenLockfile,
       })
     ).spawnPromise;
 

@@ -10,6 +10,7 @@ import {
   resolvePackageManager,
 } from '../../utils/packageManager';
 import { isUsingModernYarnVersion } from '../../utils/project';
+import { installDependenciesAsync } from '../../common/installDependencies';
 
 export function createInstallNodeModulesBuildFunction(): BuildFunction {
   return new BuildFunction({
@@ -40,24 +41,12 @@ export async function installNodeModules(
     );
   }
 
-  let args = ['install'];
-  if (packageManager === PackageManager.PNPM) {
-    args = ['install', '--no-frozen-lockfile'];
-  } else if (packageManager === PackageManager.YARN) {
-    const isYarn2 = await isUsingModernYarnVersion(stepCtx.workingDirectory);
-    if (isYarn2) {
-      args = ['install', '--no-immutable', '--inline-builds'];
-    }
-  }
-
-  if (env['EAS_VERBOSE'] === '1') {
-    args = [...args, '--verbose'];
-  }
-
-  logger.info(`Running "${packageManager} ${args.join(' ')}" in ${packagerRunDir} directory`);
-  await spawn(packageManager, args, {
-    cwd: packagerRunDir,
-    logger: stepCtx.logger,
+  const { spawnPromise } = await installDependenciesAsync({
+    packageManager,
     env,
+    logger: stepCtx.logger,
+    cwd: packagerRunDir,
+    useFrozenLockfile: doDependenciesPreventFrozenLockfile({ packageJson }),
   });
+  await spawnPromise;
 }
