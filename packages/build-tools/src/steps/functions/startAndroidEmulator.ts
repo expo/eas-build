@@ -260,8 +260,7 @@ async function ensureEmulatorIsReadyAsync({
     {
       logger,
       retryOptions: {
-        // Emulators usually take 30 second tops to boot.
-        retries: 60,
+        retries: 3 * 60,
         retryIntervalMs: 1_000,
       },
     }
