@@ -46,7 +46,7 @@ export async function installNodeModules(
     packageJson = readPackageJson(stepCtx.workingDirectory);
   } catch {
     logger.info(
-      `Failed to read package.json. We won't know if we can use frozen lockfile. You can use EAS_NO_FROZEN_LOCKFILE=1 to disable it.`
+      `Failed to read package.json, defaulting to installing dependencies with a frozen lockfile. You can use EAS_NO_FROZEN_LOCKFILE=1 to disable it.`
     );
   }
 
