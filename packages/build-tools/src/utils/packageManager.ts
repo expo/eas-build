@@ -36,44 +36,26 @@ export async function isAtLeastNpm7Async(): Promise<boolean> {
   return semver.gte(version, '7.0.0');
 }
 
-const PackageJsonZ = z.object({
-  dependencies: z
-    .object({
-      expo: z.string().optional(),
-      'react-native': z.string().optional(),
-    })
-    .optional(),
-});
-
 export function shouldUseFrozenLockfile({
   env,
-  packageJson,
+  sdkVersion,
+  reactNativeVersion,
 }: {
   env: Record<string, string | undefined>;
-  packageJson: unknown;
+  sdkVersion: string | undefined;
+  reactNativeVersion: string | undefined;
 }): boolean {
   if (env.EAS_NO_FROZEN_LOCKFILE) {
     return false;
   }
 
-  const parsedPackageJson = PackageJsonZ.safeParse(packageJson);
-  if (!parsedPackageJson.success) {
-    // We don't know what the dependencies are,
-    // so we default to using frozen lockfile.
-    return true;
-  }
-
-  const dependencies = parsedPackageJson.data.dependencies;
-
-  const sdkVersion = semver.coerce(dependencies?.expo)?.version;
-  if (sdkVersion && semver.lt(sdkVersion, '52.0.0')) {
-    // Before SDK 52 we could not have used frozen lockfile.
+  if (sdkVersion && semver.lt(sdkVersion, '53.0.0')) {
+    // Before SDK 53 we could not have used frozen lockfile.
     return false;
   }
 
-  const reactNativeVersion = semver.coerce(dependencies?.['react-native'])?.version;
-  if (reactNativeVersion && semver.lt(reactNativeVersion, '0.76')) {
-    // Before react-native 0.76 we could not have used frozen lockfile.
+  if (reactNativeVersion && semver.lt(reactNativeVersion, '0.79')) {
+    // Before react-native 0.79 we could not have used frozen lockfile.
     return false;
   }
 
@@ -81,4 +63,31 @@ export function shouldUseFrozenLockfile({
   // so we can try to use frozen lockfile, or the versions are
   // new enough that we do want to use it.
   return true;
+}
+
+const PackageJsonZ = z.object({
+  dependencies: z.record(z.string(), z.string()).optional(),
+  devDependencies: z.record(z.string(), z.string()).optional(),
+});
+
+export function getPackageVersionFromPackageJson({
+  packageJson,
+  packageName,
+}: {
+  packageJson: unknown;
+  packageName: string;
+}): string | undefined {
+  const parsedPackageJson = PackageJsonZ.safeParse(packageJson);
+  if (!parsedPackageJson.success) {
+    return undefined;
+  }
+
+  const version =
+    parsedPackageJson.data.dependencies?.[packageName] ??
+    parsedPackageJson.data.devDependencies?.[packageName];
+  if (!version) {
+    return undefined;
+  }
+
+  return semver.coerce(version)?.version;
 }

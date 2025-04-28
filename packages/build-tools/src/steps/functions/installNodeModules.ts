@@ -5,6 +5,7 @@ import { BuildStepContext } from '@expo/steps/dist_esm/BuildStepContext';
 
 import {
   findPackagerRootDir,
+  getPackageVersionFromPackageJson,
   resolvePackageManager,
   shouldUseFrozenLockfile,
 } from '../../utils/packageManager';
@@ -49,12 +50,30 @@ export async function installNodeModules(
     );
   }
 
+  const expoVersion =
+    stepCtx.global.staticContext.metadata?.sdkVersion ??
+    getPackageVersionFromPackageJson({
+      packageJson,
+      packageName: 'expo',
+    });
+
+  const reactNativeVersion =
+    stepCtx.global.staticContext.metadata?.reactNativeVersion ??
+    getPackageVersionFromPackageJson({
+      packageJson,
+      packageName: 'react-native',
+    });
+
   const { spawnPromise } = await installDependenciesAsync({
     packageManager,
     env,
     logger: stepCtx.logger,
     cwd: packagerRunDir,
-    useFrozenLockfile: shouldUseFrozenLockfile({ packageJson, env }),
+    useFrozenLockfile: shouldUseFrozenLockfile({
+      env,
+      sdkVersion: expoVersion,
+      reactNativeVersion,
+    }),
   });
   await spawnPromise;
 }

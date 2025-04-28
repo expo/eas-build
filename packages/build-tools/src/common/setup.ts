@@ -12,7 +12,11 @@ import { BuildContext } from '../context';
 import { deleteXcodeEnvLocalIfExistsAsync } from '../ios/xcodeEnv';
 import { Hook, runHookIfPresent } from '../utils/hooks';
 import { setUpNpmrcAsync } from '../utils/npmrc';
-import { shouldUseFrozenLockfile, isAtLeastNpm7Async } from '../utils/packageManager';
+import {
+  shouldUseFrozenLockfile,
+  isAtLeastNpm7Async,
+  getPackageVersionFromPackageJson,
+} from '../utils/packageManager';
 import { readPackageJson } from '../utils/project';
 import { getParentAndDescendantProcessPidsAsync } from '../utils/processes';
 
@@ -56,8 +60,26 @@ export async function setupAsync<TJob extends BuildJob>(ctx: BuildContext<TJob>)
   });
 
   await ctx.runBuildPhase(BuildPhase.INSTALL_DEPENDENCIES, async () => {
+    const expoVersion =
+      ctx.metadata?.sdkVersion ??
+      getPackageVersionFromPackageJson({
+        packageJson,
+        packageName: 'expo',
+      });
+
+    const reactNativeVersion =
+      ctx.metadata?.reactNativeVersion ??
+      getPackageVersionFromPackageJson({
+        packageJson,
+        packageName: 'react-native',
+      });
+
     await runInstallDependenciesAsync(ctx, {
-      useFrozenLockfile: shouldUseFrozenLockfile({ packageJson, env: ctx.env }),
+      useFrozenLockfile: shouldUseFrozenLockfile({
+        env: ctx.env,
+        sdkVersion: expoVersion,
+        reactNativeVersion,
+      }),
     });
   });
 
