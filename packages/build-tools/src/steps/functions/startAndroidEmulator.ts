@@ -10,7 +10,6 @@ import {
   spawnAsync,
 } from '@expo/steps';
 import spawn, { SpawnPromise, SpawnResult } from '@expo/turtle-spawn';
-import { v4 as uuidv4 } from 'uuid';
 
 import { retryAsync } from '../../utils/retry';
 
@@ -79,15 +78,12 @@ export function createStartAndroidEmulatorBuildFunction(): BuildFunction {
       avdManager.child.stdin?.end();
       await avdManager;
 
-      const qemuPropId = uuidv4();
-
       logger.info('Starting emulator device');
-      const { emulatorPromise } = await startAndroidSimulator({ deviceName, qemuPropId, env });
+      const { emulatorPromise } = await startAndroidSimulator({ deviceName, env });
 
       logger.info('Waiting for emulator to become ready');
       const { serialId } = await ensureEmulatorIsReadyAsync({
         deviceName,
-        qemuPropId,
         env,
         logger,
       });
@@ -145,15 +141,12 @@ export function createStartAndroidEmulatorBuildFunction(): BuildFunction {
             await fs.writeFile(file, updatedTxtFile);
           }
 
-          const qemuPropId = uuidv4();
-
           logger.info('Starting emulator device');
-          await startAndroidSimulator({ deviceName: cloneIdentifier, qemuPropId, env });
+          await startAndroidSimulator({ deviceName: cloneIdentifier, env });
 
           logger.info('Waiting for emulator to become ready');
           await ensureEmulatorIsReadyAsync({
             deviceName: cloneIdentifier,
-            qemuPropId,
             env,
             logger,
           });
@@ -167,11 +160,9 @@ export function createStartAndroidEmulatorBuildFunction(): BuildFunction {
 
 async function startAndroidSimulator({
   deviceName,
-  qemuPropId,
   env,
 }: {
   deviceName: string;
-  qemuPropId: string;
   env: BuildStepEnv;
 }): Promise<{ emulatorPromise: SpawnPromise<SpawnResult> }> {
   const emulatorPromise = spawn(
@@ -186,8 +177,6 @@ async function startAndroidSimulator({
       '-no-snapshot-save',
       '-avd',
       deviceName,
-      '-prop',
-      `qemu.uuid=${qemuPropId}`,
     ],
     {
       detached: true,
@@ -207,10 +196,10 @@ async function startAndroidSimulator({
 }
 
 async function getEmulatorSerialId({
-  qemuPropId,
+  deviceName,
   env,
 }: {
-  qemuPropId: string;
+  deviceName: string;
   env: BuildStepEnv;
 }): Promise<string | null> {
   const adbDevices = await spawn('adb', ['devices'], { mode: PipeMode.COMBINED, env });
@@ -225,11 +214,15 @@ async function getEmulatorSerialId({
     }
 
     const [, serialId] = matches;
-    const getProp = await spawn('adb', ['-s', serialId, 'shell', 'getprop', 'qemu.uuid'], {
+    // Previously we were using `qemu.uuid` to identify the emulator,
+    // but this does not work for newer emulators, because there is
+    // a limit on properties and custom properties get ignored.
+    // See https://stackoverflow.com/questions/2214377/how-to-get-serial-number-or-id-of-android-emulator-after-it-runs#comment98259121_42038655
+    const adbEmuAvdName = await spawn('adb', ['-s', serialId, 'emu', 'avd', 'name'], {
       mode: PipeMode.COMBINED,
       env,
     });
-    if (getProp.stdout.startsWith(qemuPropId)) {
+    if (adbEmuAvdName.stdout.replace(/\r\n/g, '\n').split('\n')[0] === deviceName) {
       return serialId;
     }
   }
@@ -239,18 +232,16 @@ async function getEmulatorSerialId({
 
 async function ensureEmulatorIsReadyAsync({
   deviceName,
-  qemuPropId,
   env,
   logger,
 }: {
   deviceName: string;
-  qemuPropId: string;
   env: BuildStepEnv;
   logger: bunyan;
 }): Promise<{ serialId: string }> {
   const serialId = await retryAsync(
     async () => {
-      const serialId = await getEmulatorSerialId({ qemuPropId, env });
+      const serialId = await getEmulatorSerialId({ deviceName, env });
       assert(
         serialId,
         `Failed to configure emulator (${deviceName}): emulator with required ID not found.`
