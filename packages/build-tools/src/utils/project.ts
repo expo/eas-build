@@ -8,7 +8,7 @@ import { findPackagerRootDir, PackageManager } from '../utils/packageManager';
 /**
  * check if .yarnrc.yml exists in the project dir or in the workspace root dir
  */
-export async function isUsingYarn2(projectDir: string): Promise<boolean> {
+export async function isUsingModernYarnVersion(projectDir: string): Promise<boolean> {
   const yarnrcPath = path.join(projectDir, '.yarnrc.yml');
   const yarnrcRootPath = path.join(findPackagerRootDir(projectDir), '.yarnrc.yml');
   return (await fs.pathExists(yarnrcPath)) || (await fs.pathExists(yarnrcRootPath));

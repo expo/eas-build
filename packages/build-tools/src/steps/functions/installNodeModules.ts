@@ -2,14 +2,15 @@ import path from 'path';
 
 import { BuildFunction, BuildStepEnv } from '@expo/steps';
 import { BuildStepContext } from '@expo/steps/dist_esm/BuildStepContext';
-import spawn from '@expo/turtle-spawn';
 
 import {
   findPackagerRootDir,
-  PackageManager,
+  getPackageVersionFromPackageJson,
   resolvePackageManager,
+  shouldUseFrozenLockfile,
 } from '../../utils/packageManager';
-import { isUsingYarn2 } from '../../utils/project';
+import { installDependenciesAsync } from '../../common/installDependencies';
+import { readPackageJson } from '../../utils/project';
 
 export function createInstallNodeModulesBuildFunction(): BuildFunction {
   return new BuildFunction({
@@ -40,24 +41,39 @@ export async function installNodeModules(
     );
   }
 
-  let args = ['install'];
-  if (packageManager === PackageManager.PNPM) {
-    args = ['install', '--no-frozen-lockfile'];
-  } else if (packageManager === PackageManager.YARN) {
-    const isYarn2 = await isUsingYarn2(stepCtx.workingDirectory);
-    if (isYarn2) {
-      args = ['install', '--no-immutable', '--inline-builds'];
-    }
+  let packageJson = {};
+  try {
+    packageJson = readPackageJson(stepCtx.workingDirectory);
+  } catch {
+    logger.info(
+      `Failed to read package.json, defaulting to installing dependencies with a frozen lockfile. You can use EAS_NO_FROZEN_LOCKFILE=1 to disable it.`
+    );
   }
 
-  if (env['EAS_VERBOSE'] === '1') {
-    args = [...args, '--verbose'];
-  }
+  const expoVersion =
+    stepCtx.global.staticContext.metadata?.sdkVersion ??
+    getPackageVersionFromPackageJson({
+      packageJson,
+      packageName: 'expo',
+    });
 
-  logger.info(`Running "${packageManager} ${args.join(' ')}" in ${packagerRunDir} directory`);
-  await spawn(packageManager, args, {
-    cwd: packagerRunDir,
-    logger: stepCtx.logger,
+  const reactNativeVersion =
+    stepCtx.global.staticContext.metadata?.reactNativeVersion ??
+    getPackageVersionFromPackageJson({
+      packageJson,
+      packageName: 'react-native',
+    });
+
+  const { spawnPromise } = await installDependenciesAsync({
+    packageManager,
     env,
+    logger: stepCtx.logger,
+    cwd: packagerRunDir,
+    useFrozenLockfile: shouldUseFrozenLockfile({
+      env,
+      sdkVersion: expoVersion,
+      reactNativeVersion,
+    }),
   });
+  await spawnPromise;
 }

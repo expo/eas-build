@@ -12,7 +12,11 @@ import { BuildContext } from '../context';
 import { deleteXcodeEnvLocalIfExistsAsync } from '../ios/xcodeEnv';
 import { Hook, runHookIfPresent } from '../utils/hooks';
 import { setUpNpmrcAsync } from '../utils/npmrc';
-import { isAtLeastNpm7Async } from '../utils/packageManager';
+import {
+  shouldUseFrozenLockfile,
+  isAtLeastNpm7Async,
+  getPackageVersionFromPackageJson,
+} from '../utils/packageManager';
 import { readPackageJson } from '../utils/project';
 import { getParentAndDescendantProcessPidsAsync } from '../utils/processes';
 
@@ -56,7 +60,27 @@ export async function setupAsync<TJob extends BuildJob>(ctx: BuildContext<TJob>)
   });
 
   await ctx.runBuildPhase(BuildPhase.INSTALL_DEPENDENCIES, async () => {
-    await runInstallDependenciesAsync(ctx);
+    const expoVersion =
+      ctx.metadata?.sdkVersion ??
+      getPackageVersionFromPackageJson({
+        packageJson,
+        packageName: 'expo',
+      });
+
+    const reactNativeVersion =
+      ctx.metadata?.reactNativeVersion ??
+      getPackageVersionFromPackageJson({
+        packageJson,
+        packageName: 'react-native',
+      });
+
+    await runInstallDependenciesAsync(ctx, {
+      useFrozenLockfile: shouldUseFrozenLockfile({
+        env: ctx.env,
+        sdkVersion: expoVersion,
+        reactNativeVersion,
+      }),
+    });
   });
 
   await ctx.runBuildPhase(BuildPhase.READ_APP_CONFIG, async () => {
@@ -143,14 +167,21 @@ async function runExpoDoctor<TJob extends Job>(ctx: BuildContext<TJob>): Promise
 }
 
 async function runInstallDependenciesAsync<TJob extends Job>(
-  ctx: BuildContext<TJob>
+  ctx: BuildContext<TJob>,
+  {
+    useFrozenLockfile,
+  }: {
+    useFrozenLockfile: boolean;
+  }
 ): Promise<void> {
   let warnTimeout: NodeJS.Timeout | undefined;
   let killTimeout: NodeJS.Timeout | undefined;
   let killTimedOut: boolean = false;
   try {
     const installDependenciesSpawnPromise = (
-      await installDependenciesAsync(ctx, {
+      await installDependenciesAsync({
+        packageManager: ctx.packageManager,
+        env: ctx.env,
         logger: ctx.logger,
         infoCallbackFn: () => {
           if (warnTimeout) {
@@ -161,6 +192,7 @@ async function runInstallDependenciesAsync<TJob extends Job>(
           }
         },
         cwd: resolvePackagerDir(ctx),
+        useFrozenLockfile,
       })
     ).spawnPromise;
 

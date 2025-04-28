@@ -5,31 +5,58 @@ import spawn, { SpawnPromise, SpawnResult, SpawnOptions } from '@expo/turtle-spa
 
 import { BuildContext } from '../context';
 import { PackageManager, findPackagerRootDir } from '../utils/packageManager';
-import { isUsingYarn2 } from '../utils/project';
+import { isUsingModernYarnVersion } from '../utils/project';
 
-export async function installDependenciesAsync<TJob extends Job>(
-  ctx: BuildContext<TJob>,
-  { logger, infoCallbackFn, cwd }: SpawnOptions
-): Promise<{ spawnPromise: SpawnPromise<SpawnResult> }> {
-  let args = ['install'];
-  if (ctx.packageManager === PackageManager.PNPM) {
-    args = ['install', '--no-frozen-lockfile'];
-  } else if (ctx.packageManager === PackageManager.YARN) {
-    const isYarn2 = await isUsingYarn2(ctx.getReactNativeProjectDirectory());
-    if (isYarn2) {
-      args = ['install', '--no-immutable', '--inline-builds'];
+export async function installDependenciesAsync({
+  packageManager,
+  env,
+  logger,
+  infoCallbackFn,
+  cwd,
+  useFrozenLockfile,
+}: {
+  packageManager: PackageManager;
+  env: Record<string, string | undefined>;
+  cwd: string;
+  logger: Exclude<SpawnOptions['logger'], undefined>;
+  infoCallbackFn?: SpawnOptions['infoCallbackFn'];
+  useFrozenLockfile: boolean;
+}): Promise<{ spawnPromise: SpawnPromise<SpawnResult> }> {
+  let args: string[];
+  switch (packageManager) {
+    case PackageManager.NPM: {
+      args = [useFrozenLockfile ? 'ci' : 'install'];
+      break;
     }
+    case PackageManager.PNPM: {
+      args = ['install', useFrozenLockfile ? '--frozen-lockfile' : '--no-frozen-lockfile'];
+      break;
+    }
+    case PackageManager.YARN: {
+      const isModernYarnVersion = await isUsingModernYarnVersion(cwd);
+      if (isModernYarnVersion) {
+        args = ['install', '--inline-builds', useFrozenLockfile ? '--immutable' : '--no-immutable'];
+      } else {
+        args = ['install', ...(useFrozenLockfile ? ['--frozen-lockfile'] : [])];
+      }
+      break;
+    }
+    case PackageManager.BUN:
+      args = ['install', ...(useFrozenLockfile ? ['--frozen-lockfile'] : [])];
+      break;
+    default:
+      throw new Error(`Unsupported package manager: ${packageManager}`);
   }
-  if (ctx.env['EAS_VERBOSE'] === '1') {
+  if (env['EAS_VERBOSE'] === '1') {
     args = [...args, '--verbose'];
   }
-  logger?.info(`Running "${ctx.packageManager} ${args.join(' ')}" in ${cwd} directory`);
+  logger.info(`Running "${packageManager} ${args.join(' ')}" in ${cwd} directory`);
   return {
-    spawnPromise: spawn(ctx.packageManager, args, {
+    spawnPromise: spawn(packageManager, args, {
       cwd,
       logger,
       infoCallbackFn,
-      env: ctx.env,
+      env,
     }),
   };
 }
