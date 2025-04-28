@@ -188,6 +188,9 @@ describe(getPackageVersionFromPackageJson, () => {
       'react-native',
       '0.79.0',
     ],
+    [null, 'react-native', undefined],
+    ['not-a-package-json', 'react-native', undefined],
+    [42, 'react-native', undefined],
   ] as const;
 
   for (const [packageJson, packageName, expectedVersion] of CASES) {
