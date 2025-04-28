@@ -3,7 +3,12 @@ import path from 'path';
 import { vol } from 'memfs';
 import fs from 'fs-extra';
 
-import { resolvePackageManager, findPackagerRootDir } from '../packageManager';
+import {
+  resolvePackageManager,
+  findPackagerRootDir,
+  getPackageVersionFromPackageJson,
+  shouldUseFrozenLockfile,
+} from '../packageManager';
 
 jest.mock('fs');
 
@@ -150,5 +155,74 @@ describe(findPackagerRootDir, () => {
 
     const rootDir = findPackagerRootDir('/repo/react-native-project');
     expect(rootDir).toBe('/repo/react-native-project');
+  });
+});
+
+describe(getPackageVersionFromPackageJson, () => {
+  const CASES = [
+    [
+      {
+        dependencies: {
+          'react-native': '0.79.0',
+        },
+      },
+      'react-native',
+      '0.79.0',
+    ],
+    [
+      {
+        dependencies: {
+          expo: '52.0.0',
+          'react-native': '0.79.0',
+        },
+      },
+      'expo',
+      '52.0.0',
+    ],
+    [
+      {
+        dependencies: {
+          'react-native': '~0.79.0',
+        },
+      },
+      'react-native',
+      '0.79.0',
+    ],
+  ] as const;
+
+  for (const [packageJson, packageName, expectedVersion] of CASES) {
+    it(`returns the version of the package ${packageName}`, () => {
+      expect(getPackageVersionFromPackageJson({ packageJson, packageName })).toBe(expectedVersion);
+    });
+  }
+});
+
+describe(shouldUseFrozenLockfile, () => {
+  it('works', () => {
+    expect(
+      shouldUseFrozenLockfile({
+        env: {},
+        sdkVersion: '52.0.0',
+        reactNativeVersion: '0.79.0',
+      })
+    ).toBe(false);
+
+    expect(
+      shouldUseFrozenLockfile({
+        env: {},
+        sdkVersion: '53.0.0',
+        reactNativeVersion: '0.79.0',
+      })
+    ).toBe(true);
+
+    expect(
+      shouldUseFrozenLockfile({
+        env: {
+          EAS_NO_FROZEN_LOCKFILE: '1',
+        },
+        sdkVersion: '53.0.0',
+        reactNativeVersion: '0.79.0',
+      })
+    ).toBe(false);
   });
 });

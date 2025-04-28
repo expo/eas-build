@@ -54,7 +54,7 @@ export function shouldUseFrozenLockfile({
     return false;
   }
 
-  if (reactNativeVersion && semver.lt(reactNativeVersion, '0.79')) {
+  if (reactNativeVersion && semver.lt(reactNativeVersion, '0.79.0')) {
     // Before react-native 0.79 we could not have used frozen lockfile.
     return false;
   }
