@@ -176,7 +176,7 @@ async function getArtifactSize(artifact: string): Promise<number | undefined> {
 
 // same as in
 // https://github.com/expo/eas-cli/blob/f0e3b648a1634266e7d723bd49a84866ab9b5801/packages/eas-cli/src/utils/files.ts#L33-L60
-function formatBytes(bytes: number): string {
+export function formatBytes(bytes: number): string {
   if (bytes === 0) {
     return `0`;
   }

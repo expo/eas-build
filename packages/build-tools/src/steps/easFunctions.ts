@@ -28,6 +28,7 @@ import { calculateEASUpdateRuntimeVersionFunction } from './functions/calculateE
 import { createRepackBuildFunction } from './functions/repack';
 import { eagerBundleBuildFunction } from './functions/eagerBundle';
 import { createSubmissionEntityFunction } from './functions/createSubmissionEntity';
+import { createDownloadBuildFunction } from './functions/downloadBuild';
 
 export function getEasFunctions(ctx: CustomBuildContext): BuildFunction[] {
   const functions = [
@@ -36,6 +37,7 @@ export function getEasFunctions(ctx: CustomBuildContext): BuildFunction[] {
     createSetUpNpmrcBuildFunction(),
     createInstallNodeModulesBuildFunction(),
     createPrebuildBuildFunction(),
+    createDownloadBuildFunction(),
 
     configureEASUpdateIfInstalledFunction(),
     injectAndroidCredentialsFunction(),
