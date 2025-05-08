@@ -6,7 +6,9 @@ import { Readable } from 'node:stream';
 import { createLogger } from '@expo/logger';
 import fetch, { Response } from 'node-fetch';
 
-import { downloadBuildAsync } from '../downloadBuild';
+import { createDownloadBuildFunction, downloadBuildAsync } from '../downloadBuild';
+import { createGlobalContextMock } from '../../../__tests__/utils/context';
+import { createMockLogger } from '../../../__tests__/utils/logger';
 
 // contains a 'TestApp.app/TestApp' file with 'i am executable' content
 const APP_TAR_GZ_BUFFER = Buffer.from(
@@ -73,5 +75,35 @@ describe('downloadBuild', () => {
         extensions: ['apk'],
       })
     ).rejects.toThrow('No .apk entries found in the archive.');
+  });
+});
+
+describe('createDownloadBuildFunction', () => {
+  it('should download a build', async () => {
+    const downloadBuild = createDownloadBuildFunction();
+    const logger = createMockLogger();
+
+    const buildStep = downloadBuild.createBuildStepFromFunctionCall(
+      createGlobalContextMock({
+        logger,
+        staticContextContent: {
+          expoApiServerURL: 'http://api.expo.test',
+        },
+      }),
+      {
+        callInputs: {
+          build_id: randomUUID(),
+          extensions: ['app'],
+        },
+      }
+    );
+
+    jest.mocked(fetch).mockResolvedValue({
+      ok: false,
+      text: () => Promise.resolve('Internal Server Error'),
+      status: 500,
+    } as unknown as Response);
+
+    await expect(buildStep.executeAsync()).rejects.toThrow('Internal Server Error');
   });
 });
