@@ -1,4 +1,5 @@
 import fs from 'fs-extra';
+import { vol } from 'memfs';
 
 import { getFingerprint, getCommonName } from '../distributionCertificate';
 
@@ -25,6 +26,7 @@ describe('distributionCertificate module', () => {
   });
   describe(getCommonName, () => {
     it('returns cert common name', async () => {
+      vol.fromNestedJSON({ '/tmp': {} });
       const commonName = getCommonName({
         dataBase64: distributionCertificate.dataBase64,
         password: distributionCertificate.password,
