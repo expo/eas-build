@@ -13,6 +13,10 @@ const mockLogger = createLogger({ name: 'mock-logger' });
 
 jest.setTimeout(60 * 1000);
 
+// Those are in fact "real" tests in that they really execute the `fastlane` commands.
+// We need the JS code to modify the file system, so we need to mock it.
+jest.unmock('fs');
+
 describe('Keychain class', () => {
   describe('ensureCertificateImported method', () => {
     let keychain: Keychain;
