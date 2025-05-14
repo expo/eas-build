@@ -82,7 +82,9 @@ export async function downloadBuildAsync({
   expoToken: string | null;
   extensions: string[];
 }): Promise<{ artifactPath: string }> {
-  const tempDirectory = await fs.promises.mkdtemp(os.tmpdir());
+  const downloadDestinationDirectory = await fs.promises.mkdtemp(
+    path.join(os.tmpdir(), 'download_build-downloaded-')
+  );
 
   const response = await retryOnDNSFailure(fetch)(
     new URL(`/v2/artifacts/eas/${buildId}`, expoApiServerURL),
@@ -101,7 +103,7 @@ export async function downloadBuildAsync({
   const archiveFilename = path
     .basename(new URL(response.url).pathname)
     .replace(/([^a-z0-9.-]+)/gi, '_');
-  const archivePath = path.join(tempDirectory, archiveFilename);
+  const archivePath = path.join(downloadDestinationDirectory, archiveFilename);
 
   await streamPipeline(response.body, fs.createWriteStream(archivePath));
 
@@ -116,7 +118,9 @@ export async function downloadBuildAsync({
     return { artifactPath: archivePath };
   }
 
-  const extractionDirectory = await fs.promises.mkdtemp(os.tmpdir());
+  const extractionDirectory = await fs.promises.mkdtemp(
+    path.join(os.tmpdir(), 'download_build-extracted-')
+  );
   await decompressTarAsync({
     archivePath,
     destinationDirectory: extractionDirectory,
