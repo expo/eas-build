@@ -195,6 +195,8 @@ describe(StepsConfigParser, () => {
               },
             ],
             if: '${ always() }',
+            'no-logs-warn-timeout-minutes': 5,
+            'no-logs-kill-timeout-minutes': 10,
           },
           {
             id: 'step4',
@@ -322,6 +324,8 @@ describe(StepsConfigParser, () => {
       expect(output3.id).toBe('my_optional_output_without_required');
       expect(output3.required).toBe(true);
       expect(step3.ifCondition).toBe('${ always() }');
+      expect(step3.noLogsWarnTimeoutMinutes).toBe(5);
+      expect(step3.noLogsKillTimeoutMinutes).toBe(10);
 
       const step4 = result.buildSteps[3];
       expect(step4.id).toEqual('step4');
@@ -370,6 +374,8 @@ describe(StepsConfigParser, () => {
       expect(input4.required).toBe(true);
       expect(step4.outputById).toStrictEqual({});
       expect(step4.ifCondition).toBe('${ ctx.job.platform } == "android"');
+      expect(step4.noLogsWarnTimeoutMinutes).toBeUndefined();
+      expect(step4.noLogsKillTimeoutMinutes).toBeUndefined();
     });
   });
 });
