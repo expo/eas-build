@@ -358,6 +358,9 @@ export class BuildStep extends BuildStepOutputAccessor {
       env: this.getScriptEnv(),
       fromJSON: (json: string) => JSON.parse(json),
       toJSON: (value: unknown) => JSON.stringify(value),
+      contains: (value, substring) => value.includes(substring),
+      startsWith: (value, prefix) => value.startsWith(prefix),
+      endsWith: (value, suffix) => value.endsWith(suffix),
     };
   }
   private async executeCommandAsync(): Promise<void> {
