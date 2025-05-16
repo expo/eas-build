@@ -218,6 +218,9 @@ export type DynamicInterpolationContext = {
   never: () => boolean;
   fromJSON: (value: string) => unknown;
   toJSON: (value: unknown) => string;
+  contains: (value: string, substring: string) => boolean;
+  startsWith: (value: string, prefix: string) => boolean;
+  endsWith: (value: string, suffix: string) => boolean;
 };
 
 export type WorkflowInterpolationContext = StaticWorkflowInterpolationContext &

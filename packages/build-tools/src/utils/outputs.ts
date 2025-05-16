@@ -26,6 +26,9 @@ export async function uploadJobOutputsToWwwAsync(
       failure: () => ctx.hasAnyPreviousStepFailed,
       fromJSON: (json: string) => JSON.parse(json),
       toJSON: (value: unknown) => JSON.stringify(value),
+      contains: (value, substring) => value.includes(substring),
+      startsWith: (value, prefix) => value.startsWith(prefix),
+      endsWith: (value, suffix) => value.endsWith(suffix),
     };
     logger.debug({ dynamicValues: interpolationContext }, 'Using dynamic values');
 
