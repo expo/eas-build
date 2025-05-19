@@ -209,6 +209,7 @@ export const StaticWorkflowInterpolationContextZ = z.object({
     .object({
       id: z.string(),
       name: z.string(),
+      filename: z.string(),
       url: z.string().url(),
     })
     .passthrough(),
