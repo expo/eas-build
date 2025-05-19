@@ -95,6 +95,9 @@ const interpolationContext: JobInterpolationContext = {
   failure: () => context.hasAnyPreviousStepFailed,
   fromJSON: (json: string) => JSON.parse(json),
   toJSON: (value: unknown) => JSON.stringify(value),
+  contains: (value: string, substring: string) => value.includes(substring),
+  startsWith: (value: string, prefix: string) => value.startsWith(prefix),
+  endsWith: (value: string, suffix: string) => value.endsWith(suffix),
 };
 
 describe(collectJobOutputs, () => {

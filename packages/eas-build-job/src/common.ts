@@ -205,6 +205,14 @@ export const StaticWorkflowInterpolationContextZ = z.object({
     // We need to .optional() to support jobs that are not triggered by a GitHub event.
     .optional(),
   env: z.record(z.string()),
+  workflow: z
+    .object({
+      id: z.string(),
+      name: z.string(),
+      filename: z.string(),
+      url: z.string().url(),
+    })
+    .passthrough(),
 });
 
 export type StaticWorkflowInterpolationContext = z.infer<
@@ -218,6 +226,9 @@ export type DynamicInterpolationContext = {
   never: () => boolean;
   fromJSON: (value: string) => unknown;
   toJSON: (value: unknown) => string;
+  contains: (value: string, substring: string) => boolean;
+  startsWith: (value: string, prefix: string) => boolean;
+  endsWith: (value: string, suffix: string) => boolean;
 };
 
 export type WorkflowInterpolationContext = StaticWorkflowInterpolationContext &
