@@ -280,6 +280,12 @@ describe('Android.JobSchema', () => {
           ref_type: 'branch',
         },
         env: { EXPO_TOKEN: randomUUID() },
+        workflow: {
+          id: randomUUID(),
+          name: 'Build app',
+          filename: 'build.yml',
+          url: `https://expo.dev/workflows/${randomUUID()}`,
+        },
       },
     };
 
