@@ -14,6 +14,7 @@ export namespace SubmissionConfig {
         ascAppIdentifier: z.string(),
         isVerboseFastlaneEnabled: z.boolean().optional(),
         groups: z.array(z.string()).optional(),
+        changelog: z.string().optional(),
       })
       .and(
         z.union([
@@ -61,6 +62,7 @@ export namespace SubmissionConfig {
         changesNotSentForReview: z.boolean().default(false),
         googleServiceAccountKeyJson: z.string(),
         isVerboseFastlaneEnabled: z.boolean().optional(),
+        changelog: z.string().optional(),
       })
       .and(
         z.union([
