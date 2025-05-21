@@ -1,12 +1,14 @@
 import path from 'path';
 
-import spawn from '@expo/turtle-spawn';
-import fs from 'fs-extra';
+import downloadFile from '@expo/downloader';
 import { ArchiveSource, ArchiveSourceType, Job } from '@expo/eas-build-job';
 import { bunyan } from '@expo/logger';
-import downloadFile from '@expo/downloader';
+import spawn from '@expo/turtle-spawn';
+import fs from 'fs-extra';
+import { Response } from 'node-fetch';
 
 import { BuildContext } from '../context';
+import { turtleFetch } from '../utils/turtleFetch';
 
 export async function prepareProjectSourcesAsync<TJob extends Job>(
   ctx: BuildContext<TJob>,
@@ -23,7 +25,10 @@ export async function prepareProjectSourcesAsync<TJob extends Job>(
       destinationDirectory
     );
   } else if (ctx.job.projectArchive.type === ArchiveSourceType.GIT) {
+    const { repositoryUrl: archiveRepositoryUrl } = ctx.job.projectArchive;
+    const repositoryUrl = archiveRepositoryUrl ?? (await generateGithubUrlAsync(ctx));
     await shallowCloneRepositoryAsync({
+      repositoryUrl,
       logger: ctx.logger,
       archiveSource: ctx.job.projectArchive,
       destinationDirectory,
@@ -31,16 +36,64 @@ export async function prepareProjectSourcesAsync<TJob extends Job>(
   }
 }
 
+async function generateGithubUrlAsync<TJob extends Job>(ctx: BuildContext<TJob>): Promise<string> {
+  const logger = ctx.logger;
+  const expoApiV2BaseUrl = ctx.env.__API_SERVER_URL;
+
+  const accessToken = ctx.env.EXPO_TOKEN;
+
+  const body = {
+    type: 'build',
+    buildId: ctx.env.EAS_BUILD_ID,
+  };
+
+  if (!accessToken) {
+    throw new Error('Failed to generate GitHub URL params, no access token');
+  }
+
+  let response: Response;
+  try {
+    response = await turtleFetch(
+      new URL(
+        '--/api/v2/github/scoped-generate-github-repository-url',
+        expoApiV2BaseUrl
+      ).toString(),
+      'POST',
+      {
+        json: body,
+        headers: {
+          Authorization: `Bearer ${accessToken}`,
+        },
+        timeout: 20000,
+        shouldThrowOnNotOk: false,
+        logger,
+        retries: 2,
+      }
+    );
+  } catch {
+    throw new Error('Failed to generate GitHub URL params, request failed');
+  }
+  if (response.status !== 200) {
+    throw new Error(
+      `Failed to generate GitHub URL params, status code: ${response.status} ${await response.text()}`
+    );
+  }
+
+  const responseJson = await response.json();
+  return responseJson.data.repositoryUrl;
+}
+
 async function shallowCloneRepositoryAsync({
+  repositoryUrl,
   logger,
   archiveSource,
   destinationDirectory,
 }: {
+  repositoryUrl: string;
   logger: bunyan;
   archiveSource: ArchiveSource & { type: ArchiveSourceType.GIT };
   destinationDirectory: string;
 }): Promise<void> {
-  const { repositoryUrl } = archiveSource;
   try {
     await spawn('git', ['init'], { cwd: destinationDirectory });
     await spawn('git', ['remote', 'add', 'origin', repositoryUrl], { cwd: destinationDirectory });
