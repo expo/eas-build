@@ -17,7 +17,10 @@ import IosCredentialsManager from '../utils/ios/credentials/manager';
 
 const pipeline = promisify(Stream.pipeline);
 
-export function createRepackBuildFunction(): BuildFunction {
+/**
+ * This function is legacy repacking for internal onboarding workflows.
+ */
+export function createLegacyRepackBuildFunction(): BuildFunction {
   return new BuildFunction({
     namespace: 'eas',
     id: '__download_and_repack_golden_development_client_archive',
