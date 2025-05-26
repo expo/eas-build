@@ -25,7 +25,7 @@ import { createInstallPodsBuildFunction } from './functions/installPods';
 import { createSendSlackMessageFunction } from './functions/sendSlackMessage';
 import { createResolveBuildConfigBuildFunction } from './functions/resolveBuildConfig';
 import { calculateEASUpdateRuntimeVersionFunction } from './functions/calculateEASUpdateRuntimeVersion';
-import { createRepackBuildFunction } from './functions/repack';
+import { createLegacyRepackBuildFunction } from './functions/repackLegacy';
 import { eagerBundleBuildFunction } from './functions/eagerBundle';
 import { createSubmissionEntityFunction } from './functions/createSubmissionEntity';
 import { createDownloadBuildFunction } from './functions/downloadBuild';
@@ -58,7 +58,7 @@ export function getEasFunctions(ctx: CustomBuildContext): BuildFunction[] {
 
     calculateEASUpdateRuntimeVersionFunction(),
 
-    createRepackBuildFunction(),
+    createLegacyRepackBuildFunction(),
 
     createSubmissionEntityFunction(),
   ];
