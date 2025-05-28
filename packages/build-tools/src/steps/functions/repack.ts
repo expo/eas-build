@@ -36,6 +36,11 @@ export function createRepackBuildFunction(): BuildFunction {
         required: true,
       }),
       BuildStepInput.createProvider({
+        id: 'platform',
+        required: false,
+        allowedValueTypeName: BuildStepInputValueTypeName.STRING,
+      }),
+      BuildStepInput.createProvider({
         id: 'output_path',
         allowedValueTypeName: BuildStepInputValueTypeName.STRING,
         required: false,
@@ -60,6 +65,15 @@ export function createRepackBuildFunction(): BuildFunction {
     fn: async (stepsCtx, { inputs, outputs, env }) => {
       const projectRoot = stepsCtx.workingDirectory;
       const verbose = stepsCtx.global.env['EAS_VERBOSE'] === '1';
+
+      const platform =
+        (inputs.platform.value as Platform) ?? stepsCtx.global.staticContext.job.platform;
+      if (![Platform.ANDROID, Platform.IOS].includes(platform)) {
+        throw new Error(
+          `Unsupported platform: ${platform}. Platform must be "${Platform.ANDROID}" or "${Platform.IOS}"`
+        );
+      }
+
       const repackLogger = createBunyanLoggerAdapter(stepsCtx.logger);
       const repackSpawnAsync = createSpawnAsyncStepAdapter(verbose, stepsCtx.logger);
 
@@ -67,7 +81,7 @@ export function createRepackBuildFunction(): BuildFunction {
       const workingDirectory =
         (inputs.working_directory.value as string) ?? path.join(tmpDir, 'working-directory');
       await fs.promises.mkdir(workingDirectory, { recursive: true });
-      stepsCtx.logger.info(`Created temporary directory: ${tmpDir}`);
+      stepsCtx.logger.info(`Created temporary workingDirectory: ${workingDirectory}`);
 
       const sourceAppPath = inputs.source_app.value as string;
       const outputPath =
@@ -75,7 +89,7 @@ export function createRepackBuildFunction(): BuildFunction {
         createDefaultOutputPath({ tmpDir, job: stepsCtx.global.staticContext.job });
 
       stepsCtx.logger.info('Repacking the app...');
-      if (stepsCtx.global.staticContext.job.platform === Platform.IOS) {
+      if (platform === Platform.IOS) {
         await repackAppIosAsync({
           platform: 'ios',
           projectRoot,
@@ -95,10 +109,10 @@ export function createRepackBuildFunction(): BuildFunction {
             ...env,
           },
         });
-      } else if (stepsCtx.global.staticContext.job.platform === Platform.ANDROID) {
+      } else if (platform === Platform.ANDROID) {
         await repackAppAndroidAsync({
           platform: 'android',
-          projectRoot: stepsCtx.workingDirectory,
+          projectRoot,
           sourceAppPath,
           outputPath,
           workingDirectory,
