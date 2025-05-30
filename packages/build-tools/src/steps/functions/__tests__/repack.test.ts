@@ -1,7 +1,11 @@
-import { type bunyan } from '@expo/logger';
-import { Platform, type Job } from '@expo/eas-build-job';
+import fs from 'node:fs';
 
-import { createBunyanLoggerAdapter, createDefaultOutputPath } from '../repack';
+import { type bunyan } from '@expo/logger';
+
+import { createGlobalContextMock } from '../../../__tests__/utils/context';
+import { createBunyanLoggerAdapter, createRepackBuildFunction } from '../repack';
+
+jest.mock('@expo/repack-app');
 
 describe(createBunyanLoggerAdapter, () => {
   it('should create a logger that calls the Bunyan logger methods', () => {
@@ -30,32 +34,53 @@ describe(createBunyanLoggerAdapter, () => {
   });
 });
 
-describe(createDefaultOutputPath, () => {
-  const tmpDir = '/tmp';
-
-  it('should return repacked.apk for android', () => {
-    const job = {
-      platform: Platform.ANDROID,
-    } as unknown as Job;
-    const outputPath = createDefaultOutputPath({ tmpDir, job });
-    expect(outputPath).toBe('/tmp/repacked.apk');
+describe(createRepackBuildFunction, () => {
+  afterEach(() => {
+    jest.restoreAllMocks();
   });
 
-  it('should return repacked.ipa for ios devices', () => {
-    const job = {
-      platform: Platform.IOS,
-      simulator: false,
-    } as unknown as Job;
-    const outputPath = createDefaultOutputPath({ tmpDir, job });
-    expect(outputPath).toBe('/tmp/repacked.ipa');
+  it('should set the output path for successful repack', async () => {
+    const repack = createRepackBuildFunction();
+    const repackStep = repack.createBuildStepFromFunctionCall(createGlobalContextMock({}), {
+      callInputs: {
+        platform: 'ios',
+        source_path: '/path/to/source_app',
+        output_path: '/path/to/output_app',
+      },
+    });
+
+    await repackStep.executeAsync();
+    expect(repackStep.outputById['output_path'].value).toBe('/path/to/output_app');
   });
 
-  it('should return repacked.app for ios simulators', () => {
-    const job = {
-      platform: Platform.IOS,
-      simulator: true,
-    } as unknown as Job;
-    const outputPath = createDefaultOutputPath({ tmpDir, job });
-    expect(outputPath).toBe('/tmp/repacked.app');
+  it('should throw for unsupported platforms', async () => {
+    const repack = createRepackBuildFunction();
+    const repackStep = repack.createBuildStepFromFunctionCall(createGlobalContextMock({}), {
+      callInputs: {
+        platform: 'unknown',
+        source_path: '/path/to/source_app',
+      },
+    });
+
+    await expect(repackStep.executeAsync()).rejects.toThrow(/Unsupported platform/);
+  });
+
+  it('should cleanup the repack working directory', async () => {
+    const repack = createRepackBuildFunction();
+    const repackStep = repack.createBuildStepFromFunctionCall(createGlobalContextMock({}), {
+      callInputs: {
+        platform: 'ios',
+        source_path: '/path/to/source_app',
+      },
+    });
+
+    const rmSpy = jest.spyOn(fs.promises, 'rm').mockResolvedValue();
+
+    await repackStep.executeAsync();
+
+    expect(rmSpy).toHaveBeenCalledWith(expect.stringMatching(/repack-.*\/working-directory/), {
+      force: true,
+      recursive: true,
+    });
   });
 });

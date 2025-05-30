@@ -2,7 +2,7 @@ import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
 
-import { type Job, Platform } from '@expo/eas-build-job';
+import { Platform } from '@expo/eas-build-job';
 import { type bunyan } from '@expo/logger';
 import {
   BuildFunction,
@@ -20,9 +20,6 @@ import {
   type SpawnProcessPromise,
   type SpawnProcessResult,
 } from '@expo/repack-app';
-import { v4 as uuidv4 } from 'uuid';
-
-import { pathExistsAsync } from '../../utils/files';
 
 export function createRepackBuildFunction(): BuildFunction {
   return new BuildFunction({
@@ -31,7 +28,7 @@ export function createRepackBuildFunction(): BuildFunction {
     name: 'Repack app',
     inputProviders: [
       BuildStepInput.createProvider({
-        id: 'source_app',
+        id: 'source_path',
         allowedValueTypeName: BuildStepInputValueTypeName.STRING,
         required: true,
       }),
@@ -42,11 +39,6 @@ export function createRepackBuildFunction(): BuildFunction {
       }),
       BuildStepInput.createProvider({
         id: 'output_path',
-        allowedValueTypeName: BuildStepInputValueTypeName.STRING,
-        required: false,
-      }),
-      BuildStepInput.createProvider({
-        id: 'working_directory',
         allowedValueTypeName: BuildStepInputValueTypeName.STRING,
         required: false,
       }),
@@ -77,61 +69,60 @@ export function createRepackBuildFunction(): BuildFunction {
       const repackLogger = createBunyanLoggerAdapter(stepsCtx.logger);
       const repackSpawnAsync = createSpawnAsyncStepAdapter(verbose, stepsCtx.logger);
 
-      const tmpDir = path.join(os.tmpdir(), `repack-${uuidv4()}`);
-      const workingDirectory =
-        (inputs.working_directory.value as string) ?? path.join(tmpDir, 'working-directory');
-      await fs.promises.mkdir(workingDirectory, { recursive: true });
-      stepsCtx.logger.info(`Created temporary workingDirectory: ${workingDirectory}`);
+      const tmpDir = await fs.promises.mkdtemp(path.join(os.tmpdir(), `repack-`));
+      const workingDirectory = path.join(tmpDir, 'working-directory');
+      try {
+        await fs.promises.mkdir(workingDirectory, { recursive: true });
+        stepsCtx.logger.info(`Created temporary workingDirectory: ${workingDirectory}`);
 
-      const sourceAppPath = inputs.source_app.value as string;
-      const outputPath =
-        (inputs.output_path.value as string) ??
-        createDefaultOutputPath({ tmpDir, job: stepsCtx.global.staticContext.job });
+        const sourceAppPath = inputs.source_path.value as string;
+        const outputPath =
+          (inputs.output_path.value as string) ??
+          path.join(tmpDir, `repacked${path.extname(sourceAppPath)}`);
 
-      stepsCtx.logger.info('Repacking the app...');
-      if (platform === Platform.IOS) {
-        await repackAppIosAsync({
-          platform: 'ios',
-          projectRoot,
-          sourceAppPath,
-          outputPath,
-          workingDirectory,
-          // TODO: add iosSigningOptions
-          logger: repackLogger,
-          spawnAsync: repackSpawnAsync,
-          verbose,
-          env: {
-            FASTLANE_DISABLE_COLORS: '1',
-            FASTLANE_SKIP_UPDATE_CHECK: '1',
-            SKIP_SLOW_FASTLANE_WARNING: 'true',
-            FASTLANE_HIDE_TIMESTAMP: 'true',
-            LC_ALL: 'en_US.UTF-8',
-            ...env,
-          },
-        });
-      } else if (platform === Platform.ANDROID) {
-        await repackAppAndroidAsync({
-          platform: 'android',
-          projectRoot,
-          sourceAppPath,
-          outputPath,
-          workingDirectory,
-          // TODO: add androidSigningOptions
-          logger: repackLogger,
-          spawnAsync: repackSpawnAsync,
-          verbose,
-          env,
-        });
-      } else {
-        throw new Error('Unsupported platform');
+        stepsCtx.logger.info('Repacking the app...');
+        if (platform === Platform.IOS) {
+          await repackAppIosAsync({
+            platform: 'ios',
+            projectRoot,
+            sourceAppPath,
+            outputPath,
+            workingDirectory,
+            // TODO: add iosSigningOptions
+            logger: repackLogger,
+            spawnAsync: repackSpawnAsync,
+            verbose,
+            env: {
+              FASTLANE_DISABLE_COLORS: '1',
+              FASTLANE_SKIP_UPDATE_CHECK: '1',
+              SKIP_SLOW_FASTLANE_WARNING: 'true',
+              FASTLANE_HIDE_TIMESTAMP: 'true',
+              LC_ALL: 'en_US.UTF-8',
+              ...env,
+            },
+          });
+        } else if (platform === Platform.ANDROID) {
+          await repackAppAndroidAsync({
+            platform: 'android',
+            projectRoot,
+            sourceAppPath,
+            outputPath,
+            workingDirectory,
+            // TODO: add androidSigningOptions
+            logger: repackLogger,
+            spawnAsync: repackSpawnAsync,
+            verbose,
+            env,
+          });
+        } else {
+          throw new Error('Unsupported platform');
+        }
+
+        stepsCtx.logger.info(`Repacked the app to ${outputPath}`);
+        outputs.output_path.set(outputPath);
+      } finally {
+        await fs.promises.rm(workingDirectory, { force: true, recursive: true });
       }
-
-      if (!(await pathExistsAsync(outputPath))) {
-        throw new Error(`Failed to repack the app. ${outputPath} does not exist`);
-      }
-
-      stepsCtx.logger.info(`Repacked the app to ${outputPath}`);
-      outputs.output_path.set(outputPath);
     },
   });
 }
@@ -184,18 +175,4 @@ function createSpawnAsyncStepAdapter(verbose: boolean, logger: bunyan): SpawnPro
       ...(verbose ? { logger, stdio: 'pipe' } : { logger: undefined }),
     });
   };
-}
-
-/**
- * Creates a default output path for the repacked app.
- */
-export function createDefaultOutputPath({ tmpDir, job }: { tmpDir: string; job: Job }): string {
-  const basename = 'repacked';
-  let extname;
-  if (job.platform === Platform.ANDROID) {
-    extname = '.apk';
-  } else if (job.platform === Platform.IOS) {
-    extname = job.simulator ? '.app' : '.ipa';
-  }
-  return path.join(tmpDir, `${basename}${extname}`);
 }
