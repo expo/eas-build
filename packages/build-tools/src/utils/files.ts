@@ -40,17 +40,3 @@ export async function isFileTarGzAsync(path: string): Promise<boolean> {
   // Source: https://en.wikipedia.org/wiki/Gzip#File_format
   return buffer[0] === 0x1f && buffer[1] === 0x8b && buffer[2] === 0x08;
 }
-
-/**
- * Checks if a file or directory exists at the given path.
- */
-export async function pathExistsAsync(filePath: string): Promise<boolean> {
-  let result;
-  try {
-    const stat = await fsPromises.stat(filePath);
-    result = stat.isFile() || stat.isDirectory();
-  } catch {
-    result = false;
-  }
-  return result;
-}

@@ -1,6 +1,6 @@
 import { vol } from 'memfs';
 
-import { decompressTarAsync, isFileTarGzAsync, pathExistsAsync } from '../files';
+import { decompressTarAsync, isFileTarGzAsync } from '../files';
 
 // contains a 'hello.txt' file with 'hello' content
 const HELLO_TAR_GZ_BUFFER = Buffer.from(
@@ -53,28 +53,5 @@ describe('decompressTarAsync', () => {
 
     expect(vol.readFileSync('test/README.md', 'utf8')).toBe('hello\n');
     expect(vol.readFileSync('test/apps/mobile/package.json', 'utf8')).toBe('{}\n');
-  });
-});
-
-describe('pathExistsAsync', () => {
-  afterEach(() => {
-    vol.reset();
-  });
-
-  it('should return true for an existing file', async () => {
-    vol.fromNestedJSON({
-      'test.txt': 'Hello, world!',
-      testdir: {
-        'file.txt': 'File in directory',
-      },
-    });
-
-    expect(await pathExistsAsync('test.txt')).toBe(true);
-    expect(await pathExistsAsync('testdir')).toBe(true);
-  });
-
-  it('should return false for a non-existing file', async () => {
-    expect(await pathExistsAsync('non-existing.txt')).toBe(false);
-    expect(await pathExistsAsync('non-existing-dir/')).toBe(false);
   });
 });
