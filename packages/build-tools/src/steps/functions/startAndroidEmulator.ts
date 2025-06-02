@@ -30,6 +30,11 @@ export function createStartAndroidEmulatorBuildFunction(): BuildFunction {
         allowedValueTypeName: BuildStepInputValueTypeName.STRING,
       }),
       BuildStepInput.createProvider({
+        id: 'device_template_id',
+        required: false,
+        allowedValueTypeName: BuildStepInputValueTypeName.STRING,
+      }),
+      BuildStepInput.createProvider({
         id: 'system_image_package',
         required: false,
         defaultValue: defaultSystemImagePackage,
@@ -45,6 +50,9 @@ export function createStartAndroidEmulatorBuildFunction(): BuildFunction {
     fn: async ({ logger }, { inputs, env }) => {
       const deviceName = `${inputs.device_name.value}`;
       const systemImagePackage = `${inputs.system_image_package.value}`;
+      // We can cast because allowedValueTypeName validated this is a string.
+      const deviceTemplateId = inputs.device_template_id.value as string | undefined;
+
       logger.info('Making sure system image is installed');
       await retryAsync(
         async () => {
@@ -65,7 +73,16 @@ export function createStartAndroidEmulatorBuildFunction(): BuildFunction {
       logger.info('Creating emulator device');
       const avdManager = spawn(
         'avdmanager',
-        ['create', 'avd', '--name', deviceName, '--package', systemImagePackage, '--force'],
+        [
+          'create',
+          'avd',
+          '--name',
+          deviceName,
+          '--package',
+          systemImagePackage,
+          '--force',
+          ...(deviceTemplateId ? ['--device', deviceTemplateId] : []),
+        ],
         {
           env,
           stdio: 'pipe',
