@@ -48,6 +48,15 @@ export function createStartAndroidEmulatorBuildFunction(): BuildFunction {
       }),
     ],
     fn: async ({ logger }, { inputs, env }) => {
+      try {
+        const availableDevices = await getAvailableEmulatorDevices({ env });
+        logger.info(`Available Android devices:\n- ${availableDevices.join(`\n- `)}`);
+      } catch (error) {
+        logger.info('Failed to list available Android devices.', error);
+      } finally {
+        logger.info('');
+      }
+
       const deviceName = `${inputs.device_name.value}`;
       const systemImagePackage = `${inputs.system_image_package.value}`;
       // We can cast because allowedValueTypeName validated this is a string.
@@ -299,4 +308,12 @@ async function ensureEmulatorIsReadyAsync({
   );
 
   return { serialId };
+}
+
+async function getAvailableEmulatorDevices({ env }: { env: BuildStepEnv }): Promise<string[]> {
+  const result = await spawn('avdmanager', ['list', 'device', '--compact', '--null'], {
+    env,
+    mode: PipeMode.COMBINED_AS_STDOUT,
+  });
+  return result.stdout.split('\0').filter((line) => line !== '');
 }
