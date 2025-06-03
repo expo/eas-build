@@ -30,6 +30,11 @@ export function createStartAndroidEmulatorBuildFunction(): BuildFunction {
         allowedValueTypeName: BuildStepInputValueTypeName.STRING,
       }),
       BuildStepInput.createProvider({
+        id: 'device_identifier',
+        required: false,
+        allowedValueTypeName: BuildStepInputValueTypeName.STRING,
+      }),
+      BuildStepInput.createProvider({
         id: 'system_image_package',
         required: false,
         defaultValue: defaultSystemImagePackage,
@@ -43,8 +48,20 @@ export function createStartAndroidEmulatorBuildFunction(): BuildFunction {
       }),
     ],
     fn: async ({ logger }, { inputs, env }) => {
+      try {
+        const availableDevices = await getAvailableEmulatorDevices({ env });
+        logger.info(`Available Android devices:\n- ${availableDevices.join(`\n- `)}`);
+      } catch (error) {
+        logger.info('Failed to list available Android devices.', error);
+      } finally {
+        logger.info('');
+      }
+
       const deviceName = `${inputs.device_name.value}`;
       const systemImagePackage = `${inputs.system_image_package.value}`;
+      // We can cast because allowedValueTypeName validated this is a string.
+      const deviceIdentifier = inputs.device_identifier.value as string | undefined;
+
       logger.info('Making sure system image is installed');
       await retryAsync(
         async () => {
@@ -65,7 +82,16 @@ export function createStartAndroidEmulatorBuildFunction(): BuildFunction {
       logger.info('Creating emulator device');
       const avdManager = spawn(
         'avdmanager',
-        ['create', 'avd', '--name', deviceName, '--package', systemImagePackage, '--force'],
+        [
+          'create',
+          'avd',
+          '--name',
+          deviceName,
+          '--package',
+          systemImagePackage,
+          '--force',
+          ...(deviceIdentifier ? ['--device', deviceIdentifier] : []),
+        ],
         {
           env,
           stdio: 'pipe',
@@ -282,4 +308,12 @@ async function ensureEmulatorIsReadyAsync({
   );
 
   return { serialId };
+}
+
+async function getAvailableEmulatorDevices({ env }: { env: BuildStepEnv }): Promise<string[]> {
+  const result = await spawn('avdmanager', ['list', 'device', '--compact', '--null'], {
+    env,
+    mode: PipeMode.COMBINED_AS_STDOUT,
+  });
+  return result.stdout.split('\0').filter((line) => line !== '');
 }
