@@ -30,7 +30,7 @@ export function createStartAndroidEmulatorBuildFunction(): BuildFunction {
         allowedValueTypeName: BuildStepInputValueTypeName.STRING,
       }),
       BuildStepInput.createProvider({
-        id: 'device_template_id',
+        id: 'device_identifier',
         required: false,
         allowedValueTypeName: BuildStepInputValueTypeName.STRING,
       }),
@@ -60,7 +60,7 @@ export function createStartAndroidEmulatorBuildFunction(): BuildFunction {
       const deviceName = `${inputs.device_name.value}`;
       const systemImagePackage = `${inputs.system_image_package.value}`;
       // We can cast because allowedValueTypeName validated this is a string.
-      const deviceTemplateId = inputs.device_template_id.value as string | undefined;
+      const deviceIdentifier = inputs.device_identifier.value as string | undefined;
 
       logger.info('Making sure system image is installed');
       await retryAsync(
@@ -90,7 +90,7 @@ export function createStartAndroidEmulatorBuildFunction(): BuildFunction {
           '--package',
           systemImagePackage,
           '--force',
-          ...(deviceTemplateId ? ['--device', deviceTemplateId] : []),
+          ...(deviceIdentifier ? ['--device', deviceIdentifier] : []),
         ],
         {
           env,
