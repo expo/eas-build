@@ -1,3 +1,4 @@
+import { randomUUID } from 'node:crypto';
 import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
@@ -20,6 +21,8 @@ import {
   type SpawnProcessPromise,
   type SpawnProcessResult,
 } from '@expo/repack-app';
+
+import { COMMON_FASTLANE_ENV } from '../../common/fastlane';
 
 export function createRepackBuildFunction(): BuildFunction {
   return new BuildFunction({
@@ -67,7 +70,7 @@ export function createRepackBuildFunction(): BuildFunction {
       }
 
       const repackLogger = createBunyanLoggerAdapter(stepsCtx.logger);
-      const repackSpawnAsync = createSpawnAsyncStepAdapter(verbose, stepsCtx.logger);
+      const repackSpawnAsync = createSpawnAsyncStepAdapter({ verbose, logger: stepsCtx.logger });
 
       const tmpDir = await fs.promises.mkdtemp(path.join(os.tmpdir(), `repack-`));
       const workingDirectory = path.join(tmpDir, 'working-directory');
@@ -80,41 +83,38 @@ export function createRepackBuildFunction(): BuildFunction {
         path.join(tmpDir, `repacked-${randomUUID()}${path.extname(sourceAppPath)}`);
 
       stepsCtx.logger.info('Repacking the app...');
-      if (platform === Platform.IOS) {
-        await repackAppIosAsync({
-          platform: 'ios',
-          projectRoot,
-          sourceAppPath,
-          outputPath,
-          workingDirectory,
-          // TODO: add iosSigningOptions
-          logger: repackLogger,
-          spawnAsync: repackSpawnAsync,
-          verbose,
-          env: {
-            FASTLANE_DISABLE_COLORS: '1',
-            FASTLANE_SKIP_UPDATE_CHECK: '1',
-            SKIP_SLOW_FASTLANE_WARNING: 'true',
-            FASTLANE_HIDE_TIMESTAMP: 'true',
-            LC_ALL: 'en_US.UTF-8',
-            ...env,
-          },
-        });
-      } else if (platform === Platform.ANDROID) {
-        await repackAppAndroidAsync({
-          platform: 'android',
-          projectRoot,
-          sourceAppPath,
-          outputPath,
-          workingDirectory,
-          // TODO: add androidSigningOptions
-          logger: repackLogger,
-          spawnAsync: repackSpawnAsync,
-          verbose,
-          env,
-        });
-      } else {
-        throw new Error('Unsupported platform');
+      switch (platform) {
+        case Platform.IOS:
+          await repackAppIosAsync({
+            platform: 'ios',
+            projectRoot,
+            sourceAppPath,
+            outputPath,
+            workingDirectory,
+            // TODO: add iosSigningOptions
+            logger: repackLogger,
+            spawnAsync: repackSpawnAsync,
+            verbose,
+            env: {
+              ...COMMON_FASTLANE_ENV,
+              ...env,
+            },
+          });
+          break;
+        case Platform.ANDROID:
+          await repackAppAndroidAsync({
+            platform: 'android',
+            projectRoot,
+            sourceAppPath,
+            outputPath,
+            workingDirectory,
+            // TODO: add androidSigningOptions
+            logger: repackLogger,
+            spawnAsync: repackSpawnAsync,
+            verbose,
+            env,
+          });
+          break;
       }
 
       stepsCtx.logger.info(`Repacked the app to ${outputPath}`);
@@ -160,7 +160,13 @@ export function createBunyanLoggerAdapter(logger: bunyan): Logger {
 /**
  * Creates `@expo/steps` based spawnAsync for repack.
  */
-function createSpawnAsyncStepAdapter({ verbose, logger }: { verbose: boolean, logger: bunyan }): SpawnProcessAsync {
+function createSpawnAsyncStepAdapter({
+  verbose,
+  logger,
+}: {
+  verbose: boolean;
+  logger: bunyan;
+}): SpawnProcessAsync {
   return function repackSpawnAsync(
     command: string,
     args: string[],
