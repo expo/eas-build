@@ -81,6 +81,11 @@ export function createRepackBuildFunction(): BuildFunction {
       const outputPath =
         (inputs.output_path.value as string) ??
         path.join(tmpDir, `repacked-${randomUUID()}${path.extname(sourceAppPath)}`);
+      const exportEmbedOptions = inputs.embed_bundle_assets.value
+        ? {
+            sourcemapOutput: undefined,
+          }
+        : undefined;
 
       stepsCtx.logger.info('Repacking the app...');
       switch (platform) {
@@ -91,6 +96,7 @@ export function createRepackBuildFunction(): BuildFunction {
             sourceAppPath,
             outputPath,
             workingDirectory,
+            exportEmbedOptions,
             // TODO: add iosSigningOptions
             logger: repackLogger,
             spawnAsync: repackSpawnAsync,
@@ -108,6 +114,7 @@ export function createRepackBuildFunction(): BuildFunction {
             sourceAppPath,
             outputPath,
             workingDirectory,
+            exportEmbedOptions,
             // TODO: add androidSigningOptions
             logger: repackLogger,
             spawnAsync: repackSpawnAsync,
