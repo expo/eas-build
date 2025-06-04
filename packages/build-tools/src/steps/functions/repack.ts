@@ -3,7 +3,7 @@ import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
 
-import { Platform } from '@expo/eas-build-job';
+import { Platform, type Android, type Ios, type Job } from '@expo/eas-build-job';
 import { type bunyan } from '@expo/logger';
 import {
   BuildFunction,
@@ -15,6 +15,8 @@ import {
 import {
   repackAppAndroidAsync,
   repackAppIosAsync,
+  type AndroidSigningOptions,
+  type IosSigningOptions,
   type Logger,
   type SpawnProcessAsync,
   type SpawnProcessOptions,
@@ -23,6 +25,7 @@ import {
 } from '@expo/repack-app';
 
 import { COMMON_FASTLANE_ENV } from '../../common/fastlane';
+import IosCredentialsManager from '../utils/ios/credentials/manager';
 
 export function createRepackBuildFunction(): BuildFunction {
   return new BuildFunction({
@@ -73,6 +76,7 @@ export function createRepackBuildFunction(): BuildFunction {
       const repackSpawnAsync = createSpawnAsyncStepAdapter({ verbose, logger: stepsCtx.logger });
 
       const tmpDir = await fs.promises.mkdtemp(path.join(os.tmpdir(), `repack-`));
+      const tmpFiles: string[] = []; // Store temporary files to clean them up later
       const workingDirectory = path.join(tmpDir, 'working-directory');
       await fs.promises.mkdir(workingDirectory);
       stepsCtx.logger.info(`Created temporary working directory: ${workingDirectory}`);
@@ -88,40 +92,51 @@ export function createRepackBuildFunction(): BuildFunction {
         : undefined;
 
       stepsCtx.logger.info('Repacking the app...');
-      switch (platform) {
-        case Platform.IOS:
-          await repackAppIosAsync({
-            platform: 'ios',
-            projectRoot,
-            sourceAppPath,
-            outputPath,
-            workingDirectory,
-            exportEmbedOptions,
-            // TODO: add iosSigningOptions
-            logger: repackLogger,
-            spawnAsync: repackSpawnAsync,
-            verbose,
-            env: {
-              ...COMMON_FASTLANE_ENV,
-              ...env,
-            },
-          });
-          break;
-        case Platform.ANDROID:
-          await repackAppAndroidAsync({
-            platform: 'android',
-            projectRoot,
-            sourceAppPath,
-            outputPath,
-            workingDirectory,
-            exportEmbedOptions,
-            // TODO: add androidSigningOptions
-            logger: repackLogger,
-            spawnAsync: repackSpawnAsync,
-            verbose,
-            env,
-          });
-          break;
+      try {
+        switch (platform) {
+          case Platform.IOS:
+            await repackAppIosAsync({
+              platform: 'ios',
+              projectRoot,
+              sourceAppPath,
+              outputPath,
+              workingDirectory,
+              exportEmbedOptions,
+              iosSigningOptions: await resolveIosSigningOptionsAsync({
+                job: stepsCtx.global.staticContext.job,
+                logger: stepsCtx.logger,
+              }),
+              logger: repackLogger,
+              spawnAsync: repackSpawnAsync,
+              verbose,
+              env: {
+                ...COMMON_FASTLANE_ENV,
+                ...env,
+              },
+            });
+            break;
+          case Platform.ANDROID:
+            await repackAppAndroidAsync({
+              platform: 'android',
+              projectRoot,
+              sourceAppPath,
+              outputPath,
+              workingDirectory,
+              exportEmbedOptions,
+              androidSigningOptions: await resolveAndroidSigningOptionsAsync({
+                job: stepsCtx.global.staticContext.job,
+                tmpDir,
+                tmpFiles,
+              }),
+              logger: repackLogger,
+              spawnAsync: repackSpawnAsync,
+              verbose,
+              env,
+            });
+            break;
+        }
+      } finally {
+        await Promise.all(tmpFiles.map((file) => fs.promises.rm(file, { force: true })));
       }
 
       stepsCtx.logger.info(`Repacked the app to ${outputPath}`);
@@ -183,5 +198,80 @@ function createSpawnAsyncStepAdapter({
       ...options,
       ...(verbose ? { logger, stdio: 'pipe' } : { logger: undefined }),
     });
+  };
+}
+
+/**
+ * A helper function to infer the platform job type based on the provided platform.
+ */
+function getPlatformJob<T extends Job>(job: T, platform: 'android'): Android.Job;
+function getPlatformJob<T extends Job>(job: T, platform: 'ios'): Ios.Job;
+function getPlatformJob<T extends Job>(job: T, _: string): T {
+  return job;
+}
+
+/**
+ * Resolves Android signing options from the job secrets.
+ */
+export async function resolveAndroidSigningOptionsAsync({
+  job,
+  tmpDir,
+  tmpFiles,
+}: {
+  job: Job;
+  tmpDir: string;
+  tmpFiles: string[];
+}): Promise<AndroidSigningOptions | undefined> {
+  const androidJob = getPlatformJob(job, 'android');
+  const buildCredentials = androidJob.secrets?.buildCredentials;
+  if (buildCredentials?.keystore.dataBase64 == null) {
+    return undefined;
+  }
+  const keyStorePath = path.join(tmpDir, `keystore-${randomUUID()}`);
+  await fs.promises.writeFile(
+    keyStorePath,
+    Buffer.from(buildCredentials.keystore.dataBase64, 'base64')
+  );
+  tmpFiles.push(keyStorePath);
+
+  const keyStorePassword = `pass:${buildCredentials.keystore.keystorePassword}`;
+  const keyAlias = buildCredentials.keystore.keyAlias;
+  const keyPassword = buildCredentials.keystore.keyPassword
+    ? `pass:${buildCredentials.keystore.keyPassword}`
+    : undefined;
+  return {
+    keyStorePath,
+    keyStorePassword,
+    keyAlias,
+    keyPassword,
+  };
+}
+
+/**
+ * Resolves iOS signing options from the job secrets.
+ */
+export async function resolveIosSigningOptionsAsync({
+  job,
+  logger,
+}: {
+  job: Job;
+  logger: bunyan;
+}): Promise<IosSigningOptions | undefined> {
+  const iosJob = getPlatformJob(job, 'ios');
+  const buildCredentials = iosJob.secrets?.buildCredentials;
+  if (iosJob.simulator || buildCredentials == null) {
+    return undefined;
+  }
+  const credentialsManager = new IosCredentialsManager(buildCredentials);
+  const credentials = await credentialsManager.prepare(logger);
+
+  const provisioningProfile: Record<string, string> = {};
+  for (const profile of Object.values(credentials.targetProvisioningProfiles)) {
+    provisioningProfile[profile.bundleIdentifier] = profile.path;
+  }
+  return {
+    provisioningProfile,
+    keychainPath: credentials.keychainPath,
+    signingIdentity: credentials.applicationTargetProvisioningProfile.data.certificateCommonName,
   };
 }
