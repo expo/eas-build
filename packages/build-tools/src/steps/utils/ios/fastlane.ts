@@ -4,6 +4,8 @@ import { bunyan } from '@expo/logger';
 import spawn, { SpawnResult } from '@expo/turtle-spawn';
 import { BuildStepEnv } from '@expo/steps';
 
+import { COMMON_FASTLANE_ENV } from '../../../common/fastlane';
+
 import { XcodeBuildLogger } from './xcpretty';
 
 export async function runFastlaneGym({
@@ -47,17 +49,12 @@ export async function runFastlane(
     extraEnv?: BuildStepEnv;
   } = {}
 ): Promise<SpawnResult> {
-  const fastlaneEnvVars = {
-    FASTLANE_DISABLE_COLORS: '1',
-    FASTLANE_SKIP_UPDATE_CHECK: '1',
-    SKIP_SLOW_FASTLANE_WARNING: 'true',
-    FASTLANE_HIDE_TIMESTAMP: 'true',
-    LC_ALL: 'en_US.UTF-8',
-    ...(env ?? process.env),
-    ...extraEnv,
-  };
   return await spawn('fastlane', fastlaneArgs, {
-    env: fastlaneEnvVars,
+    env: {
+      ...COMMON_FASTLANE_ENV,
+      ...(env ?? process.env),
+      ...extraEnv,
+    },
     logger,
     cwd,
   });
