@@ -17,7 +17,7 @@ import {
 } from '@expo/eas-build-job';
 import { ExpoConfig } from '@expo/config';
 import { bunyan } from '@expo/logger';
-import { BuildMode, BuildTrigger } from '@expo/eas-build-job/dist/common';
+import { BuildTrigger } from '@expo/eas-build-job/dist/common';
 
 import { PackageManager, resolvePackageManager } from './utils/packageManager';
 import { resolveBuildPhaseErrorAsync } from './buildErrors/detectError';
@@ -99,31 +99,7 @@ export class BuildContext<TJob extends Job = Job> {
     this._uploadArtifact = options.uploadArtifact;
     this.reportError = options.reportError;
 
-    const shouldApplyRepackOverrides = job.platform && job.mode === BuildMode.REPACK;
-    this._job = {
-      ...job,
-      ...(shouldApplyRepackOverrides
-        ? {
-            steps: [
-              { uses: 'eas/checkout' },
-              { uses: 'eas/install_node_modules' },
-              { uses: 'eas/resolve_build_config' },
-              {
-                uses: 'eas/__download_and_repack_golden_development_client_archive',
-                id: 'download_and_repack_golden_development_client_archive',
-              },
-              {
-                uses: 'eas/upload_artifact',
-                name: 'Upload build artifact',
-                with: {
-                  type: 'application-archive',
-                  path: '${ steps.download_and_repack_golden_development_client_archive.repacked_archive_path }',
-                },
-              },
-            ],
-          }
-        : null),
-    };
+    this._job = job;
     this._metadata = options.metadata;
     this.skipNativeBuild = options.skipNativeBuild;
     this.reportBuildPhaseStats = options.reportBuildPhaseStats;
