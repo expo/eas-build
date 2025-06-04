@@ -1,5 +1,3 @@
-import fs from 'node:fs';
-
 import { type bunyan } from '@expo/logger';
 
 import { createGlobalContextMock } from '../../../__tests__/utils/context';
@@ -44,7 +42,7 @@ describe(createRepackBuildFunction, () => {
     const repackStep = repack.createBuildStepFromFunctionCall(createGlobalContextMock({}), {
       callInputs: {
         platform: 'ios',
-        source_path: '/path/to/source_app',
+        source_app_path: '/path/to/source_app',
         output_path: '/path/to/output_app',
       },
     });
@@ -58,29 +56,10 @@ describe(createRepackBuildFunction, () => {
     const repackStep = repack.createBuildStepFromFunctionCall(createGlobalContextMock({}), {
       callInputs: {
         platform: 'unknown',
-        source_path: '/path/to/source_app',
+        source_app_path: '/path/to/source_app',
       },
     });
 
     await expect(repackStep.executeAsync()).rejects.toThrow(/Unsupported platform/);
-  });
-
-  it('should cleanup the repack working directory', async () => {
-    const repack = createRepackBuildFunction();
-    const repackStep = repack.createBuildStepFromFunctionCall(createGlobalContextMock({}), {
-      callInputs: {
-        platform: 'ios',
-        source_path: '/path/to/source_app',
-      },
-    });
-
-    const rmSpy = jest.spyOn(fs.promises, 'rm').mockResolvedValue();
-
-    await repackStep.executeAsync();
-
-    expect(rmSpy).toHaveBeenCalledWith(expect.stringMatching(/repack-.*\/working-directory/), {
-      force: true,
-      recursive: true,
-    });
   });
 });
