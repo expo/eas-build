@@ -71,13 +71,13 @@ export function createRepackBuildFunction(): BuildFunction {
 
       const tmpDir = await fs.promises.mkdtemp(path.join(os.tmpdir(), `repack-`));
       const workingDirectory = path.join(tmpDir, 'working-directory');
-      await fs.promises.mkdir(workingDirectory, { recursive: true });
-      stepsCtx.logger.info(`Created temporary workingDirectory: ${workingDirectory}`);
+      await fs.promises.mkdir(workingDirectory);
+      stepsCtx.logger.info(`Created temporary working directory: ${workingDirectory}`);
 
       const sourceAppPath = inputs.source_app_path.value as string;
       const outputPath =
         (inputs.output_path.value as string) ??
-        path.join(tmpDir, `repacked${path.extname(sourceAppPath)}`);
+        path.join(tmpDir, `repacked-${randomUUID()}${path.extname(sourceAppPath)}`);
 
       stepsCtx.logger.info('Repacking the app...');
       if (platform === Platform.IOS) {
@@ -160,7 +160,7 @@ export function createBunyanLoggerAdapter(logger: bunyan): Logger {
 /**
  * Creates `@expo/steps` based spawnAsync for repack.
  */
-function createSpawnAsyncStepAdapter(verbose: boolean, logger: bunyan): SpawnProcessAsync {
+function createSpawnAsyncStepAdapter({ verbose, logger }: { verbose: boolean, logger: bunyan }): SpawnProcessAsync {
   return function repackSpawnAsync(
     command: string,
     args: string[],
