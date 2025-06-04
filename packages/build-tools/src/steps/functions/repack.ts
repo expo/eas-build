@@ -28,7 +28,7 @@ export function createRepackBuildFunction(): BuildFunction {
     name: 'Repack app',
     inputProviders: [
       BuildStepInput.createProvider({
-        id: 'source_path',
+        id: 'source_app_path',
         allowedValueTypeName: BuildStepInputValueTypeName.STRING,
         required: true,
       }),
@@ -71,58 +71,54 @@ export function createRepackBuildFunction(): BuildFunction {
 
       const tmpDir = await fs.promises.mkdtemp(path.join(os.tmpdir(), `repack-`));
       const workingDirectory = path.join(tmpDir, 'working-directory');
-      try {
-        await fs.promises.mkdir(workingDirectory, { recursive: true });
-        stepsCtx.logger.info(`Created temporary workingDirectory: ${workingDirectory}`);
+      await fs.promises.mkdir(workingDirectory, { recursive: true });
+      stepsCtx.logger.info(`Created temporary workingDirectory: ${workingDirectory}`);
 
-        const sourceAppPath = inputs.source_path.value as string;
-        const outputPath =
-          (inputs.output_path.value as string) ??
-          path.join(tmpDir, `repacked${path.extname(sourceAppPath)}`);
+      const sourceAppPath = inputs.source_app_path.value as string;
+      const outputPath =
+        (inputs.output_path.value as string) ??
+        path.join(tmpDir, `repacked${path.extname(sourceAppPath)}`);
 
-        stepsCtx.logger.info('Repacking the app...');
-        if (platform === Platform.IOS) {
-          await repackAppIosAsync({
-            platform: 'ios',
-            projectRoot,
-            sourceAppPath,
-            outputPath,
-            workingDirectory,
-            // TODO: add iosSigningOptions
-            logger: repackLogger,
-            spawnAsync: repackSpawnAsync,
-            verbose,
-            env: {
-              FASTLANE_DISABLE_COLORS: '1',
-              FASTLANE_SKIP_UPDATE_CHECK: '1',
-              SKIP_SLOW_FASTLANE_WARNING: 'true',
-              FASTLANE_HIDE_TIMESTAMP: 'true',
-              LC_ALL: 'en_US.UTF-8',
-              ...env,
-            },
-          });
-        } else if (platform === Platform.ANDROID) {
-          await repackAppAndroidAsync({
-            platform: 'android',
-            projectRoot,
-            sourceAppPath,
-            outputPath,
-            workingDirectory,
-            // TODO: add androidSigningOptions
-            logger: repackLogger,
-            spawnAsync: repackSpawnAsync,
-            verbose,
-            env,
-          });
-        } else {
-          throw new Error('Unsupported platform');
-        }
-
-        stepsCtx.logger.info(`Repacked the app to ${outputPath}`);
-        outputs.output_path.set(outputPath);
-      } finally {
-        await fs.promises.rm(workingDirectory, { force: true, recursive: true });
+      stepsCtx.logger.info('Repacking the app...');
+      if (platform === Platform.IOS) {
+        await repackAppIosAsync({
+          platform: 'ios',
+          projectRoot,
+          sourceAppPath,
+          outputPath,
+          workingDirectory,
+          // TODO: add iosSigningOptions
+          logger: repackLogger,
+          spawnAsync: repackSpawnAsync,
+          verbose,
+          env: {
+            FASTLANE_DISABLE_COLORS: '1',
+            FASTLANE_SKIP_UPDATE_CHECK: '1',
+            SKIP_SLOW_FASTLANE_WARNING: 'true',
+            FASTLANE_HIDE_TIMESTAMP: 'true',
+            LC_ALL: 'en_US.UTF-8',
+            ...env,
+          },
+        });
+      } else if (platform === Platform.ANDROID) {
+        await repackAppAndroidAsync({
+          platform: 'android',
+          projectRoot,
+          sourceAppPath,
+          outputPath,
+          workingDirectory,
+          // TODO: add androidSigningOptions
+          logger: repackLogger,
+          spawnAsync: repackSpawnAsync,
+          verbose,
+          env,
+        });
+      } else {
+        throw new Error('Unsupported platform');
       }
+
+      stepsCtx.logger.info(`Repacked the app to ${outputPath}`);
+      outputs.output_path.set(outputPath);
     },
   });
 }
