@@ -10,6 +10,8 @@ import IosCredentialsManager from '../manager';
 
 jest.setTimeout(60 * 1000);
 
+jest.mock('@expo/turtle-spawn');
+
 // Those are in fact "real" tests in that they really execute the `fastlane` commands.
 // We need the JS code to modify the file system, so we need to mock it.
 jest.unmock('fs');
@@ -78,13 +80,13 @@ describe(IosCredentialsManager, () => {
 
       assert(credentials, 'credentials must be defined');
 
-      expect(credentials.teamId).toBe('QL76XYH73P');
-      expect(credentials.distributionType).toBe('app-store');
+      expect(credentials.teamId).toBe('SELFSIGNED');
+      expect(credentials.distributionType).toBe('ad-hoc');
 
       const profile = credentials.targetProvisioningProfiles[targetName];
-      expect(profile.bundleIdentifier).toBe('org.reactjs.native.example.testapp.turtlev2');
-      expect(profile.distributionType).toBe('app-store');
-      expect(profile.teamId).toBe('QL76XYH73P');
+      expect(profile.bundleIdentifier).toBe('com.example.myapp');
+      expect(profile.distributionType).toBe('ad-hoc');
+      expect(profile.teamId).toBe('SELFSIGNED');
     });
   });
 });
