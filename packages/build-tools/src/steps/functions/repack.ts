@@ -17,7 +17,6 @@ import {
   repackAppIosAsync,
   type AndroidSigningOptions,
   type IosSigningOptions,
-  type Logger,
   type SpawnProcessAsync,
   type SpawnProcessOptions,
   type SpawnProcessPromise,
@@ -72,7 +71,6 @@ export function createRepackBuildFunction(): BuildFunction {
         );
       }
 
-      const repackLogger = createBunyanLoggerAdapter(stepsCtx.logger);
       const repackSpawnAsync = createSpawnAsyncStepAdapter({ verbose, logger: stepsCtx.logger });
 
       const tmpDir = await fs.promises.mkdtemp(path.join(os.tmpdir(), `repack-`));
@@ -106,7 +104,7 @@ export function createRepackBuildFunction(): BuildFunction {
                 job: stepsCtx.global.staticContext.job,
                 logger: stepsCtx.logger,
               }),
-              logger: repackLogger,
+              logger: stepsCtx.logger,
               spawnAsync: repackSpawnAsync,
               verbose,
               env: {
@@ -128,7 +126,7 @@ export function createRepackBuildFunction(): BuildFunction {
                 tmpDir,
                 tmpFiles,
               }),
-              logger: repackLogger,
+              logger: stepsCtx.logger,
               spawnAsync: repackSpawnAsync,
               verbose,
               env,
@@ -143,40 +141,6 @@ export function createRepackBuildFunction(): BuildFunction {
       outputs.output_path.set(outputPath);
     },
   });
-}
-
-/**
- * Creates a Bunyan logger adapter for repack logger
- */
-export function createBunyanLoggerAdapter(logger: bunyan): Logger {
-  const timerMap: Record<string, number> = {};
-
-  return {
-    debug(...message: any[]): void {
-      logger.debug(message.join(''));
-    },
-    info(...message: any[]): void {
-      logger.info(message.join(''));
-    },
-    warn(...message: any[]): void {
-      logger.warn(message.join(''));
-    },
-    error(...message: any[]): void {
-      logger.error(message.join(''));
-    },
-    time(label: string): void {
-      timerMap[label] = Date.now();
-    },
-    timeEnd(label: string): void {
-      if (timerMap[label] == null) {
-        logger.warn(`Timer '${label}' does not exist`);
-        return;
-      }
-      const duration = Date.now() - timerMap[label];
-      logger.info(`${label}: ${duration} ms`);
-      delete timerMap[label];
-    },
-  };
 }
 
 /**

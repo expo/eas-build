@@ -8,7 +8,6 @@ import { createGlobalContextMock } from '../../../__tests__/utils/context';
 import { createTestAndroidJob, createTestIosJob } from '../../../__tests__/utils/job';
 import IosCredentialsManager from '../../utils/ios/credentials/manager';
 import {
-  createBunyanLoggerAdapter,
   createRepackBuildFunction,
   resolveAndroidSigningOptionsAsync,
   resolveIosSigningOptionsAsync,
@@ -20,33 +19,6 @@ import ProvisioningProfile, {
 jest.mock('fs');
 jest.mock('@expo/repack-app');
 jest.mock('../../utils/ios/credentials/manager');
-
-describe(createBunyanLoggerAdapter, () => {
-  it('should create a logger that calls the Bunyan logger methods', () => {
-    const mockLogger = {
-      debug: jest.fn(),
-      info: jest.fn(),
-      warn: jest.fn(),
-      error: jest.fn(),
-    } as unknown as bunyan;
-
-    const logger = createBunyanLoggerAdapter(mockLogger);
-
-    logger.debug('Debug message');
-    logger.info('Info message');
-    logger.warn('Warn message');
-    logger.error('Error message');
-
-    expect(mockLogger.debug).toHaveBeenCalledWith('Debug message');
-    expect(mockLogger.info).toHaveBeenCalledWith('Info message');
-    expect(mockLogger.warn).toHaveBeenCalledWith('Warn message');
-    expect(mockLogger.error).toHaveBeenCalledWith('Error message');
-
-    logger.time('Test timer');
-    logger.timeEnd('Test timer');
-    expect(mockLogger.info).toHaveBeenCalledWith(expect.stringMatching(/Test timer: \d+ ms/));
-  });
-});
 
 describe(createRepackBuildFunction, () => {
   afterEach(() => {
