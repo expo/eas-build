@@ -99,11 +99,9 @@ describe(resolveAndroidSigningOptionsAsync, () => {
     const job = createTestAndroidJob();
     const tmpDir = '/tmp';
     vol.mkdirSync(tmpDir, { recursive: true });
-    const tmpFiles: string[] = [];
     const signingOptions = await resolveAndroidSigningOptionsAsync({
       job,
       tmpDir: '/tmp',
-      tmpFiles,
     });
 
     expect(signingOptions).not.toBeNull();
@@ -115,7 +113,6 @@ describe(resolveAndroidSigningOptionsAsync, () => {
     expect(signingOptions?.keyPassword).toEqual(
       `pass:${job.secrets?.buildCredentials?.keystore.keyPassword}`
     );
-    expect(tmpFiles).toContain(signingOptions?.keyStorePath);
   });
 
   it('should return undefined if no build credentials are provided', async () => {
@@ -124,7 +121,6 @@ describe(resolveAndroidSigningOptionsAsync, () => {
     const signingOptions = await resolveAndroidSigningOptionsAsync({
       job,
       tmpDir: '/tmp',
-      tmpFiles: [],
     });
     expect(signingOptions).toBeUndefined();
   });
