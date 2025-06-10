@@ -61,6 +61,7 @@ async function fetchRepositoryUrlAsync(ctx: BuildContext<Job>): Promise<string> 
         Authorization: `Bearer ${expoToken}`,
       },
       timeout: 20000,
+      retries: 3,
       logger: ctx.logger,
     }
   );
