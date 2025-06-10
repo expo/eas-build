@@ -5,8 +5,12 @@ import fs from 'fs-extra';
 import { ArchiveSourceType, Job } from '@expo/eas-build-job';
 import { bunyan } from '@expo/logger';
 import downloadFile from '@expo/downloader';
+import { z } from 'zod';
+import { asyncResult } from '@expo/results';
+import nullthrows from 'nullthrows';
 
 import { BuildContext } from '../context';
+import { turtleFetch } from '../utils/turtleFetch';
 
 import { shallowCloneRepositoryAsync } from './git';
 
@@ -25,20 +29,64 @@ export async function prepareProjectSourcesAsync<TJob extends Job>(
       destinationDirectory
     );
   } else if (ctx.job.projectArchive.type === ArchiveSourceType.GIT) {
+    let repositoryUrl = ctx.job.projectArchive.repositoryUrl;
+    try {
+      repositoryUrl = await fetchRepositoryUrlAsync(ctx);
+    } catch (err) {
+      ctx.logger.error('Failed to refresh clone URL, falling back to the original one', err);
+    }
+
     await shallowCloneRepositoryAsync({
       logger: ctx.logger,
-      archiveSource: ctx.job.projectArchive,
+      archiveSource: {
+        ...ctx.job.projectArchive,
+        repositoryUrl,
+      },
       destinationDirectory,
     });
   }
 }
 
+async function fetchRepositoryUrlAsync(ctx: BuildContext<Job>): Promise<string> {
+  const taskId = nullthrows(ctx.env.EAS_BUILD_ID, 'EAS_BUILD_ID is not set');
+  const expoApiServerURL = nullthrows(ctx.env.__API_SERVER_URL, '__API_SERVER_URL is not set');
+  const expoToken = nullthrows(ctx.env.EXPO_TOKEN, 'EXPO_TOKEN is not set');
 
+  const response = await turtleFetch(
+    new URL(`/v2/github/fetch-github-repository-url`, expoApiServerURL).toString(),
+    'POST',
+    {
+      json: { taskId },
+      headers: {
+        Authorization: `Bearer ${expoToken}`,
+      },
+      timeout: 20000,
+      logger: ctx.logger,
+    }
+  );
 
-
+  if (!response.ok) {
+    const textResult = await asyncResult(response.text());
+    throw new Error(`Unexpected response from server (${response.status}): ${textResult.value}`);
   }
 
+  const jsonResult = await asyncResult(response.json());
+  if (!jsonResult.ok) {
+    throw new Error(
+      `Expected JSON response from server (${response.status}): ${jsonResult.reason}`
+    );
   }
+
+  const dataResult = z
+    .object({
+      repositoryUrl: z.string(),
+    })
+    .safeParse(jsonResult.value);
+  if (!dataResult.success) {
+    throw new Error(`Unexpected response from server (${response.status}): ${dataResult.error}`);
+  }
+
+  return dataResult.data.repositoryUrl;
 }
 
 export async function downloadAndUnpackProjectFromTarGzAsync<TJob extends Job>(
