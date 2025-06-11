@@ -81,7 +81,7 @@ async function fetchRepositoryUrlAsync(ctx: BuildContext<Job>): Promise<string> 
   const dataResult = z
     .object({
       data: z.object({
-        repositoryUrl: z.string(),
+        repositoryUrl: z.string().url(),
       }),
     })
     .safeParse(jsonResult.value);
