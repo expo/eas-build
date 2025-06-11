@@ -80,14 +80,16 @@ async function fetchRepositoryUrlAsync(ctx: BuildContext<Job>): Promise<string> 
 
   const dataResult = z
     .object({
-      repositoryUrl: z.string(),
+      data: z.object({
+        repositoryUrl: z.string(),
+      }),
     })
     .safeParse(jsonResult.value);
   if (!dataResult.success) {
     throw new Error(`Unexpected response from server (${response.status}): ${dataResult.error}`);
   }
 
-  return dataResult.data.repositoryUrl;
+  return dataResult.data.data.repositoryUrl;
 }
 
 export async function downloadAndUnpackProjectFromTarGzAsync<TJob extends Job>(
