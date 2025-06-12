@@ -34,6 +34,11 @@ export function createEasMaestroTestFunctionGroup(
         id: 'android_emulator_system_image_package',
         required: false,
       }),
+      BuildStepInput.createProvider({
+        allowedValueTypeName: BuildStepInputValueTypeName.STRING,
+        id: 'android_emulator_device_identifier',
+        required: false,
+      }),
     ],
     createBuildStepsFromFunctionGroupCall: (globalCtx, { inputs }) => {
       const steps: BuildStep[] = [
@@ -72,16 +77,20 @@ export function createEasMaestroTestFunctionGroup(
           })
         );
       } else if (buildToolsContext.job.platform === Platform.ANDROID) {
+        const callInputs: any = {};
+        
+        if (inputs.android_emulator_system_image_package.value) {
+          callInputs.system_image_package = inputs.android_emulator_system_image_package.value;
+        }
+        
+        if (inputs.android_emulator_device_identifier.value) {
+          callInputs.device_identifier = inputs.android_emulator_device_identifier.value;
+        }
+        
         steps.push(
           createStartAndroidEmulatorBuildFunction().createBuildStepFromFunctionCall(
             globalCtx,
-            inputs.android_emulator_system_image_package.value
-              ? {
-                  callInputs: {
-                    system_image_package: inputs.android_emulator_system_image_package.value,
-                  },
-                }
-              : undefined
+            Object.keys(callInputs).length > 0 ? { callInputs } : undefined
           )
         );
         const searchPath = inputs.app_path.value ?? 'android/app/build/outputs/**/*.apk';
