@@ -235,7 +235,7 @@ export type WorkflowInterpolationContext = StaticWorkflowInterpolationContext &
   DynamicInterpolationContext;
 
 export const CustomBuildConfigSchema = Joi.object().when('.mode', {
-  is: BuildMode.CUSTOM,
+  is: [BuildMode.CUSTOM, BuildMode.REPACK],
   then: Joi.object().when('.customBuildConfig.path', {
     is: Joi.exist(),
     then: Joi.object({

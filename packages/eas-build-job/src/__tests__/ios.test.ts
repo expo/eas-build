@@ -334,11 +334,20 @@ describe('Ios.JobSchema', () => {
     expect(error).toBeFalsy();
   });
 
-  test('can set build mode === repack', () => {
+  test('can set build mode === repack with steps', () => {
     const job = {
       mode: BuildMode.REPACK,
       type: Workflow.UNKNOWN,
       platform: Platform.IOS,
+      steps: [
+        {
+          id: 'step1',
+          name: 'Step 1',
+          run: 'echo Hello, world!',
+          shell: 'sh',
+        },
+      ],
+      outputs: {},
       projectArchive: {
         type: ArchiveSourceType.URL,
         url: 'https://expo.dev/builds/123',
