@@ -19,12 +19,6 @@ export function createUploadArtifactBuildFunction(ctx: CustomBuildContext): Buil
     inputProviders: [
       BuildStepInput.createProvider({
         id: 'type',
-        allowedValues: [
-          ManagedArtifactType.APPLICATION_ARCHIVE,
-          ManagedArtifactType.BUILD_ARTIFACTS,
-          ...Object.keys(artifactTypeInputToManagedArtifactType),
-          ...Object.values(GenericArtifactType),
-        ],
         required: false,
         allowedValueTypeName: BuildStepInputValueTypeName.STRING,
       }),
@@ -57,6 +51,18 @@ export function createUploadArtifactBuildFunction(ctx: CustomBuildContext): Buil
     ],
     fn: async ({ logger, global }, { inputs }) => {
       assert(inputs.path.value, 'Path input cannot be empty.');
+
+      const allowedTypeValues = [
+        ManagedArtifactType.APPLICATION_ARCHIVE,
+        ManagedArtifactType.BUILD_ARTIFACTS,
+        ...Object.keys(artifactTypeInputToManagedArtifactType),
+        ...Object.values(GenericArtifactType),
+      ];
+      if (inputs.type.value && !allowedTypeValues.includes(inputs.type.value as string)) {
+        throw new Error(
+          `Invalid type provided. Allowed values: ${Array.from(allowedTypeValues).join(', ')}`
+        );
+      }
 
       const artifactSearchPaths = inputs.path.value
         .toString()

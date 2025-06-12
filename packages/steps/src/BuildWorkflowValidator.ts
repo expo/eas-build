@@ -77,18 +77,6 @@ export class BuildWorkflowValidator {
         if (currentStepInput.defaultValue === undefined) {
           continue;
         }
-        if (!currentStepInput.isValueOneOfAllowedValues()) {
-          const error = new BuildConfigError(
-            `Input parameter "${currentStepInput.id}" for step "${
-              currentStep.displayName
-            }" is set to "${
-              currentStepInput.value
-            }" which is not one of the allowed values: ${nullthrows(currentStepInput.allowedValues)
-              .map((i) => `"${i}"`)
-              .join(', ')}.`
-          );
-          errors.push(error);
-        }
         const paths =
           typeof currentStepInput.defaultValue === 'string'
             ? findOutputPaths(currentStepInput.defaultValue)

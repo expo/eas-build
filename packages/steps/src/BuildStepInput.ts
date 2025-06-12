@@ -37,7 +37,6 @@ interface BuildStepInputProviderParams<
   R extends boolean = boolean,
 > {
   id: string;
-  allowedValues?: unknown[];
   defaultValue?: unknown;
   required: R;
   allowedValueTypeName: T;
@@ -52,7 +51,6 @@ export interface SerializedBuildStepInput {
   id: string;
   stepDisplayName: string;
   defaultValue?: unknown;
-  allowedValues?: unknown[];
   allowedValueTypeName: BuildStepInputValueTypeName;
   required: boolean;
   value?: unknown;
@@ -66,7 +64,6 @@ export class BuildStepInput<
   public readonly id: string;
   public readonly stepDisplayName: string;
   public readonly defaultValue?: unknown;
-  public readonly allowedValues?: unknown[];
   public readonly allowedValueTypeName: T;
   public readonly required: R;
 
@@ -81,7 +78,6 @@ export class BuildStepInput<
     {
       id,
       stepDisplayName,
-      allowedValues,
       defaultValue,
       required,
       allowedValueTypeName,
@@ -89,7 +85,6 @@ export class BuildStepInput<
   ) {
     this.id = id;
     this.stepDisplayName = stepDisplayName;
-    this.allowedValues = allowedValues;
     this.defaultValue = defaultValue;
     this.required = required;
     this.allowedValueTypeName = allowedValueTypeName;
@@ -147,14 +142,6 @@ export class BuildStepInput<
     return this;
   }
 
-  public isValueOneOfAllowedValues(): boolean {
-    const value = this._value ?? this.defaultValue;
-    if (this.allowedValues === undefined || value === undefined) {
-      return true;
-    }
-    return this.allowedValues.includes(value);
-  }
-
   public isRawValueStepOrContextReference(): boolean {
     return (
       typeof this.rawValue === 'string' &&
@@ -167,7 +154,6 @@ export class BuildStepInput<
       id: this.id,
       stepDisplayName: this.stepDisplayName,
       defaultValue: this.defaultValue,
-      allowedValues: this.allowedValues,
       allowedValueTypeName: this.allowedValueTypeName,
       required: this.required,
       value: this._value,
@@ -184,7 +170,6 @@ export class BuildStepInput<
       id: serializedInput.id,
       stepDisplayName: serializedInput.stepDisplayName,
       defaultValue: serializedInput.defaultValue,
-      allowedValues: serializedInput.allowedValues,
       allowedValueTypeName: serializedInput.allowedValueTypeName,
       required: serializedInput.required,
     });

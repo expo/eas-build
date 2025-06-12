@@ -506,7 +506,6 @@ describe(BuildStepInput, () => {
       defaultValue: 'bar',
       allowedValueTypeName: BuildStepInputValueTypeName.STRING,
       required: true,
-      allowedValues: ['bar', 'baz'],
     });
     i.set('bar');
     expect(i.serialize()).toEqual(
@@ -515,7 +514,6 @@ describe(BuildStepInput, () => {
         stepDisplayName: BuildStep.getDisplayName({ id: 'test1' }),
         defaultValue: 'bar',
         allowedValueTypeName: BuildStepInputValueTypeName.STRING,
-        allowedValues: ['bar', 'baz'],
         required: true,
         value: 'bar',
       })
@@ -529,7 +527,6 @@ describe(BuildStepInput, () => {
       stepDisplayName: BuildStep.getDisplayName({ id: 'test1' }),
       defaultValue: 'bar',
       allowedValueTypeName: BuildStepInputValueTypeName.STRING,
-      allowedValues: ['bar', 'baz'],
       required: true,
       value: 'bar',
       ctx: ctx.serialize(),
@@ -540,7 +537,6 @@ describe(BuildStepInput, () => {
     expect(input.stepDisplayName).toBe(BuildStep.getDisplayName({ id: 'test1' }));
     expect(input.defaultValue).toBe('bar');
     expect(input.allowedValueTypeName).toBe(BuildStepInputValueTypeName.STRING);
-    expect(input.allowedValues).toEqual(['bar', 'baz']);
     expect(input.required).toBe(true);
     expect(input.value).toBe('bar');
   });

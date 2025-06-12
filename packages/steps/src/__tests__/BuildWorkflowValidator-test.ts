@@ -74,7 +74,6 @@ describe(BuildWorkflowValidator, () => {
               stepDisplayName: displayName1,
               required: true,
               defaultValue: '3',
-              allowedValues: ['1', '2'],
               allowedValueTypeName: BuildStepInputValueTypeName.STRING,
             }),
             new BuildStepInput<BuildStepInputValueTypeName>(ctx, {
@@ -82,7 +81,6 @@ describe(BuildWorkflowValidator, () => {
               stepDisplayName: displayName1,
               required: true,
               defaultValue: '3',
-              allowedValues: [true, false],
               allowedValueTypeName: BuildStepInputValueTypeName.STRING,
             }),
           ],

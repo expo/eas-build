@@ -139,22 +139,6 @@ const BuildFunctionInputsSchema = Joi.array().items(
               '{{#label}} must be a object or reference to output or context value',
           }),
         }),
-      allowedValues: Joi.when('allowedValueType', {
-        is: BuildStepInputValueTypeName.STRING,
-        then: Joi.array().items(Joi.string().allow('')),
-      })
-        .when('allowedValueType', {
-          is: BuildStepInputValueTypeName.BOOLEAN,
-          then: Joi.array().items(Joi.boolean()),
-        })
-        .when('allowedValueType', {
-          is: BuildStepInputValueTypeName.NUMBER,
-          then: Joi.array().items(Joi.number()),
-        })
-        .when('allowedValueType', {
-          is: BuildStepInputValueTypeName.JSON,
-          then: Joi.array().items(Joi.object()),
-        }),
       allowedValueType: Joi.string()
         .valid(...Object.values(BuildStepInputValueTypeName))
         .default(BuildStepInputValueTypeName.STRING),

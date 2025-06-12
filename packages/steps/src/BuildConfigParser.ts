@@ -313,7 +313,6 @@ export class BuildConfigParser extends AbstractConfigParser {
             id: entry.name,
             required: entry.required ?? true,
             defaultValue: entry.defaultValue,
-            allowedValues: entry.allowedValues,
             allowedValueTypeName: entry.allowedValueType,
           });
     });

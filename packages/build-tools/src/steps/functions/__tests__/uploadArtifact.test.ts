@@ -28,8 +28,7 @@ describe(createUploadArtifactBuildFunction, () => {
         path: '/',
       },
     });
-    const typeInput = buildStep.inputs?.find((input) => input.id === 'type')!;
-    expect(typeInput.isValueOneOfAllowedValues()).toBe(true);
+    await expect(buildStep.executeAsync()).resolves.not.toThrowError();
   });
 
   it('accepts `path` argument', async () => {
@@ -103,9 +102,7 @@ describe(createUploadArtifactBuildFunction, () => {
         path: '/',
       },
     });
-    for (const input of buildStep.inputs ?? []) {
-      expect(input.isValueOneOfAllowedValues()).toBe(true);
-    }
+    await expect(buildStep.executeAsync()).resolves.not.toThrowError();
   });
 
   it.each(['invalid-value'])('does not accept %s', async (type) => {
@@ -115,7 +112,6 @@ describe(createUploadArtifactBuildFunction, () => {
         path: '/',
       },
     });
-    const typeInput = buildStep.inputs?.find((input) => input.id === 'type')!;
-    expect(typeInput.isValueOneOfAllowedValues()).toBe(false);
+    await expect(buildStep.executeAsync()).rejects.toThrowError('Invalid type provided.');
   });
 });
