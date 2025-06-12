@@ -231,19 +231,29 @@ describe(BuildConfigParser, () => {
       expect(step1.shell).toBe(getDefaultShell());
       expect(step1.inputs).toBeDefined();
       expect(step1.inputs?.[0].id).toBe('name');
-      expect(step1.inputs?.[0].value).toBe('Dominik Sokal');
+      expect(
+        step1.inputs?.[0].getValue({ interpolationContext: ctx.getInterpolationContext() })
+      ).toBe('Dominik Sokal');
       expect(step1.inputs?.[0].allowedValueTypeName).toBe(BuildStepInputValueTypeName.STRING);
       expect(step1.inputs?.[1].id).toBe('country');
-      expect(step1.inputs?.[1].value).toBe('Poland');
+      expect(
+        step1.inputs?.[1].getValue({ interpolationContext: ctx.getInterpolationContext() })
+      ).toBe('Poland');
       expect(step1.inputs?.[1].allowedValueTypeName).toBe(BuildStepInputValueTypeName.STRING);
       expect(step1.inputs?.[2].id).toBe('boolean_value');
-      expect(step1.inputs?.[2].value).toBe(true);
+      expect(
+        step1.inputs?.[2].getValue({ interpolationContext: ctx.getInterpolationContext() })
+      ).toBe(true);
       expect(step1.inputs?.[2].allowedValueTypeName).toBe(BuildStepInputValueTypeName.BOOLEAN);
       expect(step1.inputs?.[3].id).toBe('number_value');
-      expect(step1.inputs?.[3].value).toBe(123);
+      expect(
+        step1.inputs?.[3].getValue({ interpolationContext: ctx.getInterpolationContext() })
+      ).toBe(123);
       expect(step1.inputs?.[3].allowedValueTypeName).toBe(BuildStepInputValueTypeName.NUMBER);
       expect(step1.inputs?.[4].id).toBe('json_value');
-      expect(step1.inputs?.[4].value).toMatchObject({
+      expect(
+        step1.inputs?.[4].getValue({ interpolationContext: ctx.getInterpolationContext() })
+      ).toMatchObject({
         property1: 'value1',
         property2: ['value2', { value3: { property3: 'value4' } }],
       });
@@ -334,13 +344,17 @@ describe(BuildConfigParser, () => {
       expect(step1.ctx.workingDirectory).toBe(ctx.defaultWorkingDirectory);
       expect(step1.shell).toBe(getDefaultShell());
       expect(step1.inputs?.[0].id).toBe('name');
-      expect(step1.inputs?.[0].value).toBe('Dominik');
+      expect(
+        step1.inputs?.[0].getValue({ interpolationContext: ctx.getInterpolationContext() })
+      ).toBe('Dominik');
       expect(step1.inputs?.[0].allowedValueTypeName).toBe(BuildStepInputValueTypeName.STRING);
       expect(step1.inputs?.[1].id).toBe('build_number');
       expect(step1.inputs?.[1].rawValue).toBe('${ eas.job.version.buildNumber }');
       expect(step1.inputs?.[1].allowedValueTypeName).toBe(BuildStepInputValueTypeName.NUMBER);
       expect(step1.inputs?.[2].id).toBe('json_input');
-      expect(step1.inputs?.[2].value).toMatchObject({
+      expect(
+        step1.inputs?.[2].getValue({ interpolationContext: ctx.getInterpolationContext() })
+      ).toMatchObject({
         property1: 'value1',
         property2: ['aaa', 'bbb'],
       });
@@ -362,13 +376,19 @@ describe(BuildConfigParser, () => {
       expect(step2.ctx.workingDirectory).toBe(ctx.defaultWorkingDirectory);
       expect(step2.shell).toBe(getDefaultShell());
       expect(step2.inputs?.[0].id).toBe('name');
-      expect(step2.inputs?.[0].value).toBe('Szymon');
+      expect(
+        step2.inputs?.[0].getValue({ interpolationContext: ctx.getInterpolationContext() })
+      ).toBe('Szymon');
       expect(step2.inputs?.[0].allowedValueTypeName).toBe(BuildStepInputValueTypeName.STRING);
       expect(step2.inputs?.[1].id).toBe('build_number');
-      expect(step2.inputs?.[1].value).toBe(122);
+      expect(
+        step2.inputs?.[1].getValue({ interpolationContext: ctx.getInterpolationContext() })
+      ).toBe(122);
       expect(step2.inputs?.[1].allowedValueTypeName).toBe(BuildStepInputValueTypeName.NUMBER);
       expect(step2.inputs?.[2].id).toBe('json_input');
-      expect(step2.inputs?.[2].value).toMatchObject({
+      expect(
+        step2.inputs?.[2].getValue({ interpolationContext: ctx.getInterpolationContext() })
+      ).toMatchObject({
         property1: 'value1',
         property2: ['value2', { value3: { property3: 'value4' } }],
       });
