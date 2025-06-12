@@ -7,6 +7,7 @@ import fs from 'fs-extra';
 import nullthrows from 'nullthrows';
 
 import { BuildContext, SkipNativeBuildError } from '../context';
+import { COMMON_FASTLANE_ENV } from '../common/fastlane';
 
 import { createGymfileForArchiveBuild, createGymfileForSimulatorBuild } from './gymfile';
 import { Credentials } from './credentials/manager';
@@ -89,16 +90,11 @@ export async function runFastlane(
     cwd?: string;
   } = {}
 ): Promise<SpawnResult> {
-  const fastlaneEnvVars = {
-    FASTLANE_DISABLE_COLORS: '1',
-    FASTLANE_SKIP_UPDATE_CHECK: '1',
-    SKIP_SLOW_FASTLANE_WARNING: 'true',
-    FASTLANE_HIDE_TIMESTAMP: 'true',
-    LC_ALL: 'en_US.UTF-8',
-    ...(env ?? process.env),
-  };
   return await spawn('fastlane', fastlaneArgs, {
-    env: fastlaneEnvVars,
+    env: {
+      ...COMMON_FASTLANE_ENV,
+      ...(env ?? process.env),
+    },
     logger,
     cwd,
   });
