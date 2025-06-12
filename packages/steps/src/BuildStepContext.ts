@@ -1,7 +1,7 @@
 import os from 'os';
 import path from 'path';
 
-import { StaticJobInterpolationContext } from '@expo/eas-build-job';
+import { Env, JobInterpolationContext, StaticJobInterpolationContext } from '@expo/eas-build-job';
 import { bunyan } from '@expo/logger';
 import { v4 as uuidv4 } from 'uuid';
 
@@ -121,6 +121,24 @@ export class BuildStepGlobalContext {
       throw new BuildStepRuntimeError(`Step "${stepId}" does not exist.`);
     }
     return this.stepById[stepId].getOutputValueByName(outputId);
+  }
+
+  public getInterpolationContext(): JobInterpolationContext {
+    const hasAnyPreviousStepFailed = this.hasAnyPreviousStepFailed;
+
+    return {
+      ...this.staticContext,
+      always: () => true,
+      never: () => false,
+      success: () => !hasAnyPreviousStepFailed,
+      failure: () => hasAnyPreviousStepFailed,
+      env: this.env as Env,
+      fromJSON: (json: string) => JSON.parse(json),
+      toJSON: (value: unknown) => JSON.stringify(value),
+      contains: (value, substring) => value.includes(substring),
+      startsWith: (value, prefix) => value.startsWith(prefix),
+      endsWith: (value, suffix) => value.endsWith(suffix),
+    };
   }
 
   public interpolate<InterpolableType extends string | object>(
