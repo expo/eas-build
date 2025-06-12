@@ -28,7 +28,7 @@ describe(createUploadArtifactBuildFunction, () => {
         path: '/',
       },
     });
-    await expect(buildStep.executeAsync()).resolves.not.toThrowError();
+    await expect(buildStep.executeAsync()).resolves.not.toThrow();
   });
 
   it('accepts `path` argument', async () => {
@@ -38,7 +38,7 @@ describe(createUploadArtifactBuildFunction, () => {
         path: '/',
       },
     });
-    await expect(buildStep.executeAsync()).resolves.not.toThrowError();
+    await expect(buildStep.executeAsync()).resolves.not.toThrow();
   });
 
   it('accepts multiline `path` argument', async () => {
@@ -102,7 +102,7 @@ describe(createUploadArtifactBuildFunction, () => {
         path: '/',
       },
     });
-    await expect(buildStep.executeAsync()).resolves.not.toThrowError();
+    await expect(buildStep.executeAsync()).resolves.not.toThrow();
   });
 
   it.each(['invalid-value'])('does not accept %s', async (type) => {
@@ -112,6 +112,6 @@ describe(createUploadArtifactBuildFunction, () => {
         path: '/',
       },
     });
-    await expect(buildStep.executeAsync()).rejects.toThrowError('Invalid type provided.');
+    await expect(buildStep.executeAsync()).rejects.toThrow('Invalid type provided.');
   });
 });
