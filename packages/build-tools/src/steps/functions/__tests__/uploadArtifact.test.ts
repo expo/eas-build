@@ -29,7 +29,7 @@ describe(createUploadArtifactBuildFunction, () => {
       },
     });
     const typeInput = buildStep.inputs?.find((input) => input.id === 'type')!;
-    expect(typeInput.isValueOneOfAllowedValues()).toBe(true);
+    expect(typeInput.isRawValueOneOfAllowedValues()).toBe(true);
   });
 
   it('accepts `path` argument', async () => {
@@ -104,7 +104,7 @@ describe(createUploadArtifactBuildFunction, () => {
       },
     });
     for (const input of buildStep.inputs ?? []) {
-      expect(input.isValueOneOfAllowedValues()).toBe(true);
+      expect(input.isRawValueOneOfAllowedValues()).toBe(true);
     }
   });
 
@@ -116,6 +116,6 @@ describe(createUploadArtifactBuildFunction, () => {
       },
     });
     const typeInput = buildStep.inputs?.find((input) => input.id === 'type')!;
-    expect(typeInput.isValueOneOfAllowedValues()).toBe(false);
+    expect(typeInput.isRawValueOneOfAllowedValues()).toBe(false);
   });
 });

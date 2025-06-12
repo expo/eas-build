@@ -134,7 +134,7 @@ export class BuildStepInput<
     return this;
   }
 
-  public isValueOneOfAllowedValues(): boolean {
+  public isRawValueOneOfAllowedValues(): boolean {
     const value = this._value ?? this.defaultValue;
     if (this.allowedValues === undefined || value === undefined) {
       return true;
