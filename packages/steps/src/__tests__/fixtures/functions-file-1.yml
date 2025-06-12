@@ -7,7 +7,6 @@ functions:
     inputs:
       - name: name
         type: string
-        allowed_values: [Wojtek, Dominik, Szymon, Brent]
       - name: test
         type: number
         default_value: ${ eas.job.version.buildNumber }

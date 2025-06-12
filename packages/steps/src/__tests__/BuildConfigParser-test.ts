@@ -428,22 +428,18 @@ describe(BuildConfigParser, () => {
       expect(step6.inputs?.[0].id).toBe('greeting');
       expect(step6.inputs?.[0].required).toBe(true);
       expect(step6.inputs?.[0].defaultValue).toBe('Hi');
-      expect(step6.inputs?.[0].allowedValues).toEqual(['Hi', 'Hello']);
       expect(step6.inputs?.[0].allowedValueTypeName).toBe(BuildStepInputValueTypeName.STRING);
       expect(step6.inputs?.[1].id).toBe('name');
       expect(step6.inputs?.[1].required).toBe(true);
       expect(step6.inputs?.[1].defaultValue).toBe('Brent');
-      expect(step6.inputs?.[1].allowedValues).toEqual(undefined);
       expect(step6.inputs?.[1].allowedValueTypeName).toBe(BuildStepInputValueTypeName.STRING);
       expect(step6.inputs?.[2].id).toBe('test');
       expect(step6.inputs?.[2].required).toBe(true);
       expect(step6.inputs?.[2].defaultValue).toBe(false);
-      expect(step6.inputs?.[2].allowedValues).toEqual([false, true]);
       expect(step6.inputs?.[2].allowedValueTypeName).toBe(BuildStepInputValueTypeName.BOOLEAN);
       expect(step6.inputs?.[3].id).toBe('number');
       expect(step6.inputs?.[3].required).toBe(true);
       expect(step6.inputs?.[3].defaultValue).toBe(undefined);
-      expect(step6.inputs?.[3].allowedValues).toEqual(undefined);
       expect(step6.inputs?.[3].allowedValueTypeName).toBe(BuildStepInputValueTypeName.NUMBER);
       expect(step6.stepEnvOverrides).toMatchObject({});
 
@@ -523,12 +519,10 @@ describe(BuildConfigParser, () => {
       //  inputs:
       //   - name: greeting
       //     default_value: Hi
-      //     allowed_values: [Hi, Hello]
       //   - name: name
       //     default_value: Brent
       //   - name: test
       //     default_value: false
-      //     allowed_values: [false, true]
       //     type: boolean
       //   - name: number
       //     type: number
@@ -539,20 +533,12 @@ describe(BuildConfigParser, () => {
       expect(function5.inputProviders?.[0](ctx, 'unknown-step').id).toBe('greeting');
       expect(function5.inputProviders?.[0](ctx, 'unknown-step').required).toBe(true);
       expect(function5.inputProviders?.[0](ctx, 'unknown-step').defaultValue).toBe('Hi');
-      expect(function5.inputProviders?.[0](ctx, 'unknown-step').allowedValues).toEqual([
-        'Hi',
-        'Hello',
-      ]);
       expect(function5.inputProviders?.[2](ctx, 'unknown-step').allowedValueTypeName).toBe(
         BuildStepInputValueTypeName.BOOLEAN
       );
       expect(function5.inputProviders?.[2](ctx, 'unknown-step').id).toBe('test');
       expect(function5.inputProviders?.[2](ctx, 'unknown-step').required).toBe(true);
       expect(function5.inputProviders?.[2](ctx, 'unknown-step').defaultValue).toBe(false);
-      expect(function5.inputProviders?.[2](ctx, 'unknown-step').allowedValues).toEqual([
-        false,
-        true,
-      ]);
       expect(function5.inputProviders?.[3](ctx, 'unknown-step').allowedValueTypeName).toBe(
         BuildStepInputValueTypeName.NUMBER
       );

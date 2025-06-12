@@ -70,12 +70,10 @@ functions:
     inputs:
       - name: greeting
         default_value: Hi
-        allowed_values: [Hi, Hello]
       - name: name
         default_value: Brent
       - name: test
         default_value: false
-        allowed_values: [false, true]
         type: boolean
       - name: number
         type: number

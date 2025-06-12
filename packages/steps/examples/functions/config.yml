@@ -28,7 +28,6 @@ functions:
         default_value: Brent
       - name: greeting
         default_value: Hi
-        allowed_values: [Hi, Hello]
     command: echo "${ inputs.greeting }, ${ inputs.name }!"
   say_hi_brent:
     name: Say HI

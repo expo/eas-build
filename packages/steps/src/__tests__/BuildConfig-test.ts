@@ -112,20 +112,6 @@ describe(readAndValidateBuildFunctionsConfigFileAsync, () => {
     expect(typeof config).toBe('object');
     expect(config.functions?.say_hi_linux_and_darwin).toBeDefined();
   });
-  test('invalid functions config', async () => {
-    const error = await getErrorAsync<BuildConfigError>(async () => {
-      return await readAndValidateBuildFunctionsConfigFileAsync(
-        path.join(__dirname, './fixtures/invalid-functions.yml')
-      );
-    });
-    expect(error).toBeInstanceOf(BuildConfigError);
-    expect(error.message).toMatch(
-      /"functions.say_hi.inputs\[0\].allowedValues\[1\]" must be a boolean/
-    );
-    expect(error.message).toMatch(
-      /"functions.say_hi.inputs\[1\].defaultValue" with value "\${ wrong.job.platform }" fails to match the context or output reference regex pattern/
-    );
-  });
 });
 
 describe(readRawBuildConfigAsync, () => {
@@ -634,13 +620,11 @@ describe(validateConfig, () => {
                 {
                   name: 'i2',
                   default_value: 'hi',
-                  allowed_values: ['bye'],
                 },
                 {
                   name: 'i3',
                   default_value: 'hhh',
                   type: 'string',
-                  allowed_values: [1, 2],
                 },
                 {
                   name: 'i4',
@@ -673,15 +657,6 @@ describe(validateConfig, () => {
         });
         expect(error.message).toMatch(/"functions.abc.inputs\[0\].defaultValue" must be a string/);
         expect(error.message).toMatch(
-          /"functions.abc.inputs\[1\].defaultValue" must be one of allowed values/
-        );
-        expect(error.message).toMatch(
-          /"functions.abc.inputs\[2\].allowedValues\[0\]" must be a string/
-        );
-        expect(error.message).toMatch(
-          /"functions.abc.inputs\[2\].allowedValues\[1\]" must be a string/
-        );
-        expect(error.message).toMatch(
           /"functions.abc.inputs\[3\].allowedValueType" must be one of \[string, boolean, number, json\]/
         );
         expect(error.message).toMatch(/"functions.abc.inputs\[4\].defaultValue" must be a number/);
@@ -705,19 +680,16 @@ describe(validateConfig, () => {
                 {
                   name: 'i2',
                   default_value: '1',
-                  allowed_values: ['1', '2'],
                 },
                 {
                   name: 'i3',
                   default_value: true,
-                  allowed_values: [true, false],
                   type: 'boolean',
                 },
                 {
                   name: 'i4',
                   default_value: 1,
                   type: 'number',
-                  allowed_values: [1, 2],
                 },
                 {
                   name: 'i5',

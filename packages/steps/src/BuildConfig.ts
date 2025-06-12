@@ -90,16 +90,10 @@ const BuildFunctionInputsSchema = Joi.array().items(
     then: Joi.string().required(),
     otherwise: Joi.object({
       name: Joi.string().required(),
-      defaultValue: Joi.when('allowedValues', {
-        is: Joi.exist(),
-        then: Joi.valid(Joi.in('allowedValues')).messages({
-          'any.only': '{{#label}} must be one of allowed values',
-        }),
+      defaultValue: Joi.when('allowedValueType', {
+        is: BuildStepInputValueTypeName.STRING,
+        then: Joi.string().allow(''),
       })
-        .when('allowedValueType', {
-          is: BuildStepInputValueTypeName.STRING,
-          then: Joi.string().allow(''),
-        })
         .when('allowedValueType', {
           is: BuildStepInputValueTypeName.BOOLEAN,
           then: Joi.alternatives(
@@ -144,7 +138,7 @@ const BuildFunctionInputsSchema = Joi.array().items(
         .default(BuildStepInputValueTypeName.STRING),
       required: Joi.boolean(),
     })
-      .rename('allowed_values', 'allowedValues')
+      .unknown() // Ignores unknown keys
       .rename('default_value', 'defaultValue')
       .rename('type', 'allowedValueType')
       .required(),

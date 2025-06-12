@@ -338,14 +338,12 @@ describe(StepsConfigParser, () => {
       expect(input1.id).toBe('arg1');
       expect(input1.value).toBe('value1');
       expect(input1.allowedValueTypeName).toBe(BuildStepInputValueTypeName.STRING);
-      expect(input1.allowedValues).toBeUndefined();
       expect(input1.defaultValue).toBeUndefined();
       expect(input1.rawValue).toBe('value1');
       expect(input1.required).toBe(true);
       expect(input2.id).toBe('arg2');
       expect(input2.value).toBe(2);
       expect(input2.allowedValueTypeName).toBe(BuildStepInputValueTypeName.NUMBER);
-      expect(input2.allowedValues).toBeUndefined();
       expect(input2.defaultValue).toBeUndefined();
       expect(input2.rawValue).toBe(2);
       expect(input2.required).toBe(true);
@@ -355,7 +353,6 @@ describe(StepsConfigParser, () => {
         key2: ['value1'],
       });
       expect(input3.allowedValueTypeName).toBe(BuildStepInputValueTypeName.JSON);
-      expect(input3.allowedValues).toBeUndefined();
       expect(input3.defaultValue).toBeUndefined();
       expect(input3.rawValue).toMatchObject({
         key1: 'value1',
@@ -364,7 +361,6 @@ describe(StepsConfigParser, () => {
       expect(input3.required).toBe(true);
       expect(input4.id).toBe('arg4');
       expect(input4.allowedValueTypeName).toBe(BuildStepInputValueTypeName.STRING);
-      expect(input4.allowedValues).toBeUndefined();
       expect(input4.defaultValue).toBeUndefined();
       expect(input4.rawValue).toBe('${ step3.my_output }');
       expect(input4.required).toBe(true);
