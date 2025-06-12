@@ -1,11 +1,14 @@
 import assert from 'assert';
 
+import { JobInterpolationContext } from '@expo/eas-build-job';
+
 import { BuildStepGlobalContext } from './BuildStepContext.js';
 import { BuildStepRuntimeError } from './errors.js';
 import {
   BUILD_STEP_OR_BUILD_GLOBAL_CONTEXT_REFERENCE_REGEX,
   interpolateWithOutputs,
 } from './utils/template.js';
+import { interpolateJobContext } from './interpolation.js';
 
 export enum BuildStepInputValueTypeName {
   STRING = 'string',
@@ -82,9 +85,11 @@ export class BuildStepInput<
     this.allowedValueTypeName = allowedValueTypeName;
   }
 
-  public get value(): R extends true
-    ? BuildStepInputValueType<T>
-    : BuildStepInputValueType<T> | undefined {
+  public getValue({
+    interpolationContext,
+  }: {
+    interpolationContext: JobInterpolationContext;
+  }): R extends true ? BuildStepInputValueType<T> : BuildStepInputValueType<T> | undefined {
     const rawValue = this._value ?? this.defaultValue;
     if (this.required && rawValue === undefined) {
       throw new BuildStepRuntimeError(
@@ -109,7 +114,11 @@ export class BuildStepInput<
       // `valueDoesNotRequireInterpolation` checks that `rawValue` is not undefined
       // so this will never be true.
       assert(rawValue !== undefined);
-      const valueInterpolatedWithGlobalContext = this.ctx.interpolate(rawValue);
+      const interpolatedValue = interpolateJobContext({
+        target: rawValue,
+        context: interpolationContext,
+      }) as string | object;
+      const valueInterpolatedWithGlobalContext = this.ctx.interpolate(interpolatedValue);
       const valueInterpolatedWithOutputsAndGlobalContext = interpolateWithOutputs(
         valueInterpolatedWithGlobalContext,
         (path) => this.ctx.getStepOutputValue(path) ?? ''

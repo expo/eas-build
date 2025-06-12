@@ -323,7 +323,9 @@ export class BuildStep extends BuildStepOutputAccessor {
         inputs:
           this.inputs?.reduce(
             (acc, input) => {
-              acc[input.id] = input.value;
+              acc[input.id] = input.getValue({
+                interpolationContext: this.getInterpolationContext(),
+              });
               return acc;
             },
             {} as Record<string, unknown>
@@ -402,7 +404,12 @@ export class BuildStep extends BuildStepOutputAccessor {
     assert(this.fn, 'Function (fn) must be defined');
 
     await this.fn(this.ctx, {
-      inputs: this.inputById,
+      inputs: Object.fromEntries(
+        Object.entries(this.inputById).map(([key, input]) => [
+          key,
+          { value: input.getValue({ interpolationContext: this.getInterpolationContext() }) },
+        ])
+      ),
       outputs: this.outputById,
       env: this.getScriptEnv(),
     });
@@ -422,10 +429,8 @@ export class BuildStep extends BuildStepOutputAccessor {
     }
     const vars = inputs.reduce(
       (acc, input) => {
-        acc[input.id] =
-          typeof input.value === 'object'
-            ? JSON.stringify(input.value)
-            : input.value?.toString() ?? '';
+        const value = input.getValue({ interpolationContext: this.getInterpolationContext() });
+        acc[input.id] = typeof value === 'object' ? JSON.stringify(value) : value?.toString() ?? '';
         return acc;
       },
       {} as Record<string, string>
