@@ -5,8 +5,10 @@ import { SpawnPromise, SpawnResult } from '@expo/spawn-async';
 import cloneDeep from 'lodash.clonedeep';
 
 import { BuildStepOutput } from '../BuildStepOutput.js';
-import { BuildStepInput } from '../BuildStepInput.js';
-import { SerializedCustomBuildFunctionArguments } from '../utils/customFunction.js';
+import {
+  SerializedCustomBuildFunctionArguments,
+  deserializeInputs,
+} from '../utils/customFunction.js';
 import { BuildStepContext } from '../BuildStepContext.js';
 import { BuildStepFunction } from '../BuildStep.js';
 import { spawnAsync } from '../utils/shell/spawn.js';
@@ -67,12 +69,7 @@ async function runCustomJsFunctionAsync(): Promise<void> {
   });
 
   const ctx = BuildStepContext.deserialize(serializedFunctionArguments.ctx, logger);
-  const inputs = Object.fromEntries(
-    Object.entries(serializedFunctionArguments.inputs).map(([id, input]) => [
-      id,
-      BuildStepInput.deserialize(input, logger),
-    ])
-  );
+  const inputs = deserializeInputs(serializedFunctionArguments.inputs);
   const outputs = Object.fromEntries(
     Object.entries(serializedFunctionArguments.outputs).map(([id, output]) => [
       id,

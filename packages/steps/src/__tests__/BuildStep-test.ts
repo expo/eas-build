@@ -6,13 +6,9 @@ import { instance, mock, verify, when } from 'ts-mockito';
 import { v4 as uuidv4 } from 'uuid';
 
 import { BuildStep, BuildStepFunction, BuildStepStatus } from '../BuildStep.js';
-import {
-  BuildStepInput,
-  BuildStepInputById,
-  BuildStepInputValueTypeName,
-} from '../BuildStepInput.js';
+import { BuildStepInput, BuildStepInputValueTypeName } from '../BuildStepInput.js';
 import { BuildStepGlobalContext, BuildStepContext } from '../BuildStepContext.js';
-import { BuildStepOutput, BuildStepOutputById } from '../BuildStepOutput.js';
+import { BuildStepOutput } from '../BuildStepOutput.js';
 import { BuildStepRuntimeError } from '../errors.js';
 import { nullthrows } from '../utils/nullthrows.js';
 import { BuildRuntimePlatform } from '../BuildRuntimePlatform.js';
@@ -404,17 +400,12 @@ describe(BuildStep, () => {
 
       it('collects the envs after calling the fn', async () => {
         const id = 'test1';
-        const fn = jest.fn(
-          async (
-            ctx: BuildStepContext,
-            { env }: { inputs: BuildStepInputById; outputs: BuildStepOutputById; env: BuildStepEnv }
-          ) => {
-            await spawnAsync('set-env', ['ABC', '123'], {
-              cwd: ctx.workingDirectory,
-              env,
-            });
-          }
-        );
+        const fn = jest.fn(async (ctx: BuildStepContext, { env }: { env: BuildStepEnv }) => {
+          await spawnAsync('set-env', ['ABC', '123'], {
+            cwd: ctx.workingDirectory,
+            env,
+          });
+        });
         const displayName = BuildStep.getDisplayName({ id });
 
         const step = new BuildStep(baseStepCtx, {
@@ -428,17 +419,12 @@ describe(BuildStep, () => {
 
       it('collects the outputs after calling the fn', async () => {
         const id = 'test1';
-        const fn = jest.fn(
-          async (
-            ctx: BuildStepContext,
-            { env }: { inputs: BuildStepInputById; outputs: BuildStepOutputById; env: BuildStepEnv }
-          ) => {
-            await spawnAsync('set-output', ['abc', '123'], {
-              cwd: ctx.workingDirectory,
-              env,
-            });
-          }
-        );
+        const fn = jest.fn(async (ctx: BuildStepContext, { env }: { env: BuildStepEnv }) => {
+          await spawnAsync('set-output', ['abc', '123'], {
+            cwd: ctx.workingDirectory,
+            env,
+          });
+        });
         const displayName = BuildStep.getDisplayName({ id });
 
         const step = new BuildStep(baseStepCtx, {
@@ -625,7 +611,7 @@ describe(BuildStep, () => {
 
         const fn: BuildStepFunction = (_ctx, { inputs, outputs }) => {
           outputs.abc.set(
-            `${inputs.foo1.value} ${inputs.foo2.value} ${inputs.foo3.value} ${inputs.foo4.value}`
+            `${inputs.foo1?.value} ${inputs.foo2?.value} ${inputs.foo3?.value} ${inputs.foo4?.value}`
           );
         };
 
