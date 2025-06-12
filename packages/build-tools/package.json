@@ -30,7 +30,7 @@
     "@expo/logger": "1.0.117",
     "@expo/package-manager": "1.7.0",
     "@expo/plist": "^0.2.0",
-    "@expo/repack-app": "0.0.6",
+    "@expo/repack-app": "~0.2.3",
     "@expo/results": "^1.0.0",
     "@expo/steps": "1.0.182",
     "@expo/template-file": "1.0.117",
