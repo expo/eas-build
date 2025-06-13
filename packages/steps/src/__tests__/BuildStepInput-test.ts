@@ -123,11 +123,67 @@ describe(BuildStepInput, () => {
     expect(i.getValue({ interpolationContext: ctx.getInterpolationContext() })).toEqual('linux');
   });
 
+  test('context value string', () => {
+    const ctx = createGlobalContextMock({
+      staticContextContent: {
+        foo: 'bar',
+      } as unknown as JobInterpolationContext,
+    });
+    const i = new BuildStepInput(ctx, {
+      id: 'foo',
+      stepDisplayName: BuildStep.getDisplayName({ id: 'test1' }),
+      defaultValue: '${{ foo }}',
+      required: true,
+      allowedValueTypeName: BuildStepInputValueTypeName.STRING,
+    });
+    expect(i.getValue({ interpolationContext: ctx.getInterpolationContext() })).toEqual('bar');
+  });
+
   test('context value string with newline characters', () => {
     const ctx = createGlobalContextMock({
       staticContextContent: {
         foo: {
           bar: 'Line 1\nLine 2\n\nLine 3',
+        },
+      } as unknown as JobInterpolationContext,
+    });
+    const i = new BuildStepInput(ctx, {
+      id: 'foo',
+      stepDisplayName: BuildStep.getDisplayName({ id: 'test1' }),
+      defaultValue: '${ eas.foo.bar }',
+      required: true,
+      allowedValueTypeName: BuildStepInputValueTypeName.STRING,
+    });
+    expect(i.getValue({ interpolationContext: ctx.getInterpolationContext() })).toEqual(
+      'Line 1\nLine 2\n\nLine 3'
+    );
+  });
+
+  test('context value string with newline characters', () => {
+    const ctx = createGlobalContextMock({
+      staticContextContent: {
+        foo: {
+          bar: 'Line 1\nLine 2\n\nLine 3',
+        },
+      } as unknown as JobInterpolationContext,
+    });
+    const i = new BuildStepInput(ctx, {
+      id: 'foo',
+      stepDisplayName: BuildStep.getDisplayName({ id: 'test1' }),
+      defaultValue: '${{ foo.bar }}',
+      required: true,
+      allowedValueTypeName: BuildStepInputValueTypeName.STRING,
+    });
+    expect(i.getValue({ interpolationContext: ctx.getInterpolationContext() })).toEqual(
+      'Line 1\nLine 2\n\nLine 3'
+    );
+  });
+
+  test('context value string with doubly escaped newline characters', () => {
+    const ctx = createGlobalContextMock({
+      staticContextContent: {
+        foo: {
+          bar: 'Line 1\\nLine 2\\n\\nLine 3',
         },
       } as unknown as JobInterpolationContext,
     });
@@ -154,7 +210,7 @@ describe(BuildStepInput, () => {
     const i = new BuildStepInput(ctx, {
       id: 'foo',
       stepDisplayName: BuildStep.getDisplayName({ id: 'test1' }),
-      defaultValue: '${ eas.foo.bar }',
+      defaultValue: '${{ foo.bar }}',
       required: true,
       allowedValueTypeName: BuildStepInputValueTypeName.STRING,
     });
@@ -188,6 +244,31 @@ describe(BuildStepInput, () => {
     expect(i.getValue({ interpolationContext: ctx.getInterpolationContext() })).toEqual(42);
   });
 
+  test('context value number', () => {
+    const ctx = createGlobalContextMock({
+      staticContextContent: {
+        foo: {
+          bar: [
+            1,
+            2,
+            3,
+            {
+              baz: 42,
+            },
+          ],
+        },
+      } as unknown as JobInterpolationContext,
+    });
+    const i = new BuildStepInput<BuildStepInputValueTypeName>(ctx, {
+      id: 'foo',
+      stepDisplayName: BuildStep.getDisplayName({ id: 'test1' }),
+      defaultValue: '${{ foo.bar[3].baz }}',
+      allowedValueTypeName: BuildStepInputValueTypeName.NUMBER,
+      required: true,
+    });
+    expect(i.getValue({ interpolationContext: ctx.getInterpolationContext() })).toEqual(42);
+  });
+
   test('context value boolean', () => {
     const ctx = createGlobalContextMock({
       staticContextContent: {
@@ -215,6 +296,33 @@ describe(BuildStepInput, () => {
     expect(i.getValue({ interpolationContext: ctx.getInterpolationContext() })).toEqual(false);
   });
 
+  test('context value boolean', () => {
+    const ctx = createGlobalContextMock({
+      staticContextContent: {
+        foo: {
+          bar: [
+            1,
+            2,
+            3,
+            {
+              baz: {
+                qux: false,
+              },
+            },
+          ],
+        },
+      } as unknown as JobInterpolationContext,
+    });
+    const i = new BuildStepInput<BuildStepInputValueTypeName>(ctx, {
+      id: 'foo',
+      stepDisplayName: BuildStep.getDisplayName({ id: 'test1' }),
+      defaultValue: '${{ foo.bar[3].baz.qux }}',
+      allowedValueTypeName: BuildStepInputValueTypeName.BOOLEAN,
+      required: true,
+    });
+    expect(i.getValue({ interpolationContext: ctx.getInterpolationContext() })).toEqual(false);
+  });
+
   test('context value JSON', () => {
     const ctx = createGlobalContextMock({
       staticContextContent: {
@@ -236,6 +344,35 @@ describe(BuildStepInput, () => {
       id: 'foo',
       stepDisplayName: BuildStep.getDisplayName({ id: 'test1' }),
       defaultValue: '${ eas.foo }',
+      allowedValueTypeName: BuildStepInputValueTypeName.JSON,
+      required: true,
+    });
+    expect(i.getValue({ interpolationContext: ctx.getInterpolationContext() })).toMatchObject({
+      bar: [1, 2, 3, { baz: { qux: false } }],
+    });
+  });
+
+  test('context value JSON', () => {
+    const ctx = createGlobalContextMock({
+      staticContextContent: {
+        foo: {
+          bar: [
+            1,
+            2,
+            3,
+            {
+              baz: {
+                qux: false,
+              },
+            },
+          ],
+        },
+      } as unknown as JobInterpolationContext,
+    });
+    const i = new BuildStepInput<BuildStepInputValueTypeName>(ctx, {
+      id: 'foo',
+      stepDisplayName: BuildStep.getDisplayName({ id: 'test1' }),
+      defaultValue: '${{ foo }}',
       allowedValueTypeName: BuildStepInputValueTypeName.JSON,
       required: true,
     });
@@ -273,6 +410,35 @@ describe(BuildStepInput, () => {
     );
   });
 
+  test('invalid context value type number', () => {
+    const ctx = createGlobalContextMock({
+      staticContextContent: {
+        foo: {
+          bar: [
+            1,
+            2,
+            3,
+            {
+              baz: {
+                qux: 'ala ma kota',
+              },
+            },
+          ],
+        },
+      } as unknown as JobInterpolationContext,
+    });
+    const i = new BuildStepInput<BuildStepInputValueTypeName>(ctx, {
+      id: 'foo',
+      stepDisplayName: BuildStep.getDisplayName({ id: 'test1' }),
+      defaultValue: '${{ foo.bar[3].baz.qux }}',
+      allowedValueTypeName: BuildStepInputValueTypeName.NUMBER,
+      required: true,
+    });
+    expect(() => i.getValue({ interpolationContext: ctx.getInterpolationContext() })).toThrowError(
+      'Input parameter "foo" for step "test1" must be of type "number".'
+    );
+  });
+
   test('invalid context value type boolean', () => {
     const ctx = createGlobalContextMock({
       staticContextContent: {
@@ -302,6 +468,35 @@ describe(BuildStepInput, () => {
     );
   });
 
+  test('invalid context value type boolean', () => {
+    const ctx = createGlobalContextMock({
+      staticContextContent: {
+        foo: {
+          bar: [
+            1,
+            2,
+            3,
+            {
+              baz: {
+                qux: 123,
+              },
+            },
+          ],
+        },
+      } as unknown as JobInterpolationContext,
+    });
+    const i = new BuildStepInput<BuildStepInputValueTypeName>(ctx, {
+      id: 'foo',
+      stepDisplayName: BuildStep.getDisplayName({ id: 'test1' }),
+      defaultValue: '${{ foo.bar[3].baz.qux }}',
+      required: true,
+      allowedValueTypeName: BuildStepInputValueTypeName.BOOLEAN,
+    });
+    expect(() => i.getValue({ interpolationContext: ctx.getInterpolationContext() })).toThrowError(
+      'Input parameter "foo" for step "test1" must be of type "boolean".'
+    );
+  });
+
   test('invalid context value type JSON', () => {
     const ctx = createGlobalContextMock({
       staticContextContent: {
@@ -323,6 +518,35 @@ describe(BuildStepInput, () => {
       id: 'foo',
       stepDisplayName: BuildStep.getDisplayName({ id: 'test1' }),
       defaultValue: '${ eas.foo.bar[3].baz.qux }',
+      allowedValueTypeName: BuildStepInputValueTypeName.JSON,
+      required: true,
+    });
+    expect(() => i.getValue({ interpolationContext: ctx.getInterpolationContext() })).toThrowError(
+      'Input parameter "foo" for step "test1" must be of type "json".'
+    );
+  });
+
+  test('invalid context value type JSON', () => {
+    const ctx = createGlobalContextMock({
+      staticContextContent: {
+        foo: {
+          bar: [
+            1,
+            2,
+            3,
+            {
+              baz: {
+                qux: 'ala ma kota',
+              },
+            },
+          ],
+        },
+      } as unknown as JobInterpolationContext,
+    });
+    const i = new BuildStepInput<BuildStepInputValueTypeName>(ctx, {
+      id: 'foo',
+      stepDisplayName: BuildStep.getDisplayName({ id: 'test1' }),
+      defaultValue: '${{ foo.bar[3].baz.qux }}',
       allowedValueTypeName: BuildStepInputValueTypeName.JSON,
       required: true,
     });
@@ -366,6 +590,41 @@ describe(BuildStepInput, () => {
     });
   });
 
+  test('context values in an object', () => {
+    const ctx = createGlobalContextMock({
+      staticContextContent: {
+        context_val_1: 'val_1',
+        context_val_2: {
+          in_val_1: 'in_val_1',
+        },
+      } as unknown as JobInterpolationContext,
+    });
+    const i = new BuildStepInput(ctx, {
+      id: 'foo',
+      stepDisplayName: BuildStep.getDisplayName({ id: 'test1' }),
+      required: true,
+      allowedValueTypeName: BuildStepInputValueTypeName.JSON,
+    });
+    i.set({
+      foo: 'foo',
+      bar: '${{ context_val_1 }}',
+      baz: {
+        bazfoo: 'bazfoo',
+        bazbar: '${{ context_val_2.in_val_1 }}',
+        bazbaz: ['bazbaz', '${{ context_val_1 }}', '${{ context_val_2.in_val_1 }}'],
+      },
+    });
+    expect(i.getValue({ interpolationContext: ctx.getInterpolationContext() })).toEqual({
+      foo: 'foo',
+      bar: 'val_1',
+      baz: {
+        bazfoo: 'bazfoo',
+        bazbar: 'in_val_1',
+        bazbaz: ['bazbaz', 'val_1', 'in_val_1'],
+      },
+    });
+  });
+
   test('context values in an object with newline characters', () => {
     const ctx = createGlobalContextMock({
       staticContextContent: {
@@ -384,6 +643,36 @@ describe(BuildStepInput, () => {
       baz: {
         bazfoo: 'bazfoo',
         bazbaz: ['bazbaz', '${ eas.context_val_1 }'],
+      },
+    });
+    expect(i.getValue({ interpolationContext: ctx.getInterpolationContext() })).toEqual({
+      foo: 'foo',
+      bar: 'Line 1\nLine 2\n\nLine 3',
+      baz: {
+        bazfoo: 'bazfoo',
+        bazbaz: ['bazbaz', 'Line 1\nLine 2\n\nLine 3'],
+      },
+    });
+  });
+
+  test('context values in an object with newline characters', () => {
+    const ctx = createGlobalContextMock({
+      staticContextContent: {
+        context_val_1: 'Line 1\nLine 2\n\nLine 3',
+      } as unknown as JobInterpolationContext,
+    });
+    const i = new BuildStepInput(ctx, {
+      id: 'foo',
+      stepDisplayName: BuildStep.getDisplayName({ id: 'test1' }),
+      required: true,
+      allowedValueTypeName: BuildStepInputValueTypeName.JSON,
+    });
+    i.set({
+      foo: 'foo',
+      bar: '${{ context_val_1 }}',
+      baz: {
+        bazfoo: 'bazfoo',
+        bazbaz: ['bazbaz', '${{ context_val_1 }}'],
       },
     });
     expect(i.getValue({ interpolationContext: ctx.getInterpolationContext() })).toEqual({
@@ -458,6 +747,25 @@ describe(BuildStepInput, () => {
     }).toThrowError('Input parameter "foo" for step "test1" must be of type "json".');
   });
 
+  test('enforces correct value type when reading a value - reference json', () => {
+    const ctx = createGlobalContextMock({
+      staticContextContent: {
+        foo: 'bar',
+      } as unknown as JobInterpolationContext,
+    });
+    const i = new BuildStepInput<BuildStepInputValueTypeName>(ctx, {
+      id: 'foo',
+      required: true,
+      stepDisplayName: BuildStep.getDisplayName({ id: 'test1' }),
+      allowedValueTypeName: BuildStepInputValueTypeName.JSON,
+    });
+    i.set('${{ foo }}');
+    expect(() => {
+      // eslint-disable-next-line @typescript-eslint/no-unused-expressions
+      i.getValue({ interpolationContext: ctx.getInterpolationContext() });
+    }).toThrowError('Input parameter "foo" for step "test1" must be of type "json".');
+  });
+
   test('enforces correct value type when reading a value - reference number', () => {
     const ctx = createGlobalContextMock();
     const i = new BuildStepInput<BuildStepInputValueTypeName>(ctx, {
@@ -475,6 +783,27 @@ describe(BuildStepInput, () => {
     );
   });
 
+  test('enforces correct value type when reading a value - reference number', () => {
+    const ctx = createGlobalContextMock({
+      staticContextContent: {
+        foo: 'bar',
+      } as unknown as JobInterpolationContext,
+    });
+    const i = new BuildStepInput<BuildStepInputValueTypeName>(ctx, {
+      id: 'foo',
+      required: true,
+      stepDisplayName: BuildStep.getDisplayName({ id: 'test1' }),
+      allowedValueTypeName: BuildStepInputValueTypeName.NUMBER,
+    });
+    i.set('${{ foo }}');
+    expect(() => {
+      // eslint-disable-next-line @typescript-eslint/no-unused-expressions
+      i.getValue({ interpolationContext: ctx.getInterpolationContext() });
+    }).toThrowError(
+      new BuildStepRuntimeError('Input parameter "foo" for step "test1" must be of type "number".')
+    );
+  });
+
   test('enforces correct value type when reading a value - reference boolean', () => {
     const ctx = createGlobalContextMock();
     const i = new BuildStepInput<BuildStepInputValueTypeName>(ctx, {
@@ -484,6 +813,27 @@ describe(BuildStepInput, () => {
       allowedValueTypeName: BuildStepInputValueTypeName.BOOLEAN,
     });
     i.set('${ eas.runtimePlatform }');
+    expect(() => {
+      // eslint-disable-next-line @typescript-eslint/no-unused-expressions
+      i.getValue({ interpolationContext: ctx.getInterpolationContext() });
+    }).toThrowError(
+      new BuildStepRuntimeError('Input parameter "foo" for step "test1" must be of type "boolean".')
+    );
+  });
+
+  test('enforces correct value type when reading a value - reference boolean', () => {
+    const ctx = createGlobalContextMock({
+      staticContextContent: {
+        foo: 'bar',
+      } as unknown as JobInterpolationContext,
+    });
+    const i = new BuildStepInput<BuildStepInputValueTypeName>(ctx, {
+      id: 'foo',
+      required: true,
+      stepDisplayName: BuildStep.getDisplayName({ id: 'test1' }),
+      allowedValueTypeName: BuildStepInputValueTypeName.BOOLEAN,
+    });
+    i.set('${{ foo }}');
     expect(() => {
       // eslint-disable-next-line @typescript-eslint/no-unused-expressions
       i.getValue({ interpolationContext: ctx.getInterpolationContext() });

@@ -114,16 +114,18 @@ export class BuildStepInput<
       // `valueDoesNotRequireInterpolation` checks that `rawValue` is not undefined
       // so this will never be true.
       assert(rawValue !== undefined);
-      const interpolatedValue = interpolateJobContext({
+      let interpolatedValue = interpolateJobContext({
         target: rawValue,
         context: interpolationContext,
-      }) as string | object;
-      const valueInterpolatedWithGlobalContext = this.ctx.interpolate(interpolatedValue);
-      const valueInterpolatedWithOutputsAndGlobalContext = interpolateWithOutputs(
-        valueInterpolatedWithGlobalContext,
-        (path) => this.ctx.getStepOutputValue(path) ?? ''
-      );
-      returnValue = this.parseInputValueToAllowedType(valueInterpolatedWithOutputsAndGlobalContext);
+      }) as string | object | boolean | number;
+      if (typeof interpolatedValue === 'string' || typeof interpolatedValue === 'object') {
+        interpolatedValue = this.ctx.interpolate(interpolatedValue);
+        interpolatedValue = interpolateWithOutputs(
+          interpolatedValue,
+          (path) => this.ctx.getStepOutputValue(path) ?? ''
+        );
+      }
+      returnValue = this.parseInputValueToAllowedType(interpolatedValue);
     }
     return returnValue;
   }
@@ -161,7 +163,9 @@ export class BuildStepInput<
     );
   }
 
-  private parseInputValueToAllowedType(value: string | object): BuildStepInputValueType<T> {
+  private parseInputValueToAllowedType(
+    value: string | object | boolean | number
+  ): BuildStepInputValueType<T> {
     if (typeof value === 'object') {
       return value as BuildStepInputValueType<T>;
     }
@@ -176,7 +180,7 @@ export class BuildStepInput<
     }
   }
 
-  private parseInputValueToString(value: string): string {
+  private parseInputValueToString(value: string | boolean | number): string {
     let parsedValue = value;
     try {
       parsedValue = JSON.parse(`"${value}"`);
@@ -185,10 +189,10 @@ export class BuildStepInput<
         throw err;
       }
     }
-    return parsedValue;
+    return parsedValue as string;
   }
 
-  private parseInputValueToNumber(value: string): number {
+  private parseInputValueToNumber(value: string | boolean | number): number {
     const numberValue = Number(value);
     if (Number.isNaN(numberValue)) {
       throw new BuildStepRuntimeError(
@@ -198,10 +202,10 @@ export class BuildStepInput<
     return numberValue;
   }
 
-  private parseInputValueToBoolean(value: string): boolean {
-    if (value === 'true') {
+  private parseInputValueToBoolean(value: string | boolean | number): boolean {
+    if (value === 'true' || value === true) {
       return true;
-    } else if (value === 'false') {
+    } else if (value === 'false' || value === false) {
       return false;
     } else {
       throw new BuildStepRuntimeError(
@@ -210,9 +214,9 @@ export class BuildStepInput<
     }
   }
 
-  private parseInputValueToObject(value: string): Record<string, any> {
+  private parseInputValueToObject(value: string | boolean | number): Record<string, any> {
     try {
-      return JSON.parse(value);
+      return JSON.parse(value as string);
     } catch (e: any) {
       throw new BuildStepRuntimeError(
         `Input parameter "${this.id}" for step "${this.stepDisplayName}" must be of type "${this.allowedValueTypeName}".`,
