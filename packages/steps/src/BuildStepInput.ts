@@ -97,35 +97,37 @@ export class BuildStepInput<
       );
     }
 
+    const interpolatedValue = interpolateJobContext({
+      target: rawValue,
+      context: interpolationContext,
+    });
+
     const valueDoesNotRequireInterpolation =
-      rawValue === undefined ||
-      rawValue === null ||
-      typeof rawValue === 'boolean' ||
-      typeof rawValue === 'number';
+      interpolatedValue === undefined ||
+      interpolatedValue === null ||
+      typeof interpolatedValue === 'boolean' ||
+      typeof interpolatedValue === 'number';
     let returnValue;
     if (valueDoesNotRequireInterpolation) {
-      if (typeof rawValue !== this.allowedValueTypeName && rawValue !== undefined) {
+      if (
+        typeof interpolatedValue !== this.allowedValueTypeName &&
+        interpolatedValue !== undefined
+      ) {
         throw new BuildStepRuntimeError(
           `Input parameter "${this.id}" for step "${this.stepDisplayName}" must be of type "${this.allowedValueTypeName}".`
         );
       }
-      returnValue = rawValue as BuildStepInputValueType<T>;
+      returnValue = interpolatedValue as BuildStepInputValueType<T>;
     } else {
       // `valueDoesNotRequireInterpolation` checks that `rawValue` is not undefined
       // so this will never be true.
-      assert(rawValue !== undefined);
-      let interpolatedValue = interpolateJobContext({
-        target: rawValue,
-        context: interpolationContext,
-      }) as string | object | boolean | number;
-      if (typeof interpolatedValue === 'string' || typeof interpolatedValue === 'object') {
-        interpolatedValue = this.ctx.interpolate(interpolatedValue);
-        interpolatedValue = interpolateWithOutputs(
-          interpolatedValue,
-          (path) => this.ctx.getStepOutputValue(path) ?? ''
-        );
-      }
-      returnValue = this.parseInputValueToAllowedType(interpolatedValue);
+      assert(interpolatedValue !== undefined);
+      const valueInterpolatedWithGlobalContext = this.ctx.interpolate(interpolatedValue);
+      const valueInterpolatedWithOutputsAndGlobalContext = interpolateWithOutputs(
+        valueInterpolatedWithGlobalContext,
+        (path) => this.ctx.getStepOutputValue(path) ?? ''
+      );
+      returnValue = this.parseInputValueToAllowedType(valueInterpolatedWithOutputsAndGlobalContext);
     }
     return returnValue;
   }
