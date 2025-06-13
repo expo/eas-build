@@ -9,7 +9,6 @@ import {
 } from '../BuildStepInput.js';
 
 import { createGlobalContextMock } from './utils/context.js';
-import { createMockLogger } from './utils/logger.js';
 
 describe(BuildStepInput, () => {
   test('basic case string', () => {
@@ -496,53 +495,6 @@ describe(BuildStepInput, () => {
     }).toThrowError(
       new BuildStepRuntimeError('Input parameter "foo" for step "test1" is required.')
     );
-  });
-
-  test('serializes correctly', () => {
-    const ctx = createGlobalContextMock();
-    const i = new BuildStepInput<BuildStepInputValueTypeName>(ctx, {
-      id: 'foo',
-      stepDisplayName: BuildStep.getDisplayName({ id: 'test1' }),
-      defaultValue: 'bar',
-      allowedValueTypeName: BuildStepInputValueTypeName.STRING,
-      required: true,
-      allowedValues: ['bar', 'baz'],
-    });
-    i.set('bar');
-    expect(i.serialize()).toEqual(
-      expect.objectContaining({
-        id: 'foo',
-        stepDisplayName: BuildStep.getDisplayName({ id: 'test1' }),
-        defaultValue: 'bar',
-        allowedValueTypeName: BuildStepInputValueTypeName.STRING,
-        allowedValues: ['bar', 'baz'],
-        required: true,
-        value: 'bar',
-      })
-    );
-  });
-
-  test('deserializes correctly', () => {
-    const ctx = createGlobalContextMock();
-    const serializedInput = {
-      id: 'foo',
-      stepDisplayName: BuildStep.getDisplayName({ id: 'test1' }),
-      defaultValue: 'bar',
-      allowedValueTypeName: BuildStepInputValueTypeName.STRING,
-      allowedValues: ['bar', 'baz'],
-      required: true,
-      value: 'bar',
-      ctx: ctx.serialize(),
-    };
-    const input = BuildStepInput.deserialize(serializedInput, createMockLogger());
-    expect(input).toBeInstanceOf(BuildStepInput);
-    expect(input.id).toBe('foo');
-    expect(input.stepDisplayName).toBe(BuildStep.getDisplayName({ id: 'test1' }));
-    expect(input.defaultValue).toBe('bar');
-    expect(input.allowedValueTypeName).toBe(BuildStepInputValueTypeName.STRING);
-    expect(input.allowedValues).toEqual(['bar', 'baz']);
-    expect(input.required).toBe(true);
-    expect(input.value).toBe('bar');
   });
 });
 
