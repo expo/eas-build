@@ -77,13 +77,13 @@ export class BuildWorkflowValidator {
         if (currentStepInput.defaultValue === undefined) {
           continue;
         }
-        if (!currentStepInput.isValueOneOfAllowedValues()) {
+        if (!currentStepInput.isRawValueOneOfAllowedValues()) {
           const error = new BuildConfigError(
             `Input parameter "${currentStepInput.id}" for step "${
               currentStep.displayName
-            }" is set to "${
-              currentStepInput.value
-            }" which is not one of the allowed values: ${nullthrows(currentStepInput.allowedValues)
+            }" is set to "${currentStepInput.rawValue}" which is not one of the allowed values: ${nullthrows(
+              currentStepInput.allowedValues
+            )
               .map((i) => `"${i}"`)
               .join(', ')}.`
           );
