@@ -347,6 +347,33 @@ describe(BuildStepInput, () => {
             3,
             {
               baz: {
+                qux: 'test-123',
+              },
+            },
+          ],
+        },
+      } as unknown as JobInterpolationContext,
+    });
+    const i = new BuildStepInput<BuildStepInputValueTypeName>(ctx, {
+      id: 'foo',
+      stepDisplayName: BuildStep.getDisplayName({ id: 'test1' }),
+      defaultValue: '${{ startsWith(foo.bar[3].baz.qux, "test") }}',
+      allowedValueTypeName: BuildStepInputValueTypeName.BOOLEAN,
+      required: true,
+    });
+    expect(i.getValue({ interpolationContext: ctx.getInterpolationContext() })).toEqual(true);
+  });
+
+  test('context value boolean', () => {
+    const ctx = createGlobalContextMock({
+      staticContextContent: {
+        foo: {
+          bar: [
+            1,
+            2,
+            3,
+            {
+              baz: {
                 qux: false,
               },
             },
