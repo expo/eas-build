@@ -285,6 +285,31 @@ describe(BuildStepInput, () => {
     expect(i.getValue({ interpolationContext: ctx.getInterpolationContext() })).toEqual(42);
   });
 
+  test('context value number', () => {
+    const ctx = createGlobalContextMock({
+      staticContextContent: {
+        foo: {
+          bar: [
+            1,
+            2,
+            3,
+            {
+              baz: 42,
+            },
+          ],
+        },
+      } as unknown as JobInterpolationContext,
+    });
+    const i = new BuildStepInput<BuildStepInputValueTypeName>(ctx, {
+      id: 'foo',
+      stepDisplayName: BuildStep.getDisplayName({ id: 'test1' }),
+      defaultValue: 'test-${{ foo.bar[3].baz }}',
+      allowedValueTypeName: BuildStepInputValueTypeName.STRING,
+      required: true,
+    });
+    expect(i.getValue({ interpolationContext: ctx.getInterpolationContext() })).toEqual('test-42');
+  });
+
   test('context value boolean', () => {
     const ctx = createGlobalContextMock({
       staticContextContent: {
