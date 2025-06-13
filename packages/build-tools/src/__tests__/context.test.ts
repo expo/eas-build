@@ -78,4 +78,40 @@ describe('BuildContext', () => {
       ],
     });
   });
+
+  it('should not lose workflowInterpolationContext', async () => {
+    const robotAccessToken = randomUUID();
+    await vol.promises.mkdir('/workingdir/environment-secrets/', { recursive: true });
+
+    const ctx = new BuildContext(
+      {
+        triggeredBy: BuildTrigger.GIT_BASED_INTEGRATION,
+        secrets: {
+          robotAccessToken,
+          environmentSecrets: [
+            {
+              name: 'TEST_SECRET',
+              value: 'test-secret-value',
+            },
+          ],
+        },
+        workflowInterpolationContext: {
+          foo: 'bar',
+        } as any,
+      } as Job,
+      {
+        env: {},
+        workingdir: '/workingdir',
+        logger: createMockLogger(),
+        logBuffer: { getLogs: () => [], getPhaseLogs: () => [] },
+        uploadArtifact: jest.fn(),
+      }
+    );
+
+    ctx.updateJobInformation({} as Job, {} as Metadata);
+
+    expect(ctx.job.workflowInterpolationContext).toEqual({
+      foo: 'bar',
+    });
+  });
 });

@@ -60,13 +60,17 @@ export function createTestAndroidJob({
 
 export function createTestIosJob({
   buildCredentials = iosCredentials,
+  triggeredBy = BuildTrigger.EAS_CLI,
+  workflowInterpolationContext,
 }: {
   buildCredentials?: Ios.BuildCredentials;
+  triggeredBy?: Ios.Job['triggeredBy'];
+  workflowInterpolationContext?: Ios.Job['workflowInterpolationContext'];
 } = {}): Ios.Job {
   return {
     mode: BuildMode.BUILD,
     platform: Platform.IOS,
-    triggeredBy: BuildTrigger.EAS_CLI,
+    triggeredBy,
     type: Workflow.GENERIC,
     projectArchive: {
       type: ArchiveSourceType.URL,
@@ -86,5 +90,6 @@ export function createTestIosJob({
     },
     appId: randomUUID(),
     initiatingUserId: randomUUID(),
+    workflowInterpolationContext,
   };
 }
