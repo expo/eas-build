@@ -154,7 +154,10 @@ export class BuildStepInput<
   public isRawValueStepOrContextReference(): boolean {
     return (
       typeof this.rawValue === 'string' &&
-      !!BUILD_STEP_OR_BUILD_GLOBAL_CONTEXT_REFERENCE_REGEX.exec(this.rawValue)
+      (!!BUILD_STEP_OR_BUILD_GLOBAL_CONTEXT_REFERENCE_REGEX.exec(this.rawValue) ||
+        // If value is an interpolation reference we're going to render whatever it evaluates to.
+        // See `interpolateJobContext`.
+        (this.rawValue.startsWith('${{') && this.rawValue.endsWith('}}')))
     );
   }
 
