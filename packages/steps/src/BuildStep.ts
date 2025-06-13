@@ -51,7 +51,7 @@ export type BuildStepFunction = (
     outputs,
     env,
   }: {
-    inputs: { [key: string]: { value: unknown } | undefined };
+    inputs: { [key: string]: { value: unknown } };
     outputs: BuildStepOutputById;
     env: BuildStepEnv;
   }
