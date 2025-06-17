@@ -238,6 +238,7 @@ export class BuildContext<TJob extends Job = Job> {
       );
     }
     this._job = {
+      ...this._job,
       ...job,
       workflowInterpolationContext:
         job.workflowInterpolationContext ?? this.job.workflowInterpolationContext,
