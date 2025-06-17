@@ -171,7 +171,6 @@ describe('Ios.JobSchema', () => {
           ref_name: 'master',
           ref_type: 'branch',
         },
-        env: { EXPO_TOKEN: randomUUID() },
         workflow: {
           id: randomUUID(),
           name: 'Build app',

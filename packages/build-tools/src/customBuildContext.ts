@@ -99,7 +99,6 @@ export class CustomBuildContext<TJob extends Job = Job> implements ExternalBuild
       expoApiServerURL: this.env.__API_SERVER_URL,
       job: this.job,
       metadata: this.metadata ?? null,
-      env: this.env,
     };
   }
 

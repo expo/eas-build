@@ -1,6 +1,6 @@
 import path from 'path';
 
-import { Env, Job, Metadata, StaticJobInterpolationContext } from '@expo/eas-build-job';
+import { Job, Metadata, StaticJobInterpolationContext } from '@expo/eas-build-job';
 import { bunyan, createLogger } from '@expo/logger';
 
 import { BuildConfigParser } from '../BuildConfigParser.js';
@@ -32,7 +32,6 @@ export class CliContextProvider implements ExternalBuildContextProvider {
     return {
       job: {} as Job,
       metadata: {} as Metadata,
-      env: this.env as Env,
       expoApiServerURL: 'http://api.expo.test',
     };
   }

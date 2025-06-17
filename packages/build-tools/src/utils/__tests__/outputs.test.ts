@@ -89,6 +89,7 @@ context.registerStep(
 
 const interpolationContext: JobInterpolationContext = {
   ...context.staticContext,
+  env: {},
   always: () => true,
   never: () => false,
   success: () => !context.hasAnyPreviousStepFailed,
