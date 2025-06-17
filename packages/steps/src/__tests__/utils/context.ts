@@ -28,7 +28,7 @@ export class MockContextProvider implements ExternalBuildContextProvider {
     public readonly staticContextContent: Omit<StaticJobInterpolationContext, 'steps'>
   ) {}
   public get env(): BuildStepEnv {
-    return this._env;
+    return { ...process.env, ...this._env };
   }
   public staticContext(): Omit<StaticJobInterpolationContext, 'steps'> {
     return { ...this.staticContextContent };
