@@ -150,6 +150,7 @@ export class BuildStepGlobalContext {
           eas: {
             runtimePlatform: this.runtimePlatform,
             ...this.staticContext,
+            env: this.env,
           },
         })?.toString() ?? ''
       );
