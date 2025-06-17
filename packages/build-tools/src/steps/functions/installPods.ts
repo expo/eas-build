@@ -9,8 +9,10 @@ export function createInstallPodsBuildFunction(): BuildFunction {
     fn: async (stepsCtx, { env }) => {
       stepsCtx.logger.info('Installing pods');
       const verboseFlag = stepsCtx.global.env['EAS_VERBOSE'] === '1' ? ['--verbose'] : [];
+      const cocoapodsDeploymentFlag =
+        stepsCtx.global.env['POD_INSTALL_DEPLOYMENT'] === '1' ? ['--deployment'] : [];
 
-      await spawn('pod', ['install', ...verboseFlag], {
+      await spawn('pod', ['install', ...verboseFlag, ...cocoapodsDeploymentFlag], {
         logger: stepsCtx.logger,
         env: {
           ...env,
