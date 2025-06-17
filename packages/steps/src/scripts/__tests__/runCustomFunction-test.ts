@@ -4,6 +4,7 @@ import fs from 'fs/promises';
 
 import { createContext } from 'this-file';
 import { v4 as uuidv4 } from 'uuid';
+import { jest } from '@jest/globals';
 
 import { BuildStepInput, BuildStepInputValueTypeName } from '../../BuildStepInput.js';
 import { BuildStepOutput } from '../../BuildStepOutput.js';
@@ -15,15 +16,20 @@ import {
 } from '../../BuildTemporaryFiles.js';
 import { BIN_PATH } from '../../utils/shell/bin.js';
 import { createCustomFunctionCall } from '../../utils/customFunction.js';
+import { createMockLogger } from '../../__tests__/utils/logger.js';
 
 describe('runCustomFunction', () => {
   test('can run custom function', async () => {
     const dirname = createContext().dirname;
     const projectSourceDirectory = path.join(os.tmpdir(), 'eas-build', uuidv4());
     await fs.mkdir(projectSourceDirectory, { recursive: true });
+    const logger = createMockLogger();
+    // return the same logger instance so we can expect calls on it later
+    jest.spyOn(logger, 'child').mockImplementation(() => logger);
     const ctx = createStepContextMock({
       projectTargetDirectory: path.resolve(dirname, '../../__tests__/fixtures'),
       projectSourceDirectory,
+      logger,
     });
     const outputs = {
       name: new BuildStepOutput(ctx.global, {
@@ -92,5 +98,9 @@ describe('runCustomFunction', () => {
     } finally {
       await cleanUpStepTemporaryDirectoriesAsync(ctx.global, 'test');
     }
+
+    expect(jest.mocked(logger.info)).toHaveBeenCalledWith('Hello, foo!}'); // that "}" is in fixture
+    expect(jest.mocked(logger.info)).toHaveBeenCalledWith('Your number is 123');
+    expect(jest.mocked(logger.info)).toHaveBeenCalledWith('Your object is {"foo":"bar"}');
   });
 });
