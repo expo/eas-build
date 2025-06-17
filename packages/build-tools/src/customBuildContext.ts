@@ -114,7 +114,10 @@ export class CustomBuildContext<TJob extends Job = Job> implements ExternalBuild
       );
     }
     this.job = {
+      ...this.job,
       ...job,
+      workflowInterpolationContext:
+        job.workflowInterpolationContext ?? this.job.workflowInterpolationContext,
       triggeredBy: this.job.triggeredBy,
       secrets: {
         ...this.job.secrets,
