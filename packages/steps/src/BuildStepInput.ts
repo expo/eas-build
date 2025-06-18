@@ -1,11 +1,14 @@
 import assert from 'assert';
 
+import { JobInterpolationContext } from '@expo/eas-build-job';
+
 import { BuildStepGlobalContext } from './BuildStepContext.js';
 import { BuildStepRuntimeError } from './errors.js';
 import {
   BUILD_STEP_OR_BUILD_GLOBAL_CONTEXT_REFERENCE_REGEX,
   interpolateWithOutputs,
 } from './utils/template.js';
+import { interpolateJobContext } from './interpolation.js';
 
 export enum BuildStepInputValueTypeName {
   STRING = 'string',
@@ -82,9 +85,11 @@ export class BuildStepInput<
     this.allowedValueTypeName = allowedValueTypeName;
   }
 
-  public get value(): R extends true
-    ? BuildStepInputValueType<T>
-    : BuildStepInputValueType<T> | undefined {
+  public getValue({
+    interpolationContext,
+  }: {
+    interpolationContext: JobInterpolationContext;
+  }): R extends true ? BuildStepInputValueType<T> : BuildStepInputValueType<T> | undefined {
     const rawValue = this._value ?? this.defaultValue;
     if (this.required && rawValue === undefined) {
       throw new BuildStepRuntimeError(
@@ -92,24 +97,32 @@ export class BuildStepInput<
       );
     }
 
+    const interpolatedValue = interpolateJobContext({
+      target: rawValue,
+      context: interpolationContext,
+    });
+
     const valueDoesNotRequireInterpolation =
-      rawValue === undefined ||
-      rawValue === null ||
-      typeof rawValue === 'boolean' ||
-      typeof rawValue === 'number';
+      interpolatedValue === undefined ||
+      interpolatedValue === null ||
+      typeof interpolatedValue === 'boolean' ||
+      typeof interpolatedValue === 'number';
     let returnValue;
     if (valueDoesNotRequireInterpolation) {
-      if (typeof rawValue !== this.allowedValueTypeName && rawValue !== undefined) {
+      if (
+        typeof interpolatedValue !== this.allowedValueTypeName &&
+        interpolatedValue !== undefined
+      ) {
         throw new BuildStepRuntimeError(
           `Input parameter "${this.id}" for step "${this.stepDisplayName}" must be of type "${this.allowedValueTypeName}".`
         );
       }
-      returnValue = rawValue as BuildStepInputValueType<T>;
+      returnValue = interpolatedValue as BuildStepInputValueType<T>;
     } else {
       // `valueDoesNotRequireInterpolation` checks that `rawValue` is not undefined
       // so this will never be true.
-      assert(rawValue !== undefined);
-      const valueInterpolatedWithGlobalContext = this.ctx.interpolate(rawValue);
+      assert(interpolatedValue !== undefined);
+      const valueInterpolatedWithGlobalContext = this.ctx.interpolate(interpolatedValue);
       const valueInterpolatedWithOutputsAndGlobalContext = interpolateWithOutputs(
         valueInterpolatedWithGlobalContext,
         (path) => this.ctx.getStepOutputValue(path) ?? ''
@@ -134,7 +147,7 @@ export class BuildStepInput<
     return this;
   }
 
-  public isValueOneOfAllowedValues(): boolean {
+  public isRawValueOneOfAllowedValues(): boolean {
     const value = this._value ?? this.defaultValue;
     if (this.allowedValues === undefined || value === undefined) {
       return true;
@@ -145,11 +158,16 @@ export class BuildStepInput<
   public isRawValueStepOrContextReference(): boolean {
     return (
       typeof this.rawValue === 'string' &&
-      !!BUILD_STEP_OR_BUILD_GLOBAL_CONTEXT_REFERENCE_REGEX.exec(this.rawValue)
+      (!!BUILD_STEP_OR_BUILD_GLOBAL_CONTEXT_REFERENCE_REGEX.exec(this.rawValue) ||
+        // If value is an interpolation reference we're going to render whatever it evaluates to.
+        // See `interpolateJobContext`.
+        (this.rawValue.startsWith('${{') && this.rawValue.endsWith('}}')))
     );
   }
 
-  private parseInputValueToAllowedType(value: string | object): BuildStepInputValueType<T> {
+  private parseInputValueToAllowedType(
+    value: string | object | boolean | number
+  ): BuildStepInputValueType<T> {
     if (typeof value === 'object') {
       return value as BuildStepInputValueType<T>;
     }
@@ -164,7 +182,7 @@ export class BuildStepInput<
     }
   }
 
-  private parseInputValueToString(value: string): string {
+  private parseInputValueToString(value: string | boolean | number): string {
     let parsedValue = value;
     try {
       parsedValue = JSON.parse(`"${value}"`);
@@ -173,10 +191,10 @@ export class BuildStepInput<
         throw err;
       }
     }
-    return parsedValue;
+    return parsedValue as string;
   }
 
-  private parseInputValueToNumber(value: string): number {
+  private parseInputValueToNumber(value: string | boolean | number): number {
     const numberValue = Number(value);
     if (Number.isNaN(numberValue)) {
       throw new BuildStepRuntimeError(
@@ -186,10 +204,10 @@ export class BuildStepInput<
     return numberValue;
   }
 
-  private parseInputValueToBoolean(value: string): boolean {
-    if (value === 'true') {
+  private parseInputValueToBoolean(value: string | boolean | number): boolean {
+    if (value === 'true' || value === true) {
       return true;
-    } else if (value === 'false') {
+    } else if (value === 'false' || value === false) {
       return false;
     } else {
       throw new BuildStepRuntimeError(
@@ -198,9 +216,9 @@ export class BuildStepInput<
     }
   }
 
-  private parseInputValueToObject(value: string): Record<string, any> {
+  private parseInputValueToObject(value: string | boolean | number): Record<string, any> {
     try {
-      return JSON.parse(value);
+      return JSON.parse(value as string);
     } catch (e: any) {
       throw new BuildStepRuntimeError(
         `Input parameter "${this.id}" for step "${this.stepDisplayName}" must be of type "${this.allowedValueTypeName}".`,

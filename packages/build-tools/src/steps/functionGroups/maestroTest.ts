@@ -44,7 +44,10 @@ export function createEasMaestroTestFunctionGroup(
         steps.push(
           createStartIosSimulatorBuildFunction().createBuildStepFromFunctionCall(globalCtx)
         );
-        const searchPath = inputs.app_path.value ?? 'ios/build/Build/Products/*simulator/*.app';
+        const searchPath =
+          inputs.app_path.getValue({
+            interpolationContext: globalCtx.getInterpolationContext(),
+          }) ?? 'ios/build/Build/Products/*simulator/*.app';
         steps.push(
           new BuildStep(globalCtx, {
             id: BuildStep.getNewId(),
@@ -72,19 +75,25 @@ export function createEasMaestroTestFunctionGroup(
           })
         );
       } else if (buildToolsContext.job.platform === Platform.ANDROID) {
+        const system_image_package = inputs.android_emulator_system_image_package.getValue({
+          interpolationContext: globalCtx.getInterpolationContext(),
+        });
         steps.push(
           createStartAndroidEmulatorBuildFunction().createBuildStepFromFunctionCall(
             globalCtx,
-            inputs.android_emulator_system_image_package.value
+            system_image_package
               ? {
                   callInputs: {
-                    system_image_package: inputs.android_emulator_system_image_package.value,
+                    system_image_package,
                   },
                 }
               : undefined
           )
         );
-        const searchPath = inputs.app_path.value ?? 'android/app/build/outputs/**/*.apk';
+        const searchPath =
+          inputs.app_path.getValue({
+            interpolationContext: globalCtx.getInterpolationContext(),
+          }) ?? 'android/app/build/outputs/**/*.apk';
         steps.push(
           new BuildStep(globalCtx, {
             id: BuildStep.getNewId(),
@@ -115,9 +124,12 @@ export function createEasMaestroTestFunctionGroup(
         );
       }
 
-      const flowPaths = `${inputs.flow_path.value}`
+      const flowPaths = `${inputs.flow_path.getValue({
+        interpolationContext: globalCtx.getInterpolationContext(),
+      })}`
         .split('\n') // It's easy to get an empty line with YAML
         .filter((entry) => entry);
+
       for (const flowPath of flowPaths) {
         steps.push(
           new BuildStep(globalCtx, {

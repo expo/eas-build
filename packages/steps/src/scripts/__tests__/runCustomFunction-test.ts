@@ -91,7 +91,16 @@ describe('runCustomFunction', () => {
           __EXPO_STEPS_WORKING_DIRECTORY: ctx.workingDirectory,
           PATH: newPath,
         },
-        inputs,
+        inputs: Object.fromEntries(
+          Object.entries(inputs).map(([id, input]) => [
+            id,
+            {
+              value: input.getValue({
+                interpolationContext: ctx.global.getInterpolationContext(),
+              }),
+            },
+          ])
+        ),
         outputs,
       });
       await expect(promise).resolves.not.toThrow();
