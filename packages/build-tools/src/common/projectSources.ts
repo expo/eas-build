@@ -50,7 +50,10 @@ export async function prepareProjectSourcesAsync<TJob extends Job>(
 async function fetchRepositoryUrlAsync(ctx: BuildContext<Job>): Promise<string> {
   const taskId = nullthrows(ctx.env.EAS_BUILD_ID, 'EAS_BUILD_ID is not set');
   const expoApiServerURL = nullthrows(ctx.env.__API_SERVER_URL, '__API_SERVER_URL is not set');
-  const expoToken = nullthrows(ctx.env.EXPO_TOKEN, 'EXPO_TOKEN is not set');
+  const robotAccessToken = nullthrows(
+    ctx.job.secrets?.robotAccessToken,
+    'robot access token is not set'
+  );
 
   const response = await turtleFetch(
     new URL(`/v2/github/fetch-github-repository-url`, expoApiServerURL).toString(),
@@ -58,7 +61,7 @@ async function fetchRepositoryUrlAsync(ctx: BuildContext<Job>): Promise<string> 
     {
       json: { taskId },
       headers: {
-        Authorization: `Bearer ${expoToken}`,
+        Authorization: `Bearer ${robotAccessToken}`,
       },
       timeout: 20000,
       retries: 3,

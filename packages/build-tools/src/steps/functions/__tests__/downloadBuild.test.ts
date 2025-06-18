@@ -30,7 +30,7 @@ describe('downloadBuild', () => {
       logger: createLogger({ name: 'test' }),
       buildId: randomUUID(),
       expoApiServerURL: 'http://api.expo.test',
-      expoToken: null,
+      robotAccessToken: null,
       extensions: ['app'],
     });
 
@@ -51,7 +51,7 @@ describe('downloadBuild', () => {
       logger: createLogger({ name: 'test' }),
       buildId: randomUUID(),
       expoApiServerURL: 'http://api.expo.test',
-      expoToken: null,
+      robotAccessToken: null,
       extensions: ['app'],
     });
 
@@ -71,7 +71,7 @@ describe('downloadBuild', () => {
         logger: createLogger({ name: 'test' }),
         buildId: randomUUID(),
         expoApiServerURL: 'http://api.expo.test',
-        expoToken: null,
+        robotAccessToken: null,
         extensions: ['apk'],
       })
     ).rejects.toThrow('No .apk entries found in the archive.');
@@ -88,6 +88,7 @@ describe('createDownloadBuildFunction', () => {
         logger,
         staticContextContent: {
           expoApiServerURL: 'http://api.expo.test',
+          job: {},
         },
       }),
       {

@@ -48,7 +48,7 @@ export function createDownloadBuildFunction(): BuildFunction {
         required: true,
       }),
     ],
-    fn: async (stepsCtx, { inputs, outputs, env }) => {
+    fn: async (stepsCtx, { inputs, outputs }) => {
       const { logger } = stepsCtx;
 
       const extensions = z.array(z.string()).parse(inputs.extensions.value);
@@ -60,7 +60,7 @@ export function createDownloadBuildFunction(): BuildFunction {
         logger,
         buildId,
         expoApiServerURL: stepsCtx.global.staticContext.expoApiServerURL,
-        expoToken: env.EXPO_TOKEN ?? null,
+        robotAccessToken: stepsCtx.global.staticContext.job.secrets?.robotAccessToken ?? null,
         extensions,
       });
 
@@ -73,13 +73,13 @@ export async function downloadBuildAsync({
   logger,
   buildId,
   expoApiServerURL,
-  expoToken,
+  robotAccessToken,
   extensions,
 }: {
   logger: bunyan;
   buildId: string;
   expoApiServerURL: string;
-  expoToken: string | null;
+  robotAccessToken: string | null;
   extensions: string[];
 }): Promise<{ artifactPath: string }> {
   const downloadDestinationDirectory = await fs.promises.mkdtemp(
@@ -89,7 +89,7 @@ export async function downloadBuildAsync({
   const response = await retryOnDNSFailure(fetch)(
     new URL(`/v2/artifacts/eas/${buildId}`, expoApiServerURL),
     {
-      headers: expoToken ? { Authorization: `Bearer ${expoToken}` } : undefined,
+      headers: robotAccessToken ? { Authorization: `Bearer ${robotAccessToken}` } : undefined,
     }
   );
 
