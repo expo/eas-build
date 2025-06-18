@@ -155,6 +155,23 @@ describe(BuildStepInput, () => {
     expect(i.getValue({ interpolationContext: ctx.getInterpolationContext() })).toEqual('test-bar');
   });
 
+  test('context value string', () => {
+    const ctx = createGlobalContextMock();
+    ctx.updateEnv({
+      HOME: '/home/test',
+    });
+    const i = new BuildStepInput(ctx, {
+      id: 'foo',
+      stepDisplayName: BuildStep.getDisplayName({ id: 'test1' }),
+      defaultValue: '${ eas.env.HOME }',
+      required: true,
+      allowedValueTypeName: BuildStepInputValueTypeName.STRING,
+    });
+    expect(i.getValue({ interpolationContext: ctx.getInterpolationContext() })).toEqual(
+      '/home/test'
+    );
+  });
+
   test('context value string with newline characters', () => {
     const ctx = createGlobalContextMock({
       staticContextContent: {

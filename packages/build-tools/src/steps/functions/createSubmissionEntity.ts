@@ -62,7 +62,7 @@ export function createSubmissionEntityFunction(): BuildFunction {
         return;
       }
 
-      const workflowJobId = stepsCtx.global.staticContext.env.__WORKFLOW_JOB_ID;
+      const workflowJobId = stepsCtx.global.env.__WORKFLOW_JOB_ID;
       if (!workflowJobId) {
         stepsCtx.logger.error('Failed to create submission entity: no workflow job ID found');
         return;

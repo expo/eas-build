@@ -20,6 +20,7 @@ export async function uploadJobOutputsToWwwAsync(
 
     const interpolationContext: JobInterpolationContext = {
       ...ctx.staticContext,
+      env: ctx.env,
       always: () => true,
       never: () => false,
       success: () => !ctx.hasAnyPreviousStepFailed,

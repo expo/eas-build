@@ -333,6 +333,7 @@ export class BuildStep extends BuildStepOutputAccessor {
         eas: {
           runtimePlatform: this.ctx.global.runtimePlatform,
           ...this.ctx.global.staticContext,
+          env: this.getScriptEnv(),
         },
         ...this.getInterpolationContext(),
       })
