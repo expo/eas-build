@@ -44,9 +44,10 @@ export function createEasMaestroTestFunctionGroup(
         steps.push(
           createStartIosSimulatorBuildFunction().createBuildStepFromFunctionCall(globalCtx)
         );
-        const searchPath = inputs.app_path.getValue({
-          interpolationContext: globalCtx.getInterpolationContext(),
-        });
+        const searchPath =
+          inputs.app_path.getValue({
+            interpolationContext: globalCtx.getInterpolationContext(),
+          }) ?? 'ios/build/Build/Products/*simulator/*.app';
         steps.push(
           new BuildStep(globalCtx, {
             id: BuildStep.getNewId(),
