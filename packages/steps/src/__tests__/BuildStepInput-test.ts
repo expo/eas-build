@@ -157,6 +157,9 @@ describe(BuildStepInput, () => {
 
   test('context value string', () => {
     const ctx = createGlobalContextMock();
+    ctx.updateEnv({
+      HOME: '/home/test',
+    });
     const i = new BuildStepInput(ctx, {
       id: 'foo',
       stepDisplayName: BuildStep.getDisplayName({ id: 'test1' }),
@@ -164,7 +167,9 @@ describe(BuildStepInput, () => {
       required: true,
       allowedValueTypeName: BuildStepInputValueTypeName.STRING,
     });
-    expect(i.value).toEqual(process.env.HOME);
+    expect(i.getValue({ interpolationContext: ctx.getInterpolationContext() })).toEqual(
+      '/home/test'
+    );
   });
 
   test('context value string with newline characters', () => {
