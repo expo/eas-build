@@ -772,10 +772,10 @@
     base64-js "^1.2.3"
     xmlbuilder "^14.0.0"
 
-"@expo/repack-app@~0.2.3":
-  version "0.2.3"
-  resolved "https://registry.yarnpkg.com/@expo/repack-app/-/repack-app-0.2.3.tgz#18b932a80599cb839c55b7c2aca2edadb9e684db"
-  integrity sha512-QneabFTeJEZcWLR3Afp8PB1GOR9qSXAv7+uJjTfTZnspMg/adI7qnKFE4ItF5pASwKHkla/uzT0AYcUvMi6X8A==
+"@expo/repack-app@~0.2.4":
+  version "0.2.4"
+  resolved "https://registry.yarnpkg.com/@expo/repack-app/-/repack-app-0.2.4.tgz#0f71020e860de7790dedb3234120470d6c377a9f"
+  integrity sha512-RM2lSYoIicCL84rw1s6DTpZ1DNnVl+0rNXedHRbJAPMPssmXmWeDBrukC57FsLrzt5ED8W0kJN5rTclM5tTSxA==
   dependencies:
     commander "^13.1.0"
     picocolors "^1.1.1"
