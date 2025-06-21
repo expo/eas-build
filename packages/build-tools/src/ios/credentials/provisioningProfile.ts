@@ -28,6 +28,16 @@ export enum DistributionType {
   ENTERPRISE = 'enterprise',
 }
 
+/** Type enum may not correspond with extension. */
+function getExtensionForType(type: Ios.ProvisioningProfileType): string {
+  switch (type) {
+    case Ios.ProvisioningProfileType.MOBILEPROVISION:
+      return type;
+    case Ios.ProvisioningProfileType.PROVISIONPROFILE:
+      return type;
+  }
+}
+
 const PROVISIONING_PROFILES_DIRECTORY = path.join(
   os.homedir(),
   'Library/MobileDevice/Provisioning Profiles'
@@ -42,17 +52,40 @@ export default class ProvisioningProfile<TJob extends Ios.Job> {
     }
   }
 
+  private readonly ctx: BuildContext<TJob>;
+  private readonly profile: Buffer;
+  private readonly keychainPath: string;
+  private readonly target: string;
+  private readonly certificateCommonName: string;
   private readonly profilePath: string;
+  private readonly profileType: Ios.ProvisioningProfileType;
   private profileData?: ProvisioningProfileData;
 
-  constructor(
-    private readonly ctx: BuildContext<TJob>,
-    private readonly profile: Buffer,
-    private readonly keychainPath: string,
-    private readonly target: string,
-    private readonly certificateCommonName: string
-  ) {
-    this.profilePath = path.join(PROVISIONING_PROFILES_DIRECTORY, `${uuid()}.mobileprovision`);
+  constructor({
+    ctx,
+    profile,
+    keychainPath,
+    target,
+    certificateCommonName,
+    profileType,
+  }: {
+    ctx: BuildContext<TJob>;
+    profile: Buffer;
+    keychainPath: string;
+    target: string;
+    certificateCommonName: string;
+    profileType: Ios.ProvisioningProfileType;
+  }) {
+    this.ctx = ctx;
+    this.profile = profile;
+    this.keychainPath = keychainPath;
+    this.target = target;
+    this.certificateCommonName = certificateCommonName;
+    this.profileType = profileType;
+    this.profilePath = path.join(
+      PROVISIONING_PROFILES_DIRECTORY,
+      `${uuid()}.${getExtensionForType(profileType)}`
+    );
   }
 
   public async init(): Promise<void> {
@@ -111,7 +144,9 @@ Profile's certificate fingerprint = ${devCertFingerprint}, distribution certific
     }
 
     const applicationIdentifier = (plistData.Entitlements as plist.PlistObject)[
-      'application-identifier'
+      this.profileType === Ios.ProvisioningProfileType.PROVISIONPROFILE
+        ? 'com.apple.application-identifier'
+        : 'application-identifier'
     ] as string;
     const bundleIdentifier = applicationIdentifier.replace(/^.+?\./, '');
 
