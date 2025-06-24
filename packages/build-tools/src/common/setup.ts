@@ -33,31 +33,7 @@ class InstallDependenciesTimeoutError extends Error {}
 
 export async function setupAsync<TJob extends BuildJob>(ctx: BuildContext<TJob>): Promise<void> {
   await ctx.runBuildPhase(BuildPhase.PREPARE_PROJECT, async () => {
-    await prepareProjectSourcesAsync(ctx);
-    await setUpNpmrcAsync(ctx, ctx.logger);
-    if (ctx.job.platform === Platform.IOS && ctx.env.EAS_BUILD_RUNNER === 'eas-build') {
-      await deleteXcodeEnvLocalIfExistsAsync(ctx as BuildContext<Ios.Job>);
-    }
-
-    // Delete .expo directory if it exists.
-    const expoDir = path.join(ctx.getReactNativeProjectDirectory(), '.expo');
-    try {
-      if (await fs.pathExists(expoDir)) {
-        await fs.remove(expoDir);
-        ctx.logger.info('Deleted .expo directory.');
-      }
-    } catch (err) {
-      ctx.logger.warn({ err }, 'Failed to delete .expo directory.');
-    }
-
-    if (ctx.job.triggeredBy === BuildTrigger.GIT_BASED_INTEGRATION) {
-      // We need to setup envs from eas.json before
-      // eas-build-pre-install hook is called.
-      const env = await resolveEnvFromBuildProfileAsync(ctx, {
-        cwd: ctx.getReactNativeProjectDirectory(),
-      });
-      ctx.updateEnv(env);
-    }
+    await prepareProjectAsync(ctx);
   });
 
   await ctx.runBuildPhase(BuildPhase.PRE_INSTALL_HOOK, async () => {
@@ -139,6 +115,36 @@ export async function setupAsync<TJob extends BuildJob>(ctx: BuildContext<TJob>)
         ctx.markBuildPhaseHasWarnings();
       }
     });
+  }
+}
+
+export async function prepareProjectAsync<TJob extends BuildJob>(
+  ctx: BuildContext<TJob>
+): Promise<void> {
+  await prepareProjectSourcesAsync(ctx);
+  await setUpNpmrcAsync(ctx, ctx.logger);
+  if (ctx.job.platform === Platform.IOS && ctx.env.EAS_BUILD_RUNNER === 'eas-build') {
+    await deleteXcodeEnvLocalIfExistsAsync(ctx as BuildContext<Ios.Job>);
+  }
+
+  // Delete .expo directory if it exists.
+  const expoDir = path.join(ctx.getReactNativeProjectDirectory(), '.expo');
+  try {
+    if (await fs.pathExists(expoDir)) {
+      await fs.remove(expoDir);
+      ctx.logger.info('Deleted .expo directory.');
+    }
+  } catch (err) {
+    ctx.logger.warn({ err }, 'Failed to delete .expo directory.');
+  }
+
+  if (ctx.job.triggeredBy === BuildTrigger.GIT_BASED_INTEGRATION) {
+    // We need to setup envs from eas.json before
+    // eas-build-pre-install hook is called.
+    const env = await resolveEnvFromBuildProfileAsync(ctx, {
+      cwd: ctx.getReactNativeProjectDirectory(),
+    });
+    ctx.updateEnv(env);
   }
 }
 
