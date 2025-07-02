@@ -190,6 +190,8 @@ export const StaticWorkflowInterpolationContextZ = z.object({
       ref_name: z.string(),
       ref_type: z.string(),
       label: z.string().optional(),
+      repository: z.string().optional(),
+      repository_owner: z.string().optional(),
       event: z
         .object({
           label: z
