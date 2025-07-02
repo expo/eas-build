@@ -184,12 +184,14 @@ export const StaticWorkflowInterpolationContextZ = z.object({
   ),
   github: z
     .object({
-      event_name: z.enum(['push', 'pull_request', 'workflow_dispatch']),
+      event_name: z.enum(['push', 'pull_request', 'workflow_dispatch', 'schedule']),
       sha: z.string(),
       ref: z.string(),
       ref_name: z.string(),
       ref_type: z.string(),
       label: z.string().optional(),
+      repository: z.string().optional(),
+      repository_owner: z.string().optional(),
       event: z
         .object({
           label: z
@@ -200,7 +202,6 @@ export const StaticWorkflowInterpolationContextZ = z.object({
           schedule: z.string().optional(),
         })
         .optional(),
-      schedule: z.string().optional(),
     })
     // We need to .optional() to support jobs that are not triggered by a GitHub event.
     .optional(),
