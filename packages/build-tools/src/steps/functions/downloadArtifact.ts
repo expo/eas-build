@@ -29,7 +29,7 @@ export function createDownloadArtifactFunction(): BuildFunction {
     name: 'Download artifact',
     inputProviders: [
       BuildStepInput.createProvider({
-        id: 'key',
+        id: 'name',
         required: false,
         allowedValueTypeName: BuildStepInputValueTypeName.STRING,
       }),
@@ -47,10 +47,10 @@ export function createDownloadArtifactFunction(): BuildFunction {
     ],
     fn: async (stepsCtx, { inputs, outputs }) => {
       const params = z
-        .union([z.object({ artifactId: z.string() }), z.object({ key: z.string() })])
+        .union([z.object({ artifactId: z.string() }), z.object({ name: z.string() })])
         .parse({
           artifactId: inputs.artifact_id.value,
-          key: inputs.key.value,
+          name: inputs.name.value,
         });
 
       const interpolationContext = stepsCtx.global.getInterpolationContext();
@@ -76,7 +76,7 @@ export function createDownloadArtifactFunction(): BuildFunction {
       if ('artifactId' in params) {
         logger.info(`Downloading artifact with ID "${params.artifactId}"...`);
       } else {
-        logger.info(`Downloading artifact with key "${params.key}"...`);
+        logger.info(`Downloading artifact with name "${params.name}"...`);
       }
 
       const { artifactPath } = await downloadArtifactAsync({
@@ -103,18 +103,18 @@ export async function downloadArtifactAsync({
   workflowRunId: string;
   expoApiServerURL: string;
   robotAccessToken: string;
-  params: { artifactId: string } | { key: string };
+  params: { artifactId: string } | { name: string };
 }): Promise<{ artifactPath: string }> {
   const downloadDestinationDirectory = await fs.promises.mkdtemp(
     path.join(os.tmpdir(), 'download_artifact-')
   );
 
-  const url = new URL(`/v2/workflows/${workflowRunId}/artifacts`, expoApiServerURL);
+  const url = new URL(`/v2/workflows/${workflowRunId}/download-artifact`, expoApiServerURL);
 
   if ('artifactId' in params) {
     url.searchParams.set('artifactId', params.artifactId);
   } else {
-    url.searchParams.set('key', params.key);
+    url.searchParams.set('name', params.name);
   }
 
   const response = await retryOnDNSFailure(fetch)(url, {

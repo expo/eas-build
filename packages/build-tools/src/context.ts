@@ -43,7 +43,7 @@ export type ArtifactToUpload =
     }
   | {
       type: GenericArtifactType;
-      key: string;
+      name: string;
       paths: string[];
     };
 
