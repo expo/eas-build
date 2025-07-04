@@ -182,6 +182,7 @@ export const StaticWorkflowInterpolationContextZ = z.object({
       outputs: z.record(z.string(), z.string().nullable()),
     })
   ),
+  inputs: z.record(z.string(), z.union([z.string(), z.number(), z.boolean()])).optional(),
   github: z
     .object({
       event_name: z.enum(['push', 'pull_request', 'workflow_dispatch', 'schedule']),
@@ -200,6 +201,7 @@ export const StaticWorkflowInterpolationContextZ = z.object({
             })
             .optional(),
           schedule: z.string().optional(),
+          inputs: z.record(z.string(), z.union([z.string(), z.number(), z.boolean()])).optional(),
         })
         .optional(),
     })
