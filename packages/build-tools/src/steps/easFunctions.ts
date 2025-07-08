@@ -29,6 +29,7 @@ import { eagerBundleBuildFunction } from './functions/eagerBundle';
 import { createSubmissionEntityFunction } from './functions/createSubmissionEntity';
 import { createDownloadBuildFunction } from './functions/downloadBuild';
 import { createRepackBuildFunction } from './functions/repack';
+import { createRestoreCacheFunction } from './functions/restoreCache';
 
 export function getEasFunctions(ctx: CustomBuildContext): BuildFunction[] {
   const functions = [
@@ -39,6 +40,8 @@ export function getEasFunctions(ctx: CustomBuildContext): BuildFunction[] {
     createPrebuildBuildFunction(),
     createDownloadBuildFunction(),
     createRepackBuildFunction(),
+
+    createRestoreCacheFunction(),
 
     configureEASUpdateIfInstalledFunction(),
     injectAndroidCredentialsFunction(),
