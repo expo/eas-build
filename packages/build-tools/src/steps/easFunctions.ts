@@ -30,6 +30,7 @@ import { createSubmissionEntityFunction } from './functions/createSubmissionEnti
 import { createDownloadBuildFunction } from './functions/downloadBuild';
 import { createRepackBuildFunction } from './functions/repack';
 import { createDownloadArtifactFunction } from './functions/downloadArtifact';
+import { createRestoreCacheFunction } from './functions/restoreCache';
 
 export function getEasFunctions(ctx: CustomBuildContext): BuildFunction[] {
   const functions = [
@@ -41,6 +42,8 @@ export function getEasFunctions(ctx: CustomBuildContext): BuildFunction[] {
     createPrebuildBuildFunction(),
     createDownloadBuildFunction(),
     createRepackBuildFunction(),
+
+    createRestoreCacheFunction(),
 
     configureEASUpdateIfInstalledFunction(),
     injectAndroidCredentialsFunction(),
