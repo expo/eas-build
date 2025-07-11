@@ -62,11 +62,13 @@ export function createRestoreCacheFunction(): BuildFunction {
 
         const paths = z
           .array(z.string())
-          .parse(((inputs.path.value ?? '') as string).split(/[\r\n]+/));
+          .parse(((inputs.path.value ?? '') as string).split(/[\r\n]+/))
+          .filter((path) => path.length > 0);
         const key = z.string().parse(inputs.key.value);
         const restoreKeys = z
           .array(z.string())
-          .parse(((inputs.restore_keys.value ?? '') as string).split(/[\r\n]+/));
+          .parse(((inputs.restore_keys.value ?? '') as string).split(/[\r\n]+/))
+          .filter((key) => key !== '');
 
         const taskId = nullthrows(env.EAS_BUILD_ID, 'EAS_BUILD_ID is not set');
 
@@ -118,7 +120,9 @@ export async function downloadCacheAsync({
   const searchParams = new URLSearchParams();
   searchParams.set('key', key);
   searchParams.set('version', getCacheVersion(paths));
-  searchParams.set('keyPrefixes', keyPrefixes.join(','));
+  for (const keyPrefix of keyPrefixes) {
+    searchParams.append('keyPrefixes', keyPrefix);
+  }
 
   const response = await retryOnDNSFailure(fetch)(
     new URL(
@@ -141,7 +145,7 @@ export async function downloadCacheAsync({
     throw new Error(`Unexpected response from server (${response.status}): ${result.reason}`);
   }
 
-  const { matchedKey, downloadUrl } = result.value;
+  const { matchedKey, downloadUrl } = result.value.data;
 
   logger.info(`Matched cache key: ${matchedKey}. Downloading...`);
 
@@ -186,16 +190,17 @@ export async function decompressCacheAsync({
   const fileHandle = await fs.promises.open(archivePath, 'r');
   await streamPipeline(
     fileHandle.createReadStream(),
-    tar.extract(
-      {
-        cwd: workingDirectory,
-        onReadEntry: verbose
-          ? (entry) => {
-              logger.info(`- ${entry.path}`);
-            }
-          : undefined,
+    tar.extract({
+      cwd: workingDirectory,
+      onwarn: (code, message, data) => {
+        logger.warn({ code, data }, message);
       },
-      []
-    )
+      preservePaths: true,
+      onReadEntry: verbose
+        ? (entry) => {
+            logger.info(`- ${entry.path}`);
+          }
+        : undefined,
+    })
   );
 }

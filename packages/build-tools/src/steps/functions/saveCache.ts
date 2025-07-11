@@ -3,6 +3,7 @@ import os from 'os';
 import path from 'path';
 
 import * as tar from 'tar';
+import fg from 'fast-glob';
 import { bunyan } from '@expo/logger';
 import { BuildFunction, BuildStepInput, BuildStepInputValueTypeName } from '@expo/steps';
 import z from 'zod';
@@ -42,7 +43,8 @@ export function createSaveCacheFunction(): BuildFunction {
 
         const paths = z
           .array(z.string())
-          .parse(((inputs.path.value ?? '') as string).split(/[\r\n]+/));
+          .parse(((inputs.path.value ?? '') as string).split(/[\r\n]+/))
+          .filter((path) => path.length > 0);
         const key = z.string().parse(inputs.key.value);
         const taskId = nullthrows(env.EAS_BUILD_ID, 'EAS_BUILD_ID is not set');
 
@@ -109,11 +111,11 @@ export async function uploadCacheAsync({
     throw new Error(`Unexpected response from server (${response.status}): ${result.reason}`);
   }
 
-  const { url, headers } = result.value;
+  const { url, headers } = result.value.data;
 
   logger.info(`Uploading cache...`);
 
-  const uploadResponse = await retryOnDNSFailure(fetch)(url, {
+  const uploadResponse = await retryOnDNSFailure(fetch)(new URL(url), {
     method: 'PUT',
     headers,
     body: fs.createReadStream(archivePath),
@@ -140,6 +142,36 @@ export async function compressCacheAsync({
     path.join(os.tmpdir(), 'save-cache-')
   );
 
+  console.log('paths', paths);
+
+  // Transform paths to include /** for directories
+  const transformedPaths = await Promise.all(
+    paths.map(async (pathPattern) => {
+      if (fg.isDynamicPattern(pathPattern)) {
+        return pathPattern;
+      }
+
+      const fullPath = path.resolve(workingDirectory, pathPattern);
+      try {
+        const stat = await fs.promises.stat(fullPath);
+        if (stat.isDirectory()) {
+          // For directories, append /** to match all contents
+          return pathPattern.endsWith('/') ? `${pathPattern}**` : `${pathPattern}/**`;
+        }
+      } catch {
+        // If stat fails, assume it's a glob pattern and leave as-is
+      }
+      return pathPattern;
+    })
+  );
+
+  const filePaths = await fg(transformedPaths, {
+    absolute: true,
+    cwd: workingDirectory,
+  });
+
+  console.log('filePaths', filePaths);
+
   const archivePath = path.join(archiveDestinationDirectory, 'cache.tar.gz');
 
   if (verbose) {
@@ -157,7 +189,7 @@ export async function compressCacheAsync({
           }
         : undefined,
     },
-    paths
+    filePaths.map((filePath) => path.relative(workingDirectory, filePath))
   );
 
   return { archivePath };
