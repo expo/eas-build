@@ -31,6 +31,7 @@ import { createDownloadBuildFunction } from './functions/downloadBuild';
 import { createRepackBuildFunction } from './functions/repack';
 import { createDownloadArtifactFunction } from './functions/downloadArtifact';
 import { createRestoreCacheFunction } from './functions/restoreCache';
+import { createSaveCacheFunction } from './functions/saveCache';
 
 export function getEasFunctions(ctx: CustomBuildContext): BuildFunction[] {
   const functions = [
@@ -44,6 +45,7 @@ export function getEasFunctions(ctx: CustomBuildContext): BuildFunction[] {
     createRepackBuildFunction(),
 
     createRestoreCacheFunction(),
+    createSaveCacheFunction(),
 
     configureEASUpdateIfInstalledFunction(),
     injectAndroidCredentialsFunction(),
