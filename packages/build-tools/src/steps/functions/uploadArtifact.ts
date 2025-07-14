@@ -34,6 +34,12 @@ export function createUploadArtifactBuildFunction(ctx: CustomBuildContext): Buil
         required: false,
         allowedValueTypeName: BuildStepInputValueTypeName.STRING,
       }),
+      BuildStepInput.createProvider({
+        id: 'name',
+        defaultValue: '',
+        required: false,
+        allowedValueTypeName: BuildStepInputValueTypeName.STRING,
+      }),
       /**
        * path inputs expects a list of newline-delimited search paths.
        * Valid examples include:
@@ -97,7 +103,7 @@ export function createUploadArtifactBuildFunction(ctx: CustomBuildContext): Buil
           inputValue: `${inputs.type.value ?? ''}`,
         }),
         paths: artifactPaths,
-        key: inputs.key.value as string,
+        name: (inputs.name.value || inputs.key.value) as string,
       };
 
       try {

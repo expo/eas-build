@@ -29,10 +29,12 @@ import { eagerBundleBuildFunction } from './functions/eagerBundle';
 import { createSubmissionEntityFunction } from './functions/createSubmissionEntity';
 import { createDownloadBuildFunction } from './functions/downloadBuild';
 import { createRepackBuildFunction } from './functions/repack';
+import { createDownloadArtifactFunction } from './functions/downloadArtifact';
 
 export function getEasFunctions(ctx: CustomBuildContext): BuildFunction[] {
   const functions = [
     createCheckoutBuildFunction(),
+    createDownloadArtifactFunction(),
     createUploadArtifactBuildFunction(ctx),
     createSetUpNpmrcBuildFunction(),
     createInstallNodeModulesBuildFunction(),
