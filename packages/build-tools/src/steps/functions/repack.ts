@@ -163,10 +163,19 @@ function createSpawnAsyncStepAdapter({
     args: string[],
     options?: SpawnProcessOptions
   ): SpawnProcessPromise<SpawnProcessResult> {
-    return spawnAsync(command, args, {
+    const promise = spawnAsync(command, args, {
       ...options,
       ...(verbose ? { logger, stdio: 'pipe' } : { logger: undefined }),
     });
+    const child = promise.child;
+    const wrappedPromise = promise.catch((error) => {
+      logger.error(`Error while running command: ${command} ${args.join(' ')}`);
+      logger.error(`stdout: ${error.stdout}`);
+      logger.error(`stderr: ${error.stderr}`);
+      throw error;
+    }) as SpawnProcessPromise<SpawnProcessResult>;
+    wrappedPromise.child = child;
+    return wrappedPromise;
   };
 }
 
