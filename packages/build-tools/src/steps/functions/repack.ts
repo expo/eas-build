@@ -13,8 +13,6 @@ import {
   spawnAsync,
 } from '@expo/steps';
 import {
-  repackAppAndroidAsync,
-  repackAppIosAsync,
   type AndroidSigningOptions,
   type IosSigningOptions,
   type SpawnProcessAsync,
@@ -52,6 +50,12 @@ export function createRepackBuildFunction(): BuildFunction {
         allowedValueTypeName: BuildStepInputValueTypeName.BOOLEAN,
         required: false,
       }),
+      BuildStepInput.createProvider({
+        id: 'repack_version',
+        allowedValueTypeName: BuildStepInputValueTypeName.STRING,
+        required: false,
+        defaultValue: 'latest',
+      }),
     ],
     outputProviders: [
       BuildStepOutput.createProvider({
@@ -87,6 +91,13 @@ export function createRepackBuildFunction(): BuildFunction {
             sourcemapOutput: undefined,
           }
         : undefined;
+
+      stepsCtx.logger.info(`Using repack tool version: ${inputs.repack_version.value}`);
+      const repackApp = await installAndImportRepackAsync({
+        version: inputs.repack_version.value as string,
+        tmpDir,
+      });
+      const { repackAppIosAsync, repackAppAndroidAsync } = repackApp;
 
       stepsCtx.logger.info('Repacking the app...');
       switch (platform) {
@@ -146,6 +157,26 @@ export function createRepackBuildFunction(): BuildFunction {
       outputs.output_path.set(outputPath);
     },
   });
+}
+
+/**
+ * Install `@expo/repack-app` in a sandbox directory and import it.
+ */
+async function installAndImportRepackAsync({
+  version = 'latest',
+  tmpDir,
+}: {
+  version?: string;
+  tmpDir: string;
+}): Promise<typeof import('@expo/repack-app')> {
+  const sandbox = path.join(tmpDir, 'packageRoot');
+  await fs.promises.mkdir(sandbox, { recursive: true });
+  await spawnAsync('yarn', ['add', `@expo/repack-app@${version}`], {
+    stdio: 'inherit',
+    cwd: sandbox,
+  });
+  const resolved = require.resolve('@expo/repack-app', { paths: [sandbox] });
+  return require(resolved);
 }
 
 /**
