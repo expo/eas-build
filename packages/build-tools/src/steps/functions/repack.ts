@@ -3,6 +3,7 @@ import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
 
+import resolveFrom from 'resolve-from';
 import { Platform, type Android, type Ios, type Job } from '@expo/eas-build-job';
 import { type bunyan } from '@expo/logger';
 import {
@@ -175,8 +176,7 @@ async function installAndImportRepackAsync({
     stdio: 'inherit',
     cwd: sandbox,
   });
-  const resolved = require.resolve('@expo/repack-app', { paths: [sandbox] });
-  return require(resolved);
+  return require(resolveFrom(sandbox, '@expo/repack-app'));
 }
 
 /**
