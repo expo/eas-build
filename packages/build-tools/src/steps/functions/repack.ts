@@ -3,6 +3,7 @@ import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
 
+import resolveFrom from 'resolve-from';
 import { Platform, type Android, type Ios, type Job } from '@expo/eas-build-job';
 import { type bunyan } from '@expo/logger';
 import {
@@ -13,8 +14,6 @@ import {
   spawnAsync,
 } from '@expo/steps';
 import {
-  repackAppAndroidAsync,
-  repackAppIosAsync,
   type AndroidSigningOptions,
   type IosSigningOptions,
   type SpawnProcessAsync,
@@ -52,6 +51,12 @@ export function createRepackBuildFunction(): BuildFunction {
         allowedValueTypeName: BuildStepInputValueTypeName.BOOLEAN,
         required: false,
       }),
+      BuildStepInput.createProvider({
+        id: 'repack_version',
+        allowedValueTypeName: BuildStepInputValueTypeName.STRING,
+        required: false,
+        defaultValue: 'latest',
+      }),
     ],
     outputProviders: [
       BuildStepOutput.createProvider({
@@ -87,6 +92,10 @@ export function createRepackBuildFunction(): BuildFunction {
             sourcemapOutput: undefined,
           }
         : undefined;
+
+      stepsCtx.logger.info(`Using repack tool version: ${inputs.repack_version.value}`);
+      const repackApp = await installAndImportRepackAsync(inputs.repack_version.value as string);
+      const { repackAppIosAsync, repackAppAndroidAsync } = repackApp;
 
       stepsCtx.logger.info('Repacking the app...');
       switch (platform) {
@@ -146,6 +155,20 @@ export function createRepackBuildFunction(): BuildFunction {
       outputs.output_path.set(outputPath);
     },
   });
+}
+
+/**
+ * Install `@expo/repack-app` in a sandbox directory and import it.
+ */
+async function installAndImportRepackAsync(
+  version: string = 'latest'
+): Promise<typeof import('@expo/repack-app')> {
+  const sandbox = await fs.promises.mkdtemp(path.join(os.tmpdir(), `repack-package-root-`));
+  await spawnAsync('yarn', ['add', `@expo/repack-app@${version}`], {
+    stdio: 'inherit',
+    cwd: sandbox,
+  });
+  return require(resolveFrom(sandbox, '@expo/repack-app'));
 }
 
 /**

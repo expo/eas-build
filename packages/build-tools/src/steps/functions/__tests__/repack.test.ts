@@ -17,7 +17,9 @@ import ProvisioningProfile, {
 } from '../../utils/ios/credentials/provisioningProfile';
 
 jest.mock('fs');
+jest.mock('@expo/spawn-async');
 jest.mock('@expo/repack-app');
+jest.mock('resolve-from', () => jest.fn((_, moduleName) => moduleName));
 jest.mock('../../utils/ios/credentials/manager');
 
 describe(createRepackBuildFunction, () => {
