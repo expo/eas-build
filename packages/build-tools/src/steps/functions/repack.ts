@@ -94,10 +94,7 @@ export function createRepackBuildFunction(): BuildFunction {
         : undefined;
 
       stepsCtx.logger.info(`Using repack tool version: ${inputs.repack_version.value}`);
-      const repackApp = await installAndImportRepackAsync({
-        version: inputs.repack_version.value as string,
-        tmpDir,
-      });
+      const repackApp = await installAndImportRepackAsync(inputs.repack_version.value as string);
       const { repackAppIosAsync, repackAppAndroidAsync } = repackApp;
 
       stepsCtx.logger.info('Repacking the app...');
@@ -163,15 +160,10 @@ export function createRepackBuildFunction(): BuildFunction {
 /**
  * Install `@expo/repack-app` in a sandbox directory and import it.
  */
-async function installAndImportRepackAsync({
-  version = 'latest',
-  tmpDir,
-}: {
-  version?: string;
-  tmpDir: string;
-}): Promise<typeof import('@expo/repack-app')> {
-  const sandbox = path.join(tmpDir, 'packageRoot');
-  await fs.promises.mkdir(sandbox, { recursive: true });
+async function installAndImportRepackAsync(
+  version: string = 'latest'
+): Promise<typeof import('@expo/repack-app')> {
+  const sandbox = await fs.promises.mkdtemp(path.join(os.tmpdir(), `repack-package-root-`));
   await spawnAsync('yarn', ['add', `@expo/repack-app@${version}`], {
     stdio: 'inherit',
     cwd: sandbox,
