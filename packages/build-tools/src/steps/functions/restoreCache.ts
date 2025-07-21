@@ -117,21 +117,20 @@ export async function downloadCacheAsync({
   key: string;
   keyPrefixes: string[];
 }): Promise<{ archivePath: string; matchedKey: string }> {
-  const searchParams = new URLSearchParams();
-  searchParams.set('key', key);
-  searchParams.set('version', getCacheVersion(paths));
-  for (const keyPrefix of keyPrefixes) {
-    searchParams.append('keyPrefixes', keyPrefix);
-  }
-
   const response = await retryOnDNSFailure(fetch)(
-    new URL(
-      `/v2/turtle-job-runs/${jobRunId}/find-cache?${searchParams.toString()}`,
-      expoApiServerURL
-    ),
+    new URL('/turtle-caches/download', expoApiServerURL),
     {
-      method: 'GET',
-      headers: { Authorization: `Bearer ${robotAccessToken}` },
+      method: 'POST',
+      body: JSON.stringify({
+        jobRunId,
+        key,
+        version: getCacheVersion(paths),
+        keyPrefixes,
+      }),
+      headers: {
+        Authorization: `Bearer ${robotAccessToken}`,
+        'Content-Type': 'application/json',
+      },
     }
   );
 
@@ -163,7 +162,7 @@ export async function downloadCacheAsync({
   // URL may contain percent-encoded characters, e.g. my%20file.apk
   // this replaces all non-alphanumeric characters (excluding dot) with underscore
   const archiveFilename = path
-    .basename(new URL(response.url).pathname)
+    .basename(new URL(downloadUrl).pathname)
     .replace(/([^a-z0-9.-]+)/gi, '_');
   const archivePath = path.join(downloadDestinationDirectory, archiveFilename);
 

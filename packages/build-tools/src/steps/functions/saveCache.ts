@@ -55,6 +55,8 @@ export function createSaveCacheFunction(): BuildFunction {
           logger,
         });
 
+        const { size } = await fs.promises.stat(archivePath);
+
         await uploadCacheAsync({
           logger,
           jobRunId: taskId,
@@ -63,9 +65,8 @@ export function createSaveCacheFunction(): BuildFunction {
           archivePath,
           key,
           paths,
+          size,
         });
-
-        const { size } = await fs.promises.stat(archivePath);
 
         logger.info(`Uploaded cache archive to ${archivePath} (${formatBytes(size)}).`);
       } catch (error) {
@@ -83,6 +84,7 @@ export async function uploadCacheAsync({
   paths,
   key,
   archivePath,
+  size,
 }: {
   logger: bunyan;
   jobRunId: string;
@@ -91,13 +93,22 @@ export async function uploadCacheAsync({
   paths: string[];
   key: string;
   archivePath: string;
+  size: number;
 }): Promise<void> {
   const response = await retryOnDNSFailure(fetch)(
-    new URL(`/v2/turtle-job-runs/${jobRunId}/request-cache-upload-session`, expoApiServerURL),
+    new URL('/turtle-caches/upload-sessions', expoApiServerURL),
     {
       method: 'POST',
-      body: JSON.stringify({ key, version: getCacheVersion(paths) }),
-      headers: { Authorization: `Bearer ${robotAccessToken}` },
+      body: JSON.stringify({
+        jobRunId,
+        key,
+        version: getCacheVersion(paths),
+        size,
+      }),
+      headers: {
+        Authorization: `Bearer ${robotAccessToken}`,
+        'Content-Type': 'application/json',
+      },
     }
   );
 
@@ -142,8 +153,6 @@ export async function compressCacheAsync({
     path.join(os.tmpdir(), 'save-cache-')
   );
 
-  console.log('paths', paths);
-
   // Transform paths to include /** for directories
   const transformedPaths = await Promise.all(
     paths.map(async (pathPattern) => {
@@ -169,8 +178,6 @@ export async function compressCacheAsync({
     absolute: true,
     cwd: workingDirectory,
   });
-
-  console.log('filePaths', filePaths);
 
   const archivePath = path.join(archiveDestinationDirectory, 'cache.tar.gz');
 
