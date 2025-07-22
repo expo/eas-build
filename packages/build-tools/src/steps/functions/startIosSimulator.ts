@@ -92,8 +92,9 @@ export function createStartIosSimulatorBuildFunction(): BuildFunction {
           const cloneIdentifier = `eas-simulator-${i + 1}`;
           logger.info(`Cloning ${formattedDevice} to ${cloneIdentifier}...`);
 
-          await spawn('xcrun', ['simctl', 'clone', deviceIdentifier, cloneIdentifier], {
-            logger,
+          await cloneIosSimulator({
+            sourceDeviceName: deviceIdentifier,
+            destinationDeviceName: cloneIdentifier,
             env,
           });
 
@@ -232,3 +233,17 @@ type XcrunSimctlListDevicesJsonOutput<TDevice extends XcrunSimctlDevice = XcrunS
     [runtime: string]: TDevice[];
   };
 };
+
+export async function cloneIosSimulator({
+  sourceDeviceName,
+  destinationDeviceName,
+  env,
+}: {
+  sourceDeviceName: string;
+  destinationDeviceName: string;
+  env: BuildStepEnv;
+}): Promise<void> {
+  await spawn('xcrun', ['simctl', 'clone', sourceDeviceName, destinationDeviceName], {
+    env,
+  });
+}

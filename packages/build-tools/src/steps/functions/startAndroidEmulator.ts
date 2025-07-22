@@ -129,43 +129,11 @@ export function createStartAndroidEmulatorBuildFunction(): BuildFunction {
         for (let i = 0; i < count; i++) {
           const cloneIdentifier = `eas-simulator-${i + 1}`;
           logger.info(`Cloning ${deviceName} to ${cloneIdentifier}...`);
-          const cloneIniFile = `${process.env.HOME}/.android/avd/${cloneIdentifier}.ini`;
-
-          await fs.rm(`${process.env.HOME}/.android/avd/${cloneIdentifier}.avd`, {
-            recursive: true,
-            force: true,
+          await cloneAndroidEmulator({
+            sourceDeviceName: deviceName,
+            destinationDeviceName: cloneIdentifier,
+            env,
           });
-          await fs.rm(cloneIniFile, { force: true });
-
-          await fs.cp(
-            `${process.env.HOME}/.android/avd/${deviceName}.avd`,
-            `${process.env.HOME}/.android/avd/${cloneIdentifier}.avd`,
-            { recursive: true, verbatimSymlinks: true, force: true }
-          );
-
-          await fs.cp(`${process.env.HOME}/.android/avd/${deviceName}.ini`, cloneIniFile, {
-            verbatimSymlinks: true,
-            force: true,
-          });
-
-          const filesToReplaceDeviceNameIn = (
-            await spawnAsync('grep', [
-              '--binary-files=without-match',
-              '--recursive',
-              '--files-with-matches',
-              `${deviceName}`,
-              `${process.env.HOME}/.android/avd/${cloneIdentifier}.avd`,
-            ])
-          ).stdout
-            .split('\n')
-            .filter((file) => file !== '');
-
-          for (const file of [...filesToReplaceDeviceNameIn, cloneIniFile]) {
-            const txtFile = await fs.readFile(file, 'utf-8');
-            const replaceRegex = new RegExp(`${deviceName}`, 'g');
-            const updatedTxtFile = txtFile.replace(replaceRegex, cloneIdentifier);
-            await fs.writeFile(file, updatedTxtFile);
-          }
 
           logger.info('Starting emulator device');
           await startAndroidSimulator({ deviceName: cloneIdentifier, env });
@@ -328,4 +296,52 @@ export async function getBootedEmulatorDevices({ env }: { env: BuildStepEnv }): 
     .split('\n')
     .filter((line) => line.startsWith('emulator'))
     .map((line) => line.split(' ')[0]);
+}
+
+export async function cloneAndroidEmulator({
+  sourceDeviceName,
+  destinationDeviceName,
+  env,
+}: {
+  sourceDeviceName: string;
+  destinationDeviceName: string;
+  env: BuildStepEnv;
+}): Promise<void> {
+  const cloneIniFile = `${env.HOME}/.android/avd/${destinationDeviceName}.ini`;
+
+  await fs.rm(`${env.HOME}/.android/avd/${destinationDeviceName}.avd`, {
+    recursive: true,
+    force: true,
+  });
+  await fs.rm(cloneIniFile, { force: true });
+
+  await fs.cp(
+    `${env.HOME}/.android/avd/${sourceDeviceName}.avd`,
+    `${env.HOME}/.android/avd/${destinationDeviceName}.avd`,
+    { recursive: true, verbatimSymlinks: true, force: true }
+  );
+
+  await fs.cp(`${env.HOME}/.android/avd/${sourceDeviceName}.ini`, cloneIniFile, {
+    verbatimSymlinks: true,
+    force: true,
+  });
+
+  const filesToReplaceDeviceNameIn = (
+    await spawnAsync('grep', [
+      '--binary-files=without-match',
+      '--recursive',
+      '--files-with-matches',
+      `${sourceDeviceName}`,
+      `${env.HOME}/.android/avd/${destinationDeviceName}.avd`,
+    ])
+  ).stdout
+    .split('\n')
+    .filter((file) => file !== '');
+
+  for (const file of [...filesToReplaceDeviceNameIn, cloneIniFile]) {
+    const txtFile = await fs.readFile(file, 'utf-8');
+    const replaceRegex = new RegExp(`${sourceDeviceName}`, 'g');
+    const updatedTxtFile = txtFile.replace(replaceRegex, destinationDeviceName);
+    await fs.writeFile(file, updatedTxtFile);
+  }
 }
