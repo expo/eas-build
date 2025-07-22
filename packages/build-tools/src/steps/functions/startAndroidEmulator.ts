@@ -1,6 +1,8 @@
 import assert from 'assert';
 import fs from 'fs/promises';
 import { setTimeout } from 'timers/promises';
+import path from 'node:path';
+import os from 'node:os';
 
 import { PipeMode, bunyan } from '@expo/logger';
 import {
@@ -402,4 +404,41 @@ export async function startAndroidScreenRecording({
       stdio: 'pipe',
     }),
   };
+}
+
+export async function stopAndroidScreenRecording({
+  deviceName,
+  recordingSpawn,
+  env,
+}: {
+  deviceName: string;
+  recordingSpawn: SpawnPromise<SpawnResult>;
+  env: BuildStepEnv;
+}): Promise<{ outputPath: string }> {
+  recordingSpawn.child.kill(1);
+
+  let isRecordingBusy = true;
+  for (let i = 0; i < 10; i++) {
+    const lsof = await spawn(
+      'adb',
+      ['-s', deviceName, 'shell', 'lsof -t /sdcard/expo-recording.mp4 | wc -l'],
+      { env }
+    );
+    if (lsof.stdout.trim() === '0') {
+      isRecordingBusy = false;
+      break;
+    }
+    await setTimeout(1000);
+  }
+
+  if (isRecordingBusy) {
+    throw new Error(`Recording file is busy.`);
+  }
+
+  const outputDir = await fs.mkdtemp(path.join(os.tmpdir(), 'android-screen-recording-'));
+  const outputPath = path.join(outputDir, `${deviceName}.mp4`);
+
+  await spawn('adb', ['-s', deviceName, 'pull', '/sdcard/expo-recording.mp4', outputPath], { env });
+
+  return { outputPath };
 }

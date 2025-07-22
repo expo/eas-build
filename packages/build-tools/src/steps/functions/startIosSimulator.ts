@@ -301,3 +301,14 @@ export async function startIosScreenRecording({
   // eslint-disable-next-line @typescript-eslint/return-await
   return { recordingSpawn, outputPath };
 }
+
+export async function stopIosScreenRecording({
+  recordingSpawn,
+}: {
+  recordingSpawn: SpawnPromise<SpawnResult>;
+}): Promise<void> {
+  // TODO: In shell implementation we wait for "Wrote video" in the log file.
+  //       Confirm we don't need to do that here.
+  recordingSpawn.child.kill(2);
+  await recordingSpawn;
+}
