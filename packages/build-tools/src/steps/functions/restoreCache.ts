@@ -186,7 +186,10 @@ export async function decompressCacheAsync({
     logger.info(`Extracting cache to ${workingDirectory}:`);
   }
 
+  // First, extract everything to the working directory
   const fileHandle = await fs.promises.open(archivePath, 'r');
+  const extractedFiles: string[] = [];
+
   await streamPipeline(
     fileHandle.createReadStream(),
     tar.extract({
@@ -195,11 +198,45 @@ export async function decompressCacheAsync({
         logger.warn({ code, data }, message);
       },
       preservePaths: true,
-      onReadEntry: verbose
-        ? (entry) => {
-            logger.info(`- ${entry.path}`);
-          }
-        : undefined,
+      onReadEntry: (entry) => {
+        extractedFiles.push(entry.path);
+        if (verbose) {
+          logger.info(`- ${entry.path}`);
+        }
+      },
     })
   );
+
+  // Handle absolute paths that were prefixed with __absolute__
+  for (const extractedPath of extractedFiles) {
+    if (extractedPath.startsWith('__absolute__/')) {
+      const originalAbsolutePath = extractedPath.slice('__absolute__'.length);
+      const currentPath = path.join(workingDirectory, extractedPath);
+
+      try {
+        // Ensure the target directory exists
+        await fs.promises.mkdir(path.dirname(originalAbsolutePath), { recursive: true });
+
+        // Move the file to its original absolute location
+        await fs.promises.rename(currentPath, originalAbsolutePath);
+
+        if (verbose) {
+          logger.info(`Moved ${extractedPath} to ${originalAbsolutePath}`);
+        }
+      } catch (error) {
+        logger.warn(`Failed to restore absolute path ${originalAbsolutePath}: ${error}`);
+      }
+    }
+  }
+
+  // Clean up any remaining __absolute__ directories
+  const absoluteDir = path.join(workingDirectory, '__absolute__');
+  if (
+    await fs.promises
+      .access(absoluteDir)
+      .then(() => true)
+      .catch(() => false)
+  ) {
+    await fs.promises.rm(absoluteDir, { recursive: true, force: true });
+  }
 }

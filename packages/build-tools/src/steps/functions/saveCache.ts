@@ -153,51 +153,122 @@ export async function compressCacheAsync({
     path.join(os.tmpdir(), 'save-cache-')
   );
 
-  // Transform paths to include /** for directories
-  const transformedPaths = await Promise.all(
-    paths.map(async (pathPattern) => {
-      if (fg.isDynamicPattern(pathPattern)) {
-        return pathPattern;
-      }
+  // Process and normalize all paths
+  const allFiles: Array<{ absolutePath: string; archivePath: string }> = [];
 
-      const fullPath = path.resolve(workingDirectory, pathPattern);
-      try {
-        const stat = await fs.promises.stat(fullPath);
-        if (stat.isDirectory()) {
-          // For directories, append /** to match all contents
-          return pathPattern.endsWith('/') ? `${pathPattern}**` : `${pathPattern}/**`;
+  for (const inputPath of paths) {
+    // Resolve to absolute path
+    const absolutePath = path.isAbsolute(inputPath)
+      ? inputPath
+      : path.resolve(workingDirectory, inputPath);
+
+    try {
+      const stat = await fs.promises.stat(absolutePath);
+
+      if (stat.isDirectory()) {
+        // For directories, get all files recursively
+        const pattern = fg.isDynamicPattern(inputPath) ? inputPath : `${absolutePath}/**`;
+        const dirFiles = await fg(pattern, {
+          absolute: true,
+          onlyFiles: true,
+          cwd: fg.isDynamicPattern(inputPath) ? workingDirectory : undefined,
+        });
+
+        for (const filePath of dirFiles) {
+          // Calculate the archive path
+          let archivePath: string;
+
+          if (path.isAbsolute(inputPath)) {
+            // For absolute input paths, check if they're within workingDirectory
+            const relativeToWorkdir = path.relative(workingDirectory, filePath);
+            if (!relativeToWorkdir.startsWith('..') && !path.isAbsolute(relativeToWorkdir)) {
+              // File is within working directory - use relative path
+              archivePath = relativeToWorkdir;
+            } else {
+              // File is outside working directory - preserve relative structure from original path
+              const relativeToInput = path.relative(absolutePath, filePath);
+              archivePath = path.posix.join('__absolute__' + inputPath, relativeToInput);
+            }
+          } else {
+            // For relative input paths, maintain relative structure
+            archivePath = path.relative(workingDirectory, filePath);
+          }
+
+          allFiles.push({ absolutePath: filePath, archivePath });
         }
-      } catch {
-        // If stat fails, assume it's a glob pattern and leave as-is
-      }
-      return pathPattern;
-    })
-  );
+      } else {
+        // Single file
+        let archivePath: string;
 
-  const filePaths = await fg(transformedPaths, {
-    absolute: true,
-    cwd: workingDirectory,
-  });
+        if (path.isAbsolute(inputPath)) {
+          const relativeToWorkdir = path.relative(workingDirectory, absolutePath);
+          if (!relativeToWorkdir.startsWith('..') && !path.isAbsolute(relativeToWorkdir)) {
+            archivePath = relativeToWorkdir;
+          } else {
+            archivePath = '__absolute__' + inputPath;
+          }
+        } else {
+          archivePath = inputPath;
+        }
+
+        allFiles.push({ absolutePath, archivePath });
+      }
+    } catch (error) {
+      // Handle glob patterns
+      if (fg.isDynamicPattern(inputPath)) {
+        const globFiles = await fg(inputPath, {
+          absolute: true,
+          cwd: workingDirectory,
+          onlyFiles: true,
+        });
+
+        for (const filePath of globFiles) {
+          const archivePath = path.relative(workingDirectory, filePath);
+          allFiles.push({ absolutePath: filePath, archivePath });
+        }
+      } else {
+        throw new Error(`Path does not exist: ${inputPath}`);
+      }
+    }
+  }
+
+  if (allFiles.length === 0) {
+    throw new Error('No files found to cache');
+  }
 
   const archivePath = path.join(archiveDestinationDirectory, 'cache.tar.gz');
 
   if (verbose) {
-    logger.info(`Compressing cache to ${workingDirectory}:`);
+    logger.info(`Compressing cache with ${allFiles.length} files:`);
   }
 
-  await tar.c(
-    {
-      gzip: true,
-      file: archivePath,
-      cwd: workingDirectory,
-      onWriteEntry: verbose
-        ? (entry) => {
-            logger.info(`- ${entry.path}`);
-          }
-        : undefined,
-    },
-    filePaths.map((filePath) => path.relative(workingDirectory, filePath))
-  );
+  // Create a temporary directory with the correct structure
+  const tempDir = await fs.promises.mkdtemp(path.join(os.tmpdir(), 'cache-temp-'));
+
+  try {
+    // Copy all files to temp directory maintaining archive structure
+    for (const { absolutePath, archivePath: targetRelativePath } of allFiles) {
+      const targetPath = path.join(tempDir, targetRelativePath);
+      await fs.promises.mkdir(path.dirname(targetPath), { recursive: true });
+      await fs.promises.copyFile(absolutePath, targetPath);
+
+      if (verbose) {
+        logger.info(`- ${targetRelativePath}`);
+      }
+    }
+
+    // Create tar archive from the structured temp directory
+    await tar.c(
+      {
+        gzip: true,
+        file: archivePath,
+        cwd: tempDir,
+      },
+      allFiles.map(({ archivePath: targetPath }) => targetPath)
+    );
+  } finally {
+    await fs.promises.rm(tempDir, { recursive: true, force: true });
+  }
 
   return { archivePath };
 }
