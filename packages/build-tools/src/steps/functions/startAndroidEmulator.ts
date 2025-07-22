@@ -317,3 +317,15 @@ async function getAvailableEmulatorDevices({ env }: { env: BuildStepEnv }): Prom
   });
   return result.stdout.split('\0').filter((line) => line !== '');
 }
+
+export async function getBootedEmulatorDevices({ env }: { env: BuildStepEnv }): Promise<string[]> {
+  const result = await spawn('adb', ['devices', '-l'], {
+    env,
+    mode: PipeMode.COMBINED_AS_STDOUT,
+  });
+  return result.stdout
+    .replace(/\r\n/g, '\n')
+    .split('\n')
+    .filter((line) => line.startsWith('emulator'))
+    .map((line) => line.split(' ')[0]);
+}
