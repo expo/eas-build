@@ -1,3 +1,8 @@
+import fs from 'node:fs';
+import os from 'node:os';
+import { setTimeout } from 'timers/promises';
+import path from 'node:path';
+
 import { PipeMode } from '@expo/logger';
 import {
   BuildFunction,
@@ -5,7 +10,7 @@ import {
   BuildStepInput,
   BuildStepInputValueTypeName,
 } from '@expo/steps';
-import spawn from '@expo/turtle-spawn';
+import spawn, { SpawnPromise, SpawnResult } from '@expo/turtle-spawn';
 import { minBy } from 'lodash';
 
 import { retryAsync } from '../../utils/retry';
@@ -246,4 +251,53 @@ export async function cloneIosSimulator({
   await spawn('xcrun', ['simctl', 'clone', sourceDeviceName, destinationDeviceName], {
     env,
   });
+}
+
+export async function startIosScreenRecording({
+  deviceName,
+  env,
+}: {
+  deviceName: string;
+  env: BuildStepEnv;
+}): Promise<{
+  recordingSpawn: SpawnPromise<SpawnResult>;
+  outputPath: string;
+}> {
+  const outputDir = await fs.promises.mkdtemp(path.join(os.tmpdir(), 'ios-screen-recording-'));
+  const outputPath = path.join(outputDir, `${deviceName}.mov`);
+  const recordingSpawn = spawn(
+    'xcrun',
+    ['simctl', 'io', deviceName, 'recordVideo', '-f', outputPath],
+    { env }
+  );
+
+  const stdout = recordingSpawn.child.stdout;
+  if (!stdout) {
+    // No stdout means the process failed to start, so awaiting it will throw an error.
+    await recordingSpawn;
+    throw new Error('Recording process failed to start.');
+  }
+
+  let stdoutAggregated = '';
+  stdout.on('data', (data) => {
+    stdoutAggregated += data.toString();
+  });
+
+  let isRecordingStarted = false;
+  for (let i = 0; i < 20; i++) {
+    // while the process is running, we can read the stdout
+    if (stdoutAggregated.includes('Recording started')) {
+      isRecordingStarted = true;
+      break;
+    }
+    await setTimeout(1000);
+  }
+
+  if (!isRecordingStarted) {
+    throw new Error('Recording not started in time.');
+  }
+
+  // We are returning the SpawnPromise here, so we don't await it.
+  // eslint-disable-next-line @typescript-eslint/return-await
+  return { recordingSpawn, outputPath };
 }
