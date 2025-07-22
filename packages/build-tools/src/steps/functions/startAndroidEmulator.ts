@@ -1,5 +1,6 @@
 import assert from 'assert';
 import fs from 'fs/promises';
+import { setTimeout } from 'timers/promises';
 
 import { PipeMode, bunyan } from '@expo/logger';
 import {
@@ -344,4 +345,61 @@ export async function cloneAndroidEmulator({
     const updatedTxtFile = txtFile.replace(replaceRegex, destinationDeviceName);
     await fs.writeFile(file, updatedTxtFile);
   }
+}
+
+export async function startAndroidScreenRecording({
+  deviceName,
+  env,
+}: {
+  deviceName: string;
+  env: BuildStepEnv;
+}): Promise<{
+  recordingSpawn: SpawnPromise<SpawnResult>;
+}> {
+  let isReady = false;
+
+  // Ensure /sdcard/ is ready to write to. (If the emulator was just booted, it might not be ready yet.)
+  for (let i = 0; i < 10; i++) {
+    try {
+      await spawn('adb', ['-s', deviceName, 'shell', 'touch', '/sdcard/.expo-recording-ready'], {
+        env,
+      });
+      isReady = true;
+      break;
+    } catch {
+      await setTimeout(1000);
+    }
+  }
+
+  if (!isReady) {
+    throw new Error(`Emulator (${deviceName}) filesystem was not ready in time.`);
+  }
+
+  const screenrecordArgs = [
+    '-s',
+    deviceName,
+    'shell',
+    'screenrecord',
+    '--verbose',
+    '/sdcard/expo-recording.mp4',
+  ];
+
+  const screenrecordHelp = await spawn(
+    'adb',
+    ['-s', deviceName, 'shell', 'screenrecord', '--help'],
+    { env }
+  );
+
+  if (screenrecordHelp.stdout.includes('remove the time limit')) {
+    screenrecordArgs.push('--time-limit', '0');
+  }
+
+  // We are returning the SpawnPromise here, so we don't await it.
+  // eslint-disable-next-line @typescript-eslint/return-await
+  return {
+    recordingSpawn: spawn('adb', screenrecordArgs, {
+      env,
+      stdio: 'pipe',
+    }),
+  };
 }
