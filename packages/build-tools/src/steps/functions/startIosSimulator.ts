@@ -30,7 +30,7 @@ export function createStartIosSimulatorBuildFunction(): BuildFunction {
     ],
     fn: async ({ logger }, { inputs, env }) => {
       try {
-        const availableDevices = await getAvailableSimulatorDevices({ env });
+        const availableDevices = await getAvailableSimulatorDevices({ env, filter: 'available' });
         logger.info(
           `Available Simulator devices:\n- ${availableDevices
             .map(formatSimulatorDevice)
@@ -130,7 +130,10 @@ async function findMostGenericIphone({
 }: {
   env: BuildStepEnv;
 }): Promise<AvailableXcrunSimctlDevice | null> {
-  const availableSimulatorDevices = await getAvailableSimulatorDevices({ env });
+  const availableSimulatorDevices = await getAvailableSimulatorDevices({
+    env,
+    filter: 'available',
+  });
   const availableIphones = availableSimulatorDevices.filter((device) =>
     device.name.startsWith('iPhone')
   );
@@ -158,18 +161,28 @@ async function getSimulatorDevice({
   udid: string;
   env: BuildStepEnv;
 }): Promise<SimulatorDevice | null> {
-  const devices = await getAvailableSimulatorDevices({ env });
+  const devices = await getAvailableSimulatorDevices({ env, filter: 'available' });
   return devices.find((device) => device.udid === udid) ?? null;
 }
 
-async function getAvailableSimulatorDevices({
+export async function getBootedSimulatorDevices({
   env,
 }: {
   env: BuildStepEnv;
 }): Promise<SimulatorDevice[]> {
+  return await getAvailableSimulatorDevices({ env, filter: 'booted' });
+}
+
+async function getAvailableSimulatorDevices({
+  env,
+  filter,
+}: {
+  env: BuildStepEnv;
+  filter: 'available' | 'booted';
+}): Promise<SimulatorDevice[]> {
   const result = await spawn(
     'xcrun',
-    ['simctl', 'list', 'devices', '--json', '--no-escape-slashes', 'available'],
+    ['simctl', 'list', 'devices', '--json', '--no-escape-slashes', filter],
     {
       env,
       mode: PipeMode.COMBINED_AS_STDOUT,
