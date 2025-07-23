@@ -39,7 +39,7 @@ export enum BuildTrigger {
 export type ArchiveSource =
   | { type: ArchiveSourceType.NONE }
   | { type: ArchiveSourceType.GCS; bucketKey: string; metadataLocation?: string }
-  | { type: ArchiveSourceType.R2; bucketKey: string; }
+  | { type: ArchiveSourceType.R2; bucketKey: string }
   | { type: ArchiveSourceType.URL; url: string }
   | { type: ArchiveSourceType.PATH; path: string }
   | {
