@@ -285,25 +285,34 @@ export async function startIosScreenRecording({
   const recordingSpawn = spawn(
     'xcrun',
     ['simctl', 'io', deviceIdentifier, 'recordVideo', '-f', outputPath],
-    { env }
+    { env, mode: PipeMode.COMBINED }
   );
 
   const stdout = recordingSpawn.child.stdout;
-  if (!stdout) {
-    // No stdout means the process failed to start, so awaiting it will throw an error.
+  const stderr = recordingSpawn.child.stderr;
+  if (!stdout || !stderr) {
+    // No stdout/stderr means the process failed to start, so awaiting it will throw an error.
     await recordingSpawn;
     throw new Error('Recording process failed to start.');
   }
 
-  let stdoutAggregated = '';
+  let outputAggregated = '';
+
+  // Listen to both stdout and stderr since "Recording started" might come from either
   stdout.on('data', (data) => {
-    stdoutAggregated += data.toString();
+    const output = data.toString();
+    outputAggregated += output;
+  });
+
+  stderr.on('data', (data) => {
+    const output = data.toString();
+    outputAggregated += output;
   });
 
   let isRecordingStarted = false;
   for (let i = 0; i < 20; i++) {
-    // while the process is running, we can read the stdout
-    if (stdoutAggregated.includes('Recording started')) {
+    // Check if recording started message appears in either stdout or stderr
+    if (outputAggregated.includes('Recording started')) {
       isRecordingStarted = true;
       break;
     }
