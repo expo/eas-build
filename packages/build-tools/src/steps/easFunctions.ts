@@ -30,6 +30,7 @@ import { createSubmissionEntityFunction } from './functions/createSubmissionEnti
 import { createDownloadBuildFunction } from './functions/downloadBuild';
 import { createRepackBuildFunction } from './functions/repack';
 import { createDownloadArtifactFunction } from './functions/downloadArtifact';
+import { createEasMaestroTestFunction } from './functions/maestroTest';
 
 export function getEasFunctions(ctx: CustomBuildContext): BuildFunction[] {
   const functions = [
@@ -72,6 +73,8 @@ export function getEasFunctions(ctx: CustomBuildContext): BuildFunction[] {
         createGetCredentialsForBuildTriggeredByGithubIntegration(ctx),
       ]
     );
+  } else {
+    functions.push(createEasMaestroTestFunction());
   }
 
   return functions;
