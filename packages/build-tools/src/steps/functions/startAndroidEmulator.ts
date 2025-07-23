@@ -1,5 +1,8 @@
 import assert from 'assert';
 import fs from 'fs/promises';
+import { setTimeout } from 'timers/promises';
+import path from 'node:path';
+import os from 'node:os';
 
 import { PipeMode, bunyan } from '@expo/logger';
 import {
@@ -105,15 +108,7 @@ export function createStartAndroidEmulatorBuildFunction(): BuildFunction {
       await avdManager;
 
       logger.info('Starting emulator device');
-      const { emulatorPromise } = await startAndroidSimulator({ deviceName, env });
-
-      logger.info('Waiting for emulator to become ready');
-      const { serialId } = await ensureEmulatorIsReadyAsync({
-        deviceName,
-        env,
-        logger,
-      });
-
+      const { emulatorPromise, serialId } = await startAndroidSimulator({ deviceName, env });
       logger.info(`${deviceName} is ready.`);
 
       const count = Number(inputs.count.value ?? 1);
@@ -129,43 +124,11 @@ export function createStartAndroidEmulatorBuildFunction(): BuildFunction {
         for (let i = 0; i < count; i++) {
           const cloneIdentifier = `eas-simulator-${i + 1}`;
           logger.info(`Cloning ${deviceName} to ${cloneIdentifier}...`);
-          const cloneIniFile = `${process.env.HOME}/.android/avd/${cloneIdentifier}.ini`;
-
-          await fs.rm(`${process.env.HOME}/.android/avd/${cloneIdentifier}.avd`, {
-            recursive: true,
-            force: true,
+          await cloneAndroidEmulator({
+            sourceDeviceName: deviceName,
+            destinationDeviceName: cloneIdentifier,
+            env,
           });
-          await fs.rm(cloneIniFile, { force: true });
-
-          await fs.cp(
-            `${process.env.HOME}/.android/avd/${deviceName}.avd`,
-            `${process.env.HOME}/.android/avd/${cloneIdentifier}.avd`,
-            { recursive: true, verbatimSymlinks: true, force: true }
-          );
-
-          await fs.cp(`${process.env.HOME}/.android/avd/${deviceName}.ini`, cloneIniFile, {
-            verbatimSymlinks: true,
-            force: true,
-          });
-
-          const filesToReplaceDeviceNameIn = (
-            await spawnAsync('grep', [
-              '--binary-files=without-match',
-              '--recursive',
-              '--files-with-matches',
-              `${deviceName}`,
-              `${process.env.HOME}/.android/avd/${cloneIdentifier}.avd`,
-            ])
-          ).stdout
-            .split('\n')
-            .filter((file) => file !== '');
-
-          for (const file of [...filesToReplaceDeviceNameIn, cloneIniFile]) {
-            const txtFile = await fs.readFile(file, 'utf-8');
-            const replaceRegex = new RegExp(`${deviceName}`, 'g');
-            const updatedTxtFile = txtFile.replace(replaceRegex, cloneIdentifier);
-            await fs.writeFile(file, updatedTxtFile);
-          }
 
           logger.info('Starting emulator device');
           await startAndroidSimulator({ deviceName: cloneIdentifier, env });
@@ -190,7 +153,7 @@ async function startAndroidSimulator({
 }: {
   deviceName: string;
   env: BuildStepEnv;
-}): Promise<{ emulatorPromise: SpawnPromise<SpawnResult> }> {
+}): Promise<{ emulatorPromise: SpawnPromise<SpawnResult>; serialId: string }> {
   const emulatorPromise = spawn(
     `${process.env.ANDROID_HOME}/emulator/emulator`,
     [
@@ -216,9 +179,26 @@ async function startAndroidSimulator({
   }
   emulatorPromise.child.unref();
 
+  const serialId = await retryAsync(
+    async () => {
+      const serialId = await getEmulatorSerialId({ deviceName, env });
+      assert(
+        serialId,
+        `Failed to configure emulator (${serialId}): emulator with required ID not found.`
+      );
+      return serialId;
+    },
+    {
+      retryOptions: {
+        retries: 3 * 60,
+        retryIntervalMs: 1_000,
+      },
+    }
+  );
+
   // We don't want to await the SpawnPromise here.
   // eslint-disable-next-line @typescript-eslint/return-await
-  return { emulatorPromise };
+  return { emulatorPromise, serialId };
 }
 
 async function getEmulatorSerialId({
@@ -259,7 +239,6 @@ async function getEmulatorSerialId({
 async function ensureEmulatorIsReadyAsync({
   deviceName,
   env,
-  logger,
 }: {
   deviceName: string;
   env: BuildStepEnv;
@@ -270,12 +249,11 @@ async function ensureEmulatorIsReadyAsync({
       const serialId = await getEmulatorSerialId({ deviceName, env });
       assert(
         serialId,
-        `Failed to configure emulator (${deviceName}): emulator with required ID not found.`
+        `Failed to configure emulator (${serialId}): emulator with required ID not found.`
       );
       return serialId;
     },
     {
-      logger,
       retryOptions: {
         retries: 3 * 60,
         retryIntervalMs: 1_000,
@@ -295,7 +273,7 @@ async function ensureEmulatorIsReadyAsync({
       );
 
       if (!stdout.startsWith('1')) {
-        throw new Error(`Emulator (${deviceName}) boot has not completed.`);
+        throw new Error(`Emulator (${serialId}) boot has not completed.`);
       }
     },
     {
@@ -316,4 +294,163 @@ async function getAvailableEmulatorDevices({ env }: { env: BuildStepEnv }): Prom
     mode: PipeMode.COMBINED_AS_STDOUT,
   });
   return result.stdout.split('\0').filter((line) => line !== '');
+}
+
+export async function getBootedEmulatorDevices({
+  env,
+}: {
+  env: BuildStepEnv;
+}): Promise<{ serialId: string }[]> {
+  const result = await spawn('adb', ['devices', '-l'], {
+    env,
+    mode: PipeMode.COMBINED_AS_STDOUT,
+  });
+  return result.stdout
+    .replace(/\r\n/g, '\n')
+    .split('\n')
+    .filter((line) => line.startsWith('emulator'))
+    .map((line) => {
+      const [serialId] = line.split(' ')[0];
+      return { serialId };
+    });
+}
+
+export async function cloneAndroidEmulator({
+  sourceDeviceName,
+  destinationDeviceName,
+  env,
+}: {
+  sourceDeviceName: string;
+  destinationDeviceName: string;
+  env: BuildStepEnv;
+}): Promise<void> {
+  const cloneIniFile = `${env.HOME}/.android/avd/${destinationDeviceName}.ini`;
+
+  await fs.rm(`${env.HOME}/.android/avd/${destinationDeviceName}.avd`, {
+    recursive: true,
+    force: true,
+  });
+  await fs.rm(cloneIniFile, { force: true });
+
+  await fs.cp(
+    `${env.HOME}/.android/avd/${sourceDeviceName}.avd`,
+    `${env.HOME}/.android/avd/${destinationDeviceName}.avd`,
+    { recursive: true, verbatimSymlinks: true, force: true }
+  );
+
+  await fs.cp(`${env.HOME}/.android/avd/${sourceDeviceName}.ini`, cloneIniFile, {
+    verbatimSymlinks: true,
+    force: true,
+  });
+
+  const filesToReplaceDeviceNameIn = (
+    await spawnAsync('grep', [
+      '--binary-files=without-match',
+      '--recursive',
+      '--files-with-matches',
+      `${sourceDeviceName}`,
+      `${env.HOME}/.android/avd/${destinationDeviceName}.avd`,
+    ])
+  ).stdout
+    .split('\n')
+    .filter((file) => file !== '');
+
+  for (const file of [...filesToReplaceDeviceNameIn, cloneIniFile]) {
+    const txtFile = await fs.readFile(file, 'utf-8');
+    const replaceRegex = new RegExp(`${sourceDeviceName}`, 'g');
+    const updatedTxtFile = txtFile.replace(replaceRegex, destinationDeviceName);
+    await fs.writeFile(file, updatedTxtFile);
+  }
+}
+
+export async function startAndroidScreenRecording({
+  serialId,
+  env,
+}: {
+  serialId: string;
+  env: BuildStepEnv;
+}): Promise<{
+  recordingSpawn: SpawnPromise<SpawnResult>;
+}> {
+  let isReady = false;
+
+  // Ensure /sdcard/ is ready to write to. (If the emulator was just booted, it might not be ready yet.)
+  for (let i = 0; i < 10; i++) {
+    try {
+      await spawn('adb', ['-s', serialId, 'shell', 'touch', '/sdcard/.expo-recording-ready'], {
+        env,
+      });
+      isReady = true;
+      break;
+    } catch {
+      await setTimeout(1000);
+    }
+  }
+
+  if (!isReady) {
+    throw new Error(`Emulator (${serialId}) filesystem was not ready in time.`);
+  }
+
+  const screenrecordArgs = [
+    '-s',
+    serialId,
+    'shell',
+    'screenrecord',
+    '--verbose',
+    '/sdcard/expo-recording.mp4',
+  ];
+
+  const screenrecordHelp = await spawn('adb', ['-s', serialId, 'shell', 'screenrecord', '--help'], {
+    env,
+  });
+
+  if (screenrecordHelp.stdout.includes('remove the time limit')) {
+    screenrecordArgs.push('--time-limit', '0');
+  }
+
+  // We are returning the SpawnPromise here, so we don't await it.
+  // eslint-disable-next-line @typescript-eslint/return-await
+  return {
+    recordingSpawn: spawn('adb', screenrecordArgs, {
+      env,
+      stdio: 'pipe',
+    }),
+  };
+}
+
+export async function stopAndroidScreenRecording({
+  serialId,
+  recordingSpawn,
+  env,
+}: {
+  serialId: string;
+  recordingSpawn: SpawnPromise<SpawnResult>;
+  env: BuildStepEnv;
+}): Promise<{ outputPath: string }> {
+  recordingSpawn.child.kill(1);
+
+  let isRecordingBusy = true;
+  for (let i = 0; i < 10; i++) {
+    const lsof = await spawn(
+      'adb',
+      ['-s', serialId, 'shell', 'lsof -t /sdcard/expo-recording.mp4 | wc -l'],
+      { env }
+    );
+    if (lsof.stdout.trim() === '0') {
+      isRecordingBusy = false;
+      break;
+    }
+    await setTimeout(1000);
+  }
+
+  if (isRecordingBusy) {
+    throw new Error(`Recording file is busy.`);
+  }
+
+  const outputDir = await fs.mkdtemp(path.join(os.tmpdir(), 'android-screen-recording-'));
+  const outputPath = path.join(outputDir, `${serialId}.mp4`);
+
+  await spawn('adb', ['-s', serialId, 'pull', '/sdcard/expo-recording.mp4', outputPath], { env });
+
+  return { outputPath };
 }

@@ -1,3 +1,8 @@
+import fs from 'node:fs';
+import os from 'node:os';
+import { setTimeout } from 'timers/promises';
+import path from 'node:path';
+
 import { PipeMode } from '@expo/logger';
 import {
   BuildFunction,
@@ -5,7 +10,7 @@ import {
   BuildStepInput,
   BuildStepInputValueTypeName,
 } from '@expo/steps';
-import spawn from '@expo/turtle-spawn';
+import spawn, { SpawnPromise, SpawnResult } from '@expo/turtle-spawn';
 import { minBy } from 'lodash';
 
 import { retryAsync } from '../../utils/retry';
@@ -30,7 +35,7 @@ export function createStartIosSimulatorBuildFunction(): BuildFunction {
     ],
     fn: async ({ logger }, { inputs, env }) => {
       try {
-        const availableDevices = await getAvailableSimulatorDevices({ env });
+        const availableDevices = await getAvailableSimulatorDevices({ env, filter: 'available' });
         logger.info(
           `Available Simulator devices:\n- ${availableDevices
             .map(formatSimulatorDevice)
@@ -42,48 +47,33 @@ export function createStartIosSimulatorBuildFunction(): BuildFunction {
         logger.info('');
       }
 
-      const deviceIdentifier =
+      const originalDeviceIdentifier =
         inputs.device_identifier.value?.toString() ?? (await findMostGenericIphone({ env }))?.name;
 
-      if (!deviceIdentifier) {
+      if (!originalDeviceIdentifier) {
         throw new Error('Could not find an iPhone among available simulator devices.');
       }
 
-      const bootstatusResult = await spawn(
-        'xcrun',
-        ['simctl', 'bootstatus', deviceIdentifier, '-b'],
-        {
-          logger,
-          env,
-        }
-      );
+      const { udid } = await startIosSimulator({
+        deviceIdentifier: originalDeviceIdentifier,
+        env,
+      });
 
-      await retryAsync(
-        async () => {
-          await spawn('xcrun', ['simctl', 'io', deviceIdentifier, 'screenshot', '/dev/null'], {
-            env,
-          });
-        },
-        {
-          retryOptions: {
-            // There's 30 * 60 seconds in 30 minutes, which is the timeout.
-            retries: 30 * 60,
-            retryIntervalMs: 1_000,
-          },
-        }
-      );
+      await ensureIosSimulatorIsReady({
+        deviceIdentifier: originalDeviceIdentifier,
+        env,
+      });
 
       logger.info('');
 
-      const udid = parseUdidFromBootstatusStdout(bootstatusResult.stdout);
       const device = udid ? await getSimulatorDevice({ udid, env }) : null;
-      const formattedDevice = device ? formatSimulatorDevice(device) : deviceIdentifier;
+      const formattedDevice = device ? formatSimulatorDevice(device) : originalDeviceIdentifier;
       logger.info(`${formattedDevice} is ready.`);
 
       const count = Number(inputs.count.value ?? 1);
       if (count > 1) {
         logger.info(`Requested ${count} Simulators, shutting down ${formattedDevice} for cloning.`);
-        await spawn('xcrun', ['simctl', 'shutdown', deviceIdentifier], {
+        await spawn('xcrun', ['simctl', 'shutdown', originalDeviceIdentifier], {
           logger,
           env,
         });
@@ -92,30 +82,21 @@ export function createStartIosSimulatorBuildFunction(): BuildFunction {
           const cloneIdentifier = `eas-simulator-${i + 1}`;
           logger.info(`Cloning ${formattedDevice} to ${cloneIdentifier}...`);
 
-          await spawn('xcrun', ['simctl', 'clone', deviceIdentifier, cloneIdentifier], {
-            logger,
+          await cloneIosSimulator({
+            sourceDeviceName: originalDeviceIdentifier,
+            destinationDeviceName: cloneIdentifier,
             env,
           });
 
-          await spawn('xcrun', ['simctl', 'bootstatus', cloneIdentifier, '-b'], {
-            logger,
+          await startIosSimulator({
+            deviceIdentifier: cloneIdentifier,
             env,
           });
 
-          await retryAsync(
-            async () => {
-              await spawn('xcrun', ['simctl', 'io', cloneIdentifier, 'screenshot', '/dev/null'], {
-                env,
-              });
-            },
-            {
-              retryOptions: {
-                // There's 30 * 60 seconds in 30 minutes, which is the timeout.
-                retries: 30 * 60,
-                retryIntervalMs: 1_000,
-              },
-            }
-          );
+          await ensureIosSimulatorIsReady({
+            deviceIdentifier: cloneIdentifier,
+            env,
+          });
 
           logger.info(`${cloneIdentifier} is ready.`);
           logger.info('');
@@ -130,7 +111,10 @@ async function findMostGenericIphone({
 }: {
   env: BuildStepEnv;
 }): Promise<AvailableXcrunSimctlDevice | null> {
-  const availableSimulatorDevices = await getAvailableSimulatorDevices({ env });
+  const availableSimulatorDevices = await getAvailableSimulatorDevices({
+    env,
+    filter: 'available',
+  });
   const availableIphones = availableSimulatorDevices.filter((device) =>
     device.name.startsWith('iPhone')
   );
@@ -158,18 +142,28 @@ async function getSimulatorDevice({
   udid: string;
   env: BuildStepEnv;
 }): Promise<SimulatorDevice | null> {
-  const devices = await getAvailableSimulatorDevices({ env });
+  const devices = await getAvailableSimulatorDevices({ env, filter: 'available' });
   return devices.find((device) => device.udid === udid) ?? null;
 }
 
-async function getAvailableSimulatorDevices({
+export async function getBootedSimulatorDevices({
   env,
 }: {
   env: BuildStepEnv;
 }): Promise<SimulatorDevice[]> {
+  return await getAvailableSimulatorDevices({ env, filter: 'booted' });
+}
+
+async function getAvailableSimulatorDevices({
+  env,
+  filter,
+}: {
+  env: BuildStepEnv;
+  filter: 'available' | 'booted';
+}): Promise<SimulatorDevice[]> {
   const result = await spawn(
     'xcrun',
-    ['simctl', 'list', 'devices', '--json', '--no-escape-slashes', 'available'],
+    ['simctl', 'list', 'devices', '--json', '--no-escape-slashes', filter],
     {
       env,
       mode: PipeMode.COMBINED_AS_STDOUT,
@@ -219,3 +213,128 @@ type XcrunSimctlListDevicesJsonOutput<TDevice extends XcrunSimctlDevice = XcrunS
     [runtime: string]: TDevice[];
   };
 };
+
+export async function cloneIosSimulator({
+  sourceDeviceName,
+  destinationDeviceName,
+  env,
+}: {
+  sourceDeviceName: string;
+  destinationDeviceName: string;
+  env: BuildStepEnv;
+}): Promise<void> {
+  await spawn('xcrun', ['simctl', 'clone', sourceDeviceName, destinationDeviceName], {
+    env,
+  });
+}
+
+export async function startIosSimulator({
+  deviceIdentifier,
+  env,
+}: {
+  deviceIdentifier: string;
+  env: BuildStepEnv;
+}): Promise<{ udid: string }> {
+  const bootstatusResult = await spawn('xcrun', ['simctl', 'bootstatus', deviceIdentifier, '-b'], {
+    env,
+  });
+
+  const udid = parseUdidFromBootstatusStdout(bootstatusResult.stdout);
+  if (!udid) {
+    throw new Error('Failed to parse UDID from bootstatus result.');
+  }
+
+  return { udid };
+}
+
+export async function ensureIosSimulatorIsReady({
+  deviceIdentifier,
+  env,
+}: {
+  deviceIdentifier: string;
+  env: BuildStepEnv;
+}): Promise<void> {
+  await retryAsync(
+    async () => {
+      await spawn('xcrun', ['simctl', 'io', deviceIdentifier, 'screenshot', '/dev/null'], {
+        env,
+      });
+    },
+    {
+      retryOptions: {
+        // There's 30 * 60 seconds in 30 minutes, which is the timeout.
+        retries: 30 * 60,
+        retryIntervalMs: 1_000,
+      },
+    }
+  );
+}
+
+export async function startIosScreenRecording({
+  deviceIdentifier,
+  env,
+}: {
+  deviceIdentifier: string;
+  env: BuildStepEnv;
+}): Promise<{
+  recordingSpawn: SpawnPromise<SpawnResult>;
+  outputPath: string;
+}> {
+  const outputDir = await fs.promises.mkdtemp(path.join(os.tmpdir(), 'ios-screen-recording-'));
+  const outputPath = path.join(outputDir, `${deviceIdentifier}.mov`);
+  const recordingSpawn = spawn(
+    'xcrun',
+    ['simctl', 'io', deviceIdentifier, 'recordVideo', '-f', outputPath],
+    { env, mode: PipeMode.COMBINED }
+  );
+
+  const stdout = recordingSpawn.child.stdout;
+  const stderr = recordingSpawn.child.stderr;
+  if (!stdout || !stderr) {
+    // No stdout/stderr means the process failed to start, so awaiting it will throw an error.
+    await recordingSpawn;
+    throw new Error('Recording process failed to start.');
+  }
+
+  let outputAggregated = '';
+
+  // Listen to both stdout and stderr since "Recording started" might come from either
+  stdout.on('data', (data) => {
+    const output = data.toString();
+    outputAggregated += output;
+  });
+
+  stderr.on('data', (data) => {
+    const output = data.toString();
+    outputAggregated += output;
+  });
+
+  let isRecordingStarted = false;
+  for (let i = 0; i < 20; i++) {
+    // Check if recording started message appears in either stdout or stderr
+    if (outputAggregated.includes('Recording started')) {
+      isRecordingStarted = true;
+      break;
+    }
+    await setTimeout(1000);
+  }
+
+  if (!isRecordingStarted) {
+    throw new Error('Recording not started in time.');
+  }
+
+  // We are returning the SpawnPromise here, so we don't await it.
+  // eslint-disable-next-line @typescript-eslint/return-await
+  return { recordingSpawn, outputPath };
+}
+
+export async function stopIosScreenRecording({
+  recordingSpawn,
+}: {
+  recordingSpawn: SpawnPromise<SpawnResult>;
+}): Promise<void> {
+  // TODO: In shell implementation we wait for "Wrote video" in the log file.
+  //       Confirm we don't need to do that here.
+  recordingSpawn.child.kill(2);
+  await recordingSpawn;
+}
