@@ -28,6 +28,7 @@ export enum ArchiveSourceType {
   PATH = 'PATH',
   GCS = 'GCS',
   GIT = 'GIT',
+  R2  = 'R2',
 }
 
 export enum BuildTrigger {
@@ -38,6 +39,7 @@ export enum BuildTrigger {
 export type ArchiveSource =
   | { type: ArchiveSourceType.NONE }
   | { type: ArchiveSourceType.GCS; bucketKey: string; metadataLocation?: string }
+  | { type: ArchiveSourceType.R2; bucketKey: string; }
   | { type: ArchiveSourceType.URL; url: string }
   | { type: ArchiveSourceType.PATH; path: string }
   | {
