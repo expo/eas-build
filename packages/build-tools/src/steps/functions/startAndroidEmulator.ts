@@ -108,15 +108,7 @@ export function createStartAndroidEmulatorBuildFunction(): BuildFunction {
       await avdManager;
 
       logger.info('Starting emulator device');
-      const { emulatorPromise } = await startAndroidSimulator({ deviceName, env });
-
-      logger.info('Waiting for emulator to become ready');
-      const { serialId } = await ensureEmulatorIsReadyAsync({
-        deviceName,
-        env,
-        logger,
-      });
-
+      const { emulatorPromise, serialId } = await startAndroidSimulator({ deviceName, env });
       logger.info(`${deviceName} is ready.`);
 
       const count = Number(inputs.count.value ?? 1);
@@ -161,7 +153,7 @@ async function startAndroidSimulator({
 }: {
   deviceName: string;
   env: BuildStepEnv;
-}): Promise<{ emulatorPromise: SpawnPromise<SpawnResult> }> {
+}): Promise<{ emulatorPromise: SpawnPromise<SpawnResult>; serialId: string }> {
   const emulatorPromise = spawn(
     `${process.env.ANDROID_HOME}/emulator/emulator`,
     [
@@ -187,9 +179,26 @@ async function startAndroidSimulator({
   }
   emulatorPromise.child.unref();
 
+  const serialId = await retryAsync(
+    async () => {
+      const serialId = await getEmulatorSerialId({ deviceName, env });
+      assert(
+        serialId,
+        `Failed to configure emulator (${serialId}): emulator with required ID not found.`
+      );
+      return serialId;
+    },
+    {
+      retryOptions: {
+        retries: 3 * 60,
+        retryIntervalMs: 1_000,
+      },
+    }
+  );
+
   // We don't want to await the SpawnPromise here.
   // eslint-disable-next-line @typescript-eslint/return-await
-  return { emulatorPromise };
+  return { emulatorPromise, serialId };
 }
 
 async function getEmulatorSerialId({
@@ -230,7 +239,6 @@ async function getEmulatorSerialId({
 async function ensureEmulatorIsReadyAsync({
   deviceName,
   env,
-  logger,
 }: {
   deviceName: string;
   env: BuildStepEnv;
@@ -241,12 +249,11 @@ async function ensureEmulatorIsReadyAsync({
       const serialId = await getEmulatorSerialId({ deviceName, env });
       assert(
         serialId,
-        `Failed to configure emulator (${deviceName}): emulator with required ID not found.`
+        `Failed to configure emulator (${serialId}): emulator with required ID not found.`
       );
       return serialId;
     },
     {
-      logger,
       retryOptions: {
         retries: 3 * 60,
         retryIntervalMs: 1_000,
@@ -266,7 +273,7 @@ async function ensureEmulatorIsReadyAsync({
       );
 
       if (!stdout.startsWith('1')) {
-        throw new Error(`Emulator (${deviceName}) boot has not completed.`);
+        throw new Error(`Emulator (${serialId}) boot has not completed.`);
       }
     },
     {
@@ -289,7 +296,11 @@ async function getAvailableEmulatorDevices({ env }: { env: BuildStepEnv }): Prom
   return result.stdout.split('\0').filter((line) => line !== '');
 }
 
-export async function getBootedEmulatorDevices({ env }: { env: BuildStepEnv }): Promise<string[]> {
+export async function getBootedEmulatorDevices({
+  env,
+}: {
+  env: BuildStepEnv;
+}): Promise<{ serialId: string }[]> {
   const result = await spawn('adb', ['devices', '-l'], {
     env,
     mode: PipeMode.COMBINED_AS_STDOUT,
@@ -298,7 +309,10 @@ export async function getBootedEmulatorDevices({ env }: { env: BuildStepEnv }): 
     .replace(/\r\n/g, '\n')
     .split('\n')
     .filter((line) => line.startsWith('emulator'))
-    .map((line) => line.split(' ')[0]);
+    .map((line) => {
+      const [serialId] = line.split(' ')[0];
+      return { serialId };
+    });
 }
 
 export async function cloneAndroidEmulator({
@@ -350,10 +364,10 @@ export async function cloneAndroidEmulator({
 }
 
 export async function startAndroidScreenRecording({
-  deviceName,
+  serialId,
   env,
 }: {
-  deviceName: string;
+  serialId: string;
   env: BuildStepEnv;
 }): Promise<{
   recordingSpawn: SpawnPromise<SpawnResult>;
@@ -363,7 +377,7 @@ export async function startAndroidScreenRecording({
   // Ensure /sdcard/ is ready to write to. (If the emulator was just booted, it might not be ready yet.)
   for (let i = 0; i < 10; i++) {
     try {
-      await spawn('adb', ['-s', deviceName, 'shell', 'touch', '/sdcard/.expo-recording-ready'], {
+      await spawn('adb', ['-s', serialId, 'shell', 'touch', '/sdcard/.expo-recording-ready'], {
         env,
       });
       isReady = true;
@@ -374,23 +388,21 @@ export async function startAndroidScreenRecording({
   }
 
   if (!isReady) {
-    throw new Error(`Emulator (${deviceName}) filesystem was not ready in time.`);
+    throw new Error(`Emulator (${serialId}) filesystem was not ready in time.`);
   }
 
   const screenrecordArgs = [
     '-s',
-    deviceName,
+    serialId,
     'shell',
     'screenrecord',
     '--verbose',
     '/sdcard/expo-recording.mp4',
   ];
 
-  const screenrecordHelp = await spawn(
-    'adb',
-    ['-s', deviceName, 'shell', 'screenrecord', '--help'],
-    { env }
-  );
+  const screenrecordHelp = await spawn('adb', ['-s', serialId, 'shell', 'screenrecord', '--help'], {
+    env,
+  });
 
   if (screenrecordHelp.stdout.includes('remove the time limit')) {
     screenrecordArgs.push('--time-limit', '0');
@@ -407,11 +419,11 @@ export async function startAndroidScreenRecording({
 }
 
 export async function stopAndroidScreenRecording({
-  deviceName,
+  serialId,
   recordingSpawn,
   env,
 }: {
-  deviceName: string;
+  serialId: string;
   recordingSpawn: SpawnPromise<SpawnResult>;
   env: BuildStepEnv;
 }): Promise<{ outputPath: string }> {
@@ -421,7 +433,7 @@ export async function stopAndroidScreenRecording({
   for (let i = 0; i < 10; i++) {
     const lsof = await spawn(
       'adb',
-      ['-s', deviceName, 'shell', 'lsof -t /sdcard/expo-recording.mp4 | wc -l'],
+      ['-s', serialId, 'shell', 'lsof -t /sdcard/expo-recording.mp4 | wc -l'],
       { env }
     );
     if (lsof.stdout.trim() === '0') {
@@ -436,9 +448,9 @@ export async function stopAndroidScreenRecording({
   }
 
   const outputDir = await fs.mkdtemp(path.join(os.tmpdir(), 'android-screen-recording-'));
-  const outputPath = path.join(outputDir, `${deviceName}.mp4`);
+  const outputPath = path.join(outputDir, `${serialId}.mp4`);
 
-  await spawn('adb', ['-s', deviceName, 'pull', '/sdcard/expo-recording.mp4', outputPath], { env });
+  await spawn('adb', ['-s', serialId, 'pull', '/sdcard/expo-recording.mp4', outputPath], { env });
 
   return { outputPath };
 }
