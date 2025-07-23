@@ -11,6 +11,7 @@ import spawn, { SpawnPromise, SpawnResult } from '@expo/turtle-spawn';
 import { PipeMode } from '@expo/logger';
 
 import {
+  startIosSimulator,
   cloneIosSimulator,
   getBootedSimulatorDevices,
   startIosScreenRecording,
@@ -132,7 +133,7 @@ export function createEasMaestroTestFunction(): BuildFunction {
             throw new Error('Multiple booted Android Emulators found.');
           }
 
-          const serialId = bootedDevices[0];
+          const { serialId } = bootedDevices[0];
           const adbEmuAvdNameResult = await spawn('adb', ['-s', serialId, 'emu', 'avd', 'name'], {
             mode: PipeMode.COMBINED,
             env,
@@ -155,53 +156,57 @@ export function createEasMaestroTestFunction(): BuildFunction {
       for (const [flowPath, flowIndex] of Object.entries(flow_paths)) {
         for (let retryIndex = 0; retryIndex < retries; retryIndex++) {
           const localDeviceName = `eas-simulator-${flowIndex}-${retryIndex}`;
-          // start device
-          switch (platform) {
-            case 'ios': {
-              await cloneIosSimulator({
-                sourceDeviceName,
-                destinationDeviceName: localDeviceName,
-                env,
-              });
-              // boot device
-              break;
-            }
-            case 'android': {
-              await cloneAndroidEmulator({
-                sourceDeviceName,
-                destinationDeviceName: localDeviceName,
-                env,
-              });
-              // boot device
-              break;
-            }
-          }
 
           let recordingSpawn: SpawnPromise<SpawnResult> | undefined;
           let outputPath: string | undefined;
-          if (record_screen) {
+
+          try {
             switch (platform) {
               case 'ios': {
-                const iosScreenRecording = await startIosScreenRecording({
-                  deviceName: localDeviceName,
+                await cloneIosSimulator({
+                  sourceDeviceName,
+                  destinationDeviceName: localDeviceName,
                   env,
                 });
-                recordingSpawn = iosScreenRecording.recordingSpawn;
-                outputPath = iosScreenRecording.outputPath;
+                await startIosSimulator({
+                  deviceIdentifier: localDeviceName,
+                  env,
+                });
                 break;
               }
               case 'android': {
-                const androidScreenRecording = await startAndroidScreenRecording({
-                  deviceName: localDeviceName,
+                await cloneAndroidEmulator({
+                  sourceDeviceName,
+                  destinationDeviceName: localDeviceName,
                   env,
                 });
-                recordingSpawn = androidScreenRecording.recordingSpawn;
+                // boot device
                 break;
               }
             }
-          }
 
-          try {
+            if (record_screen) {
+              switch (platform) {
+                case 'ios': {
+                  const iosScreenRecording = await startIosScreenRecording({
+                    deviceIdentifier: localDeviceName,
+                    env,
+                  });
+                  recordingSpawn = iosScreenRecording.recordingSpawn;
+                  outputPath = iosScreenRecording.outputPath;
+                  break;
+                }
+                case 'android': {
+                  const androidScreenRecording = await startAndroidScreenRecording({
+                    serialId: localDeviceName,
+                    env,
+                  });
+                  recordingSpawn = androidScreenRecording.recordingSpawn;
+                  break;
+                }
+              }
+            }
+
             const [command, ...args] = getMaestroTestCommand({
               flow_path: flowPath,
               include_tags,
@@ -226,29 +231,57 @@ export function createEasMaestroTestFunction(): BuildFunction {
               throw err;
             }
           } finally {
-            if (recordingSpawn) {
+            try {
+              if (recordingSpawn) {
+                switch (platform) {
+                  case 'ios': {
+                    await stopIosScreenRecording({ recordingSpawn });
+                    break;
+                  }
+                  case 'android': {
+                    const androidScreenRecording = await stopAndroidScreenRecording({
+                      serialId: localDeviceName,
+                      recordingSpawn,
+                      env,
+                    });
+                    outputPath = androidScreenRecording.outputPath;
+                    break;
+                  }
+                }
+
+                stepCtx.logger.info(`Recording saved to ${outputPath}.`);
+              }
+            } catch (err) {
+              stepCtx.logger.error(`Error stopping recording: ${err}`);
+            }
+
+            try {
               switch (platform) {
                 case 'ios': {
-                  await stopIosScreenRecording({ recordingSpawn });
+                  stepCtx.logger.info(`Deleting iOS Simulator...`);
+                  await spawnAsync('xcrun', ['simctl', 'delete', localDeviceName], {
+                    logger: stepCtx.logger,
+                    stdio: 'pipe',
+                  });
                   break;
                 }
                 case 'android': {
-                  const androidScreenRecording = await stopAndroidScreenRecording({
-                    deviceName: localDeviceName,
-                    recordingSpawn,
-                    env,
+                  stepCtx.logger.info(`Stopping Android Emulator...`);
+                  await spawnAsync('adb', ['-s', localDeviceName, 'emu', 'kill'], {
+                    logger: stepCtx.logger,
+                    stdio: 'pipe',
                   });
-                  outputPath = androidScreenRecording.outputPath;
+                  stepCtx.logger.info(`Deleting Android Emulator...`);
+                  await spawnAsync('avdmanager', ['delete', 'avd', '-n', localDeviceName], {
+                    logger: stepCtx.logger,
+                    stdio: 'pipe',
+                  });
                   break;
                 }
               }
+            } catch (err) {
+              stepCtx.logger.error(`Error stopping device: ${err}`);
             }
-
-            if (outputPath) {
-              stepCtx.logger.info(`Recording saved to ${outputPath}.`);
-            }
-
-            // stop device
           }
         }
       }
