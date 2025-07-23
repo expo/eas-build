@@ -1,7 +1,9 @@
 import { randomUUID } from 'node:crypto';
+import path from 'node:path';
 
 import {
   BuildFunction,
+  BuildStepEnv,
   BuildStepInput,
   BuildStepInputValueTypeName,
   spawnAsync,
@@ -94,7 +96,9 @@ export function createEasMaestroTestFunction(): BuildFunction {
           output_format: z.string().optional(),
           record_screen: z.boolean().default(false),
         })
-        .parse(_inputs);
+        .parse(
+          Object.fromEntries(Object.entries(_inputs).map(([key, value]) => [key, value.value]))
+        );
 
       if (shards > 1) {
         stepCtx.logger.warn(
@@ -153,7 +157,7 @@ export function createEasMaestroTestFunction(): BuildFunction {
         }
       }
 
-      for (const [flowPath, flowIndex] of Object.entries(flow_paths)) {
+      for (const [flowIndex, flowPath] of flow_paths.entries()) {
         for (let retryIndex = 0; retryIndex < retries; retryIndex++) {
           const localDeviceName = `eas-simulator-${flowIndex}-${retryIndex}`;
 
@@ -212,7 +216,11 @@ export function createEasMaestroTestFunction(): BuildFunction {
               include_tags,
               exclude_tags,
               output_format,
-              output_path: getOutputPathForOutputFormat(output_format ?? 'noop') ?? undefined,
+              output_path:
+                getOutputPathForOutputFormat({
+                  outputFormat: output_format ?? 'noop',
+                  env,
+                }) ?? undefined,
             });
 
             await spawnAsync(command, args, {
@@ -221,6 +229,8 @@ export function createEasMaestroTestFunction(): BuildFunction {
               env,
               stdio: 'pipe',
             });
+
+            break;
           } catch (err) {
             stepCtx.logger.error(`Error running maestro test: ${err}`);
 
@@ -298,17 +308,17 @@ export function getMaestroTestCommand(params: {
 }): [command: string, ...args: string[]] {
   let includeTagsFlag = '';
   if (typeof params.include_tags === 'string') {
-    includeTagsFlag = `--include-tags="${params.include_tags}"`;
+    includeTagsFlag = `--include-tags=${params.include_tags}`;
   }
 
   let excludeTagsFlag = '';
   if (typeof params.exclude_tags === 'string') {
-    excludeTagsFlag = `--exclude-tags="${params.exclude_tags}"`;
+    excludeTagsFlag = `--exclude-tags=${params.exclude_tags}`;
   }
 
-  let outputFormatFlag = '';
-  if (params.output_format === 'junit') {
-    outputFormatFlag = `--format=JUNIT --output="${params.output_path}"`;
+  let outputFormatFlags: string[] = [];
+  if (params.output_format) {
+    outputFormatFlags = [`--format=${params.output_format}`, `--output=${params.output_path}`];
   }
 
   return [
@@ -316,12 +326,18 @@ export function getMaestroTestCommand(params: {
     'test',
     includeTagsFlag,
     excludeTagsFlag,
-    outputFormatFlag,
+    ...outputFormatFlags,
     params.flow_path,
   ].flatMap((e) => e || []) as [command: string, ...args: string[]];
 }
 
-function getOutputPathForOutputFormat(outputFormat: string): string | null {
+function getOutputPathForOutputFormat({
+  outputFormat,
+  env,
+}: {
+  outputFormat: string;
+  env: BuildStepEnv;
+}): string | null {
   if (outputFormat.toLowerCase() === 'noop') {
     return null;
   }
@@ -339,12 +355,17 @@ function getOutputPathForOutputFormat(outputFormat: string): string | null {
       break;
   }
 
-  return [
-    '$HOME/.maestro/tests/maestro-',
-    outputFormat,
-    '-',
-    randomUUID(),
-    // No . if no extension.
-    ...(extension ? ['.', extension] : []),
-  ].join('');
+  return path.join(
+    env.HOME!,
+    '.maestro',
+    'tests',
+    [
+      'maestro-',
+      outputFormat,
+      '-',
+      randomUUID(),
+      // No . if no extension.
+      ...(extension ? ['.', extension] : []),
+    ].join('')
+  );
 }
