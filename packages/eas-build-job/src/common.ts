@@ -28,7 +28,7 @@ export enum ArchiveSourceType {
   PATH = 'PATH',
   GCS = 'GCS',
   GIT = 'GIT',
-  R2  = 'R2',
+  R2 = 'R2',
 }
 
 export enum BuildTrigger {
