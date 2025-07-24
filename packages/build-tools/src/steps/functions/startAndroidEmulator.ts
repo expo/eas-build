@@ -134,7 +134,7 @@ export function createStartAndroidEmulatorBuildFunction(): BuildFunction {
           await startAndroidSimulator({ deviceName: cloneIdentifier, env });
 
           logger.info('Waiting for emulator to become ready');
-          await ensureEmulatorIsReadyAsync({
+          await ensureAndroidEmulatorIsReadyAsync({
             deviceName: cloneIdentifier,
             env,
             logger,
@@ -236,7 +236,7 @@ async function getEmulatorSerialId({
   return null;
 }
 
-async function ensureEmulatorIsReadyAsync({
+async function ensureAndroidEmulatorIsReadyAsync({
   deviceName,
   env,
 }: {

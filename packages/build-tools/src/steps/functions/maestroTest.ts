@@ -26,10 +26,10 @@ import {
   stopAndroidScreenRecording,
 } from './startAndroidEmulator';
 
-export function createEasMaestroTestFunction(): BuildFunction {
+export function createInternalEasMaestroTestFunction(): BuildFunction {
   return new BuildFunction({
     namespace: 'eas',
-    id: 'maestro_test',
+    id: '__maestro_test',
     inputProviders: [
       BuildStepInput.createProvider({
         allowedValueTypeName: BuildStepInputValueTypeName.STRING,
