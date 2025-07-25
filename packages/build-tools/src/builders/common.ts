@@ -48,9 +48,5 @@ export async function runBuilderWithHooksAsync<T extends BuildJob>(
     throw err;
   }
 
-  if (!ctx.artifacts.APPLICATION_ARCHIVE) {
-    throw new Error('Builder must upload application archive');
-  }
-
   return ctx.artifacts;
 }
