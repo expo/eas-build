@@ -64,7 +64,7 @@ export function getEasFunctions(ctx: CustomBuildContext): BuildFunction[] {
 
     createSubmissionEntityFunction(),
 
-    createInternalEasMaestroTestFunction(),
+    createInternalEasMaestroTestFunction(ctx),
   ];
 
   if (ctx.hasBuildJob()) {

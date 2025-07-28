@@ -147,7 +147,7 @@ export function createStartAndroidEmulatorBuildFunction(): BuildFunction {
   });
 }
 
-async function startAndroidSimulator({
+export async function startAndroidSimulator({
   deviceName,
   env,
 }: {
@@ -201,7 +201,7 @@ async function startAndroidSimulator({
   return { emulatorPromise, serialId };
 }
 
-async function getEmulatorSerialId({
+export async function getEmulatorSerialId({
   deviceName,
   env,
 }: {
@@ -236,7 +236,7 @@ async function getEmulatorSerialId({
   return null;
 }
 
-async function ensureAndroidEmulatorIsReadyAsync({
+export async function ensureAndroidEmulatorIsReadyAsync({
   deviceName,
   env,
 }: {
@@ -364,14 +364,19 @@ export async function cloneAndroidEmulator({
 }
 
 export async function startAndroidScreenRecording({
-  serialId,
+  deviceName,
   env,
 }: {
-  serialId: string;
+  deviceName: string;
   env: BuildStepEnv;
 }): Promise<{
   recordingSpawn: SpawnPromise<SpawnResult>;
 }> {
+  const serialId = await getEmulatorSerialId({ deviceName, env });
+  if (!serialId) {
+    throw new Error(`Emulator (${deviceName}) not found.`);
+  }
+
   let isReady = false;
 
   // Ensure /sdcard/ is ready to write to. (If the emulator was just booted, it might not be ready yet.)
@@ -419,14 +424,19 @@ export async function startAndroidScreenRecording({
 }
 
 export async function stopAndroidScreenRecording({
-  serialId,
+  deviceName,
   recordingSpawn,
   env,
 }: {
-  serialId: string;
+  deviceName: string;
   recordingSpawn: SpawnPromise<SpawnResult>;
   env: BuildStepEnv;
 }): Promise<{ outputPath: string }> {
+  const serialId = await getEmulatorSerialId({ deviceName, env });
+  if (!serialId) {
+    throw new Error(`Emulator (${deviceName}) not found.`);
+  }
+
   recordingSpawn.child.kill(1);
 
   let isRecordingBusy = true;
@@ -453,4 +463,20 @@ export async function stopAndroidScreenRecording({
   await spawn('adb', ['-s', serialId, 'pull', '/sdcard/expo-recording.mp4', outputPath], { env });
 
   return { outputPath };
+}
+
+export async function stopAndDeleteAndroidEmulator({
+  deviceName,
+  env,
+}: {
+  deviceName: string;
+  env: BuildStepEnv;
+}): Promise<void> {
+  const serialId = await getEmulatorSerialId({ deviceName, env });
+  if (!serialId) {
+    throw new Error(`Emulator (${deviceName}) not found.`);
+  }
+
+  await spawn('adb', ['-s', serialId, 'emu', 'kill'], { env });
+  await spawn('avdmanager', ['delete', 'avd', '-n', deviceName], { env });
 }

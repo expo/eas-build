@@ -59,7 +59,7 @@ export function createStartIosSimulatorBuildFunction(): BuildFunction {
         env,
       });
 
-      await ensureIosSimulatorIsReady({
+      await ensureIosSimulatorIsReadyAsync({
         deviceIdentifier: originalDeviceIdentifier,
         env,
       });
@@ -93,7 +93,7 @@ export function createStartIosSimulatorBuildFunction(): BuildFunction {
             env,
           });
 
-          await ensureIosSimulatorIsReady({
+          await ensureIosSimulatorIsReadyAsync({
             deviceIdentifier: cloneIdentifier,
             env,
           });
@@ -247,7 +247,7 @@ export async function startIosSimulator({
   return { udid };
 }
 
-export async function ensureIosSimulatorIsReady({
+export async function ensureIosSimulatorIsReadyAsync({
   deviceIdentifier,
   env,
 }: {
@@ -323,8 +323,6 @@ export async function startIosScreenRecording({
     throw new Error('Recording not started in time.');
   }
 
-  // We are returning the SpawnPromise here, so we don't await it.
-  // eslint-disable-next-line @typescript-eslint/return-await
   return { recordingSpawn, outputPath };
 }
 
@@ -333,8 +331,17 @@ export async function stopIosScreenRecording({
 }: {
   recordingSpawn: SpawnPromise<SpawnResult>;
 }): Promise<void> {
-  // TODO: In shell implementation we wait for "Wrote video" in the log file.
-  //       Confirm we don't need to do that here.
   recordingSpawn.child.kill(2);
   await recordingSpawn;
+}
+
+export async function stopAndDeleteIosSimulator({
+  deviceName,
+  env,
+}: {
+  deviceName: string;
+  env: BuildStepEnv;
+}): Promise<void> {
+  await spawn('xcrun', ['simctl', 'shutdown', deviceName], { env });
+  await spawn('xcrun', ['simctl', 'delete', deviceName], { env });
 }

@@ -10,7 +10,11 @@ import {
 } from '@expo/steps';
 import { z } from 'zod';
 import spawn, { SpawnPromise, SpawnResult } from '@expo/turtle-spawn';
-import { PipeMode } from '@expo/logger';
+import { PipeMode, bunyan } from '@expo/logger';
+import { Result, asyncResult, result } from '@expo/results';
+import { GenericArtifactType } from '@expo/eas-build-job';
+
+import { CustomBuildContext } from '../../customBuildContext';
 
 import {
   startIosSimulator,
@@ -18,15 +22,20 @@ import {
   getBootedSimulatorDevices,
   startIosScreenRecording,
   stopIosScreenRecording,
+  ensureIosSimulatorIsReadyAsync,
+  stopAndDeleteIosSimulator,
 } from './startIosSimulator';
 import {
   cloneAndroidEmulator,
+  ensureAndroidEmulatorIsReadyAsync,
   getBootedEmulatorDevices,
   startAndroidScreenRecording,
+  startAndroidSimulator,
+  stopAndDeleteAndroidEmulator,
   stopAndroidScreenRecording,
 } from './startAndroidEmulator';
 
-export function createInternalEasMaestroTestFunction(): BuildFunction {
+export function createInternalEasMaestroTestFunction(ctx: CustomBuildContext): BuildFunction {
   return new BuildFunction({
     namespace: 'eas',
     id: '__maestro_test',
@@ -76,6 +85,7 @@ export function createInternalEasMaestroTestFunction(): BuildFunction {
       }),
     ],
     fn: async (stepCtx, { inputs: _inputs, env }) => {
+      console.log('maestroTest', _inputs);
       // inputs come in form of { value: unknown }. Here we parse them into a typed and validated object.
       const {
         platform,
@@ -120,15 +130,15 @@ export function createInternalEasMaestroTestFunction(): BuildFunction {
           }
 
           const device = bootedDevices[0];
-          stepCtx.logger.info(`Using booted iOS Simulator: ${device.name}.`);
+          stepCtx.logger.info(`Running tests on iOS Simulator: ${device.name}.`);
 
-          stepCtx.logger.info(`Stopping Simulator...`);
+          stepCtx.logger.info(`Preparing Simulator for tests...`);
           await spawnAsync('xcrun', ['simctl', 'shutdown', device.udid], {
             logger: stepCtx.logger,
             stdio: 'pipe',
           });
 
-          sourceDeviceName = device.udid;
+          sourceDeviceName = device.name;
           break;
         }
         case 'android': {
@@ -145,10 +155,9 @@ export function createInternalEasMaestroTestFunction(): BuildFunction {
             env,
           });
           const avdName = adbEmuAvdNameResult.stdout.replace(/\r\n/g, '\n').split('\n')[0];
+          stepCtx.logger.info(`Running tests on Android Emulator: ${avdName}.`);
 
-          stepCtx.logger.info(`Using booted Android Emulator: ${avdName}.`);
-
-          stepCtx.logger.info(`Stopping Emulator...`);
+          stepCtx.logger.info(`Preparing Emulator for tests...`);
           await spawnAsync('adb', ['-s', serialId, 'emu', 'kill'], {
             logger: stepCtx.logger,
             stdio: 'pipe',
@@ -161,140 +170,70 @@ export function createInternalEasMaestroTestFunction(): BuildFunction {
 
       for (const [flowIndex, flowPath] of flow_paths.entries()) {
         for (let retryIndex = 0; retryIndex < retries; retryIndex++) {
-          const localDeviceName = `eas-simulator-${flowIndex}-${retryIndex}`;
+          const localDeviceIdentifier = `eas-simulator-${flowIndex}-${retryIndex}`;
 
-          let recordingSpawn: SpawnPromise<SpawnResult> | undefined;
-          let outputPath: string | undefined;
+          // If the test passes, but the recording fails, we don't want to make the test fail,
+          // so we return two separate results.
+          const { fnResult, recordingResult } = await withCleanDeviceAsync({
+            platform,
+            sourceDeviceName,
+            localDeviceName: localDeviceIdentifier,
+            env,
+            logger: stepCtx.logger,
+            fn: async () => {
+              return await maybeWithScreenRecordingAsync({
+                shouldRecord: record_screen,
+                platform,
+                deviceName: localDeviceIdentifier,
+                env,
+                logger: stepCtx.logger,
+                fn: async () => {
+                  const [command, ...args] = getMaestroTestCommand({
+                    flow_path: flowPath,
+                    include_tags,
+                    exclude_tags,
+                    output_format,
+                    output_path:
+                      getOutputPathForOutputFormat({
+                        outputFormat: output_format ?? 'noop',
+                        env,
+                      }) ?? undefined,
+                  });
 
-          try {
-            switch (platform) {
-              case 'ios': {
-                await cloneIosSimulator({
-                  sourceDeviceName,
-                  destinationDeviceName: localDeviceName,
-                  env,
-                });
-                await startIosSimulator({
-                  deviceIdentifier: localDeviceName,
-                  env,
-                });
-                break;
-              }
-              case 'android': {
-                await cloneAndroidEmulator({
-                  sourceDeviceName,
-                  destinationDeviceName: localDeviceName,
-                  env,
-                });
-                // boot device
-                break;
-              }
-            }
-
-            if (record_screen) {
-              switch (platform) {
-                case 'ios': {
-                  const iosScreenRecording = await startIosScreenRecording({
-                    deviceIdentifier: localDeviceName,
+                  await spawnAsync(command, args, {
+                    logger: stepCtx.logger,
+                    cwd: stepCtx.workingDirectory,
                     env,
+                    stdio: 'pipe',
                   });
-                  recordingSpawn = iosScreenRecording.recordingSpawn;
-                  outputPath = iosScreenRecording.outputPath;
-                  break;
-                }
-                case 'android': {
-                  const androidScreenRecording = await startAndroidScreenRecording({
-                    serialId: localDeviceName,
-                    env,
-                  });
-                  recordingSpawn = androidScreenRecording.recordingSpawn;
-                  break;
-                }
-              }
-            }
+                },
+              });
+            },
+          });
 
-            const [command, ...args] = getMaestroTestCommand({
-              flow_path: flowPath,
-              include_tags,
-              exclude_tags,
-              output_format,
-              output_path:
-                getOutputPathForOutputFormat({
-                  outputFormat: output_format ?? 'noop',
-                  env,
-                }) ?? undefined,
-            });
-
-            await spawnAsync(command, args, {
-              logger: stepCtx.logger,
-              cwd: stepCtx.workingDirectory,
-              env,
-              stdio: 'pipe',
-            });
-
-            break;
-          } catch (err) {
-            stepCtx.logger.error(`Error running maestro test: ${err}`);
-
-            if (retryIndex < retries - 1) {
-              stepCtx.logger.error(`Retrying...`);
-            } else {
-              stepCtx.logger.error(`Failed to run maestro test after ${retries} retries.`);
-              throw err;
-            }
-          } finally {
+          if (recordingResult.ok && recordingResult.value) {
             try {
-              if (recordingSpawn) {
-                switch (platform) {
-                  case 'ios': {
-                    await stopIosScreenRecording({ recordingSpawn });
-                    break;
-                  }
-                  case 'android': {
-                    const androidScreenRecording = await stopAndroidScreenRecording({
-                      serialId: localDeviceName,
-                      recordingSpawn,
-                      env,
-                    });
-                    outputPath = androidScreenRecording.outputPath;
-                    break;
-                  }
-                }
-
-                stepCtx.logger.info(`Recording saved to ${outputPath}.`);
-              }
+              await ctx.runtimeApi.uploadArtifact({
+                logger: stepCtx.logger,
+                artifact: {
+                  name: `Screen Recording (${flowPath}, retry ${retryIndex})`,
+                  paths: [recordingResult.value],
+                  type: GenericArtifactType.OTHER,
+                },
+              });
             } catch (err) {
-              stepCtx.logger.error(`Error stopping recording: ${err}`);
-            }
-
-            try {
-              switch (platform) {
-                case 'ios': {
-                  stepCtx.logger.info(`Deleting iOS Simulator...`);
-                  await spawnAsync('xcrun', ['simctl', 'delete', localDeviceName], {
-                    logger: stepCtx.logger,
-                    stdio: 'pipe',
-                  });
-                  break;
-                }
-                case 'android': {
-                  stepCtx.logger.info(`Stopping Android Emulator...`);
-                  await spawnAsync('adb', ['-s', localDeviceName, 'emu', 'kill'], {
-                    logger: stepCtx.logger,
-                    stdio: 'pipe',
-                  });
-                  stepCtx.logger.info(`Deleting Android Emulator...`);
-                  await spawnAsync('avdmanager', ['delete', 'avd', '-n', localDeviceName], {
-                    logger: stepCtx.logger,
-                    stdio: 'pipe',
-                  });
-                  break;
-                }
-              }
-            } catch (err) {
-              stepCtx.logger.error(`Error stopping device: ${err}`);
+              stepCtx.logger.warn('Failed to upload screen recording.', err);
             }
           }
+
+          if (fnResult.ok) {
+            stepCtx.logger.info(`Test passed.`);
+            // Break out of the retry loop.
+            break;
+          }
+
+          stepCtx.logger.error(`Failed to run test on device: ${fnResult.reason}`);
+          stepCtx.logger.error(`Retrying...`);
         }
       }
     },
@@ -370,4 +309,191 @@ function getOutputPathForOutputFormat({
       ...(extension ? ['.', extension] : []),
     ].join('')
   );
+}
+
+async function withCleanDeviceAsync<TResult>({
+  platform,
+  sourceDeviceName,
+  localDeviceName,
+  env,
+  logger,
+  fn,
+}: {
+  platform: 'ios' | 'android';
+  sourceDeviceName: string;
+  localDeviceName: string;
+  env: BuildStepEnv;
+  logger: bunyan;
+  fn: () => Promise<TResult>;
+}): Promise<TResult> {
+  // Clone and start the device
+
+  switch (platform) {
+    case 'ios': {
+      logger.info(`Cloning iOS Simulator ${sourceDeviceName} to ${localDeviceName}...`);
+      await cloneIosSimulator({
+        sourceDeviceName,
+        destinationDeviceName: localDeviceName,
+        env,
+      });
+      logger.info(`Starting iOS Simulator ${localDeviceName}...`);
+      await startIosSimulator({
+        deviceIdentifier: localDeviceName,
+        env,
+      });
+      logger.info(`Waiting for iOS Simulator ${localDeviceName} to be ready...`);
+      await ensureIosSimulatorIsReadyAsync({
+        deviceIdentifier: localDeviceName,
+        env,
+      });
+      break;
+    }
+    case 'android': {
+      logger.info(`Cloning Android Emulator ${sourceDeviceName} to ${localDeviceName}...`);
+      await cloneAndroidEmulator({
+        sourceDeviceName,
+        destinationDeviceName: localDeviceName,
+        env,
+      });
+      logger.info(`Starting Android Emulator ${localDeviceName}...`);
+      await startAndroidSimulator({
+        deviceName: localDeviceName,
+        env,
+      });
+      logger.info(`Waiting for Android Emulator ${localDeviceName} to be ready...`);
+      await ensureAndroidEmulatorIsReadyAsync({
+        deviceName: localDeviceName,
+        env,
+        logger,
+      });
+      break;
+    }
+  }
+
+  // Run the function
+
+  const fnResult = await asyncResult(fn());
+
+  // Stop the device
+
+  try {
+    switch (platform) {
+      case 'ios': {
+        logger.info(`Cleaning up ${localDeviceName}...`);
+        await stopAndDeleteIosSimulator({
+          deviceName: localDeviceName,
+          env,
+        });
+        break;
+      }
+      case 'android': {
+        logger.info(`Cleaning up ${localDeviceName}...`);
+        await stopAndDeleteAndroidEmulator({
+          deviceName: localDeviceName,
+          env,
+        });
+        break;
+      }
+    }
+  } catch (err) {
+    logger.error(`Error cleaning up device: ${err}`);
+  }
+
+  return fnResult.enforceValue();
+}
+
+/** Runs provided `fn` function, optionally wrapping it with starting and stopping screen recording. */
+async function maybeWithScreenRecordingAsync<TResult>({
+  shouldRecord,
+  platform,
+  deviceName,
+  env,
+  logger,
+  fn,
+}: {
+  // As weird as it is, it's more convenient to have this function like `maybeWith...`
+  // than "withScreenRecordingAsync" and `withScreenRecordingAsync(fn)` vs `fn` in the caller.
+  shouldRecord: boolean;
+  platform: 'ios' | 'android';
+  deviceName: string;
+  env: BuildStepEnv;
+  logger: bunyan;
+  fn: () => Promise<TResult>;
+}): Promise<{ fnResult: Result<TResult>; recordingResult: Result<string | null> }> {
+  if (!shouldRecord) {
+    return { fnResult: await asyncResult(fn()), recordingResult: result(null) };
+  }
+
+  let recordingResult: Result<{
+    recordingSpawn: SpawnPromise<SpawnResult>;
+    outputPath?: string;
+  }>;
+
+  // Start screen recording
+
+  logger.info(`Starting screen recording on ${deviceName}...`);
+
+  switch (platform) {
+    case 'ios': {
+      recordingResult = await asyncResult(
+        startIosScreenRecording({
+          deviceIdentifier: deviceName,
+          env,
+        })
+      );
+      break;
+    }
+    case 'android': {
+      recordingResult = await asyncResult(
+        startAndroidScreenRecording({
+          deviceName,
+          env,
+        })
+      );
+      break;
+    }
+  }
+
+  if (!recordingResult.ok) {
+    logger.warn('Failed to start screen recording.', recordingResult.reason);
+  }
+
+  // Run the function
+
+  const fnResult = await asyncResult(fn());
+
+  // If recording failed there's nothing to stop, so we return the results
+
+  if (!recordingResult.ok) {
+    return { fnResult, recordingResult: result(recordingResult.reason) };
+  }
+
+  // If recording started, finish it
+
+  try {
+    logger.info(`Stopping screen recording on ${deviceName}...`);
+
+    switch (platform) {
+      case 'ios': {
+        await stopIosScreenRecording({ recordingSpawn: recordingResult.value.recordingSpawn });
+        return {
+          fnResult,
+          // We know outputPath is defined, because startIosScreenRecording() should have filled it.
+          recordingResult: result(recordingResult.value.outputPath!),
+        };
+      }
+      case 'android': {
+        const { outputPath } = await stopAndroidScreenRecording({
+          deviceName,
+          recordingSpawn: recordingResult.value.recordingSpawn,
+          env,
+        });
+        return { fnResult, recordingResult: result(outputPath) };
+      }
+    }
+  } catch (err) {
+    logger.warn('Failed to stop screen recording.', err);
+
+    return { fnResult, recordingResult: result(err as Error) };
+  }
 }
