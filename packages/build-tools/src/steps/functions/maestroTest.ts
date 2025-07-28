@@ -76,6 +76,7 @@ export function createInternalEasMaestroTestFunction(): BuildFunction {
       }),
     ],
     fn: async (stepCtx, { inputs: _inputs, env }) => {
+      // inputs come in form of { value: unknown }. Here we parse them into a typed and validated object.
       const {
         platform,
         flow_paths,
@@ -100,6 +101,7 @@ export function createInternalEasMaestroTestFunction(): BuildFunction {
           Object.fromEntries(Object.entries(_inputs).map(([key, value]) => [key, value.value]))
         );
 
+      // TODO: Add support for shards. (Shouldn't be too difficult.)
       if (shards > 1) {
         stepCtx.logger.warn(
           'Sharding support has been temporarily disabled. Running tests on a single shard.'
