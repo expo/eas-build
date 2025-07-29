@@ -3,7 +3,6 @@ import os from 'node:os';
 import fs from 'node:fs';
 import { setTimeout } from 'node:timers/promises';
 
-import { PipeMode } from '@expo/logger';
 import spawn, { SpawnPromise, SpawnResult } from '@expo/turtle-spawn';
 import { z } from 'zod';
 
@@ -51,7 +50,7 @@ export namespace IosSimulatorUtils {
     const result = await spawn(
       'xcrun',
       ['simctl', 'list', 'devices', '--json', '--no-escape-slashes', filter],
-      { env, mode: PipeMode.COMBINED_AS_STDOUT }
+      { env }
     );
     const xcrunData = JSON.parse(result.stdout) as XcrunSimctlListDevicesJsonOutput;
 
@@ -165,7 +164,6 @@ export namespace IosSimulatorUtils {
     const outputPath = path.join(outputDir, `${udid}.mov`);
     const recordingSpawn = spawn('xcrun', ['simctl', 'io', udid, 'recordVideo', '-f', outputPath], {
       env,
-      mode: PipeMode.COMBINED,
     });
 
     const stdout = recordingSpawn.child.stdout;
