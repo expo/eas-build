@@ -68,29 +68,21 @@ describe('IosSimulatorUtils', () => {
     it('should return booted devices if devices are booted', async () => {
       const deviceName = 'ios-booted-test' as IosSimulatorName;
 
-      console.log('cloning');
-
       await IosSimulatorUtils.cloneAsync({
         sourceDeviceIdentifier: 'iPhone 16' as IosSimulatorName,
         destinationDeviceName: deviceName,
         env: process.env,
       });
 
-      console.log('starting');
-
       const { udid } = await IosSimulatorUtils.startAsync({
         deviceIdentifier: deviceName,
         env: process.env,
       });
 
-      console.log('waiting for ready');
-
       await IosSimulatorUtils.waitForReadyAsync({
         udid,
         env: process.env,
       });
-
-      console.log('getting available devices');
 
       const devices = await IosSimulatorUtils.getAvailableDevicesAsync({
         env: process.env,
