@@ -136,14 +136,14 @@ export function createInternalEasMaestroTestFunction(ctx: CustomBuildContext): B
           break;
         }
         case 'android': {
-          const connectedDevices = await AndroidEmulatorUtils.getConnectedDevicesAsync({ env });
+          const connectedDevices = await AndroidEmulatorUtils.getAttachedDevicesAsync({ env });
           if (connectedDevices.length === 0) {
             throw new Error('No booted Android Emulator found.');
           } else if (connectedDevices.length > 1) {
             throw new Error('Multiple booted Android Emulators found.');
           }
 
-          const serialId = connectedDevices[0];
+          const { serialId } = connectedDevices[0];
           const adbEmuAvdNameResult = await spawn('adb', ['-s', serialId, 'emu', 'avd', 'name'], {
             mode: PipeMode.COMBINED,
             env,

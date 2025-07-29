@@ -8,10 +8,6 @@ import {
   AndroidVirtualDeviceName,
 } from '../../utils/AndroidEmulatorUtils';
 
-const defaultSystemImagePackage = `system-images;android-30;default;${
-  process.arch === 'arm64' ? 'arm64-v8a' : 'x86_64'
-}`;
-
 export function createStartAndroidEmulatorBuildFunction(): BuildFunction {
   return new BuildFunction({
     namespace: 'eas',
@@ -32,7 +28,7 @@ export function createStartAndroidEmulatorBuildFunction(): BuildFunction {
       BuildStepInput.createProvider({
         id: 'system_image_package',
         required: false,
-        defaultValue: defaultSystemImagePackage,
+        defaultValue: AndroidEmulatorUtils.defaultSystemImagePackage,
         allowedValueTypeName: BuildStepInputValueTypeName.STRING,
       }),
       BuildStepInput.createProvider({
@@ -75,29 +71,12 @@ export function createStartAndroidEmulatorBuildFunction(): BuildFunction {
       );
 
       logger.info('Creating emulator device');
-      const avdManager = spawn(
-        'avdmanager',
-        [
-          'create',
-          'avd',
-          '--name',
-          deviceName,
-          '--package',
-          systemImagePackage,
-          '--force',
-          ...(deviceIdentifier ? ['--device', deviceIdentifier] : []),
-        ],
-        {
-          env,
-          stdio: 'pipe',
-        }
-      );
-      // `avdmanager create` always asks about creating a custom hardware profile.
-      // > Do you wish to create a custom hardware profile? [no]
-      // We answer "no".
-      avdManager.child.stdin?.write('no');
-      avdManager.child.stdin?.end();
-      await avdManager;
+      await AndroidEmulatorUtils.createAsync({
+        deviceName,
+        systemImagePackage,
+        deviceIdentifier: deviceIdentifier ?? null,
+        env,
+      });
 
       logger.info('Starting emulator device');
       const { emulatorPromise, serialId } = await AndroidEmulatorUtils.startAsync({

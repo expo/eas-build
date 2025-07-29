@@ -4,7 +4,7 @@ import os from 'node:os';
 import { setTimeout } from 'node:timers/promises';
 import path from 'node:path';
 
-import { PipeMode } from '@expo/logger';
+// import { PipeMode } from '@expo/logger';
 import spawn, { SpawnPromise, SpawnResult } from '@expo/turtle-spawn';
 import { z } from 'zod';
 
@@ -17,6 +17,10 @@ export type AndroidDeviceName = string & z.BRAND<'AndroidDeviceName'>;
 export type AndroidDeviceSerialId = string & z.BRAND<'AndroidDeviceSerialId'>;
 
 export namespace AndroidEmulatorUtils {
+  export const defaultSystemImagePackage = `system-images;android-30;default;${
+    process.arch === 'arm64' ? 'arm64-v8a' : 'x86_64'
+  }`;
+
   export async function getAvailableDevicesAsync({
     env,
   }: {
@@ -26,22 +30,27 @@ export namespace AndroidEmulatorUtils {
     return result.stdout.split('\0').filter((line) => line !== '') as AndroidDeviceName[];
   }
 
-  export async function getConnectedDevicesAsync({
+  export async function getAttachedDevicesAsync({
     env,
   }: {
     env: NodeJS.ProcessEnv;
-  }): Promise<AndroidDeviceSerialId[]> {
+  }): Promise<{ serialId: AndroidDeviceSerialId; state: 'offline' | 'device' }[]> {
     const result = await spawn('adb', ['devices', '-l'], {
       env,
-      mode: PipeMode.COMBINED_AS_STDOUT,
     });
     return result.stdout
       .replace(/\r\n/g, '\n')
       .split('\n')
       .filter((line) => line.startsWith('emulator'))
       .map((line) => {
-        const [serialId] = line.split(' ')[0];
-        return serialId as AndroidDeviceSerialId;
+        const [serialId, state] = line.split(/\s+/) as [
+          AndroidDeviceSerialId,
+          'offline' | 'device',
+        ];
+        return {
+          serialId,
+          state,
+        };
       });
   }
 
@@ -52,7 +61,7 @@ export namespace AndroidEmulatorUtils {
     deviceName: AndroidVirtualDeviceName;
     env: NodeJS.ProcessEnv;
   }): Promise<AndroidDeviceSerialId | null> {
-    const adbDevices = await spawn('adb', ['devices'], { mode: PipeMode.COMBINED, env });
+    const adbDevices = await spawn('adb', ['devices'], { env });
     for (const adbDeviceLine of adbDevices.stdout.split('\n')) {
       if (!adbDeviceLine.startsWith('emulator')) {
         continue;
@@ -69,7 +78,6 @@ export namespace AndroidEmulatorUtils {
       // a limit on properties and custom properties get ignored.
       // See https://stackoverflow.com/questions/2214377/how-to-get-serial-number-or-id-of-android-emulator-after-it-runs#comment98259121_42038655
       const adbEmuAvdName = await spawn('adb', ['-s', serialId, 'emu', 'avd', 'name'], {
-        mode: PipeMode.COMBINED,
         env,
       });
       if (adbEmuAvdName.stdout.replace(/\r\n/g, '\n').split('\n')[0] === deviceName) {
@@ -78,6 +86,42 @@ export namespace AndroidEmulatorUtils {
     }
 
     return null;
+  }
+
+  export async function createAsync({
+    deviceName,
+    systemImagePackage,
+    deviceIdentifier,
+    env,
+  }: {
+    deviceName: AndroidVirtualDeviceName;
+    systemImagePackage: string;
+    deviceIdentifier: AndroidDeviceName | null;
+    env: NodeJS.ProcessEnv;
+  }): Promise<void> {
+    const avdManager = spawn(
+      'avdmanager',
+      [
+        'create',
+        'avd',
+        '--name',
+        deviceName,
+        '--package',
+        systemImagePackage,
+        '--force',
+        ...(deviceIdentifier ? ['--device', deviceIdentifier] : []),
+      ],
+      {
+        env,
+        stdio: 'pipe',
+      }
+    );
+    // `avdmanager create` always asks about creating a custom hardware profile.
+    // > Do you wish to create a custom hardware profile? [no]
+    // We answer "no".
+    avdManager.child.stdin?.write('no');
+    avdManager.child.stdin?.end();
+    await avdManager;
   }
 
   export async function cloneAsync({
@@ -195,10 +239,7 @@ export namespace AndroidEmulatorUtils {
         const { stdout } = await spawn(
           'adb',
           ['-s', serialId, 'shell', 'getprop', 'sys.boot_completed'],
-          {
-            env,
-            mode: PipeMode.COMBINED,
-          }
+          { env }
         );
 
         if (!stdout.startsWith('1')) {
@@ -223,12 +264,27 @@ export namespace AndroidEmulatorUtils {
     env: NodeJS.ProcessEnv;
   }): Promise<void> {
     const adbEmuAvdName = await spawn('adb', ['-s', serialId, 'emu', 'avd', 'name'], {
-      mode: PipeMode.COMBINED,
       env,
     });
     const deviceName = adbEmuAvdName.stdout.replace(/\r\n/g, '\n').split('\n')[0];
 
     await spawn('adb', ['-s', serialId, 'emu', 'kill'], { env });
+
+    await retryAsync(
+      async () => {
+        const devices = await getAttachedDevicesAsync({ env });
+        if (devices.some((device) => device.serialId === serialId)) {
+          throw new Error(`Emulator (${serialId}) is still attached.`);
+        }
+      },
+      {
+        retryOptions: {
+          retries: 3 * 60,
+          retryIntervalMs: 1_000,
+        },
+      }
+    );
+
     await spawn('avdmanager', ['delete', 'avd', '-n', deviceName], { env });
   }
 
@@ -281,13 +337,16 @@ export namespace AndroidEmulatorUtils {
       screenrecordArgs.push('--time-limit', '0');
     }
 
+    const recordingSpawn = spawn('adb', screenrecordArgs, {
+      env,
+      stdio: 'pipe',
+    });
+    recordingSpawn.child.unref();
+
     // We are returning the SpawnPromise here, so we don't await it.
     // eslint-disable-next-line @typescript-eslint/return-await
     return {
-      recordingSpawn: spawn('adb', screenrecordArgs, {
-        env,
-        stdio: 'pipe',
-      }),
+      recordingSpawn,
     };
   }
 
@@ -302,14 +361,20 @@ export namespace AndroidEmulatorUtils {
   }): Promise<{ outputPath: string }> {
     recordingSpawn.child.kill(1);
 
+    try {
+      await recordingSpawn;
+    } catch {
+      // do nothing
+    }
+
     let isRecordingBusy = true;
     for (let i = 0; i < 10; i++) {
       const lsof = await spawn(
         'adb',
-        ['-s', serialId, 'shell', 'lsof -t /sdcard/expo-recording.mp4 | wc -l'],
+        ['-s', serialId, 'shell', 'lsof -t /sdcard/expo-recording.mp4'],
         { env }
       );
-      if (lsof.stdout.trim() === '0') {
+      if (lsof.stdout.trim() === '') {
         isRecordingBusy = false;
         break;
       }
