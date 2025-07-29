@@ -1,7 +1,9 @@
-module.exports = {
+import type { Config } from 'jest';
+
+const config: Config = {
   preset: 'ts-jest',
   testEnvironment: 'node',
-  rootDir: 'src',
+  rootDir: '../src',
   testMatch: [
     '**/__tests__/*.test.ts',
     ...(process.platform === 'darwin' ? ['**/__tests__/*.test.ios.ts'] : []),
@@ -9,3 +11,5 @@ module.exports = {
   clearMocks: true,
   setupFilesAfterEnv: ['<rootDir>/../jest/setup-tests.ts'],
 };
+
+export default config;
