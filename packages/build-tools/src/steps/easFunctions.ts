@@ -30,7 +30,7 @@ import { createSubmissionEntityFunction } from './functions/createSubmissionEnti
 import { createDownloadBuildFunction } from './functions/downloadBuild';
 import { createRepackBuildFunction } from './functions/repack';
 import { createDownloadArtifactFunction } from './functions/downloadArtifact';
-import { createInternalEasMaestroTestFunction } from './functions/maestroTest';
+import { createInternalEasMaestroTestFunction } from './functions/internalMaestroTest';
 
 export function getEasFunctions(ctx: CustomBuildContext): BuildFunction[] {
   const functions = [
