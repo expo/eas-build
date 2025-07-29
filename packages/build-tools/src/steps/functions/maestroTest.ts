@@ -15,25 +15,16 @@ import { Result, asyncResult, result } from '@expo/results';
 import { GenericArtifactType } from '@expo/eas-build-job';
 
 import { CustomBuildContext } from '../../customBuildContext';
-
 import {
-  startIosSimulator,
-  cloneIosSimulator,
-  getBootedSimulatorDevices,
-  startIosScreenRecording,
-  stopIosScreenRecording,
-  ensureIosSimulatorIsReadyAsync,
-  stopAndDeleteIosSimulator,
-} from './startIosSimulator';
+  IosSimulatorName,
+  IosSimulatorUtils,
+  IosSimulatorUuid,
+} from '../../utils/IosSimulatorUtils';
 import {
-  cloneAndroidEmulator,
-  ensureAndroidEmulatorIsReadyAsync,
-  getBootedEmulatorDevices,
-  startAndroidScreenRecording,
-  startAndroidSimulator,
-  stopAndDeleteAndroidEmulator,
-  stopAndroidScreenRecording,
-} from './startAndroidEmulator';
+  AndroidDeviceSerialId,
+  AndroidEmulatorUtils,
+  AndroidVirtualDeviceName,
+} from '../../utils/AndroidEmulatorUtils';
 
 export function createInternalEasMaestroTestFunction(ctx: CustomBuildContext): BuildFunction {
   return new BuildFunction({
@@ -118,11 +109,14 @@ export function createInternalEasMaestroTestFunction(ctx: CustomBuildContext): B
         );
       }
 
-      let sourceDeviceName: string;
+      let sourceDeviceIdentifier: IosSimulatorUuid | AndroidVirtualDeviceName;
 
       switch (platform) {
         case 'ios': {
-          const bootedDevices = await getBootedSimulatorDevices({ env });
+          const bootedDevices = await IosSimulatorUtils.getAvailableDevicesAsync({
+            env,
+            filter: 'booted',
+          });
           if (bootedDevices.length === 0) {
             throw new Error('No booted iOS Simulator found.');
           } else if (bootedDevices.length > 1) {
@@ -138,23 +132,25 @@ export function createInternalEasMaestroTestFunction(ctx: CustomBuildContext): B
             stdio: 'pipe',
           });
 
-          sourceDeviceName = device.name;
+          sourceDeviceIdentifier = device.udid;
           break;
         }
         case 'android': {
-          const bootedDevices = await getBootedEmulatorDevices({ env });
-          if (bootedDevices.length === 0) {
+          const connectedDevices = await AndroidEmulatorUtils.getConnectedDevicesAsync({ env });
+          if (connectedDevices.length === 0) {
             throw new Error('No booted Android Emulator found.');
-          } else if (bootedDevices.length > 1) {
+          } else if (connectedDevices.length > 1) {
             throw new Error('Multiple booted Android Emulators found.');
           }
 
-          const { serialId } = bootedDevices[0];
+          const serialId = connectedDevices[0];
           const adbEmuAvdNameResult = await spawn('adb', ['-s', serialId, 'emu', 'avd', 'name'], {
             mode: PipeMode.COMBINED,
             env,
           });
-          const avdName = adbEmuAvdNameResult.stdout.replace(/\r\n/g, '\n').split('\n')[0];
+          const avdName = adbEmuAvdNameResult.stdout
+            .replace(/\r\n/g, '\n')
+            .split('\n')[0] as AndroidVirtualDeviceName;
           stepCtx.logger.info(`Running tests on Android Emulator: ${avdName}.`);
 
           stepCtx.logger.info(`Preparing Emulator for tests...`);
@@ -163,28 +159,30 @@ export function createInternalEasMaestroTestFunction(ctx: CustomBuildContext): B
             stdio: 'pipe',
           });
 
-          sourceDeviceName = avdName;
+          sourceDeviceIdentifier = avdName;
           break;
         }
       }
 
       for (const [flowIndex, flowPath] of flow_paths.entries()) {
         for (let retryIndex = 0; retryIndex < retries; retryIndex++) {
-          const localDeviceIdentifier = `eas-simulator-${flowIndex}-${retryIndex}`;
+          const localDeviceName = `eas-simulator-${flowIndex}-${retryIndex}` as
+            | IosSimulatorName
+            | AndroidVirtualDeviceName;
 
           // If the test passes, but the recording fails, we don't want to make the test fail,
           // so we return two separate results.
           const { fnResult, recordingResult } = await withCleanDeviceAsync({
             platform,
-            sourceDeviceName,
-            localDeviceName: localDeviceIdentifier,
+            sourceDeviceIdentifier,
+            localDeviceName,
             env,
             logger: stepCtx.logger,
-            fn: async () => {
+            fn: async ({ deviceIdentifier }) => {
               return await maybeWithScreenRecordingAsync({
                 shouldRecord: record_screen,
                 platform,
-                deviceName: localDeviceIdentifier,
+                deviceIdentifier,
                 env,
                 logger: stepCtx.logger,
                 fn: async () => {
@@ -313,66 +311,73 @@ function getOutputPathForOutputFormat({
 
 async function withCleanDeviceAsync<TResult>({
   platform,
-  sourceDeviceName,
+  sourceDeviceIdentifier,
   localDeviceName,
   env,
   logger,
   fn,
 }: {
-  platform: 'ios' | 'android';
-  sourceDeviceName: string;
-  localDeviceName: string;
   env: BuildStepEnv;
   logger: bunyan;
-  fn: () => Promise<TResult>;
+  platform: 'ios' | 'android';
+  sourceDeviceIdentifier: IosSimulatorUuid | AndroidVirtualDeviceName;
+  localDeviceName: IosSimulatorName | AndroidVirtualDeviceName;
+  fn: ({
+    deviceIdentifier,
+  }: {
+    deviceIdentifier: IosSimulatorUuid | AndroidDeviceSerialId;
+  }) => Promise<TResult>;
 }): Promise<TResult> {
   // Clone and start the device
 
+  let localDeviceIdentifier: IosSimulatorUuid | AndroidDeviceSerialId;
+
   switch (platform) {
     case 'ios': {
-      logger.info(`Cloning iOS Simulator ${sourceDeviceName} to ${localDeviceName}...`);
-      await cloneIosSimulator({
-        sourceDeviceName,
-        destinationDeviceName: localDeviceName,
+      logger.info(`Cloning iOS Simulator ${sourceDeviceIdentifier} to ${localDeviceName}...`);
+      await IosSimulatorUtils.cloneAsync({
+        sourceDeviceIdentifier: sourceDeviceIdentifier as IosSimulatorUuid,
+        destinationDeviceName: localDeviceName as IosSimulatorName,
         env,
       });
       logger.info(`Starting iOS Simulator ${localDeviceName}...`);
-      await startIosSimulator({
-        deviceIdentifier: localDeviceName,
+      const { udid } = await IosSimulatorUtils.startAsync({
+        deviceIdentifier: localDeviceName as IosSimulatorName,
         env,
       });
       logger.info(`Waiting for iOS Simulator ${localDeviceName} to be ready...`);
-      await ensureIosSimulatorIsReadyAsync({
-        deviceIdentifier: localDeviceName,
+      await IosSimulatorUtils.waitForReadyAsync({
+        udid,
         env,
       });
+      localDeviceIdentifier = udid;
       break;
     }
     case 'android': {
-      logger.info(`Cloning Android Emulator ${sourceDeviceName} to ${localDeviceName}...`);
-      await cloneAndroidEmulator({
-        sourceDeviceName,
-        destinationDeviceName: localDeviceName,
+      logger.info(`Cloning Android Emulator ${sourceDeviceIdentifier} to ${localDeviceName}...`);
+      await AndroidEmulatorUtils.cloneAsync({
+        sourceDeviceName: sourceDeviceIdentifier as AndroidVirtualDeviceName,
+        destinationDeviceName: localDeviceName as AndroidVirtualDeviceName,
         env,
       });
       logger.info(`Starting Android Emulator ${localDeviceName}...`);
-      await startAndroidSimulator({
-        deviceName: localDeviceName,
+      const { serialId } = await AndroidEmulatorUtils.startAsync({
+        deviceName: localDeviceName as AndroidVirtualDeviceName,
         env,
       });
       logger.info(`Waiting for Android Emulator ${localDeviceName} to be ready...`);
-      await ensureAndroidEmulatorIsReadyAsync({
-        deviceName: localDeviceName,
+      await AndroidEmulatorUtils.waitForReadyAsync({
+        serialId,
         env,
-        logger,
       });
+      localDeviceIdentifier = serialId;
       break;
     }
   }
 
   // Run the function
 
-  const fnResult = await asyncResult(fn());
+  const fnResult = await asyncResult(fn({ deviceIdentifier: localDeviceIdentifier }));
 
   // Stop the device
 
@@ -380,16 +385,16 @@ async function withCleanDeviceAsync<TResult>({
     switch (platform) {
       case 'ios': {
         logger.info(`Cleaning up ${localDeviceName}...`);
-        await stopAndDeleteIosSimulator({
-          deviceName: localDeviceName,
+        await IosSimulatorUtils.deleteAsync({
+          udid: localDeviceIdentifier as IosSimulatorUuid,
           env,
         });
         break;
       }
       case 'android': {
         logger.info(`Cleaning up ${localDeviceName}...`);
-        await stopAndDeleteAndroidEmulator({
-          deviceName: localDeviceName,
+        await AndroidEmulatorUtils.deleteAsync({
+          serialId: localDeviceIdentifier as AndroidDeviceSerialId,
           env,
         });
         break;
@@ -406,7 +411,7 @@ async function withCleanDeviceAsync<TResult>({
 async function maybeWithScreenRecordingAsync<TResult>({
   shouldRecord,
   platform,
-  deviceName,
+  deviceIdentifier,
   env,
   logger,
   fn,
@@ -415,7 +420,7 @@ async function maybeWithScreenRecordingAsync<TResult>({
   // than "withScreenRecordingAsync" and `withScreenRecordingAsync(fn)` vs `fn` in the caller.
   shouldRecord: boolean;
   platform: 'ios' | 'android';
-  deviceName: string;
+  deviceIdentifier: IosSimulatorUuid | AndroidDeviceSerialId;
   env: BuildStepEnv;
   logger: bunyan;
   fn: () => Promise<TResult>;
@@ -431,13 +436,13 @@ async function maybeWithScreenRecordingAsync<TResult>({
 
   // Start screen recording
 
-  logger.info(`Starting screen recording on ${deviceName}...`);
+  logger.info(`Starting screen recording on ${deviceIdentifier}...`);
 
   switch (platform) {
     case 'ios': {
       recordingResult = await asyncResult(
-        startIosScreenRecording({
-          deviceIdentifier: deviceName,
+        IosSimulatorUtils.startScreenRecordingAsync({
+          udid: deviceIdentifier as IosSimulatorUuid,
           env,
         })
       );
@@ -445,8 +450,8 @@ async function maybeWithScreenRecordingAsync<TResult>({
     }
     case 'android': {
       recordingResult = await asyncResult(
-        startAndroidScreenRecording({
-          deviceName,
+        AndroidEmulatorUtils.startScreenRecordingAsync({
+          serialId: deviceIdentifier as AndroidDeviceSerialId,
           env,
         })
       );
@@ -471,11 +476,13 @@ async function maybeWithScreenRecordingAsync<TResult>({
   // If recording started, finish it
 
   try {
-    logger.info(`Stopping screen recording on ${deviceName}...`);
+    logger.info(`Stopping screen recording on ${deviceIdentifier}...`);
 
     switch (platform) {
       case 'ios': {
-        await stopIosScreenRecording({ recordingSpawn: recordingResult.value.recordingSpawn });
+        await IosSimulatorUtils.stopScreenRecordingAsync({
+          recordingSpawn: recordingResult.value.recordingSpawn,
+        });
         return {
           fnResult,
           // We know outputPath is defined, because startIosScreenRecording() should have filled it.
@@ -483,8 +490,8 @@ async function maybeWithScreenRecordingAsync<TResult>({
         };
       }
       case 'android': {
-        const { outputPath } = await stopAndroidScreenRecording({
-          deviceName,
+        const { outputPath } = await AndroidEmulatorUtils.stopScreenRecordingAsync({
+          serialId: deviceIdentifier as AndroidDeviceSerialId,
           recordingSpawn: recordingResult.value.recordingSpawn,
           env,
         });
