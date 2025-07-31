@@ -14,8 +14,10 @@
     "watch": "tsc --watch --preserveWatchOutput",
     "build": "tsc",
     "prepack": "rm -rf dist && tsc -p tsconfig.build.json",
-    "test": "jest --config jest.config.js",
-    "test:watch": "jest --config jest.config.js --watch",
+    "jest-unit": "jest --config jest/unit-config.ts",
+    "jest-integration": "jest --config jest/integration-config.ts",
+    "jest-unit-watch": "jest --config jest/unit-config.ts --watch",
+    "jest-integration-watch": "jest --config jest/integration-config.ts --watch",
     "clean": "rm -rf node_modules dist coverage"
   },
   "author": "Expo <support@expo.io>",
