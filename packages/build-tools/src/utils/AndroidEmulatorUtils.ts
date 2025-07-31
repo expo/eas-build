@@ -300,7 +300,7 @@ export namespace AndroidEmulatorUtils {
     let isReady = false;
 
     // Ensure /sdcard/ is ready to write to. (If the emulator was just booted, it might not be ready yet.)
-    for (let i = 0; i < 10; i++) {
+    for (let i = 0; i < 30; i++) {
       try {
         await spawn('adb', ['-s', serialId, 'shell', 'touch', '/sdcard/.expo-recording-ready'], {
           env,
@@ -368,7 +368,7 @@ export namespace AndroidEmulatorUtils {
     }
 
     let isRecordingBusy = true;
-    for (let i = 0; i < 10; i++) {
+    for (let i = 0; i < 30; i++) {
       const lsof = await spawn(
         'adb',
         ['-s', serialId, 'shell', 'lsof -t /sdcard/expo-recording.mp4'],
