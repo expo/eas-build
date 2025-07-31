@@ -83,6 +83,10 @@ export function createStartAndroidEmulatorBuildFunction(): BuildFunction {
         deviceName,
         env,
       });
+      await AndroidEmulatorUtils.waitForReadyAsync({
+        env,
+        serialId,
+      });
       logger.info(`${deviceName} is ready.`);
 
       const count = Number(inputs.count.value ?? 1);
