@@ -278,6 +278,7 @@ describe('Android.JobSchema', () => {
           ref: 'master',
           ref_name: 'master',
           ref_type: 'branch',
+          commit_message: 'commit message',
         },
         workflow: {
           id: randomUUID(),
