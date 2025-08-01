@@ -192,7 +192,7 @@ export const StaticWorkflowInterpolationContextZ = z.object({
       ref: z.string(),
       ref_name: z.string(),
       ref_type: z.string(),
-      commit_message: z.string(),
+      commit_message: z.string().optional(),
       label: z.string().optional(),
       repository: z.string().optional(),
       repository_owner: z.string().optional(),
