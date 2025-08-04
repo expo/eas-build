@@ -139,6 +139,23 @@ export namespace IosSimulatorUtils {
     );
   }
 
+  export async function collectLogsAsync({
+    udid,
+    env,
+  }: {
+    udid: IosSimulatorUuid;
+    env: NodeJS.ProcessEnv;
+  }): Promise<{ outputPath: string }> {
+    const outputDir = await fs.promises.mkdtemp(path.join(os.tmpdir(), 'ios-simulator-logs-'));
+    const outputPath = path.join(outputDir, `${udid}.logarchive`);
+
+    await spawn('xcrun', ['simctl', 'spawn', udid, 'log', 'collect', '--output', outputPath], {
+      env,
+    });
+
+    return { outputPath };
+  }
+
   export async function deleteAsync({
     udid,
     env,

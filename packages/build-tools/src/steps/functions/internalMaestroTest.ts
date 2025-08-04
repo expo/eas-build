@@ -190,7 +190,10 @@ export function createInternalEasMaestroTestFunction(ctx: CustomBuildContext): B
 
             // If the test passes, but the recording fails, we don't want to make the test fail,
             // so we return two separate results.
-            const { fnResult, recordingResult } = await withCleanDeviceAsync({
+            const {
+              fnResult: { fnResult, recordingResult },
+              logsResult,
+            } = await withCleanDeviceAsync({
               platform,
               sourceDeviceIdentifier,
               localDeviceName,
@@ -223,18 +226,34 @@ export function createInternalEasMaestroTestFunction(ctx: CustomBuildContext): B
               },
             });
 
+            if (logsResult?.ok) {
+              try {
+                await ctx.runtimeApi.uploadArtifact({
+                  logger: stepCtx.logger,
+                  artifact: {
+                    name: `Logs (${flowPath}, attempt ${attemptCount + 1})`,
+                    paths: [logsResult.value.outputPath],
+                    type: GenericArtifactType.OTHER,
+                  },
+                });
+              } catch (err) {
+                stepCtx.logger.warn({ err }, 'Failed to upload logs.');
+              }
+            }
+
             if (recordingResult.ok && recordingResult.value) {
               try {
                 await ctx.runtimeApi.uploadArtifact({
                   logger: stepCtx.logger,
                   artifact: {
+                    // TODO(sjchmiela): Add metadata to artifacts so we don't need to encode flow path and attempt in the name.
                     name: `Screen Recording (${flowPath}, attempt ${attemptCount + 1})`,
                     paths: [recordingResult.value],
                     type: GenericArtifactType.OTHER,
                   },
                 });
               } catch (err) {
-                stepCtx.logger.warn('Failed to upload screen recording.', err);
+                stepCtx.logger.warn({ err }, 'Failed to upload screen recording.');
               }
             }
 
@@ -244,8 +263,8 @@ export function createInternalEasMaestroTestFunction(ctx: CustomBuildContext): B
               return;
             }
 
-            stepCtx.logger.error(`Failed to run test on device: ${fnResult.reason}`);
-            stepCtx.logger.error(`Retrying...`);
+            // TODO(sjchmiela): Confirm `fnResult.reason` is interesting (it might be generic "script exited with code 1" error).
+            stepCtx.logger.error({ err: fnResult.reason }, 'Failed to run test on device.');
             throw fnResult.reason;
           },
           {
@@ -336,7 +355,7 @@ async function withCleanDeviceAsync<TResult>({
   }: {
     deviceIdentifier: IosSimulatorUuid | AndroidDeviceSerialId;
   }) => Promise<TResult>;
-}): Promise<TResult> {
+}): Promise<{ fnResult: TResult; logsResult: Result<{ outputPath: string }> | null }> {
   // Clone and start the device
 
   let localDeviceIdentifier: IosSimulatorUuid | AndroidDeviceSerialId;
@@ -390,9 +409,19 @@ async function withCleanDeviceAsync<TResult>({
 
   // Stop the device
 
+  let logsResult: Result<{ outputPath: string }> | null = null;
+
   try {
     switch (platform) {
       case 'ios': {
+        logger.info(`Collecting logs from ${localDeviceName}...`);
+        logsResult = await asyncResult(
+          IosSimulatorUtils.collectLogsAsync({
+            udid: localDeviceIdentifier as IosSimulatorUuid,
+            env,
+          })
+        );
+
         logger.info(`Cleaning up ${localDeviceName}...`);
         await IosSimulatorUtils.deleteAsync({
           udid: localDeviceIdentifier as IosSimulatorUuid,
@@ -401,6 +430,14 @@ async function withCleanDeviceAsync<TResult>({
         break;
       }
       case 'android': {
+        logger.info(`Collecting logs from ${localDeviceName}...`);
+        logsResult = await asyncResult(
+          AndroidEmulatorUtils.collectLogsAsync({
+            serialId: localDeviceIdentifier as AndroidDeviceSerialId,
+            env,
+          })
+        );
+
         logger.info(`Cleaning up ${localDeviceName}...`);
         await AndroidEmulatorUtils.deleteAsync({
           serialId: localDeviceIdentifier as AndroidDeviceSerialId,
@@ -413,7 +450,7 @@ async function withCleanDeviceAsync<TResult>({
     logger.error(`Error cleaning up device: ${err}`);
   }
 
-  return fnResult.enforceValue();
+  return { fnResult: fnResult.enforceValue(), logsResult };
 }
 
 /** Runs provided `fn` function, optionally wrapping it with starting and stopping screen recording. */

@@ -256,6 +256,21 @@ export namespace AndroidEmulatorUtils {
     );
   }
 
+  export async function collectLogsAsync({
+    serialId,
+    env,
+  }: {
+    serialId: AndroidDeviceSerialId;
+    env: NodeJS.ProcessEnv;
+  }): Promise<{ outputPath: string }> {
+    const outputDir = await fs.promises.mkdtemp(path.join(os.tmpdir(), 'android-emulator-logs-'));
+    const outputPath = path.join(outputDir, `${serialId}.log`);
+
+    await spawn('adb', ['-s', serialId, 'logcat', '-d', '> ', outputPath], { env });
+
+    return { outputPath };
+  }
+
   export async function deleteAsync({
     serialId,
     env,
