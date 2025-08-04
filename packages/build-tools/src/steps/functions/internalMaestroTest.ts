@@ -245,26 +245,26 @@ export function getMaestroTestCommand(params: {
   output_format: string | undefined;
   output_path: string | undefined;
 }): [command: string, ...args: string[]] {
-  let includeTagsFlag = '';
+  let includeTagsFlag: string[] = [];
   if (typeof params.include_tags === 'string') {
-    includeTagsFlag = `--include-tags=${params.include_tags}`;
+    includeTagsFlag = [`--include-tags`, params.include_tags];
   }
 
-  let excludeTagsFlag = '';
+  let excludeTagsFlag: string[] = [];
   if (typeof params.exclude_tags === 'string') {
-    excludeTagsFlag = `--exclude-tags=${params.exclude_tags}`;
+    excludeTagsFlag = [`--exclude-tags`, params.exclude_tags];
   }
 
   let outputFormatFlags: string[] = [];
   if (params.output_format) {
-    outputFormatFlags = [`--format=${params.output_format}`, `--output=${params.output_path}`];
+    outputFormatFlags = [`--format`, params.output_format, `--output`, params.output_path ?? ''];
   }
 
   return [
     'maestro',
     'test',
-    includeTagsFlag,
-    excludeTagsFlag,
+    ...includeTagsFlag,
+    ...excludeTagsFlag,
     ...outputFormatFlags,
     params.flow_path,
   ].flatMap((e) => e || []) as [command: string, ...args: string[]];
