@@ -1,5 +1,6 @@
-import { randomUUID } from 'node:crypto';
+import fs from 'node:fs';
 import path from 'node:path';
+import os from 'node:os';
 
 import {
   BuildFunction,
@@ -26,6 +27,7 @@ import {
   AndroidVirtualDeviceName,
 } from '../../utils/AndroidEmulatorUtils';
 import { retryAsync } from '../../utils/retry';
+import { PlatformToProperNounMap } from '../../utils/strings';
 
 export function createInternalEasMaestroTestFunction(ctx: CustomBuildContext): BuildFunction {
   return new BuildFunction({
@@ -165,7 +167,21 @@ export function createInternalEasMaestroTestFunction(ctx: CustomBuildContext): B
         }
       }
 
+      const maestroReportsDir = await fs.promises.mkdtemp(
+        path.join(os.tmpdir(), 'maestro-reports-')
+      );
+
       for (const [flowIndex, flowPath] of flow_paths.entries()) {
+        const outputPath = path.join(
+          maestroReportsDir,
+          [
+            `${output_format ?? 'noop'}-report-flow-${flowIndex + 1}`,
+            MaestroOutputFormatToExtensionMap[output_format ?? 'noop'],
+          ]
+            .filter(Boolean)
+            .join('.')
+        );
+
         await retryAsync(
           async (attemptCount) => {
             const localDeviceName = `eas-simulator-${flowIndex}-${attemptCount}` as
@@ -244,6 +260,25 @@ export function createInternalEasMaestroTestFunction(ctx: CustomBuildContext): B
             logger: stepCtx.logger,
           }
         );
+      }
+
+      const generatedMaestroReports = await fs.promises.readdir(maestroReportsDir);
+      if (generatedMaestroReports.length === 0) {
+        stepCtx.logger.warn('No reports were generated.');
+      } else {
+        stepCtx.logger.info(`Uploading reports...`);
+        try {
+          await ctx.runtimeApi.uploadArtifact({
+            logger: stepCtx.logger,
+            artifact: {
+              name: `${PlatformToProperNounMap[platform]} Maestro Test Reports (${output_format})`,
+              paths: [maestroReportsDir],
+              type: GenericArtifactType.OTHER,
+            },
+          });
+        } catch (err) {
+          stepCtx.logger.error({ err }, 'Failed to upload reports.');
+        }
       }
     },
   });
