@@ -203,10 +203,12 @@ export const StaticWorkflowInterpolationContextZ = z.object({
               name: z.string(),
             })
             .optional(),
-          head_commit: z.object({
-            message: z.string(),
-            id: z.string(),
-          }).optional(),
+          head_commit: z
+            .object({
+              message: z.string(),
+              id: z.string(),
+            })
+            .optional(),
           schedule: z.string().optional(),
           inputs: z.record(z.string(), z.union([z.string(), z.number(), z.boolean()])).optional(),
         })
