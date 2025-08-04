@@ -209,11 +209,7 @@ export function createInternalEasMaestroTestFunction(ctx: CustomBuildContext): B
                       include_tags,
                       exclude_tags,
                       output_format,
-                      output_path:
-                        getOutputPathForOutputFormat({
-                          outputFormat: output_format ?? 'noop',
-                          env,
-                        }) ?? undefined,
+                      output_path: outputPath,
                     });
 
                     await spawnAsync(command, args, {
@@ -289,7 +285,8 @@ export function getMaestroTestCommand(params: {
   include_tags: string | undefined;
   exclude_tags: string | undefined;
   output_format: string | undefined;
-  output_path: string | undefined;
+  /** Unused if `output_format` is null */
+  output_path: string;
 }): [command: string, ...args: string[]] {
   let includeTagsFlag: string[] = [];
   if (typeof params.include_tags === 'string') {
@@ -303,7 +300,7 @@ export function getMaestroTestCommand(params: {
 
   let outputFormatFlags: string[] = [];
   if (params.output_format) {
-    outputFormatFlags = [`--format`, params.output_format, `--output`, params.output_path ?? ''];
+    outputFormatFlags = [`--format`, params.output_format, `--output`, params.output_path];
   }
 
   return [
@@ -313,47 +310,13 @@ export function getMaestroTestCommand(params: {
     ...excludeTagsFlag,
     ...outputFormatFlags,
     params.flow_path,
-  ].flatMap((e) => e || []) as [command: string, ...args: string[]];
+  ] as [command: string, ...args: string[]];
 }
 
-function getOutputPathForOutputFormat({
-  outputFormat,
-  env,
-}: {
-  outputFormat: string;
-  env: BuildStepEnv;
-}): string | null {
-  if (outputFormat.toLowerCase() === 'noop') {
-    return null;
-  }
-
-  let extension: string | null;
-  switch (outputFormat) {
-    case 'junit':
-      extension = 'xml';
-      break;
-    case 'html':
-      extension = 'html';
-      break;
-    default:
-      extension = null;
-      break;
-  }
-
-  return path.join(
-    env.HOME!,
-    '.maestro',
-    'tests',
-    [
-      'maestro-',
-      outputFormat,
-      '-',
-      randomUUID(),
-      // No . if no extension.
-      ...(extension ? ['.', extension] : []),
-    ].join('')
-  );
-}
+const MaestroOutputFormatToExtensionMap: Record<string, string | undefined> = {
+  junit: 'xml',
+  html: 'html',
+};
 
 async function withCleanDeviceAsync<TResult>({
   platform,
