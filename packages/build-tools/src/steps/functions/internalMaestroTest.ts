@@ -16,11 +16,7 @@ import { Result, asyncResult, result } from '@expo/results';
 import { GenericArtifactType } from '@expo/eas-build-job';
 
 import { CustomBuildContext } from '../../customBuildContext';
-import {
-  IosSimulatorName,
-  IosSimulatorUtils,
-  IosSimulatorUuid,
-} from '../../utils/IosSimulatorUtils';
+import { IosSimulatorName, IosSimulatorUtils } from '../../utils/IosSimulatorUtils';
 import {
   AndroidDeviceSerialId,
   AndroidEmulatorUtils,
@@ -111,7 +107,7 @@ export function createInternalEasMaestroTestFunction(ctx: CustomBuildContext): B
         );
       }
 
-      let sourceDeviceIdentifier: IosSimulatorUuid | AndroidVirtualDeviceName;
+      let sourceDeviceIdentifier: IosSimulatorName | AndroidVirtualDeviceName;
 
       switch (platform) {
         case 'ios': {
@@ -134,7 +130,7 @@ export function createInternalEasMaestroTestFunction(ctx: CustomBuildContext): B
             stdio: 'pipe',
           });
 
-          sourceDeviceIdentifier = device.udid;
+          sourceDeviceIdentifier = device.name;
           break;
         }
         case 'android': {
@@ -169,8 +165,11 @@ export function createInternalEasMaestroTestFunction(ctx: CustomBuildContext): B
       const maestroReportsDir = await fs.promises.mkdtemp(
         path.join(os.tmpdir(), 'maestro-reports-')
       );
+      const deviceLogsDir = await fs.promises.mkdtemp(path.join(os.tmpdir(), 'device-logs-'));
 
       for (const [flowIndex, flowPath] of flow_paths.entries()) {
+        stepCtx.logger.info('');
+
         const outputPath = path.join(
           maestroReportsDir,
           [
@@ -205,6 +204,8 @@ export function createInternalEasMaestroTestFunction(ctx: CustomBuildContext): B
                 env,
                 logger: stepCtx.logger,
                 fn: async () => {
+                  stepCtx.logger.info('');
+
                   const [command, ...args] = getMaestroTestCommand({
                     flow_path: flowPath,
                     include_tags,
@@ -219,6 +220,8 @@ export function createInternalEasMaestroTestFunction(ctx: CustomBuildContext): B
                     env,
                     stdio: 'pipe',
                   });
+
+                  stepCtx.logger.info('');
                 },
               });
             },
@@ -226,17 +229,16 @@ export function createInternalEasMaestroTestFunction(ctx: CustomBuildContext): B
 
           if (logsResult?.ok) {
             try {
-              await ctx.runtimeApi.uploadArtifact({
-                logger: stepCtx.logger,
-                artifact: {
-                  name: `Logs (${flowPath}, attempt ${attemptCount + 1})`,
-                  paths: [logsResult.value.outputPath],
-                  type: GenericArtifactType.OTHER,
-                },
-              });
+              const extension = path.extname(logsResult.value.outputPath);
+              await fs.promises.rename(
+                logsResult.value.outputPath,
+                path.join(deviceLogsDir, `flow-${flowIndex}${extension}`)
+              );
             } catch (err) {
-              stepCtx.logger.warn({ err }, 'Failed to upload logs.');
+              stepCtx.logger.warn({ err }, 'Failed to prepare device logs for upload.');
             }
+          } else if (logsResult?.reason) {
+            stepCtx.logger.error({ err: logsResult.reason }, 'Failed to collect device logs.');
           }
 
           if (recordingResult.ok && recordingResult.value) {
@@ -245,7 +247,7 @@ export function createInternalEasMaestroTestFunction(ctx: CustomBuildContext): B
                 logger: stepCtx.logger,
                 artifact: {
                   // TODO(sjchmiela): Add metadata to artifacts so we don't need to encode flow path and attempt in the name.
-                  name: `Screen Recording (${flowPath}, attempt ${attemptCount + 1})`,
+                  name: `Screen Recording (${flowPath})`,
                   paths: [recordingResult.value],
                   type: GenericArtifactType.OTHER,
                 },
@@ -263,12 +265,15 @@ export function createInternalEasMaestroTestFunction(ctx: CustomBuildContext): B
 
           if (attemptCount < retries - 1) {
             stepCtx.logger.info(`Retrying test...`);
-          } else {
-            // TODO(sjchmiela): Confirm `fnResult.reason` is interesting (it might be generic "script exited with code 1" error).
-            stepCtx.logger.error({ err: fnResult.reason }, 'Test errored.');
+            continue;
           }
+
+          // TODO(sjchmiela): Confirm `fnResult.reason` is interesting (it might be generic "script exited with code 1" error).
+          stepCtx.logger.error({ err: fnResult.reason }, 'Test errored.');
         }
       }
+
+      stepCtx.logger.info('');
 
       const generatedMaestroReports = await fs.promises.readdir(maestroReportsDir);
       if (generatedMaestroReports.length === 0) {
@@ -286,6 +291,25 @@ export function createInternalEasMaestroTestFunction(ctx: CustomBuildContext): B
           });
         } catch (err) {
           stepCtx.logger.error({ err }, 'Failed to upload reports.');
+        }
+      }
+
+      const generatedDeviceLogs = await fs.promises.readdir(deviceLogsDir);
+      if (generatedDeviceLogs.length === 0) {
+        stepCtx.logger.warn('No device logs were successfully collected.');
+      } else {
+        stepCtx.logger.info(`Uploading device logs...`);
+        try {
+          await ctx.runtimeApi.uploadArtifact({
+            logger: stepCtx.logger,
+            artifact: {
+              name: `Maestro Test Device Logs`,
+              paths: [deviceLogsDir],
+              type: GenericArtifactType.OTHER,
+            },
+          });
+        } catch (err) {
+          stepCtx.logger.error({ err }, 'Failed to upload device logs.');
         }
       }
     },
@@ -341,23 +365,23 @@ async function withCleanDeviceAsync<TResult>({
   env: BuildStepEnv;
   logger: bunyan;
   platform: 'ios' | 'android';
-  sourceDeviceIdentifier: IosSimulatorUuid | AndroidVirtualDeviceName;
+  sourceDeviceIdentifier: IosSimulatorName | AndroidVirtualDeviceName;
   localDeviceName: IosSimulatorName | AndroidVirtualDeviceName;
   fn: ({
     deviceIdentifier,
   }: {
-    deviceIdentifier: IosSimulatorUuid | AndroidDeviceSerialId;
+    deviceIdentifier: IosSimulatorName | AndroidDeviceSerialId;
   }) => Promise<TResult>;
 }): Promise<{ fnResult: TResult; logsResult: Result<{ outputPath: string }> | null }> {
   // Clone and start the device
 
-  let localDeviceIdentifier: IosSimulatorUuid | AndroidDeviceSerialId;
+  let localDeviceIdentifier: IosSimulatorName | AndroidDeviceSerialId;
 
   switch (platform) {
     case 'ios': {
       logger.info(`Cloning iOS Simulator ${sourceDeviceIdentifier} to ${localDeviceName}...`);
       await IosSimulatorUtils.cloneAsync({
-        sourceDeviceIdentifier: sourceDeviceIdentifier as IosSimulatorUuid,
+        sourceDeviceIdentifier: sourceDeviceIdentifier as IosSimulatorName,
         destinationDeviceName: localDeviceName as IosSimulatorName,
         env,
       });
@@ -371,7 +395,7 @@ async function withCleanDeviceAsync<TResult>({
         udid,
         env,
       });
-      localDeviceIdentifier = udid;
+      localDeviceIdentifier = localDeviceName as IosSimulatorName;
       break;
     }
     case 'android': {
@@ -410,14 +434,14 @@ async function withCleanDeviceAsync<TResult>({
         logger.info(`Collecting logs from ${localDeviceName}...`);
         logsResult = await asyncResult(
           IosSimulatorUtils.collectLogsAsync({
-            udid: localDeviceIdentifier as IosSimulatorUuid,
+            deviceIdentifier: localDeviceIdentifier as IosSimulatorName,
             env,
           })
         );
 
         logger.info(`Cleaning up ${localDeviceName}...`);
         await IosSimulatorUtils.deleteAsync({
-          udid: localDeviceIdentifier as IosSimulatorUuid,
+          deviceIdentifier: localDeviceIdentifier as IosSimulatorName,
           env,
         });
         break;
@@ -459,7 +483,7 @@ async function maybeWithScreenRecordingAsync<TResult>({
   // than "withScreenRecordingAsync" and `withScreenRecordingAsync(fn)` vs `fn` in the caller.
   shouldRecord: boolean;
   platform: 'ios' | 'android';
-  deviceIdentifier: IosSimulatorUuid | AndroidDeviceSerialId;
+  deviceIdentifier: IosSimulatorName | AndroidDeviceSerialId;
   env: BuildStepEnv;
   logger: bunyan;
   fn: () => Promise<TResult>;
@@ -481,7 +505,7 @@ async function maybeWithScreenRecordingAsync<TResult>({
     case 'ios': {
       recordingResult = await asyncResult(
         IosSimulatorUtils.startScreenRecordingAsync({
-          udid: deviceIdentifier as IosSimulatorUuid,
+          deviceIdentifier: deviceIdentifier as IosSimulatorName,
           env,
         })
       );

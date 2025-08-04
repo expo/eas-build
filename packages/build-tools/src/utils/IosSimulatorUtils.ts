@@ -140,48 +140,56 @@ export namespace IosSimulatorUtils {
   }
 
   export async function collectLogsAsync({
-    udid,
+    deviceIdentifier,
     env,
   }: {
-    udid: IosSimulatorUuid;
+    deviceIdentifier: IosSimulatorName | IosSimulatorUuid;
     env: NodeJS.ProcessEnv;
   }): Promise<{ outputPath: string }> {
     const outputDir = await fs.promises.mkdtemp(path.join(os.tmpdir(), 'ios-simulator-logs-'));
-    const outputPath = path.join(outputDir, `${udid}.logarchive`);
+    const outputPath = path.join(outputDir, `${deviceIdentifier}.logarchive`);
 
-    await spawn('xcrun', ['simctl', 'spawn', udid, 'log', 'collect', '--output', outputPath], {
-      env,
-    });
+    await spawn(
+      'xcrun',
+      ['simctl', 'spawn', deviceIdentifier, 'log', 'collect', '--output', outputPath],
+      {
+        env,
+      }
+    );
 
     return { outputPath };
   }
 
   export async function deleteAsync({
-    udid,
+    deviceIdentifier,
     env,
   }: {
-    udid: IosSimulatorUuid;
+    deviceIdentifier: IosSimulatorName | IosSimulatorUuid;
     env: NodeJS.ProcessEnv;
   }): Promise<void> {
-    await spawn('xcrun', ['simctl', 'shutdown', udid], { env });
-    await spawn('xcrun', ['simctl', 'delete', udid], { env });
+    await spawn('xcrun', ['simctl', 'shutdown', deviceIdentifier], { env });
+    await spawn('xcrun', ['simctl', 'delete', deviceIdentifier], { env });
   }
 
   export async function startScreenRecordingAsync({
-    udid,
+    deviceIdentifier,
     env,
   }: {
-    udid: IosSimulatorUuid;
+    deviceIdentifier: IosSimulatorUuid | IosSimulatorName;
     env: NodeJS.ProcessEnv;
   }): Promise<{
     recordingSpawn: SpawnPromise<SpawnResult>;
     outputPath: string;
   }> {
     const outputDir = await fs.promises.mkdtemp(path.join(os.tmpdir(), 'ios-screen-recording-'));
-    const outputPath = path.join(outputDir, `${udid}.mov`);
-    const recordingSpawn = spawn('xcrun', ['simctl', 'io', udid, 'recordVideo', '-f', outputPath], {
-      env,
-    });
+    const outputPath = path.join(outputDir, `${deviceIdentifier}.mov`);
+    const recordingSpawn = spawn(
+      'xcrun',
+      ['simctl', 'io', deviceIdentifier, 'recordVideo', '-f', outputPath],
+      {
+        env,
+      }
+    );
 
     const stdout = recordingSpawn.child.stdout;
     const stderr = recordingSpawn.child.stderr;

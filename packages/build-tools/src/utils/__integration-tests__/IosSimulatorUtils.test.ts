@@ -167,7 +167,7 @@ describe('IosSimulatorUtils', () => {
     });
 
     const { recordingSpawn, outputPath } = await IosSimulatorUtils.startScreenRecordingAsync({
-      udid,
+      deviceIdentifier: udid,
       env: process.env,
     });
 
