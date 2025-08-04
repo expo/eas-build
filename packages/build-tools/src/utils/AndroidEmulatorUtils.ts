@@ -266,7 +266,33 @@ export namespace AndroidEmulatorUtils {
     const outputDir = await fs.promises.mkdtemp(path.join(os.tmpdir(), 'android-emulator-logs-'));
     const outputPath = path.join(outputDir, `${serialId}.log`);
 
-    await spawn('adb', ['-s', serialId, 'logcat', '-d', '> ', outputPath], { env });
+    // Pipe adb logcat output directly to the file to avoid loading it all into memory
+    await new Promise<void>((resolve, reject) => {
+      const { child } = spawn('adb', ['-s', serialId, 'logcat', '-d'], {
+        env,
+        stdio: ['ignore', 'pipe', 'inherit'],
+      });
+
+      if (!child.stdout) {
+        reject(new Error('"adb logcat" did not start correctly.'));
+        return;
+      }
+
+      const writeStream = fs.createWriteStream(outputPath);
+      child.stdout.pipe(writeStream);
+      child.stdout.on('error', reject);
+
+      child.on('error', reject);
+      writeStream.on('error', reject);
+
+      child.on('close', (code) => {
+        if (code === 0) {
+          resolve();
+        } else {
+          reject(new Error(`"adb logcat" exited with code ${code}`));
+        }
+      });
+    });
 
     return { outputPath };
   }

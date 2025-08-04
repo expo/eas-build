@@ -153,7 +153,6 @@ export function createInternalEasMaestroTestFunction(ctx: CustomBuildContext): B
 
           stepCtx.logger.info(`Preparing Emulator for tests...`);
           await spawnAsync('adb', ['-s', serialId, 'emu', 'kill'], {
-            logger: stepCtx.logger,
             stdio: 'pipe',
           });
 
@@ -166,6 +165,8 @@ export function createInternalEasMaestroTestFunction(ctx: CustomBuildContext): B
         path.join(os.tmpdir(), 'maestro-reports-')
       );
       const deviceLogsDir = await fs.promises.mkdtemp(path.join(os.tmpdir(), 'device-logs-'));
+
+      const failedFlows: string[] = [];
 
       for (const [flowIndex, flowPath] of flow_paths.entries()) {
         stepCtx.logger.info('');
@@ -214,14 +215,16 @@ export function createInternalEasMaestroTestFunction(ctx: CustomBuildContext): B
                     output_path: outputPath,
                   });
 
-                  await spawnAsync(command, args, {
-                    logger: stepCtx.logger,
-                    cwd: stepCtx.workingDirectory,
-                    env,
-                    stdio: 'pipe',
-                  });
-
-                  stepCtx.logger.info('');
+                  try {
+                    await spawnAsync(command, args, {
+                      logger: stepCtx.logger,
+                      cwd: stepCtx.workingDirectory,
+                      env,
+                      stdio: 'pipe',
+                    });
+                  } finally {
+                    stepCtx.logger.info('');
+                  }
                 },
               });
             },
@@ -241,6 +244,18 @@ export function createInternalEasMaestroTestFunction(ctx: CustomBuildContext): B
             stepCtx.logger.error({ err: logsResult.reason }, 'Failed to collect device logs.');
           }
 
+          if (fnResult.ok) {
+            stepCtx.logger.info(`Test passed.`);
+            // Break out of the retry loop.
+            break;
+          }
+
+          if (attemptCount < retries - 1) {
+            stepCtx.logger.info(`Retrying test...`);
+            stepCtx.logger.info('');
+            continue;
+          }
+
           if (recordingResult.ok && recordingResult.value) {
             try {
               await ctx.runtimeApi.uploadArtifact({
@@ -257,19 +272,9 @@ export function createInternalEasMaestroTestFunction(ctx: CustomBuildContext): B
             }
           }
 
-          if (fnResult.ok) {
-            stepCtx.logger.info(`Test passed.`);
-            // Break out of the retry loop.
-            break;
-          }
-
-          if (attemptCount < retries - 1) {
-            stepCtx.logger.info(`Retrying test...`);
-            continue;
-          }
-
           // TODO(sjchmiela): Confirm `fnResult.reason` is interesting (it might be generic "script exited with code 1" error).
           stepCtx.logger.error({ err: fnResult.reason }, 'Test errored.');
+          failedFlows.push(flowPath);
         }
       }
 
@@ -311,6 +316,12 @@ export function createInternalEasMaestroTestFunction(ctx: CustomBuildContext): B
         } catch (err) {
           stepCtx.logger.error({ err }, 'Failed to upload device logs.');
         }
+      }
+
+      if (failedFlows.length > 0) {
+        throw new Error(`Some Maestro tests failed:\n- ${failedFlows.join('\n- ')}`);
+      } else {
+        stepCtx.logger.info('All Maestro tests passed.');
       }
     },
   });
