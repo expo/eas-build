@@ -25,6 +25,7 @@ import {
   AndroidEmulatorUtils,
   AndroidVirtualDeviceName,
 } from '../../utils/AndroidEmulatorUtils';
+import { retryAsync } from '../../utils/retry';
 
 export function createInternalEasMaestroTestFunction(ctx: CustomBuildContext): BuildFunction {
   return new BuildFunction({
@@ -165,74 +166,84 @@ export function createInternalEasMaestroTestFunction(ctx: CustomBuildContext): B
       }
 
       for (const [flowIndex, flowPath] of flow_paths.entries()) {
-        for (let retryIndex = 0; retryIndex < retries; retryIndex++) {
-          const localDeviceName = `eas-simulator-${flowIndex}-${retryIndex}` as
-            | IosSimulatorName
-            | AndroidVirtualDeviceName;
+        await retryAsync(
+          async (attemptCount) => {
+            const localDeviceName = `eas-simulator-${flowIndex}-${attemptCount}` as
+              | IosSimulatorName
+              | AndroidVirtualDeviceName;
 
-          // If the test passes, but the recording fails, we don't want to make the test fail,
-          // so we return two separate results.
-          const { fnResult, recordingResult } = await withCleanDeviceAsync({
-            platform,
-            sourceDeviceIdentifier,
-            localDeviceName,
-            env,
-            logger: stepCtx.logger,
-            fn: async ({ deviceIdentifier }) => {
-              return await maybeWithScreenRecordingAsync({
-                shouldRecord: record_screen,
-                platform,
-                deviceIdentifier,
-                env,
-                logger: stepCtx.logger,
-                fn: async () => {
-                  const [command, ...args] = getMaestroTestCommand({
-                    flow_path: flowPath,
-                    include_tags,
-                    exclude_tags,
-                    output_format,
-                    output_path:
-                      getOutputPathForOutputFormat({
-                        outputFormat: output_format ?? 'noop',
-                        env,
-                      }) ?? undefined,
-                  });
+            // If the test passes, but the recording fails, we don't want to make the test fail,
+            // so we return two separate results.
+            const { fnResult, recordingResult } = await withCleanDeviceAsync({
+              platform,
+              sourceDeviceIdentifier,
+              localDeviceName,
+              env,
+              logger: stepCtx.logger,
+              fn: async ({ deviceIdentifier }) => {
+                return await maybeWithScreenRecordingAsync({
+                  shouldRecord: record_screen,
+                  platform,
+                  deviceIdentifier,
+                  env,
+                  logger: stepCtx.logger,
+                  fn: async () => {
+                    const [command, ...args] = getMaestroTestCommand({
+                      flow_path: flowPath,
+                      include_tags,
+                      exclude_tags,
+                      output_format,
+                      output_path:
+                        getOutputPathForOutputFormat({
+                          outputFormat: output_format ?? 'noop',
+                          env,
+                        }) ?? undefined,
+                    });
 
-                  await spawnAsync(command, args, {
-                    logger: stepCtx.logger,
-                    cwd: stepCtx.workingDirectory,
-                    env,
-                    stdio: 'pipe',
-                  });
-                },
-              });
-            },
-          });
+                    await spawnAsync(command, args, {
+                      logger: stepCtx.logger,
+                      cwd: stepCtx.workingDirectory,
+                      env,
+                      stdio: 'pipe',
+                    });
+                  },
+                });
+              },
+            });
 
-          if (recordingResult.ok && recordingResult.value) {
-            try {
-              await ctx.runtimeApi.uploadArtifact({
-                logger: stepCtx.logger,
-                artifact: {
-                  name: `Screen Recording (${flowPath}, retry ${retryIndex})`,
-                  paths: [recordingResult.value],
-                  type: GenericArtifactType.OTHER,
-                },
-              });
-            } catch (err) {
-              stepCtx.logger.warn('Failed to upload screen recording.', err);
+            if (recordingResult.ok && recordingResult.value) {
+              try {
+                await ctx.runtimeApi.uploadArtifact({
+                  logger: stepCtx.logger,
+                  artifact: {
+                    name: `Screen Recording (${flowPath}, attempt ${attemptCount + 1})`,
+                    paths: [recordingResult.value],
+                    type: GenericArtifactType.OTHER,
+                  },
+                });
+              } catch (err) {
+                stepCtx.logger.warn('Failed to upload screen recording.', err);
+              }
             }
-          }
 
-          if (fnResult.ok) {
-            stepCtx.logger.info(`Test passed.`);
-            // Break out of the retry loop.
-            break;
-          }
+            if (fnResult.ok) {
+              stepCtx.logger.info(`Test passed.`);
+              // Break out of the retry loop.
+              return;
+            }
 
-          stepCtx.logger.error(`Failed to run test on device: ${fnResult.reason}`);
-          stepCtx.logger.error(`Retrying...`);
-        }
+            stepCtx.logger.error(`Failed to run test on device: ${fnResult.reason}`);
+            stepCtx.logger.error(`Retrying...`);
+            throw fnResult.reason;
+          },
+          {
+            retryOptions: {
+              retries,
+              retryIntervalMs: 1000,
+            },
+            logger: stepCtx.logger,
+          }
+        );
       }
     },
   });
