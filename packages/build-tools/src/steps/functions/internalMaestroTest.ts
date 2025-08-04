@@ -74,7 +74,6 @@ export function createInternalEasMaestroTestFunction(ctx: CustomBuildContext): B
       }),
     ],
     fn: async (stepCtx, { inputs: _inputs, env }) => {
-      console.log('maestroTest', _inputs);
       // inputs come in form of { value: unknown }. Here we parse them into a typed and validated object.
       const {
         platform,
@@ -106,6 +105,9 @@ export function createInternalEasMaestroTestFunction(ctx: CustomBuildContext): B
           'Sharding support has been temporarily disabled. Running tests on a single shard.'
         );
       }
+
+      // eas/__maestro_test does not start devices, it expects a single device to be already running
+      // and configured with the app. Here we find the booted device and stop it.
 
       let sourceDeviceIdentifier: IosSimulatorName | AndroidVirtualDeviceName;
 
@@ -161,6 +163,9 @@ export function createInternalEasMaestroTestFunction(ctx: CustomBuildContext): B
         }
       }
 
+      // During tests we generate reports and device logs. We store them in temporary directories
+      // and upload them once all tests are done. When a test is retried, new reports overwrite
+      // the old ones. The files are named "flow-${index}" for easier identification.
       const maestroReportsDir = await fs.promises.mkdtemp(
         path.join(os.tmpdir(), 'maestro-reports-')
       );
@@ -230,6 +235,7 @@ export function createInternalEasMaestroTestFunction(ctx: CustomBuildContext): B
             },
           });
 
+          // Move device logs to the device logs directory.
           if (logsResult?.ok) {
             try {
               const extension = path.extname(logsResult.value.outputPath);
@@ -244,19 +250,8 @@ export function createInternalEasMaestroTestFunction(ctx: CustomBuildContext): B
             stepCtx.logger.error({ err: logsResult.reason }, 'Failed to collect device logs.');
           }
 
-          if (fnResult.ok) {
-            stepCtx.logger.info(`Test passed.`);
-            // Break out of the retry loop.
-            break;
-          }
-
-          if (attemptCount < retries - 1) {
-            stepCtx.logger.info(`Retrying test...`);
-            stepCtx.logger.info('');
-            continue;
-          }
-
-          if (recordingResult.ok && recordingResult.value) {
+          const isLastAttempt = fnResult.ok || attemptCount === retries - 1;
+          if (isLastAttempt && recordingResult.value) {
             try {
               await ctx.runtimeApi.uploadArtifact({
                 logger: stepCtx.logger,
@@ -272,7 +267,19 @@ export function createInternalEasMaestroTestFunction(ctx: CustomBuildContext): B
             }
           }
 
-          // TODO(sjchmiela): Confirm `fnResult.reason` is interesting (it might be generic "script exited with code 1" error).
+          if (fnResult.ok) {
+            stepCtx.logger.info(`Test passed.`);
+            // Break out of the retry loop.
+            break;
+          }
+
+          if (attemptCount < retries - 1) {
+            stepCtx.logger.info(`Retrying test...`);
+            stepCtx.logger.info('');
+            continue;
+          }
+
+          // fnResult.reason is not super interesting, but it does print out the full command so we can keep it for debugging purposes.
           stepCtx.logger.error({ err: fnResult.reason }, 'Test errored.');
           failedFlows.push(flowPath);
         }
@@ -280,6 +287,7 @@ export function createInternalEasMaestroTestFunction(ctx: CustomBuildContext): B
 
       stepCtx.logger.info('');
 
+      // When all tests are done, we upload the reports and device logs.
       const generatedMaestroReports = await fs.promises.readdir(maestroReportsDir);
       if (generatedMaestroReports.length === 0) {
         stepCtx.logger.warn('No reports were generated.');
@@ -318,6 +326,7 @@ export function createInternalEasMaestroTestFunction(ctx: CustomBuildContext): B
         }
       }
 
+      // If any tests failed, we throw an error to mark the step as failed.
       if (failedFlows.length > 0) {
         throw new Error(`Some Maestro tests failed:\n- ${failedFlows.join('\n- ')}`);
       } else {
