@@ -176,10 +176,11 @@ export function createInternalEasMaestroTestFunction(ctx: CustomBuildContext): B
       for (const [flowIndex, flowPath] of flow_paths.entries()) {
         stepCtx.logger.info('');
 
+        // If output_format is empty or noop, we won't use this.
         const outputPath = path.join(
           maestroReportsDir,
           [
-            `${output_format ?? 'noop'}-report-flow-${flowIndex + 1}`,
+            `${output_format + '-' ?? ''}report-flow-${flowIndex + 1}`,
             MaestroOutputFormatToExtensionMap[output_format ?? 'noop'],
           ]
             .filter(Boolean)
