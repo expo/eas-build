@@ -341,7 +341,7 @@ export function getMaestroTestCommand(params: {
   include_tags: string | undefined;
   exclude_tags: string | undefined;
   output_format: string | undefined;
-  /** Unused if `output_format` is null */
+  /** Unused if `output_format` is undefined */
   output_path: string;
 }): [command: string, ...args: string[]] {
   let includeTagsFlag: string[] = [];
