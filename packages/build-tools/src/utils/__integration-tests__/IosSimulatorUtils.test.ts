@@ -18,7 +18,7 @@ describe('IosSimulatorUtils', () => {
     for (const { udid } of devices) {
       try {
         await IosSimulatorUtils.deleteAsync({
-          udid,
+          deviceIdentifier: udid,
           env: process.env,
         });
       } catch (error) {
@@ -35,7 +35,7 @@ describe('IosSimulatorUtils', () => {
     for (const { udid } of devices) {
       try {
         await IosSimulatorUtils.deleteAsync({
-          udid,
+          deviceIdentifier: udid,
           env: process.env,
         });
       } catch (error) {
@@ -143,7 +143,7 @@ describe('IosSimulatorUtils', () => {
     expect(stdoutClone).toContain('light');
 
     await IosSimulatorUtils.deleteAsync({
-      udid: udidClone,
+      deviceIdentifier: udidClone,
       env: process.env,
     });
   }, 60_000);
@@ -167,7 +167,7 @@ describe('IosSimulatorUtils', () => {
     });
 
     const { recordingSpawn, outputPath } = await IosSimulatorUtils.startScreenRecordingAsync({
-      udid,
+      deviceIdentifier: udid,
       env: process.env,
     });
 
@@ -186,7 +186,7 @@ describe('IosSimulatorUtils', () => {
     expect(stdout).toContain('video/quicktime');
 
     await IosSimulatorUtils.deleteAsync({
-      udid,
+      deviceIdentifier: udid,
       env: process.env,
     });
   }, 60_000);
