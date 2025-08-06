@@ -1,7 +1,7 @@
 import path from 'path';
 
 import { GCS, GCSLoggerStream } from '@expo/build-tools';
-import { BuildPriority, ResourceClass, Worker } from '@expo/turtle-common';
+import { ResourceClass, Worker } from '@expo/turtle-common';
 
 import env from './utils/env';
 
@@ -10,6 +10,13 @@ export enum Environment {
   STAGING = 'staging',
   TEST = 'test',
   PRODUCTION = 'production',
+}
+
+export enum BuildPriority {
+  LOW = 'low',
+  NORMAL = 'normal',
+  NORMAL_PLUS = 'normal-plus',
+  HIGH = 'high',
 }
 
 type ReplaceUndefinedWithNull<T> = undefined extends T ? Exclude<T, undefined> | null : T;
