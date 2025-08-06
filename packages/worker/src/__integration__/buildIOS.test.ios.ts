@@ -1,12 +1,12 @@
 import { hostname } from 'os';
 
-import { env } from '@expo/turtle-common';
 import { ArchiveSourceType, Ios } from '@expo/eas-build-job';
 import WebSocket from 'ws';
 
 import logger from '../logger';
 import { cleanUpWorkingdir, prepareWorkingdir } from '../workingdir';
 import startWsServer from '../ws';
+import env from '../utils/env';
 
 import { WsHelper, unreachableCode } from './utils';
 

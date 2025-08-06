@@ -1,8 +1,8 @@
 import WebSocket from 'ws';
-import { env } from '@expo/turtle-common';
 import { Android } from '@expo/eas-build-job';
 
 import logger from '../logger';
+import env from '../utils/env';
 
 export function unreachableCode(msg: string): void {
   expect(msg).toBeFalsy();

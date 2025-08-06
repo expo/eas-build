@@ -1,10 +1,10 @@
 import { hostname } from 'os';
 
-import { env } from '@expo/turtle-common';
 import { ArchiveSourceType } from '@expo/eas-build-job';
 import WebSocket from 'ws';
 
 import logger from '../logger';
+import env from '../utils/env';
 import { cleanUpWorkingdir, prepareWorkingdir } from '../workingdir';
 import startWsServer from '../ws';
 
