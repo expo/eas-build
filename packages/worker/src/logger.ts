@@ -1,7 +1,7 @@
 import { Transform, TransformCallback, Writable } from 'stream';
 
 import { LoggerLevel, createLogger } from '@expo/logger';
-import { BuildLogger as CommonBuildLogger, createGCSBuildLogger } from '@expo/turtle-common';
+import { BuildLogger as CommonBuildLogger, createGCSBuildLogger } from './utils/logger';
 import { LogBuffer } from '@expo/build-tools';
 import { EnvironmentSecret } from '@expo/eas-build-job';
 
