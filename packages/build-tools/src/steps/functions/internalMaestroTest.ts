@@ -259,10 +259,13 @@ export function createInternalEasMaestroTestFunction(ctx: CustomBuildContext): B
           if (logsResult?.ok) {
             try {
               const extension = path.extname(logsResult.value.outputPath);
-              await fs.promises.rename(
-                logsResult.value.outputPath,
-                path.join(deviceLogsDir, `flow-${flowIndex}${extension}`)
-              );
+              const destinationPath = path.join(deviceLogsDir, `flow-${flowIndex}${extension}`);
+
+              await fs.promises.rm(destinationPath, {
+                force: true,
+                recursive: true,
+              });
+              await fs.promises.rename(logsResult.value.outputPath, destinationPath);
             } catch (err) {
               stepCtx.logger.warn({ err }, 'Failed to prepare device logs for upload.');
             }
