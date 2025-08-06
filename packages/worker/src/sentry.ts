@@ -1,4 +1,4 @@
-import { Sentry } from '@expo/turtle-common';
+import Sentry from './external/sentry';
 
 import config from './config';
 import logger from './logger';
