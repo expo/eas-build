@@ -1,32 +1,19 @@
-import { bunyan } from '@expo/logger';
-import { asyncResult } from '@expo/results';
 import { promises as fs } from 'node:fs';
 import * as path from 'node:path';
 
-import { parse as parseYaml } from 'yaml';
+import { bunyan } from '@expo/logger';
+import * as yaml from 'yaml';
 import { z } from 'zod';
-
-const WorkspaceConfigSchema = z.object({
-  flows: z.array(z.string()).optional(),
-  includeTags: z.array(z.string()).optional(),
-  excludeTags: z.array(z.string()).optional(),
-  executionOrder: z
-    .object({
-      flowsOrder: z.array(z.string()).optional(),
-      continueOnFailure: z.boolean().optional(),
-    })
-    .optional(),
-});
+import { asyncResult } from '@expo/results';
 
 const FlowConfigSchema = z.object({
   name: z.string().optional(),
   tags: z.array(z.string()).optional(),
 });
 
-type WorkspaceConfig = z.infer<typeof WorkspaceConfigSchema>;
 type FlowConfig = z.infer<typeof FlowConfigSchema>;
 
-export async function findMaestroFlowsToExecuteAsync({
+export async function findMaestroPathsFlowsToExecuteAsync({
   absoluteFlowPath,
   includeTags = [],
   excludeTags = [],
@@ -39,210 +26,116 @@ export async function findMaestroFlowsToExecuteAsync({
 }): Promise<string[]> {
   // If it's a file, just return it (no validation needed)
   const stat = await fs.stat(absoluteFlowPath);
-  if (!stat) {
-    return [];
-  }
 
   if (stat.isFile()) {
+    logger.info(`"${absoluteFlowPath}" is a file.`);
     return [absoluteFlowPath];
   }
 
   // It's a directory - discover flow files
-  const allFlowFiles = await discoverFlowFilesAsync(absoluteFlowPath);
-  if (allFlowFiles.length === 0) {
+  logger.info(`"${absoluteFlowPath}" is a directory.`);
+  const { flows } = await findAndParseFlowFilesAsync({
+    dirPath: absoluteFlowPath,
+    logger,
+  });
+
+  if (flows.length === 0) {
+    logger.info(`No valid flow files found in "${absoluteFlowPath}".`);
     return [];
   }
 
-  // Find and parse workspace config
-  const workspaceConfigResult = await asyncResult(
-    findAndParseWorkspaceConfigAsync(absoluteFlowPath)
+  if (!includeTags && !excludeTags) {
+    logger.info(`No tags provided, returning all flows.`);
+    return flows.map(({ path }) => path);
+  }
+
+  logger.info(
+    `Filtering flows by tags. Tags to include: ${includeTags.map((tag) => JSON.stringify(tag)).join(', ')}. Tags to exclude: ${excludeTags.map((tag) => JSON.stringify(tag)).join(', ')}.`
   );
-  let workspaceConfig: WorkspaceConfig;
-  if (!workspaceConfigResult.ok) {
-    logger.warn(
-      { error: workspaceConfigResult.reason },
-      'Failed to find and parse workspace config'
-    );
-    workspaceConfig = {};
-  } else {
-    workspaceConfig = workspaceConfigResult.value ?? {};
-  }
-
-  // Apply workspace flow patterns (globs)
-  const filteredByPatterns = await applyFlowPatterns({
-    flowFiles: allFlowFiles,
-    workspaceConfig,
-    basePath: absoluteFlowPath,
-  });
-  if (filteredByPatterns.length === 0) {
-    return [];
-  }
-
-  // Parse flow configs and apply tag filtering
-  const flowConfigs = await parseFlowConfigs(filteredByPatterns);
-  const allIncludeTags = [...includeTags, ...(workspaceConfig.includeTags ?? [])];
-  const allExcludeTags = [...excludeTags, ...(workspaceConfig.excludeTags ?? [])];
-
-  const filteredByTags = filteredByPatterns.filter((flowFile) => {
-    const config = flowConfigs.get(flowFile);
+  const filteredByTags = flows.filter(({ config }) => {
     const tags = config?.tags ?? [];
-    return matchesTags({
+    const shouldInclude = matchesTags({
       flowTags: tags,
-      includeTags: allIncludeTags,
-      excludeTags: allExcludeTags,
+      includeTags,
+      excludeTags,
     });
+
+    logger.info(
+      shouldInclude
+        ? `"${path}" matches tags, including.`
+        : `"${path}" does not match tags, excluding.`
+    );
+
+    return shouldInclude;
   });
 
-  if (filteredByTags.length === 0) {
-    return [];
-  }
-
-  // Handle execution sequences
-  return applyExecutionOrder({
-    flowFiles: filteredByTags,
-    flowConfigs,
-    workspaceConfig,
-  });
+  return filteredByTags.map(({ path }) => path);
 }
 
-async function discoverFlowFilesAsync(dirPath: string): Promise<string[]> {
-  const flowFiles: string[] = [];
+async function findAndParseFlowFilesAsync({
+  dirPath,
+  logger,
+}: {
+  dirPath: string;
+  logger: bunyan;
+}): Promise<{ flows: { config: FlowConfig; path: string }[] }> {
+  const flows: { config: FlowConfig; path: string }[] = [];
 
-  async function walkDir(currentPath: string): Promise<void> {
+  const directoriesToSearch = [dirPath];
+  while (directoriesToSearch.length > 0) {
+    const currentPath = directoriesToSearch.shift();
+    if (!currentPath) {
+      continue;
+    }
+    logger.info(`Searching for flow files in "${currentPath}"...`);
+
     const entries = await fs.readdir(currentPath, { withFileTypes: true });
 
     for (const entry of entries) {
       const fullPath = path.join(currentPath, entry.name);
 
       if (entry.isDirectory()) {
-        await walkDir(fullPath);
-      } else if (entry.isFile() && isFlowFile(fullPath)) {
-        flowFiles.push(fullPath);
-      }
-    }
-  }
-
-  await walkDir(dirPath);
-  return flowFiles;
-}
-
-function isFlowFile(filePath: string): boolean {
-  const ext = path.extname(filePath);
-  if (ext !== '.yaml' && ext !== '.yml') {
-    return false;
-  }
-
-  const basename = path.basename(filePath, ext);
-  if (basename === 'config') {
-    return false;
-  }
-
-  return true;
-}
-
-async function findAndParseWorkspaceConfigAsync(dirPath: string): Promise<WorkspaceConfig | null> {
-  const configResults = await Promise.allSettled(
-    [path.join(dirPath, 'config.yaml'), path.join(dirPath, 'config.yml')].map(
-      async (configPath) => {
-        let content;
-        try {
-          content = await fs.readFile(configPath, 'utf-8');
-        } catch {
-          return null;
+        logger.info(`Found directory "${fullPath}", queueing for search.`);
+        directoriesToSearch.push(fullPath);
+      } else if (entry.isFile()) {
+        // Skip non-YAML files
+        const ext = path.extname(fullPath);
+        if (ext !== '.yaml' && ext !== '.yml') {
+          logger.info(`Skipping non-YAML file "${fullPath}".`);
+          continue;
         }
-        return WorkspaceConfigSchema.parse(parseYaml(content));
-      }
-    )
-  );
 
-  const resolvedConfig = configResults.find(
-    (result): result is PromiseFulfilledResult<WorkspaceConfig> =>
-      result.status === 'fulfilled' && result.value !== null
-  );
+        // Skip Maestro config files
+        const basename = path.basename(fullPath, ext);
+        if (basename === 'config') {
+          logger.info(
+            `Skipping Maestro config file "${fullPath}". Maestro config files are not supported yet.`
+          );
+          continue;
+        }
 
-  return resolvedConfig?.value ?? null;
-}
-
-async function applyFlowPatterns({
-  flowFiles,
-  workspaceConfig,
-  basePath,
-}: {
-  flowFiles: string[];
-  workspaceConfig: WorkspaceConfig;
-  basePath: string;
-}): Promise<string[]> {
-  // TODO(sjchmiela): verify
-  const patterns = workspaceConfig.flows ?? ['*'];
-
-  if (patterns.includes('*')) {
-    // Default pattern - include all flows in top-level directory only
-    return flowFiles.filter((file) => {
-      const relativePath = path.relative(basePath, file);
-      return !relativePath.includes(path.sep); // No subdirectories
-    });
-  }
-
-  // Apply glob patterns (simplified implementation)
-  const matchedFiles: string[] = [];
-
-  for (const file of flowFiles) {
-    const relativePath = path.relative(basePath, file);
-
-    for (const pattern of patterns) {
-      // Simple glob matching - convert * to .* for regex
-      const regexPattern = pattern.replace(/\*/g, '.*').replace(/\?/g, '.');
-
-      const regex = new RegExp(`^${regexPattern}$`);
-      const matchesPattern = regex.test(relativePath);
-      if (matchesPattern) {
-        matchedFiles.push(file);
-        break;
+        const result = await asyncResult(parseFlowFile(fullPath));
+        if (result.ok) {
+          logger.info(`Found flow file "${fullPath}".`);
+          flows.unshift({ config: result.value, path: fullPath });
+        } else {
+          logger.info({ err: result.reason }, `Skipping flow file "${fullPath}" due to error.`);
+        }
       }
     }
   }
 
-  return matchedFiles;
+  return { flows };
 }
 
-async function parseFlowConfigs(flowFiles: string[]): Promise<Map<string, FlowConfig>> {
-  const configs = new Map<string, FlowConfig>();
-
-  await Promise.all(
-    flowFiles.map(async (file) => {
-      try {
-        const content = await fs.readFile(file, 'utf-8');
-        const config = parseFlowConfig(content);
-        configs.set(file, config);
-      } catch {
-        // If we can't parse the flow, set empty config
-        configs.set(file, {});
-      }
-    })
-  );
-
-  return configs;
-}
-
-function parseFlowConfig(yamlContent: string): FlowConfig {
-  try {
-    // Split on --- to get config section (before first ---)
-    const parts = yamlContent.split(/^---\s*$/m);
-    const configSection = parts[0].trim();
-
-    if (!configSection) {
-      return {};
-    }
-
-    const parsed = parseYaml(configSection);
-    const result = FlowConfigSchema.safeParse(parsed);
-    if (result.success) {
-      return result.data;
-    }
-    return {};
-  } catch {
-    return {};
+async function parseFlowFile(filePath: string): Promise<FlowConfig> {
+  const content = await fs.readFile(filePath, 'utf-8');
+  const documents = yaml.parseAllDocuments(content);
+  const configDoc = documents[0];
+  if (!configDoc) {
+    throw new Error(`No config section found in ${filePath}`);
   }
+  return FlowConfigSchema.parse(configDoc.toJS());
 }
 
 function matchesTags({
@@ -263,51 +156,4 @@ function matchesTags({
     excludeTags.length === 0 || !excludeTags.some((tag) => flowTags.includes(tag));
 
   return includeMatch && excludeMatch;
-}
-
-function applyExecutionOrder({
-  flowFiles,
-  flowConfigs,
-  workspaceConfig,
-}: {
-  flowFiles: string[];
-  flowConfigs: Map<string, FlowConfig>;
-  workspaceConfig: WorkspaceConfig;
-}): string[] {
-  const executionOrder = workspaceConfig.executionOrder?.flowsOrder;
-
-  if (!executionOrder || executionOrder.length === 0) {
-    // No execution order specified, return files as-is
-    return flowFiles;
-  }
-
-  // Create a map of flow name to file path
-  const flowsByName = new Map<string, string>();
-  for (const file of flowFiles) {
-    const config = flowConfigs.get(file);
-    const name = config?.name ?? path.basename(file, path.extname(file));
-    flowsByName.set(name, file);
-  }
-
-  // Build ordered list based on execution order
-  const orderedFlows: string[] = [];
-  const usedFiles = new Set<string>();
-
-  // First, add flows in the specified order
-  for (const flowName of executionOrder) {
-    const file = flowsByName.get(flowName);
-    if (file && flowFiles.includes(file)) {
-      orderedFlows.push(file);
-      usedFiles.add(file);
-    }
-  }
-
-  // Then add any remaining flows that weren't in the execution order
-  for (const file of flowFiles) {
-    if (!usedFiles.has(file)) {
-      orderedFlows.push(file);
-    }
-  }
-
-  return orderedFlows;
 }
