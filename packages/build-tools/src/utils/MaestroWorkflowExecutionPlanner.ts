@@ -81,47 +81,41 @@ async function findAndParseFlowFilesAsync({
 }): Promise<{ flows: { config: FlowConfig; path: string }[] }> {
   const flows: { config: FlowConfig; path: string }[] = [];
 
-  const directoriesToSearch = [dirPath];
-  while (directoriesToSearch.length > 0) {
-    const currentPath = directoriesToSearch.shift();
-    if (!currentPath) {
-      continue;
-    }
-    logger.info(`Searching for flow files in "${currentPath}"...`);
+  logger.info(`Searching for flow files in "${dirPath}"...`);
 
-    const entries = await fs.readdir(currentPath, { withFileTypes: true });
+  const entries = await fs.readdir(dirPath, { withFileTypes: true });
 
-    for (const entry of entries) {
-      const fullPath = path.join(currentPath, entry.name);
+  for (const entry of entries) {
+    const fullPath = path.join(dirPath, entry.name);
 
-      if (entry.isDirectory()) {
-        logger.info(`Found directory "${fullPath}", queueing for search.`);
-        directoriesToSearch.push(fullPath);
-      } else if (entry.isFile()) {
-        // Skip non-YAML files
-        const ext = path.extname(fullPath);
-        if (ext !== '.yaml' && ext !== '.yml') {
-          logger.info(`Skipping non-YAML file "${fullPath}".`);
-          continue;
-        }
-
-        // Skip Maestro config files
-        const basename = path.basename(fullPath, ext);
-        if (basename === 'config') {
-          logger.info(
-            `Skipping Maestro config file "${fullPath}". Maestro config files are not supported yet.`
-          );
-          continue;
-        }
-
-        const result = await asyncResult(parseFlowFile(fullPath));
-        if (result.ok) {
-          logger.info(`Found flow file "${fullPath}".`);
-          flows.unshift({ config: result.value, path: fullPath });
-        } else {
-          logger.info({ err: result.reason }, `Skipping flow file "${fullPath}" due to error.`);
-        }
+    if (entry.isFile()) {
+      // Skip non-YAML files
+      const ext = path.extname(fullPath);
+      if (ext !== '.yaml' && ext !== '.yml') {
+        logger.info(`Skipping non-YAML file "${fullPath}".`);
+        continue;
       }
+
+      // Skip Maestro config files
+      const basename = path.basename(fullPath, ext);
+      if (basename === 'config') {
+        logger.info(
+          `Skipping Maestro config file "${fullPath}". Maestro config files are not supported yet.`
+        );
+        continue;
+      }
+
+      const result = await asyncResult(parseFlowFile(fullPath));
+      if (result.ok) {
+        logger.info(`Found flow file "${fullPath}".`);
+        flows.push({ config: result.value, path: fullPath });
+      } else {
+        logger.info({ err: result.reason }, `Skipping flow file "${fullPath}" due to error.`);
+      }
+    } else if (entry.isDirectory()) {
+      logger.info(
+        `Found directory "${fullPath}", skipping (default behavior excludes subdirectories).`
+      );
     }
   }
 
