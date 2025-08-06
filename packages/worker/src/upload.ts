@@ -1,10 +1,9 @@
 import path from 'path';
 
-import GCS from '@expo/gcs';
 import { bunyan } from '@expo/logger';
 import fs from 'fs-extra';
 import tar from 'tar';
-import { BuildContext } from '@expo/build-tools';
+import { BuildContext, GCS } from '@expo/build-tools';
 import { asyncResult } from '@expo/results';
 import { z } from 'zod';
 import { TurtleFetchError, turtleFetch } from '@expo/turtle-common';
@@ -45,9 +44,7 @@ export async function uploadApplicationArchiveAsync(
     await GCS.uploadWithSignedUrl({
       signedUrl,
       srcGeneratorAsync: async () => {
-        return {
-          stream: fs.createReadStream(localPath),
-        };
+        return fs.createReadStream(localPath);
       },
     });
 
@@ -78,9 +75,7 @@ export async function uploadApplicationArchiveAsync(
     await GCS.uploadWithSignedUrl({
       signedUrl: config.gcsSignedUploadUrlForApplicationArchive,
       srcGeneratorAsync: async () => {
-        return {
-          stream: fs.createReadStream(localPath),
-        };
+        return fs.createReadStream(localPath);
       },
     });
   } catch (err: any) {
@@ -122,9 +117,7 @@ export async function uploadBuildArtifactsAsync(
     await GCS.uploadWithSignedUrl({
       signedUrl,
       srcGeneratorAsync: async () => {
-        return {
-          stream: fs.createReadStream(localPath),
-        };
+        return fs.createReadStream(localPath);
       },
     });
 
@@ -155,9 +148,7 @@ export async function uploadBuildArtifactsAsync(
     await GCS.uploadWithSignedUrl({
       signedUrl: config.gcsSignedUploadUrlForBuildArtifacts,
       srcGeneratorAsync: async () => {
-        return {
-          stream: fs.createReadStream(localPath),
-        };
+        return fs.createReadStream(localPath);
       },
     });
   } catch (err: any) {
@@ -194,9 +185,7 @@ export async function uploadWorkflowArtifactAsync(
     await GCS.uploadWithSignedUrl({
       signedUrl: uploadSession,
       srcGeneratorAsync: async () => {
-        return {
-          stream: fs.createReadStream(localPath),
-        };
+        return fs.createReadStream(localPath);
       },
     });
   } catch (err: any) {

@@ -1,10 +1,9 @@
 import path from 'path';
 
-import GCS from '@expo/gcs';
 import filesize from 'filesize';
 import downloadFile from '@expo/downloader';
 import { BuildJob } from '@expo/eas-build-job';
-import { CacheManager, BuildContext } from '@expo/build-tools';
+import { CacheManager, BuildContext, GCS } from '@expo/build-tools';
 import fs from 'fs-extra';
 import tar from 'tar';
 
@@ -59,9 +58,7 @@ export class GCSCacheManager implements CacheManager {
       await GCS.uploadWithSignedUrl({
         signedUrl: config.buildCache.gcsSignedUploadUrlForBuildCache,
         srcGeneratorAsync: async () => {
-          return {
-            stream: fs.createReadStream(archivePath),
-          };
+          return fs.createReadStream(archivePath);
         },
       });
     } catch (err: any) {

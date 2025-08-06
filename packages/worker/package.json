@@ -24,7 +24,6 @@
     "@expo/build-tools": "1.0.199",
     "@expo/config-plugins": "^8.0.8",
     "@expo/eas-build-job": "1.0.197",
-    "@expo/gcs": "0.0.7",
     "@expo/logger": "1.0.117",
     "@expo/results": "^1.0.0",
     "@expo/rudder-sdk-node": "1.1.1",

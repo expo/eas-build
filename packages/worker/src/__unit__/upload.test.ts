@@ -1,11 +1,10 @@
 import { randomBytes, randomUUID } from 'crypto';
 
-import { BuildContext } from '@expo/build-tools';
+import { BuildContext, GCS } from '@expo/build-tools';
 import { vol } from 'memfs';
 import { Job } from '@expo/eas-build-job';
 import { Response } from 'node-fetch';
 import { turtleFetch } from '@expo/turtle-common';
-import GCS from '@expo/gcs';
 
 import {
   uploadApplicationArchiveAsync,
@@ -31,11 +30,6 @@ jest.mock('../config', () => ({
   rudderstack: {},
   wwwApiV2BaseUrl: 'https://api.expo.test/v2/',
 }));
-jest.mock('@expo/gcs', () => {
-  return {
-    uploadWithSignedUrl: jest.fn(),
-  };
-});
 
 describe(uploadApplicationArchiveAsync.name, () => {
   it('should throw if configuration is missing', async () => {

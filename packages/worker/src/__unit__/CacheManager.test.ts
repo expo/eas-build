@@ -1,4 +1,4 @@
-import GCS from '@expo/gcs';
+import { GCS } from '@expo/build-tools';
 import { vol } from 'memfs';
 import fs from 'fs-extra';
 import downloadFile from '@expo/downloader';
@@ -8,11 +8,6 @@ import { GCSCacheManager } from '../CacheManager';
 
 jest.mock('fs');
 jest.mock('fs/promises');
-jest.mock('@expo/gcs', () => {
-  return {
-    uploadWithSignedUrl: jest.fn(),
-  };
-});
 
 jest.mock('@expo/downloader', () => {
   return jest.fn();
