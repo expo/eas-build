@@ -75,7 +75,8 @@ describe('findMaestroPathsFlowsToExecuteAsync', () => {
     excludeTags: string[] = []
   ): Promise<string[]> {
     const result = await findMaestroPathsFlowsToExecuteAsync({
-      absoluteFlowPath: path.resolve(flowPath),
+      workingDirectory: process.cwd(),
+      flowPath: path.relative(process.cwd(), flowPath),
       includeTags,
       excludeTags,
       logger,

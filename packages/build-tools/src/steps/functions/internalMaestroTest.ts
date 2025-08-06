@@ -102,18 +102,21 @@ export function createInternalEasMaestroTestFunction(ctx: CustomBuildContext): B
 
       const flowPathsToExecute: string[] = [];
       for (const flowPath of flow_paths) {
-        stepCtx.logger.info(`Finding flows to execute in ${flowPath}...`);
         const flowPaths = await findMaestroPathsFlowsToExecuteAsync({
-          absoluteFlowPath: flowPath,
+          workingDirectory: stepCtx.workingDirectory,
+          flowPath,
           logger: stepCtx.logger,
           includeTags: include_tags ? include_tags.split(',') : undefined,
           excludeTags: exclude_tags ? exclude_tags.split(',') : undefined,
         });
         if (flowPaths.length === 0) {
-          stepCtx.logger.warn(`No flows to execute in ${flowPath}.`);
+          stepCtx.logger.warn(`No flows to execute found in "${flowPath}".`);
           continue;
         }
-        stepCtx.logger.info(`Found:\n- ${flowPaths.join('\n- ')}`);
+        stepCtx.logger.info(
+          `Marking for execution:\n- ${flowPaths.map((flowPath) => path.relative(stepCtx.workingDirectory, flowPath)).join('\n- ')}`
+        );
+        stepCtx.logger.info('');
         flowPathsToExecute.push(...flowPaths);
       }
 
@@ -343,9 +346,15 @@ export function createInternalEasMaestroTestFunction(ctx: CustomBuildContext): B
         }
       }
 
+      stepCtx.logger.info('');
+
       // If any tests failed, we throw an error to mark the step as failed.
       if (failedFlows.length > 0) {
-        throw new Error(`Some Maestro tests failed:\n- ${failedFlows.join('\n- ')}`);
+        throw new Error(
+          `Some Maestro tests failed:\n- ${failedFlows
+            .map((flowPath) => path.relative(stepCtx.workingDirectory, flowPath))
+            .join('\n- ')}`
+        );
       } else {
         stepCtx.logger.info('All Maestro tests passed.');
       }

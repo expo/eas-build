@@ -14,33 +14,36 @@ const FlowConfigSchema = z.object({
 type FlowConfig = z.infer<typeof FlowConfigSchema>;
 
 export async function findMaestroPathsFlowsToExecuteAsync({
-  absoluteFlowPath,
+  workingDirectory,
+  flowPath,
   includeTags,
   excludeTags,
   logger,
 }: {
-  absoluteFlowPath: string;
+  workingDirectory: string;
+  flowPath: string;
   includeTags: string[] | undefined;
   excludeTags: string[] | undefined;
   logger: bunyan;
 }): Promise<string[]> {
+  const absoluteFlowPath = path.resolve(workingDirectory, flowPath);
   // If it's a file, just return it (no validation needed)
   const stat = await fs.stat(absoluteFlowPath);
 
   if (stat.isFile()) {
-    logger.info(`"${absoluteFlowPath}" is a file.`);
+    logger.info(`"${flowPath}" is a file.`);
     return [absoluteFlowPath];
   }
 
   // It's a directory - discover flow files
-  logger.info(`"${absoluteFlowPath}" is a directory.`);
+  logger.info(`"${flowPath}" is a directory. Searching for flow files...`);
   const { flows } = await findAndParseFlowFilesAsync({
     dirPath: absoluteFlowPath,
     logger,
   });
 
   if (flows.length === 0) {
-    logger.info(`No valid flow files found in "${absoluteFlowPath}".`);
+    logger.info(`No valid flow files found in "${flowPath}".`);
     return [];
   }
 
@@ -50,26 +53,25 @@ export async function findMaestroPathsFlowsToExecuteAsync({
   }
 
   logger.info(
-    `Filtering flows by tags. Tags to include: ${JSON.stringify(includeTags)}. Tags to exclude: ${JSON.stringify(excludeTags)}.`
+    `Filtering flows by tags. Tags to include: ${JSON.stringify(includeTags)}. Tags to exclude: ${JSON.stringify(excludeTags) ?? 'none'}.`
   );
-  const filteredByTags = flows.filter(({ config }) => {
-    const tags = config?.tags ?? [];
-    const shouldInclude = matchesTags({
-      flowTags: tags,
-      includeTags: includeTags ?? [],
-      excludeTags: excludeTags ?? [],
-    });
+  return flows
+    .filter(({ config, path: flowPath }) => {
+      const shouldInclude = matchesTags({
+        flowTags: config?.tags ?? [],
+        includeTags: includeTags ?? [],
+        excludeTags: excludeTags ?? [],
+      });
 
-    logger.info(
-      shouldInclude
-        ? `"${path}" matches tags, including.`
-        : `"${path}" does not match tags, excluding.`
-    );
+      logger.info(
+        shouldInclude
+          ? `"${path.relative(workingDirectory, flowPath)}" matches tags, including.`
+          : `"${path.relative(workingDirectory, flowPath)}" does not match tags, excluding.`
+      );
 
-    return shouldInclude;
-  });
-
-  return filteredByTags.map(({ path }) => path);
+      return shouldInclude;
+    })
+    .map(({ path }) => path);
 }
 
 async function findAndParseFlowFilesAsync({
