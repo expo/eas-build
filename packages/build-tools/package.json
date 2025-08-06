@@ -51,7 +51,8 @@
     "resolve-from": "^5.0.0",
     "retry": "^0.13.1",
     "semver": "^7.6.2",
-    "tar": "^7.4.3"
+    "tar": "^7.4.3",
+    "yaml": "^2.8.1"
   },
   "devDependencies": {
     "@expo/repack-app": "~0.2.5",
