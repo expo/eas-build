@@ -1,6 +1,5 @@
 import path from 'path';
 
-import { RudderStack } from '@expo/turtle-common';
 import { readJson, readFile } from 'fs-extra';
 import { BuildContext } from '@expo/build-tools';
 import { BuildJob, EnvironmentSecret, Platform, Workflow } from '@expo/eas-build-job';
@@ -12,6 +11,7 @@ import semver from 'semver';
 
 import config from '../config';
 import sentry from '../sentry';
+import * as RudderStack from './rudderstack';
 import { maybeStringBase64Decode, simpleSecretsWhitelist } from '../secrets';
 
 export enum Event {
