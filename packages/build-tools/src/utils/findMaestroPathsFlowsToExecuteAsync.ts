@@ -15,13 +15,13 @@ type FlowConfig = z.infer<typeof FlowConfigSchema>;
 
 export async function findMaestroPathsFlowsToExecuteAsync({
   absoluteFlowPath,
-  includeTags = [],
-  excludeTags = [],
+  includeTags,
+  excludeTags,
   logger,
 }: {
   absoluteFlowPath: string;
-  includeTags?: string[];
-  excludeTags?: string[];
+  includeTags: string[] | undefined;
+  excludeTags: string[] | undefined;
   logger: bunyan;
 }): Promise<string[]> {
   // If it's a file, just return it (no validation needed)
@@ -50,14 +50,14 @@ export async function findMaestroPathsFlowsToExecuteAsync({
   }
 
   logger.info(
-    `Filtering flows by tags. Tags to include: ${includeTags.map((tag) => JSON.stringify(tag)).join(', ')}. Tags to exclude: ${excludeTags.map((tag) => JSON.stringify(tag)).join(', ')}.`
+    `Filtering flows by tags. Tags to include: ${JSON.stringify(includeTags)}. Tags to exclude: ${JSON.stringify(excludeTags)}.`
   );
   const filteredByTags = flows.filter(({ config }) => {
     const tags = config?.tags ?? [];
     const shouldInclude = matchesTags({
       flowTags: tags,
-      includeTags,
-      excludeTags,
+      includeTags: includeTags ?? [],
+      excludeTags: excludeTags ?? [],
     });
 
     logger.info(

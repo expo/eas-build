@@ -23,6 +23,7 @@ import {
   AndroidVirtualDeviceName,
 } from '../../utils/AndroidEmulatorUtils';
 import { PlatformToProperNounMap } from '../../utils/strings';
+import { findMaestroPathsFlowsToExecuteAsync } from '../../utils/findMaestroPathsFlowsToExecuteAsync';
 
 export function createInternalEasMaestroTestFunction(ctx: CustomBuildContext): BuildFunction {
   return new BuildFunction({
@@ -99,6 +100,23 @@ export function createInternalEasMaestroTestFunction(ctx: CustomBuildContext): B
           Object.fromEntries(Object.entries(_inputs).map(([key, value]) => [key, value.value]))
         );
 
+      const flowPathsToExecute: string[] = [];
+      for (const flowPath of flow_paths) {
+        stepCtx.logger.info(`Finding flows to execute in ${flowPath}...`);
+        const flowPaths = await findMaestroPathsFlowsToExecuteAsync({
+          absoluteFlowPath: flowPath,
+          logger: stepCtx.logger,
+          includeTags: include_tags ? include_tags.split(',') : undefined,
+          excludeTags: exclude_tags ? exclude_tags.split(',') : undefined,
+        });
+        if (flowPaths.length === 0) {
+          stepCtx.logger.warn(`No flows to execute in ${flowPath}.`);
+          continue;
+        }
+        stepCtx.logger.info(`Found:\n- ${flowPaths.join('\n- ')}`);
+        flowPathsToExecute.push(...flowPaths);
+      }
+
       // TODO: Add support for shards. (Shouldn't be too difficult.)
       if (shards > 1) {
         stepCtx.logger.warn(
@@ -173,7 +191,7 @@ export function createInternalEasMaestroTestFunction(ctx: CustomBuildContext): B
 
       const failedFlows: string[] = [];
 
-      for (const [flowIndex, flowPath] of flow_paths.entries()) {
+      for (const [flowIndex, flowPath] of flowPathsToExecute.entries()) {
         stepCtx.logger.info('');
 
         // If output_format is empty or noop, we won't use this.
@@ -215,8 +233,6 @@ export function createInternalEasMaestroTestFunction(ctx: CustomBuildContext): B
 
                   const [command, ...args] = getMaestroTestCommand({
                     flow_path: flowPath,
-                    include_tags,
-                    exclude_tags,
                     output_format,
                     output_path: outputPath,
                   });
@@ -339,35 +355,19 @@ export function createInternalEasMaestroTestFunction(ctx: CustomBuildContext): B
 
 export function getMaestroTestCommand(params: {
   flow_path: string;
-  include_tags: string | undefined;
-  exclude_tags: string | undefined;
   output_format: string | undefined;
   /** Unused if `output_format` is undefined */
   output_path: string;
 }): [command: string, ...args: string[]] {
-  let includeTagsFlag: string[] = [];
-  if (typeof params.include_tags === 'string') {
-    includeTagsFlag = [`--include-tags`, params.include_tags];
-  }
-
-  let excludeTagsFlag: string[] = [];
-  if (typeof params.exclude_tags === 'string') {
-    excludeTagsFlag = [`--exclude-tags`, params.exclude_tags];
-  }
-
   let outputFormatFlags: string[] = [];
   if (params.output_format) {
     outputFormatFlags = [`--format`, params.output_format, `--output`, params.output_path];
   }
 
-  return [
-    'maestro',
-    'test',
-    ...includeTagsFlag,
-    ...excludeTagsFlag,
-    ...outputFormatFlags,
-    params.flow_path,
-  ] as [command: string, ...args: string[]];
+  return ['maestro', 'test', ...outputFormatFlags, params.flow_path] as [
+    command: string,
+    ...args: string[],
+  ];
 }
 
 const MaestroOutputFormatToExtensionMap: Record<string, string | undefined> = {

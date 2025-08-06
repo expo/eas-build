@@ -4,12 +4,19 @@ import * as path from 'node:path';
 import bunyan from 'bunyan';
 import spawnAsync from '@expo/spawn-async';
 
-import { findMaestroPathsFlowsToExecuteAsync } from '../utils/MaestroWorkflowExecutionPlanner';
-import { createMockLogger } from '../__tests__/utils/logger';
+import { findMaestroPathsFlowsToExecuteAsync } from '../findMaestroPathsFlowsToExecuteAsync';
+import { createMockLogger } from '../../__tests__/utils/logger';
 
 jest.unmock('node:fs');
+jest.setTimeout(15000);
 
-describe('MaestroWorkflowExecutionPlanner Integration Tests', () => {
+/**
+ *
+ * You need to have a Simulator running to run these tests.
+ *
+ */
+
+describe('findMaestroPathsFlowsToExecuteAsync', () => {
   const fixturesDir = path.join(__dirname, 'fixtures', 'maestro-flows');
   const singleFileDir = path.join(__dirname, 'fixtures', 'single-file');
 
@@ -20,7 +27,7 @@ describe('MaestroWorkflowExecutionPlanner Integration Tests', () => {
   });
 
   // Helper function to run maestro test and determine which flows it executed
-  // by parsing the console.log output from our evalScript commands
+  // by parsing the output
   async function getMaestroFlowList(
     flowPath: string,
     includeTags: string[] = [],
@@ -37,14 +44,12 @@ describe('MaestroWorkflowExecutionPlanner Integration Tests', () => {
     }
 
     try {
-      // Run maestro - it should execute our evalScript commands and log the flow names
       const result = await spawnAsync('maestro', args, {
         stdio: 'pipe',
       });
 
       return parseMaestroExecutedFlows(result.stdout + result.stderr);
     } catch (error: any) {
-      // Even if maestro fails, we might still get some output
       const output = (error.stdout || '') + (error.stderr || '') + (error.message || '');
       return parseMaestroExecutedFlows(output);
     }
