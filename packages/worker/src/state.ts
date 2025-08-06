@@ -1,5 +1,6 @@
 import { errors } from '@expo/eas-build-job';
-import { WorkerMessage, Worker, LauncherMessage } from '@expo/turtle-common';
+import { WorkerMessage, LauncherMessage } from '@expo/turtle-common';
+import { Worker } from './external/turtle';
 
 type FinalStatus = Worker.Status.SUCCESS | Worker.Status.ERROR | Worker.Status.ABORTED;
 

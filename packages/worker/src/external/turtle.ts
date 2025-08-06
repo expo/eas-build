@@ -1,7 +1,17 @@
 // keep in sync with BuildResourceClass enum here
 // https://github.com/expo/universe/blob/main/server/www/src/data/entities/turtlebuild/TurtleBuildConstants.ts
 
+import { GCS } from '@expo/build-tools';
 import { Platform } from '@expo/eas-build-job';
+import { Environment } from '../config';
+import { randomUUID } from 'crypto';
+
+export enum BuildPriority {
+  LOW = 'low',
+  NORMAL = 'normal',
+  NORMAL_PLUS = 'normal-plus',
+  HIGH = 'high',
+}
 
 // after adding new resource class
 export enum ResourceClass {
@@ -40,3 +50,70 @@ export const androidImagesWithJavaVersionLowerThen11 = [
   'ubuntu-22.04-jdk-11-ndk-r21e',
   'ubuntu-22.04-jdk-11-ndk-r23b',
 ];
+
+export namespace Worker {
+  export enum Status {
+    NEW = 'new',
+    IN_PROGRESS = 'in-progress',
+    SUCCESS = 'success',
+    ERROR = 'error',
+    ABORTED = 'aborted',
+  }
+
+  type JobRunWorkerRuntimeConfig = {
+    gcsSignedUploadUrlForLogs: GCS.SignedUrl;
+
+    nodeJsCacheUrl: string | undefined;
+    npmCacheUrl: string | undefined;
+    mavenCacheUrl: string | undefined;
+    cocoapodsCacheUrl: string | undefined;
+    runMetricsServer: boolean;
+    resourceClass: ResourceClass;
+
+    type: 'jobRun';
+    buildId: string;
+    priority: BuildPriority;
+  };
+
+  type BuildWorkerRuntimeConfig = {
+    gcsSignedUploadUrlForApplicationArchive: GCS.SignedUrl | null;
+    gcsSignedUploadUrlForBuildArtifacts: GCS.SignedUrl | null;
+    gcsSignedUploadUrlForLogs: GCS.SignedUrl;
+    gcsSignedUploadUrlForXcodeBuildLogs?: GCS.SignedUrl;
+    gcsSignedUploadUrlForBuildCache?: GCS.SignedUrl;
+    gcsSignedBuildCacheDownloadUrl?: string;
+
+    nodeJsCacheUrl: string | undefined;
+    npmCacheUrl: string | undefined;
+    mavenCacheUrl: string | undefined;
+    cocoapodsCacheUrl: string | undefined;
+    runMetricsServer: boolean;
+    resourceClass: ResourceClass;
+
+    type?: never;
+    buildId: string;
+    priority: BuildPriority;
+  };
+
+  export type RuntimeConfig = BuildWorkerRuntimeConfig | JobRunWorkerRuntimeConfig;
+
+  export type RuntimeConfigWithoutCacheUrls =
+    | Omit<
+        BuildWorkerRuntimeConfig,
+        'nodeJsCacheUrl' | 'npmCacheUrl' | 'mavenCacheUrl' | 'cocoapodsCacheUrl'
+      >
+    | Omit<
+        JobRunWorkerRuntimeConfig,
+        'nodeJsCacheUrl' | 'npmCacheUrl' | 'mavenCacheUrl' | 'cocoapodsCacheUrl'
+      >;
+}
+
+export function createArtifactGCSKeyPrefix({
+  environment,
+  accountId,
+}: {
+  environment: Environment;
+  accountId: string;
+}): string {
+  return `${environment}/${accountId}/${randomUUID()}`;
+}
