@@ -6,10 +6,10 @@ import tar from 'tar';
 import { BuildContext, GCS } from '@expo/build-tools';
 import { asyncResult } from '@expo/results';
 import { z } from 'zod';
-import { TurtleFetchError, turtleFetch } from './utils/turtleFetch';
 import { ArchiveSourceType } from '@expo/eas-build-job';
 import nullthrows from 'nullthrows';
 
+import { TurtleFetchError, turtleFetch } from './utils/turtleFetch';
 import config from './config';
 import { Analytics, Event } from './external/analytics';
 import sentry from './sentry';

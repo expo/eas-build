@@ -1,6 +1,8 @@
 // keep in sync with BuildResourceClass enum here
 // https://github.com/expo/universe/blob/main/server/www/src/data/entities/turtlebuild/TurtleBuildConstants.ts
 
+import { randomUUID } from 'crypto';
+
 import { GCS } from '@expo/build-tools';
 import {
   BuildJob,
@@ -11,8 +13,8 @@ import {
   Metadata,
   Platform,
 } from '@expo/eas-build-job';
+
 import { Environment } from '../config';
-import { randomUUID } from 'crypto';
 
 export enum BuildPriority {
   LOW = 'low',

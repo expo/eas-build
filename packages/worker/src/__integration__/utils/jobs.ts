@@ -1,3 +1,5 @@
+import { randomUUID } from 'crypto';
+
 import {
   Android,
   ArchiveSourceType,
@@ -7,7 +9,6 @@ import {
   Platform,
   Workflow,
 } from '@expo/eas-build-job';
-import { randomUUID } from 'crypto';
 
 const androidCredentials: Android.Keystore = {
   dataBase64: 'MjEzNwo=',

@@ -1,5 +1,6 @@
-import { bunyan } from '@expo/logger';
 import { setTimeout } from 'timers/promises';
+
+import { bunyan } from '@expo/logger';
 
 export interface RetryOptions {
   retries: number;

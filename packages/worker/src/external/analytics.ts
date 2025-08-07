@@ -11,8 +11,9 @@ import semver from 'semver';
 
 import config from '../config';
 import sentry from '../sentry';
-import * as RudderStack from './rudderstack';
 import { maybeStringBase64Decode, simpleSecretsWhitelist } from '../secrets';
+
+import * as RudderStack from './rudderstack';
 
 export enum Event {
   WORKER_BUILD_START = 'build turtle worker build start',

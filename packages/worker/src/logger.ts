@@ -1,10 +1,10 @@
 import { Transform, TransformCallback, Writable } from 'stream';
 
 import { LoggerLevel, createLogger } from '@expo/logger';
-import { BuildLogger as CommonBuildLogger, createGCSBuildLogger } from './utils/logger';
 import { LogBuffer } from '@expo/build-tools';
 import { EnvironmentSecret } from '@expo/eas-build-job';
 
+import { BuildLogger as CommonBuildLogger, createGCSBuildLogger } from './utils/logger';
 import config from './config';
 import { maybeStringBase64Decode, simpleSecretsWhitelist } from './secrets';
 

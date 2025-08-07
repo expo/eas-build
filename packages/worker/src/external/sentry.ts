@@ -3,6 +3,7 @@ import * as sentry from '@sentry/node';
 import Flatted from 'flatted';
 import { ZodError } from 'zod';
 import Router from 'koa-router';
+
 import { boomify } from '../utils/boom';
 
 interface SentryOptions {

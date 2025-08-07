@@ -4,8 +4,8 @@ import { BuildContext, GCS } from '@expo/build-tools';
 import { vol } from 'memfs';
 import { Job } from '@expo/eas-build-job';
 import { Response } from 'node-fetch';
-import { turtleFetch } from '../utils/turtleFetch';
 
+import { turtleFetch } from '../utils/turtleFetch';
 import {
   uploadApplicationArchiveAsync,
   uploadBuildArtifactsAsync,
