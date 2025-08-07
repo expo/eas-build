@@ -14,7 +14,9 @@ const FlowConfigSchema = z.object({
 
 const WorkspaceConfigSchema = z.object({
   flows: z.array(z.string()).optional(),
-  // Ignore other fields for now (includeTags, excludeTags, etc.)
+  executionOrder: z.record(z.unknown()).optional(),
+  includeTags: z.array(z.string()).optional(),
+  excludeTags: z.array(z.string()).optional(),
 });
 
 type FlowConfig = z.infer<typeof FlowConfigSchema>;
@@ -23,8 +25,8 @@ type WorkspaceConfig = z.infer<typeof WorkspaceConfigSchema>;
 export async function findMaestroPathsFlowsToExecuteAsync({
   workingDirectory,
   flowPath,
-  includeTags,
-  excludeTags,
+  includeTags: _includeTags,
+  excludeTags: _excludeTags,
   logger,
 }: {
   workingDirectory: string;
@@ -54,6 +56,10 @@ export async function findMaestroPathsFlowsToExecuteAsync({
   });
   logger.info(`Found workspace config: ${JSON.stringify(workspaceConfig)}`);
 
+  if (workspaceConfig?.executionOrder) {
+    logger.warn(`Execution order is not supported yet. Ignoring.`);
+  }
+
   logger.info(`Searching for flow files...`);
   const { flows } = await findAndParseFlowFilesAsync({
     dirPath: absoluteFlowPath,
@@ -69,7 +75,10 @@ export async function findMaestroPathsFlowsToExecuteAsync({
     return [];
   }
 
-  if (!includeTags && !excludeTags) {
+  const includeTags = [...(_includeTags ?? []), ...(workspaceConfig?.includeTags ?? [])];
+  const excludeTags = [...(_excludeTags ?? []), ...(workspaceConfig?.excludeTags ?? [])];
+
+  if (includeTags.length === 0 && excludeTags.length === 0) {
     logger.info(`No tags provided, returning all flows.`);
     return flows.map(({ path }) => path);
   }
@@ -81,8 +90,8 @@ export async function findMaestroPathsFlowsToExecuteAsync({
     .filter(({ config, path: flowPath }) => {
       const shouldInclude = matchesTags({
         flowTags: config?.tags ?? [],
-        includeTags: includeTags ?? [],
-        excludeTags: excludeTags ?? [],
+        includeTags,
+        excludeTags,
       });
 
       logger.info(

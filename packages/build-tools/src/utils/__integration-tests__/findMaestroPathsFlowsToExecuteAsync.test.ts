@@ -314,6 +314,61 @@ describe('findMaestroPathsFlowsToExecuteAsync', () => {
     });
   });
 
+  describe('config.yaml includeTags/excludeTags merging', () => {
+    const configTagsDir = path.join(__dirname, 'fixtures', 'config-tags');
+
+    it('should respect includeTags/excludeTags from config.yaml when no CLI tags provided', async () => {
+      const maestroFlows = await getMaestroFlowList(configTagsDir);
+      const ourFlows = await getOurFlowList(configTagsDir);
+
+      expect(ourFlows).toEqual(maestroFlows);
+
+      // Based on fixtures, only flows matching config includeTags and not matching excludeTags should be included
+      expect(ourFlows).toContain('flow-inc-only');
+      expect(ourFlows).not.toContain('flow-exc-only');
+      expect(ourFlows).not.toContain('flow-inc-and-exc');
+      expect(ourFlows).not.toContain('flow-neutral');
+      expect(ourFlows).not.toContain('flow-cli-exclude');
+      expect(ourFlows).not.toContain('flow-cli-include');
+    });
+
+    it('should merge CLI includeTags with config includeTags', async () => {
+      const maestroFlows = await getMaestroFlowList(configTagsDir, ['cliInclude']);
+      const ourFlows = await getOurFlowList(configTagsDir, ['cliInclude']);
+
+      expect(ourFlows).toEqual(maestroFlows);
+      // Now flows with either cfgInclude or cliInclude should be included, minus excluded ones
+      expect(ourFlows).toContain('flow-inc-only');
+      expect(ourFlows).toContain('flow-cli-include');
+      expect(ourFlows).not.toContain('flow-exc-only');
+      expect(ourFlows).not.toContain('flow-inc-and-exc');
+      expect(ourFlows).not.toContain('flow-cli-exclude');
+    });
+
+    it('should merge CLI excludeTags with config excludeTags', async () => {
+      const maestroFlows = await getMaestroFlowList(configTagsDir, [], ['cliExclude']);
+      const ourFlows = await getOurFlowList(configTagsDir, [], ['cliExclude']);
+
+      expect(ourFlows).toEqual(maestroFlows);
+      // Exclude both cfgExclude and cliExclude
+      expect(ourFlows).toContain('flow-inc-only');
+      expect(ourFlows).not.toContain('flow-exc-only');
+      expect(ourFlows).not.toContain('flow-cli-exclude');
+      expect(ourFlows).not.toContain('flow-inc-and-exc');
+    });
+
+    it('should apply both merged include and exclude tags correctly', async () => {
+      const maestroFlows = await getMaestroFlowList(configTagsDir, ['cfgInclude'], ['cfgExclude']);
+      const ourFlows = await getOurFlowList(configTagsDir, ['cfgInclude'], ['cfgExclude']);
+
+      expect(ourFlows).toEqual(maestroFlows);
+      expect(ourFlows).toContain('flow-inc-only');
+      expect(ourFlows).not.toContain('flow-exc-only');
+      expect(ourFlows).not.toContain('flow-inc-and-exc');
+      expect(ourFlows).not.toContain('flow-neutral');
+    });
+  });
+
   describe('backward compatibility (no config.yaml)', () => {
     it('should use default "*" pattern when no config.yaml exists', async () => {
       const maestroFlows = await getMaestroFlowList(noConfigFlowsDir);
