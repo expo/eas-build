@@ -54,7 +54,7 @@ export async function findMaestroPathsFlowsToExecuteAsync({
     workingDirectory,
     logger,
   });
-  logger.info(`Found workspace config: ${JSON.stringify(workspaceConfig)}`);
+  logger.info(`Using workspace config: ${JSON.stringify(workspaceConfig)}`);
 
   if (workspaceConfig?.executionOrder) {
     logger.warn(`Execution order is not supported yet. Ignoring.`);
@@ -114,12 +114,19 @@ async function findAndParseWorkspaceConfigAsync({
   workingDirectory: string;
   logger: bunyan;
 }): Promise<WorkspaceConfig | null> {
-  const configPaths = [path.join(dirPath, 'config.yaml'), path.join(dirPath, 'config.yml')];
+  const configPaths = await fg(['config.yaml', 'config.yml'], {
+    cwd: dirPath,
+    absolute: true,
+  });
+
+  if (configPaths.length === 0) {
+    logger.info(`No workspace config found in: ${path.relative(workingDirectory, dirPath)}`);
+    return null;
+  }
 
   for (const configPath of configPaths) {
     try {
       const content = await fs.readFile(configPath, 'utf-8');
-      logger.info(`Found workspace config: ${path.relative(workingDirectory, configPath)}`);
       const configDoc = yaml.parse(content);
       if (!configDoc) {
         logger.warn(
@@ -127,9 +134,13 @@ async function findAndParseWorkspaceConfigAsync({
         );
         continue;
       }
+      logger.info(`Using workspace config from: ${path.relative(workingDirectory, configPath)}`);
       return WorkspaceConfigSchema.parse(configDoc);
-    } catch {
-      // File doesn't exist or parsing failed, continue to next
+    } catch (err) {
+      logger.warn(
+        { err },
+        `Failed to parse workspace config: ${path.relative(workingDirectory, configPath)}`
+      );
       continue;
     }
   }
