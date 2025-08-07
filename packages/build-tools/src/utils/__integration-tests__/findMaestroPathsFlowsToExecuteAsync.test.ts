@@ -7,7 +7,10 @@ import spawnAsync from '@expo/spawn-async';
 import { findMaestroPathsFlowsToExecuteAsync } from '../findMaestroPathsFlowsToExecuteAsync';
 import { createMockLogger } from '../../__tests__/utils/logger';
 
+// We use node:fs
 jest.unmock('node:fs');
+// and fg uses fs.
+jest.unmock('fs');
 jest.setTimeout(15000);
 
 /**
@@ -19,6 +22,8 @@ jest.setTimeout(15000);
 describe('findMaestroPathsFlowsToExecuteAsync', () => {
   const fixturesDir = path.join(__dirname, 'fixtures', 'maestro-flows');
   const singleFileDir = path.join(__dirname, 'fixtures', 'single-file');
+  const configFlowsDir = path.join(__dirname, 'fixtures', 'config-flows');
+  const noConfigFlowsDir = path.join(__dirname, 'fixtures', 'no-config-flows');
 
   let logger: bunyan;
 
@@ -250,6 +255,92 @@ describe('findMaestroPathsFlowsToExecuteAsync', () => {
       const taggedFlows = await getOurFlowList(fixturesDir, ['auth']);
       expect(taggedFlows).not.toContain('no-tags-flow');
       expect(taggedFlows).not.toContain('basic-flow');
+    });
+  });
+
+  describe('config.yaml flow patterns', () => {
+    it('should discover flows using config.yaml patterns', async () => {
+      const maestroFlows = await getMaestroFlowList(configFlowsDir);
+      const ourFlows = await getOurFlowList(configFlowsDir);
+
+      expect(ourFlows).toEqual(maestroFlows);
+
+      // Verify specific files are included based on config patterns
+      expect(ourFlows).toContain('login'); // features/auth/login.yaml
+      expect(ourFlows).toContain('logout'); // features/auth/logout.yaml
+      expect(ourFlows).toContain('navigation'); // features/core/navigation.yaml
+      expect(ourFlows).toContain('api.spec'); // specs/api.spec.yaml
+      expect(ourFlows).toContain('ui.spec'); // specs/ui.spec.yaml
+
+      // Verify top-level file is excluded (not matching patterns)
+      expect(ourFlows).not.toContain('ignored-top-level');
+    });
+
+    it('should handle tag filtering with config.yaml patterns', async () => {
+      const authFlows = await getOurFlowList(configFlowsDir, ['auth']);
+      const maestroAuthFlows = await getMaestroFlowList(configFlowsDir, ['auth']);
+
+      expect(authFlows).toEqual(maestroAuthFlows);
+      expect(authFlows).toContain('login');
+      expect(authFlows).toContain('logout');
+      expect(authFlows).not.toContain('navigation');
+      expect(authFlows).not.toContain('api.spec');
+    });
+
+    it('should handle exclude tags with config.yaml patterns', async () => {
+      const nonSmokeFlows = await getOurFlowList(configFlowsDir, [], ['smoke']);
+      const maestroNonSmokeFlows = await getMaestroFlowList(configFlowsDir, [], ['smoke']);
+
+      expect(nonSmokeFlows).toEqual(maestroNonSmokeFlows);
+      expect(nonSmokeFlows).not.toContain('login'); // has smoke tag
+      expect(nonSmokeFlows).not.toContain('navigation'); // has smoke tag
+      expect(nonSmokeFlows).toContain('logout'); // no smoke tag
+      expect(nonSmokeFlows).toContain('api.spec'); // no smoke tag
+    });
+
+    it('should handle multiple include tags with config.yaml patterns', async () => {
+      const multiTagFlows = await getOurFlowList(configFlowsDir, ['auth', 'integration']);
+      const maestroMultiTagFlows = await getMaestroFlowList(configFlowsDir, [
+        'auth',
+        'integration',
+      ]);
+
+      expect(multiTagFlows).toEqual(maestroMultiTagFlows);
+      expect(multiTagFlows).toContain('login'); // auth tag
+      expect(multiTagFlows).toContain('logout'); // auth tag
+      expect(multiTagFlows).toContain('api.spec'); // integration tag
+      expect(multiTagFlows).toContain('ui.spec'); // integration tag
+      expect(multiTagFlows).not.toContain('navigation'); // only core/smoke tags
+    });
+  });
+
+  describe('backward compatibility (no config.yaml)', () => {
+    it('should use default "*" pattern when no config.yaml exists', async () => {
+      const maestroFlows = await getMaestroFlowList(noConfigFlowsDir);
+      const ourFlows = await getOurFlowList(noConfigFlowsDir);
+
+      expect(ourFlows).toEqual(maestroFlows);
+
+      // Should include top-level files
+      expect(ourFlows).toContain('top-level-flow');
+
+      // Should exclude subdirectory files (default "*" behavior)
+      expect(ourFlows).not.toContain('nested-flow');
+    });
+
+    it('should handle tag filtering without config.yaml', async () => {
+      const basicFlows = await getOurFlowList(noConfigFlowsDir, ['basic']);
+      const maestroBasicFlows = await getMaestroFlowList(noConfigFlowsDir, ['basic']);
+
+      expect(basicFlows).toEqual(maestroBasicFlows);
+      expect(basicFlows).toContain('top-level-flow');
+
+      const noIncludeTagsFlows = await getOurFlowList(noConfigFlowsDir, []);
+      const maestroNoIncludeTagsFlows = await getMaestroFlowList(noConfigFlowsDir, []);
+
+      expect(noIncludeTagsFlows).toEqual(maestroNoIncludeTagsFlows);
+      expect(noIncludeTagsFlows).toContain('top-level-flow');
+      expect(noIncludeTagsFlows).not.toContain('nested-flow');
     });
   });
 });
