@@ -171,6 +171,7 @@ describe('Ios.JobSchema', () => {
           ref_name: 'master',
           ref_type: 'branch',
           commit_message: 'commit message',
+          triggering_actor: 'johnny',
         },
         workflow: {
           id: randomUUID(),

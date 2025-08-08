@@ -187,6 +187,7 @@ export const StaticWorkflowInterpolationContextZ = z.object({
   inputs: z.record(z.string(), z.union([z.string(), z.number(), z.boolean()])).optional(),
   github: z
     .object({
+      triggering_actor: z.string().optional(),
       event_name: z.enum(['push', 'pull_request', 'workflow_dispatch', 'schedule']),
       sha: z.string(),
       ref: z.string(),
