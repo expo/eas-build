@@ -10,6 +10,7 @@ import { z } from 'zod';
 import { bunyan } from '@expo/logger';
 
 import { retryAsync } from './retry';
+import FastGlob from 'fast-glob';
 
 /** Android Virtual Device is the device we run. */
 export type AndroidVirtualDeviceName = string & z.BRAND<'AndroidVirtualDeviceName'>;
@@ -154,6 +155,13 @@ export namespace AndroidEmulatorUtils {
       verbatimSymlinks: true,
       force: true,
     });
+
+    const lockfiles = await FastGlob('./**/*.lock', {
+      cwd: `${env.HOME}/.android/avd/${destinationDeviceName}.avd`,
+      absolute: true,
+    });
+
+    await Promise.all(lockfiles.map((lockfile) => fs.promises.rm(lockfile, { force: true })));
 
     const filesToReplaceDeviceNameIn = // TODO: Test whether we need to use `spawnAsync` here.
       (
