@@ -14,6 +14,7 @@ import spawn, { SpawnPromise, SpawnResult } from '@expo/turtle-spawn';
 import { PipeMode, bunyan } from '@expo/logger';
 import { Result, asyncResult, result } from '@expo/results';
 import { GenericArtifactType } from '@expo/eas-build-job';
+import FastGlob from 'fast-glob';
 
 import { CustomBuildContext } from '../../customBuildContext';
 import { IosSimulatorName, IosSimulatorUtils } from '../../utils/IosSimulatorUtils';
@@ -24,6 +25,7 @@ import {
 } from '../../utils/AndroidEmulatorUtils';
 import { PlatformToProperNounMap } from '../../utils/strings';
 import { findMaestroPathsFlowsToExecuteAsync } from '../../utils/findMaestroPathsFlowsToExecuteAsync';
+import { retryAsync } from '../../utils/retry';
 
 export function createInternalEasMaestroTestFunction(ctx: CustomBuildContext): BuildFunction {
   return new BuildFunction({
@@ -178,6 +180,28 @@ export function createInternalEasMaestroTestFunction(ctx: CustomBuildContext): B
           await spawnAsync('adb', ['-s', serialId, 'emu', 'kill'], {
             stdio: 'pipe',
           });
+
+          try {
+            await retryAsync(
+              async () => {
+                const lockfiles = await FastGlob('**/*.lock', {
+                  cwd: `${env.HOME}/.android/avd/${avdName}.avd`,
+                });
+
+                if (lockfiles.length === 0) {
+                  throw new Error(`Android Virtual Device (${avdName}) is still busy.`);
+                }
+              },
+              {
+                retryOptions: {
+                  retries: 20,
+                  retryIntervalMs: 1_000,
+                },
+              }
+            );
+          } catch (err) {
+            stepCtx.logger.warn({ err }, 'Android Virtual Device is still busy.');
+          }
 
           sourceDeviceIdentifier = avdName;
           break;
