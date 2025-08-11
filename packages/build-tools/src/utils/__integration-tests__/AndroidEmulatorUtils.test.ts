@@ -2,6 +2,7 @@ import fs from 'node:fs';
 import { setTimeout } from 'timers/promises';
 
 import spawn from '@expo/turtle-spawn';
+import { asyncResult } from '@expo/results';
 
 import {
   AndroidDeviceSerialId,
@@ -103,7 +104,7 @@ describe('AndroidEmulatorUtils', () => {
     expect(stdout).toContain('data');
 
     await spawn('adb', ['-s', serialId, 'emu', 'kill'], { env: process.env });
-    await emulatorPromise;
+    await asyncResult(emulatorPromise);
 
     const cloneDeviceName = (deviceName + '-clone') as AndroidVirtualDeviceName;
     await AndroidEmulatorUtils.cloneAsync({
@@ -132,7 +133,7 @@ describe('AndroidEmulatorUtils', () => {
       serialId,
       env: process.env,
     });
-    await emulatorPromiseClone;
+    await asyncResult(emulatorPromiseClone);
   }, 60_000);
 
   it('should work with screen recording', async () => {
@@ -179,6 +180,6 @@ describe('AndroidEmulatorUtils', () => {
       serialId,
       env: process.env,
     });
-    await emulatorPromise;
+    await asyncResult(emulatorPromise);
   }, 60_000);
 });

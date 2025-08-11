@@ -1,5 +1,6 @@
 import { BuildFunction, BuildStepInput, BuildStepInputValueTypeName } from '@expo/steps';
 import spawn from '@expo/turtle-spawn';
+import { asyncResult } from '@expo/results';
 
 import { retryAsync } from '../../utils/retry';
 import {
@@ -97,7 +98,8 @@ export function createStartAndroidEmulatorBuildFunction(): BuildFunction {
           env,
         });
         // Waiting for source emulator to shutdown.
-        await emulatorPromise;
+        // We don't care about resolved/rejected.
+        await asyncResult(emulatorPromise);
 
         for (let i = 0; i < count; i++) {
           const cloneIdentifier = `eas-simulator-${i + 1}` as AndroidVirtualDeviceName;
