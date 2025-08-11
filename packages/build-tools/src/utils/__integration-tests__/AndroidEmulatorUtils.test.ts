@@ -8,6 +8,7 @@ import {
   AndroidEmulatorUtils,
   AndroidVirtualDeviceName,
 } from '../AndroidEmulatorUtils';
+import { createMockLogger } from '../../__tests__/utils/logger';
 
 // We need to use real fs for cloning devices to work.
 jest.unmock('fs');
@@ -109,6 +110,7 @@ describe('AndroidEmulatorUtils', () => {
       sourceDeviceName: deviceName,
       destinationDeviceName: cloneDeviceName,
       env: process.env,
+      logger: createMockLogger({ logToConsole: true }),
     });
 
     const { serialId: serialIdClone, emulatorPromise: emulatorPromiseClone } =
