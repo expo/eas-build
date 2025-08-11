@@ -7,6 +7,7 @@ import path from 'node:path';
 // import { PipeMode } from '@expo/logger';
 import spawn, { SpawnPromise, SpawnResult } from '@expo/turtle-spawn';
 import { z } from 'zod';
+import { bunyan } from '@expo/logger';
 
 import { retryAsync } from './retry';
 
@@ -128,10 +129,12 @@ export namespace AndroidEmulatorUtils {
     sourceDeviceName,
     destinationDeviceName,
     env,
+    logger,
   }: {
     sourceDeviceName: AndroidVirtualDeviceName;
     destinationDeviceName: AndroidVirtualDeviceName;
     env: NodeJS.ProcessEnv;
+    logger: bunyan;
   }): Promise<void> {
     const cloneIniFile = `${env.HOME}/.android/avd/${destinationDeviceName}.ini`;
 
@@ -166,10 +169,14 @@ export namespace AndroidEmulatorUtils {
         .filter((file) => file !== '');
 
     for (const file of [...filesToReplaceDeviceNameIn, cloneIniFile]) {
-      const txtFile = await fs.promises.readFile(file, 'utf-8');
-      const replaceRegex = new RegExp(`${sourceDeviceName}`, 'g');
-      const updatedTxtFile = txtFile.replace(replaceRegex, destinationDeviceName);
-      await fs.promises.writeFile(file, updatedTxtFile);
+      try {
+        const txtFile = await fs.promises.readFile(file, 'utf-8');
+        const replaceRegex = new RegExp(`${sourceDeviceName}`, 'g');
+        const updatedTxtFile = txtFile.replace(replaceRegex, destinationDeviceName);
+        await fs.promises.writeFile(file, updatedTxtFile);
+      } catch (err) {
+        logger.warn({ err }, `Failed to replace device name in ${file}.`);
+      }
     }
   }
 

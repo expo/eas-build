@@ -106,6 +106,7 @@ export function createStartAndroidEmulatorBuildFunction(): BuildFunction {
             sourceDeviceName: deviceName,
             destinationDeviceName: cloneIdentifier,
             env,
+            logger,
           });
 
           logger.info('Starting emulator device');
