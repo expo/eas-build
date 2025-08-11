@@ -203,7 +203,11 @@ export namespace AndroidEmulatorUtils {
       {
         detached: true,
         stdio: 'inherit',
-        env,
+        env: {
+          ...env,
+          // We don't need to wait for emulator to exit gracefully.
+          ANDROID_EMULATOR_WAIT_TIME_BEFORE_KILL: '1',
+        },
       }
     );
     // If emulator fails to start, throw its error.
