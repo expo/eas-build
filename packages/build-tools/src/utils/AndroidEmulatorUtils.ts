@@ -4,13 +4,12 @@ import os from 'node:os';
 import { setTimeout } from 'node:timers/promises';
 import path from 'node:path';
 
-// import { PipeMode } from '@expo/logger';
-import spawn, { SpawnPromise, SpawnResult } from '@expo/turtle-spawn';
-import { z } from 'zod';
 import { bunyan } from '@expo/logger';
+import spawn, { SpawnPromise, SpawnResult } from '@expo/turtle-spawn';
+import FastGlob from 'fast-glob';
+import { z } from 'zod';
 
 import { retryAsync } from './retry';
-import FastGlob from 'fast-glob';
 
 /** Android Virtual Device is the device we run. */
 export type AndroidVirtualDeviceName = string & z.BRAND<'AndroidVirtualDeviceName'>;
