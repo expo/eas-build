@@ -437,6 +437,7 @@ async function withCleanDeviceAsync<TResult>({
         sourceDeviceName: sourceDeviceIdentifier as AndroidVirtualDeviceName,
         destinationDeviceName: localDeviceName as AndroidVirtualDeviceName,
         env,
+        logger,
       });
       logger.info(`Starting Android Emulator ${localDeviceName}...`);
       const { serialId } = await AndroidEmulatorUtils.startAsync({

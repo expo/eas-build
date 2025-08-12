@@ -2,12 +2,14 @@ import fs from 'node:fs';
 import { setTimeout } from 'timers/promises';
 
 import spawn from '@expo/turtle-spawn';
+import { asyncResult } from '@expo/results';
 
 import {
   AndroidDeviceSerialId,
   AndroidEmulatorUtils,
   AndroidVirtualDeviceName,
 } from '../AndroidEmulatorUtils';
+import { createMockLogger } from '../../__tests__/utils/logger';
 
 // We need to use real fs for cloning devices to work.
 jest.unmock('fs');
@@ -102,13 +104,14 @@ describe('AndroidEmulatorUtils', () => {
     expect(stdout).toContain('data');
 
     await spawn('adb', ['-s', serialId, 'emu', 'kill'], { env: process.env });
-    await emulatorPromise;
+    await asyncResult(emulatorPromise);
 
     const cloneDeviceName = (deviceName + '-clone') as AndroidVirtualDeviceName;
     await AndroidEmulatorUtils.cloneAsync({
       sourceDeviceName: deviceName,
       destinationDeviceName: cloneDeviceName,
       env: process.env,
+      logger: createMockLogger({ logToConsole: true }),
     });
 
     const { serialId: serialIdClone, emulatorPromise: emulatorPromiseClone } =
@@ -130,7 +133,7 @@ describe('AndroidEmulatorUtils', () => {
       serialId,
       env: process.env,
     });
-    await emulatorPromiseClone;
+    await asyncResult(emulatorPromiseClone);
   }, 60_000);
 
   it('should work with screen recording', async () => {
@@ -177,6 +180,6 @@ describe('AndroidEmulatorUtils', () => {
       serialId,
       env: process.env,
     });
-    await emulatorPromise;
+    await asyncResult(emulatorPromise);
   }, 60_000);
 });

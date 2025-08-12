@@ -166,11 +166,6 @@ async function findAndParseFlowFilesAsync({
   const flowPatterns = workspaceConfig?.flows ?? ['*'];
   logger.info(`Using flow patterns: ${JSON.stringify(flowPatterns)}`);
 
-  logger.info(`Searching for flows with patterns: ${JSON.stringify(flowPatterns)}`, {
-    cwd: dirPath,
-    fg: flowPatterns,
-  });
-
   // Use fast-glob to find matching files
   const matchedFiles = await fg(flowPatterns, {
     cwd: dirPath,

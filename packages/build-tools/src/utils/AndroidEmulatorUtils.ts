@@ -4,8 +4,9 @@ import os from 'node:os';
 import { setTimeout } from 'node:timers/promises';
 import path from 'node:path';
 
-// import { PipeMode } from '@expo/logger';
+import { bunyan } from '@expo/logger';
 import spawn, { SpawnPromise, SpawnResult } from '@expo/turtle-spawn';
+import FastGlob from 'fast-glob';
 import { z } from 'zod';
 
 import { retryAsync } from './retry';
@@ -128,10 +129,12 @@ export namespace AndroidEmulatorUtils {
     sourceDeviceName,
     destinationDeviceName,
     env,
+    logger,
   }: {
     sourceDeviceName: AndroidVirtualDeviceName;
     destinationDeviceName: AndroidVirtualDeviceName;
     env: NodeJS.ProcessEnv;
+    logger: bunyan;
   }): Promise<void> {
     const cloneIniFile = `${env.HOME}/.android/avd/${destinationDeviceName}.ini`;
 
@@ -152,6 +155,13 @@ export namespace AndroidEmulatorUtils {
       force: true,
     });
 
+    const lockfiles = await FastGlob('./**/*.lock', {
+      cwd: `${env.HOME}/.android/avd/${destinationDeviceName}.avd`,
+      absolute: true,
+    });
+
+    await Promise.all(lockfiles.map((lockfile) => fs.promises.rm(lockfile, { force: true })));
+
     const filesToReplaceDeviceNameIn = // TODO: Test whether we need to use `spawnAsync` here.
       (
         await spawn('grep', [
@@ -166,10 +176,14 @@ export namespace AndroidEmulatorUtils {
         .filter((file) => file !== '');
 
     for (const file of [...filesToReplaceDeviceNameIn, cloneIniFile]) {
-      const txtFile = await fs.promises.readFile(file, 'utf-8');
-      const replaceRegex = new RegExp(`${sourceDeviceName}`, 'g');
-      const updatedTxtFile = txtFile.replace(replaceRegex, destinationDeviceName);
-      await fs.promises.writeFile(file, updatedTxtFile);
+      try {
+        const txtFile = await fs.promises.readFile(file, 'utf-8');
+        const replaceRegex = new RegExp(`${sourceDeviceName}`, 'g');
+        const updatedTxtFile = txtFile.replace(replaceRegex, destinationDeviceName);
+        await fs.promises.writeFile(file, updatedTxtFile);
+      } catch (err) {
+        logger.warn({ err }, `Failed to replace device name in ${file}.`);
+      }
     }
   }
 
@@ -196,7 +210,11 @@ export namespace AndroidEmulatorUtils {
       {
         detached: true,
         stdio: 'inherit',
-        env,
+        env: {
+          ...env,
+          // We don't need to wait for emulator to exit gracefully.
+          ANDROID_EMULATOR_WAIT_TIME_BEFORE_KILL: '1',
+        },
       }
     );
     // If emulator fails to start, throw its error.
