@@ -195,7 +195,6 @@ export const StaticWorkflowInterpolationContextZ = z.object({
       ref_type: z.string(),
       commit_message: z.string().optional(),
       label: z.string().optional(),
-      pull_request: z.number().optional(),
       repository: z.string().optional(),
       repository_owner: z.string().optional(),
       event: z
@@ -209,6 +208,11 @@ export const StaticWorkflowInterpolationContextZ = z.object({
             .object({
               message: z.string(),
               id: z.string(),
+            })
+            .optional(),
+          pull_request: z
+            .object({
+              number: z.number(),
             })
             .optional(),
           schedule: z.string().optional(),
