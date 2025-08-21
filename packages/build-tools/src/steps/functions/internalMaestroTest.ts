@@ -1,6 +1,7 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import os from 'node:os';
+import { setTimeout } from 'node:timers/promises';
 
 import {
   BuildFunction,
@@ -178,6 +179,8 @@ export function createInternalEasMaestroTestFunction(ctx: CustomBuildContext): B
           await spawnAsync('adb', ['-s', serialId, 'emu', 'kill'], {
             stdio: 'pipe',
           });
+          // Waiting for emulator to get killed, see ANDROID_EMULATOR_WAIT_TIME_BEFORE_KILL.
+          await setTimeout(1000);
 
           sourceDeviceIdentifier = avdName;
           break;
@@ -280,7 +283,7 @@ export function createInternalEasMaestroTestFunction(ctx: CustomBuildContext): B
                 logger: stepCtx.logger,
                 artifact: {
                   // TODO(sjchmiela): Add metadata to artifacts so we don't need to encode flow path and attempt in the name.
-                  name: `Screen Recording (${flowPath})`,
+                  name: `Screen Recording (${flowIndex}-${path.basename(flowPath, path.extname(flowPath))})`,
                   paths: [recordingResult.value],
                   type: GenericArtifactType.OTHER,
                 },
