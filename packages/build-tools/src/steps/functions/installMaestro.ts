@@ -10,6 +10,7 @@ import {
   BuildStepGlobalContext,
   BuildStepInput,
   BuildStepInputValueTypeName,
+  BuildStepOutput,
 } from '@expo/steps';
 import spawn from '@expo/turtle-spawn';
 import { bunyan } from '@expo/logger';
@@ -26,7 +27,13 @@ export function createInstallMaestroBuildFunction(): BuildFunction {
         allowedValueTypeName: BuildStepInputValueTypeName.STRING,
       }),
     ],
-    fn: async ({ logger, global }, { inputs, env }) => {
+    outputProviders: [
+      BuildStepOutput.createProvider({
+        id: 'maestro_version',
+        required: false,
+      }),
+    ],
+    fn: async ({ logger, global }, { inputs, env, outputs }) => {
       const requestedMaestroVersion = inputs.maestro_version.value as string | undefined;
       const currentMaestroVersion = await getMaestroVersion({ env });
 
@@ -64,6 +71,7 @@ export function createInstallMaestroBuildFunction(): BuildFunction {
         }
 
         if (currentMaestroVersion) {
+          outputs.maestro_version.set(currentMaestroVersion);
           logger.info(`Maestro ${currentMaestroVersion} is ready.`);
         }
 
@@ -93,7 +101,10 @@ export function createInstallMaestroBuildFunction(): BuildFunction {
 
       // Skip installing if the input sets a specific Maestro version to install
       // and it is already installed which happens when developing on a local computer.
-      if (!currentMaestroVersion || requestedMaestroVersion !== currentMaestroVersion) {
+      if (
+        !currentMaestroVersion ||
+        (requestedMaestroVersion && requestedMaestroVersion !== currentMaestroVersion)
+      ) {
         await installMaestro({
           version: requestedMaestroVersion,
           global,
@@ -105,6 +116,7 @@ export function createInstallMaestroBuildFunction(): BuildFunction {
       const maestroVersion = await getMaestroVersion({ env });
       assert(maestroVersion, 'Failed to ensure Maestro is installed.');
       logger.info(`Maestro ${maestroVersion} is ready.`);
+      outputs.maestro_version.set(maestroVersion);
     },
   });
 }
@@ -149,7 +161,9 @@ async function installMaestro({
       env: {
         ...env,
         MAESTRO_DIR: maestroDir,
-        MAESTRO_VERSION: version,
+        // _Not_ providing MAESTRO_VERSION installs latest.
+        // MAESTRO_VERSION is used to interpolate the download URL like github.com/releases/cli-$MAESTRO_VERSION...
+        MAESTRO_VERSION: version === 'latest' ? undefined : version,
       },
     });
     // That's where Maestro installs binary as of February 2024
