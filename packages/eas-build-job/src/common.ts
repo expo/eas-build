@@ -215,6 +215,7 @@ export const StaticWorkflowInterpolationContextZ = z.object({
               number: z.number(),
             })
             .optional(),
+          number: z.number().optional(),
           schedule: z.string().optional(),
           inputs: z.record(z.string(), z.union([z.string(), z.number(), z.boolean()])).optional(),
         })
