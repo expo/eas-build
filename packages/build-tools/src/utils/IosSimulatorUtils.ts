@@ -137,6 +137,23 @@ export namespace IosSimulatorUtils {
         },
       }
     );
+
+    // Wait for data migration to complete before declaring the simulator ready
+    // Based on WebKit's approach: https://trac.webkit.org/changeset/231452/webkit
+    await retryAsync(
+      async () => {
+        const isDataMigrating = await isDataMigratorProcessRunning({ env });
+        if (isDataMigrating) {
+          throw new Error('com.apple.datamigrator still running');
+        }
+      },
+      {
+        retryOptions: {
+          retries: 30 * 60,
+          retryIntervalMs: 1_000,
+        },
+      }
+    );
   }
 
   export async function collectLogsAsync({
@@ -236,6 +253,26 @@ export namespace IosSimulatorUtils {
   }): Promise<void> {
     recordingSpawn.child.kill(2);
     await recordingSpawn;
+  }
+
+  /**
+   * Check if any com.apple.datamigrator processes are running.
+   * The existence of these processes indicates that simulators are still booting/migrating data.
+   * Based on WebKit's approach: https://trac.webkit.org/changeset/231452/webkit
+   */
+  export async function isDataMigratorProcessRunning({
+    env,
+  }: {
+    env: NodeJS.ProcessEnv;
+  }): Promise<boolean> {
+    try {
+      const result = await spawn('ps', ['-eo', 'pid,comm'], { env });
+
+      return result.stdout.includes('com.apple.datamigrator');
+    } catch {
+      // If ps command fails, assume no data migration processes are running
+      return false;
+    }
   }
 }
 
