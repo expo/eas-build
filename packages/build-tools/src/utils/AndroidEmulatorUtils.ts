@@ -138,19 +138,29 @@ export namespace AndroidEmulatorUtils {
   }): Promise<void> {
     const cloneIniFile = `${env.HOME}/.android/avd/${destinationDeviceName}.ini`;
 
-    // Clean destination device files
-    await fs.promises.rm(`${env.HOME}/.android/avd/${destinationDeviceName}.avd`, {
-      recursive: true,
-      force: true,
-    });
-    await fs.promises.rm(cloneIniFile, { force: true });
+    try {
+      // Clean destination device files
+      await fs.promises.rm(`${env.HOME}/.android/avd/${destinationDeviceName}.avd`, {
+        recursive: true,
+        force: true,
+      });
+      await fs.promises.rm(cloneIniFile, { force: true });
+    } catch (err) {
+      logger.warn({ err }, `Failed to remove destination device files ${destinationDeviceName}.`);
+    }
 
-    // Remove lockfiles from source device
-    const sourceLockfiles = await FastGlob('./**/*.lock', {
-      cwd: `${env.HOME}/.android/avd/${destinationDeviceName}.avd`,
-      absolute: true,
-    });
-    await Promise.all(sourceLockfiles.map((lockfile) => fs.promises.rm(lockfile, { force: true })));
+    try {
+      // Remove lockfiles from source device
+      const sourceLockfiles = await FastGlob('./**/*.lock', {
+        cwd: `${env.HOME}/.android/avd/${sourceDeviceName}.avd`,
+        absolute: true,
+      });
+      await Promise.all(
+        sourceLockfiles.map((lockfile) => fs.promises.rm(lockfile, { force: true }))
+      );
+    } catch (err) {
+      logger.warn({ err }, `Failed to remove lockfiles from source device ${sourceDeviceName}.`);
+    }
 
     // Copy source to destination
     await fs.promises.cp(
@@ -165,12 +175,18 @@ export namespace AndroidEmulatorUtils {
     });
 
     // Remove lockfiles from destination device
-    const lockfiles = await FastGlob('./**/*.lock', {
-      cwd: `${env.HOME}/.android/avd/${destinationDeviceName}.avd`,
-      absolute: true,
-    });
-
-    await Promise.all(lockfiles.map((lockfile) => fs.promises.rm(lockfile, { force: true })));
+    try {
+      const lockfiles = await FastGlob('./**/*.lock', {
+        cwd: `${env.HOME}/.android/avd/${destinationDeviceName}.avd`,
+        absolute: true,
+      });
+      await Promise.all(lockfiles.map((lockfile) => fs.promises.rm(lockfile, { force: true })));
+    } catch (err) {
+      logger.warn(
+        { err },
+        `Failed to remove lockfiles from destination device ${destinationDeviceName}.`
+      );
+    }
 
     const filesToReplaceDeviceNameIn = // TODO: Test whether we need to use `spawnAsync` here.
       (
