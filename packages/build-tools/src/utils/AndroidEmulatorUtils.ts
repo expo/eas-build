@@ -138,15 +138,19 @@ export namespace AndroidEmulatorUtils {
   }): Promise<void> {
     const cloneIniFile = `${env.HOME}/.android/avd/${destinationDeviceName}.ini`;
 
-    // Clean destination device files
-    await fs.promises.rm(`${env.HOME}/.android/avd/${destinationDeviceName}.avd`, {
-      recursive: true,
-      force: true,
-    });
-    await fs.promises.rm(cloneIniFile, { force: true });
-
-    // Remove lockfiles from source device
     try {
+      // Clean destination device files
+      await fs.promises.rm(`${env.HOME}/.android/avd/${destinationDeviceName}.avd`, {
+        recursive: true,
+        force: true,
+      });
+      await fs.promises.rm(cloneIniFile, { force: true });
+    } catch (err) {
+      logger.warn({ err }, `Failed to remove destination device files ${destinationDeviceName}.`);
+    }
+
+    try {
+      // Remove lockfiles from source device
       const sourceLockfiles = await FastGlob('./**/*.lock', {
         cwd: `${env.HOME}/.android/avd/${sourceDeviceName}.avd`,
         absolute: true,
