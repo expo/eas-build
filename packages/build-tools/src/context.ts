@@ -18,6 +18,7 @@ import {
 import { ExpoConfig } from '@expo/config';
 import { bunyan } from '@expo/logger';
 import { BuildTrigger } from '@expo/eas-build-job/dist/common';
+import { Client, fetchExchange } from '@urql/core';
 
 import { PackageManager, resolvePackageManager } from './utils/packageManager';
 import { resolveBuildPhaseErrorAsync } from './buildErrors/detectError';
@@ -89,6 +90,7 @@ export class BuildContext<TJob extends Job = Job> {
   private buildPhaseHasWarnings = false;
   private _appConfig?: ExpoConfig;
   private readonly reportBuildPhaseStats?: (stats: BuildPhaseStats) => void;
+  public readonly graphqlClient: Client;
 
   constructor(job: TJob, options: BuildContextOptions) {
     this.workingdir = options.workingdir;
@@ -111,9 +113,20 @@ export class BuildContext<TJob extends Job = Job> {
       ...environmentSecrets,
       __EAS_BUILD_ENVS_DIR: this.buildEnvsDirectory,
     };
+
     this._env.PATH = this._env.PATH
       ? [this.buildExecutablesDirectory, this._env.PATH].join(':')
       : this.buildExecutablesDirectory;
+
+    this.graphqlClient = new Client({
+      url: new URL('graphql', this.env.__API_SERVER_URL).toString(),
+      exchanges: [fetchExchange],
+      fetchOptions: {
+        headers: {
+          Authorization: `Bearer ${job.secrets?.robotAccessToken}`,
+        },
+      },
+    });
   }
 
   public get job(): TJob {
