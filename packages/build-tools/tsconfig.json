@@ -1,7 +1,14 @@
 {
   "extends": "../../tsconfig.json",
   "compilerOptions": {
-    "outDir": "./dist"
+    "outDir": "./dist",
+    "plugins": [
+      {
+        "name": "gql.tada/ts-plugin",
+        "schema": "http://api.expo.test/graphql",
+        "tadaOutputLocation": "./src/graphql-env.d.ts"
+      }
+    ]
   },
   "include": ["src/**/*"]
 }
