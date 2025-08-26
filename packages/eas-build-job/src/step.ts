@@ -48,7 +48,7 @@ const CommonStepZ = z.object({
    *   ANOTHER_ENV_VAR: another-value
    */
   env: z
-    .record(z.string())
+    .record(z.string(), z.string())
     .optional()
     .describe('Additional environment variables to set for the step.'),
 });
@@ -82,7 +82,7 @@ export const FunctionStepZ = CommonStepZ.extend({
    *      - value1
    *   arg4: ${{ steps.step1.outputs.test }}
    */
-  with: z.record(z.unknown()).optional().describe('Inputs to the function.'),
+  with: z.record(z.string(), z.unknown()).optional().describe('Inputs to the function.'),
 
   run: z.never().optional(),
   shell: z.never().optional(),
