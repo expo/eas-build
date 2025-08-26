@@ -11,14 +11,16 @@
   ],
   "scripts": {
     "start": "yarn watch",
-    "watch": "tsc --watch --preserveWatchOutput",
-    "build": "tsc",
+    "watch": "yarn gql && tsc --watch --preserveWatchOutput",
+    "build": "yarn gql && tsc",
     "prepack": "rm -rf dist && tsc -p tsconfig.build.json",
     "jest-unit": "jest --config jest/unit-config.ts",
     "jest-integration": "jest --config jest/integration-config.ts",
     "jest-unit-watch": "jest --config jest/unit-config.ts --watch",
     "jest-integration-watch": "jest --config jest/integration-config.ts --watch",
-    "clean": "rm -rf node_modules dist coverage"
+    "clean": "rm -rf node_modules dist coverage",
+    "gql": "gql.tada generate-schema ${API_SERVER_URL:-https://api.expo.dev}/graphql --output ./schema.graphql",
+    "gql:local": "API_SERVER_URL=http://api.expo.test yarn gql"
   },
   "author": "Expo <support@expo.io>",
   "bugs": "https://github.com/expo/eas-build/issues",

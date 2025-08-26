@@ -5,7 +5,7 @@
     "plugins": [
       {
         "name": "gql.tada/ts-plugin",
-        "schema": "http://api.expo.test/graphql",
+        "schema": "./schema.graphql",
         "tadaOutputLocation": "./src/graphql-env.d.ts"
       }
     ]
