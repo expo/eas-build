@@ -14,6 +14,7 @@ import {
 } from '@expo/steps';
 import spawn from '@expo/turtle-spawn';
 import { bunyan } from '@expo/logger';
+import { asyncResult } from '@expo/results';
 
 export function createInstallMaestroBuildFunction(): BuildFunction {
   return new BuildFunction({
@@ -113,21 +114,22 @@ export function createInstallMaestroBuildFunction(): BuildFunction {
         });
       }
 
-      const maestroVersion = await getMaestroVersion({ env });
-      assert(maestroVersion, 'Failed to ensure Maestro is installed.');
-      logger.info(`Maestro ${maestroVersion} is ready.`);
-      outputs.maestro_version.set(maestroVersion);
+      const maestroVersionResult = await asyncResult(getMaestroVersion({ env }));
+      if (!maestroVersionResult.ok) {
+        logger.error(maestroVersionResult.reason, 'Failed to get Maestro version.');
+
+        throw new Error('Failed to ensure Maestro is installed.');
+      }
+
+      logger.info(`Maestro ${maestroVersionResult.value} is ready.`);
+      outputs.maestro_version.set(maestroVersionResult.value);
     },
   });
 }
 
-async function getMaestroVersion({ env }: { env: BuildStepEnv }): Promise<string | null> {
-  try {
-    const maestroVersion = await spawn('maestro', ['--version'], { stdio: 'pipe', env });
-    return maestroVersion.stdout.trim();
-  } catch {
-    return null;
-  }
+async function getMaestroVersion({ env }: { env: BuildStepEnv }): Promise<string> {
+  const maestroVersion = await spawn('maestro', ['--version'], { stdio: 'pipe', env });
+  return maestroVersion.stdout.trim();
 }
 
 async function installMaestro({
@@ -225,7 +227,7 @@ async function isJavaInstalled({ env }: { env: BuildStepEnv }): Promise<boolean>
 }
 
 /**
- * Installs Java 11 from a file uploaded manually to GCS as cache.
+ * Installs Java 17 from a file uploaded manually to GCS as cache.
  * Should not be run outside of EAS Build VMs not to break users' environments.
  */
 async function installJavaFromGcs({
@@ -236,7 +238,7 @@ async function installJavaFromGcs({
   env: BuildStepEnv;
 }): Promise<void> {
   const downloadUrl =
-    'https://storage.googleapis.com/turtle-v2/zulu11.68.17-ca-jdk11.0.21-macosx_aarch64.dmg';
+    'https://storage.googleapis.com/turtle-v2/zulu17.60.17-ca-jdk17.0.16-macosx_aarch64.dmg';
   const filename = path.basename(downloadUrl);
   const tempDirectory = await fs.promises.mkdtemp(path.join(os.tmpdir(), 'install_java'));
   const installerPath = path.join(tempDirectory, filename);
@@ -260,7 +262,7 @@ async function installJavaFromGcs({
       [
         'installer',
         '-pkg',
-        path.join(installerMountDirectory, 'Double-Click to Install Azul Zulu JDK 11.pkg'),
+        path.join(installerMountDirectory, 'Double-Click to Install Azul Zulu JDK 17.pkg'),
         '-target',
         '/',
       ],
