@@ -87,6 +87,8 @@ export const FunctionStepZ = CommonStepZ.extend({
   run: z.never().optional(),
   shell: z.never().optional(),
   outputs: z.never().optional(),
+  'no-logs-warn-timeout-minutes': z.never().optional(),
+  'no-logs-kill-timeout-minutes': z.never().optional(),
 });
 
 export type FunctionStep = z.infer<typeof FunctionStepZ>;
@@ -137,6 +139,30 @@ export const ShellStepZ = CommonStepZ.extend({
       ])
     )
     .optional(),
+  /**
+   * Number of minutes since last log produced by the script, after which a warning will be logged.
+   *
+   * @example
+   * no-logs-warn-timeout-minutes: 15
+   */
+  'no-logs-warn-timeout-minutes': z
+    .number()
+    .optional()
+    .describe(
+      'If the script does not produce any logs in this many minutes, a warning will be logged.'
+    ),
+  /**
+   * Number of minutes since last log produced by the script, after which an error will be thrown and the process running the script will be terminated.
+   *
+   * @example
+   * no-logs-kill-timeout-minutes: 30
+   */
+  'no-logs-kill-timeout-minutes': z
+    .number()
+    .optional()
+    .describe(
+      'If the script does not produce any logs in this many minutes, an error will be thrown and script will be terminated.'
+    ),
 
   uses: z.never().optional(),
   with: z.never().optional(),
