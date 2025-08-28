@@ -36,7 +36,7 @@ export function createInstallMaestroBuildFunction(): BuildFunction {
     ],
     fn: async ({ logger, global }, { inputs, env, outputs }) => {
       const requestedMaestroVersion = inputs.maestro_version.value as string | undefined;
-      const currentMaestroVersion = await getMaestroVersion({ env });
+      const { value: currentMaestroVersion } = await asyncResult(getMaestroVersion({ env }));
 
       // When not running in EAS Build VM, do not modify local environment.
       if (env.EAS_BUILD_RUNNER !== 'eas-build') {
