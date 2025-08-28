@@ -136,7 +136,9 @@ describe(StepsConfigParser, () => {
       const parser = new StepsConfigParser(ctx, {
         steps: [],
       });
-      await expect(parser.parseAsync()).rejects.toThrow('Array must contain at least 1 element');
+      await expect(parser.parseAsync()).rejects.toThrow(
+        'Too small: expected array to have >=1 items'
+      );
     });
 
     it('returns a BuildWorkflow object', async () => {

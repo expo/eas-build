@@ -17,7 +17,7 @@ export namespace Generic {
     yarn: z.string().optional(),
     pnpm: z.string().optional(),
     bun: z.string().optional(),
-    env: z.record(z.string()),
+    env: z.record(z.string(), z.string()),
     // Linux
     ndk: z.string().optional(),
     // macOS
@@ -46,7 +46,7 @@ export namespace Generic {
     appId: z.string(),
 
     steps: z.array(StepZ).min(1),
-    outputs: z.record(z.string()).optional(),
+    outputs: z.record(z.string(), z.string()).optional(),
   });
 
   export type PartialJob = z.infer<typeof PartialJobZ>;
