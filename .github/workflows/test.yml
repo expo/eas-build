@@ -21,6 +21,12 @@ jobs:
       - name: Setup ncc
         run: npm install -g @vercel/ncc
       - run: yarn install --frozen-lockfile --check-files
+      - name: 'gql.tada Checks'
+        working-directory: packages/build-tools
+        run: |
+          yarn gql-tada generate-output
+          yarn gql-tada check
+          git diff --name-status --exit-code .
       - run: yarn build
       - run: yarn test
       - run: yarn lint --max-warnings=0
