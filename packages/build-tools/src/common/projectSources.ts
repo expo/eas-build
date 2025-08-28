@@ -171,11 +171,17 @@ async function uploadProjectMetadataAsync(
 
   const files: string[] = [];
 
-  async function scanDirectory(dir: string, relativePath = ''): Promise<void> {
+  const directoriesToScan: { dir: string; relativePath: string }[] = [
+    { dir: projectDirectory, relativePath: '' },
+  ];
+
+  while (directoriesToScan.length > 0) {
+    const { dir, relativePath } = directoriesToScan.shift()!;
+
     if (relativePath === '.git') {
       // Do not include whole `.git` directory in the archive, just that it exists.
       files.push('.git/...');
-      return;
+      continue;
     }
 
     const entries = await fs.readdir(dir, { withFileTypes: true });
@@ -185,14 +191,12 @@ async function uploadProjectMetadataAsync(
       const relativeFilePath = path.join(relativePath, entry.name);
 
       if (entry.isDirectory()) {
-        await scanDirectory(fullPath, relativeFilePath);
+        directoriesToScan.push({ dir: fullPath, relativePath: relativeFilePath });
       } else {
         files.push(relativeFilePath);
       }
     }
   }
-
-  await scanDirectory(projectDirectory);
   const sortedFiles = files
     .map(
       // Prepend entries with "project/"
