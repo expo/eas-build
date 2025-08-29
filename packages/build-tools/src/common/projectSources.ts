@@ -159,13 +159,13 @@ async function uploadProjectMetadataAsync(
   { projectDirectory }: { projectDirectory: string }
 ): Promise<void> {
   if (!ctx.job.platform) {
-    ctx.logger.info('Not a build - skipping project metadata upload.');
+    // Not a build job, skip.
     return;
   } else if (
     ctx.job.projectArchive.type === ArchiveSourceType.GCS &&
     ctx.job.projectArchive.metadataLocation
   ) {
-    ctx.logger.info('Build already has project metadata - skipping upload.');
+    // Build already has project metadata, skip.
     return;
   }
 
