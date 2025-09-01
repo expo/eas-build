@@ -106,6 +106,6 @@ describe(validateSteps, () => {
   });
 
   it('errors when steps is empty', () => {
-    expect(() => validateSteps([])).toThrow('Array must contain at least 1 element');
+    expect(() => validateSteps([])).toThrow('Too small: expected array to have >=1 items');
   });
 });
