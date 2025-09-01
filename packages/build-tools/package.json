@@ -11,8 +11,10 @@
   ],
   "scripts": {
     "start": "yarn watch",
-    "watch": "yarn gql && tsc --watch --preserveWatchOutput",
-    "build": "yarn gql && tsc",
+    "prewatch": "yarn gql",
+    "watch": "tsc --watch --preserveWatchOutput",
+    "prebuild": "yarn gql",
+    "build": "tsc",
     "prepack": "rm -rf dist && tsc -p tsconfig.build.json",
     "jest-unit": "jest --config jest/unit-config.ts",
     "jest-integration": "jest --config jest/integration-config.ts",

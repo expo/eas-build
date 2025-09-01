@@ -4,3 +4,5 @@ dist/
 .secrets*
 !.secrets.example
 !.secrets.test
+
+src/graphql-env.d.ts
