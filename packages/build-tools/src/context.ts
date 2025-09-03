@@ -121,6 +121,7 @@ export class BuildContext<TJob extends Job = Job> {
     this.graphqlClient = new Client({
       url: new URL('graphql', this.env.__API_SERVER_URL).toString(),
       exchanges: [fetchExchange],
+      preferGetMethod: false,
       fetchOptions: {
         headers: {
           Authorization: `Bearer ${job.secrets?.robotAccessToken}`,
