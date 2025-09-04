@@ -232,6 +232,8 @@ export namespace AndroidEmulatorUtils {
         '-no-snapshot-save',
         '-avd',
         deviceName,
+        '-accel',
+        'on',
         ...(typeof env.ANDROID_EMULATOR_EXTRA_ARGS === 'string'
           ? env.ANDROID_EMULATOR_EXTRA_ARGS.split(' ')
           : []),
