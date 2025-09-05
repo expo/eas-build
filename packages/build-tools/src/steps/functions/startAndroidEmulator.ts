@@ -77,6 +77,7 @@ export function createStartAndroidEmulatorBuildFunction(): BuildFunction {
         systemImagePackage,
         deviceIdentifier: deviceIdentifier ?? null,
         env,
+        logger,
       });
 
       logger.info('Starting emulator device');

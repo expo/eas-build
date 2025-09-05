@@ -94,11 +94,13 @@ export namespace AndroidEmulatorUtils {
     systemImagePackage,
     deviceIdentifier,
     env,
+    logger,
   }: {
     deviceName: AndroidVirtualDeviceName;
     systemImagePackage: string;
     deviceIdentifier: AndroidDeviceName | null;
     env: NodeJS.ProcessEnv;
+    logger: bunyan;
   }): Promise<void> {
     const avdManager = spawn(
       'avdmanager',
@@ -123,6 +125,18 @@ export namespace AndroidEmulatorUtils {
     avdManager.child.stdin?.write('no');
     avdManager.child.stdin?.end();
     await avdManager;
+
+    // Add extra config to the device's ini file.
+    const configIniFile = `${env.HOME}/.android/avd/${deviceName}.ini`;
+    try {
+      const configIniFileContent = await fs.promises.readFile(configIniFile, 'utf-8');
+      await fs.promises.writeFile(
+        configIniFile,
+        `${configIniFileContent}\n${env.ANDROID_EMULATOR_EXTRA_CONFIG ?? ''}\n`
+      );
+    } catch (err) {
+      logger.warn({ err }, `Failed to add extra config to ${configIniFile}.`);
+    }
   }
 
   export async function cloneAsync({
