@@ -34,7 +34,6 @@ import { createRestoreCacheFunction } from './functions/restoreCache';
 import { createSaveCacheFunction } from './functions/saveCache';
 import { createInternalEasMaestroTestFunction } from './functions/internalMaestroTest';
 
-
 export function getEasFunctions(ctx: CustomBuildContext): BuildFunction[] {
   const functions = [
     createCheckoutBuildFunction(),
