@@ -66,6 +66,7 @@ describe('AndroidEmulatorUtils', () => {
         systemImagePackage: AndroidEmulatorUtils.defaultSystemImagePackage,
         deviceIdentifier: null,
         env: process.env,
+        logger: createMockLogger({ logToConsole: true }),
       });
       ({ serialId } = await AndroidEmulatorUtils.startAsync({
         deviceName,
@@ -88,6 +89,7 @@ describe('AndroidEmulatorUtils', () => {
       systemImagePackage: AndroidEmulatorUtils.defaultSystemImagePackage,
       deviceIdentifier: null,
       env: process.env,
+      logger: createMockLogger({ logToConsole: true }),
     });
     const { serialId, emulatorPromise } = await AndroidEmulatorUtils.startAsync({
       deviceName,
@@ -143,6 +145,7 @@ describe('AndroidEmulatorUtils', () => {
       systemImagePackage: AndroidEmulatorUtils.defaultSystemImagePackage,
       deviceIdentifier: null,
       env: process.env,
+      logger: createMockLogger({ logToConsole: true }),
     });
 
     const { serialId, emulatorPromise } = await AndroidEmulatorUtils.startAsync({
