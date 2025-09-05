@@ -127,8 +127,9 @@ export namespace AndroidEmulatorUtils {
     await avdManager;
 
     // Add extra config to the device's ini file.
-    const configIniFile = `${env.HOME}/.android/avd/${deviceName}.ini`;
+    const configIniFile = `${env.HOME}/.android/avd/${deviceName}.avd/config.ini`;
     try {
+      logger.info(`Adding extra config to ${configIniFile}.`);
       const configIniFileContent = await fs.promises.readFile(configIniFile, 'utf-8');
       await fs.promises.writeFile(
         configIniFile,
