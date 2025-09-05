@@ -154,7 +154,7 @@ export async function compressCacheAsync({
   );
 
   // Process and normalize all paths
-  const allFiles: Array<{ absolutePath: string; archivePath: string }> = [];
+  const allFiles: { absolutePath: string; archivePath: string }[] = [];
 
   for (const inputPath of paths) {
     // Resolve to absolute path
@@ -214,6 +214,7 @@ export async function compressCacheAsync({
         allFiles.push({ absolutePath, archivePath });
       }
     } catch (error) {
+      logger.warn({ error }, 'Failed to resolve paths');
       // Handle glob patterns
       if (fg.isDynamicPattern(inputPath)) {
         const globFiles = await fg(inputPath, {
