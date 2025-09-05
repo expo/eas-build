@@ -49,16 +49,9 @@ export namespace SubmissionConfig {
       IN_PROGRESS = 'inProgress',
     }
 
-    export enum ReleaseTrack {
-      PRODUCTION = 'production',
-      BETA = 'beta',
-      ALPHA = 'alpha',
-      INTERNAL = 'internal',
-    }
-
     export const SchemaZ = z
       .object({
-        track: z.nativeEnum(ReleaseTrack),
+        track: z.string(),
         changesNotSentForReview: z.boolean().default(false),
         googleServiceAccountKeyJson: z.string(),
         isVerboseFastlaneEnabled: z.boolean().optional(),
