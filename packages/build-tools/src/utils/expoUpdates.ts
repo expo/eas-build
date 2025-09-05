@@ -3,13 +3,14 @@ import os from 'os';
 import path from 'path';
 
 import { v4 as uuidv4 } from 'uuid';
-import { Platform, Job, BuildJob, Workflow, FingerprintSourceType } from '@expo/eas-build-job';
+import { Platform, Job, BuildJob, Workflow } from '@expo/eas-build-job';
 import semver from 'semver';
 import { ExpoConfig } from '@expo/config';
 import { bunyan } from '@expo/logger';
 import { BuildStepEnv } from '@expo/steps';
 import fetch from 'node-fetch';
 import fs from 'fs-extra';
+import { graphql } from 'gql.tada';
 
 import {
   androidSetRuntimeVersionNativelyAsync,
@@ -256,43 +257,61 @@ async function logDiffFingerprints({
   ctx: BuildContext<BuildJob>;
 }): Promise<void> {
   const { resolvedRuntimeVersion, resolvedFingerprintSources } = resolvedRuntime;
-  if (ctx.metadata?.fingerprintSource && resolvedFingerprintSources && resolvedRuntimeVersion) {
-    try {
-      const fingerprintSource = ctx.metadata.fingerprintSource;
 
-      let localFingerprintFile: string | null = null;
-
-      if (fingerprintSource.type === FingerprintSourceType.URL) {
-        const result = await fetch(fingerprintSource.url);
-        const localFingerprintJSON = await result.json();
-        localFingerprintFile = path.join(os.tmpdir(), `eas-build-${uuidv4()}-local-fingerprint`);
-        await fs.writeFile(localFingerprintFile, JSON.stringify(localFingerprintJSON));
-      } else if (fingerprintSource.type === FingerprintSourceType.PATH) {
-        localFingerprintFile = fingerprintSource.path;
-      } else {
-        ctx.logger.warn(`Invalid fingerprint source type: ${fingerprintSource.type}`);
-      }
-
-      if (localFingerprintFile) {
-        const easFingerprint = {
-          hash: resolvedRuntimeVersion,
-          sources: resolvedFingerprintSources,
-        };
-        const easFingerprintFile = path.join(os.tmpdir(), `eas-build-${uuidv4()}-eas-fingerprint`);
-        await fs.writeFile(easFingerprintFile, JSON.stringify(easFingerprint));
-
-        const changesJSONString = await diffFingerprintsAsync(
-          ctx.getReactNativeProjectDirectory(),
-          localFingerprintFile,
-          easFingerprintFile,
-          { env: ctx.env, logger: ctx.logger }
-        );
-        if (changesJSONString) {
-          const changes = JSON.parse(changesJSONString);
-          if (changes.length) {
-            ctx.logger.warn('Difference between local and EAS fingerprints:');
-            ctx.logger.warn(stringifyFingerprintDiff(changes));
+  const fingerprintInfo = await ctx.graphqlClient
+    .query(
+      graphql(`
+        query GetFingerprintUrl($id: ID!) {
+          builds {
+            byId(buildId: $id) {
+              fingerprint {
+                debugInfoUrl
+              }
+            }
           }
+        }
+      `),
+      { id: ctx.env.EAS_BUILD_ID }
+    )
+    .toPromise();
+
+  if (fingerprintInfo.error) {
+    ctx.logger.warn('Failed to fetch current fingerprint info', fingerprintInfo.error);
+    return;
+  }
+
+  if (
+    fingerprintInfo.data?.builds.byId?.fingerprint?.debugInfoUrl &&
+    resolvedFingerprintSources &&
+    resolvedRuntimeVersion
+  ) {
+    try {
+      const result = await fetch(fingerprintInfo.data.builds.byId.fingerprint.debugInfoUrl);
+      const localFingerprintJSON = await result.json();
+      const localFingerprintFile = path.join(
+        os.tmpdir(),
+        `eas-build-${uuidv4()}-local-fingerprint`
+      );
+      await fs.writeFile(localFingerprintFile, JSON.stringify(localFingerprintJSON));
+
+      const easFingerprint = {
+        hash: resolvedRuntimeVersion,
+        sources: resolvedFingerprintSources,
+      };
+      const easFingerprintFile = path.join(os.tmpdir(), `eas-build-${uuidv4()}-eas-fingerprint`);
+      await fs.writeFile(easFingerprintFile, JSON.stringify(easFingerprint));
+
+      const changesJSONString = await diffFingerprintsAsync(
+        ctx.getReactNativeProjectDirectory(),
+        localFingerprintFile,
+        easFingerprintFile,
+        { env: ctx.env, logger: ctx.logger }
+      );
+      if (changesJSONString) {
+        const changes = JSON.parse(changesJSONString);
+        if (changes.length) {
+          ctx.logger.warn('Difference between local and EAS fingerprints:');
+          ctx.logger.warn(stringifyFingerprintDiff(changes));
         }
       }
     } catch (error) {

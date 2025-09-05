@@ -1,4 +1,3 @@
-import { PipeMode } from '@expo/logger';
 import {
   BuildFunction,
   BuildStepEnv,
@@ -8,7 +7,11 @@ import {
 import spawn from '@expo/turtle-spawn';
 import { minBy } from 'lodash';
 
-import { retryAsync } from '../../utils/retry';
+import {
+  IosSimulatorName,
+  IosSimulatorUtils,
+  IosSimulatorUuid,
+} from '../../utils/IosSimulatorUtils';
 
 export function createStartIosSimulatorBuildFunction(): BuildFunction {
   return new BuildFunction({
@@ -30,10 +33,13 @@ export function createStartIosSimulatorBuildFunction(): BuildFunction {
     ],
     fn: async ({ logger }, { inputs, env }) => {
       try {
-        const availableDevices = await getAvailableSimulatorDevices({ env });
+        const availableDevices = await IosSimulatorUtils.getAvailableDevicesAsync({
+          env,
+          filter: 'available',
+        });
         logger.info(
           `Available Simulator devices:\n- ${availableDevices
-            .map(formatSimulatorDevice)
+            .map((device) => device.displayName)
             .join(`\n- `)}`
         );
       } catch (error) {
@@ -42,82 +48,59 @@ export function createStartIosSimulatorBuildFunction(): BuildFunction {
         logger.info('');
       }
 
-      const deviceIdentifier =
-        inputs.device_identifier.value?.toString() ?? (await findMostGenericIphone({ env }))?.name;
+      const deviceIdentifierInput = inputs.device_identifier.value?.toString() as
+        | IosSimulatorUuid
+        | IosSimulatorName
+        | undefined;
+      const originalDeviceIdentifier =
+        deviceIdentifierInput ?? (await findMostGenericIphoneUuidAsync({ env }));
 
-      if (!deviceIdentifier) {
+      if (!originalDeviceIdentifier) {
         throw new Error('Could not find an iPhone among available simulator devices.');
       }
 
-      const bootstatusResult = await spawn(
-        'xcrun',
-        ['simctl', 'bootstatus', deviceIdentifier, '-b'],
-        {
-          logger,
-          env,
-        }
-      );
+      const { udid } = await IosSimulatorUtils.startAsync({
+        deviceIdentifier: originalDeviceIdentifier,
+        env,
+      });
 
-      await retryAsync(
-        async () => {
-          await spawn('xcrun', ['simctl', 'io', deviceIdentifier, 'screenshot', '/dev/null'], {
-            env,
-          });
-        },
-        {
-          retryOptions: {
-            // There's 30 * 60 seconds in 30 minutes, which is the timeout.
-            retries: 30 * 60,
-            retryIntervalMs: 1_000,
-          },
-        }
-      );
+      await IosSimulatorUtils.waitForReadyAsync({ udid, env });
 
       logger.info('');
 
-      const udid = parseUdidFromBootstatusStdout(bootstatusResult.stdout);
-      const device = udid ? await getSimulatorDevice({ udid, env }) : null;
-      const formattedDevice = device ? formatSimulatorDevice(device) : deviceIdentifier;
+      const device = await IosSimulatorUtils.getDeviceAsync({ udid, env });
+      const formattedDevice = device?.displayName ?? originalDeviceIdentifier;
       logger.info(`${formattedDevice} is ready.`);
 
       const count = Number(inputs.count.value ?? 1);
       if (count > 1) {
         logger.info(`Requested ${count} Simulators, shutting down ${formattedDevice} for cloning.`);
-        await spawn('xcrun', ['simctl', 'shutdown', deviceIdentifier], {
+        await spawn('xcrun', ['simctl', 'shutdown', originalDeviceIdentifier], {
           logger,
           env,
         });
 
         for (let i = 0; i < count; i++) {
-          const cloneIdentifier = `eas-simulator-${i + 1}`;
-          logger.info(`Cloning ${formattedDevice} to ${cloneIdentifier}...`);
+          const cloneDeviceName = `eas-simulator-${i + 1}` as IosSimulatorName;
+          logger.info(`Cloning ${formattedDevice} to ${cloneDeviceName}...`);
 
-          await spawn('xcrun', ['simctl', 'clone', deviceIdentifier, cloneIdentifier], {
-            logger,
+          await IosSimulatorUtils.cloneAsync({
+            sourceDeviceIdentifier: originalDeviceIdentifier,
+            destinationDeviceName: cloneDeviceName,
             env,
           });
 
-          await spawn('xcrun', ['simctl', 'bootstatus', cloneIdentifier, '-b'], {
-            logger,
+          const { udid: cloneUdid } = await IosSimulatorUtils.startAsync({
+            deviceIdentifier: cloneDeviceName,
             env,
           });
 
-          await retryAsync(
-            async () => {
-              await spawn('xcrun', ['simctl', 'io', cloneIdentifier, 'screenshot', '/dev/null'], {
-                env,
-              });
-            },
-            {
-              retryOptions: {
-                // There's 30 * 60 seconds in 30 minutes, which is the timeout.
-                retries: 30 * 60,
-                retryIntervalMs: 1_000,
-              },
-            }
-          );
+          await IosSimulatorUtils.waitForReadyAsync({
+            udid: cloneUdid,
+            env,
+          });
 
-          logger.info(`${cloneIdentifier} is ready.`);
+          logger.info(`${cloneDeviceName} is ready.`);
           logger.info('');
         }
       }
@@ -125,97 +108,19 @@ export function createStartIosSimulatorBuildFunction(): BuildFunction {
   });
 }
 
-async function findMostGenericIphone({
+async function findMostGenericIphoneUuidAsync({
   env,
 }: {
   env: BuildStepEnv;
-}): Promise<AvailableXcrunSimctlDevice | null> {
-  const availableSimulatorDevices = await getAvailableSimulatorDevices({ env });
+}): Promise<IosSimulatorUuid | null> {
+  const availableSimulatorDevices = await IosSimulatorUtils.getAvailableDevicesAsync({
+    env,
+    filter: 'available',
+  });
   const availableIphones = availableSimulatorDevices.filter((device) =>
     device.name.startsWith('iPhone')
   );
   // It's funny, but it works.
   const iphoneWithShortestName = minBy(availableIphones, (device) => device.name.length);
-  return iphoneWithShortestName ?? null;
+  return iphoneWithShortestName?.udid ?? null;
 }
-
-function formatSimulatorDevice(device: XcrunSimctlDevice & { runtime: string }): string {
-  return `${device.name} (${device.udid}) on ${device.runtime}`;
-}
-
-function parseUdidFromBootstatusStdout(stdout: string): string | null {
-  const matches = stdout.match(/^Monitoring boot status for .+ \((.+)\)\.$/m);
-  if (!matches) {
-    return null;
-  }
-  return matches[1];
-}
-
-async function getSimulatorDevice({
-  udid,
-  env,
-}: {
-  udid: string;
-  env: BuildStepEnv;
-}): Promise<SimulatorDevice | null> {
-  const devices = await getAvailableSimulatorDevices({ env });
-  return devices.find((device) => device.udid === udid) ?? null;
-}
-
-async function getAvailableSimulatorDevices({
-  env,
-}: {
-  env: BuildStepEnv;
-}): Promise<SimulatorDevice[]> {
-  const result = await spawn(
-    'xcrun',
-    ['simctl', 'list', 'devices', '--json', '--no-escape-slashes', 'available'],
-    {
-      env,
-      mode: PipeMode.COMBINED_AS_STDOUT,
-    }
-  );
-  const xcrunData = JSON.parse(
-    result.stdout
-  ) as XcrunSimctlListDevicesJsonOutput<AvailableXcrunSimctlDevice>;
-
-  const allAvailableDevices: (AvailableXcrunSimctlDevice & { runtime: string })[] = [];
-  for (const [runtime, devices] of Object.entries(xcrunData.devices)) {
-    allAvailableDevices.push(...devices.map((device) => ({ ...device, runtime })));
-  }
-
-  return allAvailableDevices;
-}
-
-type XcrunSimctlDevice = {
-  availabilityError?: string;
-  /** e.g. /Users/sjchmiela/Library/Developer/CoreSimulator/Devices/8272DEB1-42B5-4F78-AB2D-0BC5F320B822/data */
-  dataPath: string;
-  /** e.g. 18341888 */
-  dataPathSize: number;
-  /** e.g. /Users/sjchmiela/Library/Logs/CoreSimulator/8272DEB1-42B5-4F78-AB2D-0BC5F320B822 */
-  logPath: string;
-  /** e.g. 8272DEB1-42B5-4F78-AB2D-0BC5F320B822 */
-  udid: string;
-  isAvailable: boolean;
-  /** e.g. com.apple.CoreSimulator.SimDeviceType.iPhone-13-mini */
-  deviceTypeIdentifier: string;
-  state: 'Shutdown' | 'Booted';
-  /** e.g. iPhone 15 */
-  name: string;
-  /** e.g. 2024-01-22T19:28:56Z */
-  lastBootedAt?: string;
-};
-
-type SimulatorDevice = AvailableXcrunSimctlDevice & { runtime: string };
-
-type AvailableXcrunSimctlDevice = XcrunSimctlDevice & {
-  availabilityError?: never;
-  isAvailable: true;
-};
-
-type XcrunSimctlListDevicesJsonOutput<TDevice extends XcrunSimctlDevice = XcrunSimctlDevice> = {
-  devices: {
-    [runtime: string]: TDevice[];
-  };
-};

@@ -8,6 +8,7 @@ import downloadFile from '@expo/downloader';
 import { z } from 'zod';
 import { asyncResult } from '@expo/results';
 import nullthrows from 'nullthrows';
+import { graphql } from 'gql.tada';
 
 import { BuildContext } from '../context';
 import { turtleFetch } from '../utils/turtleFetch';
@@ -44,6 +45,13 @@ export async function prepareProjectSourcesAsync<TJob extends Job>(
       },
       destinationDirectory,
     });
+  }
+
+  const uploadResult = await asyncResult(
+    uploadProjectMetadataAsync(ctx, { projectDirectory: destinationDirectory })
+  );
+  if (!uploadResult.ok) {
+    ctx.logger.warn(`Failed to upload project metadata: ${uploadResult.reason}`);
   }
 }
 
@@ -144,4 +152,115 @@ async function unpackTarGzAsync({
   await spawn('tar', ['-C', destination, '--strip-components', '1', '-zxf', source], {
     logger,
   });
+}
+
+async function uploadProjectMetadataAsync(
+  ctx: BuildContext<Job>,
+  { projectDirectory }: { projectDirectory: string }
+): Promise<void> {
+  if (!ctx.job.platform) {
+    // Not a build job, skip.
+    return;
+  } else if (
+    ctx.job.projectArchive.type === ArchiveSourceType.GCS &&
+    ctx.job.projectArchive.metadataLocation
+  ) {
+    // Build already has project metadata, skip.
+    return;
+  }
+
+  const files: string[] = [];
+
+  const directoriesToScan: { dir: string; relativePath: string }[] = [
+    { dir: projectDirectory, relativePath: '' },
+  ];
+
+  while (directoriesToScan.length > 0) {
+    const { dir, relativePath } = directoriesToScan.shift()!;
+
+    if (relativePath === '.git') {
+      // Do not include whole `.git` directory in the archive, just that it exists.
+      files.push('.git/...');
+      continue;
+    }
+
+    const entries = await fs.readdir(dir, { withFileTypes: true });
+
+    for (const entry of entries) {
+      const fullPath = path.join(dir, entry.name);
+      const relativeFilePath = path.join(relativePath, entry.name);
+
+      if (entry.isDirectory()) {
+        directoriesToScan.push({ dir: fullPath, relativePath: relativeFilePath });
+      } else {
+        files.push(relativeFilePath);
+      }
+    }
+  }
+  const sortedFiles = files
+    .map(
+      // Prepend entries with "project/"
+      (f) => path.join('project', f)
+    )
+    .sort(); // Sort for consistent ordering
+
+  const result = await ctx.graphqlClient
+    .mutation(
+      graphql(`
+        mutation {
+          uploadSession {
+            createUploadSession(type: EAS_BUILD_GCS_PROJECT_METADATA)
+          }
+        }
+      `),
+      {}
+    )
+    .toPromise();
+
+  if (result.error) {
+    throw result.error;
+  }
+
+  const uploadSession = result.data!.uploadSession.createUploadSession as {
+    url: string;
+    bucketKey: string;
+    headers: Record<string, string>;
+  };
+
+  await fetch(uploadSession.url, {
+    method: 'PUT',
+    body: JSON.stringify({ archiveContent: sortedFiles }),
+    headers: uploadSession.headers,
+  });
+
+  const updateMetadataResult = await ctx.graphqlClient
+    .mutation(
+      graphql(`
+        mutation UpdateTurtleBuildMetadataMutation(
+          $buildId: ID!
+          $projectMetadataFile: ProjectMetadataFileInput!
+        ) {
+          build {
+            updateBuildMetadata(
+              buildId: $buildId
+              metadata: { projectMetadataFile: $projectMetadataFile }
+            ) {
+              id
+            }
+          }
+        }
+      `),
+      {
+        buildId: ctx.env.EAS_BUILD_ID,
+        projectMetadataFile: {
+          type: 'GCS',
+          bucketKey: uploadSession.bucketKey,
+        },
+      }
+    )
+    .toPromise();
+
+  if (updateMetadataResult.error) {
+    throw updateMetadataResult.error;
+  }
 }

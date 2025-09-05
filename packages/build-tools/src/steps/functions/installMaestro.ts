@@ -10,9 +10,11 @@ import {
   BuildStepGlobalContext,
   BuildStepInput,
   BuildStepInputValueTypeName,
+  BuildStepOutput,
 } from '@expo/steps';
 import spawn from '@expo/turtle-spawn';
 import { bunyan } from '@expo/logger';
+import { asyncResult } from '@expo/results';
 
 export function createInstallMaestroBuildFunction(): BuildFunction {
   return new BuildFunction({
@@ -26,9 +28,15 @@ export function createInstallMaestroBuildFunction(): BuildFunction {
         allowedValueTypeName: BuildStepInputValueTypeName.STRING,
       }),
     ],
-    fn: async ({ logger, global }, { inputs, env }) => {
+    outputProviders: [
+      BuildStepOutput.createProvider({
+        id: 'maestro_version',
+        required: false,
+      }),
+    ],
+    fn: async ({ logger, global }, { inputs, env, outputs }) => {
       const requestedMaestroVersion = inputs.maestro_version.value as string | undefined;
-      const currentMaestroVersion = await getMaestroVersion({ env });
+      const { value: currentMaestroVersion } = await asyncResult(getMaestroVersion({ env }));
 
       // When not running in EAS Build VM, do not modify local environment.
       if (env.EAS_BUILD_RUNNER !== 'eas-build') {
@@ -64,6 +72,7 @@ export function createInstallMaestroBuildFunction(): BuildFunction {
         }
 
         if (currentMaestroVersion) {
+          outputs.maestro_version.set(currentMaestroVersion);
           logger.info(`Maestro ${currentMaestroVersion} is ready.`);
         }
 
@@ -93,7 +102,10 @@ export function createInstallMaestroBuildFunction(): BuildFunction {
 
       // Skip installing if the input sets a specific Maestro version to install
       // and it is already installed which happens when developing on a local computer.
-      if (!currentMaestroVersion || requestedMaestroVersion !== currentMaestroVersion) {
+      if (
+        !currentMaestroVersion ||
+        (requestedMaestroVersion && requestedMaestroVersion !== currentMaestroVersion)
+      ) {
         await installMaestro({
           version: requestedMaestroVersion,
           global,
@@ -102,20 +114,22 @@ export function createInstallMaestroBuildFunction(): BuildFunction {
         });
       }
 
-      const maestroVersion = await getMaestroVersion({ env });
-      assert(maestroVersion, 'Failed to ensure Maestro is installed.');
-      logger.info(`Maestro ${maestroVersion} is ready.`);
+      const maestroVersionResult = await asyncResult(getMaestroVersion({ env }));
+      if (!maestroVersionResult.ok) {
+        logger.error(maestroVersionResult.reason, 'Failed to get Maestro version.');
+
+        throw new Error('Failed to ensure Maestro is installed.');
+      }
+
+      logger.info(`Maestro ${maestroVersionResult.value} is ready.`);
+      outputs.maestro_version.set(maestroVersionResult.value);
     },
   });
 }
 
-async function getMaestroVersion({ env }: { env: BuildStepEnv }): Promise<string | null> {
-  try {
-    const maestroVersion = await spawn('maestro', ['--version'], { stdio: 'pipe', env });
-    return maestroVersion.stdout.trim();
-  } catch {
-    return null;
-  }
+async function getMaestroVersion({ env }: { env: BuildStepEnv }): Promise<string> {
+  const maestroVersion = await spawn('maestro', ['--version'], { stdio: 'pipe', env });
+  return maestroVersion.stdout.trim();
 }
 
 async function installMaestro({
@@ -149,7 +163,9 @@ async function installMaestro({
       env: {
         ...env,
         MAESTRO_DIR: maestroDir,
-        MAESTRO_VERSION: version,
+        // _Not_ providing MAESTRO_VERSION installs latest.
+        // MAESTRO_VERSION is used to interpolate the download URL like github.com/releases/cli-$MAESTRO_VERSION...
+        MAESTRO_VERSION: version === 'latest' ? undefined : version,
       },
     });
     // That's where Maestro installs binary as of February 2024
@@ -211,7 +227,7 @@ async function isJavaInstalled({ env }: { env: BuildStepEnv }): Promise<boolean>
 }
 
 /**
- * Installs Java 11 from a file uploaded manually to GCS as cache.
+ * Installs Java 17 from a file uploaded manually to GCS as cache.
  * Should not be run outside of EAS Build VMs not to break users' environments.
  */
 async function installJavaFromGcs({
@@ -222,7 +238,7 @@ async function installJavaFromGcs({
   env: BuildStepEnv;
 }): Promise<void> {
   const downloadUrl =
-    'https://storage.googleapis.com/turtle-v2/zulu11.68.17-ca-jdk11.0.21-macosx_aarch64.dmg';
+    'https://storage.googleapis.com/turtle-v2/zulu17.60.17-ca-jdk17.0.16-macosx_aarch64.dmg';
   const filename = path.basename(downloadUrl);
   const tempDirectory = await fs.promises.mkdtemp(path.join(os.tmpdir(), 'install_java'));
   const installerPath = path.join(tempDirectory, filename);
@@ -246,7 +262,7 @@ async function installJavaFromGcs({
       [
         'installer',
         '-pkg',
-        path.join(installerMountDirectory, 'Double-Click to Install Azul Zulu JDK 11.pkg'),
+        path.join(installerMountDirectory, 'Double-Click to Install Azul Zulu JDK 17.pkg'),
         '-target',
         '/',
       ],

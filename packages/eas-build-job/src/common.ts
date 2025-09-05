@@ -28,6 +28,7 @@ export enum ArchiveSourceType {
   PATH = 'PATH',
   GCS = 'GCS',
   GIT = 'GIT',
+  R2 = 'R2',
 }
 
 export enum BuildTrigger {
@@ -38,6 +39,7 @@ export enum BuildTrigger {
 export type ArchiveSource =
   | { type: ArchiveSourceType.NONE }
   | { type: ArchiveSourceType.GCS; bucketKey: string; metadataLocation?: string }
+  | { type: ArchiveSourceType.R2; bucketKey: string }
   | { type: ArchiveSourceType.URL; url: string }
   | { type: ArchiveSourceType.PATH; path: string }
   | {
@@ -185,11 +187,13 @@ export const StaticWorkflowInterpolationContextZ = z.object({
   inputs: z.record(z.string(), z.union([z.string(), z.number(), z.boolean()])).optional(),
   github: z
     .object({
+      triggering_actor: z.string().optional(),
       event_name: z.enum(['push', 'pull_request', 'workflow_dispatch', 'schedule']),
       sha: z.string(),
       ref: z.string(),
       ref_name: z.string(),
       ref_type: z.string(),
+      commit_message: z.string().optional(),
       label: z.string().optional(),
       repository: z.string().optional(),
       repository_owner: z.string().optional(),
@@ -200,6 +204,18 @@ export const StaticWorkflowInterpolationContextZ = z.object({
               name: z.string(),
             })
             .optional(),
+          head_commit: z
+            .object({
+              message: z.string(),
+              id: z.string(),
+            })
+            .optional(),
+          pull_request: z
+            .object({
+              number: z.number(),
+            })
+            .optional(),
+          number: z.number().optional(),
           schedule: z.string().optional(),
           inputs: z.record(z.string(), z.union([z.string(), z.number(), z.boolean()])).optional(),
         })

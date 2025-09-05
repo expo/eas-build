@@ -241,9 +241,6 @@ async function resignAsync(ctx: BuildContext<Ios.Job>): Promise<Artifacts> {
     });
   });
 
-  if (!ctx.artifacts.APPLICATION_ARCHIVE) {
-    throw new Error('Builder must upload application archive');
-  }
   return ctx.artifacts;
 }
 

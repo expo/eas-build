@@ -1,6 +1,6 @@
 {
   "name": "@expo/eas-build-job",
-  "version": "1.0.190",
+  "version": "1.0.206",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "files": [
@@ -23,10 +23,10 @@
     "@types/node": "20.14.2",
     "jest": "^29.7.0",
     "ts-jest": "^29.1.4",
-    "typescript": "^5.3.3"
+    "typescript": "^5.5.4"
   },
   "dependencies": {
-    "@expo/logger": "1.0.117",
+    "@expo/logger": "1.0.206",
     "joi": "^17.13.1",
     "semver": "^7.6.2",
     "zod": "^3.23.8"
