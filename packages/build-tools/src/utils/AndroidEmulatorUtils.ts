@@ -8,6 +8,7 @@ import { bunyan } from '@expo/logger';
 import spawn, { SpawnPromise, SpawnResult } from '@expo/turtle-spawn';
 import FastGlob from 'fast-glob';
 import { z } from 'zod';
+import getenv from 'getenv';
 
 import { retryAsync } from './retry';
 
@@ -129,12 +130,72 @@ export namespace AndroidEmulatorUtils {
     // Add extra config to the device's ini file.
     const configIniFile = `${env.HOME}/.android/avd/${deviceName}.avd/config.ini`;
     try {
-      logger.info(`Adding extra config to ${configIniFile}.`);
-      const configIniFileContent = await fs.promises.readFile(configIniFile, 'utf-8');
-      await fs.promises.writeFile(
-        configIniFile,
-        `${configIniFileContent}\n${env.ANDROID_EMULATOR_EXTRA_CONFIG ?? ''}\n`
-      );
+      let configIniFileContent = await fs.promises.readFile(configIniFile, 'utf-8');
+
+      logger.info('Setting hw.ramSize to 2048.');
+      configIniFileContent = `${configIniFileContent}\nhw.ramSize=2048\n`;
+
+      const shouldResizeScreen = getenv.boolish('ANDROID_EMULATOR_ADJUST_SCREEN', false);
+      if (shouldResizeScreen) {
+        const currentDensityString = configIniFileContent.match(/hw.lcd.density=(\d+)/)?.[1];
+        const currentDensity = currentDensityString
+          ? parseInt(currentDensityString, 10)
+          : undefined;
+        const currentHeightString = configIniFileContent.match(/hw.lcd.height=(\d+)/)?.[1];
+        const currentHeight = currentHeightString ? parseInt(currentHeightString, 10) : undefined;
+        const currentWidthString = configIniFileContent.match(/hw.lcd.width=(\d+)/)?.[1];
+        const currentWidth = currentWidthString ? parseInt(currentWidthString, 10) : undefined;
+
+        if (currentDensity && currentDensity > 220) {
+          logger.info(
+            `Current density is ${currentDensity}, which we believe may impact performance.`
+          );
+          if (currentHeight && currentWidth) {
+            const newDensity = 220;
+            logger.info(`Setting hw.lcd.density to ${newDensity}.`);
+            configIniFileContent = `${configIniFileContent}\nhw.lcd.density=${newDensity}\n`;
+
+            const newHeight = Math.round((currentHeight * newDensity) / currentDensity);
+            const newWidth = Math.round((currentWidth * newDensity) / currentDensity);
+            logger.info(
+              `Setting scaled screen resolution: hw.lcd.height to ${newHeight} and hw.lcd.width to ${newWidth}.`
+            );
+            configIniFileContent = `${configIniFileContent}\nhw.lcd.height=${newHeight}\nhw.lcd.width=${newWidth}\n`;
+          } else {
+            logger.info(
+              'Could not find current screen resolution, setting to 1170x540 and 220 ppi.'
+            );
+            configIniFileContent = `${configIniFileContent}\nhw.lcd.height=${1170}\nhw.lcd.width=${540}\nhw.lcd.density=220\n`;
+          }
+        }
+      }
+
+      const shouldAdjustHeapSize = getenv.boolish('ANDROID_EMULATOR_ADJUST_HEAP_SIZE', true);
+      if (shouldAdjustHeapSize) {
+        const heapSizeString = configIniFileContent.match(/vm.heapSize=(\d\w+)/)?.[1];
+        if (!heapSizeString) {
+          logger.info('Setting vm.heapSize to 768 MB.');
+          configIniFileContent = `${configIniFileContent}\nvm.heapSize=768\n`;
+        } else if (heapSizeString) {
+          const heapSize = parseInt(heapSizeString, 10);
+          const lowerCaseHeapSizeString = heapSizeString.toLocaleLowerCase();
+          if (lowerCaseHeapSizeString.includes('g')) {
+            logger.info('vm.heapSize is in GB, skipping adjustment.');
+          } else if (heapSize < 768) {
+            logger.info('Bumping vm.heapSize to 768 MB.');
+            configIniFileContent = `${configIniFileContent}\nvm.heapSize=768\n`;
+          }
+        }
+      }
+
+      if (env.ANDROID_EMULATOR_EXTRA_CONFIG) {
+        logger.info(
+          `Adding extra config from $ANDROID_EMULATOR_EXTRA_CONFIG:\n${env.ANDROID_EMULATOR_EXTRA_CONFIG}`
+        );
+        configIniFileContent = `${configIniFileContent}\n${env.ANDROID_EMULATOR_EXTRA_CONFIG}\n`;
+      }
+
+      await fs.promises.writeFile(configIniFile, configIniFileContent);
     } catch (err) {
       logger.warn({ err }, `Failed to add extra config to ${configIniFile}.`);
     }
@@ -242,8 +303,6 @@ export namespace AndroidEmulatorUtils {
         '-no-boot-anim',
         '-writable-system',
         '-noaudio',
-        '-memory',
-        '8192',
         '-no-snapshot-save',
         '-avd',
         deviceName,
