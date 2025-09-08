@@ -129,7 +129,10 @@ export const ShellStepZ = CommonStepZ.extend({
     .array(
       z.union([
         // We allow a shorthand for outputs
-        z.string().transform((name) => ({ name, required: false })),
+        z.codec(z.string(), z.object({ name: z.string(), required: z.boolean().default(false) }), {
+          decode: (name) => ({ name, required: false }),
+          encode: (output) => output.name,
+        }),
         z.object({
           name: z.string(),
           required: z.boolean().optional(),
