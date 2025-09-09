@@ -8,7 +8,6 @@ import { bunyan } from '@expo/logger';
 import spawn, { SpawnPromise, SpawnResult } from '@expo/turtle-spawn';
 import FastGlob from 'fast-glob';
 import { z } from 'zod';
-import getenv from 'getenv';
 
 import { retryAsync } from './retry';
 
@@ -135,7 +134,8 @@ export namespace AndroidEmulatorUtils {
       logger.info('Setting hw.ramSize to 2048.');
       configIniFileContent = `${configIniFileContent}\nhw.ramSize=2048\n`;
 
-      const shouldResizeScreen = getenv.boolish('ANDROID_EMULATOR_ADJUST_SCREEN', false);
+      const shouldResizeScreen =
+        env.ANDROID_EMULATOR_ADJUST_SCREEN === 'true' || env.ANDROID_EMULATOR_ADJUST_SCREEN === '1';
       if (shouldResizeScreen) {
         const currentDensityString = configIniFileContent.match(/hw.lcd.density=(\d+)/)?.[1];
         const currentDensity = currentDensityString
@@ -170,7 +170,9 @@ export namespace AndroidEmulatorUtils {
         }
       }
 
-      const shouldAdjustHeapSize = getenv.boolish('ANDROID_EMULATOR_ADJUST_HEAP_SIZE', true);
+      const shouldAdjustHeapSize =
+        env.ANDROID_EMULATOR_ADJUST_HEAP_SIZE !== 'false' &&
+        env.ANDROID_EMULATOR_ADJUST_HEAP_SIZE !== '0';
       if (shouldAdjustHeapSize) {
         const heapSizeString = configIniFileContent.match(/vm.heapSize=(\d\w+)/)?.[1];
         if (!heapSizeString) {

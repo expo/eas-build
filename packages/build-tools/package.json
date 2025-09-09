@@ -45,7 +45,6 @@
     "@urql/core": "^6.0.1",
     "fast-glob": "^3.3.2",
     "fs-extra": "^11.2.0",
-    "getenv": "^2.0.0",
     "gql.tada": "^1.8.13",
     "joi": "^17.13.1",
     "lodash": "^4.17.21",
@@ -64,7 +63,6 @@
   "devDependencies": {
     "@expo/repack-app": "~0.2.5",
     "@types/fs-extra": "^11.0.4",
-    "@types/getenv": "^1.0.3",
     "@types/jest": "^29.5.12",
     "@types/lodash": "^4.17.4",
     "@types/node": "20.14.2",
