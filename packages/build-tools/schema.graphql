@@ -1897,6 +1897,7 @@ type Build implements ActivityTimelineProjectActivity & BuildOrBuildJob {
   maxRetryTimeMinutes: Int
   app: App!
   isWaived: Boolean!
+  waiverType: EASBuildWaiverType
   isForIosSimulator: Boolean!
   deployment: Deployment
   cliVersion: String
