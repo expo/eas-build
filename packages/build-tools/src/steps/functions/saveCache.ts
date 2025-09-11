@@ -67,10 +67,8 @@ export function createSaveCacheFunction(): BuildFunction {
           paths,
           size,
         });
-
-        logger.info(`Uploaded cache archive to ${archivePath} (${formatBytes(size)}).`);
       } catch (error) {
-        logger.error({ err: error }, 'Failed to restore cache');
+        logger.error({ err: error }, 'Failed to create cache');
       }
     },
   });
@@ -96,7 +94,7 @@ export async function uploadCacheAsync({
   size: number;
 }): Promise<void> {
   const response = await retryOnDNSFailure(fetch)(
-    new URL('/turtle-caches/upload-sessions', expoApiServerURL),
+    new URL('v2/turtle-caches/upload-sessions', expoApiServerURL),
     {
       method: 'POST',
       body: JSON.stringify({
@@ -113,6 +111,10 @@ export async function uploadCacheAsync({
   );
 
   if (!response.ok) {
+    if (response.status === 409) {
+      logger.info(`Cache already exists, skipping upload`);
+      return;
+    }
     const textResult = await asyncResult(response.text());
     throw new Error(`Unexpected response from server (${response.status}): ${textResult.value}`);
   }
@@ -136,6 +138,7 @@ export async function uploadCacheAsync({
       `Unexpected response from cache server (${uploadResponse.status}): ${uploadResponse.statusText}`
     );
   }
+  logger.info(`Uploaded cache archive to ${archivePath} (${formatBytes(size)}).`);
 }
 
 export async function compressCacheAsync({

@@ -83,7 +83,7 @@ export function createRestoreCacheFunction(): BuildFunction {
         });
 
         const { size } = await fs.promises.stat(archivePath);
-        logger.info(`Downloaded cache archive to ${archivePath} (${formatBytes(size)}).`);
+        logger.info(`Downloaded cache archive from ${archivePath} (${formatBytes(size)}).`);
 
         await decompressCacheAsync({
           archivePath,
@@ -118,7 +118,7 @@ export async function downloadCacheAsync({
   keyPrefixes: string[];
 }): Promise<{ archivePath: string; matchedKey: string }> {
   const response = await retryOnDNSFailure(fetch)(
-    new URL('/turtle-caches/download', expoApiServerURL),
+    new URL('v2/turtle-caches/download', expoApiServerURL),
     {
       method: 'POST',
       body: JSON.stringify({
@@ -135,6 +135,11 @@ export async function downloadCacheAsync({
   );
 
   if (!response.ok) {
+    if (response.status === 404) {
+      throw new Error(
+        `No cache found for this key, ensure it was created with eas/save_cache (${response.status})`
+      );
+    }
     const textResult = await asyncResult(response.text());
     throw new Error(`Unexpected response from server (${response.status}): ${textResult.value}`);
   }
