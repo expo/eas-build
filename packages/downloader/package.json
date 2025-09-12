@@ -1,6 +1,6 @@
 {
   "name": "@expo/downloader",
-  "version": "1.0.218",
+  "version": "1.0.221",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "files": [
