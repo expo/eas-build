@@ -4096,6 +4096,7 @@ enum WorkflowJobType {
   SLACK
   DOC
   REPACK
+  GITHUB_COMMENT
 }
 
 type WorkflowJob {
