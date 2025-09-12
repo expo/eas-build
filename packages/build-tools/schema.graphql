@@ -2865,13 +2865,6 @@ enum SubmissionAndroidArchiveType {
   AAB
 }
 
-enum SubmissionAndroidTrack {
-  PRODUCTION
-  INTERNAL
-  ALPHA
-  BETA
-}
-
 enum SubmissionAndroidReleaseStatus {
   DRAFT
   IN_PROGRESS
@@ -2927,7 +2920,7 @@ type IosSubmissionConfig {
 type AndroidSubmissionConfig {
   applicationIdentifier: String @deprecated(reason: "applicationIdentifier is deprecated and will be auto-detected on submit")
   archiveType: SubmissionAndroidArchiveType @deprecated(reason: "archiveType is deprecated and will be null")
-  track: SubmissionAndroidTrack!
+  track: String!
   releaseStatus: SubmissionAndroidReleaseStatus
   rollout: Float
 }
@@ -6087,6 +6080,8 @@ input IosSubmissionConfigInput {
   changelog: String
   groups: [String!]
 }
+
+scalar SubmissionAndroidTrack
 
 input AndroidSubmissionConfigInput {
   googleServiceAccountKeyId: String

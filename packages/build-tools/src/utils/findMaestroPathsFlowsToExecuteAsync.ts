@@ -14,7 +14,7 @@ const FlowConfigSchema = z.object({
 
 const WorkspaceConfigSchema = z.object({
   flows: z.array(z.string()).optional(),
-  executionOrder: z.record(z.unknown()).optional(),
+  executionOrder: z.record(z.string(), z.unknown()).optional(),
   includeTags: z.array(z.string()).optional(),
   excludeTags: z.array(z.string()).optional(),
 });
