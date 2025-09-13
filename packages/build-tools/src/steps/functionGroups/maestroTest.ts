@@ -100,16 +100,16 @@ export function createEasMaestroTestFunctionGroup(
             name: 'install_app',
             displayName: `Install app to Emulator`,
             command: `
-              # shopt -s globstar is necessary to add /**/ support
-              shopt -s globstar
               # shopt -s nullglob is necessary not to try to install
               # SEARCH_PATH literally if there are no matching files.
               shopt -s nullglob
 
               SEARCH_PATH="${searchPath}"
+              SEARCH_DIR=\${SEARCH_PATH%"*/"*}
+              BASENAME=\${SEARCH_PATH##*/}
               FILES_FOUND=false
 
-              for APP_PATH in $SEARCH_PATH; do
+              for APP_PATH in $(find $SEARCH_DIR -name "$BASENAME"); do
                 FILES_FOUND=true
                 echo "Installing \\"$APP_PATH\\""
                 adb install "$APP_PATH"
