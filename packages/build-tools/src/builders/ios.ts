@@ -1,3 +1,6 @@
+import { createHash } from 'crypto';
+import path from 'path';
+
 import plist from '@expo/plist';
 import { IOSConfig } from '@expo/config-plugins';
 import { ManagedArtifactType, BuildMode, BuildPhase, Ios, Workflow } from '@expo/eas-build-job';
@@ -22,6 +25,7 @@ import { prebuildAsync } from '../common/prebuild';
 import { prepareExecutableAsync } from '../utils/prepareBuildExecutable';
 import { getParentAndDescendantProcessPidsAsync } from '../utils/processes';
 import { eagerBundleAsync, shouldUseEagerBundle } from '../common/eagerBundle';
+import { uploadCacheAsync, compressCacheAsync } from '../steps/functions/saveCache';
 
 import { runBuilderWithHooksAsync } from './common';
 import { runCustomBuildAsync } from './custom';
@@ -171,7 +175,59 @@ async function buildAsync(ctx: BuildContext<Ios.Job>): Promise<void> {
   });
 
   await ctx.runBuildPhase(BuildPhase.SAVE_CACHE, async () => {
-    await ctx.cacheManager?.saveCache(ctx);
+    const workingDirectory = ctx.getReactNativeProjectDirectory();
+    const paths = ['node_modules', 'ios/Pods'];
+
+    const packageJsonPath = path.join(workingDirectory, 'package.json');
+    const podfileLockPath = path.join(workingDirectory, 'ios/Podfile.lock');
+
+    let keyData = 'ios-cache';
+    try {
+      if (await fs.pathExists(packageJsonPath)) {
+        const packageJson = await fs.readJson(packageJsonPath);
+        keyData +=
+          JSON.stringify(packageJson.dependencies || {}) +
+          JSON.stringify(packageJson.devDependencies || {});
+      }
+      if (await fs.pathExists(podfileLockPath)) {
+        const podfileLock = await fs.readFile(podfileLockPath, 'utf8');
+        keyData += podfileLock;
+      }
+    } catch (err) {
+      ctx.logger.warn({ err }, 'Failed to read package files for cache key generation');
+    }
+
+    const cacheKey = `ios-cache-${createHash('sha256').update(keyData).digest('hex').substring(0, 16)}`;
+
+    const jobRunId = nullthrows(ctx.env.EAS_BUILD_ID, 'EAS_BUILD_ID is not set');
+    const robotAccessToken = nullthrows(
+      ctx.job.secrets?.robotAccessToken,
+      'Robot access token is required for cache operations'
+    );
+
+    try {
+      const { archivePath } = await compressCacheAsync({
+        paths,
+        workingDirectory,
+        verbose: true,
+        logger: ctx.logger,
+      });
+
+      const { size } = await fs.stat(archivePath);
+
+      await uploadCacheAsync({
+        logger: ctx.logger,
+        jobRunId,
+        expoApiServerURL: ctx.env.__API_SERVER_URL ?? 'https://exp.host',
+        robotAccessToken,
+        archivePath,
+        key: cacheKey,
+        paths,
+        size,
+      });
+    } catch (err) {
+      ctx.logger.warn({ err }, 'Failed to save cache');
+    }
   });
 }
 
