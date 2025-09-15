@@ -47,6 +47,9 @@ export async function installDependenciesAsync({
     default:
       throw new Error(`Unsupported package manager: ${packageManager}`);
   }
+  if (env['EAS_CUSTOM_INSTALL_DEPENDENCIES']) {
+    args = env['EAS_CUSTOM_INSTALL_DEPENDENCIES'].split(' ');
+  }
   if (env['EAS_VERBOSE'] === '1') {
     args = [...args, '--verbose'];
   }
