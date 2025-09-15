@@ -30,6 +30,8 @@ import { createSubmissionEntityFunction } from './functions/createSubmissionEnti
 import { createDownloadBuildFunction } from './functions/downloadBuild';
 import { createRepackBuildFunction } from './functions/repack';
 import { createDownloadArtifactFunction } from './functions/downloadArtifact';
+import { createRestoreCacheFunction } from './functions/restoreCache';
+import { createSaveCacheFunction } from './functions/saveCache';
 import { createInternalEasMaestroTestFunction } from './functions/internalMaestroTest';
 
 export function getEasFunctions(ctx: CustomBuildContext): BuildFunction[] {
@@ -42,6 +44,9 @@ export function getEasFunctions(ctx: CustomBuildContext): BuildFunction[] {
     createPrebuildBuildFunction(),
     createDownloadBuildFunction(),
     createRepackBuildFunction(),
+
+    createRestoreCacheFunction(),
+    createSaveCacheFunction(),
 
     configureEASUpdateIfInstalledFunction(),
     injectAndroidCredentialsFunction(),
