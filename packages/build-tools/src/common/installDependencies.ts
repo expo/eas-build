@@ -35,7 +35,11 @@ export async function installDependenciesAsync({
     case PackageManager.YARN: {
       const isModernYarnVersion = await isUsingModernYarnVersion(cwd);
       if (isModernYarnVersion) {
-        args = ['install', '--inline-builds', useFrozenLockfile ? '--immutable' : '--no-immutable'];
+        if (env['EAS_YARN_FOCUS_WORKSPACE']) {
+          args = ['workspaces', 'focus', env['EAS_YARN_FOCUS_WORKSPACE'], '--production'];
+        } else {
+          args = ['install', '--inline-builds', useFrozenLockfile ? '--immutable' : '--no-immutable'];
+        }
       } else {
         args = ['install', ...(useFrozenLockfile ? ['--frozen-lockfile'] : [])];
       }
@@ -46,9 +50,6 @@ export async function installDependenciesAsync({
       break;
     default:
       throw new Error(`Unsupported package manager: ${packageManager}`);
-  }
-  if (env['EAS_CUSTOM_INSTALL_DEPENDENCIES']) {
-    args = env['EAS_CUSTOM_INSTALL_DEPENDENCIES'].split(' ');
   }
   if (env['EAS_VERBOSE'] === '1') {
     args = [...args, '--verbose'];
