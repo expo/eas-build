@@ -25,7 +25,7 @@ export async function installDependenciesAsync({
   let args: string[];
   switch (packageManager) {
     case PackageManager.NPM: {
-      args = [useFrozenLockfile ? 'ci' : 'install'];
+      args = useFrozenLockfile ? ['ci', '--include=dev'] : ['install'];
       break;
     }
     case PackageManager.PNPM: {
