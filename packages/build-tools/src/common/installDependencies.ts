@@ -36,7 +36,7 @@ export async function installDependenciesAsync({
       const isModernYarnVersion = await isUsingModernYarnVersion(cwd);
       if (isModernYarnVersion) {
         if (env['EAS_YARN_FOCUS_WORKSPACE']) {
-          args = ['workspaces', 'focus', env['EAS_YARN_FOCUS_WORKSPACE'], '--production'];
+          args = ['workspaces', 'focus', env['EAS_YARN_FOCUS_WORKSPACE']];
         } else {
           args = ['install', '--inline-builds', useFrozenLockfile ? '--immutable' : '--no-immutable'];
         }
