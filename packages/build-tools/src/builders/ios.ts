@@ -180,6 +180,7 @@ async function buildAsync(ctx: BuildContext<Ios.Job>): Promise<void> {
 
     const packageJsonPath = path.join(workingDirectory, 'package.json');
     const podfileLockPath = path.join(workingDirectory, 'ios/Podfile.lock');
+    const yarnLockPath = path.join(workingDirectory, 'yarn.lock');
 
     let keyData = 'ios-cache';
     try {
@@ -188,10 +189,21 @@ async function buildAsync(ctx: BuildContext<Ios.Job>): Promise<void> {
         keyData +=
           JSON.stringify(packageJson.dependencies || {}) +
           JSON.stringify(packageJson.devDependencies || {});
+
+        if (packageJson.dependencies?.expo) {
+          keyData += `expo:${packageJson.dependencies.expo}`;
+        }
+        if (packageJson.devDependencies?.['@expo/cli']) {
+          keyData += `expo-cli:${packageJson.devDependencies['@expo/cli']}`;
+        }
       }
       if (await fs.pathExists(podfileLockPath)) {
         const podfileLock = await fs.readFile(podfileLockPath, 'utf8');
         keyData += podfileLock;
+      }
+      if (await fs.pathExists(yarnLockPath)) {
+        const yarnLock = await fs.readFile(yarnLockPath, 'utf8');
+        keyData += yarnLock;
       }
     } catch (err) {
       ctx.logger.warn({ err }, 'Failed to read package files for cache key generation');
