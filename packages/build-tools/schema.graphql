@@ -6050,7 +6050,6 @@ type SubmissionMutation {
 
 input CreateIosSubmissionInput {
   appId: ID!
-  archiveUrl: String
   archiveSource: SubmissionArchiveSourceInput
   config: IosSubmissionConfigInput!
   submittedBuildId: ID
@@ -6058,7 +6057,6 @@ input CreateIosSubmissionInput {
 
 input CreateAndroidSubmissionInput {
   appId: ID!
-  archiveUrl: String
   archiveSource: SubmissionArchiveSourceInput
   config: AndroidSubmissionConfigInput!
   submittedBuildId: ID
@@ -6074,7 +6072,6 @@ input IosSubmissionConfigInput {
   appleAppSpecificPassword: String
   ascApiKey: AscApiKeyInput
   ascApiKeyId: String
-  archiveUrl: String
   appleIdUsername: String
   ascAppIdentifier: String!
   isVerboseFastlaneEnabled: Boolean
@@ -6087,7 +6084,6 @@ scalar SubmissionAndroidTrack
 input AndroidSubmissionConfigInput {
   googleServiceAccountKeyId: String
   googleServiceAccountKeyJson: String
-  archiveUrl: String
   applicationIdentifier: String
   track: SubmissionAndroidTrack!
   releaseStatus: SubmissionAndroidReleaseStatus
