@@ -248,6 +248,7 @@ export type DynamicInterpolationContext = {
   contains: (value: string, substring: string) => boolean;
   startsWith: (value: string, prefix: string) => boolean;
   endsWith: (value: string, suffix: string) => boolean;
+  hashFiles: (pattern: string) => string;
 };
 
 export type WorkflowInterpolationContext = StaticWorkflowInterpolationContext &
