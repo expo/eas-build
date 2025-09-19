@@ -14,6 +14,7 @@ import { asyncResult } from '@expo/results';
 import { retryOnDNSFailure } from '../../utils/retryOnDNSFailure';
 import { formatBytes } from '../../utils/artifacts';
 import { getCacheVersion } from '../utils/cache';
+import { Platform } from '@expo/eas-build-job';
 
 export function createSaveCacheFunction(): BuildFunction {
   return new BuildFunction({
@@ -36,11 +37,6 @@ export function createSaveCacheFunction(): BuildFunction {
       const { logger } = stepsCtx;
 
       try {
-        if (stepsCtx.global.staticContext.job.platform) {
-          logger.error('Caches are not supported in build jobs yet.');
-          return;
-        }
-
         const paths = z
           .array(z.string())
           .parse(((inputs.path.value ?? '') as string).split(/[\r\n]+/))
@@ -59,13 +55,14 @@ export function createSaveCacheFunction(): BuildFunction {
 
         await uploadCacheAsync({
           logger,
-          jobRunId: taskId,
+          buildId: taskId,
           expoApiServerURL: stepsCtx.global.staticContext.expoApiServerURL,
-          robotAccessToken: stepsCtx.global.staticContext.job.secrets?.robotAccessToken ?? null,
+          robotAccessToken: stepsCtx.global.staticContext.job.secrets?.robotAccessToken ?? '',
           archivePath,
           key,
           paths,
           size,
+          platform: stepsCtx.global.staticContext.job.platform,
         });
       } catch (error) {
         logger.error({ err: error }, 'Failed to create cache');
@@ -76,29 +73,39 @@ export function createSaveCacheFunction(): BuildFunction {
 
 export async function uploadCacheAsync({
   logger,
-  jobRunId,
+  buildId,
   expoApiServerURL,
   robotAccessToken,
   paths,
   key,
   archivePath,
   size,
+  platform,
 }: {
   logger: bunyan;
-  jobRunId: string;
+  buildId: string;
   expoApiServerURL: string;
   robotAccessToken: string;
   paths: string[];
   key: string;
   archivePath: string;
   size: number;
+  platform: Platform | undefined;
 }): Promise<void> {
+  const routerURL = platform ? 'v2/turtle-builds/caches/upload-sessions' : 'v2/turtle-caches/upload-sessions'
+
   const response = await retryOnDNSFailure(fetch)(
-    new URL('v2/turtle-caches/upload-sessions', expoApiServerURL),
+    new URL(routerURL, expoApiServerURL),
     {
       method: 'POST',
-      body: JSON.stringify({
-        jobRunId,
+      body: platform ? JSON.stringify({
+        buildId,
+        key,
+        version: getCacheVersion(paths),
+        size,
+      })
+      : JSON.stringify({
+        jobRunId:buildId,
         key,
         version: getCacheVersion(paths),
         size,
@@ -109,7 +116,7 @@ export async function uploadCacheAsync({
       },
     }
   );
-
+  logger.info('version - ', getCacheVersion(paths))
   if (!response.ok) {
     if (response.status === 409) {
       logger.info(`Cache already exists, skipping upload`);

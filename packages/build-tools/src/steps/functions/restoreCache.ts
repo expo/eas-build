@@ -20,6 +20,7 @@ import { asyncResult } from '@expo/results';
 import { retryOnDNSFailure } from '../../utils/retryOnDNSFailure';
 import { formatBytes } from '../../utils/artifacts';
 import { getCacheVersion } from '../utils/cache';
+import { Platform } from '@expo/eas-build-job';
 
 const streamPipeline = promisify(stream.pipeline);
 
@@ -74,12 +75,13 @@ export function createRestoreCacheFunction(): BuildFunction {
 
         const { archivePath, matchedKey } = await downloadCacheAsync({
           logger,
-          jobRunId: taskId,
+          buildId: taskId,
           expoApiServerURL: stepsCtx.global.staticContext.expoApiServerURL,
           robotAccessToken: stepsCtx.global.staticContext.job.secrets?.robotAccessToken ?? null,
           paths,
           key,
           keyPrefixes: restoreKeys,
+          platform: stepsCtx.global.staticContext.job.platform,
         });
 
         const { size } = await fs.promises.stat(archivePath);
@@ -102,31 +104,40 @@ export function createRestoreCacheFunction(): BuildFunction {
 
 export async function downloadCacheAsync({
   logger,
-  jobRunId,
+  buildId,
   expoApiServerURL,
   robotAccessToken,
   paths,
   key,
   keyPrefixes,
+  platform,
 }: {
   logger: bunyan;
-  jobRunId: string;
+  buildId: string;
   expoApiServerURL: string;
   robotAccessToken: string;
   paths: string[];
   key: string;
   keyPrefixes: string[];
+  platform: Platform | undefined;
 }): Promise<{ archivePath: string; matchedKey: string }> {
+  const routerURL = platform ? 'v2/turtle-builds/caches/download' : 'v2/turtle-caches/download'
   const response = await retryOnDNSFailure(fetch)(
-    new URL('v2/turtle-caches/download', expoApiServerURL),
+    new URL(routerURL, expoApiServerURL),
     {
       method: 'POST',
-      body: JSON.stringify({
-        jobRunId,
+      body: platform ? JSON.stringify({
+        buildId,
         key,
         version: getCacheVersion(paths),
         keyPrefixes,
-      }),
+      })
+      : JSON.stringify({
+        jobRunId:buildId,
+        key,
+        version: getCacheVersion(paths),
+        keyPrefixes,
+      }) ,
       headers: {
         Authorization: `Bearer ${robotAccessToken}`,
         'Content-Type': 'application/json',
@@ -134,6 +145,7 @@ export async function downloadCacheAsync({
     }
   );
 
+  logger.info('version - ', getCacheVersion(paths))
   if (!response.ok) {
     if (response.status === 404) {
       throw new Error(
