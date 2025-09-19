@@ -14,6 +14,7 @@ import { asyncResult } from '@expo/results';
 import { retryOnDNSFailure } from '../../utils/retryOnDNSFailure';
 import { formatBytes } from '../../utils/artifacts';
 import { getCacheVersion } from '../utils/cache';
+import { Platform } from '@expo/eas-build-job';
 
 export function createSaveCacheFunction(): BuildFunction {
   return new BuildFunction({
@@ -36,11 +37,6 @@ export function createSaveCacheFunction(): BuildFunction {
       const { logger } = stepsCtx;
 
       try {
-        // if (stepsCtx.global.staticContext.job.platform) {
-        //   logger.error('Caches are not supported in build jobs yet.');
-        //   return;
-        // }
-
         const paths = z
           .array(z.string())
           .parse(((inputs.path.value ?? '') as string).split(/[\r\n]+/))
@@ -66,6 +62,7 @@ export function createSaveCacheFunction(): BuildFunction {
           key,
           paths,
           size,
+          platform: stepsCtx.global.staticContext.job.platform,
         });
       } catch (error) {
         logger.error({ err: error }, 'Failed to create cache');
@@ -83,6 +80,7 @@ export async function uploadCacheAsync({
   key,
   archivePath,
   size,
+  platform,
 }: {
   logger: bunyan;
   buildId: string;
@@ -92,13 +90,22 @@ export async function uploadCacheAsync({
   key: string;
   archivePath: string;
   size: number;
+  platform: Platform | undefined;
 }): Promise<void> {
+  const routerURL = platform ? 'v2/turtle-builds/caches/upload-sessions' : 'v2/turtle-caches/upload-sessions'
+
   const response = await retryOnDNSFailure(fetch)(
-    new URL('v2/turtle-builds/caches/upload-sessions', expoApiServerURL),
+    new URL(routerURL, expoApiServerURL),
     {
       method: 'POST',
-      body: JSON.stringify({
+      body: platform ? JSON.stringify({
         buildId,
+        key,
+        version: getCacheVersion(paths),
+        size,
+      })
+      : JSON.stringify({
+        jobRunId:buildId,
         key,
         version: getCacheVersion(paths),
         size,

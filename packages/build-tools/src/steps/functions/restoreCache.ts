@@ -20,6 +20,7 @@ import { asyncResult } from '@expo/results';
 import { retryOnDNSFailure } from '../../utils/retryOnDNSFailure';
 import { formatBytes } from '../../utils/artifacts';
 import { getCacheVersion } from '../utils/cache';
+import { Platform } from '@expo/eas-build-job';
 
 const streamPipeline = promisify(stream.pipeline);
 
@@ -80,6 +81,7 @@ export function createRestoreCacheFunction(): BuildFunction {
           paths,
           key,
           keyPrefixes: restoreKeys,
+          platform: stepsCtx.global.staticContext.job.platform,
         });
 
         const { size } = await fs.promises.stat(archivePath);
@@ -108,6 +110,7 @@ export async function downloadCacheAsync({
   paths,
   key,
   keyPrefixes,
+  platform,
 }: {
   logger: bunyan;
   buildId: string;
@@ -116,17 +119,25 @@ export async function downloadCacheAsync({
   paths: string[];
   key: string;
   keyPrefixes: string[];
+  platform: Platform | undefined;
 }): Promise<{ archivePath: string; matchedKey: string }> {
+  const routerURL = platform ? 'v2/turtle-builds/caches/download' : 'v2/turtle-caches/download'
   const response = await retryOnDNSFailure(fetch)(
-    new URL('v2/turtle-builds/caches/download', expoApiServerURL),
+    new URL(routerURL, expoApiServerURL),
     {
       method: 'POST',
-      body: JSON.stringify({
+      body: platform ? JSON.stringify({
         buildId,
         key,
         version: getCacheVersion(paths),
         keyPrefixes,
-      }),
+      })
+      : JSON.stringify({
+        jobRunId:buildId,
+        key,
+        version: getCacheVersion(paths),
+        keyPrefixes,
+      }) ,
       headers: {
         Authorization: `Bearer ${robotAccessToken}`,
         'Content-Type': 'application/json',

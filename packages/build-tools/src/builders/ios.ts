@@ -131,6 +131,7 @@ async function buildAsync(ctx: BuildContext<Ios.Job>): Promise<void> {
           paths,
           key: cacheKey,
           keyPrefixes: [],
+          platform: ctx.job.platform,
         });
 
         await decompressCacheAsync({
@@ -302,6 +303,7 @@ async function buildAsync(ctx: BuildContext<Ios.Job>): Promise<void> {
         key: cacheKey,
         paths,
         size,
+        platform: ctx.job.platform,
       });
     } catch (err) {
       ctx.logger.warn({ err }, 'Failed to save cache');
