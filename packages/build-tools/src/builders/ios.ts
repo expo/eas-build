@@ -26,6 +26,7 @@ import { prepareExecutableAsync } from '../utils/prepareBuildExecutable';
 import { getParentAndDescendantProcessPidsAsync } from '../utils/processes';
 import { eagerBundleAsync, shouldUseEagerBundle } from '../common/eagerBundle';
 import { uploadCacheAsync, compressCacheAsync } from '../steps/functions/saveCache';
+import { downloadCacheAsync, decompressCacheAsync } from '../steps/functions/restoreCache';
 
 import { runBuilderWithHooksAsync } from './common';
 import { runCustomBuildAsync } from './custom';
@@ -77,9 +78,79 @@ async function buildAsync(ctx: BuildContext<Ios.Job>): Promise<void> {
     });
 
     await ctx.runBuildPhase(BuildPhase.RESTORE_CACHE, async () => {
-      await ctx.cacheManager?.restoreCache(ctx);
-    });
+      const workingDirectory = ctx.getReactNativeProjectDirectory();
+      const paths = ['node_modules'];//, 'ios/Pods'];
 
+      const packageJsonPath = path.join(workingDirectory, 'package.json');
+      // const podfileLockPath = path.join(workingDirectory, 'ios/Podfile.lock');
+      const yarnLockPath = path.join(workingDirectory, 'yarn.lock');
+
+      let keyData = 'ios-cache';
+      try {
+        if (await fs.pathExists(packageJsonPath)) {
+          const packageJson = await fs.readJson(packageJsonPath);
+          keyData +=
+            JSON.stringify(packageJson.dependencies || {}) +
+            JSON.stringify(packageJson.devDependencies || {});
+
+          if (packageJson.dependencies?.expo) {
+            keyData += `expo:${packageJson.dependencies.expo}`;
+          }
+          if (packageJson.devDependencies?.['@expo/cli']) {
+            keyData += `expo-cli:${packageJson.devDependencies['@expo/cli']}`;
+          }
+        }
+        // if (await fs.pathExists(podfileLockPath)) {
+        //   const podfileLock = await fs.readFile(podfileLockPath, 'utf8');
+        //   keyData += podfileLock;
+        // }
+        if (await fs.pathExists(yarnLockPath)) {
+          const yarnLock = await fs.readFile(yarnLockPath, 'utf8');
+          keyData += yarnLock;
+        }
+      } catch (err) {
+        ctx.logger.warn({ err }, 'Failed to read package files for cache key generation');
+      }
+      ctx.logger.info("RESTORE - ", keyData)
+      const cacheKey = `ios-cache-${createHash('sha256').update(keyData).digest('hex').substring(0, 16)}`;
+
+      let jobRunId;
+      if(ctx.env.EAS_BUILD_ID){
+        jobRunId = ctx.env.EAS_BUILD_ID
+      } else {
+        jobRunId = nullthrows(ctx.env.__WORKFLOW_JOB_ID, 'EAS_BUILD_ID or __WORKFLOW_JOB_ID is not set');
+      }
+      const robotAccessToken = nullthrows(
+        ctx.job.secrets?.robotAccessToken,
+        'Robot access token is required for cache operations'
+      );
+
+      ctx.logger.info("key - ", cacheKey)
+      ctx.logger.info("paths - ", paths)
+      try {
+        const { archivePath } = await downloadCacheAsync({
+          logger: ctx.logger,
+          buildId:jobRunId,
+          expoApiServerURL: ctx.env.__API_SERVER_URL ?? 'https://exp.host',
+          robotAccessToken,
+          paths,
+          key: cacheKey,
+          keyPrefixes: [],
+        });
+
+        await decompressCacheAsync({
+          archivePath,
+          workingDirectory,
+          verbose: true,
+          logger: ctx.logger,
+        });
+
+        ctx.logger.info('Cache restored successfully');
+      } catch (err) {
+        ctx.logger.warn({ err }, 'Failed to restore cache');
+      }
+    });
+    
     await ctx.runBuildPhase(BuildPhase.INSTALL_PODS, async () => {
       await runInstallPodsAsync(ctx);
     });
@@ -176,10 +247,10 @@ async function buildAsync(ctx: BuildContext<Ios.Job>): Promise<void> {
 
   await ctx.runBuildPhase(BuildPhase.SAVE_CACHE, async () => {
     const workingDirectory = ctx.getReactNativeProjectDirectory();
-    const paths = ['node_modules', 'ios/Pods'];
+    const paths = ['node_modules'];//, 'ios/Pods'];
 
     const packageJsonPath = path.join(workingDirectory, 'package.json');
-    const podfileLockPath = path.join(workingDirectory, 'ios/Podfile.lock');
+    // const podfileLockPath = path.join(workingDirectory, 'ios/Podfile.lock');
     const yarnLockPath = path.join(workingDirectory, 'yarn.lock');
 
     let keyData = 'ios-cache';
@@ -197,10 +268,10 @@ async function buildAsync(ctx: BuildContext<Ios.Job>): Promise<void> {
           keyData += `expo-cli:${packageJson.devDependencies['@expo/cli']}`;
         }
       }
-      if (await fs.pathExists(podfileLockPath)) {
-        const podfileLock = await fs.readFile(podfileLockPath, 'utf8');
-        keyData += podfileLock;
-      }
+      // if (await fs.pathExists(podfileLockPath)) {
+      //   const podfileLock = await fs.readFile(podfileLockPath, 'utf8');
+      //   keyData += podfileLock;
+      // }
       if (await fs.pathExists(yarnLockPath)) {
         const yarnLock = await fs.readFile(yarnLockPath, 'utf8');
         keyData += yarnLock;
@@ -208,10 +279,15 @@ async function buildAsync(ctx: BuildContext<Ios.Job>): Promise<void> {
     } catch (err) {
       ctx.logger.warn({ err }, 'Failed to read package files for cache key generation');
     }
-
+    ctx.logger.info("SAVE - ", keyData)
     const cacheKey = `ios-cache-${createHash('sha256').update(keyData).digest('hex').substring(0, 16)}`;
 
-    const jobRunId = nullthrows(ctx.env.EAS_BUILD_ID, 'EAS_BUILD_ID is not set');
+    let jobRunId;
+    if(ctx.env.EAS_BUILD_ID){
+      jobRunId = ctx.env.EAS_BUILD_ID
+    } else {
+      jobRunId = nullthrows(ctx.env.__WORKFLOW_JOB_ID, 'EAS_BUILD_ID or __WORKFLOW_JOB_ID is not set');
+    }
     const robotAccessToken = nullthrows(
       ctx.job.secrets?.robotAccessToken,
       'Robot access token is required for cache operations'
@@ -229,7 +305,7 @@ async function buildAsync(ctx: BuildContext<Ios.Job>): Promise<void> {
 
       await uploadCacheAsync({
         logger: ctx.logger,
-        jobRunId,
+        buildId:jobRunId,
         expoApiServerURL: ctx.env.__API_SERVER_URL ?? 'https://exp.host',
         robotAccessToken,
         archivePath,

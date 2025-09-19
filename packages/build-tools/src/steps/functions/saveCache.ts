@@ -36,10 +36,10 @@ export function createSaveCacheFunction(): BuildFunction {
       const { logger } = stepsCtx;
 
       try {
-        if (stepsCtx.global.staticContext.job.platform) {
-          logger.error('Caches are not supported in build jobs yet.');
-          return;
-        }
+        // if (stepsCtx.global.staticContext.job.platform) {
+        //   logger.error('Caches are not supported in build jobs yet.');
+        //   return;
+        // }
 
         const paths = z
           .array(z.string())
@@ -59,9 +59,9 @@ export function createSaveCacheFunction(): BuildFunction {
 
         await uploadCacheAsync({
           logger,
-          jobRunId: taskId,
+          buildId: taskId,
           expoApiServerURL: stepsCtx.global.staticContext.expoApiServerURL,
-          robotAccessToken: stepsCtx.global.staticContext.job.secrets?.robotAccessToken ?? null,
+          robotAccessToken: stepsCtx.global.staticContext.job.secrets?.robotAccessToken ?? '',
           archivePath,
           key,
           paths,
@@ -76,7 +76,7 @@ export function createSaveCacheFunction(): BuildFunction {
 
 export async function uploadCacheAsync({
   logger,
-  jobRunId,
+  buildId,
   expoApiServerURL,
   robotAccessToken,
   paths,
@@ -85,7 +85,7 @@ export async function uploadCacheAsync({
   size,
 }: {
   logger: bunyan;
-  jobRunId: string;
+  buildId: string;
   expoApiServerURL: string;
   robotAccessToken: string;
   paths: string[];
@@ -94,11 +94,11 @@ export async function uploadCacheAsync({
   size: number;
 }): Promise<void> {
   const response = await retryOnDNSFailure(fetch)(
-    new URL('v2/turtle-caches/upload-sessions', expoApiServerURL),
+    new URL('v2/turtle-builds/caches/upload-sessions', expoApiServerURL),
     {
       method: 'POST',
       body: JSON.stringify({
-        jobRunId,
+        buildId,
         key,
         version: getCacheVersion(paths),
         size,
@@ -109,7 +109,7 @@ export async function uploadCacheAsync({
       },
     }
   );
-
+  logger.info('version - ', getCacheVersion(paths))
   if (!response.ok) {
     if (response.status === 409) {
       logger.info(`Cache already exists, skipping upload`);

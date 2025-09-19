@@ -74,7 +74,7 @@ export function createRestoreCacheFunction(): BuildFunction {
 
         const { archivePath, matchedKey } = await downloadCacheAsync({
           logger,
-          jobRunId: taskId,
+          buildId: taskId,
           expoApiServerURL: stepsCtx.global.staticContext.expoApiServerURL,
           robotAccessToken: stepsCtx.global.staticContext.job.secrets?.robotAccessToken ?? null,
           paths,
@@ -102,7 +102,7 @@ export function createRestoreCacheFunction(): BuildFunction {
 
 export async function downloadCacheAsync({
   logger,
-  jobRunId,
+  buildId,
   expoApiServerURL,
   robotAccessToken,
   paths,
@@ -110,7 +110,7 @@ export async function downloadCacheAsync({
   keyPrefixes,
 }: {
   logger: bunyan;
-  jobRunId: string;
+  buildId: string;
   expoApiServerURL: string;
   robotAccessToken: string;
   paths: string[];
@@ -118,11 +118,11 @@ export async function downloadCacheAsync({
   keyPrefixes: string[];
 }): Promise<{ archivePath: string; matchedKey: string }> {
   const response = await retryOnDNSFailure(fetch)(
-    new URL('v2/turtle-caches/download', expoApiServerURL),
+    new URL('v2/turtle-builds/caches/download', expoApiServerURL),
     {
       method: 'POST',
       body: JSON.stringify({
-        jobRunId,
+        buildId,
         key,
         version: getCacheVersion(paths),
         keyPrefixes,
@@ -134,6 +134,7 @@ export async function downloadCacheAsync({
     }
   );
 
+  logger.info('version - ', getCacheVersion(paths))
   if (!response.ok) {
     if (response.status === 404) {
       throw new Error(
