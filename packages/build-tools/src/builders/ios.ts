@@ -79,10 +79,9 @@ async function buildAsync(ctx: BuildContext<Ios.Job>): Promise<void> {
 
     await ctx.runBuildPhase(BuildPhase.RESTORE_CACHE, async () => {
       const workingDirectory = ctx.getReactNativeProjectDirectory();
-      const paths = ['node_modules'];//, 'ios/Pods'];
+      const paths = ['node_modules'];
 
       const packageJsonPath = path.join(workingDirectory, 'package.json');
-      // const podfileLockPath = path.join(workingDirectory, 'ios/Podfile.lock');
       const yarnLockPath = path.join(workingDirectory, 'yarn.lock');
 
       let keyData = 'ios-cache';
@@ -100,10 +99,6 @@ async function buildAsync(ctx: BuildContext<Ios.Job>): Promise<void> {
             keyData += `expo-cli:${packageJson.devDependencies['@expo/cli']}`;
           }
         }
-        // if (await fs.pathExists(podfileLockPath)) {
-        //   const podfileLock = await fs.readFile(podfileLockPath, 'utf8');
-        //   keyData += podfileLock;
-        // }
         if (await fs.pathExists(yarnLockPath)) {
           const yarnLock = await fs.readFile(yarnLockPath, 'utf8');
           keyData += yarnLock;
@@ -150,7 +145,7 @@ async function buildAsync(ctx: BuildContext<Ios.Job>): Promise<void> {
         ctx.logger.warn({ err }, 'Failed to restore cache');
       }
     });
-    
+
     await ctx.runBuildPhase(BuildPhase.INSTALL_PODS, async () => {
       await runInstallPodsAsync(ctx);
     });
@@ -247,10 +242,9 @@ async function buildAsync(ctx: BuildContext<Ios.Job>): Promise<void> {
 
   await ctx.runBuildPhase(BuildPhase.SAVE_CACHE, async () => {
     const workingDirectory = ctx.getReactNativeProjectDirectory();
-    const paths = ['node_modules'];//, 'ios/Pods'];
+    const paths = ['node_modules'];
 
     const packageJsonPath = path.join(workingDirectory, 'package.json');
-    // const podfileLockPath = path.join(workingDirectory, 'ios/Podfile.lock');
     const yarnLockPath = path.join(workingDirectory, 'yarn.lock');
 
     let keyData = 'ios-cache';
@@ -268,10 +262,6 @@ async function buildAsync(ctx: BuildContext<Ios.Job>): Promise<void> {
           keyData += `expo-cli:${packageJson.devDependencies['@expo/cli']}`;
         }
       }
-      // if (await fs.pathExists(podfileLockPath)) {
-      //   const podfileLock = await fs.readFile(podfileLockPath, 'utf8');
-      //   keyData += podfileLock;
-      // }
       if (await fs.pathExists(yarnLockPath)) {
         const yarnLock = await fs.readFile(yarnLockPath, 'utf8');
         keyData += yarnLock;
