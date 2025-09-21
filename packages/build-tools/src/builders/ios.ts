@@ -6,6 +6,7 @@ import { IOSConfig } from '@expo/config-plugins';
 import { ManagedArtifactType, BuildMode, BuildPhase, Ios, Workflow } from '@expo/eas-build-job';
 import fs from 'fs-extra';
 import nullthrows from 'nullthrows';
+import * as PackageManagerUtils from '@expo/package-manager';
 
 import { Artifacts, BuildContext } from '../context';
 import {
@@ -77,75 +78,64 @@ async function buildAsync(ctx: BuildContext<Ios.Job>): Promise<void> {
       });
     });
 
-    await ctx.runBuildPhase(BuildPhase.RESTORE_CACHE, async () => {
-      const workingDirectory = ctx.getReactNativeProjectDirectory();
-      const paths = ['node_modules'];
+    if (ctx.env.EAS_BUILD_RUNNER == 'eas-build') {
+      await ctx.runBuildPhase(BuildPhase.RESTORE_CACHE, async () => {
+        const workingDirectory = ctx.getReactNativeProjectDirectory();
+        const paths = [path.join(ctx.env.HOME, 'Library/Caches/ccache')];
 
-      const packageJsonPath = path.join(workingDirectory, 'package.json');
-      const yarnLockPath = path.join(workingDirectory, 'yarn.lock');
+        const manager = PackageManagerUtils.createForProject(workingDirectory);
+        const yarnLockPath = path.join(workingDirectory, manager.lockFile);
 
-      let keyData = 'ios-cache';
-      try {
-        if (await fs.pathExists(packageJsonPath)) {
-          const packageJson = await fs.readJson(packageJsonPath);
-          keyData +=
-            JSON.stringify(packageJson.dependencies || {}) +
-            JSON.stringify(packageJson.devDependencies || {});
-
-          if (packageJson.dependencies?.expo) {
-            keyData += `expo:${packageJson.dependencies.expo}`;
+        let keyData = 'ios-cache';
+        try {
+          if (await fs.pathExists(yarnLockPath)) {
+            const yarnLock = await fs.readFile(yarnLockPath, 'utf8');
+            keyData += yarnLock;
           }
-          if (packageJson.devDependencies?.['@expo/cli']) {
-            keyData += `expo-cli:${packageJson.devDependencies['@expo/cli']}`;
-          }
+        } catch (err) {
+          ctx.logger.warn({ err }, 'Failed to read package files for cache key generation');
         }
-        if (await fs.pathExists(yarnLockPath)) {
-          const yarnLock = await fs.readFile(yarnLockPath, 'utf8');
-          keyData += yarnLock;
+        ctx.logger.info("RESTORE - ", keyData)
+        const cacheKey = `ios-cache-${createHash('sha256').update(keyData).digest('hex').substring(0, 16)}`;
+
+        let jobRunId;
+        if(ctx.env.EAS_BUILD_ID){
+          jobRunId = ctx.env.EAS_BUILD_ID
+        } else {
+          jobRunId = nullthrows(ctx.env.__WORKFLOW_JOB_ID, 'EAS_BUILD_ID or __WORKFLOW_JOB_ID is not set');
         }
-      } catch (err) {
-        ctx.logger.warn({ err }, 'Failed to read package files for cache key generation');
-      }
-      ctx.logger.info("RESTORE - ", keyData)
-      const cacheKey = `ios-cache-${createHash('sha256').update(keyData).digest('hex').substring(0, 16)}`;
+        const robotAccessToken = nullthrows(
+          ctx.job.secrets?.robotAccessToken,
+          'Robot access token is required for cache operations'
+        );
 
-      let jobRunId;
-      if(ctx.env.EAS_BUILD_ID){
-        jobRunId = ctx.env.EAS_BUILD_ID
-      } else {
-        jobRunId = nullthrows(ctx.env.__WORKFLOW_JOB_ID, 'EAS_BUILD_ID or __WORKFLOW_JOB_ID is not set');
-      }
-      const robotAccessToken = nullthrows(
-        ctx.job.secrets?.robotAccessToken,
-        'Robot access token is required for cache operations'
-      );
+        ctx.logger.info("key - ", cacheKey)
+        ctx.logger.info("paths - ", paths)
+        try {
+          const { archivePath } = await downloadCacheAsync({
+            logger: ctx.logger,
+            buildId:jobRunId,
+            expoApiServerURL: ctx.env.__API_SERVER_URL ?? 'https://exp.host',
+            robotAccessToken,
+            paths,
+            key: cacheKey,
+            keyPrefixes: [],
+            platform: ctx.job.platform,
+          });
 
-      ctx.logger.info("key - ", cacheKey)
-      ctx.logger.info("paths - ", paths)
-      try {
-        const { archivePath } = await downloadCacheAsync({
-          logger: ctx.logger,
-          buildId:jobRunId,
-          expoApiServerURL: ctx.env.__API_SERVER_URL ?? 'https://exp.host',
-          robotAccessToken,
-          paths,
-          key: cacheKey,
-          keyPrefixes: [],
-          platform: ctx.job.platform,
-        });
+          await decompressCacheAsync({
+            archivePath,
+            workingDirectory,
+            verbose: true,
+            logger: ctx.logger,
+          });
 
-        await decompressCacheAsync({
-          archivePath,
-          workingDirectory,
-          verbose: true,
-          logger: ctx.logger,
-        });
-
-        ctx.logger.info('Cache restored successfully');
-      } catch (err) {
-        ctx.logger.warn({ err }, 'Failed to restore cache');
-      }
-    });
+          ctx.logger.info('Cache restored successfully');
+        } catch (err) {
+          ctx.logger.warn({ err }, 'Failed to restore cache');
+        }
+      });
+  }
 
     await ctx.runBuildPhase(BuildPhase.INSTALL_PODS, async () => {
       await runInstallPodsAsync(ctx);
@@ -241,74 +231,63 @@ async function buildAsync(ctx: BuildContext<Ios.Job>): Promise<void> {
     });
   });
 
-  await ctx.runBuildPhase(BuildPhase.SAVE_CACHE, async () => {
-    const workingDirectory = ctx.getReactNativeProjectDirectory();
-    const paths = ['node_modules'];
+  if (ctx.env.EAS_BUILD_RUNNER == 'eas-build') {
+    await ctx.runBuildPhase(BuildPhase.SAVE_CACHE, async () => {
+      const workingDirectory = ctx.getReactNativeProjectDirectory();
+      const paths = [path.join(ctx.env.HOME, 'Library/Caches/ccache')];
 
-    const packageJsonPath = path.join(workingDirectory, 'package.json');
-    const yarnLockPath = path.join(workingDirectory, 'yarn.lock');
+      const manager = PackageManagerUtils.createForProject(workingDirectory);
+      const yarnLockPath = path.join(workingDirectory, manager.lockFile);
 
-    let keyData = 'ios-cache';
-    try {
-      if (await fs.pathExists(packageJsonPath)) {
-        const packageJson = await fs.readJson(packageJsonPath);
-        keyData +=
-          JSON.stringify(packageJson.dependencies || {}) +
-          JSON.stringify(packageJson.devDependencies || {});
-
-        if (packageJson.dependencies?.expo) {
-          keyData += `expo:${packageJson.dependencies.expo}`;
+      let keyData = 'ios-cache';
+      try {
+        if (await fs.pathExists(yarnLockPath)) {
+          const yarnLock = await fs.readFile(yarnLockPath, 'utf8');
+          keyData += yarnLock;
         }
-        if (packageJson.devDependencies?.['@expo/cli']) {
-          keyData += `expo-cli:${packageJson.devDependencies['@expo/cli']}`;
-        }
+      } catch (err) {
+        ctx.logger.warn({ err }, 'Failed to read package files for cache key generation');
       }
-      if (await fs.pathExists(yarnLockPath)) {
-        const yarnLock = await fs.readFile(yarnLockPath, 'utf8');
-        keyData += yarnLock;
+      ctx.logger.info("SAVE - ", keyData)
+      const cacheKey = `ios-cache-${createHash('sha256').update(keyData).digest('hex').substring(0, 16)}`;
+
+      let jobRunId;
+      if(ctx.env.EAS_BUILD_ID){
+        jobRunId = ctx.env.EAS_BUILD_ID
+      } else {
+        jobRunId = nullthrows(ctx.env.__WORKFLOW_JOB_ID, 'EAS_BUILD_ID or __WORKFLOW_JOB_ID is not set');
       }
-    } catch (err) {
-      ctx.logger.warn({ err }, 'Failed to read package files for cache key generation');
-    }
-    ctx.logger.info("SAVE - ", keyData)
-    const cacheKey = `ios-cache-${createHash('sha256').update(keyData).digest('hex').substring(0, 16)}`;
+      const robotAccessToken = nullthrows(
+        ctx.job.secrets?.robotAccessToken,
+        'Robot access token is required for cache operations'
+      );
 
-    let jobRunId;
-    if(ctx.env.EAS_BUILD_ID){
-      jobRunId = ctx.env.EAS_BUILD_ID
-    } else {
-      jobRunId = nullthrows(ctx.env.__WORKFLOW_JOB_ID, 'EAS_BUILD_ID or __WORKFLOW_JOB_ID is not set');
-    }
-    const robotAccessToken = nullthrows(
-      ctx.job.secrets?.robotAccessToken,
-      'Robot access token is required for cache operations'
-    );
+      try {
+        const { archivePath } = await compressCacheAsync({
+          paths,
+          workingDirectory,
+          verbose: true,
+          logger: ctx.logger,
+        });
 
-    try {
-      const { archivePath } = await compressCacheAsync({
-        paths,
-        workingDirectory,
-        verbose: true,
-        logger: ctx.logger,
-      });
+        const { size } = await fs.stat(archivePath);
 
-      const { size } = await fs.stat(archivePath);
-
-      await uploadCacheAsync({
-        logger: ctx.logger,
-        buildId:jobRunId,
-        expoApiServerURL: ctx.env.__API_SERVER_URL ?? 'https://exp.host',
-        robotAccessToken,
-        archivePath,
-        key: cacheKey,
-        paths,
-        size,
-        platform: ctx.job.platform,
-      });
-    } catch (err) {
-      ctx.logger.warn({ err }, 'Failed to save cache');
-    }
-  });
+        await uploadCacheAsync({
+          logger: ctx.logger,
+          buildId:jobRunId,
+          expoApiServerURL: ctx.env.__API_SERVER_URL ?? 'https://exp.host',
+          robotAccessToken,
+          archivePath,
+          key: cacheKey,
+          paths,
+          size,
+          platform: ctx.job.platform,
+        });
+      } catch (err) {
+        ctx.logger.warn({ err }, 'Failed to save cache');
+      }
+    });
+  }
 }
 
 async function readEntitlementsAsync(

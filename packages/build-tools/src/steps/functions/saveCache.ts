@@ -10,11 +10,11 @@ import z from 'zod';
 import nullthrows from 'nullthrows';
 import fetch from 'node-fetch';
 import { asyncResult } from '@expo/results';
+import { Platform } from '@expo/eas-build-job';
 
 import { retryOnDNSFailure } from '../../utils/retryOnDNSFailure';
 import { formatBytes } from '../../utils/artifacts';
 import { getCacheVersion } from '../utils/cache';
-import { Platform } from '@expo/eas-build-job';
 
 export function createSaveCacheFunction(): BuildFunction {
   return new BuildFunction({
@@ -92,31 +92,31 @@ export async function uploadCacheAsync({
   size: number;
   platform: Platform | undefined;
 }): Promise<void> {
-  const routerURL = platform ? 'v2/turtle-builds/caches/upload-sessions' : 'v2/turtle-caches/upload-sessions'
+  const routerURL = platform
+    ? 'v2/turtle-builds/caches/upload-sessions'
+    : 'v2/turtle-caches/upload-sessions';
 
-  const response = await retryOnDNSFailure(fetch)(
-    new URL(routerURL, expoApiServerURL),
-    {
-      method: 'POST',
-      body: platform ? JSON.stringify({
-        buildId,
-        key,
-        version: getCacheVersion(paths),
-        size,
-      })
+  const response = await retryOnDNSFailure(fetch)(new URL(routerURL, expoApiServerURL), {
+    method: 'POST',
+    body: platform
+      ? JSON.stringify({
+          buildId,
+          key,
+          version: getCacheVersion(paths),
+          size,
+        })
       : JSON.stringify({
-        jobRunId:buildId,
-        key,
-        version: getCacheVersion(paths),
-        size,
-      }),
-      headers: {
-        Authorization: `Bearer ${robotAccessToken}`,
-        'Content-Type': 'application/json',
-      },
-    }
-  );
-  logger.info('version - ', getCacheVersion(paths))
+          jobRunId: buildId,
+          key,
+          version: getCacheVersion(paths),
+          size,
+        }),
+    headers: {
+      Authorization: `Bearer ${robotAccessToken}`,
+      'Content-Type': 'application/json',
+    },
+  });
+  logger.info('version - ', getCacheVersion(paths));
   if (!response.ok) {
     if (response.status === 409) {
       logger.info(`Cache already exists, skipping upload`);
