@@ -234,7 +234,7 @@ async function buildAsync(ctx: BuildContext<Ios.Job>): Promise<void> {
     });
   });
 
-  if (ctx.env.EAS_BUILD_RUNNER == 'eas-build') {
+  if (ctx.env.EAS_BUILD_RUNNER === 'eas-build') {
     await ctx.runBuildPhase(BuildPhase.SAVE_CACHE, async () => {
       const workingDirectory = ctx.getReactNativeProjectDirectory();
       const paths = [path.join(ctx.env.HOME, 'Library/Caches/ccache')];

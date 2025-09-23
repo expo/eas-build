@@ -16,11 +16,12 @@ import z from 'zod';
 import nullthrows from 'nullthrows';
 import fetch from 'node-fetch';
 import { asyncResult } from '@expo/results';
+import { Platform } from '@expo/eas-build-job';
 
 import { retryOnDNSFailure } from '../../utils/retryOnDNSFailure';
 import { formatBytes } from '../../utils/artifacts';
 import { getCacheVersion } from '../utils/cache';
-import { Platform } from '@expo/eas-build-job';
+
 
 const streamPipeline = promisify(stream.pipeline);
 
@@ -121,31 +122,29 @@ export async function downloadCacheAsync({
   keyPrefixes: string[];
   platform: Platform | undefined;
 }): Promise<{ archivePath: string; matchedKey: string }> {
-  const routerURL = platform ? 'v2/turtle-builds/caches/download' : 'v2/turtle-caches/download'
-  const response = await retryOnDNSFailure(fetch)(
-    new URL(routerURL, expoApiServerURL),
-    {
-      method: 'POST',
-      body: platform ? JSON.stringify({
-        buildId,
-        key,
-        version: getCacheVersion(paths),
-        keyPrefixes,
-      })
+  const routerURL = platform ? 'v2/turtle-builds/caches/download' : 'v2/turtle-caches/download';
+  const response = await retryOnDNSFailure(fetch)(new URL(routerURL, expoApiServerURL), {
+    method: 'POST',
+    body: platform
+      ? JSON.stringify({
+          buildId,
+          key,
+          version: getCacheVersion(paths),
+          keyPrefixes,
+        })
       : JSON.stringify({
-        jobRunId:buildId,
-        key,
-        version: getCacheVersion(paths),
-        keyPrefixes,
-      }) ,
-      headers: {
-        Authorization: `Bearer ${robotAccessToken}`,
-        'Content-Type': 'application/json',
-      },
-    }
-  );
+          jobRunId: buildId,
+          key,
+          version: getCacheVersion(paths),
+          keyPrefixes,
+        }),
+    headers: {
+      Authorization: `Bearer ${robotAccessToken}`,
+      'Content-Type': 'application/json',
+    },
+  });
 
-  logger.info('version - ', getCacheVersion(paths))
+  logger.info('version - ', getCacheVersion(paths));
   if (!response.ok) {
     if (response.status === 404) {
       throw new Error(
