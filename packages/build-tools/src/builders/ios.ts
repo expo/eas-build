@@ -83,26 +83,13 @@ async function buildAsync(ctx: BuildContext<Ios.Job>): Promise<void> {
         const workingDirectory = ctx.getReactNativeProjectDirectory();
         const paths = [path.join(ctx.env.HOME, 'Library/Caches/ccache')];
 
-        const manager = PackageManagerUtils.createForProject(workingDirectory);
-        const yarnLockPath = path.join(workingDirectory, manager.lockFile);
+        const cacheKey = await generateCacheKeyAsync(ctx, workingDirectory);
 
-        let keyData = 'ios-cache';
-        try {
-          if (await fs.pathExists(yarnLockPath)) {
-            const yarnLock = await fs.readFile(yarnLockPath, 'utf8');
-            keyData += yarnLock;
-          }
-        } catch (err) {
-          ctx.logger.warn({ err }, 'Failed to read package files for cache key generation');
-        }
-        ctx.logger.info('RESTORE - ', keyData);
-        const cacheKey = `ios-cache-${createHash('sha256').update(keyData).digest('hex').substring(0, 16)}`;
-
-        let jobRunId;
+        let jobId;
         if (ctx.env.EAS_BUILD_ID) {
-          jobRunId = ctx.env.EAS_BUILD_ID;
+          jobId = ctx.env.EAS_BUILD_ID;
         } else {
-          jobRunId = nullthrows(
+          jobId = nullthrows(
             ctx.env.__WORKFLOW_JOB_ID,
             'EAS_BUILD_ID or __WORKFLOW_JOB_ID is not set'
           );
@@ -112,12 +99,10 @@ async function buildAsync(ctx: BuildContext<Ios.Job>): Promise<void> {
           'Robot access token is required for cache operations'
         );
 
-        ctx.logger.info('key - ', cacheKey);
-        ctx.logger.info('paths - ', paths);
         try {
           const { archivePath } = await downloadCacheAsync({
             logger: ctx.logger,
-            buildId: jobRunId,
+            jobId,
             expoApiServerURL: ctx.env.__API_SERVER_URL ?? 'https://exp.host',
             robotAccessToken,
             paths,
@@ -239,26 +224,13 @@ async function buildAsync(ctx: BuildContext<Ios.Job>): Promise<void> {
       const workingDirectory = ctx.getReactNativeProjectDirectory();
       const paths = [path.join(ctx.env.HOME, 'Library/Caches/ccache')];
 
-      const manager = PackageManagerUtils.createForProject(workingDirectory);
-      const yarnLockPath = path.join(workingDirectory, manager.lockFile);
+      const cacheKey = await generateCacheKeyAsync(ctx, workingDirectory);
 
-      let keyData = 'ios-cache';
-      try {
-        if (await fs.pathExists(yarnLockPath)) {
-          const yarnLock = await fs.readFile(yarnLockPath, 'utf8');
-          keyData += yarnLock;
-        }
-      } catch (err) {
-        ctx.logger.warn({ err }, 'Failed to read package files for cache key generation');
-      }
-      ctx.logger.info('SAVE - ', keyData);
-      const cacheKey = `ios-cache-${createHash('sha256').update(keyData).digest('hex').substring(0, 16)}`;
-
-      let jobRunId;
+      let jobId;
       if (ctx.env.EAS_BUILD_ID) {
-        jobRunId = ctx.env.EAS_BUILD_ID;
+        jobId = ctx.env.EAS_BUILD_ID;
       } else {
-        jobRunId = nullthrows(
+        jobId = nullthrows(
           ctx.env.__WORKFLOW_JOB_ID,
           'EAS_BUILD_ID or __WORKFLOW_JOB_ID is not set'
         );
@@ -280,7 +252,7 @@ async function buildAsync(ctx: BuildContext<Ios.Job>): Promise<void> {
 
         await uploadCacheAsync({
           logger: ctx.logger,
-          buildId: jobRunId,
+          jobId,
           expoApiServerURL: ctx.env.__API_SERVER_URL ?? 'https://exp.host',
           robotAccessToken,
           archivePath,
@@ -413,4 +385,26 @@ async function runInstallPodsAsync(ctx: BuildContext<Ios.Job>): Promise<void> {
       clearTimeout(killTimeout);
     }
   }
+}
+
+async function generateCacheKeyAsync(
+  ctx: BuildContext<Ios.Job>,
+  workingDirectory: string
+): Promise<string> {
+  // This will resolve which package manager and use the relevant lock file
+  // The lock file hash is the key and ensures cache is fresh
+  const manager = PackageManagerUtils.createForProject(workingDirectory);
+  const lockPath = path.join(workingDirectory, manager.lockFile);
+
+  let keyInput = '';
+  try {
+    if (await fs.pathExists(lockPath)) {
+      const lockFile = await fs.readFile(lockPath, 'utf8');
+      keyInput += lockFile;
+    }
+  } catch (err) {
+    ctx.logger.warn({ err }, 'Failed to read package files for cache key generation');
+  }
+
+  return `ios-cache-${createHash('sha256').update(keyInput).digest('hex').substring(0, 16)}`;
 }

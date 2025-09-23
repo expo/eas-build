@@ -42,7 +42,7 @@ export function createSaveCacheFunction(): BuildFunction {
           .parse(((inputs.path.value ?? '') as string).split(/[\r\n]+/))
           .filter((path) => path.length > 0);
         const key = z.string().parse(inputs.key.value);
-        const taskId = nullthrows(env.EAS_BUILD_ID, 'EAS_BUILD_ID is not set');
+        const jobId = nullthrows(env.EAS_BUILD_ID, 'EAS_BUILD_ID is not set');
 
         const { archivePath } = await compressCacheAsync({
           paths,
@@ -55,7 +55,7 @@ export function createSaveCacheFunction(): BuildFunction {
 
         await uploadCacheAsync({
           logger,
-          buildId: taskId,
+          jobId,
           expoApiServerURL: stepsCtx.global.staticContext.expoApiServerURL,
           robotAccessToken: stepsCtx.global.staticContext.job.secrets?.robotAccessToken ?? '',
           archivePath,
@@ -73,7 +73,7 @@ export function createSaveCacheFunction(): BuildFunction {
 
 export async function uploadCacheAsync({
   logger,
-  buildId,
+  jobId,
   expoApiServerURL,
   robotAccessToken,
   paths,
@@ -83,7 +83,7 @@ export async function uploadCacheAsync({
   platform,
 }: {
   logger: bunyan;
-  buildId: string;
+  jobId: string;
   expoApiServerURL: string;
   robotAccessToken: string;
   paths: string[];
@@ -100,13 +100,13 @@ export async function uploadCacheAsync({
     method: 'POST',
     body: platform
       ? JSON.stringify({
-          buildId,
+          buildId: jobId,
           key,
           version: getCacheVersion(paths),
           size,
         })
       : JSON.stringify({
-          jobRunId: buildId,
+          jobRunId: jobId,
           key,
           version: getCacheVersion(paths),
           size,

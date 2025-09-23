@@ -71,11 +71,11 @@ export function createRestoreCacheFunction(): BuildFunction {
           .parse(((inputs.restore_keys.value ?? '') as string).split(/[\r\n]+/))
           .filter((key) => key !== '');
 
-        const taskId = nullthrows(env.EAS_BUILD_ID, 'EAS_BUILD_ID is not set');
+        const jobId = nullthrows(env.EAS_BUILD_ID, 'EAS_BUILD_ID is not set');
 
         const { archivePath, matchedKey } = await downloadCacheAsync({
           logger,
-          buildId: taskId,
+          jobId,
           expoApiServerURL: stepsCtx.global.staticContext.expoApiServerURL,
           robotAccessToken: stepsCtx.global.staticContext.job.secrets?.robotAccessToken ?? null,
           paths,
@@ -104,7 +104,7 @@ export function createRestoreCacheFunction(): BuildFunction {
 
 export async function downloadCacheAsync({
   logger,
-  buildId,
+  jobId,
   expoApiServerURL,
   robotAccessToken,
   paths,
@@ -113,7 +113,7 @@ export async function downloadCacheAsync({
   platform,
 }: {
   logger: bunyan;
-  buildId: string;
+  jobId: string;
   expoApiServerURL: string;
   robotAccessToken: string;
   paths: string[];
@@ -126,13 +126,13 @@ export async function downloadCacheAsync({
     method: 'POST',
     body: platform
       ? JSON.stringify({
-          buildId,
+          buildId: jobId,
           key,
           version: getCacheVersion(paths),
           keyPrefixes,
         })
       : JSON.stringify({
-          jobRunId: buildId,
+          jobRunId: jobId,
           key,
           version: getCacheVersion(paths),
           keyPrefixes,
@@ -143,7 +143,6 @@ export async function downloadCacheAsync({
     },
   });
 
-  logger.info('version - ', getCacheVersion(paths));
   if (!response.ok) {
     if (response.status === 404) {
       throw new Error(
