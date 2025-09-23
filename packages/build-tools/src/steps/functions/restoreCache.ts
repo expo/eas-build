@@ -22,7 +22,6 @@ import { retryOnDNSFailure } from '../../utils/retryOnDNSFailure';
 import { formatBytes } from '../../utils/artifacts';
 import { getCacheVersion } from '../utils/cache';
 
-
 const streamPipeline = promisify(stream.pipeline);
 
 export function createRestoreCacheFunction(): BuildFunction {
