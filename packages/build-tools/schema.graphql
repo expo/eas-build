@@ -5455,7 +5455,7 @@ input CreateSharedEnvironmentVariableInput {
   visibility: EnvironmentVariableVisibility!
   environments: [EnvironmentVariableEnvironment!]
   overwrite: Boolean
-  isGlobal: Boolean
+  isGlobal: Boolean @deprecated(reason: "Whether the variable is global is now governed by its scope - account / app.")
   type: EnvironmentSecretType
   fileName: String
 }
@@ -5477,7 +5477,7 @@ input UpdateEnvironmentVariableInput {
   environments: [EnvironmentVariableEnvironment!]
   visibility: EnvironmentVariableVisibility
   type: EnvironmentSecretType
-  isGlobal: Boolean
+  isGlobal: Boolean @deprecated(reason: "You cannot change whether the variable is global.")
   fileName: String
 }
 
