@@ -78,7 +78,7 @@ async function buildAsync(ctx: BuildContext<Ios.Job>): Promise<void> {
       });
     });
 
-    if (ctx.env.EAS_BUILD_RUNNER == 'eas-build') {
+    if (ctx.env.EAS_BUILD_RUNNER === 'eas-build') {
       await ctx.runBuildPhase(BuildPhase.RESTORE_CACHE, async () => {
         const workingDirectory = ctx.getReactNativeProjectDirectory();
         const paths = [path.join(ctx.env.HOME, 'Library/Caches/ccache')];
@@ -95,26 +95,29 @@ async function buildAsync(ctx: BuildContext<Ios.Job>): Promise<void> {
         } catch (err) {
           ctx.logger.warn({ err }, 'Failed to read package files for cache key generation');
         }
-        ctx.logger.info("RESTORE - ", keyData)
+        ctx.logger.info('RESTORE - ', keyData);
         const cacheKey = `ios-cache-${createHash('sha256').update(keyData).digest('hex').substring(0, 16)}`;
 
         let jobRunId;
-        if(ctx.env.EAS_BUILD_ID){
-          jobRunId = ctx.env.EAS_BUILD_ID
+        if (ctx.env.EAS_BUILD_ID) {
+          jobRunId = ctx.env.EAS_BUILD_ID;
         } else {
-          jobRunId = nullthrows(ctx.env.__WORKFLOW_JOB_ID, 'EAS_BUILD_ID or __WORKFLOW_JOB_ID is not set');
+          jobRunId = nullthrows(
+            ctx.env.__WORKFLOW_JOB_ID,
+            'EAS_BUILD_ID or __WORKFLOW_JOB_ID is not set'
+          );
         }
         const robotAccessToken = nullthrows(
           ctx.job.secrets?.robotAccessToken,
           'Robot access token is required for cache operations'
         );
 
-        ctx.logger.info("key - ", cacheKey)
-        ctx.logger.info("paths - ", paths)
+        ctx.logger.info('key - ', cacheKey);
+        ctx.logger.info('paths - ', paths);
         try {
           const { archivePath } = await downloadCacheAsync({
             logger: ctx.logger,
-            buildId:jobRunId,
+            buildId: jobRunId,
             expoApiServerURL: ctx.env.__API_SERVER_URL ?? 'https://exp.host',
             robotAccessToken,
             paths,
@@ -135,7 +138,7 @@ async function buildAsync(ctx: BuildContext<Ios.Job>): Promise<void> {
           ctx.logger.warn({ err }, 'Failed to restore cache');
         }
       });
-  }
+    }
 
     await ctx.runBuildPhase(BuildPhase.INSTALL_PODS, async () => {
       await runInstallPodsAsync(ctx);
@@ -248,14 +251,17 @@ async function buildAsync(ctx: BuildContext<Ios.Job>): Promise<void> {
       } catch (err) {
         ctx.logger.warn({ err }, 'Failed to read package files for cache key generation');
       }
-      ctx.logger.info("SAVE - ", keyData)
+      ctx.logger.info('SAVE - ', keyData);
       const cacheKey = `ios-cache-${createHash('sha256').update(keyData).digest('hex').substring(0, 16)}`;
 
       let jobRunId;
-      if(ctx.env.EAS_BUILD_ID){
-        jobRunId = ctx.env.EAS_BUILD_ID
+      if (ctx.env.EAS_BUILD_ID) {
+        jobRunId = ctx.env.EAS_BUILD_ID;
       } else {
-        jobRunId = nullthrows(ctx.env.__WORKFLOW_JOB_ID, 'EAS_BUILD_ID or __WORKFLOW_JOB_ID is not set');
+        jobRunId = nullthrows(
+          ctx.env.__WORKFLOW_JOB_ID,
+          'EAS_BUILD_ID or __WORKFLOW_JOB_ID is not set'
+        );
       }
       const robotAccessToken = nullthrows(
         ctx.job.secrets?.robotAccessToken,
@@ -274,7 +280,7 @@ async function buildAsync(ctx: BuildContext<Ios.Job>): Promise<void> {
 
         await uploadCacheAsync({
           logger: ctx.logger,
-          buildId:jobRunId,
+          buildId: jobRunId,
           expoApiServerURL: ctx.env.__API_SERVER_URL ?? 'https://exp.host',
           robotAccessToken,
           archivePath,
