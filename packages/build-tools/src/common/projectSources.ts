@@ -23,8 +23,8 @@ export async function prepareProjectSourcesAsync<TJob extends Job>(
 
   if (!projectArchiveResult.ok) {
     ctx.logger.error(
-      'Failed to refresh project archive, falling back to the original one',
-      projectArchiveResult.reason
+      { err: projectArchiveResult.reason },
+      'Failed to refresh project archive, falling back to the original one'
     );
   }
 
