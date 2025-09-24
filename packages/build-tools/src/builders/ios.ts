@@ -84,16 +84,8 @@ async function buildAsync(ctx: BuildContext<Ios.Job>): Promise<void> {
         const paths = [path.join(ctx.env.HOME, 'Library/Caches/ccache')];
 
         const cacheKey = await generateCacheKeyAsync(ctx, workingDirectory);
+        const jobId = nullthrows(ctx.env.EAS_BUILD_ID, 'EAS_BUILD_ID is not set');
 
-        let jobId;
-        if (ctx.env.EAS_BUILD_ID) {
-          jobId = ctx.env.EAS_BUILD_ID;
-        } else {
-          jobId = nullthrows(
-            ctx.env.__WORKFLOW_JOB_ID,
-            'EAS_BUILD_ID or __WORKFLOW_JOB_ID is not set'
-          );
-        }
         const robotAccessToken = nullthrows(
           ctx.job.secrets?.robotAccessToken,
           'Robot access token is required for cache operations'
@@ -225,16 +217,8 @@ async function buildAsync(ctx: BuildContext<Ios.Job>): Promise<void> {
       const paths = [path.join(ctx.env.HOME, 'Library/Caches/ccache')];
 
       const cacheKey = await generateCacheKeyAsync(ctx, workingDirectory);
+      const jobId = nullthrows(ctx.env.EAS_BUILD_ID, 'EAS_BUILD_ID is not set');
 
-      let jobId;
-      if (ctx.env.EAS_BUILD_ID) {
-        jobId = ctx.env.EAS_BUILD_ID;
-      } else {
-        jobId = nullthrows(
-          ctx.env.__WORKFLOW_JOB_ID,
-          'EAS_BUILD_ID or __WORKFLOW_JOB_ID is not set'
-        );
-      }
       const robotAccessToken = nullthrows(
         ctx.job.secrets?.robotAccessToken,
         'Robot access token is required for cache operations'
