@@ -81,6 +81,7 @@ async function buildAsync(ctx: BuildContext<Ios.Job>): Promise<void> {
     await ctx.runBuildPhase(BuildPhase.RESTORE_CACHE, async () => {
       if (ctx.env.EAS_USE_CACHE !== 'true') {
         ctx.logger.info('EAS_USE_CACHE is not enabled');
+        return;
       }
       const workingDirectory = ctx.getReactNativeProjectDirectory();
       const paths = [path.join(ctx.env.HOME, 'Library/Caches/ccache')];
@@ -112,7 +113,7 @@ async function buildAsync(ctx: BuildContext<Ios.Job>): Promise<void> {
         await decompressCacheAsync({
           archivePath,
           workingDirectory,
-          verbose: true,
+          verbose: ctx.logger.debug(),
           logger: ctx.logger,
         });
 
@@ -219,6 +220,7 @@ async function buildAsync(ctx: BuildContext<Ios.Job>): Promise<void> {
   await ctx.runBuildPhase(BuildPhase.SAVE_CACHE, async () => {
     if (ctx.env.EAS_USE_CACHE !== 'true') {
       ctx.logger.info('EAS_USE_CACHE is not enabled');
+      return;
     }
     const workingDirectory = ctx.getReactNativeProjectDirectory();
     const paths = [path.join(ctx.env.HOME, 'Library/Caches/ccache')];
@@ -236,7 +238,7 @@ async function buildAsync(ctx: BuildContext<Ios.Job>): Promise<void> {
       const { archivePath } = await compressCacheAsync({
         paths,
         workingDirectory,
-        verbose: true,
+        verbose: ctx.logger.debug(),
         logger: ctx.logger,
       });
 
