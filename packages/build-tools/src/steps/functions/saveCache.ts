@@ -15,6 +15,7 @@ import { Platform } from '@expo/eas-build-job';
 import { retryOnDNSFailure } from '../../utils/retryOnDNSFailure';
 import { formatBytes } from '../../utils/artifacts';
 import { getCacheVersion } from '../utils/cache';
+import { turtleFetch } from '../../utils/turtleFetch';
 
 export function createSaveCacheFunction(): BuildFunction {
   return new BuildFunction({
@@ -99,21 +100,20 @@ export async function uploadCacheAsync({
     ? 'v2/turtle-builds/caches/upload-sessions'
     : 'v2/turtle-caches/upload-sessions';
 
-  const response = await retryOnDNSFailure(fetch)(new URL(routerURL, expoApiServerURL), {
-    method: 'POST',
-    body: platform
-      ? JSON.stringify({
+  const response = await turtleFetch(new URL(routerURL, expoApiServerURL).toString(), 'POST', {
+    json: platform
+      ? {
           buildId: jobId,
           key,
           version: getCacheVersion(paths),
           size,
-        })
-      : JSON.stringify({
+        }
+      : {
           jobRunId: jobId,
           key,
           version: getCacheVersion(paths),
           size,
-        }),
+        },
     headers: {
       Authorization: `Bearer ${robotAccessToken}`,
       'Content-Type': 'application/json',

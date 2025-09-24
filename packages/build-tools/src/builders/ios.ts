@@ -78,48 +78,49 @@ async function buildAsync(ctx: BuildContext<Ios.Job>): Promise<void> {
       });
     });
 
-    if (ctx.env.EAS_BUILD_RUNNER === 'eas-build') {
-      await ctx.runBuildPhase(BuildPhase.RESTORE_CACHE, async () => {
-        const workingDirectory = ctx.getReactNativeProjectDirectory();
-        const paths = [path.join(ctx.env.HOME, 'Library/Caches/ccache')];
+    await ctx.runBuildPhase(BuildPhase.RESTORE_CACHE, async () => {
+      if (ctx.env.EAS_USE_CACHE !== 'true') {
+        ctx.logger.info('EAS_USE_CACHE is not enabled');
+      }
+      const workingDirectory = ctx.getReactNativeProjectDirectory();
+      const paths = [path.join(ctx.env.HOME, 'Library/Caches/ccache')];
 
-        try {
-          const cacheKey = await generateCacheKeyAsync(workingDirectory);
-          const jobId = nullthrows(ctx.env.EAS_BUILD_ID, 'EAS_BUILD_ID is not set');
+      try {
+        const cacheKey = await generateCacheKeyAsync(workingDirectory);
+        const jobId = nullthrows(ctx.env.EAS_BUILD_ID, 'EAS_BUILD_ID is not set');
 
-          const robotAccessToken = nullthrows(
-            ctx.job.secrets?.robotAccessToken,
-            'Robot access token is required for cache operations'
-          );
-          const expoApiServerURL = nullthrows(
-            ctx.env.__API_SERVER_URL,
-            '__API_SERVER_URL is not set'
-          );
+        const robotAccessToken = nullthrows(
+          ctx.job.secrets?.robotAccessToken,
+          'Robot access token is required for cache operations'
+        );
+        const expoApiServerURL = nullthrows(
+          ctx.env.__API_SERVER_URL,
+          '__API_SERVER_URL is not set'
+        );
 
-          const { archivePath } = await downloadCacheAsync({
-            logger: ctx.logger,
-            jobId,
-            expoApiServerURL,
-            robotAccessToken,
-            paths,
-            key: cacheKey,
-            keyPrefixes: [],
-            platform: ctx.job.platform,
-          });
+        const { archivePath } = await downloadCacheAsync({
+          logger: ctx.logger,
+          jobId,
+          expoApiServerURL,
+          robotAccessToken,
+          paths,
+          key: cacheKey,
+          keyPrefixes: [],
+          platform: ctx.job.platform,
+        });
 
-          await decompressCacheAsync({
-            archivePath,
-            workingDirectory,
-            verbose: true,
-            logger: ctx.logger,
-          });
+        await decompressCacheAsync({
+          archivePath,
+          workingDirectory,
+          verbose: true,
+          logger: ctx.logger,
+        });
 
-          ctx.logger.info('Cache restored successfully');
-        } catch (err) {
-          ctx.logger.warn({ err }, 'Failed to restore cache');
-        }
-      });
-    }
+        ctx.logger.info('Cache restored successfully');
+      } catch (err) {
+        ctx.logger.warn({ err }, 'Failed to restore cache');
+      }
+    });
 
     await ctx.runBuildPhase(BuildPhase.INSTALL_PODS, async () => {
       await runInstallPodsAsync(ctx);
@@ -215,49 +216,47 @@ async function buildAsync(ctx: BuildContext<Ios.Job>): Promise<void> {
     });
   });
 
-  if (ctx.env.EAS_BUILD_RUNNER === 'eas-build') {
-    await ctx.runBuildPhase(BuildPhase.SAVE_CACHE, async () => {
-      const workingDirectory = ctx.getReactNativeProjectDirectory();
-      const paths = [path.join(ctx.env.HOME, 'Library/Caches/ccache')];
+  await ctx.runBuildPhase(BuildPhase.SAVE_CACHE, async () => {
+    if (ctx.env.EAS_USE_CACHE !== 'true') {
+      ctx.logger.info('EAS_USE_CACHE is not enabled');
+    }
+    const workingDirectory = ctx.getReactNativeProjectDirectory();
+    const paths = [path.join(ctx.env.HOME, 'Library/Caches/ccache')];
 
-      try {
-        const cacheKey = await generateCacheKeyAsync(workingDirectory);
-        const jobId = nullthrows(ctx.env.EAS_BUILD_ID, 'EAS_BUILD_ID is not set');
+    try {
+      const cacheKey = await generateCacheKeyAsync(workingDirectory);
+      const jobId = nullthrows(ctx.env.EAS_BUILD_ID, 'EAS_BUILD_ID is not set');
 
-        const robotAccessToken = nullthrows(
-          ctx.job.secrets?.robotAccessToken,
-          'Robot access token is required for cache operations'
-        );
-        const expoApiServerURL = nullthrows(
-          ctx.env.__API_SERVER_URL,
-          '__API_SERVER_URL is not set'
-        );
+      const robotAccessToken = nullthrows(
+        ctx.job.secrets?.robotAccessToken,
+        'Robot access token is required for cache operations'
+      );
+      const expoApiServerURL = nullthrows(ctx.env.__API_SERVER_URL, '__API_SERVER_URL is not set');
 
-        const { archivePath } = await compressCacheAsync({
-          paths,
-          workingDirectory,
-          verbose: true,
-          logger: ctx.logger,
-        });
+      const { archivePath } = await compressCacheAsync({
+        paths,
+        workingDirectory,
+        verbose: true,
+        logger: ctx.logger,
+      });
 
-        const { size } = await fs.stat(archivePath);
+      const { size } = await fs.stat(archivePath);
 
-        await uploadCacheAsync({
-          logger: ctx.logger,
-          jobId,
-          expoApiServerURL,
-          robotAccessToken,
-          archivePath,
-          key: cacheKey,
-          paths,
-          size,
-          platform: ctx.job.platform,
-        });
-      } catch (err) {
-        ctx.logger.warn({ err }, 'Failed to save cache');
-      }
-    });
-  }
+      await uploadCacheAsync({
+        logger: ctx.logger,
+        jobId,
+        expoApiServerURL,
+        robotAccessToken,
+        archivePath,
+        key: cacheKey,
+        paths,
+        size,
+        platform: ctx.job.platform,
+      });
+    } catch (err) {
+      ctx.logger.error({ err }, 'Failed to save cache');
+    }
+  });
 }
 
 async function readEntitlementsAsync(
@@ -395,5 +394,5 @@ async function generateCacheKeyAsync(workingDirectory: string): Promise<string> 
     throw new Error(`Failed to read package files for cache key generation: ${err.code}`);
   }
 
-  return `ios-ccache-${createHash('sha256').update(keyInput).digest('hex').substring(0, 16)}`;
+  return `ios-ccache-${createHash('sha256').update(keyInput).digest('hex')}`;
 }

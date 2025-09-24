@@ -21,6 +21,7 @@ import { Platform } from '@expo/eas-build-job';
 import { retryOnDNSFailure } from '../../utils/retryOnDNSFailure';
 import { formatBytes } from '../../utils/artifacts';
 import { getCacheVersion } from '../utils/cache';
+import { turtleFetch } from '../../utils/turtleFetch';
 
 const streamPipeline = promisify(stream.pipeline);
 
@@ -125,21 +126,20 @@ export async function downloadCacheAsync({
   platform: Platform | undefined;
 }): Promise<{ archivePath: string; matchedKey: string }> {
   const routerURL = platform ? 'v2/turtle-builds/caches/download' : 'v2/turtle-caches/download';
-  const response = await retryOnDNSFailure(fetch)(new URL(routerURL, expoApiServerURL), {
-    method: 'POST',
-    body: platform
-      ? JSON.stringify({
+  const response = await turtleFetch(new URL(routerURL, expoApiServerURL).toString(), 'POST', {
+    json: platform
+      ? {
           buildId: jobId,
           key,
           version: getCacheVersion(paths),
           keyPrefixes,
-        })
-      : JSON.stringify({
+        }
+      : {
           jobRunId: jobId,
           key,
           version: getCacheVersion(paths),
           keyPrefixes,
-        }),
+        },
     headers: {
       Authorization: `Bearer ${robotAccessToken}`,
       'Content-Type': 'application/json',
