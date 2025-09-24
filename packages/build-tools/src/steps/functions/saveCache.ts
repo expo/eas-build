@@ -43,6 +43,9 @@ export function createSaveCacheFunction(): BuildFunction {
           .filter((path) => path.length > 0);
         const key = z.string().parse(inputs.key.value);
         const jobId = nullthrows(env.EAS_BUILD_ID, 'EAS_BUILD_ID is not set');
+        const robotAccessToken = nullthrows(
+          stepsCtx.global.staticContext.job.secrets?.robotAccessToken
+        );
 
         const { archivePath } = await compressCacheAsync({
           paths,
@@ -57,7 +60,7 @@ export function createSaveCacheFunction(): BuildFunction {
           logger,
           jobId,
           expoApiServerURL: stepsCtx.global.staticContext.expoApiServerURL,
-          robotAccessToken: stepsCtx.global.staticContext.job.secrets?.robotAccessToken ?? '',
+          robotAccessToken,
           archivePath,
           key,
           paths,
@@ -116,7 +119,6 @@ export async function uploadCacheAsync({
       'Content-Type': 'application/json',
     },
   });
-  logger.info('version - ', getCacheVersion(paths));
   if (!response.ok) {
     if (response.status === 409) {
       logger.info(`Cache already exists, skipping upload`);

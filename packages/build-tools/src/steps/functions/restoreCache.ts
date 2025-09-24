@@ -72,12 +72,15 @@ export function createRestoreCacheFunction(): BuildFunction {
           .filter((key) => key !== '');
 
         const jobId = nullthrows(env.EAS_BUILD_ID, 'EAS_BUILD_ID is not set');
+        const robotAccessToken = nullthrows(
+          stepsCtx.global.staticContext.job.secrets?.robotAccessToken
+        );
 
         const { archivePath, matchedKey } = await downloadCacheAsync({
           logger,
           jobId,
           expoApiServerURL: stepsCtx.global.staticContext.expoApiServerURL,
-          robotAccessToken: stepsCtx.global.staticContext.job.secrets?.robotAccessToken ?? null,
+          robotAccessToken,
           paths,
           key,
           keyPrefixes: restoreKeys,

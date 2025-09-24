@@ -83,19 +83,23 @@ async function buildAsync(ctx: BuildContext<Ios.Job>): Promise<void> {
         const workingDirectory = ctx.getReactNativeProjectDirectory();
         const paths = [path.join(ctx.env.HOME, 'Library/Caches/ccache')];
 
-        const cacheKey = await generateCacheKeyAsync(ctx, workingDirectory);
-        const jobId = nullthrows(ctx.env.EAS_BUILD_ID, 'EAS_BUILD_ID is not set');
-
-        const robotAccessToken = nullthrows(
-          ctx.job.secrets?.robotAccessToken,
-          'Robot access token is required for cache operations'
-        );
-
         try {
+          const cacheKey = await generateCacheKeyAsync(workingDirectory);
+          const jobId = nullthrows(ctx.env.EAS_BUILD_ID, 'EAS_BUILD_ID is not set');
+
+          const robotAccessToken = nullthrows(
+            ctx.job.secrets?.robotAccessToken,
+            'Robot access token is required for cache operations'
+          );
+          const expoApiServerURL = nullthrows(
+            ctx.env.__API_SERVER_URL,
+            '__API_SERVER_URL is not set'
+          );
+
           const { archivePath } = await downloadCacheAsync({
             logger: ctx.logger,
             jobId,
-            expoApiServerURL: ctx.env.__API_SERVER_URL ?? 'https://exp.host',
+            expoApiServerURL,
             robotAccessToken,
             paths,
             key: cacheKey,
@@ -216,15 +220,19 @@ async function buildAsync(ctx: BuildContext<Ios.Job>): Promise<void> {
       const workingDirectory = ctx.getReactNativeProjectDirectory();
       const paths = [path.join(ctx.env.HOME, 'Library/Caches/ccache')];
 
-      const cacheKey = await generateCacheKeyAsync(ctx, workingDirectory);
-      const jobId = nullthrows(ctx.env.EAS_BUILD_ID, 'EAS_BUILD_ID is not set');
-
-      const robotAccessToken = nullthrows(
-        ctx.job.secrets?.robotAccessToken,
-        'Robot access token is required for cache operations'
-      );
-
       try {
+        const cacheKey = await generateCacheKeyAsync(workingDirectory);
+        const jobId = nullthrows(ctx.env.EAS_BUILD_ID, 'EAS_BUILD_ID is not set');
+
+        const robotAccessToken = nullthrows(
+          ctx.job.secrets?.robotAccessToken,
+          'Robot access token is required for cache operations'
+        );
+        const expoApiServerURL = nullthrows(
+          ctx.env.__API_SERVER_URL,
+          '__API_SERVER_URL is not set'
+        );
+
         const { archivePath } = await compressCacheAsync({
           paths,
           workingDirectory,
@@ -237,7 +245,7 @@ async function buildAsync(ctx: BuildContext<Ios.Job>): Promise<void> {
         await uploadCacheAsync({
           logger: ctx.logger,
           jobId,
-          expoApiServerURL: ctx.env.__API_SERVER_URL ?? 'https://exp.host',
+          expoApiServerURL,
           robotAccessToken,
           archivePath,
           key: cacheKey,
@@ -371,10 +379,7 @@ async function runInstallPodsAsync(ctx: BuildContext<Ios.Job>): Promise<void> {
   }
 }
 
-async function generateCacheKeyAsync(
-  ctx: BuildContext<Ios.Job>,
-  workingDirectory: string
-): Promise<string> {
+async function generateCacheKeyAsync(workingDirectory: string): Promise<string> {
   // This will resolve which package manager and use the relevant lock file
   // The lock file hash is the key and ensures cache is fresh
   const manager = PackageManagerUtils.createForProject(workingDirectory);
@@ -386,9 +391,9 @@ async function generateCacheKeyAsync(
       const lockFile = await fs.readFile(lockPath, 'utf8');
       keyInput += lockFile;
     }
-  } catch (err) {
-    ctx.logger.warn({ err }, 'Failed to read package files for cache key generation');
+  } catch (err: any) {
+    throw new Error(`Failed to read package files for cache key generation: ${err.code}`);
   }
 
-  return `ios-cache-${createHash('sha256').update(keyInput).digest('hex').substring(0, 16)}`;
+  return `ios-ccache-${createHash('sha256').update(keyInput).digest('hex').substring(0, 16)}`;
 }
