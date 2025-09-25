@@ -384,15 +384,29 @@ async function generateCacheKeyAsync(workingDirectory: string): Promise<string> 
   const manager = PackageManagerUtils.createForProject(workingDirectory);
   const lockPath = path.join(workingDirectory, manager.lockFile);
 
-  let keyInput = '';
   try {
-    if (await fs.pathExists(lockPath)) {
-      const lockFile = await fs.readFile(lockPath, 'utf8');
-      keyInput += lockFile;
-    }
+    const key = await hashFiles([lockPath]);
+    return `ios-ccache-${key}`;
   } catch (err: any) {
-    throw new Error(`Failed to read package files for cache key generation: ${err.code}`);
+    throw new Error(`Failed to read package files for cache key generation: ${err.message}`);
+  }
+}
+
+async function hashFiles(filePaths: string[]): Promise<string> {
+  const hashes: string[] = [];
+
+  for (const filePath of filePaths) {
+    try {
+      if (await fs.pathExists(filePath)) {
+        const fileContent = await fs.readFile(filePath);
+        const fileHash = createHash('sha256').update(fileContent).digest('hex');
+        hashes.push(fileHash);
+      }
+    } catch (err: any) {
+      throw new Error(`Failed to hash file ${filePath}: ${err.message}`);
+    }
   }
 
-  return `ios-ccache-${createHash('sha256').update(keyInput).digest('hex')}`;
+  const combinedHashes = hashes.join('');
+  return createHash('sha256').update(combinedHashes).digest('hex');
 }
