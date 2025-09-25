@@ -144,6 +144,7 @@ export async function downloadCacheAsync({
       Authorization: `Bearer ${robotAccessToken}`,
       'Content-Type': 'application/json',
     },
+    shouldThrowOnNotOk: false,
   });
 
   if (!response.ok) {

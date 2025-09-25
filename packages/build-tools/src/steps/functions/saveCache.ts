@@ -118,6 +118,7 @@ export async function uploadCacheAsync({
       Authorization: `Bearer ${robotAccessToken}`,
       'Content-Type': 'application/json',
     },
+    shouldThrowOnNotOk: false,
   });
   if (!response.ok) {
     if (response.status === 409) {
