@@ -7,6 +7,7 @@ import { ManagedArtifactType, BuildMode, BuildPhase, Ios, Workflow } from '@expo
 import fs from 'fs-extra';
 import nullthrows from 'nullthrows';
 import * as PackageManagerUtils from '@expo/package-manager';
+import { spawnAsync } from '@expo/steps';
 
 import { Artifacts, BuildContext } from '../context';
 import {
@@ -53,7 +54,7 @@ export default async function iosBuilder(ctx: BuildContext<Ios.Job>): Promise<Ar
 async function buildAsync(ctx: BuildContext<Ios.Job>): Promise<void> {
   await setupAsync(ctx);
   const hasNativeCode = ctx.job.type === Workflow.GENERIC;
-
+  const buildStart = Date.now();
   const credentialsManager = new CredentialsManager(ctx);
   try {
     const credentials = await ctx.runBuildPhase(BuildPhase.PREPARE_CREDENTIALS, async () => {
@@ -232,6 +233,10 @@ async function buildAsync(ctx: BuildContext<Ios.Job>): Promise<void> {
         'Robot access token is required for cache operations'
       );
       const expoApiServerURL = nullthrows(ctx.env.__API_SERVER_URL, '__API_SERVER_URL is not set');
+
+      // cache size can blow up over time over many builds, so evict stale files and only upload what was within this builds time window
+      const evictWindow = Math.floor((Date.now() - buildStart) / 1000);
+      await spawnAsync('ccache', ['--evict-older-than', evictWindow + 's']);
 
       const { archivePath } = await compressCacheAsync({
         paths,
