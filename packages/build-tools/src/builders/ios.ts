@@ -56,6 +56,8 @@ async function buildAsync(ctx: BuildContext<Ios.Job>): Promise<void> {
   const hasNativeCode = ctx.job.type === Workflow.GENERIC;
   const buildStart = Date.now();
   const credentialsManager = new CredentialsManager(ctx);
+  const workingDirectory = ctx.getReactNativeProjectDirectory();
+  const cachePaths = [path.join(ctx.env.HOME, 'Library/Caches/ccache')];
   try {
     const credentials = await ctx.runBuildPhase(BuildPhase.PREPARE_CREDENTIALS, async () => {
       return await credentialsManager.prepare();
@@ -83,8 +85,6 @@ async function buildAsync(ctx: BuildContext<Ios.Job>): Promise<void> {
       if (ctx.env.EAS_USE_CACHE !== '1') {
         return;
       }
-      const workingDirectory = ctx.getReactNativeProjectDirectory();
-      const paths = [path.join(ctx.env.HOME, 'Library/Caches/ccache')];
 
       try {
         const cacheKey = await generateCacheKeyAsync(workingDirectory);
@@ -104,7 +104,7 @@ async function buildAsync(ctx: BuildContext<Ios.Job>): Promise<void> {
           jobId,
           expoApiServerURL,
           robotAccessToken,
-          paths,
+          paths: cachePaths,
           key: cacheKey,
           keyPrefixes: [],
           platform: ctx.job.platform,
@@ -113,7 +113,7 @@ async function buildAsync(ctx: BuildContext<Ios.Job>): Promise<void> {
         await decompressCacheAsync({
           archivePath,
           workingDirectory,
-          verbose: ctx.logger.debug(),
+          verbose: ctx.env.EXPO_DEBUG === '1',
           logger: ctx.logger,
         });
 
@@ -221,8 +221,6 @@ async function buildAsync(ctx: BuildContext<Ios.Job>): Promise<void> {
     if (ctx.env.EAS_USE_CACHE !== '1') {
       return;
     }
-    const workingDirectory = ctx.getReactNativeProjectDirectory();
-    const paths = [path.join(ctx.env.HOME, 'Library/Caches/ccache')];
 
     try {
       const cacheKey = await generateCacheKeyAsync(workingDirectory);
@@ -234,14 +232,14 @@ async function buildAsync(ctx: BuildContext<Ios.Job>): Promise<void> {
       );
       const expoApiServerURL = nullthrows(ctx.env.__API_SERVER_URL, '__API_SERVER_URL is not set');
 
-      // cache size can blow up over time over many builds, so evict stale files and only upload what was within this builds time window
+      // cache size can blow up over time over many builds, so evict stale files and only upload what was used within this builds time window
       const evictWindow = Math.floor((Date.now() - buildStart) / 1000);
       await spawnAsync('ccache', ['--evict-older-than', evictWindow + 's']);
 
       const { archivePath } = await compressCacheAsync({
-        paths,
+        paths: cachePaths,
         workingDirectory,
-        verbose: ctx.logger.debug(),
+        verbose: ctx.env.EXPO_DEBUG === '1',
         logger: ctx.logger,
       });
 
@@ -254,7 +252,7 @@ async function buildAsync(ctx: BuildContext<Ios.Job>): Promise<void> {
         robotAccessToken,
         archivePath,
         key: cacheKey,
-        paths,
+        paths: cachePaths,
         size,
         platform: ctx.job.platform,
       });
