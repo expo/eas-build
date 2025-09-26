@@ -8,6 +8,7 @@ import fs from 'fs-extra';
 import nullthrows from 'nullthrows';
 import * as PackageManagerUtils from '@expo/package-manager';
 import { spawnAsync } from '@expo/steps';
+import { asyncResult } from '@expo/results';
 
 import { Artifacts, BuildContext } from '../context';
 import {
@@ -234,7 +235,21 @@ async function buildAsync(ctx: BuildContext<Ios.Job>): Promise<void> {
 
       // cache size can blow up over time over many builds, so evict stale files and only upload what was used within this builds time window
       const evictWindow = Math.floor((Date.now() - buildStart) / 1000);
-      await spawnAsync('ccache', ['--evict-older-than', evictWindow + 's']);
+      ctx.logger.info('Pruning cache...');
+      await asyncResult(
+        spawnAsync('ccache', ['--evict-older-than', evictWindow + 's'], {
+          env: ctx.env,
+          logger: ctx.logger,
+          stdio: 'pipe',
+        })
+      );
+
+      ctx.logger.info('Cache stats:');
+      await asyncResult(
+        spawnAsync('ccache', ['--show-stats'], { env: ctx.env, logger: ctx.logger, stdio: 'pipe' })
+      );
+
+      ctx.logger.info('Preparing cache archive...');
 
       const { archivePath } = await compressCacheAsync({
         paths: cachePaths,

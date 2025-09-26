@@ -21,7 +21,7 @@ import { Platform } from '@expo/eas-build-job';
 import { retryOnDNSFailure } from '../../utils/retryOnDNSFailure';
 import { formatBytes } from '../../utils/artifacts';
 import { getCacheVersion } from '../utils/cache';
-import { turtleFetch } from '../../utils/turtleFetch';
+import { turtleFetch, TurtleFetchError } from '../../utils/turtleFetch';
 
 const streamPipeline = promisify(stream.pipeline);
 
@@ -128,68 +128,74 @@ export async function downloadCacheAsync({
 }): Promise<{ archivePath: string; matchedKey: string }> {
   const routerURL = platform ? 'v2/turtle-builds/caches/download' : 'v2/turtle-caches/download';
 
-  const response = await turtleFetch(new URL(routerURL, expoApiServerURL).toString(), 'POST', {
-    json: platform
-      ? {
-          buildId: jobId,
-          key,
-          version: getCacheVersion(paths),
-          keyPrefixes,
-        }
-      : {
-          jobRunId: jobId,
-          key,
-          version: getCacheVersion(paths),
-          keyPrefixes,
-        },
-    headers: {
-      Authorization: `Bearer ${robotAccessToken}`,
-      'Content-Type': 'application/json',
-    },
-    retries: 2,
-    shouldThrowOnNotOk: true,
-  });
+  try {
+    const response = await turtleFetch(new URL(routerURL, expoApiServerURL).toString(), 'POST', {
+      json: platform
+        ? {
+            buildId: jobId,
+            key,
+            version: getCacheVersion(paths),
+            keyPrefixes,
+          }
+        : {
+            jobRunId: jobId,
+            key,
+            version: getCacheVersion(paths),
+            keyPrefixes,
+          },
+      headers: {
+        Authorization: `Bearer ${robotAccessToken}`,
+        'Content-Type': 'application/json',
+      },
+      // It's ok to retry POST caches/download, because we're only retrying signing a download URL.
+      retries: 2,
+      shouldThrowOnNotOk: true,
+    });
 
-  if (!response.ok) {
-    if (response.status === 404) {
+    const result = await asyncResult(response.json());
+    if (!result.ok) {
+      throw new Error(`Unexpected response from server (${response.status}): ${result.reason}`);
+    }
+
+    const { matchedKey, downloadUrl } = result.value.data;
+
+    logger.info(`Matched cache key: ${matchedKey}. Downloading...`);
+
+    const downloadDestinationDirectory = await fs.promises.mkdtemp(
+      path.join(os.tmpdir(), 'restore-cache-')
+    );
+
+    const downloadResponse = await retryOnDNSFailure(fetch)(downloadUrl);
+    if (!downloadResponse.ok) {
       throw new Error(
-        `No cache found for this key, ensure it was created with eas/save_cache (${response.status})`
+        `Unexpected response from cache server (${downloadResponse.status}): ${downloadResponse.statusText}`
       );
     }
-    const textResult = await asyncResult(response.text());
-    throw new Error(`Unexpected response from server (${response.status}): ${textResult.value}`);
+
+    // URL may contain percent-encoded characters, e.g. my%20file.apk
+    // this replaces all non-alphanumeric characters (excluding dot) with underscore
+    const archiveFilename = path
+      .basename(new URL(downloadUrl).pathname)
+      .replace(/([^a-z0-9.-]+)/gi, '_');
+    const archivePath = path.join(downloadDestinationDirectory, archiveFilename);
+
+    await streamPipeline(downloadResponse.body, fs.createWriteStream(archivePath));
+
+    return { archivePath, matchedKey };
+  } catch (err: any) {
+    if (err instanceof TurtleFetchError) {
+      if (err.response.status === 404) {
+        throw new Error(
+          `No cache found for this key, ensure it was created with eas/save_cache (${err.response.status})`
+        );
+      }
+      const textResult = await asyncResult(err.response.text());
+      throw new Error(
+        `Unexpected response from server (${err.response.status}): ${textResult.value}`
+      );
+    }
+    throw err;
   }
-
-  const result = await asyncResult(response.json());
-  if (!result.ok) {
-    throw new Error(`Unexpected response from server (${response.status}): ${result.reason}`);
-  }
-
-  const { matchedKey, downloadUrl } = result.value.data;
-
-  logger.info(`Matched cache key: ${matchedKey}. Downloading...`);
-
-  const downloadDestinationDirectory = await fs.promises.mkdtemp(
-    path.join(os.tmpdir(), 'restore-cache-')
-  );
-
-  const downloadResponse = await retryOnDNSFailure(fetch)(downloadUrl);
-  if (!downloadResponse.ok) {
-    throw new Error(
-      `Unexpected response from cache server (${downloadResponse.status}): ${downloadResponse.statusText}`
-    );
-  }
-
-  // URL may contain percent-encoded characters, e.g. my%20file.apk
-  // this replaces all non-alphanumeric characters (excluding dot) with underscore
-  const archiveFilename = path
-    .basename(new URL(downloadUrl).pathname)
-    .replace(/([^a-z0-9.-]+)/gi, '_');
-  const archivePath = path.join(downloadDestinationDirectory, archiveFilename);
-
-  await streamPipeline(downloadResponse.body, fs.createWriteStream(archivePath));
-
-  return { archivePath, matchedKey };
 }
 
 export async function decompressCacheAsync({
