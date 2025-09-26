@@ -10,6 +10,7 @@ import z from 'zod';
 import nullthrows from 'nullthrows';
 import fetch from 'node-fetch';
 import { asyncResult } from '@expo/results';
+import { Platform } from '@expo/eas-build-job';
 
 import { retryOnDNSFailure } from '../../utils/retryOnDNSFailure';
 import { formatBytes } from '../../utils/artifacts';
@@ -36,17 +37,16 @@ export function createSaveCacheFunction(): BuildFunction {
       const { logger } = stepsCtx;
 
       try {
-        if (stepsCtx.global.staticContext.job.platform) {
-          logger.error('Caches are not supported in build jobs yet.');
-          return;
-        }
-
         const paths = z
           .array(z.string())
           .parse(((inputs.path.value ?? '') as string).split(/[\r\n]+/))
           .filter((path) => path.length > 0);
         const key = z.string().parse(inputs.key.value);
-        const taskId = nullthrows(env.EAS_BUILD_ID, 'EAS_BUILD_ID is not set');
+        const jobId = nullthrows(env.EAS_BUILD_ID, 'EAS_BUILD_ID is not set');
+        const robotAccessToken = nullthrows(
+          stepsCtx.global.staticContext.job.secrets?.robotAccessToken,
+          'robotAccessToken is not set'
+        );
 
         const { archivePath } = await compressCacheAsync({
           paths,
@@ -59,13 +59,14 @@ export function createSaveCacheFunction(): BuildFunction {
 
         await uploadCacheAsync({
           logger,
-          jobRunId: taskId,
+          jobId,
           expoApiServerURL: stepsCtx.global.staticContext.expoApiServerURL,
-          robotAccessToken: stepsCtx.global.staticContext.job.secrets?.robotAccessToken ?? null,
+          robotAccessToken,
           archivePath,
           key,
           paths,
           size,
+          platform: stepsCtx.global.staticContext.job.platform,
         });
       } catch (error) {
         logger.error({ err: error }, 'Failed to create cache');
@@ -76,40 +77,50 @@ export function createSaveCacheFunction(): BuildFunction {
 
 export async function uploadCacheAsync({
   logger,
-  jobRunId,
+  jobId,
   expoApiServerURL,
   robotAccessToken,
   paths,
   key,
   archivePath,
   size,
+  platform,
 }: {
   logger: bunyan;
-  jobRunId: string;
+  jobId: string;
   expoApiServerURL: string;
   robotAccessToken: string;
   paths: string[];
   key: string;
   archivePath: string;
   size: number;
+  platform: Platform | undefined;
 }): Promise<void> {
-  const response = await retryOnDNSFailure(fetch)(
-    new URL('v2/turtle-caches/upload-sessions', expoApiServerURL),
-    {
-      method: 'POST',
-      body: JSON.stringify({
-        jobRunId,
-        key,
-        version: getCacheVersion(paths),
-        size,
-      }),
-      headers: {
-        Authorization: `Bearer ${robotAccessToken}`,
-        'Content-Type': 'application/json',
-      },
-    }
-  );
+  const routerURL = platform
+    ? 'v2/turtle-builds/caches/upload-sessions'
+    : 'v2/turtle-caches/upload-sessions';
 
+  // attempts to upload should only attempt on DNS errors, and not application errors such as 409 (cache exists)
+  const response = await retryOnDNSFailure(fetch)(new URL(routerURL, expoApiServerURL), {
+    method: 'POST',
+    body: platform
+      ? JSON.stringify({
+          buildId: jobId,
+          key,
+          version: getCacheVersion(paths),
+          size,
+        })
+      : JSON.stringify({
+          jobRunId: jobId,
+          key,
+          version: getCacheVersion(paths),
+          size,
+        }),
+    headers: {
+      Authorization: `Bearer ${robotAccessToken}`,
+      'Content-Type': 'application/json',
+    },
+  });
   if (!response.ok) {
     if (response.status === 409) {
       logger.info(`Cache already exists, skipping upload`);
