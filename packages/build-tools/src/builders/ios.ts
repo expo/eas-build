@@ -80,7 +80,7 @@ async function buildAsync(ctx: BuildContext<Ios.Job>): Promise<void> {
     });
 
     await ctx.runBuildPhase(BuildPhase.RESTORE_CACHE, async () => {
-      if (ctx.env.EAS_USE_CACHE !== 'true') {
+      if (ctx.env.EAS_USE_CACHE !== '1') {
         return;
       }
       const workingDirectory = ctx.getReactNativeProjectDirectory();
@@ -218,7 +218,7 @@ async function buildAsync(ctx: BuildContext<Ios.Job>): Promise<void> {
   });
 
   await ctx.runBuildPhase(BuildPhase.SAVE_CACHE, async () => {
-    if (ctx.env.EAS_USE_CACHE !== 'true') {
+    if (ctx.env.EAS_USE_CACHE !== '1') {
       return;
     }
     const workingDirectory = ctx.getReactNativeProjectDirectory();

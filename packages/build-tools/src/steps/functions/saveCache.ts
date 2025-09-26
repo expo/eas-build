@@ -15,7 +15,6 @@ import { Platform } from '@expo/eas-build-job';
 import { retryOnDNSFailure } from '../../utils/retryOnDNSFailure';
 import { formatBytes } from '../../utils/artifacts';
 import { getCacheVersion } from '../utils/cache';
-import { turtleFetch } from '../../utils/turtleFetch';
 
 export function createSaveCacheFunction(): BuildFunction {
   return new BuildFunction({
@@ -45,7 +44,8 @@ export function createSaveCacheFunction(): BuildFunction {
         const key = z.string().parse(inputs.key.value);
         const jobId = nullthrows(env.EAS_BUILD_ID, 'EAS_BUILD_ID is not set');
         const robotAccessToken = nullthrows(
-          stepsCtx.global.staticContext.job.secrets?.robotAccessToken
+          stepsCtx.global.staticContext.job.secrets?.robotAccessToken,
+          'robotAccessToken is not set'
         );
 
         const { archivePath } = await compressCacheAsync({
@@ -100,25 +100,26 @@ export async function uploadCacheAsync({
     ? 'v2/turtle-builds/caches/upload-sessions'
     : 'v2/turtle-caches/upload-sessions';
 
-  const response = await turtleFetch(new URL(routerURL, expoApiServerURL).toString(), 'POST', {
-    json: platform
-      ? {
+  // attempts to upload should only attempt on DNS errors, and not application errors such as 409 (cache exists)
+  const response = await retryOnDNSFailure(fetch)(new URL(routerURL, expoApiServerURL), {
+    method: 'POST',
+    body: platform
+      ? JSON.stringify({
           buildId: jobId,
           key,
           version: getCacheVersion(paths),
           size,
-        }
-      : {
+        })
+      : JSON.stringify({
           jobRunId: jobId,
           key,
           version: getCacheVersion(paths),
           size,
-        },
+        }),
     headers: {
       Authorization: `Bearer ${robotAccessToken}`,
       'Content-Type': 'application/json',
     },
-    shouldThrowOnNotOk: false,
   });
   if (!response.ok) {
     if (response.status === 409) {

@@ -74,7 +74,8 @@ export function createRestoreCacheFunction(): BuildFunction {
 
         const jobId = nullthrows(env.EAS_BUILD_ID, 'EAS_BUILD_ID is not set');
         const robotAccessToken = nullthrows(
-          stepsCtx.global.staticContext.job.secrets?.robotAccessToken
+          stepsCtx.global.staticContext.job.secrets?.robotAccessToken,
+          'robotAccessToken is not set'
         );
 
         const { archivePath, matchedKey } = await downloadCacheAsync({
@@ -126,6 +127,7 @@ export async function downloadCacheAsync({
   platform: Platform | undefined;
 }): Promise<{ archivePath: string; matchedKey: string }> {
   const routerURL = platform ? 'v2/turtle-builds/caches/download' : 'v2/turtle-caches/download';
+
   const response = await turtleFetch(new URL(routerURL, expoApiServerURL).toString(), 'POST', {
     json: platform
       ? {
@@ -144,7 +146,8 @@ export async function downloadCacheAsync({
       Authorization: `Bearer ${robotAccessToken}`,
       'Content-Type': 'application/json',
     },
-    shouldThrowOnNotOk: false,
+    retries: 2,
+    shouldThrowOnNotOk: true,
   });
 
   if (!response.ok) {
