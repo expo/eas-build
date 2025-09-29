@@ -15,7 +15,7 @@ export {
   Cache,
   WorkflowInterpolationContext,
 } from './common';
-export { Metadata, sanitizeMetadata, FingerprintSource, FingerprintSourceType } from './metadata';
+export { Metadata, sanitizeMetadata } from './metadata';
 export * from './job';
 export * from './logs';
 export * as errors from './errors';

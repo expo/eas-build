@@ -6573,6 +6573,7 @@ type WorkflowJobApprovalMutation {
 
 type WorkflowRevisionMutation {
   validateWorkflowYamlConfig(yamlConfig: String!, appId: ID!): Boolean!
+  getOrCreateWorkflowRevisionFromGitRef(fileName: String!, gitRef: String!, appId: ID!): WorkflowRevision!
 }
 
 input WorkflowRevisionInput {
@@ -6599,6 +6600,7 @@ input WorkflowRunInput {
 
 type WorkflowRunMutation {
   createWorkflowRun(appId: ID!, workflowRevisionInput: WorkflowRevisionInput!, workflowRunInput: WorkflowRunInput!): WorkflowRun!
+  createWorkflowRunFromGitRef(workflowRevisionId: ID!, gitRef: String!, inputs: JSONObject): WorkflowRun!
   retryWorkflowRun(workflowRunId: ID!, fromFailedJobs: Boolean): WorkflowRun!
   cancelWorkflowRun(workflowRunId: ID!): WorkflowRun!
 }
