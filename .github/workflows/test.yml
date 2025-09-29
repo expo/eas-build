@@ -10,7 +10,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        node: ['18', '20', '22']
+        node: ["18", "20", "22"]
     name: Test with Node ${{ matrix.node }} on Linux
     steps:
       - uses: actions/checkout@v4
@@ -21,10 +21,10 @@ jobs:
       - name: Setup ncc
         run: npm install -g @vercel/ncc
       - run: yarn install --frozen-lockfile --check-files
-      - name: 'gql.tada Checks'
+      - name: "gql.tada Checks"
         working-directory: packages/build-tools
         run: |
-          yarn gql-tada generate-output
+          yarn gql
           yarn gql-tada check
           git diff --name-status --exit-code .
       - run: yarn build
