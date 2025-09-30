@@ -37,21 +37,9 @@ export async function prepareProjectSourcesAsync<TJob extends Job>(
   } else if (projectArchive.type === ArchiveSourceType.URL) {
     await downloadAndUnpackProjectFromTarGzAsync(ctx, projectArchive.url, destinationDirectory);
   } else if (projectArchive.type === ArchiveSourceType.GIT) {
-    let repositoryUrl = projectArchive.repositoryUrl;
-    if (!projectArchiveResult.ok) {
-      try {
-        repositoryUrl = await fetchRepositoryUrlAsync(ctx);
-      } catch (err) {
-        ctx.logger.error('Failed to refresh clone URL, falling back to the original one', err);
-      }
-    }
-
     await shallowCloneRepositoryAsync({
       logger: ctx.logger,
-      archiveSource: {
-        ...projectArchive,
-        repositoryUrl,
-      },
+      archiveSource: projectArchive,
       destinationDirectory,
     });
   }
@@ -62,54 +50,6 @@ export async function prepareProjectSourcesAsync<TJob extends Job>(
   if (!uploadResult.ok) {
     ctx.logger.warn(`Failed to upload project metadata: ${uploadResult.reason}`);
   }
-}
-
-async function fetchRepositoryUrlAsync(ctx: BuildContext<Job>): Promise<string> {
-  const taskId = nullthrows(ctx.env.EAS_BUILD_ID, 'EAS_BUILD_ID is not set');
-  const expoApiServerURL = nullthrows(ctx.env.__API_SERVER_URL, '__API_SERVER_URL is not set');
-  const robotAccessToken = nullthrows(
-    ctx.job.secrets?.robotAccessToken,
-    'robot access token is not set'
-  );
-
-  const response = await turtleFetch(
-    new URL(`/v2/github/fetch-github-repository-url`, expoApiServerURL).toString(),
-    'POST',
-    {
-      json: { taskId },
-      headers: {
-        Authorization: `Bearer ${robotAccessToken}`,
-      },
-      timeout: 20000,
-      retries: 3,
-      logger: ctx.logger,
-    }
-  );
-
-  if (!response.ok) {
-    const textResult = await asyncResult(response.text());
-    throw new Error(`Unexpected response from server (${response.status}): ${textResult.value}`);
-  }
-
-  const jsonResult = await asyncResult(response.json());
-  if (!jsonResult.ok) {
-    throw new Error(
-      `Expected JSON response from server (${response.status}): ${jsonResult.reason}`
-    );
-  }
-
-  const dataResult = z
-    .object({
-      data: z.object({
-        repositoryUrl: z.string().url(),
-      }),
-    })
-    .safeParse(jsonResult.value);
-  if (!dataResult.success) {
-    throw new Error(`Unexpected response from server (${response.status}): ${dataResult.error}`);
-  }
-
-  return dataResult.data.data.repositoryUrl;
 }
 
 export async function downloadAndUnpackProjectFromTarGzAsync<TJob extends Job>(
