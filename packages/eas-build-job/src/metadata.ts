@@ -7,7 +7,7 @@ export type Metadata = {
    * Tracking context
    * It's used to track build process across different Expo services and tools.
    */
-  trackingContext: Record<string, string | number | boolean>;
+  trackingContext?: Record<string, string | number | boolean>;
 
   /**
    * Application version:
@@ -172,9 +172,7 @@ export type Metadata = {
 };
 
 export const MetadataSchema = Joi.object({
-  trackingContext: Joi.object()
-    .pattern(Joi.string(), [Joi.string(), Joi.number(), Joi.boolean()])
-    .required(),
+  trackingContext: Joi.object().pattern(Joi.string(), [Joi.string(), Joi.number(), Joi.boolean()]),
   appVersion: Joi.string(),
   appBuildVersion: Joi.string(),
   cliVersion: Joi.string(),
