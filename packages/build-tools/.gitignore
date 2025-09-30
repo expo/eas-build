@@ -6,3 +6,4 @@ dist/
 !.secrets.test
 
 src/graphql-env.d.ts
+schema.graphql
