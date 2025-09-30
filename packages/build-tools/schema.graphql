@@ -1901,6 +1901,7 @@ type Build implements ActivityTimelineProjectActivity & BuildOrBuildJob {
   isForIosSimulator: Boolean!
   deployment: Deployment
   cliVersion: String
+  workflowJob: WorkflowJob
 }
 
 type BuildArtifacts {
@@ -2904,6 +2905,7 @@ type Submission implements ActivityTimelineProjectActivity {
   updatedAt: DateTime!
   completedAt: DateTime
   priority: SubmissionPriority
+  workflowJob: WorkflowJob
 }
 
 type SubmissionError {
@@ -3067,6 +3069,7 @@ type Update implements ActivityTimelineProjectActivity {
   assetMapUrl: String
   manifestHostOverride: String
   assetHostOverride: String
+  workflowJob: WorkflowJob
 }
 
 type CodeSigningInfo {

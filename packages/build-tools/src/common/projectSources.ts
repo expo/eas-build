@@ -275,11 +275,6 @@ async function uploadProjectMetadataAsync(
 }
 
 async function fetchProjectArchiveSourceAsync(ctx: BuildContext<Job>): Promise<ArchiveSource> {
-  // We only support fetching project archive source for builds (non-empty platform).
-  if (!ctx.job.platform) {
-    return ctx.job.projectArchive;
-  }
-
   const taskId = nullthrows(ctx.env.EAS_BUILD_ID, 'EAS_BUILD_ID is not set');
   const expoApiServerURL = nullthrows(ctx.env.__API_SERVER_URL, '__API_SERVER_URL is not set');
   const robotAccessToken = nullthrows(
@@ -288,7 +283,12 @@ async function fetchProjectArchiveSourceAsync(ctx: BuildContext<Job>): Promise<A
   );
 
   const response = await turtleFetch(
-    new URL(`/v2/turtle-builds/${taskId}/download-project-archive`, expoApiServerURL).toString(),
+    new URL(
+      ctx.job.platform
+        ? `/v2/turtle-builds/${taskId}/download-project-archive`
+        : `/v2/turtle-job-runs/${taskId}/download-project-archive`,
+      expoApiServerURL
+    ).toString(),
     'POST',
     {
       headers: {
