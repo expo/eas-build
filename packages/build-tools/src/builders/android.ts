@@ -1,7 +1,12 @@
+import { createHash } from 'crypto';
 import path from 'path';
 
 import { Android, BuildMode, BuildPhase, Workflow } from '@expo/eas-build-job';
+import * as PackageManagerUtils from '@expo/package-manager';
+import fs from 'fs-extra';
 import nullthrows from 'nullthrows';
+import { asyncResult } from '@expo/results';
+import { spawnAsync } from '@expo/steps';
 
 import { Artifacts, BuildContext, SkipNativeBuildError } from '../context';
 import {
@@ -21,6 +26,8 @@ import { setupAsync } from '../common/setup';
 import { prebuildAsync } from '../common/prebuild';
 import { prepareExecutableAsync } from '../utils/prepareBuildExecutable';
 import { eagerBundleAsync, shouldUseEagerBundle } from '../common/eagerBundle';
+import { decompressCacheAsync, downloadCacheAsync } from '../steps/functions/restoreCache';
+import { compressCacheAsync, uploadCacheAsync } from '../steps/functions/saveCache';
 
 import { runBuilderWithHooksAsync } from './common';
 import { runCustomBuildAsync } from './custom';
@@ -40,6 +47,9 @@ export default async function androidBuilder(ctx: BuildContext<Android.Job>): Pr
 
 async function buildAsync(ctx: BuildContext<Android.Job>): Promise<void> {
   await setupAsync(ctx);
+  const buildStart = Date.now();
+  const workingDirectory = ctx.getReactNativeProjectDirectory();
+  const cachePaths = [path.join(ctx.env.HOME, '.cache/ccache')];
   const hasNativeCode = ctx.job.type === Workflow.GENERIC;
 
   if (hasNativeCode) {
@@ -63,7 +73,44 @@ async function buildAsync(ctx: BuildContext<Android.Job>): Promise<void> {
   });
 
   await ctx.runBuildPhase(BuildPhase.RESTORE_CACHE, async () => {
-    await ctx.cacheManager?.restoreCache(ctx);
+    if (ctx.env.EAS_USE_CACHE !== '1') {
+      // EAS_USE_CACHE is for the new cache. If it is not set, use the old cache.
+      await ctx.cacheManager?.restoreCache(ctx);
+      return;
+    }
+
+    try {
+      const cacheKey = await generateCacheKeyAsync(workingDirectory);
+      const jobId = nullthrows(ctx.env.EAS_BUILD_ID, 'EAS_BUILD_ID is not set');
+
+      const robotAccessToken = nullthrows(
+        ctx.job.secrets?.robotAccessToken,
+        'Robot access token is required for cache operations'
+      );
+      const expoApiServerURL = nullthrows(ctx.env.__API_SERVER_URL, '__API_SERVER_URL is not set');
+
+      const { archivePath } = await downloadCacheAsync({
+        logger: ctx.logger,
+        jobId,
+        expoApiServerURL,
+        robotAccessToken,
+        paths: cachePaths,
+        key: cacheKey,
+        keyPrefixes: [],
+        platform: ctx.job.platform,
+      });
+
+      await decompressCacheAsync({
+        archivePath,
+        workingDirectory,
+        verbose: ctx.env.EXPO_DEBUG === '1',
+        logger: ctx.logger,
+      });
+
+      ctx.logger.info('Cache restored successfully');
+    } catch (err) {
+      ctx.logger.warn({ err }, 'Failed to restore cache');
+    }
   });
 
   await ctx.runBuildPhase(BuildPhase.POST_INSTALL_HOOK, async () => {
@@ -154,6 +201,95 @@ async function buildAsync(ctx: BuildContext<Android.Job>): Promise<void> {
   });
 
   await ctx.runBuildPhase(BuildPhase.SAVE_CACHE, async () => {
-    await ctx.cacheManager?.saveCache(ctx);
+    if (ctx.env.EAS_USE_CACHE !== '1') {
+      // EAS_USE_CACHE is for the new cache. If it is not set, use the old cache.
+      await ctx.cacheManager?.saveCache(ctx);
+      return;
+    }
+
+    try {
+      const cacheKey = await generateCacheKeyAsync(workingDirectory);
+      const jobId = nullthrows(ctx.env.EAS_BUILD_ID, 'EAS_BUILD_ID is not set');
+
+      const robotAccessToken = nullthrows(
+        ctx.job.secrets?.robotAccessToken,
+        'Robot access token is required for cache operations'
+      );
+      const expoApiServerURL = nullthrows(ctx.env.__API_SERVER_URL, '__API_SERVER_URL is not set');
+
+      // cache size can blow up over time over many builds, so evict stale files and only upload what was used within this builds time window
+      const evictWindow = Math.floor((Date.now() - buildStart) / 1000);
+      ctx.logger.info('Pruning cache...');
+      await asyncResult(
+        spawnAsync('ccache', ['--evict-older-than', evictWindow + 's'], {
+          env: ctx.env,
+          logger: ctx.logger,
+          stdio: 'pipe',
+        })
+      );
+
+      ctx.logger.info('Cache stats:');
+      await asyncResult(
+        spawnAsync('ccache', ['--show-stats'], { env: ctx.env, logger: ctx.logger, stdio: 'pipe' })
+      );
+
+      ctx.logger.info('Preparing cache archive...');
+
+      const { archivePath } = await compressCacheAsync({
+        paths: cachePaths,
+        workingDirectory,
+        verbose: ctx.env.EXPO_DEBUG === '1',
+        logger: ctx.logger,
+      });
+
+      const { size } = await fs.stat(archivePath);
+
+      await uploadCacheAsync({
+        logger: ctx.logger,
+        jobId,
+        expoApiServerURL,
+        robotAccessToken,
+        archivePath,
+        key: cacheKey,
+        paths: cachePaths,
+        size,
+        platform: ctx.job.platform,
+      });
+    } catch (err) {
+      ctx.logger.error({ err }, 'Failed to save cache');
+    }
   });
+}
+
+async function generateCacheKeyAsync(workingDirectory: string): Promise<string> {
+  // This will resolve which package manager and use the relevant lock file
+  // The lock file hash is the key and ensures cache is fresh
+  const manager = PackageManagerUtils.createForProject(workingDirectory);
+  const lockPath = path.join(workingDirectory, manager.lockFile);
+
+  try {
+    const key = await hashFiles([lockPath]);
+    return `android-ccache-${key}`;
+  } catch (err: any) {
+    throw new Error(`Failed to read package files for cache key generation: ${err.message}`);
+  }
+}
+
+async function hashFiles(filePaths: string[]): Promise<string> {
+  const hashes: string[] = [];
+
+  for (const filePath of filePaths) {
+    try {
+      if (await fs.pathExists(filePath)) {
+        const fileContent = await fs.readFile(filePath);
+        const fileHash = createHash('sha256').update(fileContent).digest('hex');
+        hashes.push(fileHash);
+      }
+    } catch (err: any) {
+      throw new Error(`Failed to hash file ${filePath}: ${err.message}`);
+    }
+  }
+
+  const combinedHashes = hashes.join('');
+  return createHash('sha256').update(combinedHashes).digest('hex');
 }
