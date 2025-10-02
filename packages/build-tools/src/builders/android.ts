@@ -111,6 +111,35 @@ async function buildAsync(ctx: BuildContext<Android.Job>): Promise<void> {
     } catch (err) {
       ctx.logger.warn({ err }, 'Failed to restore cache');
     }
+
+    const cmakesToMigrate = [
+      path.join(ctx.env.ANDROID_NDK_HOME, 'build', 'cmake', 'android-legacy.toolchain.cmake'),
+      path.join(ctx.env.ANDROID_NDK_HOME, 'build', 'cmake', 'android.toolchain.cmake'),
+    ];
+
+    for (const cmake of cmakesToMigrate) {
+      try {
+        ctx.logger.info(`Adding ccache configuration to ${cmake}...`);
+        const fileContent = await fs.readFile(cmake);
+        const ccacheAddition = `
+
+find_program(CCACHE ccache)
+if (CCACHE)
+  set(CMAKE_CXX_COMPILER_LAUNCHER \${CCACHE})
+  set(CMAKE_C_COMPILER_LAUNCHER \${CCACHE})
+endif()
+`;
+        if (fileContent.includes(ccacheAddition)) {
+          ctx.logger.info(`${cmake} already contains ccache configuration. Skipping.`);
+          continue;
+        }
+
+        await fs.writeFile(cmake, fileContent + ccacheAddition);
+        ctx.logger.info(`Done.`);
+      } catch (err) {
+        ctx.logger.error({ err }, `Failed to add ccache configuration to ${cmake}`);
+      }
+    }
   });
 
   await ctx.runBuildPhase(BuildPhase.POST_INSTALL_HOOK, async () => {
