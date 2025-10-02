@@ -84,6 +84,8 @@ async function buildAsync(ctx: BuildContext<Ios.Job>): Promise<void> {
 
     await ctx.runBuildPhase(BuildPhase.RESTORE_CACHE, async () => {
       if (ctx.env.EAS_USE_CACHE !== '1') {
+        // EAS_USE_CACHE is for the new cache. If it is not set, use the old cache.
+        await ctx.cacheManager?.restoreCache(ctx);
         return;
       }
 
@@ -220,6 +222,8 @@ async function buildAsync(ctx: BuildContext<Ios.Job>): Promise<void> {
 
   await ctx.runBuildPhase(BuildPhase.SAVE_CACHE, async () => {
     if (ctx.env.EAS_USE_CACHE !== '1') {
+      // EAS_USE_CACHE is for the new cache. If it is not set, use the old cache.
+      await ctx.cacheManager?.saveCache(ctx);
       return;
     }
 
