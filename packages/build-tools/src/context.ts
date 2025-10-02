@@ -54,7 +54,12 @@ export interface BuildContextOptions {
   logBuffer: LogBuffer;
   env: Env;
   cacheManager?: CacheManager;
-  uploadArtifact: (spec: { artifact: ArtifactToUpload; logger: bunyan }) => Promise<string | null>;
+  uploadArtifact: (spec: { artifact: ArtifactToUpload; logger: bunyan }) => Promise<
+    /** Workflow Artifact ID */
+    | { artifactId: string; filename?: never }
+    /** This remains from the time we relied on Launcher to rename the GCS object. */
+    | { artifactId?: never; filename: string | null }
+  >;
   reportError?: (
     msg: string,
     err?: Error,
@@ -222,11 +227,12 @@ export class BuildContext<TJob extends Job = Job> {
   }: {
     artifact: ArtifactToUpload;
     logger: bunyan;
-  }): Promise<void> {
-    const bucketKey = await this._uploadArtifact({ artifact, logger });
-    if (bucketKey && !isGenericArtifact(artifact)) {
-      this.artifacts[artifact.type] = bucketKey;
+  }): Promise<{ artifactId: string | null }> {
+    const result = await this._uploadArtifact({ artifact, logger });
+    if (result.filename && !isGenericArtifact(artifact)) {
+      this.artifacts[artifact.type] = result.filename;
     }
+    return { artifactId: result.artifactId ?? null };
   }
 
   public updateEnv(env: Env): void {
