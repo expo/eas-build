@@ -1,7 +1,12 @@
 import assert from 'assert';
 
 import { GenericArtifactType, Job, ManagedArtifactType } from '@expo/eas-build-job';
-import { BuildFunction, BuildStepInput, BuildStepInputValueTypeName } from '@expo/steps';
+import {
+  BuildFunction,
+  BuildStepInput,
+  BuildStepInputValueTypeName,
+  BuildStepOutput,
+} from '@expo/steps';
 
 import { CustomBuildContext } from '../../customBuildContext';
 import { FindArtifactsError, findArtifacts } from '../../utils/artifacts';
@@ -61,7 +66,13 @@ export function createUploadArtifactBuildFunction(ctx: CustomBuildContext): Buil
         allowedValueTypeName: BuildStepInputValueTypeName.BOOLEAN,
       }),
     ],
-    fn: async ({ logger, global }, { inputs }) => {
+    outputProviders: [
+      BuildStepOutput.createProvider({
+        id: 'artifact_id',
+        required: false,
+      }),
+    ],
+    fn: async ({ logger, global }, { inputs, outputs }) => {
       assert(inputs.path.value, 'Path input cannot be empty.');
 
       const artifactSearchPaths = inputs.path.value
@@ -107,10 +118,14 @@ export function createUploadArtifactBuildFunction(ctx: CustomBuildContext): Buil
       };
 
       try {
-        await ctx.runtimeApi.uploadArtifact({
+        const { artifactId } = await ctx.runtimeApi.uploadArtifact({
           artifact,
           logger,
         });
+
+        if (artifactId) {
+          outputs.artifact_id.set(artifactId);
+        }
       } catch (error) {
         if (inputs.ignore_error.value) {
           logger.error(`Failed to upload ${artifact.type}. Ignoring error.`, error);
