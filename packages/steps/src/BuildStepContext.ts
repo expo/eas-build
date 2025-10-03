@@ -204,12 +204,14 @@ export class BuildStepGlobalContext {
         filePaths = [resolvedPattern];
       } else {
         // Use glob to find matching files
-        filePaths = fg.sync(pattern, {
-          cwd,
-          absolute: true,
-          onlyFiles: true,
-          followSymbolicLinks: false,
-        }).sort(); // Sort for consistent ordering
+        filePaths = fg
+          .sync(pattern, {
+            cwd,
+            absolute: true,
+            onlyFiles: true,
+            followSymbolicLinks: false,
+          })
+          .sort(); // Sort for consistent ordering
       }
 
       if (filePaths.length === 0) {
