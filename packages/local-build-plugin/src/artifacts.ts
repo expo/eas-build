@@ -6,7 +6,10 @@ import * as tar from 'tar';
 
 import config from './config';
 
-export async function prepareArtifacts(artifactPaths: string[], logger?: bunyan): Promise<string> {
+export async function prepareArtifacts(
+  artifactPaths: string[],
+  logger?: bunyan
+): Promise<{ filename: string }> {
   const l = logger?.child({ phase: 'PREPARE_ARTIFACTS' });
   l?.info('Preparing artifacts');
   let suffix;
@@ -39,7 +42,7 @@ export async function prepareArtifacts(artifactPaths: string[], logger?: bunyan)
   const destPath = config.artifactPath ?? path.join(config.artifactsDir, artifactName);
   await fs.copy(localPath, destPath);
   l?.info({ phase: 'PREPARE_ARTIFACTS' }, `Writing artifacts to ${destPath}`);
-  return destPath;
+  return { filename: destPath };
 }
 
 function getCommonParentDir(path1: string, path2: string): string {

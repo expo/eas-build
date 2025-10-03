@@ -2,24 +2,12 @@ import Joi from 'joi';
 
 import { Workflow } from './common';
 
-export enum FingerprintSourceType {
-  'GCS' = 'GCS',
-  'PATH' = 'PATH',
-  'URL' = 'URL',
-}
-
-export type FingerprintSource = { isDebugFingerprint?: boolean } & (
-  | { type: FingerprintSourceType.GCS; bucketKey: string }
-  | { type: FingerprintSourceType.PATH; path: string }
-  | { type: FingerprintSourceType.URL; url: string }
-);
-
 export type Metadata = {
   /**
    * Tracking context
    * It's used to track build process across different Expo services and tools.
    */
-  trackingContext: Record<string, string | number | boolean>;
+  trackingContext?: Record<string, string | number | boolean>;
 
   /**
    * Application version:
@@ -70,11 +58,6 @@ export type Metadata = {
    * Fingerprint hash of a project's native dependencies
    */
   fingerprintHash?: string;
-
-  /**
-   * The location of the fingerprint file if one exists
-   */
-  fingerprintSource?: FingerprintSource;
 
   /**
    * Version of the react-native package used in the project.
@@ -188,35 +171,8 @@ export type Metadata = {
   environment?: 'production' | 'preview' | 'development';
 };
 
-const FingerprintSourceSchema = Joi.object<FingerprintSource>({
-  type: Joi.string()
-    .valid(...Object.values(FingerprintSourceType))
-    .required(),
-  isDebugFingerprint: Joi.boolean(),
-})
-  .when(Joi.object({ type: FingerprintSourceType.GCS }).unknown(), {
-    then: Joi.object({
-      type: Joi.string().valid(FingerprintSourceType.GCS).required(),
-      bucketKey: Joi.string().required(),
-    }),
-  })
-  .when(Joi.object({ type: FingerprintSourceType.PATH }).unknown(), {
-    then: Joi.object({
-      type: Joi.string().valid(FingerprintSourceType.PATH).required(),
-      path: Joi.string().required(),
-    }),
-  })
-  .when(Joi.object({ type: FingerprintSourceType.URL }).unknown(), {
-    then: Joi.object({
-      type: Joi.string().valid(FingerprintSourceType.URL).required(),
-      url: Joi.string().uri().required(),
-    }),
-  });
-
 export const MetadataSchema = Joi.object({
-  trackingContext: Joi.object()
-    .pattern(Joi.string(), [Joi.string(), Joi.number(), Joi.boolean()])
-    .required(),
+  trackingContext: Joi.object().pattern(Joi.string(), [Joi.string(), Joi.number(), Joi.boolean()]),
   appVersion: Joi.string(),
   appBuildVersion: Joi.string(),
   cliVersion: Joi.string(),
@@ -226,7 +182,6 @@ export const MetadataSchema = Joi.object({
   sdkVersion: Joi.string(),
   runtimeVersion: Joi.string(),
   fingerprintHash: Joi.string(),
-  fingerprintSource: FingerprintSourceSchema,
   reactNativeVersion: Joi.string(),
   channel: Joi.string(),
   appName: Joi.string(),

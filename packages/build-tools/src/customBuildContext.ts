@@ -22,7 +22,9 @@ const platformToBuildRuntimePlatform: Record<Platform, BuildRuntimePlatform> = {
 };
 
 export interface BuilderRuntimeApi {
-  uploadArtifact: (spec: { artifact: ArtifactToUpload; logger: bunyan }) => Promise<void>;
+  uploadArtifact: (spec: { artifact: ArtifactToUpload; logger: bunyan }) => Promise<{
+    artifactId: string | null;
+  }>;
 }
 
 export class CustomBuildContext<TJob extends Job = Job> implements ExternalBuildContextProvider {

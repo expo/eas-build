@@ -2,7 +2,7 @@ import path from 'path';
 
 import spawn from '@expo/turtle-spawn';
 import fs from 'fs-extra';
-import { ArchiveSourceType, Job } from '@expo/eas-build-job';
+import { ArchiveSourceType, Job, ArchiveSource, ArchiveSourceSchemaZ } from '@expo/eas-build-job';
 import { bunyan } from '@expo/logger';
 import downloadFile from '@expo/downloader';
 import { z } from 'zod';
@@ -19,30 +19,27 @@ export async function prepareProjectSourcesAsync<TJob extends Job>(
   ctx: BuildContext<TJob>,
   destinationDirectory = ctx.buildDirectory
 ): Promise<void> {
-  if (ctx.job.projectArchive.type === ArchiveSourceType.GCS) {
-    throw new Error('GCS project sources should be resolved earlier to url');
-  } else if (ctx.job.projectArchive.type === ArchiveSourceType.PATH) {
-    await prepareProjectSourcesLocallyAsync(ctx, ctx.job.projectArchive.path, destinationDirectory); // used in eas build --local
-  } else if (ctx.job.projectArchive.type === ArchiveSourceType.URL) {
-    await downloadAndUnpackProjectFromTarGzAsync(
-      ctx,
-      ctx.job.projectArchive.url,
-      destinationDirectory
-    );
-  } else if (ctx.job.projectArchive.type === ArchiveSourceType.GIT) {
-    let repositoryUrl = ctx.job.projectArchive.repositoryUrl;
-    try {
-      repositoryUrl = await fetchRepositoryUrlAsync(ctx);
-    } catch (err) {
-      ctx.logger.error('Failed to refresh clone URL, falling back to the original one', err);
-    }
+  const projectArchiveResult = await asyncResult(fetchProjectArchiveSourceAsync(ctx));
 
+  if (!projectArchiveResult.ok) {
+    ctx.logger.error(
+      { err: projectArchiveResult.reason },
+      'Failed to refresh project archive, falling back to the original one'
+    );
+  }
+
+  const projectArchive = projectArchiveResult.value ?? ctx.job.projectArchive;
+
+  if (projectArchive.type === ArchiveSourceType.GCS) {
+    throw new Error('GCS project sources should be resolved earlier to url');
+  } else if (projectArchive.type === ArchiveSourceType.PATH) {
+    await prepareProjectSourcesLocallyAsync(ctx, projectArchive.path, destinationDirectory); // used in eas build --local
+  } else if (projectArchive.type === ArchiveSourceType.URL) {
+    await downloadAndUnpackProjectFromTarGzAsync(ctx, projectArchive.url, destinationDirectory);
+  } else if (projectArchive.type === ArchiveSourceType.GIT) {
     await shallowCloneRepositoryAsync({
       logger: ctx.logger,
-      archiveSource: {
-        ...ctx.job.projectArchive,
-        repositoryUrl,
-      },
+      archiveSource: projectArchive,
       destinationDirectory,
     });
   }
@@ -53,54 +50,6 @@ export async function prepareProjectSourcesAsync<TJob extends Job>(
   if (!uploadResult.ok) {
     ctx.logger.warn(`Failed to upload project metadata: ${uploadResult.reason}`);
   }
-}
-
-async function fetchRepositoryUrlAsync(ctx: BuildContext<Job>): Promise<string> {
-  const taskId = nullthrows(ctx.env.EAS_BUILD_ID, 'EAS_BUILD_ID is not set');
-  const expoApiServerURL = nullthrows(ctx.env.__API_SERVER_URL, '__API_SERVER_URL is not set');
-  const robotAccessToken = nullthrows(
-    ctx.job.secrets?.robotAccessToken,
-    'robot access token is not set'
-  );
-
-  const response = await turtleFetch(
-    new URL(`/v2/github/fetch-github-repository-url`, expoApiServerURL).toString(),
-    'POST',
-    {
-      json: { taskId },
-      headers: {
-        Authorization: `Bearer ${robotAccessToken}`,
-      },
-      timeout: 20000,
-      retries: 3,
-      logger: ctx.logger,
-    }
-  );
-
-  if (!response.ok) {
-    const textResult = await asyncResult(response.text());
-    throw new Error(`Unexpected response from server (${response.status}): ${textResult.value}`);
-  }
-
-  const jsonResult = await asyncResult(response.json());
-  if (!jsonResult.ok) {
-    throw new Error(
-      `Expected JSON response from server (${response.status}): ${jsonResult.reason}`
-    );
-  }
-
-  const dataResult = z
-    .object({
-      data: z.object({
-        repositoryUrl: z.string().url(),
-      }),
-    })
-    .safeParse(jsonResult.value);
-  if (!dataResult.success) {
-    throw new Error(`Unexpected response from server (${response.status}): ${dataResult.error}`);
-  }
-
-  return dataResult.data.data.repositoryUrl;
 }
 
 export async function downloadAndUnpackProjectFromTarGzAsync<TJob extends Job>(
@@ -263,4 +212,52 @@ async function uploadProjectMetadataAsync(
   if (updateMetadataResult.error) {
     throw updateMetadataResult.error;
   }
+}
+
+async function fetchProjectArchiveSourceAsync(ctx: BuildContext<Job>): Promise<ArchiveSource> {
+  const taskId = nullthrows(ctx.env.EAS_BUILD_ID, 'EAS_BUILD_ID is not set');
+  const expoApiServerURL = nullthrows(ctx.env.__API_SERVER_URL, '__API_SERVER_URL is not set');
+  const robotAccessToken = nullthrows(
+    ctx.job.secrets?.robotAccessToken,
+    'robot access token is not set'
+  );
+
+  const response = await turtleFetch(
+    new URL(
+      ctx.job.platform
+        ? `/v2/turtle-builds/${taskId}/download-project-archive`
+        : `/v2/turtle-job-runs/${taskId}/download-project-archive`,
+      expoApiServerURL
+    ).toString(),
+    'POST',
+    {
+      headers: {
+        Authorization: `Bearer ${robotAccessToken}`,
+      },
+      timeout: 20000,
+      retries: 3,
+      logger: ctx.logger,
+    }
+  );
+
+  if (!response.ok) {
+    const textResult = await asyncResult(response.text());
+    throw new Error(`Unexpected response from server (${response.status}): ${textResult.value}`);
+  }
+
+  const jsonResult = await asyncResult(response.json());
+  if (!jsonResult.ok) {
+    throw new Error(
+      `Expected JSON response from server (${response.status}): ${jsonResult.reason}`
+    );
+  }
+
+  const dataResult = z.object({ data: ArchiveSourceSchemaZ }).safeParse(jsonResult.value);
+  if (!dataResult.success) {
+    throw new Error(
+      `Unexpected data from server (${response.status}): ${z.prettifyError(dataResult.error)}`
+    );
+  }
+
+  return dataResult.data.data;
 }

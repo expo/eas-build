@@ -28,7 +28,7 @@ export async function buildAndroidAsync(
       } else if (artifact.type === ManagedArtifactType.BUILD_ARTIFACTS) {
         return await prepareArtifacts(artifact.paths, logger);
       } else {
-        return null;
+        return { filename: null };
       }
     },
     env,
