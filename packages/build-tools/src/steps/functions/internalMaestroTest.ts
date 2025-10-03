@@ -8,6 +8,7 @@ import {
   BuildStepEnv,
   BuildStepInput,
   BuildStepInputValueTypeName,
+  BuildStepOutput,
   spawnAsync,
 } from '@expo/steps';
 import { z } from 'zod';
@@ -75,7 +76,13 @@ export function createInternalEasMaestroTestFunction(ctx: CustomBuildContext): B
         required: false,
       }),
     ],
-    fn: async (stepCtx, { inputs: _inputs, env }) => {
+    outputProviders: [
+      BuildStepOutput.createProvider({
+        id: 'test_reports_artifact_id',
+        required: false,
+      }),
+    ],
+    fn: async (stepCtx, { inputs: _inputs, env, outputs }) => {
       // inputs come in form of { value: unknown }. Here we parse them into a typed and validated object.
       const {
         platform,
@@ -320,7 +327,7 @@ export function createInternalEasMaestroTestFunction(ctx: CustomBuildContext): B
       } else {
         stepCtx.logger.info(`Uploading reports...`);
         try {
-          await ctx.runtimeApi.uploadArtifact({
+          const { artifactId } = await ctx.runtimeApi.uploadArtifact({
             logger: stepCtx.logger,
             artifact: {
               name: `${PlatformToProperNounMap[platform]} Maestro Test Reports (${output_format})`,
@@ -328,6 +335,9 @@ export function createInternalEasMaestroTestFunction(ctx: CustomBuildContext): B
               type: GenericArtifactType.OTHER,
             },
           });
+          if (artifactId) {
+            outputs.test_reports_artifact_id.set(artifactId);
+          }
         } catch (err) {
           stepCtx.logger.error({ err }, 'Failed to upload reports.');
         }
