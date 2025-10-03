@@ -387,6 +387,7 @@ export class BuildContext<TJob extends Job = Job> {
     }
 
     const environmentSecretsDirectory = path.join(os.tmpdir(), 'eas-environment-secrets');
+
     const environmentSecrets: Record<string, string> = {};
     for (const { name, type, value } of job.secrets.environmentSecrets) {
       if (type === EnvironmentSecretType.STRING) {
