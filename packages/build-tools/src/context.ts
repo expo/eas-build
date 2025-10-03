@@ -56,7 +56,7 @@ export interface BuildContextOptions {
   cacheManager?: CacheManager;
   uploadArtifact: (spec: { artifact: ArtifactToUpload; logger: bunyan }) => Promise<
     /** Workflow Artifact ID */
-    | { artifactId: string; filename?: never }
+    | { artifactId: string | null; filename?: never }
     /** This remains from the time we relied on Launcher to rename the GCS object. */
     | { artifactId?: never; filename: string | null }
   >;
