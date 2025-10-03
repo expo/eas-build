@@ -30,10 +30,10 @@ import { getParentAndDescendantProcessPidsAsync } from '../utils/processes';
 import { eagerBundleAsync, shouldUseEagerBundle } from '../common/eagerBundle';
 import { uploadCacheAsync, compressCacheAsync } from '../steps/functions/saveCache';
 import { downloadCacheAsync, decompressCacheAsync } from '../steps/functions/restoreCache';
+import { findPackagerRootDir } from '../utils/packageManager';
 
 import { runBuilderWithHooksAsync } from './common';
 import { runCustomBuildAsync } from './custom';
-import { findPackagerRootDir } from '../utils/packageManager';
 
 const INSTALL_PODS_WARN_TIMEOUT_MS = 15 * 60 * 1000; // 15 minutes
 const INSTALL_PODS_KILL_TIMEOUT_MS = 30 * 60 * 1000; // 30 minutes
