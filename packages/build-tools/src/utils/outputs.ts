@@ -30,6 +30,7 @@ export async function uploadJobOutputsToWwwAsync(
       contains: (value, substring) => value.includes(substring),
       startsWith: (value, prefix) => value.startsWith(prefix),
       endsWith: (value, suffix) => value.endsWith(suffix),
+      hashFiles: (pattern: string) => '',
     };
     logger.debug({ dynamicValues: interpolationContext }, 'Using dynamic values');
 
