@@ -185,66 +185,54 @@ export class BuildStepGlobalContext {
   }
 
   public hashFiles(pattern: string): string {
-    try {
-      // Resolve pattern relative to default working directory
-      const cwd = this.defaultWorkingDirectory;
-      const absolutePattern = path.isAbsolute(pattern) ? pattern : path.resolve(cwd, pattern);
+    // Resolve pattern relative to default working directory
+    const cwd = this.defaultWorkingDirectory;
+    const absolutePattern = path.isAbsolute(pattern) ? pattern : path.resolve(cwd, pattern);
 
-      // For security, only allow patterns within the working directory
-      const resolvedPattern = path.resolve(absolutePattern);
-      if (!resolvedPattern.startsWith(path.resolve(cwd))) {
-        throw new Error(`Pattern "${pattern}" resolves to a path outside the working directory`);
-      }
-
-      // Check if the pattern refers to a single file
-      let filePaths: string[] = [];
-
-      if (fs.existsSync(resolvedPattern) && fs.statSync(resolvedPattern).isFile()) {
-        // Single file
-        filePaths = [resolvedPattern];
-      } else {
-        // Use glob to find matching files
-        filePaths = fg
-          .sync(pattern, {
-            cwd,
-            absolute: true,
-            onlyFiles: true,
-            followSymbolicLinks: false,
-          })
-          .sort(); // Sort for consistent ordering
-      }
-
-      if (filePaths.length === 0) {
-        // Return consistent hash for "no files found"
-        return crypto.createHash('sha256').update('').digest('hex');
-      }
-
-      // Create hash based on file paths and contents
-      const hash = crypto.createHash('sha256');
-
-      for (const filePath of filePaths) {
-        // Add relative path to hash for consistency
-        const relativePath = path.relative(cwd, filePath);
-        hash.update(relativePath);
-        hash.update('\0'); // separator
-
-        try {
-          const fileContent = fs.readFileSync(filePath);
-          hash.update(fileContent);
-        } catch (error: any) {
-          // If file can't be read, include error in hash
-          hash.update(`ERROR: ${error?.message ?? 'Unknown error'}`);
-        }
-        hash.update('\0'); // separator between files
-      }
-
-      return hash.digest('hex');
-    } catch (error: any) {
-      // Return a consistent hash for errors
-      const errorHash = crypto.createHash('sha256');
-      errorHash.update(`ERROR: ${error?.message ?? 'Unknown error'}`);
-      return errorHash.digest('hex');
+    // For security, only allow patterns within the working directory
+    const resolvedPattern = path.resolve(absolutePattern);
+    if (!resolvedPattern.startsWith(path.resolve(cwd))) {
+      throw new Error(`Pattern "${pattern}" resolves to a path outside the working directory`);
     }
+
+    // Check if the pattern refers to a single file
+    let filePaths: string[] = [];
+
+    if (fs.existsSync(resolvedPattern) && fs.statSync(resolvedPattern).isFile()) {
+      // Single file
+      filePaths = [resolvedPattern];
+    } else {
+      // Use glob to find matching files
+      filePaths = fg
+        .sync(pattern, {
+          cwd,
+          absolute: true,
+          onlyFiles: true,
+          followSymbolicLinks: false,
+        })
+        .sort(); // Sort for consistent ordering
+    }
+
+    if (filePaths.length === 0) {
+      // Return consistent hash for "no files found"
+      return crypto.createHash('sha256').update('').digest('hex');
+    }
+
+    // Create hash based on file paths and contents
+    const hash = crypto.createHash('sha256');
+
+    for (const filePath of filePaths) {
+      // Add relative path to hash for consistency
+      const relativePath = path.relative(cwd, filePath);
+      hash.update(relativePath);
+      hash.update('\0'); // separator
+
+      const fileContent = fs.readFileSync(filePath);
+      hash.update(fileContent);
+      hash.update('\0'); // separator between files
+    }
+
+    return hash.digest('hex');
   }
 
   public serialize(): SerializedBuildStepGlobalContext {
