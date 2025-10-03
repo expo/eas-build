@@ -33,6 +33,7 @@ import { downloadCacheAsync, decompressCacheAsync } from '../steps/functions/res
 
 import { runBuilderWithHooksAsync } from './common';
 import { runCustomBuildAsync } from './custom';
+import { findPackagerRootDir } from '../utils/packageManager';
 
 const INSTALL_PODS_WARN_TIMEOUT_MS = 15 * 60 * 1000; // 15 minutes
 const INSTALL_PODS_KILL_TIMEOUT_MS = 30 * 60 * 1000; // 30 minutes
@@ -403,8 +404,9 @@ async function runInstallPodsAsync(ctx: BuildContext<Ios.Job>): Promise<void> {
 async function generateCacheKeyAsync(workingDirectory: string): Promise<string> {
   // This will resolve which package manager and use the relevant lock file
   // The lock file hash is the key and ensures cache is fresh
-  const manager = PackageManagerUtils.createForProject(workingDirectory);
-  const lockPath = path.join(workingDirectory, manager.lockFile);
+  const packagerRunDir = findPackagerRootDir(workingDirectory);
+  const manager = PackageManagerUtils.createForProject(packagerRunDir);
+  const lockPath = path.join(packagerRunDir, manager.lockFile);
 
   try {
     const key = await hashFiles([lockPath]);
