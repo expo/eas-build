@@ -183,16 +183,11 @@ export async function downloadCacheAsync({
 
     return { archivePath, matchedKey };
   } catch (err: any) {
-    if (err instanceof TurtleFetchError) {
-      if (err.response.status === 404) {
+    if (err instanceof TurtleFetchError && err.response.status !== 404) {
+        const textResult = await asyncResult(err.response.text());
         throw new Error(
-          `No cache found for this key, ensure it was created with eas/save_cache (${err.response.status})`
+          `Unexpected response from server (${err.response.status}): ${textResult.value}`
         );
-      }
-      const textResult = await asyncResult(err.response.text());
-      throw new Error(
-        `Unexpected response from server (${err.response.status}): ${textResult.value}`
-      );
     }
     throw err;
   }
