@@ -184,10 +184,10 @@ export async function downloadCacheAsync({
     return { archivePath, matchedKey };
   } catch (err: any) {
     if (err instanceof TurtleFetchError && err.response.status !== 404) {
-        const textResult = await asyncResult(err.response.text());
-        throw new Error(
-          `Unexpected response from server (${err.response.status}): ${textResult.value}`
-        );
+      const textResult = await asyncResult(err.response.text());
+      throw new Error(
+        `Unexpected response from server (${err.response.status}): ${textResult.value}`
+      );
     }
     throw err;
   }

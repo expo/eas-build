@@ -33,7 +33,7 @@ import { findPackagerRootDir } from '../utils/packageManager';
 import { runBuilderWithHooksAsync } from './common';
 import { runCustomBuildAsync } from './custom';
 
-const CACHE_KEY_PREFIX = 'android-ccache'
+const CACHE_KEY_PREFIX = 'android-ccache';
 
 export default async function androidBuilder(ctx: BuildContext<Android.Job>): Promise<Artifacts> {
   if (ctx.job.mode === BuildMode.BUILD) {
@@ -76,7 +76,7 @@ async function buildAsync(ctx: BuildContext<Android.Job>): Promise<void> {
   });
 
   await ctx.runBuildPhase(BuildPhase.RESTORE_CACHE, async () => {
-    if (ctx.env.EAS_USE_CACHE !== '1' && ctx.env.EAS_RESTORE_CACHE !=='1') {
+    if (ctx.env.EAS_USE_CACHE !== '1' && ctx.env.EAS_RESTORE_CACHE !== '1') {
       // EAS_USE_CACHE is for the new cache. If it is not set, use the old cache.
       await ctx.cacheManager?.restoreCache(ctx);
       return;
@@ -240,7 +240,7 @@ endif()
   });
 
   await ctx.runBuildPhase(BuildPhase.SAVE_CACHE, async () => {
-    if (ctx.env.EAS_USE_CACHE !== '1' && ctx.env.EAS_SAVE_CACHE !=='1') {
+    if (ctx.env.EAS_USE_CACHE !== '1' && ctx.env.EAS_SAVE_CACHE !== '1') {
       // EAS_USE_CACHE is for the new cache. If it is not set, use the old cache.
       await ctx.cacheManager?.saveCache(ctx);
       return;
@@ -269,7 +269,11 @@ endif()
 
       ctx.logger.info('Cache stats:');
       await asyncResult(
-        spawnAsync('ccache', ['--show-stats', '-v'], { env: ctx.env, logger: ctx.logger, stdio: 'pipe' })
+        spawnAsync('ccache', ['--show-stats', '-v'], {
+          env: ctx.env,
+          logger: ctx.logger,
+          stdio: 'pipe',
+        })
       );
 
       ctx.logger.info('Preparing cache archive...');

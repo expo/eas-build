@@ -37,7 +37,7 @@ import { runCustomBuildAsync } from './custom';
 
 const INSTALL_PODS_WARN_TIMEOUT_MS = 15 * 60 * 1000; // 15 minutes
 const INSTALL_PODS_KILL_TIMEOUT_MS = 30 * 60 * 1000; // 30 minutes
-const CACHE_KEY_PREFIX = 'ios-ccache'
+const CACHE_KEY_PREFIX = 'ios-ccache';
 
 class InstallPodsTimeoutError extends Error {}
 
@@ -124,7 +124,11 @@ async function buildAsync(ctx: BuildContext<Ios.Job>): Promise<void> {
 
         ctx.logger.info('Cache restored successfully');
         await asyncResult(
-          spawnAsync('ccache', ['--zero-stats'], { env: ctx.env, logger: ctx.logger, stdio: 'pipe' })
+          spawnAsync('ccache', ['--zero-stats'], {
+            env: ctx.env,
+            logger: ctx.logger,
+            stdio: 'pipe',
+          })
         );
       } catch (err: any) {
         if (err.response.status === 404) {
@@ -259,7 +263,11 @@ async function buildAsync(ctx: BuildContext<Ios.Job>): Promise<void> {
 
       ctx.logger.info('Cache stats:');
       await asyncResult(
-        spawnAsync('ccache', ['--show-stats', '-v'], { env: ctx.env, logger: ctx.logger, stdio: 'pipe' })
+        spawnAsync('ccache', ['--show-stats', '-v'], {
+          env: ctx.env,
+          logger: ctx.logger,
+          stdio: 'pipe',
+        })
       );
 
       ctx.logger.info('Preparing cache archive...');
