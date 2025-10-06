@@ -30,6 +30,7 @@ import { getParentAndDescendantProcessPidsAsync } from '../utils/processes';
 import { eagerBundleAsync, shouldUseEagerBundle } from '../common/eagerBundle';
 import { uploadCacheAsync, compressCacheAsync } from '../steps/functions/saveCache';
 import { downloadCacheAsync, decompressCacheAsync } from '../steps/functions/restoreCache';
+import { findPackagerRootDir } from '../utils/packageManager';
 
 import { runBuilderWithHooksAsync } from './common';
 import { runCustomBuildAsync } from './custom';
@@ -403,8 +404,9 @@ async function runInstallPodsAsync(ctx: BuildContext<Ios.Job>): Promise<void> {
 async function generateCacheKeyAsync(workingDirectory: string): Promise<string> {
   // This will resolve which package manager and use the relevant lock file
   // The lock file hash is the key and ensures cache is fresh
-  const manager = PackageManagerUtils.createForProject(workingDirectory);
-  const lockPath = path.join(workingDirectory, manager.lockFile);
+  const packagerRunDir = findPackagerRootDir(workingDirectory);
+  const manager = PackageManagerUtils.createForProject(packagerRunDir);
+  const lockPath = path.join(packagerRunDir, manager.lockFile);
 
   try {
     const key = await hashFiles([lockPath]);

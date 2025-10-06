@@ -28,6 +28,7 @@ import { prepareExecutableAsync } from '../utils/prepareBuildExecutable';
 import { eagerBundleAsync, shouldUseEagerBundle } from '../common/eagerBundle';
 import { decompressCacheAsync, downloadCacheAsync } from '../steps/functions/restoreCache';
 import { compressCacheAsync, uploadCacheAsync } from '../steps/functions/saveCache';
+import { findPackagerRootDir } from '../utils/packageManager';
 
 import { runBuilderWithHooksAsync } from './common';
 import { runCustomBuildAsync } from './custom';
@@ -293,8 +294,9 @@ endif()
 async function generateCacheKeyAsync(workingDirectory: string): Promise<string> {
   // This will resolve which package manager and use the relevant lock file
   // The lock file hash is the key and ensures cache is fresh
-  const manager = PackageManagerUtils.createForProject(workingDirectory);
-  const lockPath = path.join(workingDirectory, manager.lockFile);
+  const packagerRunDir = findPackagerRootDir(workingDirectory);
+  const manager = PackageManagerUtils.createForProject(packagerRunDir);
+  const lockPath = path.join(packagerRunDir, manager.lockFile);
 
   try {
     const key = await hashFiles([lockPath]);
