@@ -37,6 +37,7 @@ import { runCustomBuildAsync } from './custom';
 
 const INSTALL_PODS_WARN_TIMEOUT_MS = 15 * 60 * 1000; // 15 minutes
 const INSTALL_PODS_KILL_TIMEOUT_MS = 30 * 60 * 1000; // 30 minutes
+const CACHE_KEY_PREFIX = 'ios-ccache-';
 
 class InstallPodsTimeoutError extends Error {}
 
@@ -84,46 +85,57 @@ async function buildAsync(ctx: BuildContext<Ios.Job>): Promise<void> {
     });
 
     await ctx.runBuildPhase(BuildPhase.RESTORE_CACHE, async () => {
-      if (ctx.env.EAS_USE_CACHE !== '1') {
-        // EAS_USE_CACHE is for the new cache. If it is not set, use the old cache.
-        await ctx.cacheManager?.restoreCache(ctx);
-        return;
-      }
+      await ctx.cacheManager?.restoreCache(ctx);
+      if (
+        ctx.env.EAS_RESTORE_CACHE === '1' ||
+        (ctx.env.EAS_USE_CACHE === '1' && ctx.env.EAS_RESTORE_CACHE !== '0')
+      ) {
+        try {
+          const cacheKey = await generateCacheKeyAsync(workingDirectory);
+          const jobId = nullthrows(ctx.env.EAS_BUILD_ID, 'EAS_BUILD_ID is not set');
 
-      try {
-        const cacheKey = await generateCacheKeyAsync(workingDirectory);
-        const jobId = nullthrows(ctx.env.EAS_BUILD_ID, 'EAS_BUILD_ID is not set');
+          const robotAccessToken = nullthrows(
+            ctx.job.secrets?.robotAccessToken,
+            'Robot access token is required for cache operations'
+          );
+          const expoApiServerURL = nullthrows(
+            ctx.env.__API_SERVER_URL,
+            '__API_SERVER_URL is not set'
+          );
 
-        const robotAccessToken = nullthrows(
-          ctx.job.secrets?.robotAccessToken,
-          'Robot access token is required for cache operations'
-        );
-        const expoApiServerURL = nullthrows(
-          ctx.env.__API_SERVER_URL,
-          '__API_SERVER_URL is not set'
-        );
+          const { archivePath } = await downloadCacheAsync({
+            logger: ctx.logger,
+            jobId,
+            expoApiServerURL,
+            robotAccessToken,
+            paths: cachePaths,
+            key: cacheKey,
+            keyPrefixes: [CACHE_KEY_PREFIX],
+            platform: ctx.job.platform,
+          });
 
-        const { archivePath } = await downloadCacheAsync({
-          logger: ctx.logger,
-          jobId,
-          expoApiServerURL,
-          robotAccessToken,
-          paths: cachePaths,
-          key: cacheKey,
-          keyPrefixes: [],
-          platform: ctx.job.platform,
-        });
+          await decompressCacheAsync({
+            archivePath,
+            workingDirectory,
+            verbose: ctx.env.EXPO_DEBUG === '1',
+            logger: ctx.logger,
+          });
 
-        await decompressCacheAsync({
-          archivePath,
-          workingDirectory,
-          verbose: ctx.env.EXPO_DEBUG === '1',
-          logger: ctx.logger,
-        });
-
-        ctx.logger.info('Cache restored successfully');
-      } catch (err) {
-        ctx.logger.warn({ err }, 'Failed to restore cache');
+          ctx.logger.info('Cache restored successfully');
+          await asyncResult(
+            spawnAsync('ccache', ['--zero-stats'], {
+              env: ctx.env,
+              logger: ctx.logger,
+              stdio: 'pipe',
+            })
+          );
+        } catch (err: any) {
+          if (err.response.status === 404) {
+            ctx.logger.info('No cache found for this key. Create a cache with function save_cache');
+          } else {
+            ctx.logger.warn({ err }, 'Failed to restore cache');
+          }
+        }
       }
     });
 
@@ -222,62 +234,69 @@ async function buildAsync(ctx: BuildContext<Ios.Job>): Promise<void> {
   });
 
   await ctx.runBuildPhase(BuildPhase.SAVE_CACHE, async () => {
-    if (ctx.env.EAS_USE_CACHE !== '1') {
-      // EAS_USE_CACHE is for the new cache. If it is not set, use the old cache.
-      await ctx.cacheManager?.saveCache(ctx);
-      return;
-    }
+    await ctx.cacheManager?.saveCache(ctx);
+    if (
+      ctx.env.EAS_SAVE_CACHE === '1' ||
+      (ctx.env.EAS_USE_CACHE === '1' && ctx.env.EAS_SAVE_CACHE !== '0')
+    ) {
+      try {
+        const cacheKey = await generateCacheKeyAsync(workingDirectory);
+        const jobId = nullthrows(ctx.env.EAS_BUILD_ID, 'EAS_BUILD_ID is not set');
 
-    try {
-      const cacheKey = await generateCacheKeyAsync(workingDirectory);
-      const jobId = nullthrows(ctx.env.EAS_BUILD_ID, 'EAS_BUILD_ID is not set');
+        const robotAccessToken = nullthrows(
+          ctx.job.secrets?.robotAccessToken,
+          'Robot access token is required for cache operations'
+        );
+        const expoApiServerURL = nullthrows(
+          ctx.env.__API_SERVER_URL,
+          '__API_SERVER_URL is not set'
+        );
 
-      const robotAccessToken = nullthrows(
-        ctx.job.secrets?.robotAccessToken,
-        'Robot access token is required for cache operations'
-      );
-      const expoApiServerURL = nullthrows(ctx.env.__API_SERVER_URL, '__API_SERVER_URL is not set');
+        // cache size can blow up over time over many builds, so evict stale files and only upload what was used within this builds time window
+        const evictWindow = Math.floor((Date.now() - buildStart) / 1000);
+        ctx.logger.info('Pruning cache...');
+        await asyncResult(
+          spawnAsync('ccache', ['--evict-older-than', evictWindow + 's'], {
+            env: ctx.env,
+            logger: ctx.logger,
+            stdio: 'pipe',
+          })
+        );
 
-      // cache size can blow up over time over many builds, so evict stale files and only upload what was used within this builds time window
-      const evictWindow = Math.floor((Date.now() - buildStart) / 1000);
-      ctx.logger.info('Pruning cache...');
-      await asyncResult(
-        spawnAsync('ccache', ['--evict-older-than', evictWindow + 's'], {
-          env: ctx.env,
+        ctx.logger.info('Cache stats:');
+        await asyncResult(
+          spawnAsync('ccache', ['--show-stats', '-v'], {
+            env: ctx.env,
+            logger: ctx.logger,
+            stdio: 'pipe',
+          })
+        );
+
+        ctx.logger.info('Preparing cache archive...');
+
+        const { archivePath } = await compressCacheAsync({
+          paths: cachePaths,
+          workingDirectory,
+          verbose: ctx.env.EXPO_DEBUG === '1',
           logger: ctx.logger,
-          stdio: 'pipe',
-        })
-      );
+        });
 
-      ctx.logger.info('Cache stats:');
-      await asyncResult(
-        spawnAsync('ccache', ['--show-stats'], { env: ctx.env, logger: ctx.logger, stdio: 'pipe' })
-      );
+        const { size } = await fs.stat(archivePath);
 
-      ctx.logger.info('Preparing cache archive...');
-
-      const { archivePath } = await compressCacheAsync({
-        paths: cachePaths,
-        workingDirectory,
-        verbose: ctx.env.EXPO_DEBUG === '1',
-        logger: ctx.logger,
-      });
-
-      const { size } = await fs.stat(archivePath);
-
-      await uploadCacheAsync({
-        logger: ctx.logger,
-        jobId,
-        expoApiServerURL,
-        robotAccessToken,
-        archivePath,
-        key: cacheKey,
-        paths: cachePaths,
-        size,
-        platform: ctx.job.platform,
-      });
-    } catch (err) {
-      ctx.logger.error({ err }, 'Failed to save cache');
+        await uploadCacheAsync({
+          logger: ctx.logger,
+          jobId,
+          expoApiServerURL,
+          robotAccessToken,
+          archivePath,
+          key: cacheKey,
+          paths: cachePaths,
+          size,
+          platform: ctx.job.platform,
+        });
+      } catch (err) {
+        ctx.logger.error({ err }, 'Failed to save cache');
+      }
     }
   });
 }
@@ -410,7 +429,7 @@ async function generateCacheKeyAsync(workingDirectory: string): Promise<string> 
 
   try {
     const key = await hashFiles([lockPath]);
-    return `ios-ccache-${key}`;
+    return `${CACHE_KEY_PREFIX}${key}`;
   } catch (err: any) {
     throw new Error(`Failed to read package files for cache key generation: ${err.message}`);
   }
