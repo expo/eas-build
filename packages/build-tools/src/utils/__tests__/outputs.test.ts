@@ -99,7 +99,7 @@ const interpolationContext: JobInterpolationContext = {
   contains: (value: string, substring: string) => value.includes(substring),
   startsWith: (value: string, prefix: string) => value.startsWith(prefix),
   endsWith: (value: string, suffix: string) => value.endsWith(suffix),
-  hashFiles: (pattern: string) => '',
+  hashFiles: (value: string) => value,
 };
 
 describe(collectJobOutputs, () => {
@@ -142,6 +142,44 @@ describe(collectJobOutputs, () => {
         interpolationContext,
       })
     ).toEqual({ missing_output: '', not_set_output: '' });
+  });
+
+  it('interpolates hashFiles function', () => {
+    expect(
+      collectJobOutputs({
+        jobOutputDefinitions: {
+          file_hash: '${{ hashFiles("package.json") }}',
+        },
+        interpolationContext,
+      })
+    ).toEqual({ file_hash: 'package.json' });
+  });
+
+  it('interpolates hashFiles with multiple patterns', () => {
+    expect(
+      collectJobOutputs({
+        jobOutputDefinitions: {
+          combined: 'cache-${{ hashFiles("*.lock") }}-v1',
+        },
+        interpolationContext,
+      })
+    ).toEqual({ combined: 'cache-*.lock-v1' });
+  });
+
+  it('handles hashFiles with empty result', () => {
+    const contextWithEmptyHash: JobInterpolationContext = {
+      ...interpolationContext,
+      hashFiles: () => '',
+    };
+
+    expect(
+      collectJobOutputs({
+        jobOutputDefinitions: {
+          cache_key: 'prefix-${{ hashFiles("nonexistent.txt") }}-suffix',
+        },
+        interpolationContext: contextWithEmptyHash,
+      })
+    ).toEqual({ cache_key: 'prefix--suffix' });
   });
 });
 

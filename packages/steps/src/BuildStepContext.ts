@@ -185,54 +185,45 @@ export class BuildStepGlobalContext {
   }
 
   public hashFiles(pattern: string): string {
-    // Resolve pattern relative to default working directory
     const cwd = this.defaultWorkingDirectory;
-    const absolutePattern = path.isAbsolute(pattern) ? pattern : path.resolve(cwd, pattern);
+    const workspacePath = path.resolve(cwd);
 
-    // For security, only allow patterns within the working directory
-    const resolvedPattern = path.resolve(absolutePattern);
-    if (!resolvedPattern.startsWith(path.resolve(cwd))) {
-      throw new Error(`Pattern "${pattern}" resolves to a path outside the working directory`);
-    }
-
-    // Check if the pattern refers to a single file
-    let filePaths: string[] = [];
-
-    if (fs.existsSync(resolvedPattern) && fs.statSync(resolvedPattern).isFile()) {
-      // Single file
-      filePaths = [resolvedPattern];
-    } else {
-      // Use glob to find matching files
-      filePaths = fg
-        .sync(pattern, {
-          cwd,
-          absolute: true,
-          onlyFiles: true,
-          followSymbolicLinks: false,
-        })
-        .sort(); // Sort for consistent ordering
-    }
+    // Use glob to find matching files
+    const filePaths = fg.sync(pattern, {
+      cwd,
+      absolute: true,
+    });
 
     if (filePaths.length === 0) {
-      // Return consistent hash for "no files found"
-      return crypto.createHash('sha256').update('').digest('hex');
+      return '';
     }
 
-    // Create hash based on file paths and contents
-    const hash = crypto.createHash('sha256');
+    const result = crypto.createHash('sha256');
+    let count = 0;
 
-    for (const filePath of filePaths) {
-      // Add relative path to hash for consistency
-      const relativePath = path.relative(cwd, filePath);
-      hash.update(relativePath);
-      hash.update('\0'); // separator
+    for (const file of filePaths) {
+      if (!file.startsWith(`${workspacePath}${path.sep}`)) {
+        continue;
+      }
 
-      const fileContent = fs.readFileSync(filePath);
-      hash.update(fileContent);
-      hash.update('\0'); // separator between files
+      if (fs.statSync(file).isDirectory()) {
+        continue;
+      }
+
+      const fileHash = crypto.createHash('sha256');
+      const fileContent = fs.readFileSync(file);
+      fileHash.update(fileContent);
+      result.write(fileHash.digest());
+      count++;
     }
 
-    return hash.digest('hex');
+    result.end();
+
+    if (count > 0) {
+      return result.digest('hex');
+    } else {
+      return '';
+    }
   }
 
   public serialize(): SerializedBuildStepGlobalContext {

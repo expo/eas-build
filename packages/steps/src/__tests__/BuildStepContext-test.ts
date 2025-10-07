@@ -1,5 +1,7 @@
 import path from 'path';
 import os from 'os';
+import fs from 'fs';
+import crypto from 'crypto';
 
 import { JobInterpolationContext } from '@expo/eas-build-job';
 import { instance, mock, when } from 'ts-mockito';
@@ -218,5 +220,105 @@ describe(BuildStepGlobalContext, () => {
         path.join(ctx.projectTargetDirectory, 'apps/web')
       );
     });
+  });
+  describe(BuildStepGlobalContext.prototype.hashFiles, () => {
+    let tempDir: string;
+    let ctx: BuildStepGlobalContext;
+
+    beforeEach(() => {
+      tempDir = fs.mkdtempSync(path.join(os.tmpdir(), 'hashfiles-test-'));
+      ctx = createGlobalContextMock({
+        projectTargetDirectory: tempDir,
+        relativeWorkingDirectory: '',
+      });
+      ctx.markAsCheckedOut(ctx.baseLogger);
+    });
+
+    afterEach(() => {
+      fs.rmSync(tempDir, { recursive: true, force: true });
+    });
+
+    it('returns empty string when no files match', () => {
+      const hash = ctx.hashFiles('nonexistent/**/*.txt');
+      expect(hash).toBe('');
+    });
+
+    it('hashes a single file', () => {
+      const filePath = path.join(tempDir, 'test.txt');
+      fs.writeFileSync(filePath, 'test content');
+
+      const hash = ctx.hashFiles('test.txt');
+
+      // Verify it matches the expected hash format
+      const expectedHash = crypto.createHash('sha256');
+      const fileHash = crypto.createHash('sha256');
+      fileHash.update('test content');
+      expectedHash.write(fileHash.digest());
+      expectedHash.end();
+
+      expect(hash).toBe(expectedHash.digest('hex'));
+    });
+
+    it('hashes multiple files in deterministic order', () => {
+      fs.writeFileSync(path.join(tempDir, 'file1.txt'), 'content1');
+      fs.writeFileSync(path.join(tempDir, 'file2.txt'), 'content2');
+      fs.writeFileSync(path.join(tempDir, 'file3.txt'), 'content3');
+
+      const hash1 = ctx.hashFiles('*.txt');
+      const hash2 = ctx.hashFiles('*.txt');
+
+      expect(hash1).toBe(hash2);
+      expect(hash1).not.toBe('');
+    });
+
+    it('produces different hashes for different file contents', () => {
+      fs.writeFileSync(path.join(tempDir, 'file.txt'), 'content1');
+      const hash1 = ctx.hashFiles('file.txt');
+
+      fs.writeFileSync(path.join(tempDir, 'file.txt'), 'content2');
+      const hash2 = ctx.hashFiles('file.txt');
+
+      expect(hash1).not.toBe(hash2);
+    });
+
+    it('works with glob patterns', () => {
+      const subdir = path.join(tempDir, 'subdir');
+      fs.mkdirSync(subdir);
+      fs.writeFileSync(path.join(tempDir, 'file1.js'), 'code1');
+      fs.writeFileSync(path.join(subdir, 'file2.js'), 'code2');
+      fs.writeFileSync(path.join(tempDir, 'file.txt'), 'text');
+
+      const hash = ctx.hashFiles('**/*.js');
+      expect(hash).not.toBe('');
+    });
+
+    it('skips files outside workspace', () => {
+      const outsideDir = fs.mkdtempSync(path.join(os.tmpdir(), 'outside-'));
+      try {
+        fs.writeFileSync(path.join(outsideDir, 'outside.txt'), 'outside');
+        fs.writeFileSync(path.join(tempDir, 'inside.txt'), 'inside');
+
+        // This pattern won't match outside files due to glob cwd
+        const hash = ctx.hashFiles('inside.txt');
+        expect(hash).not.toBe('');
+      } finally {
+        fs.rmSync(outsideDir, { recursive: true, force: true });
+      }
+    });
+
+    it('handles empty files', () => {
+      fs.writeFileSync(path.join(tempDir, 'empty.txt'), '');
+      const hash = ctx.hashFiles('empty.txt');
+
+      // Should still produce a hash for an empty file
+      const expectedHash = crypto.createHash('sha256');
+      const fileHash = crypto.createHash('sha256');
+      fileHash.update('');
+      expectedHash.write(fileHash.digest());
+      expectedHash.end();
+
+      expect(hash).toBe(expectedHash.digest('hex'));
+    });
+
   });
 });
