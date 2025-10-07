@@ -319,5 +319,35 @@ describe(BuildStepGlobalContext, () => {
 
       expect(hash).toBe(expectedHash.digest('hex'));
     });
+
+    it('supports multiple patterns', () => {
+      fs.writeFileSync(path.join(tempDir, 'package-lock.json'), 'npm content');
+      fs.writeFileSync(path.join(tempDir, 'Gemfile.lock'), 'ruby content');
+      fs.writeFileSync(path.join(tempDir, 'other.txt'), 'other');
+
+      const hash = ctx.hashFiles('**/package-lock.json', '**/Gemfile.lock');
+      expect(hash).not.toBe('');
+
+      // Verify the hash is deterministic
+      const hash2 = ctx.hashFiles('**/package-lock.json', '**/Gemfile.lock');
+      expect(hash).toBe(hash2);
+    });
+
+    it('supports exclusion patterns with multiple patterns', () => {
+      const libDir = path.join(tempDir, 'lib');
+      const fooDir = path.join(libDir, 'foo');
+      fs.mkdirSync(libDir);
+      fs.mkdirSync(fooDir);
+
+      fs.writeFileSync(path.join(libDir, 'file1.rb'), 'ruby1');
+      fs.writeFileSync(path.join(fooDir, 'file2.rb'), 'ruby2');
+
+      const hashAll = ctx.hashFiles('/lib/**/*.rb');
+      const hashExcluded = ctx.hashFiles('/lib/**/*.rb', '!/lib/foo/*.rb');
+
+      // The hashes should be different because exclusion removes foo/file2.rb
+      expect(hashAll).not.toBe(hashExcluded);
+      expect(hashExcluded).not.toBe('');
+    });
   });
 });

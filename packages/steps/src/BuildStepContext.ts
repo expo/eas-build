@@ -141,7 +141,7 @@ export class BuildStepGlobalContext {
       contains: (value, substring) => value.includes(substring),
       startsWith: (value, prefix) => value.startsWith(prefix),
       endsWith: (value, suffix) => value.endsWith(suffix),
-      hashFiles: (pattern: string) => this.hashFiles(pattern),
+      hashFiles: (...patterns: string[]) => this.hashFiles(...patterns),
     };
   }
 
@@ -184,12 +184,12 @@ export class BuildStepGlobalContext {
     return this.didCheckOut;
   }
 
-  public hashFiles(pattern: string): string {
+  public hashFiles(...patterns: string[]): string {
     const cwd = this.defaultWorkingDirectory;
     const workspacePath = path.resolve(cwd);
 
-    // Use glob to find matching files
-    const filePaths = fg.sync(pattern, {
+    // Use glob to find matching files across all patterns
+    const filePaths = fg.sync(patterns, {
       cwd,
       absolute: true,
     });

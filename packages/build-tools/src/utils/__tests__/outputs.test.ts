@@ -99,7 +99,7 @@ const interpolationContext: JobInterpolationContext = {
   contains: (value: string, substring: string) => value.includes(substring),
   startsWith: (value: string, prefix: string) => value.startsWith(prefix),
   endsWith: (value: string, suffix: string) => value.endsWith(suffix),
-  hashFiles: (value: string) => value,
+  hashFiles: (...patterns: string[]) => patterns.join(','),
 };
 
 describe(collectJobOutputs, () => {
@@ -164,6 +164,15 @@ describe(collectJobOutputs, () => {
         interpolationContext,
       })
     ).toEqual({ combined: 'key-*.lock-v1' });
+
+    expect(
+      collectJobOutputs({
+        jobOutputDefinitions: {
+          multi_pattern: '${{ hashFiles("**/package-lock.json", "**/Gemfile.lock") }}',
+        },
+        interpolationContext,
+      })
+    ).toEqual({ multi_pattern: '**/package-lock.json,**/Gemfile.lock' });
   });
 
   it('handles hashFiles with empty result', () => {
