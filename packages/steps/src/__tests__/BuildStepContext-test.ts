@@ -319,6 +319,5 @@ describe(BuildStepGlobalContext, () => {
 
       expect(hash).toBe(expectedHash.digest('hex'));
     });
-
   });
 });
