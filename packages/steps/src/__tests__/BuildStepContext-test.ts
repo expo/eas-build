@@ -342,8 +342,8 @@ describe(BuildStepGlobalContext, () => {
       fs.writeFileSync(path.join(libDir, 'file1.rb'), 'ruby1');
       fs.writeFileSync(path.join(fooDir, 'file2.rb'), 'ruby2');
 
-      const hashAll = ctx.hashFiles('/lib/**/*.rb');
-      const hashExcluded = ctx.hashFiles('/lib/**/*.rb', '!/lib/foo/*.rb');
+      const hashAll = ctx.hashFiles('lib/**/*.rb');
+      const hashExcluded = ctx.hashFiles('lib/**/*.rb', '!lib/foo/*.rb');
 
       // The hashes should be different because exclusion removes foo/file2.rb
       expect(hashAll).not.toBe(hashExcluded);

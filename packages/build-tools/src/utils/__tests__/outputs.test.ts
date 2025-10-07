@@ -99,7 +99,7 @@ const interpolationContext: JobInterpolationContext = {
   contains: (value: string, substring: string) => value.includes(substring),
   startsWith: (value: string, prefix: string) => value.startsWith(prefix),
   endsWith: (value: string, suffix: string) => value.endsWith(suffix),
-  hashFiles: (...patterns: string[]) => patterns.join(','),
+  hashFiles: (...value: string[]) => value.join(','),
 };
 
 describe(collectJobOutputs, () => {
