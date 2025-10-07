@@ -159,11 +159,11 @@ describe(collectJobOutputs, () => {
     expect(
       collectJobOutputs({
         jobOutputDefinitions: {
-          combined: 'cache-${{ hashFiles("*.lock") }}-v1',
+          combined: 'key-${{ hashFiles("*.lock") }}-v1',
         },
         interpolationContext,
       })
-    ).toEqual({ combined: 'cache-*.lock-v1' });
+    ).toEqual({ combined: 'key-*.lock-v1' });
   });
 
   it('handles hashFiles with empty result', () => {
