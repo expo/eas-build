@@ -99,6 +99,7 @@ const interpolationContext: JobInterpolationContext = {
   contains: (value: string, substring: string) => value.includes(substring),
   startsWith: (value: string, prefix: string) => value.startsWith(prefix),
   endsWith: (value: string, suffix: string) => value.endsWith(suffix),
+  hashFiles: (...value: string[]) => value.join(','),
 };
 
 describe(collectJobOutputs, () => {
@@ -141,6 +142,79 @@ describe(collectJobOutputs, () => {
         interpolationContext,
       })
     ).toEqual({ missing_output: '', not_set_output: '' });
+  });
+
+  it('interpolates hashFiles function', () => {
+    const mockHash = 'mockhash';
+    const contextWithHash: JobInterpolationContext = {
+      ...interpolationContext,
+      hashFiles: jest.fn(() => mockHash),
+    };
+
+    expect(
+      collectJobOutputs({
+        jobOutputDefinitions: {
+          file_hash: '${{ hashFiles("package.json") }}',
+        },
+        interpolationContext: contextWithHash,
+      })
+    ).toEqual({ file_hash: mockHash });
+
+    expect(contextWithHash.hashFiles).toHaveBeenCalledWith('package.json');
+  });
+
+  it('interpolates hashFiles with multiple patterns', () => {
+    const mockHash = 'mockhash';
+    const contextWithHash: JobInterpolationContext = {
+      ...interpolationContext,
+      hashFiles: jest.fn(() => mockHash),
+    };
+
+    expect(
+      collectJobOutputs({
+        jobOutputDefinitions: {
+          combined: 'key-${{ hashFiles("*.lock") }}-v1',
+        },
+        interpolationContext: contextWithHash,
+      })
+    ).toEqual({ combined: `key-${mockHash}-v1` });
+
+    expect(contextWithHash.hashFiles).toHaveBeenCalledWith('*.lock');
+
+    const contextWithMultiPattern: JobInterpolationContext = {
+      ...interpolationContext,
+      hashFiles: jest.fn(() => mockHash),
+    };
+
+    expect(
+      collectJobOutputs({
+        jobOutputDefinitions: {
+          multi_pattern: '${{ hashFiles("**/package-lock.json", "**/Gemfile.lock") }}',
+        },
+        interpolationContext: contextWithMultiPattern,
+      })
+    ).toEqual({ multi_pattern: mockHash });
+
+    expect(contextWithMultiPattern.hashFiles).toHaveBeenCalledWith(
+      '**/package-lock.json',
+      '**/Gemfile.lock'
+    );
+  });
+
+  it('handles hashFiles with empty result', () => {
+    const contextWithEmptyHash: JobInterpolationContext = {
+      ...interpolationContext,
+      hashFiles: () => '',
+    };
+
+    expect(
+      collectJobOutputs({
+        jobOutputDefinitions: {
+          cache_key: 'prefix-${{ hashFiles("nonexistent.txt") }}-suffix',
+        },
+        interpolationContext: contextWithEmptyHash,
+      })
+    ).toEqual({ cache_key: 'prefix--suffix' });
   });
 });
 

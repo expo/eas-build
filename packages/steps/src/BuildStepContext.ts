@@ -1,6 +1,9 @@
 import os from 'os';
 import path from 'path';
+import crypto from 'crypto';
+import fs from 'fs';
 
+import fg from 'fast-glob';
 import { Env, JobInterpolationContext, StaticJobInterpolationContext } from '@expo/eas-build-job';
 import { bunyan } from '@expo/logger';
 import { v4 as uuidv4 } from 'uuid';
@@ -138,6 +141,7 @@ export class BuildStepGlobalContext {
       contains: (value, substring) => value.includes(substring),
       startsWith: (value, prefix) => value.startsWith(prefix),
       endsWith: (value, suffix) => value.endsWith(suffix),
+      hashFiles: (...patterns: string[]) => this.hashFiles(...patterns),
     };
   }
 
@@ -178,6 +182,48 @@ export class BuildStepGlobalContext {
 
   public wasCheckedOut(): boolean {
     return this.didCheckOut;
+  }
+
+  public hashFiles(...patterns: string[]): string {
+    const cwd = this.defaultWorkingDirectory;
+    const workspacePath = path.resolve(cwd);
+
+    // Use glob to find matching files across all patterns
+    const filePaths = fg.sync(patterns, {
+      cwd,
+      absolute: true,
+    });
+
+    if (filePaths.length === 0) {
+      return '';
+    }
+
+    const result = crypto.createHash('sha256');
+    let fileFound = false;
+
+    for (const file of filePaths) {
+      if (!file.startsWith(`${workspacePath}${path.sep}`)) {
+        continue;
+      }
+
+      if (fs.statSync(file).isDirectory()) {
+        continue;
+      }
+
+      const fileHash = crypto.createHash('sha256');
+      const fileContent = fs.readFileSync(file);
+      fileHash.update(fileContent);
+      result.write(fileHash.digest());
+      fileFound = true;
+    }
+
+    result.end();
+
+    if (fileFound) {
+      return result.digest('hex');
+    } else {
+      return '';
+    }
   }
 
   public serialize(): SerializedBuildStepGlobalContext {
