@@ -199,7 +199,7 @@ export class BuildStepGlobalContext {
     }
 
     const result = crypto.createHash('sha256');
-    let count = 0;
+    let fileFound = false;
 
     for (const file of filePaths) {
       if (!file.startsWith(`${workspacePath}${path.sep}`)) {
@@ -214,12 +214,12 @@ export class BuildStepGlobalContext {
       const fileContent = fs.readFileSync(file);
       fileHash.update(fileContent);
       result.write(fileHash.digest());
-      count++;
+      fileFound = true;
     }
 
     result.end();
 
-    if (count > 0) {
+    if (fileFound) {
       return result.digest('hex');
     } else {
       return '';

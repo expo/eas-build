@@ -145,34 +145,60 @@ describe(collectJobOutputs, () => {
   });
 
   it('interpolates hashFiles function', () => {
+    const mockHash = 'mockhash';
+    const contextWithHash: JobInterpolationContext = {
+      ...interpolationContext,
+      hashFiles: jest.fn(() => mockHash),
+    };
+
     expect(
       collectJobOutputs({
         jobOutputDefinitions: {
           file_hash: '${{ hashFiles("package.json") }}',
         },
-        interpolationContext,
+        interpolationContext: contextWithHash,
       })
-    ).toEqual({ file_hash: 'package.json' });
+    ).toEqual({ file_hash: mockHash });
+
+    expect(contextWithHash.hashFiles).toHaveBeenCalledWith('package.json');
   });
 
   it('interpolates hashFiles with multiple patterns', () => {
+    const mockHash = 'mockhash';
+    const contextWithHash: JobInterpolationContext = {
+      ...interpolationContext,
+      hashFiles: jest.fn(() => mockHash),
+    };
+
     expect(
       collectJobOutputs({
         jobOutputDefinitions: {
           combined: 'key-${{ hashFiles("*.lock") }}-v1',
         },
-        interpolationContext,
+        interpolationContext: contextWithHash,
       })
-    ).toEqual({ combined: 'key-*.lock-v1' });
+    ).toEqual({ combined: `key-${mockHash}-v1` });
+
+    expect(contextWithHash.hashFiles).toHaveBeenCalledWith('*.lock');
+
+    const contextWithMultiPattern: JobInterpolationContext = {
+      ...interpolationContext,
+      hashFiles: jest.fn(() => mockHash),
+    };
 
     expect(
       collectJobOutputs({
         jobOutputDefinitions: {
           multi_pattern: '${{ hashFiles("**/package-lock.json", "**/Gemfile.lock") }}',
         },
-        interpolationContext,
+        interpolationContext: contextWithMultiPattern,
       })
-    ).toEqual({ multi_pattern: '**/package-lock.json,**/Gemfile.lock' });
+    ).toEqual({ multi_pattern: mockHash });
+
+    expect(contextWithMultiPattern.hashFiles).toHaveBeenCalledWith(
+      '**/package-lock.json',
+      '**/Gemfile.lock'
+    );
   });
 
   it('handles hashFiles with empty result', () => {
