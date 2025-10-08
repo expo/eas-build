@@ -27,8 +27,8 @@ import { interpolateWithInputs, interpolateWithOutputs } from './utils/template.
 import { BuildStepRuntimeError } from './errors.js';
 import { BuildStepEnv } from './BuildStepEnv.js';
 import { BuildRuntimePlatform } from './BuildRuntimePlatform.js';
-import { jsepEval } from './utils/jsepEval.js';
-import { interpolateJobContext } from './interpolation.js';
+import { jsepEvalAsync } from './utils/jsepEval.js';
+import { interpolateJobContextAsync } from './interpolation.js';
 
 export enum BuildStepStatus {
   NEW = 'new',
@@ -303,7 +303,7 @@ export class BuildStep extends BuildStepOutputAccessor {
     );
   }
 
-  public shouldExecuteStep(): boolean {
+  public async shouldExecuteStepAsync(): Promise<boolean> {
     const hasAnyPreviousStepFailed = this.ctx.global.hasAnyPreviousStepFailed;
 
     if (!this.ifCondition) {
@@ -318,18 +318,16 @@ export class BuildStep extends BuildStepOutputAccessor {
       ifCondition = ifCondition.slice(2, -1);
     }
 
+    const inputs = {} as Record<string, unknown>;
+    for (const input of this.inputs ?? []) {
+      inputs[input.id] = await input.getValueAsync({
+        interpolationContext: this.getInterpolationContext(),
+      });
+    }
+
     return Boolean(
-      jsepEval(ifCondition, {
-        inputs:
-          this.inputs?.reduce(
-            (acc, input) => {
-              acc[input.id] = input.getValue({
-                interpolationContext: this.getInterpolationContext(),
-              });
-              return acc;
-            },
-            {} as Record<string, unknown>
-          ) ?? {},
+      await jsepEvalAsync(ifCondition, {
+        inputs,
         eas: {
           runtimePlatform: this.ctx.global.runtimePlatform,
           ...this.ctx.global.staticContext,
@@ -363,14 +361,13 @@ export class BuildStep extends BuildStepOutputAccessor {
   private async executeCommandAsync(): Promise<void> {
     assert(this.command, 'Command must be defined.');
 
-    const interpolatedCommand = interpolateJobContext({
+    const interpolatedCommand = await interpolateJobContextAsync({
       target: this.command,
       context: this.getInterpolationContext(),
     });
 
-    const command = this.interpolateInputsOutputsAndGlobalContextInTemplate(
-      `${interpolatedCommand}`,
-      this.inputs
+    const command = await this.interpolateInputsOutputsAndGlobalContextInTemplateAsync(
+      `${interpolatedCommand}`
     );
     this.ctx.logger.debug(`Interpolated inputs in the command template`);
 
@@ -396,10 +393,18 @@ export class BuildStep extends BuildStepOutputAccessor {
 
     await this.fn(this.ctx, {
       inputs: Object.fromEntries(
-        Object.entries(this.inputById).map(([key, input]) => [
-          key,
-          { value: input.getValue({ interpolationContext: this.getInterpolationContext() }) },
-        ])
+        await Promise.all(
+          Object.entries(this.inputById).map(async ([key, input]) => {
+            return [
+              key,
+              {
+                value: await input.getValueAsync({
+                  interpolationContext: this.getInterpolationContext(),
+                }),
+              },
+            ];
+          })
+        )
       ),
       outputs: this.outputById,
       env: this.getScriptEnv(),
@@ -408,26 +413,25 @@ export class BuildStep extends BuildStepOutputAccessor {
     this.ctx.logger.debug(`Script completed successfully`);
   }
 
-  private interpolateInputsOutputsAndGlobalContextInTemplate(
-    template: string,
-    inputs?: BuildStepInput[]
-  ): string {
-    if (!inputs) {
+  private async interpolateInputsOutputsAndGlobalContextInTemplateAsync(
+    template: string
+  ): Promise<string> {
+    if (!this.inputs) {
       return interpolateWithOutputs(
         this.ctx.global.interpolate(template),
         (path) => this.ctx.global.getStepOutputValue(path) ?? ''
       );
     }
-    const vars = inputs.reduce(
-      (acc, input) => {
-        const value = input.getValue({ interpolationContext: this.getInterpolationContext() });
-        acc[input.id] = typeof value === 'object' ? JSON.stringify(value) : value?.toString() ?? '';
-        return acc;
-      },
-      {} as Record<string, string>
-    );
+    const inputs = {} as Record<string, string>;
+    for (const input of this.inputs ?? []) {
+      const value = await input.getValueAsync({
+        interpolationContext: this.getInterpolationContext(),
+      });
+      inputs[input.id] =
+        typeof value === 'object' ? JSON.stringify(value) : value?.toString() ?? '';
+    }
     return interpolateWithOutputs(
-      interpolateWithInputs(this.ctx.global.interpolate(template), vars),
+      interpolateWithInputs(this.ctx.global.interpolate(template), inputs),
       (path) => this.ctx.global.getStepOutputValue(path) ?? ''
     );
   }
