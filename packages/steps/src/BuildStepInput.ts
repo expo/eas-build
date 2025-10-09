@@ -8,7 +8,7 @@ import {
   BUILD_STEP_OR_BUILD_GLOBAL_CONTEXT_REFERENCE_REGEX,
   interpolateWithOutputs,
 } from './utils/template.js';
-import { interpolateJobContext } from './interpolation.js';
+import { interpolateJobContextAsync } from './interpolation.js';
 
 export enum BuildStepInputValueTypeName {
   STRING = 'string',
@@ -85,11 +85,13 @@ export class BuildStepInput<
     this.allowedValueTypeName = allowedValueTypeName;
   }
 
-  public getValue({
+  public async getValueAsync({
     interpolationContext,
   }: {
     interpolationContext: JobInterpolationContext;
-  }): R extends true ? BuildStepInputValueType<T> : BuildStepInputValueType<T> | undefined {
+  }): Promise<
+    R extends true ? BuildStepInputValueType<T> : BuildStepInputValueType<T> | undefined
+  > {
     const rawValue = this._value ?? this.defaultValue;
     if (this.required && rawValue === undefined) {
       throw new BuildStepRuntimeError(
@@ -97,7 +99,7 @@ export class BuildStepInput<
       );
     }
 
-    const interpolatedValue = interpolateJobContext({
+    const interpolatedValue = await interpolateJobContextAsync({
       target: rawValue,
       context: interpolationContext,
     });
