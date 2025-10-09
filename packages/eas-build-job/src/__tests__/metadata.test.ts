@@ -37,6 +37,27 @@ describe('MetadataSchema', () => {
     expect(error).toBeFalsy();
     expect(value).toEqual(validMetadata);
   });
+
+  test('valid metadata with environment', () => {
+    const environments = ['production', 'preview', 'development', 'staging', 'custom-env'];
+
+    environments.forEach((env) => {
+      const metadataWithEnvironment = {
+        ...validMetadata,
+        environment: env,
+      };
+
+      const { value, error } = MetadataSchema.validate(metadataWithEnvironment, {
+        stripUnknown: true,
+        convert: true,
+        abortEarly: false,
+      });
+
+      expect(error).toBeFalsy();
+      expect(value.environment).toBe(env);
+    });
+  });
+
   test('invalid metadata', () => {
     const metadata = {
       appName: 'testapp',
