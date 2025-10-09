@@ -124,7 +124,7 @@ export interface Job {
   initiatingUserId: string;
   appId: string;
 
-  environment?: 'production' | 'preview' | 'development';
+  environment?: string;
 }
 
 const SecretsSchema = Joi.object({
@@ -186,7 +186,7 @@ export const JobSchema = Joi.object({
   initiatingUserId: Joi.string().required(),
   appId: Joi.string().required(),
 
-  environment: Joi.string().valid('production', 'preview', 'development'),
+  environment: Joi.string(),
 
   workflowInterpolationContext: Joi.object().custom((workflowInterpolationContext) =>
     StaticWorkflowInterpolationContextZ.optional().parse(workflowInterpolationContext)

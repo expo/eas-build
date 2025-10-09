@@ -168,7 +168,7 @@ export type Metadata = {
   /**
    * EAS env vars environment chosen for the job
    */
-  environment?: 'production' | 'preview' | 'development';
+  environment?: string;
 };
 
 export const MetadataSchema = Joi.object({
@@ -201,7 +201,7 @@ export const MetadataSchema = Joi.object({
   simulator: Joi.boolean(),
   selectedImage: Joi.string(),
   customNodeVersion: Joi.string(),
-  environment: Joi.string().valid('production', 'preview', 'development'),
+  environment: Joi.string(),
 });
 
 export function sanitizeMetadata(metadata: object): Metadata {
