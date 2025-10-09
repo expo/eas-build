@@ -117,12 +117,13 @@ export default class IosCredentialsManager {
       );
 
       logger.info('Initializing provisioning profile');
-      const provisioningProfile = new ProvisioningProfile(
-        Buffer.from(targetCredentials.provisioningProfileBase64, 'base64'),
-        this.keychain.data.path,
+      const provisioningProfile = new ProvisioningProfile({
+        profile: Buffer.from(targetCredentials.provisioningProfileBase64, 'base64'),
+        certificateCommonName,
+        keychainPath: this.keychain.data.path,
         target,
-        certificateCommonName
-      );
+        profileType: targetCredentials.provisioningProfileType,
+      });
       await provisioningProfile.init(logger);
 
       logger.info('Validating whether distribution certificate has been imported successfully');
