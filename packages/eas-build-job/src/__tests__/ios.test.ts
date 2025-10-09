@@ -241,6 +241,47 @@ describe('Ios.JobSchema', () => {
     expect(error).toBeFalsy();
   });
 
+  test('valid job with environment', () => {
+    const environments = ['production', 'preview', 'development', 'staging', 'custom-env'];
+
+    environments.forEach((env) => {
+      const jobWithEnvironment = {
+        secrets: {
+          buildCredentials,
+        },
+        type: Workflow.GENERIC,
+        platform: Platform.IOS,
+        projectArchive: {
+          type: ArchiveSourceType.URL,
+          url: 'http://localhost:3000',
+        },
+        projectRootDirectory: '.',
+        scheme: 'testapp',
+        buildConfiguration: 'Release',
+        applicationArchivePath: 'ios/build/*.ipa',
+        builderEnvironment: {
+          image: 'default',
+          node: '1.2.3',
+          corepack: true,
+          yarn: '2.3.4',
+          fastlane: '3.4.5',
+          cocoapods: '4.5.6',
+          env: {
+            ENV_VAR: '123',
+          },
+        },
+        expoBuildUrl: 'https://expo.dev/fake/build/url',
+        initiatingUserId: randomUUID(),
+        appId: randomUUID(),
+        environment: env,
+      };
+
+      const { value, error } = Ios.JobSchema.validate(jobWithEnvironment, joiOptions);
+      expect(error).toBeFalsy();
+      expect(value.environment).toBe(env);
+    });
+  });
+
   test('invalid managed job', () => {
     const managedJob = {
       secrets: {

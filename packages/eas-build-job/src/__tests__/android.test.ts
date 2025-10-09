@@ -144,6 +144,44 @@ describe('Android.JobSchema', () => {
     expect(error).toBeFalsy();
   });
 
+  test('valid job with environment', () => {
+    const environments = ['production', 'preview', 'development', 'staging', 'custom-env'];
+
+    environments.forEach((env) => {
+      const jobWithEnvironment = {
+        secrets,
+        platform: Platform.ANDROID,
+        type: Workflow.GENERIC,
+        projectArchive: {
+          type: ArchiveSourceType.URL,
+          url: 'http://localhost:3000',
+        },
+        gradleCommand: ':app:bundleRelease',
+        applicationArchivePath: 'android/app/build/outputs/bundle/release/app-release.aab',
+        projectRootDirectory: '.',
+        builderEnvironment: {
+          image: 'default',
+          node: '1.2.3',
+          corepack: true,
+          yarn: '2.3.4',
+          ndk: '4.5.6',
+          bun: '1.0.0',
+          env: {
+            SOME_ENV: '123',
+          },
+        },
+        expoBuildUrl: 'https://expo.dev/fake/build/url',
+        initiatingUserId: randomUUID(),
+        appId: randomUUID(),
+        environment: env,
+      };
+
+      const { value, error } = Android.JobSchema.validate(jobWithEnvironment, joiOptions);
+      expect(error).toBeFalsy();
+      expect(value.environment).toBe(env);
+    });
+  });
+
   test('invalid managed job', () => {
     const managedJob = {
       secrets,
