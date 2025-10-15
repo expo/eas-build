@@ -110,6 +110,9 @@ export const ArchiveSourceSchemaZ = z.discriminatedUnion('type', [
     bucketKey: z.string(),
     metadataLocation: z.string().optional(),
   }),
+  z.object({
+    type: z.literal(ArchiveSourceType.NONE),
+  }),
 ]);
 
 export type Env = Record<string, string>;

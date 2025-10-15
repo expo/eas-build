@@ -18,7 +18,8 @@ import { shallowCloneRepositoryAsync } from './git';
 export async function prepareProjectSourcesAsync<TJob extends Job>(
   ctx: BuildContext<TJob>,
   destinationDirectory = ctx.buildDirectory
-): Promise<void> {
+): // Return type required to make switch exhaustive.
+Promise<{ handled: boolean }> {
   const projectArchiveResult = await asyncResult(fetchProjectArchiveSourceAsync(ctx));
 
   if (!projectArchiveResult.ok) {
@@ -30,25 +31,51 @@ export async function prepareProjectSourcesAsync<TJob extends Job>(
 
   const projectArchive = projectArchiveResult.value ?? ctx.job.projectArchive;
 
-  if (projectArchive.type === ArchiveSourceType.GCS) {
-    throw new Error('GCS project sources should be resolved earlier to url');
-  } else if (projectArchive.type === ArchiveSourceType.PATH) {
-    await prepareProjectSourcesLocallyAsync(ctx, projectArchive.path, destinationDirectory); // used in eas build --local
-  } else if (projectArchive.type === ArchiveSourceType.URL) {
-    await downloadAndUnpackProjectFromTarGzAsync(ctx, projectArchive.url, destinationDirectory);
-  } else if (projectArchive.type === ArchiveSourceType.GIT) {
-    await shallowCloneRepositoryAsync({
-      logger: ctx.logger,
-      archiveSource: projectArchive,
-      destinationDirectory,
-    });
-  }
+  switch (projectArchive.type) {
+    case ArchiveSourceType.R2:
+    case ArchiveSourceType.GCS: {
+      throw new Error('Remote project sources should be resolved earlier to URL');
+    }
 
-  const uploadResult = await asyncResult(
-    uploadProjectMetadataAsync(ctx, { projectDirectory: destinationDirectory })
-  );
-  if (!uploadResult.ok) {
-    ctx.logger.warn(`Failed to upload project metadata: ${uploadResult.reason}`);
+    case ArchiveSourceType.PATH: {
+      await prepareProjectSourcesLocallyAsync(ctx, projectArchive.path, destinationDirectory); // used in eas build --local
+      return { handled: true };
+    }
+
+    case ArchiveSourceType.NONE: {
+      // May be used in no-sources jobs like submission jobs.
+      return { handled: true };
+    }
+
+    case ArchiveSourceType.URL: {
+      await downloadAndUnpackProjectFromTarGzAsync(ctx, projectArchive.url, destinationDirectory);
+
+      const uploadResult = await asyncResult(
+        uploadProjectMetadataAsync(ctx, { projectDirectory: destinationDirectory })
+      );
+      if (!uploadResult.ok) {
+        ctx.logger.warn(`Failed to upload project metadata: ${uploadResult.reason}`);
+      }
+
+      return { handled: true };
+    }
+
+    case ArchiveSourceType.GIT: {
+      await shallowCloneRepositoryAsync({
+        logger: ctx.logger,
+        archiveSource: projectArchive,
+        destinationDirectory,
+      });
+
+      const uploadResult = await asyncResult(
+        uploadProjectMetadataAsync(ctx, { projectDirectory: destinationDirectory })
+      );
+      if (!uploadResult.ok) {
+        ctx.logger.warn(`Failed to upload project metadata: ${uploadResult.reason}`);
+      }
+
+      return { handled: true };
+    }
   }
 }
 

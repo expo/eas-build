@@ -241,6 +241,37 @@ describe('Ios.JobSchema', () => {
     expect(error).toBeFalsy();
   });
 
+  test('valid job with none archive source type', () => {
+    const managedJob = {
+      secrets: {
+        buildCredentials,
+      },
+      type: Workflow.MANAGED,
+      platform: Platform.IOS,
+      projectArchive: {
+        type: ArchiveSourceType.NONE,
+      },
+      projectRootDirectory: '.',
+      username: 'turtle-tutorial',
+      builderEnvironment: {
+        image: 'default',
+        node: '1.2.3',
+        yarn: '2.3.4',
+        fastlane: '3.4.5',
+        cocoapods: '4.5.6',
+        env: {
+          ENV_VAR: '123',
+        },
+      },
+      initiatingUserId: randomUUID(),
+      appId: randomUUID(),
+    };
+
+    const { value, error } = Ios.JobSchema.validate(managedJob, joiOptions);
+    expect(value).toMatchObject(managedJob);
+    expect(error).toBeFalsy();
+  });
+
   test('valid job with environment', () => {
     const environments = ['production', 'preview', 'development', 'staging', 'custom-env'];
 
