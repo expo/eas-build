@@ -1,4 +1,3 @@
-import { createHash } from 'crypto';
 import path from 'path';
 
 import plist from '@expo/plist';
@@ -6,7 +5,6 @@ import { IOSConfig } from '@expo/config-plugins';
 import { ManagedArtifactType, BuildMode, BuildPhase, Ios, Workflow } from '@expo/eas-build-job';
 import fs from 'fs-extra';
 import nullthrows from 'nullthrows';
-import * as PackageManagerUtils from '@expo/package-manager';
 import { spawnAsync } from '@expo/steps';
 import { asyncResult } from '@expo/results';
 
@@ -30,7 +28,7 @@ import { getParentAndDescendantProcessPidsAsync } from '../utils/processes';
 import { eagerBundleAsync, shouldUseEagerBundle } from '../common/eagerBundle';
 import { uploadCacheAsync, compressCacheAsync } from '../steps/functions/saveCache';
 import { downloadCacheAsync, decompressCacheAsync } from '../steps/functions/restoreCache';
-import { findPackagerRootDir } from '../utils/packageManager';
+import { generateCacheKeyAsync } from '../utils/cacheKey';
 
 import { runBuilderWithHooksAsync } from './common';
 import { runCustomBuildAsync } from './custom';
@@ -91,7 +89,7 @@ async function buildAsync(ctx: BuildContext<Ios.Job>): Promise<void> {
         (ctx.env.EAS_USE_CACHE === '1' && ctx.env.EAS_RESTORE_CACHE !== '0')
       ) {
         try {
-          const cacheKey = await generateCacheKeyAsync(workingDirectory);
+          const cacheKey = await generateCacheKeyAsync(workingDirectory, CACHE_KEY_PREFIX);
           const jobId = nullthrows(ctx.env.EAS_BUILD_ID, 'EAS_BUILD_ID is not set');
 
           const robotAccessToken = nullthrows(
@@ -240,7 +238,7 @@ async function buildAsync(ctx: BuildContext<Ios.Job>): Promise<void> {
       (ctx.env.EAS_USE_CACHE === '1' && ctx.env.EAS_SAVE_CACHE !== '0')
     ) {
       try {
-        const cacheKey = await generateCacheKeyAsync(workingDirectory);
+        const cacheKey = await generateCacheKeyAsync(workingDirectory, CACHE_KEY_PREFIX);
         const jobId = nullthrows(ctx.env.EAS_BUILD_ID, 'EAS_BUILD_ID is not set');
 
         const robotAccessToken = nullthrows(
@@ -420,36 +418,3 @@ async function runInstallPodsAsync(ctx: BuildContext<Ios.Job>): Promise<void> {
   }
 }
 
-async function generateCacheKeyAsync(workingDirectory: string): Promise<string> {
-  // This will resolve which package manager and use the relevant lock file
-  // The lock file hash is the key and ensures cache is fresh
-  const packagerRunDir = findPackagerRootDir(workingDirectory);
-  const manager = PackageManagerUtils.createForProject(packagerRunDir);
-  const lockPath = path.join(packagerRunDir, manager.lockFile);
-
-  try {
-    const key = await hashFiles([lockPath]);
-    return `${CACHE_KEY_PREFIX}${key}`;
-  } catch (err: any) {
-    throw new Error(`Failed to read package files for cache key generation: ${err.message}`);
-  }
-}
-
-async function hashFiles(filePaths: string[]): Promise<string> {
-  const hashes: string[] = [];
-
-  for (const filePath of filePaths) {
-    try {
-      if (await fs.pathExists(filePath)) {
-        const fileContent = await fs.readFile(filePath);
-        const fileHash = createHash('sha256').update(fileContent).digest('hex');
-        hashes.push(fileHash);
-      }
-    } catch (err: any) {
-      throw new Error(`Failed to hash file ${filePath}: ${err.message}`);
-    }
-  }
-
-  const combinedHashes = hashes.join('');
-  return createHash('sha256').update(combinedHashes).digest('hex');
-}
