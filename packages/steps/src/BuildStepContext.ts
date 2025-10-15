@@ -1,12 +1,12 @@
 import os from 'os';
 import path from 'path';
-import crypto from 'crypto';
 import fs from 'fs';
 
 import fg from 'fast-glob';
 import { Env, JobInterpolationContext, StaticJobInterpolationContext } from '@expo/eas-build-job';
 import { bunyan } from '@expo/logger';
 import { v4 as uuidv4 } from 'uuid';
+import { hashFilesSync } from '@expo/build-tools/utils/cacheKey';
 
 import {
   BuildStep,
@@ -192,38 +192,22 @@ export class BuildStepGlobalContext {
     const filePaths = fg.sync(patterns, {
       cwd,
       absolute: true,
+      onlyFiles: true,
     });
 
     if (filePaths.length === 0) {
       return '';
     }
 
-    const result = crypto.createHash('sha256');
-    let fileFound = false;
+    const validFilePaths = filePaths.filter((file) =>
+      file.startsWith(`${workspacePath}${path.sep}`)
+    );
 
-    for (const file of filePaths) {
-      if (!file.startsWith(`${workspacePath}${path.sep}`)) {
-        continue;
-      }
-
-      if (fs.statSync(file).isDirectory()) {
-        continue;
-      }
-
-      const fileHash = crypto.createHash('sha256');
-      const fileContent = fs.readFileSync(file);
-      fileHash.update(fileContent);
-      result.write(fileHash.digest());
-      fileFound = true;
-    }
-
-    result.end();
-
-    if (fileFound) {
-      return result.digest('hex');
-    } else {
+    if (validFilePaths.length === 0) {
       return '';
     }
+
+    return hashFilesSync(validFilePaths);
   }
 
   public serialize(): SerializedBuildStepGlobalContext {
