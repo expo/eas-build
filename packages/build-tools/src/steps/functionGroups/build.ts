@@ -1,7 +1,7 @@
+import path from 'path';
+
 import { BuildFunctionGroup, BuildStep, BuildStepGlobalContext } from '@expo/steps';
 import { BuildJob, Platform } from '@expo/eas-build-job';
-
-import path from 'path';
 
 import { createCheckoutBuildFunction } from '../functions/checkout';
 import { createInstallNodeModulesBuildFunction } from '../functions/installNodeModules';

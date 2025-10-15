@@ -282,4 +282,3 @@ async function buildAsync(ctx: BuildContext<Android.Job>): Promise<void> {
     }
   });
 }
-
