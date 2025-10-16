@@ -8,26 +8,28 @@ import fs from 'fs-extra';
  * @returns Combined SHA256 hash of all files, or empty string if no files exist
  */
 export async function hashFilesAsync(filePaths: string[]): Promise<string> {
-  const hashes: string[] = [];
+  const combinedHash = createHash('sha256');
 
   for (const filePath of filePaths) {
     try {
       if (await fs.pathExists(filePath)) {
         const fileContent = await fs.readFile(filePath);
-        const fileHash = createHash('sha256').update(fileContent).digest('hex');
-        hashes.push(fileHash);
+        const fileHash = createHash('sha256').update(fileContent).digest();
+        combinedHash.write(fileHash);
       }
     } catch (err: any) {
       throw new Error(`Failed to hash file ${filePath}: ${err.message}`);
     }
   }
 
-  if (hashes.length === 0) {
+  combinedHash.end();
+  const result = combinedHash.digest('hex');
+
+  if (result === createHash('sha256').digest('hex')) {
     return '';
   }
 
-  const combinedHashes = hashes.join('');
-  return createHash('sha256').update(combinedHashes).digest('hex');
+  return result;
 }
 
 /**
@@ -37,24 +39,26 @@ export async function hashFilesAsync(filePaths: string[]): Promise<string> {
  * @returns Combined SHA256 hash of all files, or empty string if no files exist
  */
 export function hashFiles(filePaths: string[]): string {
-  const hashes: string[] = [];
+  const combinedHash = createHash('sha256');
 
   for (const filePath of filePaths) {
     try {
       if (fs.pathExistsSync(filePath)) {
         const fileContent = fs.readFileSync(filePath);
-        const fileHash = createHash('sha256').update(fileContent).digest('hex');
-        hashes.push(fileHash);
+        const fileHash = createHash('sha256').update(fileContent).digest();
+        combinedHash.write(fileHash);
       }
     } catch (err: any) {
       throw new Error(`Failed to hash file ${filePath}: ${err.message}`);
     }
   }
 
-  if (hashes.length === 0) {
+  combinedHash.end();
+  const result = combinedHash.digest('hex');
+
+  if (result === createHash('sha256').digest('hex')) {
     return '';
   }
 
-  const combinedHashes = hashes.join('');
-  return createHash('sha256').update(combinedHashes).digest('hex');
+  return result;
 }
