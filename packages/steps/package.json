@@ -9,11 +9,6 @@
       "types": "./dist_esm/index.d.ts",
       "import": "./dist_esm/index.js",
       "require": "./dist_commonjs/index.cjs"
-    },
-    "./utils/hashFiles": {
-      "types": "./dist_esm/utils/hashFiles.d.ts",
-      "import": "./dist_esm/utils/hashFiles.js",
-      "require": "./dist_commonjs/utils/hashFiles.cjs"
     }
   },
   "files": [

@@ -184,7 +184,6 @@ function createStepsForIosBuildWithCredentials({
     },
   });
   const saveCache = createInternalSaveCacheFunction(
-    IOS_CACHE_KEY_PREFIX,
     cachePaths,
     buildStartTime
   ).createBuildStepFromFunctionCall(globalCtx, {
@@ -264,7 +263,6 @@ function createStepsForAndroidBuildWithoutCredentials({
     },
   });
   const saveCache = createInternalSaveCacheFunction(
-    ANDROID_CACHE_KEY_PREFIX,
     cachePaths,
     buildStartTime
   ).createBuildStepFromFunctionCall(globalCtx, {
@@ -339,7 +337,6 @@ function createStepsForAndroidBuildWithCredentials({
     },
   });
   const saveCache = createInternalSaveCacheFunction(
-    ANDROID_CACHE_KEY_PREFIX,
     cachePaths,
     buildStartTime
   ).createBuildStepFromFunctionCall(globalCtx, {

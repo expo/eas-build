@@ -8,7 +8,7 @@ import { Platform } from '@expo/eas-build-job';
 import nullthrows from 'nullthrows';
 import { asyncResult } from '@expo/results';
 
-import { generateCacheKeyAsync } from '../../utils/cacheKey';
+import { generateDefaultBuildCacheKeyAsync } from '../../utils/cacheKey';
 
 import { downloadCacheAsync, decompressCacheAsync } from './restoreCache';
 
@@ -48,7 +48,7 @@ export function createInternalRestoreCacheFunction(
         const workingDirectory = String(inputs.working_directory.value);
         const platform = String(inputs.platform.value) as Platform;
 
-        const cacheKey = await generateCacheKeyAsync(workingDirectory, cacheKeyPrefix);
+        const cacheKey = await generateDefaultBuildCacheKeyAsync(workingDirectory);
 
         const jobId = nullthrows(env.EAS_BUILD_ID, 'EAS_BUILD_ID is not set');
         const robotAccessToken = nullthrows(

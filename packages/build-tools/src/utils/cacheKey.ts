@@ -5,10 +5,7 @@ import { hashFiles } from '@expo/steps';
 
 import { findPackagerRootDir } from './packageManager';
 
-export async function generateCacheKeyAsync(
-  workingDirectory: string,
-  prefix: string
-): Promise<string> {
+export async function generateDefaultBuildCacheKeyAsync(workingDirectory: string): Promise<string> {
   // This will resolve which package manager and use the relevant lock file
   // The lock file hash is the key and ensures cache is fresh
   const packagerRunDir = findPackagerRootDir(workingDirectory);
@@ -16,9 +13,8 @@ export async function generateCacheKeyAsync(
   const lockPath = path.join(packagerRunDir, manager.lockFile);
 
   try {
-    const key = hashFiles([lockPath]);
-    return `${prefix}${key}`;
+    return hashFiles([lockPath]);
   } catch (err: any) {
-    throw new Error(`Failed to read package files for cache key generation: ${err.message}`);
+    throw new Error(`Failed to read lockfile for cache key generation: ${err.message}`);
   }
 }

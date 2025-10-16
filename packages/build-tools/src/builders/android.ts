@@ -26,7 +26,7 @@ import { prepareExecutableAsync } from '../utils/prepareBuildExecutable';
 import { eagerBundleAsync, shouldUseEagerBundle } from '../common/eagerBundle';
 import { decompressCacheAsync, downloadCacheAsync } from '../steps/functions/restoreCache';
 import { compressCacheAsync, uploadCacheAsync } from '../steps/functions/saveCache';
-import { generateCacheKeyAsync } from '../utils/cacheKey';
+import { generateDefaultBuildCacheKeyAsync } from '../utils/cacheKey';
 
 import { runBuilderWithHooksAsync } from './common';
 import { runCustomBuildAsync } from './custom';
@@ -80,7 +80,7 @@ async function buildAsync(ctx: BuildContext<Android.Job>): Promise<void> {
       (ctx.env.EAS_USE_CACHE === '1' && ctx.env.EAS_RESTORE_CACHE !== '0')
     ) {
       try {
-        const cacheKey = await generateCacheKeyAsync(workingDirectory, CACHE_KEY_PREFIX);
+        const cacheKey = await generateDefaultBuildCacheKeyAsync(workingDirectory);
         const jobId = nullthrows(ctx.env.EAS_BUILD_ID, 'EAS_BUILD_ID is not set');
 
         const robotAccessToken = nullthrows(
@@ -98,7 +98,7 @@ async function buildAsync(ctx: BuildContext<Android.Job>): Promise<void> {
           expoApiServerURL,
           robotAccessToken,
           paths: cachePaths,
-          key: cacheKey,
+          key: CACHE_KEY_PREFIX + cacheKey,
           keyPrefixes: [CACHE_KEY_PREFIX],
           platform: ctx.job.platform,
         });
@@ -222,7 +222,7 @@ async function buildAsync(ctx: BuildContext<Android.Job>): Promise<void> {
       (ctx.env.EAS_USE_CACHE === '1' && ctx.env.EAS_SAVE_CACHE !== '0')
     ) {
       try {
-        const cacheKey = await generateCacheKeyAsync(workingDirectory, CACHE_KEY_PREFIX);
+        const cacheKey = await generateDefaultBuildCacheKeyAsync(workingDirectory);
         const jobId = nullthrows(ctx.env.EAS_BUILD_ID, 'EAS_BUILD_ID is not set');
 
         const robotAccessToken = nullthrows(
