@@ -7,37 +7,6 @@ import fs from 'fs-extra';
  * @param filePaths Array of absolute file paths to hash
  * @returns Combined SHA256 hash of all files, or empty string if no files exist
  */
-export async function hashFilesAsync(filePaths: string[]): Promise<string> {
-  const combinedHash = createHash('sha256');
-
-  for (const filePath of filePaths) {
-    try {
-      if (await fs.pathExists(filePath)) {
-        const fileContent = await fs.readFile(filePath);
-        const fileHash = createHash('sha256').update(fileContent).digest();
-        combinedHash.write(fileHash);
-      }
-    } catch (err: any) {
-      throw new Error(`Failed to hash file ${filePath}: ${err.message}`);
-    }
-  }
-
-  combinedHash.end();
-  const result = combinedHash.digest('hex');
-
-  if (result === createHash('sha256').digest('hex')) {
-    return '';
-  }
-
-  return result;
-}
-
-/**
- * Synchronous version of hashFilesAsync.
- * Hashes the contents of multiple files and returns a combined SHA256 hash.
- * @param filePaths Array of absolute file paths to hash
- * @returns Combined SHA256 hash of all files, or empty string if no files exist
- */
 export function hashFiles(filePaths: string[]): string {
   const combinedHash = createHash('sha256');
 

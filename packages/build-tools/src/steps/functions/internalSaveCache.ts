@@ -21,7 +21,7 @@ export function createInternalSaveCacheFunction(
   return new BuildFunction({
     namespace: 'eas',
     id: `__save_cache_${cacheKeyPrefix.replace(/-/g, '_')}`,
-    name: `Save Cache (${cacheKeyPrefix})`,
+    name: 'Save Cache',
     inputProviders: [
       BuildStepInput.createProvider({
         id: 'working_directory',

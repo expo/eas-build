@@ -1,7 +1,7 @@
 import path from 'path';
 
 import * as PackageManagerUtils from '@expo/package-manager';
-import { hashFilesAsync } from '@expo/steps';
+import { hashFiles } from '@expo/steps';
 
 import { findPackagerRootDir } from './packageManager';
 
@@ -16,7 +16,7 @@ export async function generateCacheKeyAsync(
   const lockPath = path.join(packagerRunDir, manager.lockFile);
 
   try {
-    const key = await hashFilesAsync([lockPath]);
+    const key = hashFiles([lockPath]);
     return `${prefix}${key}`;
   } catch (err: any) {
     throw new Error(`Failed to read package files for cache key generation: ${err.message}`);
