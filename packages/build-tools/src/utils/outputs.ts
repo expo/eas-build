@@ -18,26 +18,7 @@ export async function uploadJobOutputsToWwwAsync(
     const workflowJobId = nullthrows(ctx.env.__WORKFLOW_JOB_ID);
     const robotAccessToken = nullthrows(ctx.staticContext.job.secrets?.robotAccessToken);
 
-    const interpolationContext: JobInterpolationContext = {
-      ...ctx.staticContext,
-      env: ctx.env,
-      always: () => true,
-      never: () => false,
-      success: () => !ctx.hasAnyPreviousStepFailed,
-      failure: () => ctx.hasAnyPreviousStepFailed,
-      fromJSON: (json: string) => JSON.parse(json),
-      toJSON: (value: unknown) => JSON.stringify(value),
-      contains: (value, substring) => value.includes(substring),
-      startsWith: (value, prefix) => value.startsWith(prefix),
-      endsWith: (value, suffix) => value.endsWith(suffix),
-      hashFiles: (...patterns: string[]) => ctx.hashFiles(...patterns),
-      replaceAll: (input: string, stringToReplace: string, replacementString: string) => {
-        while (input.includes(stringToReplace)) {
-          input = input.replace(stringToReplace, replacementString);
-        }
-        return input;
-      },
-    };
+    const interpolationContext = ctx.getInterpolationContext();
     logger.debug({ dynamicValues: interpolationContext }, 'Using dynamic values');
 
     const outputs = collectJobOutputs({
