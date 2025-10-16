@@ -20,7 +20,7 @@ export function createInternalSaveCacheFunction(
 ): BuildFunction {
   return new BuildFunction({
     namespace: 'eas',
-    id: `__save_cache_${cacheKeyPrefix.replace(/-/g, '_')}`,
+    id: '__save_cache',
     name: 'Save Cache',
     inputProviders: [
       BuildStepInput.createProvider({

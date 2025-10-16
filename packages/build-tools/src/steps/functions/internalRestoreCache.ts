@@ -18,7 +18,7 @@ export function createInternalRestoreCacheFunction(
 ): BuildFunction {
   return new BuildFunction({
     namespace: 'eas',
-    id: `__restore_cache_${cacheKeyPrefix.replace(/-/g, '_')}`,
+    id: '__restore_cache',
     name: 'Restore Cache',
     inputProviders: [
       BuildStepInput.createProvider({
