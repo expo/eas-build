@@ -1,13 +1,12 @@
 import os from 'os';
 import path from 'path';
-import fs from 'fs';
 
 import fg from 'fast-glob';
 import { Env, JobInterpolationContext, StaticJobInterpolationContext } from '@expo/eas-build-job';
 import { bunyan } from '@expo/logger';
 import { v4 as uuidv4 } from 'uuid';
-import { hashFilesSync } from '@expo/build-tools/utils/cacheKey';
 
+import { hashFiles } from './utils/hashFiles.js';
 import {
   BuildStep,
   BuildStepOutputAccessor,
@@ -207,7 +206,7 @@ export class BuildStepGlobalContext {
       return '';
     }
 
-    return hashFilesSync(validFilePaths);
+    return hashFiles(validFilePaths);
   }
 
   public serialize(): SerializedBuildStepGlobalContext {
