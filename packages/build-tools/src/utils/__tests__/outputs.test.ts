@@ -100,6 +100,12 @@ const interpolationContext: JobInterpolationContext = {
   startsWith: (value: string, prefix: string) => value.startsWith(prefix),
   endsWith: (value: string, suffix: string) => value.endsWith(suffix),
   hashFiles: (...value: string[]) => value.join(','),
+  replaceAll: (input: string, stringToReplace: string, replacementString: string) => {
+    while (input.includes(stringToReplace)) {
+      input = input.replace(stringToReplace, replacementString);
+    }
+    return input;
+  },
 };
 
 describe(collectJobOutputs, () => {
