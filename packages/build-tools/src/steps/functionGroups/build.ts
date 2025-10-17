@@ -26,9 +26,6 @@ import { shouldUseEagerBundle } from '../../common/eagerBundle';
 import { createInternalRestoreCacheFunction } from '../functions/internalRestoreCache';
 import { createInternalSaveCacheFunction } from '../functions/internalSaveCache';
 
-const IOS_CACHE_KEY_PREFIX = 'ios-ccache-';
-const ANDROID_CACHE_KEY_PREFIX = 'android-ccache-';
-
 interface HelperFunctionsInput {
   globalCtx: BuildStepGlobalContext;
   buildToolsContext: CustomBuildContext<BuildJob>;
@@ -149,7 +146,6 @@ function createStepsForIosBuildWithCredentials({
     },
   });
   const restoreCache = createInternalRestoreCacheFunction(
-    IOS_CACHE_KEY_PREFIX,
     cachePaths
   ).createBuildStepFromFunctionCall(globalCtx, {
     callInputs: {
@@ -247,7 +243,6 @@ function createStepsForAndroidBuildWithoutCredentials({
       },
     });
   const restoreCache = createInternalRestoreCacheFunction(
-    ANDROID_CACHE_KEY_PREFIX,
     cachePaths
   ).createBuildStepFromFunctionCall(globalCtx, {
     callInputs: {
@@ -321,7 +316,6 @@ function createStepsForAndroidBuildWithCredentials({
       },
     });
   const restoreCache = createInternalRestoreCacheFunction(
-    ANDROID_CACHE_KEY_PREFIX,
     cachePaths
   ).createBuildStepFromFunctionCall(globalCtx, {
     callInputs: {

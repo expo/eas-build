@@ -9,6 +9,7 @@ import fs from 'fs-extra';
  */
 export function hashFiles(filePaths: string[]): string {
   const combinedHash = createHash('sha256');
+  let noFile = true;
 
   for (const filePath of filePaths) {
     try {
@@ -16,6 +17,7 @@ export function hashFiles(filePaths: string[]): string {
         const fileContent = fs.readFileSync(filePath);
         const fileHash = createHash('sha256').update(fileContent).digest();
         combinedHash.write(fileHash);
+        noFile = false;
       }
     } catch (err: any) {
       throw new Error(`Failed to hash file ${filePath}: ${err.message}`);
@@ -25,7 +27,7 @@ export function hashFiles(filePaths: string[]): string {
   combinedHash.end();
   const result = combinedHash.digest('hex');
 
-  if (result === createHash('sha256').digest('hex')) {
+  if (noFile) {
     return '';
   }
 

@@ -27,11 +27,10 @@ import { eagerBundleAsync, shouldUseEagerBundle } from '../common/eagerBundle';
 import { decompressCacheAsync, downloadCacheAsync } from '../steps/functions/restoreCache';
 import { compressCacheAsync, uploadCacheAsync } from '../steps/functions/saveCache';
 import { generateDefaultBuildCacheKeyAsync } from '../utils/cacheKey';
+import { ANDROID_CACHE_KEY_PREFIX } from '../utils/constants';
 
 import { runBuilderWithHooksAsync } from './common';
 import { runCustomBuildAsync } from './custom';
-
-const CACHE_KEY_PREFIX = 'android-ccache-';
 
 export default async function androidBuilder(ctx: BuildContext<Android.Job>): Promise<Artifacts> {
   if (ctx.job.mode === BuildMode.BUILD) {
@@ -80,7 +79,10 @@ async function buildAsync(ctx: BuildContext<Android.Job>): Promise<void> {
       (ctx.env.EAS_USE_CACHE === '1' && ctx.env.EAS_RESTORE_CACHE !== '0')
     ) {
       try {
-        const cacheKey = await generateDefaultBuildCacheKeyAsync(workingDirectory);
+        const cacheKey = await generateDefaultBuildCacheKeyAsync(
+          workingDirectory,
+          ctx.job.platform
+        );
         const jobId = nullthrows(ctx.env.EAS_BUILD_ID, 'EAS_BUILD_ID is not set');
 
         const robotAccessToken = nullthrows(
@@ -98,8 +100,8 @@ async function buildAsync(ctx: BuildContext<Android.Job>): Promise<void> {
           expoApiServerURL,
           robotAccessToken,
           paths: cachePaths,
-          key: CACHE_KEY_PREFIX + cacheKey,
-          keyPrefixes: [CACHE_KEY_PREFIX],
+          key: cacheKey,
+          keyPrefixes: [ANDROID_CACHE_KEY_PREFIX],
           platform: ctx.job.platform,
         });
 
@@ -222,7 +224,10 @@ async function buildAsync(ctx: BuildContext<Android.Job>): Promise<void> {
       (ctx.env.EAS_USE_CACHE === '1' && ctx.env.EAS_SAVE_CACHE !== '0')
     ) {
       try {
-        const cacheKey = await generateDefaultBuildCacheKeyAsync(workingDirectory);
+        const cacheKey = await generateDefaultBuildCacheKeyAsync(
+          workingDirectory,
+          ctx.job.platform
+        );
         const jobId = nullthrows(ctx.env.EAS_BUILD_ID, 'EAS_BUILD_ID is not set');
 
         const robotAccessToken = nullthrows(

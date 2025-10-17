@@ -9,23 +9,16 @@ import nullthrows from 'nullthrows';
 import { asyncResult } from '@expo/results';
 
 import { generateDefaultBuildCacheKeyAsync } from '../../utils/cacheKey';
+import { ANDROID_CACHE_KEY_PREFIX, IOS_CACHE_KEY_PREFIX } from '../../utils/constants';
 
 import { downloadCacheAsync, decompressCacheAsync } from './restoreCache';
 
-export function createInternalRestoreCacheFunction(
-  cacheKeyPrefix: string,
-  cachePaths: string[]
-): BuildFunction {
+export function createInternalRestoreCacheFunction(cachePaths: string[]): BuildFunction {
   return new BuildFunction({
     namespace: 'eas',
-    id: '__restore_cache',
+    id: 'restore_build_cache',
     name: 'Restore Cache',
     inputProviders: [
-      BuildStepInput.createProvider({
-        id: 'working_directory',
-        required: true,
-        allowedValueTypeName: BuildStepInputValueTypeName.STRING,
-      }),
       BuildStepInput.createProvider({
         id: 'platform',
         required: true,
@@ -45,10 +38,11 @@ export function createInternalRestoreCacheFunction(
       }
 
       try {
-        const workingDirectory = String(inputs.working_directory.value);
+        const workingDirectory = stepCtx.workingDirectory;
         const platform = String(inputs.platform.value) as Platform;
+        const prefix = platform === Platform.IOS ? IOS_CACHE_KEY_PREFIX : ANDROID_CACHE_KEY_PREFIX;
 
-        const cacheKey = await generateDefaultBuildCacheKeyAsync(workingDirectory);
+        const cacheKey = await generateDefaultBuildCacheKeyAsync(workingDirectory, platform);
 
         const jobId = nullthrows(env.EAS_BUILD_ID, 'EAS_BUILD_ID is not set');
         const robotAccessToken = nullthrows(
@@ -64,7 +58,7 @@ export function createInternalRestoreCacheFunction(
           robotAccessToken,
           paths: cachePaths,
           key: cacheKey,
-          keyPrefixes: [cacheKeyPrefix],
+          keyPrefixes: [prefix],
           platform,
         });
 

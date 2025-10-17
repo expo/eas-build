@@ -48,7 +48,7 @@ export function createInternalSaveCacheFunction(
         const workingDirectory = String(inputs.working_directory.value);
         const platform = String(inputs.platform.value) as Platform;
 
-        const cacheKey = await generateDefaultBuildCacheKeyAsync(workingDirectory);
+        const cacheKey = await generateDefaultBuildCacheKeyAsync(workingDirectory, platform);
 
         const jobId = nullthrows(env.EAS_BUILD_ID, 'EAS_BUILD_ID is not set');
         const robotAccessToken = nullthrows(
