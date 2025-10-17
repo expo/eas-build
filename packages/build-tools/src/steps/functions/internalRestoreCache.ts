@@ -3,7 +3,7 @@ import { Platform } from '@expo/eas-build-job';
 
 import { restoreCcacheAsync } from './restoreCache';
 
-export function createInternalRestoreCacheFunction(cachePaths: string[]): BuildFunction {
+export function createInternalRestoreCacheFunction(): BuildFunction {
   return new BuildFunction({
     namespace: 'eas',
     id: 'restore_build_cache',
@@ -24,7 +24,6 @@ export function createInternalRestoreCacheFunction(cachePaths: string[]): BuildF
         logger,
         workingDirectory,
         platform,
-        cachePaths,
         env,
         secrets: stepCtx.global.staticContext.job.secrets,
       });

@@ -1,6 +1,7 @@
 import fs from 'fs';
 import os from 'os';
 import path from 'path';
+import assert from 'assert';
 
 import * as tar from 'tar';
 import fg from 'fast-glob';
@@ -21,6 +22,7 @@ import { retryOnDNSFailure } from '../../utils/retryOnDNSFailure';
 import { formatBytes } from '../../utils/artifacts';
 import { getCacheVersion } from '../utils/cache';
 import { generateDefaultBuildCacheKeyAsync } from '../../utils/cacheKey';
+import { ANDROID_CACHE_PATH, IOS_CACHE_PATH } from '../../utils/constants';
 
 export function createSaveCacheFunction(): BuildFunction {
   return new BuildFunction({
@@ -299,7 +301,6 @@ export async function saveCcacheAsync({
   workingDirectory,
   platform,
   buildStartTime,
-  cachePaths,
   env,
   secrets,
 }: {
@@ -307,7 +308,6 @@ export async function saveCcacheAsync({
   workingDirectory: string;
   platform: Platform;
   buildStartTime: number;
-  cachePaths: string[];
   env: Record<string, string | undefined>;
   secrets?: { robotAccessToken?: string };
 }): Promise<void> {
@@ -327,6 +327,13 @@ export async function saveCcacheAsync({
       'Robot access token is required for cache operations'
     );
     const expoApiServerURL = nullthrows(env.__API_SERVER_URL, '__API_SERVER_URL is not set');
+    assert(
+      env.HOME,
+      'Failed to infer directory to save ccache: $HOME environment variable is empty.'
+    );
+    const cachePaths = [
+      path.join(env.HOME, platform === Platform.IOS ? IOS_CACHE_PATH : ANDROID_CACHE_PATH),
+    ];
 
     // Cache size can blow up over time over many builds, so evict stale files
     // and only upload what was used within this build's time window

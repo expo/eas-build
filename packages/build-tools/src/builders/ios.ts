@@ -1,5 +1,3 @@
-import path from 'path';
-
 import plist from '@expo/plist';
 import { IOSConfig } from '@expo/config-plugins';
 import { ManagedArtifactType, BuildMode, BuildPhase, Ios, Workflow } from '@expo/eas-build-job';
@@ -54,7 +52,6 @@ async function buildAsync(ctx: BuildContext<Ios.Job>): Promise<void> {
   const buildStart = Date.now();
   const credentialsManager = new CredentialsManager(ctx);
   const workingDirectory = ctx.getReactNativeProjectDirectory();
-  const cachePaths = [path.join(ctx.env.HOME, 'Library/Caches/ccache')];
   try {
     const credentials = await ctx.runBuildPhase(BuildPhase.PREPARE_CREDENTIALS, async () => {
       return await credentialsManager.prepare();
@@ -84,7 +81,6 @@ async function buildAsync(ctx: BuildContext<Ios.Job>): Promise<void> {
         logger: ctx.logger,
         workingDirectory,
         platform: ctx.job.platform,
-        cachePaths,
         env: ctx.env,
         secrets: ctx.job.secrets,
       });
@@ -191,7 +187,6 @@ async function buildAsync(ctx: BuildContext<Ios.Job>): Promise<void> {
       workingDirectory,
       platform: ctx.job.platform,
       buildStartTime: buildStart,
-      cachePaths,
       env: ctx.env,
       secrets: ctx.job.secrets,
     });

@@ -44,7 +44,6 @@ async function buildAsync(ctx: BuildContext<Android.Job>): Promise<void> {
   await setupAsync(ctx);
   const buildStart = Date.now();
   const workingDirectory = ctx.getReactNativeProjectDirectory();
-  const cachePaths = [path.join(ctx.env.HOME, '.cache/ccache')];
   const hasNativeCode = ctx.job.type === Workflow.GENERIC;
 
   if (hasNativeCode) {
@@ -73,7 +72,6 @@ async function buildAsync(ctx: BuildContext<Android.Job>): Promise<void> {
       logger: ctx.logger,
       workingDirectory,
       platform: ctx.job.platform,
-      cachePaths,
       env: ctx.env,
       secrets: ctx.job.secrets,
     });
@@ -173,7 +171,6 @@ async function buildAsync(ctx: BuildContext<Android.Job>): Promise<void> {
       workingDirectory,
       platform: ctx.job.platform,
       buildStartTime: buildStart,
-      cachePaths,
       env: ctx.env,
       secrets: ctx.job.secrets,
     });

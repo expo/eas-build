@@ -1,5 +1,3 @@
-import path from 'path';
-
 import { BuildFunctionGroup, BuildStep, BuildStepGlobalContext } from '@expo/steps';
 import { BuildJob, Platform } from '@expo/eas-build-job';
 
@@ -129,7 +127,6 @@ function createStepsForIosBuildWithCredentials({
   buildToolsContext,
 }: HelperFunctionsInput): BuildStep[] {
   const workingDirectory = buildToolsContext.defaultWorkingDirectory;
-  const cachePaths = [path.join(buildToolsContext.env.HOME, 'Library/Caches/ccache')];
   const buildStartTime = Date.now();
 
   const resolveAppleTeamIdFromCredentials =
@@ -145,14 +142,15 @@ function createStepsForIosBuildWithCredentials({
       apple_team_id: '${ steps.resolve_apple_team_id_from_credentials.apple_team_id }',
     },
   });
-  const restoreCache = createInternalRestoreCacheFunction(
-    cachePaths
-  ).createBuildStepFromFunctionCall(globalCtx, {
-    callInputs: {
-      working_directory: workingDirectory,
-      platform: Platform.IOS,
-    },
-  });
+  const restoreCache = createInternalRestoreCacheFunction().createBuildStepFromFunctionCall(
+    globalCtx,
+    {
+      callInputs: {
+        working_directory: workingDirectory,
+        platform: Platform.IOS,
+      },
+    }
+  );
   const installPods = createInstallPodsBuildFunction().createBuildStepFromFunctionCall(globalCtx, {
     workingDirectory: './ios',
   });
@@ -179,15 +177,14 @@ function createStepsForIosBuildWithCredentials({
         '${ steps.calculate_eas_update_runtime_version.resolved_eas_update_runtime_version }',
     },
   });
-  const saveCache = createInternalSaveCacheFunction(
-    cachePaths,
-    buildStartTime
-  ).createBuildStepFromFunctionCall(globalCtx, {
-    callInputs: {
-      working_directory: workingDirectory,
-      platform: Platform.IOS,
-    },
-  });
+  const saveCache = createInternalSaveCacheFunction(buildStartTime).createBuildStepFromFunctionCall(
+    globalCtx,
+    {
+      callInputs: {
+        platform: Platform.IOS,
+      },
+    }
+  );
   return [
     createCheckoutBuildFunction().createBuildStepFromFunctionCall(globalCtx),
     createSetUpNpmrcBuildFunction().createBuildStepFromFunctionCall(globalCtx),
@@ -227,7 +224,6 @@ function createStepsForAndroidBuildWithoutCredentials({
   buildToolsContext,
 }: HelperFunctionsInput): BuildStep[] {
   const workingDirectory = buildToolsContext.defaultWorkingDirectory;
-  const cachePaths = [path.join(buildToolsContext.env.HOME, '.cache/ccache')];
   const buildStartTime = Date.now();
 
   const calculateEASUpdateRuntimeVersion =
@@ -242,14 +238,15 @@ function createStepsForAndroidBuildWithoutCredentials({
           '${ steps.calculate_eas_update_runtime_version.resolved_eas_update_runtime_version }',
       },
     });
-  const restoreCache = createInternalRestoreCacheFunction(
-    cachePaths
-  ).createBuildStepFromFunctionCall(globalCtx, {
-    callInputs: {
-      working_directory: workingDirectory,
-      platform: Platform.ANDROID,
-    },
-  });
+  const restoreCache = createInternalRestoreCacheFunction().createBuildStepFromFunctionCall(
+    globalCtx,
+    {
+      callInputs: {
+        working_directory: workingDirectory,
+        platform: Platform.ANDROID,
+      },
+    }
+  );
   const runGradle = runGradleFunction().createBuildStepFromFunctionCall(globalCtx, {
     id: 'run_gradle',
     callInputs: {
@@ -257,15 +254,14 @@ function createStepsForAndroidBuildWithoutCredentials({
         '${ steps.calculate_eas_update_runtime_version.resolved_eas_update_runtime_version }',
     },
   });
-  const saveCache = createInternalSaveCacheFunction(
-    cachePaths,
-    buildStartTime
-  ).createBuildStepFromFunctionCall(globalCtx, {
-    callInputs: {
-      working_directory: workingDirectory,
-      platform: Platform.ANDROID,
-    },
-  });
+  const saveCache = createInternalSaveCacheFunction(buildStartTime).createBuildStepFromFunctionCall(
+    globalCtx,
+    {
+      callInputs: {
+        platform: Platform.ANDROID,
+      },
+    }
+  );
   return [
     createCheckoutBuildFunction().createBuildStepFromFunctionCall(globalCtx),
     createSetUpNpmrcBuildFunction().createBuildStepFromFunctionCall(globalCtx),
@@ -300,7 +296,6 @@ function createStepsForAndroidBuildWithCredentials({
   buildToolsContext,
 }: HelperFunctionsInput): BuildStep[] {
   const workingDirectory = buildToolsContext.defaultWorkingDirectory;
-  const cachePaths = [path.join(buildToolsContext.env.HOME, '.cache/ccache')];
   const buildStartTime = Date.now();
 
   const calculateEASUpdateRuntimeVersion =
@@ -315,14 +310,15 @@ function createStepsForAndroidBuildWithCredentials({
           '${ steps.calculate_eas_update_runtime_version.resolved_eas_update_runtime_version }',
       },
     });
-  const restoreCache = createInternalRestoreCacheFunction(
-    cachePaths
-  ).createBuildStepFromFunctionCall(globalCtx, {
-    callInputs: {
-      working_directory: workingDirectory,
-      platform: Platform.ANDROID,
-    },
-  });
+  const restoreCache = createInternalRestoreCacheFunction().createBuildStepFromFunctionCall(
+    globalCtx,
+    {
+      callInputs: {
+        working_directory: workingDirectory,
+        platform: Platform.ANDROID,
+      },
+    }
+  );
   const runGradle = runGradleFunction().createBuildStepFromFunctionCall(globalCtx, {
     id: 'run_gradle',
     callInputs: {
@@ -330,15 +326,14 @@ function createStepsForAndroidBuildWithCredentials({
         '${ steps.calculate_eas_update_runtime_version.resolved_eas_update_runtime_version }',
     },
   });
-  const saveCache = createInternalSaveCacheFunction(
-    cachePaths,
-    buildStartTime
-  ).createBuildStepFromFunctionCall(globalCtx, {
-    callInputs: {
-      working_directory: workingDirectory,
-      platform: Platform.ANDROID,
-    },
-  });
+  const saveCache = createInternalSaveCacheFunction(buildStartTime).createBuildStepFromFunctionCall(
+    globalCtx,
+    {
+      callInputs: {
+        platform: Platform.ANDROID,
+      },
+    }
+  );
   return [
     createCheckoutBuildFunction().createBuildStepFromFunctionCall(globalCtx),
     createSetUpNpmrcBuildFunction().createBuildStepFromFunctionCall(globalCtx),
