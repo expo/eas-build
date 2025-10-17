@@ -11,6 +11,7 @@ import {
   BuildStepInput,
   BuildStepInputValueTypeName,
   BuildStepOutput,
+  spawnAsync,
 } from '@expo/steps';
 import z from 'zod';
 import nullthrows from 'nullthrows';
@@ -22,6 +23,8 @@ import { retryOnDNSFailure } from '../../utils/retryOnDNSFailure';
 import { formatBytes } from '../../utils/artifacts';
 import { getCacheVersion } from '../utils/cache';
 import { turtleFetch, TurtleFetchError } from '../../utils/turtleFetch';
+import { generateDefaultBuildCacheKeyAsync } from '../../utils/cacheKey';
+import { ANDROID_CACHE_KEY_PREFIX, IOS_CACHE_KEY_PREFIX } from '../../utils/constants';
 
 const streamPipeline = promisify(stream.pipeline);
 
@@ -260,5 +263,74 @@ export async function decompressCacheAsync({
       .catch(() => false)
   ) {
     await fs.promises.rm(absoluteDir, { recursive: true, force: true });
+  }
+}
+
+export async function restoreCcacheAsync({
+  logger,
+  workingDirectory,
+  platform,
+  cachePaths,
+  env,
+  secrets,
+}: {
+  logger: bunyan;
+  workingDirectory: string;
+  platform: Platform;
+  cachePaths: string[];
+  env: Record<string, string | undefined>;
+  secrets?: { robotAccessToken?: string };
+}): Promise<void> {
+  const enabled =
+    env.EAS_RESTORE_CACHE === '1' || (env.EAS_USE_CACHE === '1' && env.EAS_RESTORE_CACHE !== '0');
+
+  if (!enabled) {
+    return;
+  }
+
+  try {
+    const cacheKey = await generateDefaultBuildCacheKeyAsync(workingDirectory, platform);
+
+    const jobId = nullthrows(env.EAS_BUILD_ID, 'EAS_BUILD_ID is not set');
+    const robotAccessToken = nullthrows(
+      secrets?.robotAccessToken,
+      'Robot access token is required for cache operations'
+    );
+    const expoApiServerURL = nullthrows(env.__API_SERVER_URL, '__API_SERVER_URL is not set');
+
+    const { archivePath } = await downloadCacheAsync({
+      logger,
+      jobId,
+      expoApiServerURL,
+      robotAccessToken,
+      paths: cachePaths,
+      key: cacheKey,
+      keyPrefixes: [platform === Platform.IOS ? IOS_CACHE_KEY_PREFIX : ANDROID_CACHE_KEY_PREFIX],
+      platform,
+    });
+
+    await decompressCacheAsync({
+      archivePath,
+      workingDirectory,
+      verbose: env.EXPO_DEBUG === '1',
+      logger,
+    });
+
+    logger.info('Cache restored successfully');
+
+    // Zero ccache stats for accurate tracking
+    await asyncResult(
+      spawnAsync('ccache', ['--zero-stats'], {
+        env,
+        logger,
+        stdio: 'pipe',
+      })
+    );
+  } catch (err: any) {
+    if (err.response?.status === 404) {
+      logger.info('No cache found for this key. Create a cache with function save_cache');
+    } else {
+      logger.warn({ err }, 'Failed to restore cache');
+    }
   }
 }
