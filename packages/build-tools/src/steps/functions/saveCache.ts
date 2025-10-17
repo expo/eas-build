@@ -1,11 +1,17 @@
 import fs from 'fs';
 import os from 'os';
 import path from 'path';
+import assert from 'assert';
 
 import * as tar from 'tar';
 import fg from 'fast-glob';
 import { bunyan } from '@expo/logger';
-import { BuildFunction, BuildStepInput, BuildStepInputValueTypeName } from '@expo/steps';
+import {
+  BuildFunction,
+  BuildStepInput,
+  BuildStepInputValueTypeName,
+  spawnAsync,
+} from '@expo/steps';
 import z from 'zod';
 import nullthrows from 'nullthrows';
 import fetch from 'node-fetch';
@@ -15,6 +21,8 @@ import { Platform } from '@expo/eas-build-job';
 import { retryOnDNSFailure } from '../../utils/retryOnDNSFailure';
 import { formatBytes } from '../../utils/artifacts';
 import { getCacheVersion } from '../utils/cache';
+import { generateDefaultBuildCacheKeyAsync } from '../../utils/cacheKey';
+import { ANDROID_CACHE_PATH, IOS_CACHE_PATH } from '../../utils/constants';
 
 export function createSaveCacheFunction(): BuildFunction {
   return new BuildFunction({
@@ -286,4 +294,91 @@ export async function compressCacheAsync({
   }
 
   return { archivePath };
+}
+
+export async function saveCcacheAsync({
+  logger,
+  workingDirectory,
+  platform,
+  buildStartTime,
+  env,
+  secrets,
+}: {
+  logger: bunyan;
+  workingDirectory: string;
+  platform: Platform;
+  buildStartTime: number;
+  env: Record<string, string | undefined>;
+  secrets?: { robotAccessToken?: string };
+}): Promise<void> {
+  const enabled =
+    env.EAS_SAVE_CACHE === '1' || (env.EAS_USE_CACHE === '1' && env.EAS_SAVE_CACHE !== '0');
+
+  if (!enabled) {
+    return;
+  }
+
+  try {
+    const cacheKey = await generateDefaultBuildCacheKeyAsync(workingDirectory, platform);
+
+    const jobId = nullthrows(env.EAS_BUILD_ID, 'EAS_BUILD_ID is not set');
+    const robotAccessToken = nullthrows(
+      secrets?.robotAccessToken,
+      'Robot access token is required for cache operations'
+    );
+    const expoApiServerURL = nullthrows(env.__API_SERVER_URL, '__API_SERVER_URL is not set');
+    assert(
+      env.HOME,
+      'Failed to infer directory to save ccache: $HOME environment variable is empty.'
+    );
+    const cachePaths = [
+      path.join(env.HOME, platform === Platform.IOS ? IOS_CACHE_PATH : ANDROID_CACHE_PATH),
+    ];
+
+    // Cache size can blow up over time over many builds, so evict stale files
+    // and only upload what was used within this build's time window
+    const evictWindow = Math.floor((Date.now() - buildStartTime) / 1000);
+    logger.info('Pruning cache...');
+    await asyncResult(
+      spawnAsync('ccache', ['--evict-older-than', evictWindow + 's'], {
+        env,
+        logger,
+        stdio: 'pipe',
+      })
+    );
+
+    logger.info('Cache stats:');
+    await asyncResult(
+      spawnAsync('ccache', ['--show-stats', '-v'], {
+        env,
+        logger,
+        stdio: 'pipe',
+      })
+    );
+
+    logger.info('Preparing cache archive...');
+
+    const { archivePath } = await compressCacheAsync({
+      paths: cachePaths,
+      workingDirectory,
+      verbose: env.EXPO_DEBUG === '1',
+      logger,
+    });
+
+    const { size } = await fs.promises.stat(archivePath);
+
+    await uploadCacheAsync({
+      logger,
+      jobId,
+      expoApiServerURL,
+      robotAccessToken,
+      archivePath,
+      key: cacheKey,
+      paths: cachePaths,
+      size,
+      platform,
+    });
+  } catch (err) {
+    logger.error({ err }, 'Failed to save cache');
+  }
 }
