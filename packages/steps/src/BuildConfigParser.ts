@@ -74,9 +74,12 @@ export class BuildConfigParser extends AbstractConfigParser {
     );
     const buildSteps: BuildStep[] = [];
     for (const stepConfig of config.build.steps) {
-      buildSteps.push(
-        ...this.createBuildStepFromConfig(stepConfig, buildFunctions, buildFunctionGroups)
+      const buildSteps = await this.createBuildStepFromConfigAsync(
+        stepConfig,
+        buildFunctions,
+        buildFunctionGroups
       );
+      buildSteps.push(...buildSteps);
     }
     return {
       buildSteps,
@@ -84,23 +87,23 @@ export class BuildConfigParser extends AbstractConfigParser {
     };
   }
 
-  private createBuildStepFromConfig(
+  private async createBuildStepFromConfigAsync(
     buildStepConfig: BuildStepConfig,
     buildFunctions: BuildFunctionById,
     buildFunctionGroups: BuildFunctionGroupById
-  ): BuildStep[] {
+  ): Promise<BuildStep[]> {
     if (isBuildStepCommandRun(buildStepConfig)) {
       return [this.createBuildStepFromBuildStepCommandRun(buildStepConfig)];
     } else if (isBuildStepBareCommandRun(buildStepConfig)) {
       return [this.createBuildStepFromBuildStepBareCommandRun(buildStepConfig)];
     } else if (isBuildStepBareFunctionOrFunctionGroupCall(buildStepConfig)) {
-      return this.createBuildStepsFromBareBuildStepFunctionOrBareBuildStepFunctionGroupCall(
+      return await this.createBuildStepsFromBareBuildStepFunctionOrBareBuildStepFunctionGroupCallAsync(
         buildFunctions,
         buildFunctionGroups,
         buildStepConfig
       );
     } else if (buildStepConfig !== null) {
-      return this.createBuildStepsFromBuildStepFunctionOrBuildStepFunctionGroupCall(
+      return await this.createBuildStepsFromBuildStepFunctionOrBuildStepFunctionGroupCallAsync(
         buildFunctions,
         buildFunctionGroups,
         buildStepConfig
@@ -156,62 +159,65 @@ export class BuildConfigParser extends AbstractConfigParser {
     });
   }
 
-  private createBuildStepsFromBuildStepFunctionGroupCall(
+  private async createBuildStepsFromBuildStepFunctionGroupCallAsync(
     buildFunctionGroups: BuildFunctionGroupById,
     buildStepFunctionCall: BuildStepFunctionCall
-  ): BuildStep[] {
+  ): Promise<BuildStep[]> {
     const functionId = getFunctionIdFromBuildStepFunctionCall(buildStepFunctionCall);
     const buildFunctionGroup = buildFunctionGroups[functionId];
     assert(buildFunctionGroup, `Build function group with id "${functionId}" is not defined.`);
-    return buildFunctionGroup.createBuildStepsFromFunctionGroupCall(this.ctx, {
+    return await buildFunctionGroup.createBuildStepsFromFunctionGroupCallAsync(this.ctx, {
       callInputs: buildStepFunctionCall[functionId].inputs,
     });
   }
 
-  private createBuildStepsFromBuildStepBareFunctionGroupCall(
+  private async createBuildStepsFromBuildStepBareFunctionGroupCallAsync(
     buildFunctionGroups: BuildFunctionGroupById,
     functionGroupId: string
-  ): BuildStep[] {
+  ): Promise<BuildStep[]> {
     const buildFunctionGroup = buildFunctionGroups[functionGroupId];
     assert(buildFunctionGroup, `Build function group with id "${functionGroupId}" is not defined.`);
-    return buildFunctionGroup.createBuildStepsFromFunctionGroupCall(this.ctx);
+    return await buildFunctionGroup.createBuildStepsFromFunctionGroupCallAsync(this.ctx);
   }
 
-  private createBuildStepFromBuildStepBareFunctionCall(
+  private async createBuildStepFromBuildStepBareFunctionCallAsync(
     buildFunctions: BuildFunctionById,
     functionId: BuildStepBareFunctionOrFunctionGroupCall
-  ): BuildStep {
+  ): Promise<BuildStep> {
     const buildFunction = buildFunctions[functionId];
     return buildFunction.createBuildStepFromFunctionCall(this.ctx);
   }
 
-  private createBuildStepsFromBareBuildStepFunctionOrBareBuildStepFunctionGroupCall(
+  private async createBuildStepsFromBareBuildStepFunctionOrBareBuildStepFunctionGroupCallAsync(
     buildFunctions: BuildFunctionById,
     buildFunctionGroups: BuildFunctionGroupById,
     functionOrFunctionGroupId: string
-  ): BuildStep[] {
+  ): Promise<BuildStep[]> {
     const maybeFunctionGroup = buildFunctionGroups[functionOrFunctionGroupId];
     if (maybeFunctionGroup) {
-      return this.createBuildStepsFromBuildStepBareFunctionGroupCall(
+      return await this.createBuildStepsFromBuildStepBareFunctionGroupCallAsync(
         buildFunctionGroups,
         functionOrFunctionGroupId
       );
     }
     return [
-      this.createBuildStepFromBuildStepBareFunctionCall(buildFunctions, functionOrFunctionGroupId),
+      await this.createBuildStepFromBuildStepBareFunctionCallAsync(
+        buildFunctions,
+        functionOrFunctionGroupId
+      ),
     ];
   }
 
-  private createBuildStepsFromBuildStepFunctionOrBuildStepFunctionGroupCall(
+  private async createBuildStepsFromBuildStepFunctionOrBuildStepFunctionGroupCallAsync(
     buildFunctions: BuildFunctionById,
     buildFunctionGroups: BuildFunctionGroupById,
     buildStepFunctionCall: BuildStepFunctionCall
-  ): BuildStep[] {
+  ): Promise<BuildStep[]> {
     const functionId = getFunctionIdFromBuildStepFunctionCall(buildStepFunctionCall);
 
     const maybeFunctionGroup = buildFunctionGroups[functionId];
     if (maybeFunctionGroup) {
-      return this.createBuildStepsFromBuildStepFunctionGroupCall(
+      return await this.createBuildStepsFromBuildStepFunctionGroupCallAsync(
         buildFunctionGroups,
         buildStepFunctionCall
       );
