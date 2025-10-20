@@ -393,10 +393,11 @@ export class BuildContext<TJob extends Job = Job> {
       if (type === EnvironmentSecretType.STRING) {
         environmentSecrets[name] = value;
       } else {
-        environmentSecrets[name] = createTemporaryEnvironmentSecretFile(
-          this.environmentSecretsDirectory,
-          value
-        );
+        environmentSecrets[name] = createTemporaryEnvironmentSecretFile({
+          secretsDir: this.environmentSecretsDirectory,
+          name,
+          contents_base64: value,
+        });
       }
     }
     return environmentSecrets;
