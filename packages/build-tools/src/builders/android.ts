@@ -13,6 +13,7 @@ import {
   configureExpoUpdatesIfInstalledAsync,
   resolveRuntimeVersionForExpoUpdatesIfConfiguredAsync,
 } from '../utils/expoUpdates';
+import { TurtleFetchError } from '../utils/turtleFetch';
 import {
   runGradleCommand,
   ensureLFLineEndingsInGradlewScript,
@@ -120,8 +121,8 @@ async function buildAsync(ctx: BuildContext<Android.Job>): Promise<void> {
             stdio: 'pipe',
           })
         );
-      } catch (err: any) {
-        if (err.response.status === 404) {
+      } catch (err: unknown) {
+        if (err instanceof TurtleFetchError && err.response.status === 404) {
           ctx.logger.info('No cache found for this key. Create a cache with function save_cache');
         } else {
           ctx.logger.warn({ err }, 'Failed to restore cache');
