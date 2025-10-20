@@ -15,6 +15,7 @@ import {
   resolveRuntimeVersionForExpoUpdatesIfConfiguredAsync,
   configureExpoUpdatesIfInstalledAsync,
 } from '../utils/expoUpdates';
+import { TurtleFetchError } from '../utils/turtleFetch';
 import { uploadApplicationArchive } from '../utils/artifacts';
 import { Hook, runHookIfPresent } from '../utils/hooks';
 import { configureXcodeProject } from '../ios/configure';
@@ -130,7 +131,7 @@ async function buildAsync(ctx: BuildContext<Ios.Job>): Promise<void> {
             })
           );
         } catch (err: any) {
-          if (err.response.status === 404) {
+          if (err instanceof TurtleFetchError && err.response.status === 404) {
             ctx.logger.info('No cache found for this key. Create a cache with function save_cache');
           } else {
             ctx.logger.warn({ err }, 'Failed to restore cache');
