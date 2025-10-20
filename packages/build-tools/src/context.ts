@@ -163,9 +163,6 @@ export class BuildContext<TJob extends Job = Job> {
   public get buildEnvsDirectory(): string {
     return path.join(this.workingdir, 'env');
   }
-  public get environmentSecretsDirectory(): string {
-    return path.join(this.workingdir, 'environment-secrets');
-  }
   public get packageManager(): PackageManager {
     return resolvePackageManager(this.getReactNativeProjectDirectory());
   }
@@ -388,13 +385,15 @@ export class BuildContext<TJob extends Job = Job> {
       return {};
     }
 
+    const environmentSecretsDirectory = path.join(this.workingdir, 'eas-environment-secrets');
+
     const environmentSecrets: Record<string, string> = {};
     for (const { name, type, value } of job.secrets.environmentSecrets) {
       if (type === EnvironmentSecretType.STRING) {
         environmentSecrets[name] = value;
       } else {
         environmentSecrets[name] = createTemporaryEnvironmentSecretFile({
-          secretsDir: this.environmentSecretsDirectory,
+          secretsDir: environmentSecretsDirectory,
           name,
           contents_base64: value,
         });
