@@ -121,7 +121,7 @@ async function buildAsync(ctx: BuildContext<Android.Job>): Promise<void> {
             stdio: 'pipe',
           })
         );
-      } catch (err: any) {
+      } catch (err: unknown) {
         if (err instanceof TurtleFetchError && err.response.status === 404) {
           ctx.logger.info('No cache found for this key. Create a cache with function save_cache');
         } else {
