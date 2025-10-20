@@ -1,5 +1,4 @@
 import path from 'path';
-import os from 'os';
 
 import fs from 'fs-extra';
 import {
@@ -386,17 +385,18 @@ export class BuildContext<TJob extends Job = Job> {
       return {};
     }
 
-    const environmentSecretsDirectory = path.join(os.tmpdir(), 'eas-environment-secrets');
+    const environmentSecretsDirectory = path.join(this.workingdir, 'eas-environment-secrets');
 
     const environmentSecrets: Record<string, string> = {};
     for (const { name, type, value } of job.secrets.environmentSecrets) {
       if (type === EnvironmentSecretType.STRING) {
         environmentSecrets[name] = value;
       } else {
-        environmentSecrets[name] = createTemporaryEnvironmentSecretFile(
-          environmentSecretsDirectory,
-          value
-        );
+        environmentSecrets[name] = createTemporaryEnvironmentSecretFile({
+          secretsDir: environmentSecretsDirectory,
+          name,
+          contents_base64: value,
+        });
       }
     }
     return environmentSecrets;
