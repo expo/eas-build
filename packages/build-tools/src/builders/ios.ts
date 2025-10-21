@@ -186,7 +186,7 @@ async function buildAsync(ctx: BuildContext<Ios.Job>): Promise<void> {
       logger: ctx.logger,
       workingDirectory,
       platform: ctx.job.platform,
-      buildStartTime: buildStart,
+      evictUsedBefore: buildStart,
       env: ctx.env,
       secrets: ctx.job.secrets,
     });

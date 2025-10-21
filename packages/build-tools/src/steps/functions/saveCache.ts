@@ -300,14 +300,14 @@ export async function saveCcacheAsync({
   logger,
   workingDirectory,
   platform,
-  buildStartTime,
+  evictUsedBefore,
   env,
   secrets,
 }: {
   logger: bunyan;
   workingDirectory: string;
   platform: Platform;
-  buildStartTime: number;
+  evictUsedBefore: number;
   env: Record<string, string | undefined>;
   secrets?: { robotAccessToken?: string };
 }): Promise<void> {
@@ -320,6 +320,7 @@ export async function saveCcacheAsync({
 
   try {
     const cacheKey = await generateDefaultBuildCacheKeyAsync(workingDirectory, platform);
+    logger.info(`Saving cache key: ${cacheKey}`);
 
     const jobId = nullthrows(env.EAS_BUILD_ID, 'EAS_BUILD_ID is not set');
     const robotAccessToken = nullthrows(
@@ -337,7 +338,7 @@ export async function saveCcacheAsync({
 
     // Cache size can blow up over time over many builds, so evict stale files
     // and only upload what was used within this build's time window
-    const evictWindow = Math.floor((Date.now() - buildStartTime) / 1000);
+    const evictWindow = Math.floor((Date.now() - evictUsedBefore) / 1000);
     logger.info('Pruning cache...');
     await asyncResult(
       spawnAsync('ccache', ['--evict-older-than', evictWindow + 's'], {

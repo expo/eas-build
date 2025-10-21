@@ -127,7 +127,7 @@ function createStepsForIosBuildWithCredentials({
   buildToolsContext,
 }: HelperFunctionsInput): BuildStep[] {
   const workingDirectory = buildToolsContext.defaultWorkingDirectory;
-  const buildStartTime = Date.now();
+  const evictUsedBefore = Date.now();
 
   const resolveAppleTeamIdFromCredentials =
     resolveAppleTeamIdFromCredentialsFunction().createBuildStepFromFunctionCall(globalCtx, {
@@ -177,14 +177,13 @@ function createStepsForIosBuildWithCredentials({
         '${ steps.calculate_eas_update_runtime_version.resolved_eas_update_runtime_version }',
     },
   });
-  const saveCache = createInternalSaveCacheFunction(buildStartTime).createBuildStepFromFunctionCall(
-    globalCtx,
-    {
-      callInputs: {
-        platform: Platform.IOS,
-      },
-    }
-  );
+  const saveCache = createInternalSaveCacheFunction(
+    evictUsedBefore
+  ).createBuildStepFromFunctionCall(globalCtx, {
+    callInputs: {
+      platform: Platform.IOS,
+    },
+  });
   return [
     createCheckoutBuildFunction().createBuildStepFromFunctionCall(globalCtx),
     createSetUpNpmrcBuildFunction().createBuildStepFromFunctionCall(globalCtx),
@@ -224,7 +223,7 @@ function createStepsForAndroidBuildWithoutCredentials({
   buildToolsContext,
 }: HelperFunctionsInput): BuildStep[] {
   const workingDirectory = buildToolsContext.defaultWorkingDirectory;
-  const buildStartTime = Date.now();
+  const evictUsedBefore = Date.now();
 
   const calculateEASUpdateRuntimeVersion =
     calculateEASUpdateRuntimeVersionFunction().createBuildStepFromFunctionCall(globalCtx, {
@@ -254,14 +253,13 @@ function createStepsForAndroidBuildWithoutCredentials({
         '${ steps.calculate_eas_update_runtime_version.resolved_eas_update_runtime_version }',
     },
   });
-  const saveCache = createInternalSaveCacheFunction(buildStartTime).createBuildStepFromFunctionCall(
-    globalCtx,
-    {
-      callInputs: {
-        platform: Platform.ANDROID,
-      },
-    }
-  );
+  const saveCache = createInternalSaveCacheFunction(
+    evictUsedBefore
+  ).createBuildStepFromFunctionCall(globalCtx, {
+    callInputs: {
+      platform: Platform.ANDROID,
+    },
+  });
   return [
     createCheckoutBuildFunction().createBuildStepFromFunctionCall(globalCtx),
     createSetUpNpmrcBuildFunction().createBuildStepFromFunctionCall(globalCtx),
@@ -296,7 +294,7 @@ function createStepsForAndroidBuildWithCredentials({
   buildToolsContext,
 }: HelperFunctionsInput): BuildStep[] {
   const workingDirectory = buildToolsContext.defaultWorkingDirectory;
-  const buildStartTime = Date.now();
+  const evictUsedBefore = Date.now();
 
   const calculateEASUpdateRuntimeVersion =
     calculateEASUpdateRuntimeVersionFunction().createBuildStepFromFunctionCall(globalCtx, {
@@ -326,14 +324,13 @@ function createStepsForAndroidBuildWithCredentials({
         '${ steps.calculate_eas_update_runtime_version.resolved_eas_update_runtime_version }',
     },
   });
-  const saveCache = createInternalSaveCacheFunction(buildStartTime).createBuildStepFromFunctionCall(
-    globalCtx,
-    {
-      callInputs: {
-        platform: Platform.ANDROID,
-      },
-    }
-  );
+  const saveCache = createInternalSaveCacheFunction(
+    evictUsedBefore
+  ).createBuildStepFromFunctionCall(globalCtx, {
+    callInputs: {
+      platform: Platform.ANDROID,
+    },
+  });
   return [
     createCheckoutBuildFunction().createBuildStepFromFunctionCall(globalCtx),
     createSetUpNpmrcBuildFunction().createBuildStepFromFunctionCall(globalCtx),

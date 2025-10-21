@@ -7,9 +7,14 @@ import { Platform } from '@expo/eas-build-job';
 import { IOS_CACHE_KEY_PREFIX, ANDROID_CACHE_KEY_PREFIX } from './constants';
 import { findPackagerRootDir } from './packageManager';
 
+const platformToBuildCacheKeyPrefix: Record<Platform, string> = {
+  [Platform.ANDROID]: ANDROID_CACHE_KEY_PREFIX,
+  [Platform.IOS]: IOS_CACHE_KEY_PREFIX,
+};
+
 export async function generateDefaultBuildCacheKeyAsync(
   workingDirectory: string,
-  platform: string
+  platform: Platform
 ): Promise<string> {
   // This will resolve which package manager and use the relevant lock file
   // The lock file hash is the key and ensures cache is fresh
@@ -17,10 +22,8 @@ export async function generateDefaultBuildCacheKeyAsync(
   const manager = PackageManagerUtils.createForProject(packagerRunDir);
   const lockPath = path.join(packagerRunDir, manager.lockFile);
 
-  const prefix = platform === Platform.IOS ? IOS_CACHE_KEY_PREFIX : ANDROID_CACHE_KEY_PREFIX;
-
   try {
-    return `${prefix}${hashFiles([lockPath])}`;
+    return `${platformToBuildCacheKeyPrefix[platform]}${hashFiles([lockPath])}`;
   } catch (err: any) {
     throw new Error(`Failed to read lockfile for cache key generation: ${err.message}`);
   }

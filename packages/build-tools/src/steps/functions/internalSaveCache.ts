@@ -3,7 +3,7 @@ import { Platform } from '@expo/eas-build-job';
 
 import { saveCcacheAsync } from './saveCache';
 
-export function createInternalSaveCacheFunction(buildStartTime: number): BuildFunction {
+export function createInternalSaveCacheFunction(evictUsedBefore: number): BuildFunction {
   return new BuildFunction({
     namespace: 'eas',
     id: 'save_build_cache',
@@ -24,7 +24,7 @@ export function createInternalSaveCacheFunction(buildStartTime: number): BuildFu
         logger,
         workingDirectory,
         platform,
-        buildStartTime,
+        evictUsedBefore,
         env,
         secrets: stepCtx.global.staticContext.job.secrets,
       });
