@@ -307,7 +307,7 @@ export async function restoreCcacheAsync({
     const cachePaths = [
       path.join(env.HOME, platform === Platform.IOS ? IOS_CACHE_PATH : ANDROID_CACHE_PATH),
     ];
-    const { archivePath } = await downloadCacheAsync({
+    const { archivePath, matchedKey } = await downloadCacheAsync({
       logger,
       jobId,
       expoApiServerURL,
@@ -325,7 +325,9 @@ export async function restoreCcacheAsync({
       logger,
     });
 
-    logger.info('Cache restored successfully');
+    logger.info(
+      `Cache restored successfully ${matchedKey === cacheKey ? '(direct hit)' : '(prefix match)'}`
+    );
 
     // Zero ccache stats for accurate tracking
     await asyncResult(
