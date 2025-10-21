@@ -337,8 +337,8 @@ export async function restoreCcacheAsync({
         stdio: 'pipe',
       })
     );
-  } catch (err: any) {
-    if (err.response?.status === 404) {
+  } catch (err: unknown) {
+    if (err instanceof TurtleFetchError && err.response?.status === 404) {
       logger.info('No cache found for this key. Create a cache with function save_cache');
     } else {
       logger.warn({ err }, 'Failed to restore cache');
