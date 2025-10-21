@@ -242,6 +242,10 @@ async function uploadProjectMetadataAsync(
 }
 
 async function fetchProjectArchiveSourceAsync(ctx: BuildContext<Job>): Promise<ArchiveSource> {
+  if (ctx.isLocal) {
+    console.warn('Local build, skipping project archive refresh');
+    return ctx.job.projectArchive;
+  }
   const taskId = nullthrows(ctx.env.EAS_BUILD_ID, 'EAS_BUILD_ID is not set');
   const expoApiServerURL = nullthrows(ctx.env.__API_SERVER_URL, '__API_SERVER_URL is not set');
   const robotAccessToken = nullthrows(

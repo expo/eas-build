@@ -1,6 +1,13 @@
 import assert from 'assert';
 
-import { BuildJob, Env, Metadata, sanitizeBuildJob, sanitizeMetadata } from '@expo/eas-build-job';
+import {
+  BuildJob,
+  Env,
+  EasCliNpmTags,
+  Metadata,
+  sanitizeBuildJob,
+  sanitizeMetadata,
+} from '@expo/eas-build-job';
 import { PipeMode, bunyan } from '@expo/logger';
 import spawn from '@expo/turtle-spawn';
 import Joi from 'joi';
@@ -9,9 +16,6 @@ import { BuildStepEnv } from '@expo/steps';
 
 import { BuildContext } from '../context';
 import { isAtLeastNpm7Async } from '../utils/packageManager';
-
-const EAS_CLI_STAGING_NPM_TAG = 'latest-eas-build-staging';
-const EAS_CLI_PRODUCTION_NPM_TAG = 'latest-eas-build';
 
 const EasBuildInternalResultSchema = Joi.object<{ job: object; metadata: object }>({
   job: Joi.object().unknown(),
@@ -127,19 +131,19 @@ async function resolveEasCommandPrefixAndEnvAsync(): Promise<{
   if (process.env.ENVIRONMENT === 'development') {
     return {
       cmd: 'npx',
-      args: [...npxArgsPrefix, `eas-cli@${EAS_CLI_STAGING_NPM_TAG}`],
+      args: [...npxArgsPrefix, `eas-cli@${EasCliNpmTags.STAGING}`],
       extraEnv: {},
     };
   } else if (process.env.ENVIRONMENT === 'staging') {
     return {
       cmd: 'npx',
-      args: [...npxArgsPrefix, `eas-cli@${EAS_CLI_STAGING_NPM_TAG}`],
+      args: [...npxArgsPrefix, `eas-cli@${EasCliNpmTags.STAGING}`],
       extraEnv: { EXPO_STAGING: '1' },
     };
   } else {
     return {
       cmd: 'npx',
-      args: [...npxArgsPrefix, `eas-cli@${EAS_CLI_PRODUCTION_NPM_TAG}`],
+      args: [...npxArgsPrefix, `eas-cli@${EasCliNpmTags.PRODUCTION}`],
       extraEnv: {},
     };
   }

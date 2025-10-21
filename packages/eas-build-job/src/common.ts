@@ -285,3 +285,8 @@ export const CustomBuildConfigSchema = Joi.object().when('.mode', {
     outputs: Joi.any().strip(),
   }),
 });
+
+export enum EasCliNpmTags {
+  STAGING = 'latest-eas-build-staging',
+  PRODUCTION = 'latest-eas-build',
+}
