@@ -8,6 +8,7 @@ import {
   configureExpoUpdatesIfInstalledAsync,
   resolveRuntimeVersionForExpoUpdatesIfConfiguredAsync,
 } from '../utils/expoUpdates';
+import { TurtleFetchError } from '../utils/turtleFetch';
 import {
   runGradleCommand,
   ensureLFLineEndingsInGradlewScript,

@@ -1,10 +1,25 @@
 import fs from 'fs';
 import path from 'path';
+import crypto from 'crypto';
 
-import { v4 as uuid } from 'uuid';
+export function createTemporaryEnvironmentSecretFile({
+  secretsDir,
+  name,
+  contents_base64,
+}: {
+  secretsDir: string;
+  name: string;
+  contents_base64: string;
+}): string {
+  const contentsBuffer = Buffer.from(contents_base64, 'base64');
 
-export function createTemporaryEnvironmentSecretFile(secretsDir: string, value: string): string {
-  const randomFilePath = path.join(secretsDir, uuid());
-  fs.writeFileSync(randomFilePath, Buffer.from(value, 'base64'));
+  const hash = crypto.createHash('sha256');
+  hash.update(`${name}:`);
+  hash.update(contentsBuffer);
+  const key = hash.digest('hex');
+
+  const randomFilePath = path.join(secretsDir, key);
+  fs.writeFileSync(randomFilePath, contentsBuffer);
+
   return randomFilePath;
 }

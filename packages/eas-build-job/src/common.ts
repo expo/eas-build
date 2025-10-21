@@ -110,6 +110,9 @@ export const ArchiveSourceSchemaZ = z.discriminatedUnion('type', [
     bucketKey: z.string(),
     metadataLocation: z.string().optional(),
   }),
+  z.object({
+    type: z.literal(ArchiveSourceType.NONE),
+  }),
 ]);
 
 export type Env = Record<string, string>;
@@ -169,6 +172,42 @@ export interface BuildPhaseStats {
   durationMs: number;
 }
 
+const GitHubContextZ = z.object({
+  triggering_actor: z.string().optional(),
+  event_name: z.enum(['push', 'pull_request', 'workflow_dispatch', 'schedule']),
+  sha: z.string(),
+  ref: z.string(),
+  ref_name: z.string(),
+  ref_type: z.string(),
+  commit_message: z.string().optional(),
+  label: z.string().optional(),
+  repository: z.string().optional(),
+  repository_owner: z.string().optional(),
+  event: z
+    .object({
+      label: z
+        .object({
+          name: z.string(),
+        })
+        .optional(),
+      head_commit: z
+        .object({
+          message: z.string(),
+          id: z.string(),
+        })
+        .optional(),
+      pull_request: z
+        .object({
+          number: z.number(),
+        })
+        .optional(),
+      number: z.number().optional(),
+      schedule: z.string().optional(),
+      inputs: z.record(z.string(), z.union([z.string(), z.number(), z.boolean()])).optional(),
+    })
+    .optional(),
+});
+
 export const StaticWorkflowInterpolationContextZ = z.object({
   after: z.record(
     z.string(),
@@ -185,44 +224,9 @@ export const StaticWorkflowInterpolationContextZ = z.object({
     })
   ),
   inputs: z.record(z.string(), z.union([z.string(), z.number(), z.boolean()])).optional(),
-  github: z
-    .object({
-      triggering_actor: z.string().optional(),
-      event_name: z.enum(['push', 'pull_request', 'workflow_dispatch', 'schedule']),
-      sha: z.string(),
-      ref: z.string(),
-      ref_name: z.string(),
-      ref_type: z.string(),
-      commit_message: z.string().optional(),
-      label: z.string().optional(),
-      repository: z.string().optional(),
-      repository_owner: z.string().optional(),
-      event: z
-        .object({
-          label: z
-            .object({
-              name: z.string(),
-            })
-            .optional(),
-          head_commit: z
-            .object({
-              message: z.string(),
-              id: z.string(),
-            })
-            .optional(),
-          pull_request: z
-            .object({
-              number: z.number(),
-            })
-            .optional(),
-          number: z.number().optional(),
-          schedule: z.string().optional(),
-          inputs: z.record(z.string(), z.union([z.string(), z.number(), z.boolean()])).optional(),
-        })
-        .optional(),
-    })
+  github:
     // We need to .optional() to support jobs that are not triggered by a GitHub event.
-    .optional(),
+    GitHubContextZ.optional(),
   workflow: z
     .object({
       id: z.string(),
@@ -249,6 +253,7 @@ export type DynamicInterpolationContext = {
   startsWith: (value: string, prefix: string) => boolean;
   endsWith: (value: string, suffix: string) => boolean;
   hashFiles: (...globs: string[]) => string;
+  replaceAll: (input: string, stringToReplace: string, replacementString: string) => string;
 };
 
 export type WorkflowInterpolationContext = StaticWorkflowInterpolationContext &

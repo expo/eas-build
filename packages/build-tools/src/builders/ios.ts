@@ -9,6 +9,7 @@ import {
   resolveRuntimeVersionForExpoUpdatesIfConfiguredAsync,
   configureExpoUpdatesIfInstalledAsync,
 } from '../utils/expoUpdates';
+import { TurtleFetchError } from '../utils/turtleFetch';
 import { uploadApplicationArchive } from '../utils/artifacts';
 import { Hook, runHookIfPresent } from '../utils/hooks';
 import { configureXcodeProject } from '../ios/configure';
