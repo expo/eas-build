@@ -20,16 +20,21 @@ export async function prepareProjectSourcesAsync<TJob extends Job>(
   destinationDirectory = ctx.buildDirectory
 ): // Return type required to make switch exhaustive.
 Promise<{ handled: boolean }> {
-  const projectArchiveResult = await asyncResult(fetchProjectArchiveSourceAsync(ctx));
+  let projectArchive: ArchiveSource = ctx.job.projectArchive;
+  if (ctx.isLocal) {
+    console.warn('Local build, skipping project archive refresh');
+  } else {
+    const projectArchiveResult = await asyncResult(fetchProjectArchiveSourceAsync(ctx));
 
-  if (!projectArchiveResult.ok) {
-    ctx.logger.error(
-      { err: projectArchiveResult.reason },
-      'Failed to refresh project archive, falling back to the original one'
-    );
+    if (!projectArchiveResult.ok) {
+      ctx.logger.error(
+        { err: projectArchiveResult.reason },
+        'Failed to refresh project archive, falling back to the original one'
+      );
+    }
+
+    projectArchive = projectArchiveResult.value ?? ctx.job.projectArchive;
   }
-
-  const projectArchive = projectArchiveResult.value ?? ctx.job.projectArchive;
 
   switch (projectArchive.type) {
     case ArchiveSourceType.R2:
@@ -242,10 +247,6 @@ async function uploadProjectMetadataAsync(
 }
 
 async function fetchProjectArchiveSourceAsync(ctx: BuildContext<Job>): Promise<ArchiveSource> {
-  if (ctx.isLocal) {
-    console.warn('Local build, skipping project archive refresh');
-    return ctx.job.projectArchive;
-  }
   const taskId = nullthrows(ctx.env.EAS_BUILD_ID, 'EAS_BUILD_ID is not set');
   const expoApiServerURL = nullthrows(ctx.env.__API_SERVER_URL, '__API_SERVER_URL is not set');
   const robotAccessToken = nullthrows(

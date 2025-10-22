@@ -87,12 +87,10 @@ async function buildAsync(ctx: BuildContext<Ios.Job>): Promise<void> {
 
     await ctx.runBuildPhase(BuildPhase.RESTORE_CACHE, async () => {
       await ctx.cacheManager?.restoreCache(ctx);
-      if (ctx.isUsingCache) {
+      if (ctx.shouldRestoreCache) {
         try {
           const cacheKey = await generateCacheKeyAsync(workingDirectory);
-          const jobId = ctx.isLocal
-            ? 'local'
-            : nullthrows(ctx.env.EAS_BUILD_ID, 'EAS_BUILD_ID is not set');
+          const jobId = nullthrows(ctx.env.EAS_BUILD_ID, 'EAS_BUILD_ID is not set');
 
           const robotAccessToken = nullthrows(
             ctx.job.secrets?.robotAccessToken,
@@ -235,7 +233,7 @@ async function buildAsync(ctx: BuildContext<Ios.Job>): Promise<void> {
 
   await ctx.runBuildPhase(BuildPhase.SAVE_CACHE, async () => {
     await ctx.cacheManager?.saveCache(ctx);
-    if (ctx.isUsingCache) {
+    if (ctx.shouldSaveCache) {
       try {
         const cacheKey = await generateCacheKeyAsync(workingDirectory);
         const jobId = nullthrows(ctx.env.EAS_BUILD_ID, 'EAS_BUILD_ID is not set');

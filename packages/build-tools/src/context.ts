@@ -86,7 +86,8 @@ export class BuildContext<TJob extends Job = Job> {
   public artifacts: Artifacts = {};
 
   private readonly _isLocal: boolean;
-  private readonly _isUsingCache: boolean;
+  private readonly _shouldSaveCache: boolean;
+  private readonly _shouldRestoreCache: boolean;
 
   private _env: Env;
   private _job: TJob;
@@ -128,7 +129,12 @@ export class BuildContext<TJob extends Job = Job> {
 
     this._isLocal = this._env.EAS_BUILD_RUNNER !== 'eas-build';
 
-    this._isUsingCache =
+    this._shouldSaveCache =
+      !this._isLocal &&
+      (this._env.EAS_SAVE_CACHE === '1' ||
+        (this._env.EAS_USE_CACHE === '1' && this._env.EAS_SAVE_CACHE !== '0'));
+
+    this._shouldRestoreCache =
       !this._isLocal &&
       (this._env.EAS_RESTORE_CACHE === '1' ||
         (this._env.EAS_USE_CACHE === '1' && this._env.EAS_RESTORE_CACHE !== '0'));
@@ -163,8 +169,11 @@ export class BuildContext<TJob extends Job = Job> {
   public get isLocal(): boolean {
     return this._isLocal;
   }
-  public get isUsingCache(): boolean {
-    return this._isUsingCache;
+  public get shouldSaveCache(): boolean {
+    return this._shouldSaveCache;
+  }
+  public get shouldRestoreCache(): boolean {
+    return this._shouldRestoreCache;
   }
   /**
    * Directory used to store executables used during regular (non-custom) builds.
