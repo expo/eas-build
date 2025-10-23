@@ -15,6 +15,7 @@ async function main(): Promise<void> {
   } catch (err: any) {
     if (!shouldExit()) {
       console.error(chalk.red(err.message));
+      console.log(err.stack);
       process.exit(1);
     }
   }

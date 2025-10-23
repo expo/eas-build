@@ -1,3 +1,4 @@
+import { BinaryLike, createHash } from 'crypto';
 import path from 'path';
 
 import { Android, BuildMode, BuildPhase, Workflow } from '@expo/eas-build-job';
