@@ -26,7 +26,7 @@ export const PATH_BY_PLATFORM: Record<string, string> = {
 export function getCcachePath(homeDir: string | undefined): string[] {
   assert(homeDir, 'Failed to infer directory to save ccache: $HOME environment variable is empty.');
   return [path.join(homeDir, PATH_BY_PLATFORM[os.platform()])];
-};
+}
 
 export async function generateDefaultBuildCacheKeyAsync(
   workingDirectory: string,
