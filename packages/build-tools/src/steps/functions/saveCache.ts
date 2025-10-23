@@ -32,6 +32,11 @@ export function createSaveCacheFunction(): BuildFunction {
         required: true,
         allowedValueTypeName: BuildStepInputValueTypeName.STRING,
       }),
+      BuildStepInput.createProvider({
+        id: 'public',
+        required: false,
+        allowedValueTypeName: BuildStepInputValueTypeName.BOOLEAN,
+      }),
     ],
     fn: async (stepsCtx, { env, inputs }) => {
       const { logger } = stepsCtx;
@@ -42,6 +47,7 @@ export function createSaveCacheFunction(): BuildFunction {
           .parse(((inputs.path.value ?? '') as string).split(/[\r\n]+/))
           .filter((path) => path.length > 0);
         const key = z.string().parse(inputs.key.value);
+        const isPublic = z.boolean().optional().parse(inputs.public.value) ?? false;
         const jobId = nullthrows(env.EAS_BUILD_ID, 'EAS_BUILD_ID is not set');
         const robotAccessToken = nullthrows(
           stepsCtx.global.staticContext.job.secrets?.robotAccessToken,
@@ -67,6 +73,7 @@ export function createSaveCacheFunction(): BuildFunction {
           paths,
           size,
           platform: stepsCtx.global.staticContext.job.platform,
+          isPublic,
         });
       } catch (error) {
         logger.error({ err: error }, 'Failed to create cache');
@@ -85,6 +92,7 @@ export async function uploadCacheAsync({
   archivePath,
   size,
   platform,
+  isPublic = false,
 }: {
   logger: bunyan;
   jobId: string;
@@ -95,6 +103,7 @@ export async function uploadCacheAsync({
   archivePath: string;
   size: number;
   platform: Platform | undefined;
+  isPublic?: boolean;
 }): Promise<void> {
   const routerURL = platform
     ? 'v2/turtle-builds/caches/upload-sessions'
@@ -109,12 +118,14 @@ export async function uploadCacheAsync({
           key,
           version: getCacheVersion(paths),
           size,
+          isPublic,
         })
       : JSON.stringify({
           jobRunId: jobId,
           key,
           version: getCacheVersion(paths),
           size,
+          isPublic,
         }),
     headers: {
       Authorization: `Bearer ${robotAccessToken}`,
