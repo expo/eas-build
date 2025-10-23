@@ -27,9 +27,8 @@ import { turtleFetch, TurtleFetchError } from '../../utils/turtleFetch';
 import { generateDefaultBuildCacheKeyAsync } from '../../utils/cacheKey';
 import {
   ANDROID_CACHE_KEY_PREFIX,
-  ANDROID_CACHE_PATH,
   IOS_CACHE_KEY_PREFIX,
-  IOS_CACHE_PATH,
+  PATH_BY_PLATFORM,
 } from '../../utils/constants';
 
 const streamPipeline = promisify(stream.pipeline);
@@ -293,6 +292,7 @@ export async function restoreCcacheAsync({
   }
   try {
     const cacheKey = await generateDefaultBuildCacheKeyAsync(workingDirectory, platform);
+    logger.info(`Restoring cache key: ${cacheKey}`);
 
     const jobId = nullthrows(env.EAS_BUILD_ID, 'EAS_BUILD_ID is not set');
     const robotAccessToken = nullthrows(
@@ -304,9 +304,7 @@ export async function restoreCcacheAsync({
       env.HOME,
       'Failed to infer directory to restore ccache: $HOME environment variable is empty.'
     );
-    const cachePaths = [
-      path.join(env.HOME, platform === Platform.IOS ? IOS_CACHE_PATH : ANDROID_CACHE_PATH),
-    ];
+    const cachePaths = [path.join(env.HOME, PATH_BY_PLATFORM[os.platform()])];
     const { archivePath, matchedKey } = await downloadCacheAsync({
       logger,
       jobId,

@@ -22,7 +22,7 @@ import { retryOnDNSFailure } from '../../utils/retryOnDNSFailure';
 import { formatBytes } from '../../utils/artifacts';
 import { getCacheVersion } from '../utils/cache';
 import { generateDefaultBuildCacheKeyAsync } from '../../utils/cacheKey';
-import { ANDROID_CACHE_PATH, IOS_CACHE_PATH } from '../../utils/constants';
+import { PATH_BY_PLATFORM } from '../../utils/constants';
 
 export function createSaveCacheFunction(): BuildFunction {
   return new BuildFunction({
@@ -332,9 +332,7 @@ export async function saveCcacheAsync({
       env.HOME,
       'Failed to infer directory to save ccache: $HOME environment variable is empty.'
     );
-    const cachePaths = [
-      path.join(env.HOME, platform === Platform.IOS ? IOS_CACHE_PATH : ANDROID_CACHE_PATH),
-    ];
+    const cachePaths = [path.join(env.HOME, PATH_BY_PLATFORM[os.platform()])];
 
     // Cache size can blow up over time over many builds, so evict stale files
     // and only upload what was used within this build's time window
