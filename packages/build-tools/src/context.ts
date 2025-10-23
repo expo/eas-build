@@ -85,6 +85,10 @@ export class BuildContext<TJob extends Job = Job> {
   public readonly skipNativeBuild?: boolean;
   public artifacts: Artifacts = {};
 
+  private readonly _isLocal: boolean;
+  private readonly _shouldSaveCache: boolean;
+  private readonly _shouldRestoreCache: boolean;
+
   private _env: Env;
   private _job: TJob;
   private _metadata?: Metadata;
@@ -123,6 +127,18 @@ export class BuildContext<TJob extends Job = Job> {
       ? [this.buildExecutablesDirectory, this._env.PATH].join(':')
       : this.buildExecutablesDirectory;
 
+    this._isLocal = this._env.EAS_BUILD_RUNNER !== 'eas-build';
+
+    this._shouldSaveCache =
+      !this._isLocal &&
+      (this._env.EAS_SAVE_CACHE === '1' ||
+        (this._env.EAS_USE_CACHE === '1' && this._env.EAS_SAVE_CACHE !== '0'));
+
+    this._shouldRestoreCache =
+      !this._isLocal &&
+      (this._env.EAS_RESTORE_CACHE === '1' ||
+        (this._env.EAS_USE_CACHE === '1' && this._env.EAS_RESTORE_CACHE !== '0'));
+
     this.graphqlClient = new Client({
       url: new URL('graphql', this.env.__API_SERVER_URL).toString(),
       exchanges: [fetchExchange],
@@ -149,6 +165,15 @@ export class BuildContext<TJob extends Job = Job> {
   }
   public get buildLogsDirectory(): string {
     return path.join(this.workingdir, 'logs');
+  }
+  public get isLocal(): boolean {
+    return this._isLocal;
+  }
+  public get shouldSaveCache(): boolean {
+    return this._shouldSaveCache;
+  }
+  public get shouldRestoreCache(): boolean {
+    return this._shouldRestoreCache;
   }
   /**
    * Directory used to store executables used during regular (non-custom) builds.

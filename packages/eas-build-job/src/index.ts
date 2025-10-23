@@ -7,6 +7,7 @@ export {
   BuildMode,
   BuildPhaseStats,
   BuildTrigger,
+  EasCliNpmTags,
   Env,
   EnvironmentSecret,
   EnvironmentSecretType,
@@ -24,3 +25,6 @@ export * from './context';
 export * from './generic';
 export * from './step';
 export * from './submission-config';
+
+const version = require('../package.json').version;
+export { version };

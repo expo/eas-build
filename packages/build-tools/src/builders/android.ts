@@ -1,4 +1,4 @@
-import { createHash } from 'crypto';
+import { BinaryLike, createHash } from 'crypto';
 import path from 'path';
 
 import { Android, BuildMode, BuildPhase, Workflow } from '@expo/eas-build-job';
@@ -78,10 +78,7 @@ async function buildAsync(ctx: BuildContext<Android.Job>): Promise<void> {
 
   await ctx.runBuildPhase(BuildPhase.RESTORE_CACHE, async () => {
     await ctx.cacheManager?.restoreCache(ctx);
-    if (
-      ctx.env.EAS_RESTORE_CACHE === '1' ||
-      (ctx.env.EAS_USE_CACHE === '1' && ctx.env.EAS_RESTORE_CACHE !== '0')
-    ) {
+    if (ctx.shouldRestoreCache) {
       try {
         const cacheKey = await generateCacheKeyAsync(workingDirectory);
         const jobId = nullthrows(ctx.env.EAS_BUILD_ID, 'EAS_BUILD_ID is not set');
@@ -220,10 +217,7 @@ async function buildAsync(ctx: BuildContext<Android.Job>): Promise<void> {
 
   await ctx.runBuildPhase(BuildPhase.SAVE_CACHE, async () => {
     await ctx.cacheManager?.saveCache(ctx);
-    if (
-      ctx.env.EAS_SAVE_CACHE === '1' ||
-      (ctx.env.EAS_USE_CACHE === '1' && ctx.env.EAS_SAVE_CACHE !== '0')
-    ) {
+    if (ctx.shouldSaveCache) {
       try {
         const cacheKey = await generateCacheKeyAsync(workingDirectory);
         const jobId = nullthrows(ctx.env.EAS_BUILD_ID, 'EAS_BUILD_ID is not set');
@@ -308,7 +302,9 @@ async function hashFiles(filePaths: string[]): Promise<string> {
     try {
       if (await fs.pathExists(filePath)) {
         const fileContent = await fs.readFile(filePath);
-        const fileHash = createHash('sha256').update(fileContent).digest('hex');
+        const fileHash = createHash('sha256')
+          .update(fileContent as BinaryLike)
+          .digest('hex');
         hashes.push(fileHash);
       }
     } catch (err: any) {
