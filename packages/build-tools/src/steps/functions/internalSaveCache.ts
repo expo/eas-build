@@ -3,7 +3,7 @@ import { Platform } from '@expo/eas-build-job';
 
 import { saveCcacheAsync } from './saveCache';
 
-export function createInternalSaveCacheFunction(evictUsedBefore: number): BuildFunction {
+export function createSaveBuildCacheFunction(evictUsedBefore: number): BuildFunction {
   return new BuildFunction({
     namespace: 'eas',
     id: 'save_build_cache',
@@ -11,14 +11,15 @@ export function createInternalSaveCacheFunction(evictUsedBefore: number): BuildF
     inputProviders: [
       BuildStepInput.createProvider({
         id: 'platform',
-        required: true,
+        required: false,
         allowedValueTypeName: BuildStepInputValueTypeName.STRING,
       }),
     ],
     fn: async (stepCtx, { env, inputs }) => {
       const { logger } = stepCtx;
       const workingDirectory = stepCtx.workingDirectory;
-      const platform = String(inputs.platform.value) as Platform;
+      const platform =
+        (inputs.platform.value as Platform) ?? stepCtx.global.staticContext.job.platform;
 
       await saveCcacheAsync({
         logger,

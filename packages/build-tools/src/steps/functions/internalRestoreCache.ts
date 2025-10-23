@@ -3,7 +3,7 @@ import { Platform } from '@expo/eas-build-job';
 
 import { restoreCcacheAsync } from './restoreCache';
 
-export function createInternalRestoreCacheFunction(): BuildFunction {
+export function createRestoreBuildCacheFunction(): BuildFunction {
   return new BuildFunction({
     namespace: 'eas',
     id: 'restore_build_cache',
@@ -11,14 +11,15 @@ export function createInternalRestoreCacheFunction(): BuildFunction {
     inputProviders: [
       BuildStepInput.createProvider({
         id: 'platform',
-        required: true,
+        required: false,
         allowedValueTypeName: BuildStepInputValueTypeName.STRING,
       }),
     ],
     fn: async (stepCtx, { env, inputs }) => {
       const { logger } = stepCtx;
       const workingDirectory = stepCtx.workingDirectory;
-      const platform = String(inputs.platform.value) as Platform;
+      const platform =
+        (inputs.platform.value as Platform) ?? stepCtx.global.staticContext.job.platform;
 
       await restoreCcacheAsync({
         logger,

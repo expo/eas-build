@@ -1,15 +1,31 @@
 import path from 'path';
+import os from 'os';
+import assert from 'assert';
 
 import * as PackageManagerUtils from '@expo/package-manager';
 import { hashFiles } from '@expo/steps';
 import { Platform } from '@expo/eas-build-job';
 
-import { IOS_CACHE_KEY_PREFIX, ANDROID_CACHE_KEY_PREFIX } from './constants';
 import { findPackagerRootDir } from './packageManager';
 
-const platformToBuildCacheKeyPrefix: Record<Platform, string> = {
+export const IOS_CACHE_KEY_PREFIX = 'ios-ccache-';
+export const ANDROID_CACHE_KEY_PREFIX = 'android-ccache-';
+export const DARWIN_CACHE_PATH = 'Library/Caches/ccache';
+export const LINUX_CACHE_PATH = '.cache/ccache';
+
+export const CACHE_KEY_PREFIX_BY_PLATFORM: Record<Platform, string> = {
   [Platform.ANDROID]: ANDROID_CACHE_KEY_PREFIX,
   [Platform.IOS]: IOS_CACHE_KEY_PREFIX,
+};
+
+export const PATH_BY_PLATFORM: Record<string, string> = {
+  darwin: DARWIN_CACHE_PATH,
+  linux: LINUX_CACHE_PATH,
+};
+
+export function getCcachePath(homeDir: string | undefined): string[] {
+  assert(homeDir, 'Failed to infer directory to save ccache: $HOME environment variable is empty.');
+  return [path.join(homeDir, PATH_BY_PLATFORM[os.platform()])];
 };
 
 export async function generateDefaultBuildCacheKeyAsync(
@@ -23,7 +39,7 @@ export async function generateDefaultBuildCacheKeyAsync(
   const lockPath = path.join(packagerRunDir, manager.lockFile);
 
   try {
-    return `${platformToBuildCacheKeyPrefix[platform]}${hashFiles([lockPath])}`;
+    return `${CACHE_KEY_PREFIX_BY_PLATFORM[platform]}${hashFiles([lockPath])}`;
   } catch (err: any) {
     throw new Error(`Failed to read lockfile for cache key generation: ${err.message}`);
   }

@@ -76,6 +76,10 @@ async function buildAsync(ctx: BuildContext<Ios.Job>): Promise<void> {
     });
 
     await ctx.runBuildPhase(BuildPhase.RESTORE_CACHE, async () => {
+      if (ctx.isLocal) {
+        ctx.logger.info('Restore cache is not supported for local builds');
+        return;
+      }
       await ctx.cacheManager?.restoreCache(ctx);
       await restoreCcacheAsync({
         logger: ctx.logger,
@@ -181,6 +185,10 @@ async function buildAsync(ctx: BuildContext<Ios.Job>): Promise<void> {
   });
 
   await ctx.runBuildPhase(BuildPhase.SAVE_CACHE, async () => {
+    if (ctx.isLocal) {
+      ctx.logger.info('Save cache is not supported for local builds');
+      return;
+    }
     await ctx.cacheManager?.saveCache(ctx);
     await saveCcacheAsync({
       logger: ctx.logger,

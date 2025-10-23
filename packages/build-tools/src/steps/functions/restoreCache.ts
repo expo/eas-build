@@ -1,6 +1,5 @@
 import fs from 'fs';
 import os from 'os';
-import assert from 'assert';
 import path from 'path';
 import stream from 'stream';
 import { promisify } from 'util';
@@ -24,12 +23,11 @@ import { retryOnDNSFailure } from '../../utils/retryOnDNSFailure';
 import { formatBytes } from '../../utils/artifacts';
 import { getCacheVersion } from '../utils/cache';
 import { turtleFetch, TurtleFetchError } from '../../utils/turtleFetch';
-import { generateDefaultBuildCacheKeyAsync } from '../../utils/cacheKey';
 import {
-  ANDROID_CACHE_KEY_PREFIX,
-  IOS_CACHE_KEY_PREFIX,
-  PATH_BY_PLATFORM,
-} from '../../utils/constants';
+  CACHE_KEY_PREFIX_BY_PLATFORM,
+  generateDefaultBuildCacheKeyAsync,
+  getCcachePath,
+} from '../../utils/cacheKey';
 
 const streamPipeline = promisify(stream.pipeline);
 
@@ -300,11 +298,7 @@ export async function restoreCcacheAsync({
       'Robot access token is required for cache operations'
     );
     const expoApiServerURL = nullthrows(env.__API_SERVER_URL, '__API_SERVER_URL is not set');
-    assert(
-      env.HOME,
-      'Failed to infer directory to restore ccache: $HOME environment variable is empty.'
-    );
-    const cachePaths = [path.join(env.HOME, PATH_BY_PLATFORM[os.platform()])];
+    const cachePaths = getCcachePath(env.HOME);
     const { archivePath, matchedKey } = await downloadCacheAsync({
       logger,
       jobId,
@@ -312,7 +306,7 @@ export async function restoreCcacheAsync({
       robotAccessToken,
       paths: cachePaths,
       key: cacheKey,
-      keyPrefixes: [platform === Platform.IOS ? IOS_CACHE_KEY_PREFIX : ANDROID_CACHE_KEY_PREFIX],
+      keyPrefixes: [CACHE_KEY_PREFIX_BY_PLATFORM[platform]],
       platform,
     });
 
