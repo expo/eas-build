@@ -21,8 +21,8 @@ import { setupAsync } from '../common/setup';
 import { prebuildAsync } from '../common/prebuild';
 import { prepareExecutableAsync } from '../utils/prepareBuildExecutable';
 import { eagerBundleAsync, shouldUseEagerBundle } from '../common/eagerBundle';
-import { restoreCcacheAsync } from '../steps/functions/restoreCache';
-import { saveCcacheAsync } from '../steps/functions/saveCache';
+import { restoreCcacheAsync } from '../steps/functions/restoreBuildCache';
+import { saveCcacheAsync } from '../steps/functions/saveBuildCache';
 
 import { runBuilderWithHooksAsync } from './common';
 import { runCustomBuildAsync } from './custom';

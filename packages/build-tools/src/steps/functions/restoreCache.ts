@@ -11,7 +11,6 @@ import {
   BuildStepInput,
   BuildStepInputValueTypeName,
   BuildStepOutput,
-  spawnAsync,
 } from '@expo/steps';
 import z from 'zod';
 import nullthrows from 'nullthrows';
@@ -23,11 +22,6 @@ import { retryOnDNSFailure } from '../../utils/retryOnDNSFailure';
 import { formatBytes } from '../../utils/artifacts';
 import { getCacheVersion } from '../utils/cache';
 import { turtleFetch, TurtleFetchError } from '../../utils/turtleFetch';
-import {
-  CACHE_KEY_PREFIX_BY_PLATFORM,
-  generateDefaultBuildCacheKeyAsync,
-  getCcachePath,
-} from '../../utils/cacheKey';
 
 const streamPipeline = promisify(stream.pipeline);
 
@@ -266,74 +260,5 @@ export async function decompressCacheAsync({
       .catch(() => false)
   ) {
     await fs.promises.rm(absoluteDir, { recursive: true, force: true });
-  }
-}
-
-export async function restoreCcacheAsync({
-  logger,
-  workingDirectory,
-  platform,
-  env,
-  secrets,
-}: {
-  logger: bunyan;
-  workingDirectory: string;
-  platform: Platform;
-  env: Record<string, string | undefined>;
-  secrets?: { robotAccessToken?: string };
-}): Promise<void> {
-  const enabled =
-    env.EAS_RESTORE_CACHE === '1' || (env.EAS_USE_CACHE === '1' && env.EAS_RESTORE_CACHE !== '0');
-
-  if (!enabled) {
-    return;
-  }
-  try {
-    const cacheKey = await generateDefaultBuildCacheKeyAsync(workingDirectory, platform);
-    logger.info(`Restoring cache key: ${cacheKey}`);
-
-    const jobId = nullthrows(env.EAS_BUILD_ID, 'EAS_BUILD_ID is not set');
-    const robotAccessToken = nullthrows(
-      secrets?.robotAccessToken,
-      'Robot access token is required for cache operations'
-    );
-    const expoApiServerURL = nullthrows(env.__API_SERVER_URL, '__API_SERVER_URL is not set');
-    const cachePath = getCcachePath(env);
-    const { archivePath, matchedKey } = await downloadCacheAsync({
-      logger,
-      jobId,
-      expoApiServerURL,
-      robotAccessToken,
-      paths: [cachePath],
-      key: cacheKey,
-      keyPrefixes: [CACHE_KEY_PREFIX_BY_PLATFORM[platform]],
-      platform,
-    });
-
-    await decompressCacheAsync({
-      archivePath,
-      workingDirectory,
-      verbose: env.EXPO_DEBUG === '1',
-      logger,
-    });
-
-    logger.info(
-      `Cache restored successfully ${matchedKey === cacheKey ? '(direct hit)' : '(prefix match)'}`
-    );
-
-    // Zero ccache stats for accurate tracking
-    await asyncResult(
-      spawnAsync('ccache', ['--zero-stats'], {
-        env,
-        logger,
-        stdio: 'pipe',
-      })
-    );
-  } catch (err: unknown) {
-    if (err instanceof TurtleFetchError && err.response?.status === 404) {
-      logger.info('No cache found for this key.');
-    } else {
-      logger.warn({ err }, 'Failed to restore cache');
-    }
   }
 }

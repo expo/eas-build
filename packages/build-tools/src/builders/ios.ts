@@ -22,8 +22,8 @@ import { prebuildAsync } from '../common/prebuild';
 import { prepareExecutableAsync } from '../utils/prepareBuildExecutable';
 import { getParentAndDescendantProcessPidsAsync } from '../utils/processes';
 import { eagerBundleAsync, shouldUseEagerBundle } from '../common/eagerBundle';
-import { saveCcacheAsync } from '../steps/functions/saveCache';
-import { restoreCcacheAsync } from '../steps/functions/restoreCache';
+import { saveCcacheAsync } from '../steps/functions/saveBuildCache';
+import { restoreCcacheAsync } from '../steps/functions/restoreBuildCache';
 
 import { runBuilderWithHooksAsync } from './common';
 import { runCustomBuildAsync } from './custom';
