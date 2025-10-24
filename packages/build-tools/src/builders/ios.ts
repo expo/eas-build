@@ -1,21 +1,14 @@
-import { BinaryLike, createHash } from 'crypto';
-import path from 'path';
-
 import plist from '@expo/plist';
 import { IOSConfig } from '@expo/config-plugins';
 import { ManagedArtifactType, BuildMode, BuildPhase, Ios, Workflow } from '@expo/eas-build-job';
 import fs from 'fs-extra';
 import nullthrows from 'nullthrows';
-import * as PackageManagerUtils from '@expo/package-manager';
-import { spawnAsync } from '@expo/steps';
-import { asyncResult } from '@expo/results';
 
 import { Artifacts, BuildContext } from '../context';
 import {
   resolveRuntimeVersionForExpoUpdatesIfConfiguredAsync,
   configureExpoUpdatesIfInstalledAsync,
 } from '../utils/expoUpdates';
-import { TurtleFetchError } from '../utils/turtleFetch';
 import { uploadApplicationArchive } from '../utils/artifacts';
 import { Hook, runHookIfPresent } from '../utils/hooks';
 import { configureXcodeProject } from '../ios/configure';
@@ -29,16 +22,14 @@ import { prebuildAsync } from '../common/prebuild';
 import { prepareExecutableAsync } from '../utils/prepareBuildExecutable';
 import { getParentAndDescendantProcessPidsAsync } from '../utils/processes';
 import { eagerBundleAsync, shouldUseEagerBundle } from '../common/eagerBundle';
-import { uploadCacheAsync, compressCacheAsync } from '../steps/functions/saveCache';
-import { downloadCacheAsync, decompressCacheAsync } from '../steps/functions/restoreCache';
-import { findPackagerRootDir } from '../utils/packageManager';
+import { saveCcacheAsync } from '../steps/functions/saveBuildCache';
+import { restoreCcacheAsync } from '../steps/functions/restoreBuildCache';
 
 import { runBuilderWithHooksAsync } from './common';
 import { runCustomBuildAsync } from './custom';
 
 const INSTALL_PODS_WARN_TIMEOUT_MS = 15 * 60 * 1000; // 15 minutes
 const INSTALL_PODS_KILL_TIMEOUT_MS = 30 * 60 * 1000; // 30 minutes
-const CACHE_KEY_PREFIX = 'ios-ccache-';
 
 class InstallPodsTimeoutError extends Error {}
 
@@ -58,10 +49,9 @@ export default async function iosBuilder(ctx: BuildContext<Ios.Job>): Promise<Ar
 async function buildAsync(ctx: BuildContext<Ios.Job>): Promise<void> {
   await setupAsync(ctx);
   const hasNativeCode = ctx.job.type === Workflow.GENERIC;
-  const buildStart = Date.now();
+  const evictUsedBefore = new Date();
   const credentialsManager = new CredentialsManager(ctx);
   const workingDirectory = ctx.getReactNativeProjectDirectory();
-  const cachePaths = [path.join(ctx.env.HOME, 'Library/Caches/ccache')];
   try {
     const credentials = await ctx.runBuildPhase(BuildPhase.PREPARE_CREDENTIALS, async () => {
       return await credentialsManager.prepare();
@@ -86,55 +76,18 @@ async function buildAsync(ctx: BuildContext<Ios.Job>): Promise<void> {
     });
 
     await ctx.runBuildPhase(BuildPhase.RESTORE_CACHE, async () => {
-      await ctx.cacheManager?.restoreCache(ctx);
-      if (ctx.shouldRestoreCache) {
-        try {
-          const cacheKey = await generateCacheKeyAsync(workingDirectory);
-          const jobId = nullthrows(ctx.env.EAS_BUILD_ID, 'EAS_BUILD_ID is not set');
-
-          const robotAccessToken = nullthrows(
-            ctx.job.secrets?.robotAccessToken,
-            'Robot access token is required for cache operations'
-          );
-          const expoApiServerURL = nullthrows(
-            ctx.env.__API_SERVER_URL,
-            '__API_SERVER_URL is not set'
-          );
-
-          const { archivePath } = await downloadCacheAsync({
-            logger: ctx.logger,
-            jobId,
-            expoApiServerURL,
-            robotAccessToken,
-            paths: cachePaths,
-            key: cacheKey,
-            keyPrefixes: [CACHE_KEY_PREFIX],
-            platform: ctx.job.platform,
-          });
-
-          await decompressCacheAsync({
-            archivePath,
-            workingDirectory,
-            verbose: ctx.env.EXPO_DEBUG === '1',
-            logger: ctx.logger,
-          });
-
-          ctx.logger.info('Cache restored successfully');
-          await asyncResult(
-            spawnAsync('ccache', ['--zero-stats'], {
-              env: ctx.env,
-              logger: ctx.logger,
-              stdio: 'pipe',
-            })
-          );
-        } catch (err: unknown) {
-          if (err instanceof TurtleFetchError && err.response.status === 404) {
-            ctx.logger.info('No cache found for this key. Create a cache with function save_cache');
-          } else {
-            ctx.logger.warn({ err }, 'Failed to restore cache');
-          }
-        }
+      if (ctx.isLocal) {
+        ctx.logger.info('Local builds do not support restoring cache');
+        return;
       }
+      await ctx.cacheManager?.restoreCache(ctx);
+      await restoreCcacheAsync({
+        logger: ctx.logger,
+        workingDirectory,
+        platform: ctx.job.platform,
+        env: ctx.env,
+        secrets: ctx.job.secrets,
+      });
     });
 
     await ctx.runBuildPhase(BuildPhase.INSTALL_PODS, async () => {
@@ -232,67 +185,19 @@ async function buildAsync(ctx: BuildContext<Ios.Job>): Promise<void> {
   });
 
   await ctx.runBuildPhase(BuildPhase.SAVE_CACHE, async () => {
-    await ctx.cacheManager?.saveCache(ctx);
-    if (ctx.shouldSaveCache) {
-      try {
-        const cacheKey = await generateCacheKeyAsync(workingDirectory);
-        const jobId = nullthrows(ctx.env.EAS_BUILD_ID, 'EAS_BUILD_ID is not set');
-
-        const robotAccessToken = nullthrows(
-          ctx.job.secrets?.robotAccessToken,
-          'Robot access token is required for cache operations'
-        );
-        const expoApiServerURL = nullthrows(
-          ctx.env.__API_SERVER_URL,
-          '__API_SERVER_URL is not set'
-        );
-
-        // cache size can blow up over time over many builds, so evict stale files and only upload what was used within this builds time window
-        const evictWindow = Math.floor((Date.now() - buildStart) / 1000);
-        ctx.logger.info('Pruning cache...');
-        await asyncResult(
-          spawnAsync('ccache', ['--evict-older-than', evictWindow + 's'], {
-            env: ctx.env,
-            logger: ctx.logger,
-            stdio: 'pipe',
-          })
-        );
-
-        ctx.logger.info('Cache stats:');
-        await asyncResult(
-          spawnAsync('ccache', ['--show-stats', '-v'], {
-            env: ctx.env,
-            logger: ctx.logger,
-            stdio: 'pipe',
-          })
-        );
-
-        ctx.logger.info('Preparing cache archive...');
-
-        const { archivePath } = await compressCacheAsync({
-          paths: cachePaths,
-          workingDirectory,
-          verbose: ctx.env.EXPO_DEBUG === '1',
-          logger: ctx.logger,
-        });
-
-        const { size } = await fs.stat(archivePath);
-
-        await uploadCacheAsync({
-          logger: ctx.logger,
-          jobId,
-          expoApiServerURL,
-          robotAccessToken,
-          archivePath,
-          key: cacheKey,
-          paths: cachePaths,
-          size,
-          platform: ctx.job.platform,
-        });
-      } catch (err) {
-        ctx.logger.error({ err }, 'Failed to save cache');
-      }
+    if (ctx.isLocal) {
+      ctx.logger.info('Local builds do not support saving cache.');
+      return;
     }
+    await ctx.cacheManager?.saveCache(ctx);
+    await saveCcacheAsync({
+      logger: ctx.logger,
+      workingDirectory,
+      platform: ctx.job.platform,
+      evictUsedBefore,
+      env: ctx.env,
+      secrets: ctx.job.secrets,
+    });
   });
 }
 
@@ -413,40 +318,4 @@ async function runInstallPodsAsync(ctx: BuildContext<Ios.Job>): Promise<void> {
       clearTimeout(killTimeout);
     }
   }
-}
-
-async function generateCacheKeyAsync(workingDirectory: string): Promise<string> {
-  // This will resolve which package manager and use the relevant lock file
-  // The lock file hash is the key and ensures cache is fresh
-  const packagerRunDir = findPackagerRootDir(workingDirectory);
-  const manager = PackageManagerUtils.createForProject(packagerRunDir);
-  const lockPath = path.join(packagerRunDir, manager.lockFile);
-
-  try {
-    const key = await hashFiles([lockPath]);
-    return `${CACHE_KEY_PREFIX}${key}`;
-  } catch (err: any) {
-    throw new Error(`Failed to read package files for cache key generation: ${err.message}`);
-  }
-}
-
-async function hashFiles(filePaths: string[]): Promise<string> {
-  const hashes: string[] = [];
-
-  for (const filePath of filePaths) {
-    try {
-      if (await fs.pathExists(filePath)) {
-        const fileContent = await fs.readFile(filePath);
-        const fileHash = createHash('sha256')
-          .update(fileContent as BinaryLike)
-          .digest('hex');
-        hashes.push(fileHash);
-      }
-    } catch (err: any) {
-      throw new Error(`Failed to hash file ${filePath}: ${err.message}`);
-    }
-  }
-
-  const combinedHashes = hashes.join('');
-  return createHash('sha256').update(combinedHashes).digest('hex');
 }
