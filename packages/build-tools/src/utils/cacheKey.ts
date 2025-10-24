@@ -18,14 +18,14 @@ export const CACHE_KEY_PREFIX_BY_PLATFORM: Record<Platform, string> = {
   [Platform.IOS]: IOS_CACHE_KEY_PREFIX,
 };
 
-export const PATH_BY_PLATFORM: Record<string, string> = {
+const PATH_BY_PLATFORM: Record<string, string> = {
   darwin: DARWIN_CACHE_PATH,
   linux: LINUX_CACHE_PATH,
 };
 
-export function getCcachePath(homeDir: string | undefined): string[] {
-  assert(homeDir, 'Failed to infer directory to save ccache: $HOME environment variable is empty.');
-  return [path.join(homeDir, PATH_BY_PLATFORM[os.platform()])];
+export function getCcachePath(env: Record<string, string | undefined>): string {
+  assert(env.HOME, 'Failed to infer directory: $HOME environment variable is empty.');
+  return path.join(env.HOME, PATH_BY_PLATFORM[os.platform()]);
 }
 
 export async function generateDefaultBuildCacheKeyAsync(

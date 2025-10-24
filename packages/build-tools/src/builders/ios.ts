@@ -49,7 +49,7 @@ export default async function iosBuilder(ctx: BuildContext<Ios.Job>): Promise<Ar
 async function buildAsync(ctx: BuildContext<Ios.Job>): Promise<void> {
   await setupAsync(ctx);
   const hasNativeCode = ctx.job.type === Workflow.GENERIC;
-  const buildStart = Date.now();
+  const evictUsedBefore = new Date();
   const credentialsManager = new CredentialsManager(ctx);
   const workingDirectory = ctx.getReactNativeProjectDirectory();
   try {
@@ -77,7 +77,7 @@ async function buildAsync(ctx: BuildContext<Ios.Job>): Promise<void> {
 
     await ctx.runBuildPhase(BuildPhase.RESTORE_CACHE, async () => {
       if (ctx.isLocal) {
-        ctx.logger.info('Restore cache is not supported for local builds');
+        ctx.logger.info('Local builds do not support restoring cache');
         return;
       }
       await ctx.cacheManager?.restoreCache(ctx);
@@ -186,7 +186,7 @@ async function buildAsync(ctx: BuildContext<Ios.Job>): Promise<void> {
 
   await ctx.runBuildPhase(BuildPhase.SAVE_CACHE, async () => {
     if (ctx.isLocal) {
-      ctx.logger.info('Save cache is not supported for local builds');
+      ctx.logger.info('Local builds do not support saving cache.');
       return;
     }
     await ctx.cacheManager?.saveCache(ctx);
@@ -194,7 +194,7 @@ async function buildAsync(ctx: BuildContext<Ios.Job>): Promise<void> {
       logger: ctx.logger,
       workingDirectory,
       platform: ctx.job.platform,
-      evictUsedBefore: buildStart,
+      evictUsedBefore,
       env: ctx.env,
       secrets: ctx.job.secrets,
     });

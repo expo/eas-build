@@ -3,7 +3,7 @@ import { Platform } from '@expo/eas-build-job';
 
 import { saveCcacheAsync } from './saveCache';
 
-export function createSaveBuildCacheFunction(evictUsedBefore: number): BuildFunction {
+export function createSaveBuildCacheFunction(evictUsedBefore: Date): BuildFunction {
   return new BuildFunction({
     namespace: 'eas',
     id: 'save_build_cache',

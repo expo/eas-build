@@ -42,7 +42,7 @@ export default async function androidBuilder(ctx: BuildContext<Android.Job>): Pr
 
 async function buildAsync(ctx: BuildContext<Android.Job>): Promise<void> {
   await setupAsync(ctx);
-  const buildStart = Date.now();
+  const evictUsedBefore = new Date();
   const workingDirectory = ctx.getReactNativeProjectDirectory();
   const hasNativeCode = ctx.job.type === Workflow.GENERIC;
 
@@ -178,7 +178,7 @@ async function buildAsync(ctx: BuildContext<Android.Job>): Promise<void> {
       logger: ctx.logger,
       workingDirectory,
       platform: ctx.job.platform,
-      evictUsedBefore: buildStart,
+      evictUsedBefore,
       env: ctx.env,
       secrets: ctx.job.secrets,
     });

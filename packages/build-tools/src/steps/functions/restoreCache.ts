@@ -298,13 +298,13 @@ export async function restoreCcacheAsync({
       'Robot access token is required for cache operations'
     );
     const expoApiServerURL = nullthrows(env.__API_SERVER_URL, '__API_SERVER_URL is not set');
-    const cachePaths = getCcachePath(env.HOME);
+    const cachePath = getCcachePath(env);
     const { archivePath, matchedKey } = await downloadCacheAsync({
       logger,
       jobId,
       expoApiServerURL,
       robotAccessToken,
-      paths: cachePaths,
+      paths: [cachePath],
       key: cacheKey,
       keyPrefixes: [CACHE_KEY_PREFIX_BY_PLATFORM[platform]],
       platform,
@@ -331,7 +331,7 @@ export async function restoreCcacheAsync({
     );
   } catch (err: unknown) {
     if (err instanceof TurtleFetchError && err.response?.status === 404) {
-      logger.info('No cache found for this key. Create a cache with function save_cache');
+      logger.info('No cache found for this key.');
     } else {
       logger.warn({ err }, 'Failed to restore cache');
     }

@@ -305,7 +305,7 @@ export async function saveCcacheAsync({
   logger: bunyan;
   workingDirectory: string;
   platform: Platform;
-  evictUsedBefore: number;
+  evictUsedBefore: Date;
   env: Record<string, string | undefined>;
   secrets?: { robotAccessToken?: string };
 }): Promise<void> {
@@ -326,11 +326,11 @@ export async function saveCcacheAsync({
       'Robot access token is required for cache operations'
     );
     const expoApiServerURL = nullthrows(env.__API_SERVER_URL, '__API_SERVER_URL is not set');
-    const cachePaths = getCcachePath(env.HOME);
+    const cachePath = getCcachePath(env);
 
     // Cache size can blow up over time over many builds, so evict stale files
     // and only upload what was used within this build's time window
-    const evictWindow = Math.floor((Date.now() - evictUsedBefore) / 1000);
+    const evictWindow = Math.floor((Date.now() - evictUsedBefore.getMilliseconds()) / 1000);
     logger.info('Pruning cache...');
     await asyncResult(
       spawnAsync('ccache', ['--evict-older-than', evictWindow + 's'], {
@@ -352,7 +352,7 @@ export async function saveCcacheAsync({
     logger.info('Preparing cache archive...');
 
     const { archivePath } = await compressCacheAsync({
-      paths: cachePaths,
+      paths: [cachePath],
       workingDirectory,
       verbose: env.EXPO_DEBUG === '1',
       logger,
@@ -367,7 +367,7 @@ export async function saveCcacheAsync({
       robotAccessToken,
       archivePath,
       key: cacheKey,
-      paths: cachePaths,
+      paths: [cachePath],
       size,
       platform,
     });

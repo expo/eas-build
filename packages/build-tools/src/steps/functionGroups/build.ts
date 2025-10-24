@@ -21,8 +21,8 @@ import { createResolveBuildConfigBuildFunction } from '../functions/resolveBuild
 import { calculateEASUpdateRuntimeVersionFunction } from '../functions/calculateEASUpdateRuntimeVersion';
 import { eagerBundleBuildFunction } from '../functions/eagerBundle';
 import { shouldUseEagerBundle } from '../../common/eagerBundle';
-import { createRestoreBuildCacheFunction } from '../functions/internalRestoreCache';
-import { createSaveBuildCacheFunction } from '../functions/internalSaveCache';
+import { createRestoreBuildCacheFunction } from '../functions/restoreBuildCache';
+import { createSaveBuildCacheFunction } from '../functions/saveBuildCache';
 
 interface HelperFunctionsInput {
   globalCtx: BuildStepGlobalContext;
@@ -126,7 +126,7 @@ function createStepsForIosBuildWithCredentials({
   globalCtx,
   buildToolsContext,
 }: HelperFunctionsInput): BuildStep[] {
-  const evictUsedBefore = Date.now();
+  const evictUsedBefore = new Date();
 
   const resolveAppleTeamIdFromCredentials =
     resolveAppleTeamIdFromCredentialsFunction().createBuildStepFromFunctionCall(globalCtx, {
@@ -221,7 +221,7 @@ function createStepsForAndroidBuildWithoutCredentials({
   globalCtx,
   buildToolsContext,
 }: HelperFunctionsInput): BuildStep[] {
-  const evictUsedBefore = Date.now();
+  const evictUsedBefore = new Date();
 
   const calculateEASUpdateRuntimeVersion =
     calculateEASUpdateRuntimeVersionFunction().createBuildStepFromFunctionCall(globalCtx, {
@@ -291,7 +291,7 @@ function createStepsForAndroidBuildWithCredentials({
   globalCtx,
   buildToolsContext,
 }: HelperFunctionsInput): BuildStep[] {
-  const evictUsedBefore = Date.now();
+  const evictUsedBefore = new Date();
 
   const calculateEASUpdateRuntimeVersion =
     calculateEASUpdateRuntimeVersionFunction().createBuildStepFromFunctionCall(globalCtx, {
