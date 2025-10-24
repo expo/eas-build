@@ -34,7 +34,13 @@ export function createRestoreBuildCacheFunction(): BuildFunction {
       const { logger } = stepCtx;
       const workingDirectory = stepCtx.workingDirectory;
       const platform =
-        (inputs.platform.value as Platform) ?? stepCtx.global.staticContext.job.platform;
+        (inputs.platform.value as Platform | undefined) ??
+        stepCtx.global.staticContext.job.platform;
+      if (!platform || ![Platform.ANDROID, Platform.IOS].includes(platform)) {
+        throw new Error(
+          `Unsupported platform: ${platform}. Platform must be "${Platform.ANDROID}" or "${Platform.IOS}"`
+        );
+      }
 
       await restoreCcacheAsync({
         logger,
