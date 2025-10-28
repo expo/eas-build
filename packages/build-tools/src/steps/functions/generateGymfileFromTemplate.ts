@@ -11,7 +11,6 @@ import { bunyan } from '@expo/logger';
 import templateFile from '@expo/template-file';
 import { v4 as uuid } from 'uuid';
 
-import { IosBuildCredentialsSchema } from '../utils/ios/credentials/credentials';
 import IosCredentialsManager, { Credentials } from '../utils/ios/credentials/manager';
 import { resolveBuildConfiguration, resolveScheme } from '../utils/ios/resolve';
 import { isTVOS } from '../utils/ios/tvos';
@@ -102,7 +101,7 @@ export function generateGymfileFromTemplateFunction(): BuildFunction {
       let credentials: Credentials | undefined = undefined;
       const rawCredentialsInput = inputs.credentials.value as Record<string, any> | undefined;
       if (rawCredentialsInput) {
-        const { value, error } = IosBuildCredentialsSchema.validate(rawCredentialsInput, {
+        const { value, error } = Ios.BuildCredentialsSchema.validate(rawCredentialsInput, {
           stripUnknown: true,
           convert: true,
           abortEarly: false,

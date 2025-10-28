@@ -4,7 +4,6 @@ import { BuildFunction, BuildStepInput, BuildStepInputValueTypeName } from '@exp
 import { Ios } from '@expo/eas-build-job';
 import semver from 'semver';
 
-import { IosBuildCredentialsSchema } from '../utils/ios/credentials/credentials';
 import IosCredentialsManager from '../utils/ios/credentials/manager';
 import { updateVersionsAsync } from '../utils/ios/configure';
 import { resolveBuildConfiguration } from '../utils/ios/resolve';
@@ -39,7 +38,7 @@ export function configureIosVersionFunction(): BuildFunction {
     ],
     fn: async (stepCtx, { inputs }) => {
       const rawCredentialsInput = inputs.credentials.value as Record<string, any>;
-      const { value, error } = IosBuildCredentialsSchema.validate(rawCredentialsInput, {
+      const { value, error } = Ios.BuildCredentialsSchema.validate(rawCredentialsInput, {
         stripUnknown: true,
         convert: true,
         abortEarly: false,
