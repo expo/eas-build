@@ -976,8 +976,8 @@ describe(BuildStep.deserialize, () => {
   });
 });
 
-describe(BuildStep.prototype.shouldExecuteStep, () => {
-  it('returns true when if condition is always and previous steps failed', () => {
+describe(BuildStep.prototype.shouldExecuteStepAsync, () => {
+  it('returns true when if condition is always and previous steps failed', async () => {
     const ctx = createGlobalContextMock();
     ctx.markAsFailed();
     const step = new BuildStep(ctx, {
@@ -986,10 +986,10 @@ describe(BuildStep.prototype.shouldExecuteStep, () => {
       command: 'echo 123',
       ifCondition: '${ always() }',
     });
-    expect(step.shouldExecuteStep()).toBe(true);
+    await expect(step.shouldExecuteStepAsync()).resolves.toBe(true);
   });
 
-  it('returns true when if condition is always and previous steps have not failed', () => {
+  it('returns true when if condition is always and previous steps have not failed', async () => {
     const ctx = createGlobalContextMock();
     const step = new BuildStep(ctx, {
       id: 'test1',
@@ -997,10 +997,10 @@ describe(BuildStep.prototype.shouldExecuteStep, () => {
       command: 'echo 123',
       ifCondition: '${ always() }',
     });
-    expect(step.shouldExecuteStep()).toBe(true);
+    await expect(step.shouldExecuteStepAsync()).resolves.toBe(true);
   });
 
-  it('returns false when if condition is success and previous steps failed', () => {
+  it('returns false when if condition is success and previous steps failed', async () => {
     const ctx = createGlobalContextMock();
     ctx.markAsFailed();
     const step = new BuildStep(ctx, {
@@ -1009,10 +1009,10 @@ describe(BuildStep.prototype.shouldExecuteStep, () => {
       command: 'echo 123',
       ifCondition: '${ success() }',
     });
-    expect(step.shouldExecuteStep()).toBe(false);
+    await expect(step.shouldExecuteStepAsync()).resolves.toBe(false);
   });
 
-  it('returns true when a dynamic expression matches', () => {
+  it('returns true when a dynamic expression matches', async () => {
     const ctx = createGlobalContextMock();
     ctx.updateEnv({
       NODE_ENV: 'production',
@@ -1026,10 +1026,10 @@ describe(BuildStep.prototype.shouldExecuteStep, () => {
       },
       ifCondition: '${ env.NODE_ENV === "production" && env.LOCAL_ENV === "true" }',
     });
-    expect(step.shouldExecuteStep()).toBe(true);
+    await expect(step.shouldExecuteStepAsync()).resolves.toBe(true);
   });
 
-  it('can use the general interpolation context', () => {
+  it('can use the general interpolation context', async () => {
     const ctx = createGlobalContextMock();
     ctx.updateEnv({
       CONFIG_JSON: '{"foo": "bar"}',
@@ -1040,10 +1040,10 @@ describe(BuildStep.prototype.shouldExecuteStep, () => {
       command: 'echo 123',
       ifCondition: 'fromJSON(env.CONFIG_JSON).foo == "bar"',
     });
-    expect(step.shouldExecuteStep()).toBe(true);
+    await expect(step.shouldExecuteStepAsync()).resolves.toBe(true);
   });
 
-  it('returns true when a simplified dynamic expression matches', () => {
+  it('returns true when a simplified dynamic expression matches', async () => {
     const ctx = createGlobalContextMock();
     const step = new BuildStep(ctx, {
       id: 'test1',
@@ -1054,10 +1054,10 @@ describe(BuildStep.prototype.shouldExecuteStep, () => {
       },
       ifCondition: "env.NODE_ENV === 'production'",
     });
-    expect(step.shouldExecuteStep()).toBe(true);
+    await expect(step.shouldExecuteStepAsync()).resolves.toBe(true);
   });
 
-  it('returns true when an input matches', () => {
+  it('returns true when an input matches', async () => {
     const ctx = createGlobalContextMock();
     const step = new BuildStep(ctx, {
       id: 'test1',
@@ -1077,10 +1077,10 @@ describe(BuildStep.prototype.shouldExecuteStep, () => {
       ],
       ifCondition: 'inputs.foo1 === "bar"',
     });
-    expect(step.shouldExecuteStep()).toBe(true);
+    await expect(step.shouldExecuteStepAsync()).resolves.toBe(true);
   });
 
-  it('returns true when an eas value matches', () => {
+  it('returns true when an eas value matches', async () => {
     const ctx = createGlobalContextMock({ runtimePlatform: BuildRuntimePlatform.LINUX });
     const step = new BuildStep(ctx, {
       id: 'test1',
@@ -1088,10 +1088,10 @@ describe(BuildStep.prototype.shouldExecuteStep, () => {
       command: 'echo 123',
       ifCondition: 'eas.runtimePlatform === "linux"',
     });
-    expect(step.shouldExecuteStep()).toBe(true);
+    await expect(step.shouldExecuteStepAsync()).resolves.toBe(true);
   });
 
-  it('returns true when if condition is success and previous steps have not failed', () => {
+  it('returns true when if condition is success and previous steps have not failed', async () => {
     const ctx = createGlobalContextMock();
     const step = new BuildStep(ctx, {
       id: 'test1',
@@ -1099,10 +1099,10 @@ describe(BuildStep.prototype.shouldExecuteStep, () => {
       command: 'echo 123',
       ifCondition: '${ success() }',
     });
-    expect(step.shouldExecuteStep()).toBe(true);
+    await expect(step.shouldExecuteStepAsync()).resolves.toBe(true);
   });
 
-  it('returns true when if condition is failure and previous steps failed', () => {
+  it('returns true when if condition is failure and previous steps failed', async () => {
     const ctx = createGlobalContextMock();
     ctx.markAsFailed();
     for (const ifCondition of ['${ failure() }', '${{ failure() }}']) {
@@ -1112,11 +1112,11 @@ describe(BuildStep.prototype.shouldExecuteStep, () => {
         command: 'echo 123',
         ifCondition,
       });
-      expect(step.shouldExecuteStep()).toBe(true);
+      await expect(step.shouldExecuteStepAsync()).resolves.toBe(true);
     }
   });
 
-  it('returns false when if condition is failure and previous steps have not failed', () => {
+  it('returns false when if condition is failure and previous steps have not failed', async () => {
     const ctx = createGlobalContextMock();
     for (const ifCondition of ['${ failure() }', '${{ failure() }}']) {
       const step = new BuildStep(ctx, {
@@ -1125,7 +1125,7 @@ describe(BuildStep.prototype.shouldExecuteStep, () => {
         command: 'echo 123',
         ifCondition,
       });
-      expect(step.shouldExecuteStep()).toBe(false);
+      await expect(step.shouldExecuteStepAsync()).resolves.toBe(false);
     }
   });
 });
