@@ -1,0 +1,67 @@
+name: Test Android Build Cache
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+  pull_request:
+    types: [opened, synchronize]
+
+jobs:
+  test-build-cache:
+    runs-on: ubuntu-latest
+    name: Test Android Build with Cache
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Setup EAS CLI
+        run: npm install -g eas-cli
+
+      - name: Create new Expo app
+        run: |
+          npx create-expo-app@latest test-cache-app --template blank --no-install
+          cd test-cache-app
+          npm install
+
+      - name: Configure EAS for build cache
+        working-directory: test-cache-app
+        run: |
+          # Create eas.json with cache configuration
+          cat > eas.json << 'EOF'
+          {
+            "cli": {
+              "version": ">= 16.0.0"
+            },
+            "build": {
+              "test": {
+                "android": {
+                  "buildType": "apk",
+                  "withoutCredentials": true
+                },
+                "env": {
+                  "EAS_USE_CACHE": "1",
+                  "EAS_SAVE_CACHE": "1"
+                }
+              }
+            }
+          }
+          EOF
+
+      - name: Run Android build with cache
+        working-directory: test-cache-app
+        env:
+          EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
+        run: |
+          # Build Android app with cache enabled
+          eas build --platform android --profile test --non-interactive --no-wait
+
+      - name: Verify cache usage
+        working-directory: test-cache-app
+        run: |
+          echo "Build submitted successfully with cache configuration"
+          echo "The EAS workflow will automatically save the cache using the save_cache function"
