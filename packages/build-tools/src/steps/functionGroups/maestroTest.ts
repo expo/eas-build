@@ -12,6 +12,19 @@ import { createStartIosSimulatorBuildFunction } from '../functions/startIosSimul
 import { createStartAndroidEmulatorBuildFunction } from '../functions/startAndroidEmulator';
 import { createUploadArtifactBuildFunction } from '../functions/uploadArtifact';
 
+export function getEnvFlags(envVars?: Record<string, string>): string {
+  return envVars
+    ? Object.entries(envVars)
+        .map(([key, value]) => `-e ${key}=${value}`)
+        .join(' ')
+    : '';
+}
+
+function getMaestroTestCommand(flowPath: string, envVars?: Record<string, string>): string {
+  const envFlags = getEnvFlags(envVars);
+  return envFlags ? `maestro test ${envFlags} ${flowPath}` : `maestro test ${flowPath}`;
+}
+
 export function createEasMaestroTestFunctionGroup(
   buildToolsContext: CustomBuildContext
 ): BuildFunctionGroup {
@@ -32,6 +45,11 @@ export function createEasMaestroTestFunctionGroup(
       BuildStepInput.createProvider({
         allowedValueTypeName: BuildStepInputValueTypeName.STRING,
         id: 'android_emulator_system_image_package',
+        required: false,
+      }),
+      BuildStepInput.createProvider({
+        allowedValueTypeName: BuildStepInputValueTypeName.JSON,
+        id: 'env',
         required: false,
       }),
     ],
@@ -131,13 +149,14 @@ export function createEasMaestroTestFunctionGroup(
         .filter((entry) => entry);
 
       for (const flowPath of flowPaths) {
+        const envVars = inputs.env?.value as Record<string, string> | undefined;
         steps.push(
           new BuildStep(globalCtx, {
             id: BuildStep.getNewId(),
             name: 'maestro_test',
             ifCondition: '${ always() }',
             displayName: `maestro test ${flowPath}`,
-            command: `maestro test ${flowPath}`,
+            command: getMaestroTestCommand(flowPath, envVars),
           })
         );
       }
