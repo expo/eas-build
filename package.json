@@ -27,9 +27,7 @@
   "resolutions": {
     "typescript": "5.5.4"
   },
-  "workspaces": [
-    "packages/*"
-  ],
+  "workspaces": ["apps/*", "packages/*"],
   "volta": {
     "node": "20.14.0",
     "yarn": "1.22.22"
