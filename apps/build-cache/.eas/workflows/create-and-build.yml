@@ -1,0 +1,99 @@
+name: Create and Build Public Cache App
+
+on:
+  workflow_dispatch: {}
+
+jobs:
+  create-and-build:
+    name: Create public-cache app and build
+    runs-on: ubuntu-latest
+    steps:
+      - name: Install dependencies
+        run: yarn install
+
+      - name: Create fresh expo app
+        run: |
+          # Create a new directory for the public-cache app
+          mkdir -p ../public-cache
+          cd ../public-cache
+
+          # Initialize a new Expo app
+          npx create-expo-app@latest . --template blank --no-install
+
+          # Update app.json with the correct name and slug
+          cat > app.json << 'EOF'
+          {
+            "expo": {
+              "name": "public-cache",
+              "slug": "public-cache",
+              "owner": "mustafastaging",
+              "version": "1.0.0",
+              "orientation": "portrait",
+              "icon": "./assets/icon.png",
+              "userInterfaceStyle": "light",
+              "newArchEnabled": true,
+              "splash": {
+                "image": "./assets/splash-icon.png",
+                "resizeMode": "contain",
+                "backgroundColor": "#ffffff"
+              },
+              "ios": {
+                "supportsTablet": true,
+                "bundleIdentifier": "com.yourcompany.publiccache"
+              },
+              "android": {
+                "adaptiveIcon": {
+                  "foregroundImage": "./assets/adaptive-icon.png",
+                  "backgroundColor": "#ffffff"
+                },
+                "package": "com.yourcompany.publiccache"
+              },
+              "web": {
+                "favicon": "./assets/favicon.png"
+              }
+            }
+          }
+          EOF
+
+          # Install dependencies
+          yarn install
+
+      - name: Create EAS build configuration
+        run: |
+          cd ../public-cache
+          cat > eas.json << 'EOF'
+          {
+            "cli": {
+              "version": ">= 13.2.2"
+            },
+            "build": {
+              "development": {
+                "developmentClient": true,
+                "distribution": "internal",
+                "android": {
+                  "buildType": "apk"
+                }
+              },
+              "preview": {
+                "distribution": "internal",
+                "android": {
+                  "buildType": "apk"
+                }
+              },
+              "production": {}
+            },
+            "submit": {
+              "production": {}
+            }
+          }
+          EOF
+
+      - name: Initialize EAS project
+        run: |
+          cd ../public-cache
+          npx eas-cli init --force --non-interactive
+
+      - name: Run EAS Build
+        run: |
+          cd ../public-cache
+          npx eas-cli build --platform android --profile preview --non-interactive --no-wait
