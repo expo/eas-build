@@ -1,12 +1,14 @@
-name: Create and Build Public Cache App
+name: Create and Build Public Cache App (iOS)
 
 on:
   workflow_dispatch: {}
 
 jobs:
-  create-and-build:
-    name: Create public-cache app and build
-    runs-on: linux-medium
+  create-and-build-ios:
+    name: Create public-cache app and build iOS
+    runs_on: macos-medium
+    env:
+      EAS_USE_CACHE: "1"
     steps:
       - name: Install dependencies
         run: yarn install
@@ -74,17 +76,12 @@ jobs:
             "build": {
               "development": {
                 "developmentClient": true,
-                "distribution": "internal",
-                "android": {
-                  "buildType": "apk"
-                }
+                "distribution": "internal"
               },
               "preview": {
                 "distribution": "internal",
-                "android": {
-                  "buildType": "apk",
-                  "gradleCommand": ":app:assembleDebug",
-                  "withoutCredentials": true
+                "ios": {
+                  "simulator": true
                 }
               },
               "production": {}
@@ -95,7 +92,7 @@ jobs:
           }
           EOF
 
-      - name: Run Local EAS Build
+      - name: Run Local EAS Build (iOS)
         run: |
           cd ../public-cache
-          npx eas-cli build --platform android --profile preview --local --non-interactive
+          npx eas-cli build --platform ios --profile preview --local --non-interactive
