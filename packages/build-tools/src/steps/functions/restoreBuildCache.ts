@@ -16,7 +16,7 @@ import {
 } from '../../utils/cacheKey';
 import { TurtleFetchError } from '../../utils/turtleFetch';
 
-import { downloadCacheAsync, decompressCacheAsync } from './restoreCache';
+import { downloadCacheAsync, decompressCacheAsync, downloadPublicCacheAsync } from './restoreCache';
 
 export function createRestoreBuildCacheFunction(): BuildFunction {
   return new BuildFunction({
@@ -72,17 +72,17 @@ export async function restoreCcacheAsync({
   if (!enabled) {
     return;
   }
+  const robotAccessToken = nullthrows(
+    secrets?.robotAccessToken,
+    'Robot access token is required for cache operations'
+  );
+  const expoApiServerURL = nullthrows(env.__API_SERVER_URL, '__API_SERVER_URL is not set');
+  const cachePath = getCcachePath(env);
   try {
     const cacheKey = await generateDefaultBuildCacheKeyAsync(workingDirectory, platform);
     logger.info(`Restoring cache key: ${cacheKey}`);
 
     const jobId = nullthrows(env.EAS_BUILD_ID, 'EAS_BUILD_ID is not set');
-    const robotAccessToken = nullthrows(
-      secrets?.robotAccessToken,
-      'Robot access token is required for cache operations'
-    );
-    const expoApiServerURL = nullthrows(env.__API_SERVER_URL, '__API_SERVER_URL is not set');
-    const cachePath = getCcachePath(env);
     const { archivePath, matchedKey } = await downloadCacheAsync({
       logger,
       jobId,
@@ -115,7 +115,21 @@ export async function restoreCcacheAsync({
     );
   } catch (err: unknown) {
     if (err instanceof TurtleFetchError && err.response?.status === 404) {
-      logger.info('No cache found for this key.');
+      logger.info('No cache found for this key. Downloading public cache...');
+      const { archivePath } = await downloadPublicCacheAsync({
+        logger,
+        expoApiServerURL,
+        robotAccessToken,
+        paths: [cachePath],
+        keyPrefixes: [CACHE_KEY_PREFIX_BY_PLATFORM[platform]],
+        platform,
+      });
+      await decompressCacheAsync({
+        archivePath,
+        workingDirectory,
+        verbose: env.EXPO_DEBUG === '1',
+        logger,
+      });
     } else {
       logger.warn({ err }, 'Failed to restore cache');
     }
