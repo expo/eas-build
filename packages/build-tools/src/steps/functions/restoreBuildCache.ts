@@ -127,7 +127,7 @@ export async function restoreCcacheAsync({
         await decompressCacheAsync({
           archivePath,
           workingDirectory,
-          verbose: env.EXPO_DEBUG === '0',
+          verbose: env.EXPO_DEBUG === '1',
           logger,
         });
       } catch (err: unknown) {
