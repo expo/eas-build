@@ -97,15 +97,6 @@ export async function saveCcacheAsync({
       })
     );
 
-    logger.info('Cache stats:');
-    await asyncResult(
-      spawnAsync('ccache', ['--show-stats', '-v'], {
-        env,
-        logger,
-        stdio: 'pipe',
-      })
-    );
-
     logger.info('Preparing cache archive...');
 
     const { archivePath } = await compressCacheAsync({

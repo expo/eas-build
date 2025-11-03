@@ -23,7 +23,7 @@ import { prepareExecutableAsync } from '../utils/prepareBuildExecutable';
 import { getParentAndDescendantProcessPidsAsync } from '../utils/processes';
 import { eagerBundleAsync, shouldUseEagerBundle } from '../common/eagerBundle';
 import { saveCcacheAsync } from '../steps/functions/saveBuildCache';
-import { restoreCcacheAsync } from '../steps/functions/restoreBuildCache';
+import { cacheStatsAsync, restoreCcacheAsync } from '../steps/functions/restoreBuildCache';
 
 import { runBuilderWithHooksAsync } from './common';
 import { runCustomBuildAsync } from './custom';
@@ -197,6 +197,13 @@ async function buildAsync(ctx: BuildContext<Ios.Job>): Promise<void> {
       evictUsedBefore,
       env: ctx.env,
       secrets: ctx.job.secrets,
+    });
+  });
+
+  await ctx.runBuildPhase(BuildPhase.CACHE_STATS, async () => {
+    await cacheStatsAsync({
+      logger: ctx.logger,
+      env: ctx.env,
     });
   });
 }

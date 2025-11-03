@@ -19,6 +19,7 @@ export enum BuildPhase {
   CONFIGURE_EXPO_UPDATES = 'CONFIGURE_EXPO_UPDATES',
   EAGER_BUNDLE = 'EAGER_BUNDLE',
   SAVE_CACHE = 'SAVE_CACHE',
+  CACHE_STATS = 'CACHE_STATS',
   /**
    * @deprecated
    */
@@ -82,6 +83,7 @@ export const buildPhaseDisplayName: Record<BuildPhase, string> = {
   [BuildPhase.CONFIGURE_EXPO_UPDATES]: 'Configure expo-updates',
   [BuildPhase.EAGER_BUNDLE]: 'Bundle JavaScript',
   [BuildPhase.SAVE_CACHE]: 'Save cache',
+  [BuildPhase.CACHE_STATS]: 'Cache stats',
   [BuildPhase.UPLOAD_ARTIFACTS]: 'Upload artifacts',
   [BuildPhase.UPLOAD_APPLICATION_ARCHIVE]: 'Upload application archive',
   [BuildPhase.UPLOAD_BUILD_ARTIFACTS]: 'Upload build artifacts',
@@ -143,6 +145,7 @@ export const buildPhaseWebsiteId: Record<BuildPhase, string> = {
   [BuildPhase.CONFIGURE_EXPO_UPDATES]: 'configure-expo-updates',
   [BuildPhase.EAGER_BUNDLE]: 'eager-bundle',
   [BuildPhase.SAVE_CACHE]: 'save-cache',
+  [BuildPhase.CACHE_STATS]: 'cache-stats',
   [BuildPhase.UPLOAD_ARTIFACTS]: 'upload-artifacts',
   [BuildPhase.UPLOAD_APPLICATION_ARCHIVE]: 'upload-application-archive',
   [BuildPhase.UPLOAD_BUILD_ARTIFACTS]: 'upload-build-artifacts',

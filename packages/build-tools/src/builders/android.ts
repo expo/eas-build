@@ -21,7 +21,7 @@ import { setupAsync } from '../common/setup';
 import { prebuildAsync } from '../common/prebuild';
 import { prepareExecutableAsync } from '../utils/prepareBuildExecutable';
 import { eagerBundleAsync, shouldUseEagerBundle } from '../common/eagerBundle';
-import { restoreCcacheAsync } from '../steps/functions/restoreBuildCache';
+import { cacheStatsAsync, restoreCcacheAsync } from '../steps/functions/restoreBuildCache';
 import { saveCcacheAsync } from '../steps/functions/saveBuildCache';
 
 import { runBuilderWithHooksAsync } from './common';
@@ -181,6 +181,13 @@ async function buildAsync(ctx: BuildContext<Android.Job>): Promise<void> {
       evictUsedBefore,
       env: ctx.env,
       secrets: ctx.job.secrets,
+    });
+  });
+
+  await ctx.runBuildPhase(BuildPhase.CACHE_STATS, async () => {
+    await cacheStatsAsync({
+      logger: ctx.logger,
+      env: ctx.env,
     });
   });
 }
