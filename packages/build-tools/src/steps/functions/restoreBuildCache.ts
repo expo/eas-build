@@ -115,21 +115,24 @@ export async function restoreCcacheAsync({
     );
   } catch (err: unknown) {
     if (err instanceof TurtleFetchError && err.response?.status === 404) {
-      logger.info('No cache found for this key. Downloading public cache...');
-      const { archivePath } = await downloadPublicCacheAsync({
-        logger,
-        expoApiServerURL,
-        robotAccessToken,
-        paths: [cachePath],
-        keyPrefixes: [CACHE_KEY_PREFIX_BY_PLATFORM[platform]],
-        platform,
-      });
-      await decompressCacheAsync({
-        archivePath,
-        workingDirectory,
-        verbose: env.EXPO_DEBUG === '1',
-        logger,
-      });
+      try {
+        logger.info('No cache found for this key. Downloading public cache...');
+        const { archivePath } = await downloadPublicCacheAsync({
+          logger,
+          expoApiServerURL,
+          robotAccessToken,
+          paths: [cachePath],
+          platform,
+        });
+        await decompressCacheAsync({
+          archivePath,
+          workingDirectory,
+          verbose: env.EXPO_DEBUG === '0',
+          logger,
+        });
+      } catch (err: unknown) {
+        logger.warn({ err }, 'Failed to download public cache');
+      }
     } else {
       logger.warn({ err }, 'Failed to restore cache');
     }

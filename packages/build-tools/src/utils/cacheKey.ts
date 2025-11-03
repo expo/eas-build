@@ -18,6 +18,11 @@ export const CACHE_KEY_PREFIX_BY_PLATFORM: Record<Platform, string> = {
   [Platform.IOS]: IOS_CACHE_KEY_PREFIX,
 };
 
+export const PUBLIC_CACHE_KEY_PREFIX_BY_PLATFORM: Record<Platform, string> = {
+  [Platform.ANDROID]: `public-${ANDROID_CACHE_KEY_PREFIX}`,
+  [Platform.IOS]: `public-${IOS_CACHE_KEY_PREFIX}`,
+};
+
 const PATH_BY_PLATFORM: Record<string, string> = {
   darwin: DARWIN_CACHE_PATH,
   linux: LINUX_CACHE_PATH,

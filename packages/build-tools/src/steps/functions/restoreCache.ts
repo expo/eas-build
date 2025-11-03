@@ -22,7 +22,7 @@ import { retryOnDNSFailure } from '../../utils/retryOnDNSFailure';
 import { formatBytes } from '../../utils/artifacts';
 import { getCacheVersion } from '../utils/cache';
 import { turtleFetch, TurtleFetchError } from '../../utils/turtleFetch';
-import { CACHE_KEY_PREFIX_BY_PLATFORM } from '../../utils/cacheKey';
+import { PUBLIC_CACHE_KEY_PREFIX_BY_PLATFORM } from '../../utils/cacheKey';
 
 const streamPipeline = promisify(stream.pipeline);
 
@@ -199,25 +199,23 @@ export async function downloadPublicCacheAsync({
   expoApiServerURL,
   robotAccessToken,
   paths,
-  keyPrefixes,
   platform,
 }: {
   logger: bunyan;
   expoApiServerURL: string;
   robotAccessToken: string;
   paths: string[];
-  keyPrefixes: string[];
   platform: Platform;
 }): Promise<{ archivePath: string; matchedKey: string }> {
   const routerURL = 'v2/public-turtle-caches/download';
-  const key = CACHE_KEY_PREFIX_BY_PLATFORM[platform]; // TODO: HOW TO DETERMINE KEY FOR PUBLIC CACHE?
+  const key = PUBLIC_CACHE_KEY_PREFIX_BY_PLATFORM[platform];
 
   try {
     const response = await turtleFetch(new URL(routerURL, expoApiServerURL).toString(), 'POST', {
       json: {
         key,
         version: getCacheVersion(paths),
-        keyPrefixes,
+        keyPrefixes: [key],
       },
       headers: {
         Authorization: `Bearer ${robotAccessToken}`,
@@ -234,7 +232,7 @@ export async function downloadPublicCacheAsync({
 
     const { matchedKey, downloadUrl } = result.value.data;
 
-    logger.info(`Matched cache key: ${matchedKey}. Downloading...`);
+    logger.info(`Matched public cache key: ${matchedKey}. Downloading...`);
 
     const downloadDestinationDirectory = await fs.promises.mkdtemp(
       path.join(os.tmpdir(), 'restore-cache-')
@@ -247,8 +245,6 @@ export async function downloadPublicCacheAsync({
       );
     }
 
-    // URL may contain percent-encoded characters, e.g. my%20file.apk
-    // this replaces all non-alphanumeric characters (excluding dot) with underscore
     const archiveFilename = path
       .basename(new URL(downloadUrl).pathname)
       .replace(/([^a-z0-9.-]+)/gi, '_');

@@ -60,6 +60,7 @@ export function createSaveCacheFunction(): BuildFunction {
         if (env.EAS_PUBLIC_CACHE === '1') {
           await uploadPublicCacheAsync({
             logger,
+            jobId,
             expoApiServerURL: stepsCtx.global.staticContext.expoApiServerURL,
             robotAccessToken,
             archivePath,
@@ -167,6 +168,7 @@ export async function uploadCacheAsync({
 
 export async function uploadPublicCacheAsync({
   logger,
+  jobId,
   expoApiServerURL,
   robotAccessToken,
   paths,
@@ -175,6 +177,7 @@ export async function uploadPublicCacheAsync({
   size,
 }: {
   logger: bunyan;
+  jobId: string;
   expoApiServerURL: string;
   robotAccessToken: string;
   paths: string[];
@@ -184,11 +187,10 @@ export async function uploadPublicCacheAsync({
   platform: Platform | undefined;
 }): Promise<void> {
   const routerURL = 'v2/public-turtle-caches/upload-sessions';
-
-  // attempts to upload should only attempt on DNS errors, and not application errors such as 409 (cache exists)
   const response = await retryOnDNSFailure(fetch)(new URL(routerURL, expoApiServerURL), {
     method: 'POST',
     body: JSON.stringify({
+      jobRunId: jobId,
       key,
       version: getCacheVersion(paths),
       size,
