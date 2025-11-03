@@ -138,3 +138,26 @@ export async function restoreCcacheAsync({
     }
   }
 }
+
+export async function cacheStatsAsync({
+  logger,
+  env,
+}: {
+  logger: bunyan;
+  env: Record<string, string | undefined>;
+}): Promise<void> {
+  const enabled =
+    env.EAS_RESTORE_CACHE === '1' || (env.EAS_USE_CACHE === '1' && env.EAS_RESTORE_CACHE !== '0');
+
+  if (!enabled) {
+    return;
+  }
+  logger.info('Cache stats:');
+  await asyncResult(
+    spawnAsync('ccache', ['--show-stats', '-v'], {
+      env,
+      logger,
+      stdio: 'pipe',
+    })
+  );
+}

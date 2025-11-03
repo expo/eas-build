@@ -186,8 +186,8 @@ export async function uploadPublicCacheAsync({
   size: number;
   platform: Platform | undefined;
 }): Promise<void> {
-  const routerURL = 'v2/public-turtle-caches/upload-sessions';
-  const response = await retryOnDNSFailure(fetch)(new URL(routerURL, expoApiServerURL), {
+  const routerPath = 'v2/public-turtle-caches/upload-sessions';
+  const response = await retryOnDNSFailure(fetch)(new URL(routerPath, expoApiServerURL), {
     method: 'POST',
     body: JSON.stringify({
       jobRunId: jobId,
