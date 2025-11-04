@@ -1,7 +1,7 @@
 import path from 'path';
+import fs from 'fs/promises';
 
 import spawn from '@expo/turtle-spawn';
-import fs from 'fs-extra';
 import fetch from 'node-fetch';
 import { ArchiveSourceType, Job, ArchiveSource, ArchiveSourceSchemaZ } from '@expo/eas-build-job';
 import { bunyan } from '@expo/logger';
@@ -103,7 +103,7 @@ async function prepareProjectSourcesLocallyAsync<TJob extends Job>(
   destinationDirectory: string
 ): Promise<void> {
   const projectTarball = path.join(ctx.workingdir, 'project.tar.gz');
-  await fs.copy(projectArchivePath, projectTarball);
+  await fs.copyFile(projectArchivePath, projectTarball);
 
   await unpackTarGzAsync({
     destination: destinationDirectory,
