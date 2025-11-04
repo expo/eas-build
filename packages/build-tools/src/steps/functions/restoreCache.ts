@@ -22,6 +22,7 @@ import { retryOnDNSFailure } from '../../utils/retryOnDNSFailure';
 import { formatBytes } from '../../utils/artifacts';
 import { getCacheVersion } from '../utils/cache';
 import { turtleFetch, TurtleFetchError } from '../../utils/turtleFetch';
+import { PUBLIC_CACHE_KEY_PREFIX_BY_PLATFORM } from '../../utils/cacheKey';
 
 const streamPipeline = promisify(stream.pipeline);
 
@@ -174,6 +175,76 @@ export async function downloadCacheAsync({
 
     // URL may contain percent-encoded characters, e.g. my%20file.apk
     // this replaces all non-alphanumeric characters (excluding dot) with underscore
+    const archiveFilename = path
+      .basename(new URL(downloadUrl).pathname)
+      .replace(/([^a-z0-9.-]+)/gi, '_');
+    const archivePath = path.join(downloadDestinationDirectory, archiveFilename);
+
+    await streamPipeline(downloadResponse.body, fs.createWriteStream(archivePath));
+
+    return { archivePath, matchedKey };
+  } catch (err: any) {
+    if (err instanceof TurtleFetchError && err.response.status !== 404) {
+      const textResult = await asyncResult(err.response.text());
+      throw new Error(
+        `Unexpected response from server (${err.response.status}): ${textResult.value}`
+      );
+    }
+    throw err;
+  }
+}
+
+export async function downloadPublicCacheAsync({
+  logger,
+  expoApiServerURL,
+  robotAccessToken,
+  paths,
+  platform,
+}: {
+  logger: bunyan;
+  expoApiServerURL: string;
+  robotAccessToken: string;
+  paths: string[];
+  platform: Platform;
+}): Promise<{ archivePath: string; matchedKey: string }> {
+  const routerURL = 'v2/public-turtle-caches/download';
+  const key = PUBLIC_CACHE_KEY_PREFIX_BY_PLATFORM[platform];
+
+  try {
+    const response = await turtleFetch(new URL(routerURL, expoApiServerURL).toString(), 'POST', {
+      json: {
+        key,
+        version: getCacheVersion(paths),
+        keyPrefixes: [key],
+      },
+      headers: {
+        Authorization: `Bearer ${robotAccessToken}`,
+        'Content-Type': 'application/json',
+      },
+      retries: 2,
+      shouldThrowOnNotOk: true,
+    });
+
+    const result = await asyncResult(response.json());
+    if (!result.ok) {
+      throw new Error(`Unexpected response from server (${response.status}): ${result.reason}`);
+    }
+
+    const { matchedKey, downloadUrl } = result.value.data;
+
+    logger.info(`Matched public cache key: ${matchedKey}. Downloading...`);
+
+    const downloadDestinationDirectory = await fs.promises.mkdtemp(
+      path.join(os.tmpdir(), 'restore-cache-')
+    );
+
+    const downloadResponse = await retryOnDNSFailure(fetch)(downloadUrl);
+    if (!downloadResponse.ok) {
+      throw new Error(
+        `Unexpected response from cache server (${downloadResponse.status}): ${downloadResponse.statusText}`
+      );
+    }
+
     const archiveFilename = path
       .basename(new URL(downloadUrl).pathname)
       .replace(/([^a-z0-9.-]+)/gi, '_');

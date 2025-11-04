@@ -57,17 +57,31 @@ export function createSaveCacheFunction(): BuildFunction {
 
         const { size } = await fs.promises.stat(archivePath);
 
-        await uploadCacheAsync({
-          logger,
-          jobId,
-          expoApiServerURL: stepsCtx.global.staticContext.expoApiServerURL,
-          robotAccessToken,
-          archivePath,
-          key,
-          paths,
-          size,
-          platform: stepsCtx.global.staticContext.job.platform,
-        });
+        if (env.EAS_PUBLIC_CACHE === '1') {
+          await uploadPublicCacheAsync({
+            logger,
+            jobId,
+            expoApiServerURL: stepsCtx.global.staticContext.expoApiServerURL,
+            robotAccessToken,
+            archivePath,
+            key,
+            paths,
+            size,
+            platform: stepsCtx.global.staticContext.job.platform,
+          });
+        } else {
+          await uploadCacheAsync({
+            logger,
+            jobId,
+            expoApiServerURL: stepsCtx.global.staticContext.expoApiServerURL,
+            robotAccessToken,
+            archivePath,
+            key,
+            paths,
+            size,
+            platform: stepsCtx.global.staticContext.job.platform,
+          });
+        }
       } catch (error) {
         logger.error({ err: error }, 'Failed to create cache');
       }
@@ -138,6 +152,71 @@ export async function uploadCacheAsync({
   const { url, headers } = result.value.data;
 
   logger.info(`Uploading cache...`);
+
+  const uploadResponse = await retryOnDNSFailure(fetch)(new URL(url), {
+    method: 'PUT',
+    headers,
+    body: fs.createReadStream(archivePath),
+  });
+  if (!uploadResponse.ok) {
+    throw new Error(
+      `Unexpected response from cache server (${uploadResponse.status}): ${uploadResponse.statusText}`
+    );
+  }
+  logger.info(`Uploaded cache archive to ${archivePath} (${formatBytes(size)}).`);
+}
+
+export async function uploadPublicCacheAsync({
+  logger,
+  jobId,
+  expoApiServerURL,
+  robotAccessToken,
+  paths,
+  key,
+  archivePath,
+  size,
+}: {
+  logger: bunyan;
+  jobId: string;
+  expoApiServerURL: string;
+  robotAccessToken: string;
+  paths: string[];
+  key: string;
+  archivePath: string;
+  size: number;
+  platform: Platform | undefined;
+}): Promise<void> {
+  const routerPath = 'v2/public-turtle-caches/upload-sessions';
+  const response = await retryOnDNSFailure(fetch)(new URL(routerPath, expoApiServerURL), {
+    method: 'POST',
+    body: JSON.stringify({
+      jobRunId: jobId,
+      key,
+      version: getCacheVersion(paths),
+      size,
+    }),
+    headers: {
+      Authorization: `Bearer ${robotAccessToken}`,
+      'Content-Type': 'application/json',
+    },
+  });
+  if (!response.ok) {
+    if (response.status === 409) {
+      logger.info(`Cache ${key} already exists, skipping upload`);
+      return;
+    }
+    const textResult = await asyncResult(response.text());
+    throw new Error(`Unexpected response from server (${response.status}): ${textResult.value}`);
+  }
+
+  const result = await asyncResult(response.json());
+  if (!result.ok) {
+    throw new Error(`Unexpected response from server (${response.status}): ${result.reason}`);
+  }
+
+  const { url, headers } = result.value.data;
+
+  logger.info(`Uploading public cache...`);
 
   const uploadResponse = await retryOnDNSFailure(fetch)(new URL(url), {
     method: 'PUT',

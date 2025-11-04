@@ -8,14 +8,21 @@ import { Platform } from '@expo/eas-build-job';
 
 import { findPackagerRootDir } from './packageManager';
 
-export const IOS_CACHE_KEY_PREFIX = 'ios-ccache-';
-export const ANDROID_CACHE_KEY_PREFIX = 'android-ccache-';
-export const DARWIN_CACHE_PATH = 'Library/Caches/ccache';
-export const LINUX_CACHE_PATH = '.cache/ccache';
+const IOS_CACHE_KEY_PREFIX = 'ios-ccache-';
+const ANDROID_CACHE_KEY_PREFIX = 'android-ccache-';
+const PUBLIC_IOS_CACHE_KEY_PREFIX = 'public-ios-ccache-';
+const PUBLIC_ANDROID_CACHE_KEY_PREFIX = 'public-android-ccache-';
+const DARWIN_CACHE_PATH = 'Library/Caches/ccache';
+const LINUX_CACHE_PATH = '.cache/ccache';
 
 export const CACHE_KEY_PREFIX_BY_PLATFORM: Record<Platform, string> = {
   [Platform.ANDROID]: ANDROID_CACHE_KEY_PREFIX,
   [Platform.IOS]: IOS_CACHE_KEY_PREFIX,
+};
+
+export const PUBLIC_CACHE_KEY_PREFIX_BY_PLATFORM: Record<Platform, string> = {
+  [Platform.ANDROID]: PUBLIC_ANDROID_CACHE_KEY_PREFIX,
+  [Platform.IOS]: PUBLIC_IOS_CACHE_KEY_PREFIX,
 };
 
 const PATH_BY_PLATFORM: Record<string, string> = {
