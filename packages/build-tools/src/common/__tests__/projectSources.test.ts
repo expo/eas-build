@@ -26,6 +26,8 @@ describe('projectSources', () => {
     const buildId = randomUUID();
     await vol.promises.mkdir('/workingdir/environment-secrets/', { recursive: true });
 
+    const gitCommitHash = randomBytes(20).toString('hex');
+
     const ctx = new BuildContext(
       {
         triggeredBy: BuildTrigger.GIT_BASED_INTEGRATION,
@@ -37,7 +39,7 @@ describe('projectSources', () => {
           type: ArchiveSourceType.GIT,
           repositoryUrl: 'https://x-access-token:1234567890@github.com/expo/eas-build.git',
           gitRef: 'refs/heads/main',
-          gitCommitHash: randomBytes(20).toString('hex'),
+          gitCommitHash,
         },
         platform: Platform.IOS,
         secrets: {
@@ -50,6 +52,7 @@ describe('projectSources', () => {
           __API_SERVER_URL: 'https://api.expo.dev',
           EXPO_TOKEN: robotAccessToken,
           EAS_BUILD_ID: buildId,
+          EAS_BUILD_RUNNER: 'eas-build',
         },
         workingdir: '/workingdir',
         logger: createMockLogger(),
@@ -63,7 +66,12 @@ describe('projectSources', () => {
         ({
           ok: true,
           json: async () => ({
-            data: { repositoryUrl: 'https://x-access-token:qwerty@github.com/expo/eas-build.git' },
+            data: {
+              gitRef: 'refs/heads/main',
+              gitCommitHash,
+              repositoryUrl: 'https://x-access-token:qwerty@github.com/expo/eas-build.git',
+              type: ArchiveSourceType.GIT,
+            },
           }),
         }) as Response
     );
@@ -108,6 +116,7 @@ describe('projectSources', () => {
           __API_SERVER_URL: 'https://api.expo.dev',
           EXPO_TOKEN: robotAccessToken,
           EAS_BUILD_ID: buildId,
+          EAS_BUILD_RUNNER: 'eas-build',
         },
         workingdir: '/workingdir',
         logger: createMockLogger(),
@@ -180,6 +189,8 @@ describe('projectSources', () => {
     const buildId = randomUUID();
     await vol.promises.mkdir('/workingdir/environment-secrets/', { recursive: true });
 
+    const gitCommitHash = randomBytes(20).toString('hex');
+
     const ctx = new BuildContext(
       {
         triggeredBy: BuildTrigger.GIT_BASED_INTEGRATION,
@@ -191,7 +202,7 @@ describe('projectSources', () => {
           type: ArchiveSourceType.GIT,
           repositoryUrl: 'https://x-access-token:1234567890@github.com/expo/eas-build.git',
           gitRef: 'refs/heads/main',
-          gitCommitHash: randomBytes(20).toString('hex'),
+          gitCommitHash,
         },
         platform: Platform.IOS,
         secrets: {
@@ -204,6 +215,7 @@ describe('projectSources', () => {
           __API_SERVER_URL: 'https://api.expo.dev',
           EXPO_TOKEN: robotAccessToken,
           EAS_BUILD_ID: buildId,
+          EAS_BUILD_RUNNER: 'eas-build',
         },
         workingdir: '/workingdir',
         logger: createMockLogger(),
@@ -224,7 +236,12 @@ describe('projectSources', () => {
         ({
           ok: true,
           json: async () => ({
-            data: { repositoryUrl: 'https://x-access-token:qwerty@github.com/expo/eas-build.git' },
+            data: {
+              repositoryUrl: 'https://x-access-token:qwerty@github.com/expo/eas-build.git',
+              gitRef: 'refs/heads/main',
+              gitCommitHash,
+              type: ArchiveSourceType.GIT,
+            },
           }),
         }) as Response
     );
@@ -268,6 +285,7 @@ describe('projectSources', () => {
         env: {
           __API_SERVER_URL: 'https://api.expo.dev',
           EXPO_TOKEN: robotAccessToken,
+          EAS_BUILD_RUNNER: 'eas-build',
           // EAS_BUILD_ID: buildId,
         },
         workingdir: '/workingdir',
@@ -280,8 +298,8 @@ describe('projectSources', () => {
     await prepareProjectSourcesAsync(ctx);
 
     expect(logger.error).toHaveBeenCalledWith(
-      'Failed to refresh clone URL, falling back to the original one',
-      expect.any(Error)
+      { err: expect.any(Error) },
+      'Failed to refresh project archive, falling back to the original one'
     );
   });
 });
