@@ -386,14 +386,21 @@ export class BuildStep extends BuildStepOutputAccessor {
       const workingDirectoryStat = await fs.stat(this.ctx.workingDirectory);
       if (!workingDirectoryStat.isDirectory()) {
         this.ctx.logger.error(
-          `Working directory "${this.ctx.workingDirectory}" is not a directory`
+          `Working directory "${this.ctx.workingDirectory}" exists, but is not a directory`
         );
       }
-    } catch (err) {
-      this.ctx.logger.error(
-        { err },
-        `Failed to stat working directory "${this.ctx.workingDirectory}"`
-      );
+    } catch (err: any) {
+      if (err?.code === 'ENOENT') {
+        this.ctx.logger.error(
+          { err },
+          `Working directory "${this.ctx.workingDirectory}" does not exist`
+        );
+      } else {
+        this.ctx.logger.error(
+          { err },
+          `Cannot access working directory "${this.ctx.workingDirectory}"`
+        );
+      }
     }
 
     await spawnAsync(shellCommand, args ?? [], {

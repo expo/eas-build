@@ -249,6 +249,34 @@ describe(BuildStep, () => {
     });
 
     describe('command', () => {
+      it('logs an error if the command is to be executed in non-existing working directory', async () => {
+        const id = 'test1';
+        const command = 'ls -la';
+        const displayName = BuildStep.getDisplayName({ id, command });
+
+        const step = new BuildStep(baseStepCtx, {
+          id,
+          command,
+          displayName,
+          workingDirectory: 'non-existing-directory',
+        });
+
+        let err;
+        try {
+          await step.executeAsync();
+        } catch (error) {
+          err = error;
+        }
+
+        expect(err).toBeDefined();
+        expect(step.ctx.logger.error).toHaveBeenCalledWith(
+          expect.anything(),
+          expect.stringContaining(
+            `Working directory "${path.join(baseStepCtx.defaultWorkingDirectory, 'non-existing-directory')}" does not exist`
+          )
+        );
+      });
+
       it('executes the command passed to the step', async () => {
         const logger = createMockLogger();
         const lines: string[] = [];
