@@ -29,7 +29,9 @@ describe('BuildContext', () => {
         },
       } as Job,
       {
-        env: {},
+        env: {
+          __API_SERVER_URL: 'http://api.expo.test',
+        },
         workingdir: '/workingdir',
         logger: createMockLogger(),
         logBuffer: { getLogs: () => [], getPhaseLogs: () => [] },
@@ -100,7 +102,9 @@ describe('BuildContext', () => {
         } as any,
       } as Job,
       {
-        env: {},
+        env: {
+          __API_SERVER_URL: 'http://api.expo.test',
+        },
         workingdir: '/workingdir',
         logger: createMockLogger(),
         logBuffer: { getLogs: () => [], getPhaseLogs: () => [] },

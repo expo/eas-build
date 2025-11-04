@@ -25,7 +25,9 @@ describe('ProvisioningProfile class', () => {
         workingdir: '/workingdir',
         logBuffer: { getLogs: () => [], getPhaseLogs: () => [] },
         logger: mockLogger,
-        env: {},
+        env: {
+          __API_SERVER_URL: 'http://api.expo.test',
+        },
         uploadArtifact: jest.fn(),
       });
       keychain = new Keychain(ctx);

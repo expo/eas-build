@@ -12,7 +12,9 @@ import { createUploadArtifactBuildFunction } from '../uploadArtifact';
 describe(createUploadArtifactBuildFunction, () => {
   const contextUploadArtifact = jest.fn();
   const ctx = new BuildContext(createTestIosJob({}), {
-    env: {},
+    env: {
+      __API_SERVER_URL: 'http://api.expo.test',
+    },
     logBuffer: { getLogs: () => [], getPhaseLogs: () => [] },
     logger: createMockLogger(),
     uploadArtifact: contextUploadArtifact,

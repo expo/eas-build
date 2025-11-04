@@ -30,7 +30,9 @@ describe(runHookIfPresent, () => {
       workingdir: '/workingdir',
       logBuffer: { getLogs: () => [], getPhaseLogs: () => [] },
       logger: loggerMock as any,
-      env: {},
+      env: {
+        __API_SERVER_URL: 'http://api.expo.test',
+      },
       uploadArtifact: jest.fn(),
     });
   });

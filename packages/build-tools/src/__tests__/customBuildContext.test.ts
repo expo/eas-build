@@ -17,7 +17,9 @@ describe(CustomBuildContext, () => {
         } as unknown as Ios.Job['workflowInterpolationContext'],
       }),
       {
-        env: {},
+        env: {
+          __API_SERVER_URL: 'http://api.expo.test',
+        },
         logBuffer: { getLogs: () => [], getPhaseLogs: () => [] },
         logger: createMockLogger(),
         uploadArtifact: contextUploadArtifact,
