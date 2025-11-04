@@ -2,6 +2,7 @@ import path from 'path';
 
 import spawn from '@expo/turtle-spawn';
 import fs from 'fs-extra';
+import fetch from 'node-fetch';
 import { ArchiveSourceType, Job, ArchiveSource, ArchiveSourceSchemaZ } from '@expo/eas-build-job';
 import { bunyan } from '@expo/logger';
 import downloadFile from '@expo/downloader';
