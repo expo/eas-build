@@ -6,8 +6,7 @@ import fs from 'fs-extra';
 import { v4 as uuid } from 'uuid';
 
 import Keychain from '../keychain';
-
-import { distributionCertificate } from './fixtures';
+import { distributionCertificate } from '../__tests__/fixtures';
 
 const mockLogger = createLogger({ name: 'mock-logger' });
 

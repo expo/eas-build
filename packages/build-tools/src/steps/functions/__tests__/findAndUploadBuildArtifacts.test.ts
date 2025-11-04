@@ -1,3 +1,5 @@
+import { randomUUID } from 'crypto';
+
 import { ManagedArtifactType } from '@expo/eas-build-job';
 import { vol } from 'memfs';
 
@@ -11,9 +13,11 @@ import { createFindAndUploadBuildArtifactsBuildFunction } from '../findAndUpload
 jest.mock('fs');
 
 describe(createFindAndUploadBuildArtifactsBuildFunction, () => {
-  const contextUploadArtifact = jest.fn();
+  const contextUploadArtifact = jest.fn(async () => ({ artifactId: randomUUID() }));
   const ctx = new BuildContext(createTestIosJob({}), {
-    env: {},
+    env: {
+      __API_SERVER_URL: 'http://api.expo.test',
+    },
     logBuffer: { getLogs: () => [], getPhaseLogs: () => [] },
     logger: createMockLogger(),
     uploadArtifact: contextUploadArtifact,

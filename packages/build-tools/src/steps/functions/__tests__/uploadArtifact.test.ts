@@ -1,4 +1,4 @@
-import { randomBytes } from 'crypto';
+import { randomBytes, randomUUID } from 'crypto';
 import fs from 'fs';
 import path from 'path';
 
@@ -10,9 +10,11 @@ import { CustomBuildContext } from '../../../customBuildContext';
 import { createUploadArtifactBuildFunction } from '../uploadArtifact';
 
 describe(createUploadArtifactBuildFunction, () => {
-  const contextUploadArtifact = jest.fn();
+  const contextUploadArtifact = jest.fn(async () => ({ artifactId: randomUUID() }));
   const ctx = new BuildContext(createTestIosJob({}), {
-    env: {},
+    env: {
+      __API_SERVER_URL: 'http://api.expo.test',
+    },
     logBuffer: { getLogs: () => [], getPhaseLogs: () => [] },
     logger: createMockLogger(),
     uploadArtifact: contextUploadArtifact,

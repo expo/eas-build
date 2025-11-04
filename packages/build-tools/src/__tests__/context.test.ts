@@ -13,7 +13,7 @@ jest.mock('fs-extra');
 describe('BuildContext', () => {
   it('should merge secrets', async () => {
     const robotAccessToken = randomUUID();
-    await vol.promises.mkdir('/workingdir/environment-secrets/', { recursive: true });
+    await vol.promises.mkdir('/workingdir/eas-environment-secrets/', { recursive: true });
 
     const ctx = new BuildContext(
       {
@@ -29,7 +29,9 @@ describe('BuildContext', () => {
         },
       } as Job,
       {
-        env: {},
+        env: {
+          __API_SERVER_URL: 'http://api.expo.test',
+        },
         workingdir: '/workingdir',
         logger: createMockLogger(),
         logBuffer: { getLogs: () => [], getPhaseLogs: () => [] },
@@ -81,7 +83,7 @@ describe('BuildContext', () => {
 
   it('should not lose workflowInterpolationContext', async () => {
     const robotAccessToken = randomUUID();
-    await vol.promises.mkdir('/workingdir/environment-secrets/', { recursive: true });
+    await vol.promises.mkdir('/workingdir/eas-environment-secrets/', { recursive: true });
 
     const ctx = new BuildContext(
       {
@@ -100,7 +102,9 @@ describe('BuildContext', () => {
         } as any,
       } as Job,
       {
-        env: {},
+        env: {
+          __API_SERVER_URL: 'http://api.expo.test',
+        },
         workingdir: '/workingdir',
         logger: createMockLogger(),
         logBuffer: { getLogs: () => [], getPhaseLogs: () => [] },

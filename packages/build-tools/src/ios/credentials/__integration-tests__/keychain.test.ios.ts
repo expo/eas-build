@@ -8,8 +8,7 @@ import { v4 as uuid } from 'uuid';
 
 import { BuildContext } from '../../../context';
 import Keychain from '../keychain';
-
-import { distributionCertificate } from './fixtures';
+import { distributionCertificate } from '../__tests__/fixtures';
 
 const mockLogger = createLogger({ name: 'mock-logger' });
 
