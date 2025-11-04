@@ -1,7 +1,7 @@
 import path from 'path';
+import fs from 'fs/promises';
 
 import spawn from '@expo/turtle-spawn';
-import fs from 'fs-extra';
 import fetch from 'node-fetch';
 import { ArchiveSourceType, Job, ArchiveSource, ArchiveSourceSchemaZ } from '@expo/eas-build-job';
 import { bunyan } from '@expo/logger';
@@ -56,12 +56,7 @@ Promise<{ handled: boolean }> {
     case ArchiveSourceType.URL: {
       await downloadAndUnpackProjectFromTarGzAsync(ctx, projectArchive.url, destinationDirectory);
 
-      const uploadResult = await asyncResult(
-        uploadProjectMetadataAsync(ctx, { projectDirectory: destinationDirectory })
-      );
-      if (!uploadResult.ok) {
-        ctx.logger.warn(`Failed to upload project metadata: ${uploadResult.reason}`);
-      }
+      uploadProjectMetadataAsFireAndForget(ctx, { projectDirectory: destinationDirectory });
 
       return { handled: true };
     }
@@ -73,12 +68,7 @@ Promise<{ handled: boolean }> {
         destinationDirectory,
       });
 
-      const uploadResult = await asyncResult(
-        uploadProjectMetadataAsync(ctx, { projectDirectory: destinationDirectory })
-      );
-      if (!uploadResult.ok) {
-        ctx.logger.warn(`Failed to upload project metadata: ${uploadResult.reason}`);
-      }
+      uploadProjectMetadataAsFireAndForget(ctx, { projectDirectory: destinationDirectory });
 
       return { handled: true };
     }
@@ -113,7 +103,7 @@ async function prepareProjectSourcesLocallyAsync<TJob extends Job>(
   destinationDirectory: string
 ): Promise<void> {
   const projectTarball = path.join(ctx.workingdir, 'project.tar.gz');
-  await fs.copy(projectArchivePath, projectTarball);
+  await fs.copyFile(projectArchivePath, projectTarball);
 
   await unpackTarGzAsync({
     destination: destinationDirectory,
@@ -134,6 +124,18 @@ async function unpackTarGzAsync({
   await spawn('tar', ['-C', destination, '--strip-components', '1', '-zxf', source], {
     logger,
   });
+}
+
+function uploadProjectMetadataAsFireAndForget(
+  ctx: BuildContext<Job>,
+  { projectDirectory }: { projectDirectory: string }
+): void {
+  void (async () => {
+    const uploadResult = await asyncResult(uploadProjectMetadataAsync(ctx, { projectDirectory }));
+    if (!uploadResult.ok) {
+      ctx.logger.warn(`Failed to upload project metadata: ${uploadResult.reason}`);
+    }
+  })();
 }
 
 async function uploadProjectMetadataAsync(
