@@ -24,6 +24,7 @@ const iosCredentials: Ios.BuildCredentials = {
       dataBase64: '',
       password: '',
     },
+    provisioningProfileType: Ios.ProvisioningProfileType.MOBILEPROVISION,
   },
 };
 
@@ -67,6 +68,7 @@ describe(IosCredentialsManager, () => {
           [targetName]: {
             distributionCertificate,
             provisioningProfileBase64: provisioningProfile.dataBase64,
+            provisioningProfileType: Ios.ProvisioningProfileType.MOBILEPROVISION,
           },
         },
       });

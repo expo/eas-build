@@ -2,7 +2,7 @@ import crypto from 'crypto';
 import os from 'os';
 import path from 'path';
 
-import { errors } from '@expo/eas-build-job';
+import { Ios, errors } from '@expo/eas-build-job';
 import spawn from '@expo/turtle-spawn';
 import fs from 'fs-extra';
 import plist from 'plist';
@@ -27,6 +27,16 @@ export enum DistributionType {
   ENTERPRISE = 'enterprise',
 }
 
+/** Type enum may not correspond with extension. */
+function getExtensionForType(type: Ios.ProvisioningProfileType): string {
+  switch (type) {
+    case Ios.ProvisioningProfileType.MOBILEPROVISION:
+      return type;
+    case Ios.ProvisioningProfileType.PROVISIONPROFILE:
+      return type;
+  }
+}
+
 const PROVISIONING_PROFILES_DIRECTORY = path.join(
   os.homedir(),
   'Library/MobileDevice/Provisioning Profiles'
@@ -41,16 +51,36 @@ export default class ProvisioningProfile {
     }
   }
 
+  private readonly profile: Buffer;
+  private readonly keychainPath: string;
+  private readonly target: string;
+  private readonly certificateCommonName: string;
   private readonly profilePath: string;
+  private readonly profileType: Ios.ProvisioningProfileType;
   private profileData?: ProvisioningProfileData;
 
-  constructor(
-    private readonly profile: Buffer,
-    private readonly keychainPath: string,
-    private readonly target: string,
-    private readonly certificateCommonName: string
-  ) {
-    this.profilePath = path.join(PROVISIONING_PROFILES_DIRECTORY, `${uuid()}.mobileprovision`);
+  constructor({
+    profile,
+    keychainPath,
+    target,
+    certificateCommonName,
+    profileType,
+  }: {
+    profile: Buffer;
+    keychainPath: string;
+    target: string;
+    certificateCommonName: string;
+    profileType: Ios.ProvisioningProfileType;
+  }) {
+    this.profile = profile;
+    this.keychainPath = keychainPath;
+    this.target = target;
+    this.certificateCommonName = certificateCommonName;
+    this.profileType = profileType;
+    this.profilePath = path.join(
+      PROVISIONING_PROFILES_DIRECTORY,
+      `${uuid()}.${getExtensionForType(profileType)}`
+    );
   }
 
   public async init(logger: bunyan): Promise<void> {
@@ -107,7 +137,9 @@ Profile's certificate fingerprint = ${devCertFingerprint}, distribution certific
     }
 
     const applicationIdentifier = (plistData.Entitlements as plist.PlistObject)[
-      'application-identifier'
+      this.profileType === Ios.ProvisioningProfileType.PROVISIONPROFILE
+        ? 'com.apple.application-identifier'
+        : 'application-identifier'
     ] as string;
     const bundleIdentifier = applicationIdentifier.replace(/^.+?\./, '');
 

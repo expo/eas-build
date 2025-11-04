@@ -1,3 +1,4 @@
+import { Ios } from '@expo/eas-build-job';
 import {
   BuildFunction,
   BuildStepInput,
@@ -6,7 +7,6 @@ import {
 } from '@expo/steps';
 
 import IosCredentialsManager from '../utils/ios/credentials/manager';
-import { IosBuildCredentialsSchema } from '../utils/ios/credentials/credentials';
 
 export function resolveAppleTeamIdFromCredentialsFunction(): BuildFunction {
   return new BuildFunction({
@@ -29,7 +29,7 @@ export function resolveAppleTeamIdFromCredentialsFunction(): BuildFunction {
     ],
     fn: async (stepCtx, { inputs, outputs }) => {
       const rawCredentialsInput = inputs.credentials.value as Record<string, any>;
-      const { value, error } = IosBuildCredentialsSchema.validate(rawCredentialsInput, {
+      const { value, error } = Ios.BuildCredentialsSchema.validate(rawCredentialsInput, {
         stripUnknown: true,
         convert: true,
         abortEarly: false,

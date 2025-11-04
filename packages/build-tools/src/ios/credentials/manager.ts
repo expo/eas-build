@@ -128,13 +128,14 @@ export default class IosCredentialsManager<TJob extends Ios.Job> {
       );
 
       this.ctx.logger.info('Initializing provisioning profile');
-      const provisioningProfile = new ProvisioningProfile(
-        this.ctx,
-        Buffer.from(targetCredentials.provisioningProfileBase64, 'base64'),
-        this.keychain.data.path,
+      const provisioningProfile = new ProvisioningProfile({
+        ctx: this.ctx,
+        profile: Buffer.from(targetCredentials.provisioningProfileBase64, 'base64'),
+        keychainPath: this.keychain.data.path,
         target,
-        certificateCommonName
-      );
+        certificateCommonName,
+        profileType: targetCredentials.provisioningProfileType,
+      });
       await provisioningProfile.init();
 
       this.ctx.logger.info(
