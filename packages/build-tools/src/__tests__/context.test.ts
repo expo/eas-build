@@ -13,7 +13,7 @@ jest.mock('fs-extra');
 describe('BuildContext', () => {
   it('should merge secrets', async () => {
     const robotAccessToken = randomUUID();
-    await vol.promises.mkdir('/workingdir/environment-secrets/', { recursive: true });
+    await vol.promises.mkdir('/workingdir/eas-environment-secrets/', { recursive: true });
 
     const ctx = new BuildContext(
       {
@@ -83,7 +83,7 @@ describe('BuildContext', () => {
 
   it('should not lose workflowInterpolationContext', async () => {
     const robotAccessToken = randomUUID();
-    await vol.promises.mkdir('/workingdir/environment-secrets/', { recursive: true });
+    await vol.promises.mkdir('/workingdir/eas-environment-secrets/', { recursive: true });
 
     const ctx = new BuildContext(
       {
