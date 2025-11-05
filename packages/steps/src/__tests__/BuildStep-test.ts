@@ -277,6 +277,33 @@ describe(BuildStep, () => {
         );
       });
 
+      it('does not log an error if the command is to be executed in a directory that exists', async () => {
+        const id = 'test1';
+        const command = 'ls -la';
+        const displayName = BuildStep.getDisplayName({ id, command });
+
+        await fs.mkdir(path.join(baseStepCtx.defaultWorkingDirectory, 'existing-directory'), {
+          recursive: true,
+        });
+
+        const step = new BuildStep(baseStepCtx, {
+          id,
+          command,
+          displayName,
+          workingDirectory: 'existing-directory',
+        });
+
+        let err;
+        try {
+          await step.executeAsync();
+        } catch (error) {
+          err = error;
+        }
+
+        expect(err).toBeUndefined();
+        expect(step.ctx.logger.error).not.toHaveBeenCalled();
+      });
+
       it('executes the command passed to the step', async () => {
         const logger = createMockLogger();
         const lines: string[] = [];
