@@ -381,6 +381,28 @@ export class BuildStep extends BuildStepOutputAccessor {
     this.ctx.logger.debug(
       `Executing script: ${shellCommand}${args !== undefined ? ` ${args.join(' ')}` : ''}`
     );
+
+    try {
+      const workingDirectoryStat = await fs.stat(this.ctx.workingDirectory);
+      if (!workingDirectoryStat.isDirectory()) {
+        this.ctx.logger.error(
+          `Working directory "${this.ctx.workingDirectory}" exists, but is not a directory`
+        );
+      }
+    } catch (err: any) {
+      if (err?.code === 'ENOENT') {
+        this.ctx.logger.error(
+          { err },
+          `Working directory "${this.ctx.workingDirectory}" does not exist`
+        );
+      } else {
+        this.ctx.logger.error(
+          { err },
+          `Cannot access working directory "${this.ctx.workingDirectory}"`
+        );
+      }
+    }
+
     await spawnAsync(shellCommand, args ?? [], {
       cwd: this.ctx.workingDirectory,
       logger: this.ctx.logger,
