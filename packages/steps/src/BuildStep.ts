@@ -4,7 +4,7 @@ import path from 'path';
 import { Buffer } from 'buffer';
 
 import { v4 as uuidv4 } from 'uuid';
-import { JobInterpolationContext } from '@expo/eas-build-job';
+import { JobInterpolationContext, errors } from '@expo/eas-build-job';
 
 import { BuildStepContext, BuildStepGlobalContext } from './BuildStepContext.js';
 import { BuildStepInput, BuildStepInputById, makeBuildStepInputByIdMap } from './BuildStepInput.js';
@@ -60,6 +60,8 @@ export type BuildStepFunction = (
 // TODO: move to a place common with tests
 const UUID_REGEX =
   /^[0-9a-fA-F]{8}\b-[0-9a-fA-F]{4}\b-[0-9a-fA-F]{4}\b-[0-9a-fA-F]{4}\b-[0-9a-fA-F]{12}$/;
+
+class BuildStepTimeoutError extends errors.SpawnCommandTimeoutError {}
 
 export interface SerializedBuildStepOutputAccessor {
   id: string;
@@ -146,6 +148,9 @@ export class BuildStep extends BuildStepOutputAccessor {
   private readonly inputById: BuildStepInputById;
   protected executed = false;
 
+  public readonly noLogsWarnTimeoutMinutes?: number;
+  public readonly noLogsKillTimeoutMinutes?: number;
+
   public static getNewId(userDefinedId?: string): string {
     return userDefinedId ?? uuidv4();
   }
@@ -192,6 +197,8 @@ export class BuildStep extends BuildStepOutputAccessor {
       supportedRuntimePlatforms: maybeSupportedRuntimePlatforms,
       env,
       ifCondition,
+      noLogsWarnTimeoutMinutes,
+      noLogsKillTimeoutMinutes,
     }: {
       id: string;
       name?: string;
@@ -205,6 +212,8 @@ export class BuildStep extends BuildStepOutputAccessor {
       supportedRuntimePlatforms?: BuildRuntimePlatform[];
       env?: BuildStepEnv;
       ifCondition?: string;
+      noLogsWarnTimeoutMinutes?: number;
+      noLogsKillTimeoutMinutes?: number;
     }
   ) {
     assert(command !== undefined || fn !== undefined, 'Either command or fn must be defined.');
@@ -237,6 +246,9 @@ export class BuildStep extends BuildStepOutputAccessor {
 
     this.outputsDir = getTemporaryOutputsDirPath(ctx, this.id);
     this.envsDir = getTemporaryEnvsDirPath(ctx, this.id);
+
+    this.noLogsWarnTimeoutMinutes = noLogsWarnTimeoutMinutes;
+    this.noLogsKillTimeoutMinutes = noLogsKillTimeoutMinutes;
 
     ctx.registerStep(this);
   }
@@ -409,6 +421,21 @@ export class BuildStep extends BuildStepOutputAccessor {
       env: this.getScriptEnv(),
       // stdin is /dev/null, std{out,err} are piped into logger.
       stdio: ['ignore', 'pipe', 'pipe'],
+      noLogsTimeout: {
+        warn: {
+          timeoutMinutes: this.noLogsWarnTimeoutMinutes ?? 15,
+          message:
+            'Command takes longer then expected and it did not produce any logs in the past 15 minutes. Consider evaluating your command for possible issues.',
+        },
+        kill: {
+          timeoutMinutes: this.noLogsKillTimeoutMinutes ?? 30,
+          message:
+            'Command takes a very long time and it did not produce any logs in the past 30 minutes. Most likely an unexpected error happened which caused the process to hang and it will be terminated.',
+          errorClass: BuildStepTimeoutError,
+          errorMessage:
+            'Command was inactive for over 30 minutes. Please evaluate if it is correct.',
+        },
+      },
     });
     this.ctx.logger.debug(`Script completed successfully`);
   }
