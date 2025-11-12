@@ -204,7 +204,7 @@ describe(BuildFunction, () => {
       expect(step.outputById.output1).toBeDefined();
       expect(step.outputById.output2).toBeDefined();
     });
-    it('passes values to build inputs', () => {
+    it('passes values to build inputs', async () => {
       const ctx = createGlobalContextMock();
       const inputProviders: BuildStepInputProvider[] = [
         BuildStepInput.createProvider({
@@ -253,22 +253,22 @@ describe(BuildFunction, () => {
         workingDirectory: ctx.defaultWorkingDirectory,
       });
       expect(
-        step.inputs?.[0].getValue({
+        await step.inputs?.[0].getValueAsync({
           interpolationContext: ctx.getInterpolationContext(),
         })
       ).toBe('abc');
       expect(
-        step.inputs?.[1].getValue({
+        await step.inputs?.[1].getValueAsync({
           interpolationContext: ctx.getInterpolationContext(),
         })
       ).toBe('def');
       expect(
-        step.inputs?.[2].getValue({
+        await step.inputs?.[2].getValueAsync({
           interpolationContext: ctx.getInterpolationContext(),
         })
       ).toBe(false);
       expect(
-        step.inputs?.[3].getValue({
+        await step.inputs?.[3].getValueAsync({
           interpolationContext: ctx.getInterpolationContext(),
         })
       ).toMatchObject({
