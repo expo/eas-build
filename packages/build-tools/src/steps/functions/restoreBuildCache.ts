@@ -78,19 +78,23 @@ export async function restoreCcacheAsync({
   );
   const expoApiServerURL = nullthrows(env.__API_SERVER_URL, '__API_SERVER_URL is not set');
   const cachePath = getCcachePath(env);
+
+  // Check if ccache is installed before proceeding
+  const whichResult = await asyncResult(spawnAsync('which', ['ccache']));
+  if (!whichResult.ok) {
+    return;
+  }
+
   try {
-    try {
-      // Zero ccache stats for accurate tracking, return without logging if ccache is not installed
-      await asyncResult(
-        spawnAsync('ccache', ['--zero-stats'], {
-          env,
-          logger,
-          stdio: 'pipe',
-        })
-      );
-    } catch {
-      return;
-    }
+    // Zero ccache stats for accurate tracking
+    await asyncResult(
+      spawnAsync('ccache', ['--zero-stats'], {
+        env,
+        logger,
+        stdio: 'pipe',
+      })
+    );
+
     const cacheKey = await generateDefaultBuildCacheKeyAsync(workingDirectory, platform);
     logger.info(`Restoring cache key: ${cacheKey}`);
 
@@ -156,13 +160,18 @@ export async function cacheStatsAsync({
     return;
   }
 
-  try {
-    await asyncResult(
-      spawnAsync('ccache', ['--show-stats', '-v'], {
-        env,
-        logger,
-        stdio: 'pipe',
-      })
-    );
-  } catch {}
+  // Check if ccache is installed
+  const whichResult = await asyncResult(spawnAsync('which', ['ccache']));
+  if (!whichResult.ok) {
+    return;
+  }
+
+  logger.info('Cache stats:');
+  await asyncResult(
+    spawnAsync('ccache', ['--show-stats', '-v'], {
+      env,
+      logger,
+      stdio: 'pipe',
+    })
+  );
 }
