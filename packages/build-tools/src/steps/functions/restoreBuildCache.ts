@@ -78,7 +78,23 @@ export async function restoreCcacheAsync({
   );
   const expoApiServerURL = nullthrows(env.__API_SERVER_URL, '__API_SERVER_URL is not set');
   const cachePath = getCcachePath(env);
+
+  // Check if ccache is installed before proceeding
+  const checkInstall = await asyncResult(spawnAsync('command', ['-v', 'ccache']));
+  if (!checkInstall.ok) {
+    return;
+  }
+
   try {
+    // Zero ccache stats for accurate tracking
+    await asyncResult(
+      spawnAsync('ccache', ['--zero-stats'], {
+        env,
+        logger,
+        stdio: 'pipe',
+      })
+    );
+
     const cacheKey = await generateDefaultBuildCacheKeyAsync(workingDirectory, platform);
     logger.info(`Restoring cache key: ${cacheKey}`);
 
@@ -103,15 +119,6 @@ export async function restoreCcacheAsync({
 
     logger.info(
       `Cache restored successfully ${matchedKey === cacheKey ? '(direct hit)' : '(prefix match)'}`
-    );
-
-    // Zero ccache stats for accurate tracking
-    await asyncResult(
-      spawnAsync('ccache', ['--zero-stats'], {
-        env,
-        logger,
-        stdio: 'pipe',
-      })
     );
   } catch (err: unknown) {
     if (err instanceof TurtleFetchError && err.response?.status === 404) {
@@ -152,6 +159,13 @@ export async function cacheStatsAsync({
   if (!enabled) {
     return;
   }
+
+  // Check if ccache is installed
+  const checkInstall = await asyncResult(spawnAsync('command', ['-v', 'ccache']));
+  if (!checkInstall.ok) {
+    return;
+  }
+
   logger.info('Cache stats:');
   await asyncResult(
     spawnAsync('ccache', ['--show-stats', '-v'], {

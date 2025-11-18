@@ -73,6 +73,12 @@ export async function saveCcacheAsync({
     return;
   }
 
+  // Check if ccache is installed before proceeding
+  const checkInstall = await asyncResult(spawnAsync('command', ['-v', 'ccache']));
+  if (!checkInstall.ok) {
+    return;
+  }
+
   try {
     const cacheKey = await generateDefaultBuildCacheKeyAsync(workingDirectory, platform);
     logger.info(`Saving cache key: ${cacheKey}`);
