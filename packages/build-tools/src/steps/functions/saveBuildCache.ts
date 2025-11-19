@@ -74,7 +74,13 @@ export async function saveCcacheAsync({
   }
 
   // Check if ccache is installed before proceeding
-  const checkInstall = await asyncResult(spawnAsync('command', ['-v', 'ccache']));
+  const checkInstall = await asyncResult(
+    spawnAsync('command', ['-v', 'ccache'], {
+      env,
+      logger,
+      stdio: 'pipe',
+    })
+  );
   if (!checkInstall.ok) {
     return;
   }
