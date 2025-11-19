@@ -90,9 +90,6 @@ export async function restoreCcacheAsync({
   if (!checkInstall.ok) {
     return;
   }
-  if (!checkInstall.ok) {
-    return;
-  }
 
   try {
     // Zero ccache stats for accurate tracking
