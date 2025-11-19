@@ -80,7 +80,12 @@ export async function restoreCcacheAsync({
   const cachePath = getCcachePath(env);
 
   // Check if ccache is installed before proceeding
-  const checkInstall = await asyncResult(spawnAsync('command', ['-v', 'ccache']));
+  const checkInstall = await asyncResult(
+    spawnAsync('command', ['-v', 'ccache'], {
+      env,
+      stdio: 'pipe',
+    })
+  );
   if (!checkInstall.ok) {
     return;
   }
@@ -90,7 +95,6 @@ export async function restoreCcacheAsync({
     await asyncResult(
       spawnAsync('ccache', ['--zero-stats'], {
         env,
-        logger,
         stdio: 'pipe',
       })
     );
@@ -161,7 +165,12 @@ export async function cacheStatsAsync({
   }
 
   // Check if ccache is installed
-  const checkInstall = await asyncResult(spawnAsync('command', ['-v', 'ccache']));
+  const checkInstall = await asyncResult(
+    spawnAsync('command', ['-v', 'ccache'], {
+      env,
+      stdio: 'pipe',
+    })
+  );
   if (!checkInstall.ok) {
     return;
   }
