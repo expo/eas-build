@@ -83,7 +83,6 @@ export async function restoreCcacheAsync({
   const checkInstall = await asyncResult(
     spawnAsync('command', ['-v', 'ccache'], {
       env,
-      logger,
       stdio: 'pipe',
     })
   );
@@ -96,7 +95,6 @@ export async function restoreCcacheAsync({
     await asyncResult(
       spawnAsync('ccache', ['--zero-stats'], {
         env,
-        logger,
         stdio: 'pipe',
       })
     );
@@ -170,7 +168,6 @@ export async function cacheStatsAsync({
   const checkInstall = await asyncResult(
     spawnAsync('command', ['-v', 'ccache'], {
       env,
-      logger,
       stdio: 'pipe',
     })
   );

@@ -77,7 +77,6 @@ export async function saveCcacheAsync({
   const checkInstall = await asyncResult(
     spawnAsync('command', ['-v', 'ccache'], {
       env,
-      logger,
       stdio: 'pipe',
     })
   );
