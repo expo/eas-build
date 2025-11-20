@@ -78,6 +78,7 @@ export async function saveCcacheAsync({
     spawnAsync('command', ['-v', 'ccache'], {
       env,
       stdio: 'pipe',
+      shell: true,
     })
   );
   if (!checkInstall.ok) {
