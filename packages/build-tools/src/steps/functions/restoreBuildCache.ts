@@ -84,6 +84,7 @@ export async function restoreCcacheAsync({
     spawnAsync('command', ['-v', 'ccache'], {
       env,
       stdio: 'pipe',
+      shell: true,
     })
   );
   if (!checkInstall.ok) {
@@ -169,6 +170,7 @@ export async function cacheStatsAsync({
     spawnAsync('command', ['-v', 'ccache'], {
       env,
       stdio: 'pipe',
+      shell: true,
     })
   );
   if (!checkInstall.ok) {
