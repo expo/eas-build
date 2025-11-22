@@ -53,7 +53,10 @@ function isValid<T extends jsep.ExpressionType>(
   return types.includes(expression.type as T);
 }
 
-function getParameterPath(node: jsep.MemberExpression, context: Record<string, unknown>): string {
+async function getParameterPathAsync(
+  node: jsep.MemberExpression,
+  context: Record<string, unknown>
+): Promise<string> {
   // it's a MEMBER expression
   // EXAMPLES:  a[b] (computed)
   //            a.b (not computed)
@@ -74,28 +77,31 @@ function getParameterPath(node: jsep.MemberExpression, context: Record<string, u
   } else if (isValid(object, ['Identifier'])) {
     objectPath = object.name;
   } else {
-    objectPath = getParameterPath(object, context);
+    objectPath = await getParameterPathAsync(object, context);
   }
 
   if (computed) {
     // if computed -> evaluate anew
-    const propertyPath = evaluateExpressionNode(property, context);
+    const propertyPath = await evaluateExpressionNodeAsync(property, context);
     return objectPath + '[' + propertyPath + ']';
   } else if (property.type === 'Identifier') {
     return (objectPath ? objectPath + '.' : '') + property.name;
   } else if (property.type === 'CallExpression') {
-    const propertyPath = evaluateExpressionNode(property, context);
+    const propertyPath = await evaluateExpressionNodeAsync(property, context);
     return (objectPath ? objectPath + '.' : '') + propertyPath;
   } else if (property.type === 'Literal') {
     return (objectPath ? objectPath + '.' : '') + `${property.value}`;
   } else {
     assert(isValid(property, ['MemberExpression']), 'Invalid object type');
-    const propertyPath = getParameterPath(property, context);
+    const propertyPath = await getParameterPathAsync(property, context);
     return (objectPath ? objectPath + '.' : '') + propertyPath;
   }
 }
 
-function evaluateExpressionNode(node: jsep.Expression, context: Record<string, unknown>): unknown {
+async function evaluateExpressionNodeAsync(
+  node: jsep.Expression,
+  context: Record<string, unknown>
+): Promise<unknown> {
   switch (node.type as jsep.ExpressionType) {
     case 'Literal': {
       return (node as jsep.Literal).value;
@@ -105,7 +111,9 @@ function evaluateExpressionNode(node: jsep.Expression, context: Record<string, u
     }
     case 'Compound': {
       const compoundNode = node as jsep.Compound;
-      const expressions = compoundNode.body.map((el) => evaluateExpressionNode(el, context));
+      const expressions = await Promise.all(
+        compoundNode.body.map((el) => evaluateExpressionNodeAsync(el, context))
+      );
       return expressions.pop();
     }
     case 'UnaryExpression': {
@@ -114,7 +122,7 @@ function evaluateExpressionNode(node: jsep.Expression, context: Record<string, u
         throw new Error(`Unsupported unary operator: ${unaryNode.operator}`);
       }
       const operatorFn = unaryOperatorFunctions[unaryNode.operator as UnaryOperator];
-      const argument = evaluateExpressionNode(unaryNode.argument, context);
+      const argument = await evaluateExpressionNodeAsync(unaryNode.argument, context);
       return operatorFn(argument);
     }
     case 'BinaryExpression': {
@@ -123,15 +131,15 @@ function evaluateExpressionNode(node: jsep.Expression, context: Record<string, u
         throw new Error(`Unsupported binary operator: ${binaryNode.operator}`);
       }
       const operator = binaryOperatorFunctions[binaryNode.operator as BinaryOperator];
-      const left = evaluateExpressionNode(binaryNode.left, context);
-      const right = evaluateExpressionNode(binaryNode.right, context);
+      const left = await evaluateExpressionNodeAsync(binaryNode.left, context);
+      const right = await evaluateExpressionNodeAsync(binaryNode.right, context);
       return operator(left, right);
     }
     case 'ConditionalExpression': {
       const conditionalNode = node as jsep.ConditionalExpression;
-      const test = evaluateExpressionNode(conditionalNode.test, context);
-      const consequent = evaluateExpressionNode(conditionalNode.consequent, context);
-      const alternate = evaluateExpressionNode(conditionalNode.alternate, context);
+      const test = await evaluateExpressionNodeAsync(conditionalNode.test, context);
+      const consequent = await evaluateExpressionNodeAsync(conditionalNode.consequent, context);
+      const alternate = await evaluateExpressionNodeAsync(conditionalNode.alternate, context);
       return test ? consequent : alternate;
     }
     case 'CallExpression': {
@@ -148,11 +156,13 @@ function evaluateExpressionNode(node: jsep.Expression, context: Record<string, u
           }. Expected one of [${allowedCalleeTypes.join(', ')}].`
         );
       }
-      const callee = evaluateExpressionNode(callNode.callee, context);
-      const args = callNode.arguments.map((arg) => evaluateExpressionNode(arg, context));
+      const callee = await evaluateExpressionNodeAsync(callNode.callee, context);
+      const args = await Promise.all(
+        callNode.arguments.map((arg) => evaluateExpressionNodeAsync(arg, context))
+      );
       assert(typeof callee === 'function', 'Expected a function');
       // eslint-disable-next-line prefer-spread
-      return callee.apply(null, args);
+      return await callee.apply(null, args);
     }
     case 'Identifier': {
       const identifier = (node as jsep.Identifier).name;
@@ -168,8 +178,8 @@ function evaluateExpressionNode(node: jsep.Expression, context: Record<string, u
     case 'MemberExpression': {
       const memberNode = node as jsep.MemberExpression;
       return get(
-        evaluateExpressionNode(memberNode.object, context),
-        getParameterPath(
+        await evaluateExpressionNodeAsync(memberNode.object, context),
+        await getParameterPathAsync(
           {
             type: 'MemberExpression',
             object: { type: 'ThisExpression' },
@@ -181,8 +191,10 @@ function evaluateExpressionNode(node: jsep.Expression, context: Record<string, u
       );
     }
     case 'ArrayExpression': {
-      const elements = (node as jsep.ArrayExpression).elements.map((el) =>
-        el ? evaluateExpressionNode(el, context) : null
+      const elements = await Promise.all(
+        (node as jsep.ArrayExpression).elements.map((el) =>
+          el ? evaluateExpressionNodeAsync(el, context) : null
+        )
       );
       return elements;
     }
@@ -191,7 +203,10 @@ function evaluateExpressionNode(node: jsep.Expression, context: Record<string, u
   }
 }
 
-export function jsepEval(expression: string, context?: Record<string, unknown>): unknown {
+export async function jsepEvalAsync(
+  expression: string,
+  context?: Record<string, unknown>
+): Promise<unknown> {
   const tree = jsep(expression);
-  return evaluateExpressionNode(tree, context ?? {});
+  return await evaluateExpressionNodeAsync(tree, context ?? {});
 }
