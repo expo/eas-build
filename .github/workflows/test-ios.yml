@@ -10,7 +10,7 @@ jobs:
     runs-on: macos-latest
     name: Test with Node 20 on macOS
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
       - name: Setup node
         uses: actions/setup-node@v4
         with:
