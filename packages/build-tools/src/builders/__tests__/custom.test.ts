@@ -6,43 +6,34 @@ import { BuildContext } from '../../context';
 import { createMockLogger } from '../../__tests__/utils/logger';
 import { createTestIosJob } from '../../__tests__/utils/job';
 import { findAndUploadXcodeBuildLogsAsync } from '../../ios/xcodeBuildLogs';
+import { prepareProjectSourcesAsync } from '../../common/projectSources';
 
-jest.mock('fs', () => {
-  return {
-    ...jest.requireActual('memfs').fs,
-    promises: {
-      cp: jest.fn(),
-      mkdir: jest.fn(),
-    },
-  };
-});
-jest.mock('fs/promises');
 jest.mock('../../common/projectSources');
 jest.mock('../../ios/xcodeBuildLogs');
 
 const findAndUploadXcodeBuildLogsAsyncMock = jest.mocked(findAndUploadXcodeBuildLogsAsync);
-
-afterEach(() => {
-  vol.reset();
-});
 
 describe(runCustomBuildAsync, () => {
   let ctx: BuildContext<BuildJob>;
 
   beforeEach(() => {
     const job = createTestIosJob();
-    vol.mkdirSync('/workingdir/env', { recursive: true });
-    vol.mkdirSync('/workingdir/temporary-custom-build', { recursive: true });
-    vol.fromJSON(
-      {
-        'test.yaml': `
+
+    jest.mocked(prepareProjectSourcesAsync).mockImplementation(async () => {
+      vol.mkdirSync('/workingdir/env', { recursive: true });
+      vol.mkdirSync('/workingdir/temporary-custom-build', { recursive: true });
+      vol.fromJSON(
+        {
+          'test.yaml': `
           build:
             steps:
               - eas/checkout
           `,
-      },
-      '/workingdir/temporary-custom-build'
-    );
+        },
+        '/workingdir/temporary-custom-build'
+      );
+      return { handled: true };
+    });
 
     ctx = new BuildContext(
       {
@@ -72,5 +63,15 @@ describe(runCustomBuildAsync, () => {
     ctx.artifacts.XCODE_BUILD_LOGS = 'uploaded';
     await runCustomBuildAsync(ctx);
     expect(findAndUploadXcodeBuildLogsAsyncMock).not.toHaveBeenCalled();
+  });
+
+  it('retries checking out the project', async () => {
+    jest.mocked(prepareProjectSourcesAsync).mockImplementationOnce(async () => {
+      throw new Error('Failed to clone repository');
+    });
+
+    await runCustomBuildAsync(ctx);
+
+    expect(prepareProjectSourcesAsync).toHaveBeenCalledTimes(2);
   });
 });

@@ -18,7 +18,7 @@ import { shallowCloneRepositoryAsync } from './git';
 
 export async function prepareProjectSourcesAsync<TJob extends Job>(
   ctx: BuildContext<TJob>,
-  destinationDirectory = ctx.buildDirectory
+  destinationDirectory: string
 ): // Return type required to make switch exhaustive.
 Promise<{ handled: boolean }> {
   let projectArchive: ArchiveSource = ctx.job.projectArchive;
