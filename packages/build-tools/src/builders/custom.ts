@@ -18,19 +18,21 @@ import { retryAsync } from '../utils/retry';
 export async function runCustomBuildAsync(ctx: BuildContext<BuildJob>): Promise<Artifacts> {
   const customBuildCtx = new CustomBuildContext(ctx);
 
-  await retryAsync(
-    async () => {
-      await fs.rm(customBuildCtx.projectSourceDirectory, { recursive: true, force: true });
+  await ctx.runBuildPhase(BuildPhase.PREPARE_PROJECT, async () => {
+    await retryAsync(
+      async () => {
+        await fs.rm(customBuildCtx.projectSourceDirectory, { recursive: true, force: true });
 
-      await prepareProjectSourcesAsync(ctx, customBuildCtx.projectSourceDirectory);
-    },
-    {
-      retryOptions: {
-        retries: 3,
-        retryIntervalMs: 1_000,
+        await prepareProjectSourcesAsync(ctx, customBuildCtx.projectSourceDirectory);
       },
-    }
-  );
+      {
+        retryOptions: {
+          retries: 3,
+          retryIntervalMs: 1_000,
+        },
+      }
+    );
+  });
 
   if (ctx.job.triggeredBy === BuildTrigger.GIT_BASED_INTEGRATION) {
     // We need to setup envs from eas.json

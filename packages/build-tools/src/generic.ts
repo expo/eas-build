@@ -18,19 +18,21 @@ export async function runGenericJobAsync(
 ): Promise<{ runResult: Result<void>; buildWorkflow: BuildWorkflow }> {
   const customBuildCtx = new CustomBuildContext(ctx);
 
-  await retryAsync(
-    async () => {
-      await fs.rm(customBuildCtx.projectSourceDirectory, { recursive: true, force: true });
+  await ctx.runBuildPhase(BuildPhase.PREPARE_PROJECT, async () => {
+    await retryAsync(
+      async () => {
+        await fs.rm(customBuildCtx.projectSourceDirectory, { recursive: true, force: true });
 
-      await prepareProjectSourcesAsync(ctx, customBuildCtx.projectSourceDirectory);
-    },
-    {
-      retryOptions: {
-        retries: 3,
-        retryIntervalMs: 1_000,
+        await prepareProjectSourcesAsync(ctx, customBuildCtx.projectSourceDirectory);
       },
-    }
-  );
+      {
+        retryOptions: {
+          retries: 3,
+          retryIntervalMs: 1_000,
+        },
+      }
+    );
+  });
 
   const globalContext = new BuildStepGlobalContext(customBuildCtx, false);
 
