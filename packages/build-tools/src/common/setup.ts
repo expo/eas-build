@@ -37,6 +37,7 @@ export async function setupAsync<TJob extends BuildJob>(ctx: BuildContext<TJob>)
     await retryAsync(
       async () => {
         await fs.rm(ctx.buildDirectory, { recursive: true, force: true });
+        await fs.mkdir(ctx.buildDirectory, { recursive: true });
 
         await prepareProjectSourcesAsync(ctx, ctx.buildDirectory);
       },

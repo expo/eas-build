@@ -22,6 +22,7 @@ export async function runGenericJobAsync(
     await retryAsync(
       async () => {
         await fs.rm(customBuildCtx.projectSourceDirectory, { recursive: true, force: true });
+        await fs.mkdir(customBuildCtx.projectSourceDirectory, { recursive: true });
 
         await prepareProjectSourcesAsync(ctx, customBuildCtx.projectSourceDirectory);
       },
