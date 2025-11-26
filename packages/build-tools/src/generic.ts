@@ -1,3 +1,5 @@
+import fs from 'fs/promises';
+
 import { BuildPhase, Generic } from '@expo/eas-build-job';
 import { BuildStepGlobalContext, BuildWorkflow, errors, StepsConfigParser } from '@expo/steps';
 import { Result, asyncResult } from '@expo/results';
@@ -8,6 +10,7 @@ import { getEasFunctions } from './steps/easFunctions';
 import { CustomBuildContext } from './customBuildContext';
 import { getEasFunctionGroups } from './steps/easFunctionGroups';
 import { uploadJobOutputsToWwwAsync } from './utils/outputs';
+import { retryAsync } from './utils/retry';
 
 export async function runGenericJobAsync(
   ctx: BuildContext<Generic.Job>,
@@ -15,7 +18,19 @@ export async function runGenericJobAsync(
 ): Promise<{ runResult: Result<void>; buildWorkflow: BuildWorkflow }> {
   const customBuildCtx = new CustomBuildContext(ctx);
 
-  await prepareProjectSourcesAsync(ctx, customBuildCtx.projectSourceDirectory);
+  await retryAsync(
+    async () => {
+      await fs.rm(customBuildCtx.projectSourceDirectory, { recursive: true, force: true });
+
+      await prepareProjectSourcesAsync(ctx, customBuildCtx.projectSourceDirectory);
+    },
+    {
+      retryOptions: {
+        retries: 3,
+        retryIntervalMs: 1_000,
+      },
+    }
+  );
 
   const globalContext = new BuildStepGlobalContext(customBuildCtx, false);
 

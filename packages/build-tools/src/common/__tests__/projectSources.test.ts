@@ -79,7 +79,7 @@ describe('projectSources', () => {
         }) as Response
     );
 
-    await prepareProjectSourcesAsync(ctx);
+    await prepareProjectSourcesAsync(ctx, ctx.buildDirectory);
     expect(shallowCloneRepositoryAsync).toHaveBeenCalledWith(
       expect.objectContaining({
         archiveSource: {
@@ -136,7 +136,7 @@ describe('projectSources', () => {
         }) as Response
     );
 
-    await prepareProjectSourcesAsync(ctx);
+    await prepareProjectSourcesAsync(ctx, ctx.buildDirectory);
     expect(shallowCloneRepositoryAsync).toHaveBeenLastCalledWith(
       expect.objectContaining({
         archiveSource: {
@@ -156,7 +156,7 @@ describe('projectSources', () => {
         }) as Response
     );
 
-    await prepareProjectSourcesAsync(ctx);
+    await prepareProjectSourcesAsync(ctx, ctx.buildDirectory);
     expect(shallowCloneRepositoryAsync).toHaveBeenLastCalledWith(
       expect.objectContaining({
         archiveSource: {
@@ -174,7 +174,7 @@ describe('projectSources', () => {
         }) as Response
     );
 
-    await prepareProjectSourcesAsync(ctx);
+    await prepareProjectSourcesAsync(ctx, ctx.buildDirectory);
     expect(shallowCloneRepositoryAsync).toHaveBeenLastCalledWith(
       expect.objectContaining({
         archiveSource: {
@@ -249,7 +249,7 @@ describe('projectSources', () => {
         }) as Response
     );
 
-    await prepareProjectSourcesAsync(ctx);
+    await prepareProjectSourcesAsync(ctx, ctx.buildDirectory);
     expect(shallowCloneRepositoryAsync).toHaveBeenLastCalledWith(
       expect.objectContaining({
         archiveSource: {
@@ -298,7 +298,7 @@ describe('projectSources', () => {
       }
     );
 
-    await prepareProjectSourcesAsync(ctx);
+    await prepareProjectSourcesAsync(ctx, ctx.buildDirectory);
 
     expect(logger.error).toHaveBeenCalledWith(
       { err: expect.any(Error) },
@@ -385,7 +385,7 @@ describe('projectSources', () => {
       fetchMock.mockImplementation(async () => ({ ok: true }) as Response);
 
       // Call prepareProjectSourcesAsync and don't await metadata upload
-      await prepareProjectSourcesAsync(ctx);
+      await prepareProjectSourcesAsync(ctx, ctx.buildDirectory);
 
       // Wait for the fire-and-forget async operation to complete
       await setTimeout(1000);
@@ -498,7 +498,7 @@ describe('projectSources', () => {
       fetchMock.mockResolvedValue({ ok: true } as Response);
 
       const startTime = Date.now();
-      await prepareProjectSourcesAsync(ctx);
+      await prepareProjectSourcesAsync(ctx, ctx.buildDirectory);
       const endTime = Date.now();
 
       // prepareProjectSourcesAsync should complete quickly without waiting for upload
@@ -562,7 +562,7 @@ describe('projectSources', () => {
       fetchMock.mockResolvedValue({ ok: true } as Response);
 
       // Should not throw even though upload will fail
-      await expect(prepareProjectSourcesAsync(ctx)).resolves.not.toThrow();
+      await expect(prepareProjectSourcesAsync(ctx, ctx.buildDirectory)).resolves.not.toThrow();
 
       // Wait for the fire-and-forget operation to complete
       await setTimeout(100);

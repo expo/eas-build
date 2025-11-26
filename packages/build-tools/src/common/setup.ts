@@ -19,6 +19,7 @@ import {
 } from '../utils/packageManager';
 import { readPackageJson } from '../utils/project';
 import { getParentAndDescendantProcessPidsAsync } from '../utils/processes';
+import { retryAsync } from '../utils/retry';
 
 import { prepareProjectSourcesAsync } from './projectSources';
 import { installDependenciesAsync, resolvePackagerDir } from './installDependencies';
@@ -33,7 +34,20 @@ class InstallDependenciesTimeoutError extends Error {}
 
 export async function setupAsync<TJob extends BuildJob>(ctx: BuildContext<TJob>): Promise<void> {
   await ctx.runBuildPhase(BuildPhase.PREPARE_PROJECT, async () => {
-    await prepareProjectSourcesAsync(ctx);
+    await retryAsync(
+      async () => {
+        await fs.rm(ctx.buildDirectory, { recursive: true, force: true });
+
+        await prepareProjectSourcesAsync(ctx, ctx.buildDirectory);
+      },
+      {
+        retryOptions: {
+          retries: 3,
+          retryIntervalMs: 1_000,
+        },
+      }
+    );
+
     await setUpNpmrcAsync(ctx, ctx.logger);
     if (ctx.job.platform === Platform.IOS && ctx.env.EAS_BUILD_RUNNER === 'eas-build') {
       await deleteXcodeEnvLocalIfExistsAsync(ctx as BuildContext<Ios.Job>);
