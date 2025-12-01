@@ -1,13 +1,37 @@
 import path from 'path';
 import { vol } from 'memfs';
-import { bunyan } from '@expo/logger';
 
 import {
   injectCredentialsGradleConfig,
   injectConfigureVersionGradleConfig,
 } from '../gradleConfig';
 
-jest.mock('fs-extra');
+jest.mock('fs-extra', () => {
+  const memfs = require('memfs');
+  return {
+    ...memfs.fs,
+    ...memfs.fs.promises,
+    readFile: memfs.fs.promises.readFile,
+    writeFile: memfs.fs.promises.writeFile,
+    mkdirp: memfs.fs.promises.mkdir,
+    remove: async (path: string) => {
+      try {
+        const stats = await memfs.fs.promises.stat(path);
+        if (stats.isDirectory()) {
+          await memfs.fs.promises.rmdir(path, { recursive: true });
+        } else {
+          await memfs.fs.promises.unlink(path);
+        }
+      } catch (err: any) {
+        if (err.code !== 'ENOENT') throw err;
+      }
+    },
+    copy: async (src: string, dest: string) => {
+      const content = await memfs.fs.promises.readFile(src);
+      await memfs.fs.promises.writeFile(dest, content);
+    },
+  };
+});
 
 const originalFs = jest.requireActual('fs');
 
@@ -39,7 +63,7 @@ android {
 `;
 
 describe('gradleConfig', () => {
-  let mockLogger: bunyan;
+  let mockLogger: any;
 
   beforeEach(() => {
     vol.reset();
@@ -47,7 +71,7 @@ describe('gradleConfig', () => {
       info: jest.fn(),
       warn: jest.fn(),
       error: jest.fn(),
-    } as any;
+    };
 
     // Set up template files and Android project structure in the mock filesystem
     vol.fromJSON({

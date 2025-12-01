@@ -5,7 +5,16 @@ import { createGymfileForArchiveBuild, createGymfileForSimulatorBuild } from '..
 import { Credentials } from '../credentials/manager';
 import { DistributionType } from '../credentials/provisioningProfile';
 
-jest.mock('fs-extra');
+jest.mock('fs-extra', () => {
+  const memfs = require('memfs');
+  return {
+    ...memfs.fs,
+    ...memfs.fs.promises,
+    readFile: memfs.fs.promises.readFile,
+    writeFile: memfs.fs.promises.writeFile,
+    mkdirp: memfs.fs.promises.mkdir,
+  };
+});
 
 const originalFs = jest.requireActual('fs');
 
@@ -23,10 +32,11 @@ const SIMULATOR_TEMPLATE = originalFs.readFileSync(
 describe('gymfile', () => {
   beforeEach(() => {
     vol.reset();
-    // Set up template files in the mock filesystem
+    // Set up template files and /tmp directory in the mock filesystem
     vol.fromJSON({
       [path.join(__dirname, '../../../templates/Gymfile.archive.template')]: ARCHIVE_TEMPLATE,
       [path.join(__dirname, '../../../templates/Gymfile.simulator.template')]: SIMULATOR_TEMPLATE,
+      '/tmp/.keep': '', // Create /tmp directory
     });
   });
 

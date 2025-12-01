@@ -4,7 +4,16 @@ import { vol } from 'memfs';
 import { createFastfileForResigningBuild } from '../fastfile';
 import { TargetProvisioningProfiles } from '../credentials/manager';
 
-jest.mock('fs-extra');
+jest.mock('fs-extra', () => {
+  const memfs = require('memfs');
+  return {
+    ...memfs.fs,
+    ...memfs.fs.promises,
+    readFile: memfs.fs.promises.readFile,
+    writeFile: memfs.fs.promises.writeFile,
+    mkdirp: memfs.fs.promises.mkdir,
+  };
+});
 
 const originalFs = jest.requireActual('fs');
 
@@ -17,9 +26,10 @@ const RESIGN_TEMPLATE = originalFs.readFileSync(
 describe('fastfile', () => {
   beforeEach(() => {
     vol.reset();
-    // Set up template file in the mock filesystem
+    // Set up template file and /tmp directory in the mock filesystem
     vol.fromJSON({
       [path.join(__dirname, '../../../templates/Fastfile.resign.template')]: RESIGN_TEMPLATE,
+      '/tmp/.keep': '', // Create /tmp directory
     });
   });
 
@@ -34,12 +44,12 @@ describe('fastfile', () => {
           bundleIdentifier: 'com.example.app',
           uuid: 'test-uuid-1',
           path: '/path/to/profiles/main.mobileprovision',
-        },
+        } as any,
         'com.example.app.widget': {
           bundleIdentifier: 'com.example.app.widget',
           uuid: 'test-uuid-2',
           path: '/path/to/profiles/widget.mobileprovision',
-        },
+        } as any,
       };
 
       const outputFile = '/tmp/Fastfile';
@@ -62,7 +72,7 @@ describe('fastfile', () => {
           bundleIdentifier: 'com.example.app',
           uuid: 'single-uuid',
           path: '/tmp/profile.mobileprovision',
-        },
+        } as any,
       };
 
       const outputFile = '/tmp/Fastfile';
@@ -85,22 +95,22 @@ describe('fastfile', () => {
           bundleIdentifier: 'com.example.app',
           uuid: 'uuid-main',
           path: '/profiles/main.mobileprovision',
-        },
+        } as any,
         'com.example.app.widget': {
           bundleIdentifier: 'com.example.app.widget',
           uuid: 'uuid-widget',
           path: '/profiles/widget.mobileprovision',
-        },
+        } as any,
         'com.example.app.extension': {
           bundleIdentifier: 'com.example.app.extension',
           uuid: 'uuid-extension',
           path: '/profiles/extension.mobileprovision',
-        },
+        } as any,
         'com.example.app.intents': {
           bundleIdentifier: 'com.example.app.intents',
           uuid: 'uuid-intents',
           path: '/profiles/intents.mobileprovision',
-        },
+        } as any,
       };
 
       const outputFile = '/tmp/Fastfile';
@@ -140,7 +150,7 @@ describe('fastfile', () => {
           bundleIdentifier: 'com.example.app',
           uuid: 'test-uuid',
           path: '/path/with spaces/profile (1).mobileprovision',
-        },
+        } as any,
       };
 
       const outputFile = '/tmp/Fastfile';
@@ -163,7 +173,7 @@ describe('fastfile', () => {
           bundleIdentifier: 'com.example.app',
           uuid: 'test-uuid',
           path: '/path/to/profile.mobileprovision',
-        },
+        } as any,
       };
 
       const outputFile = '/tmp/Fastfile';
