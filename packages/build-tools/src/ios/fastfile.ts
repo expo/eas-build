@@ -1,6 +1,6 @@
 import path from 'path';
 
-import templateFile from '@expo/template-file';
+import { templateFile } from '@expo/template-file';
 
 import { TargetProvisioningProfiles } from './credentials/manager';
 

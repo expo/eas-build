@@ -1,6 +1,6 @@
 import path from 'path';
 
-import templateFile from '@expo/template-file';
+import { templateFile } from '@expo/template-file';
 import fs from 'fs-extra';
 
 import { Credentials } from './credentials/manager';
