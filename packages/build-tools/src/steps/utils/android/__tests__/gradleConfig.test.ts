@@ -1,10 +1,8 @@
 import path from 'path';
+
 import { vol } from 'memfs';
 
-import {
-  injectCredentialsGradleConfig,
-  injectConfigureVersionGradleConfig,
-} from '../gradleConfig';
+import { injectCredentialsGradleConfig, injectConfigureVersionGradleConfig } from '../gradleConfig';
 
 jest.mock('fs-extra', () => {
   const memfs = require('memfs');
@@ -95,7 +93,8 @@ describe('gradleConfig', () => {
     it('should copy credentials gradle file to android/app directory', async () => {
       await injectCredentialsGradleConfig(mockLogger, '/workingdir');
 
-      const credentialsGradlePath = '/workingdir/android/app/eas-build-inject-android-credentials.gradle';
+      const credentialsGradlePath =
+        '/workingdir/android/app/eas-build-inject-android-credentials.gradle';
       const generatedContent = vol.readFileSync(credentialsGradlePath, 'utf-8') as string;
 
       // Verify the file was copied
@@ -124,8 +123,9 @@ describe('gradleConfig', () => {
       const buildGradlePath = '/workingdir/android/app/build.gradle';
       const contentAfterFirst = vol.readFileSync(buildGradlePath, 'utf-8') as string;
       const firstOccurrences = (
-        contentAfterFirst.match(/apply from: "\.\/eas-build-inject-android-credentials\.gradle"/g) ||
-        []
+        contentAfterFirst.match(
+          /apply from: "\.\/eas-build-inject-android-credentials\.gradle"/g
+        ) || []
       ).length;
 
       // Call again
@@ -133,8 +133,9 @@ describe('gradleConfig', () => {
 
       const contentAfterSecond = vol.readFileSync(buildGradlePath, 'utf-8') as string;
       const secondOccurrences = (
-        contentAfterSecond.match(/apply from: "\.\/eas-build-inject-android-credentials\.gradle"/g) ||
-        []
+        contentAfterSecond.match(
+          /apply from: "\.\/eas-build-inject-android-credentials\.gradle"/g
+        ) || []
       ).length;
 
       expect(firstOccurrences).toBe(1);
@@ -143,7 +144,8 @@ describe('gradleConfig', () => {
 
     it('should replace existing credentials gradle file', async () => {
       // Create an old credentials file
-      const credentialsGradlePath = '/workingdir/android/app/eas-build-inject-android-credentials.gradle';
+      const credentialsGradlePath =
+        '/workingdir/android/app/eas-build-inject-android-credentials.gradle';
       vol.writeFileSync(credentialsGradlePath, '// Old content');
 
       await injectCredentialsGradleConfig(mockLogger, '/workingdir');
@@ -210,9 +212,7 @@ describe('gradleConfig', () => {
       const buildGradlePath = '/workingdir/android/app/build.gradle';
       const buildGradleContent = vol.readFileSync(buildGradlePath, 'utf-8') as string;
 
-      expect(buildGradleContent).toContain(
-        'apply from: "./eas-build-configure-version.gradle"'
-      );
+      expect(buildGradleContent).toContain('apply from: "./eas-build-configure-version.gradle"');
     });
 
     it('should not duplicate apply statement if already present', async () => {
@@ -316,9 +316,7 @@ describe('gradleConfig', () => {
       expect(buildGradleContent).toContain(
         'apply from: "./eas-build-inject-android-credentials.gradle"'
       );
-      expect(buildGradleContent).toContain(
-        'apply from: "./eas-build-configure-version.gradle"'
-      );
+      expect(buildGradleContent).toContain('apply from: "./eas-build-configure-version.gradle"');
 
       // Both files should exist
       const credentialsPath = '/workingdir/android/app/eas-build-inject-android-credentials.gradle';

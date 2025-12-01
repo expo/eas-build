@@ -1,4 +1,5 @@
 import path from 'path';
+
 import { vol } from 'memfs';
 
 import { createGymfileForArchiveBuild, createGymfileForSimulatorBuild } from '../gymfile';
@@ -168,7 +169,6 @@ describe('gymfile', () => {
       const generatedContent = vol.readFileSync(outputFile, 'utf-8') as string;
       expect(generatedContent).toMatchSnapshot();
     });
-
 
     it('should handle multiple provisioning profiles correctly', async () => {
       const mockCredentials: Credentials = {

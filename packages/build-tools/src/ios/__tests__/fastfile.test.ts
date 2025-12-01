@@ -1,4 +1,5 @@
 import path from 'path';
+
 import { vol } from 'memfs';
 
 import { createFastfileForResigningBuild } from '../fastfile';
