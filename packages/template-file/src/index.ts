@@ -1,6 +1,7 @@
 import fs from 'fs/promises';
 
-import lodashTemplate from 'lodash/template';
+// We can't use lodash/template because templates expect to be able to do `_.forEach`.
+import _ from 'lodash';
 
 export function templateString({
   input,
@@ -11,7 +12,7 @@ export function templateString({
   vars: Record<string, unknown>;
   mustache?: boolean;
 }): string {
-  const compiledTemplate = lodashTemplate(
+  const compiledTemplate = _.template(
     input,
     mustache
       ? {
