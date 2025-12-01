@@ -1,6 +1,5 @@
 import assert from 'assert';
 import path from 'path';
-import os from 'os';
 
 import fs from 'fs-extra';
 import { BuildFunction, BuildStepInput, BuildStepInputValueTypeName } from '@expo/steps';
@@ -8,8 +7,7 @@ import { Ios } from '@expo/eas-build-job';
 import { IOSConfig } from '@expo/config-plugins';
 import plist from '@expo/plist';
 import { bunyan } from '@expo/logger';
-import { templateFile } from '@expo/template-file';
-import { v4 as uuid } from 'uuid';
+import { templateString } from '@expo/template-file';
 
 import { IosBuildCredentialsSchema } from '../utils/ios/credentials/credentials';
 import IosCredentialsManager, { Credentials } from '../utils/ios/credentials/manager';
@@ -147,8 +145,6 @@ export function generateGymfileFromTemplateFunction(): BuildFunction {
         buildConfiguration
       );
 
-      const templatePath = await saveTemplateToTemporaryFileAsync(template);
-
       const gymfilePath = path.join(stepCtx.workingDirectory, 'ios/Gymfile');
 
       const PROFILES: { BUNDLE_ID: string; UUID: string }[] = [];
@@ -174,9 +170,8 @@ export function generateGymfileFromTemplateFunction(): BuildFunction {
       });
       const simulatorDestination = `generic/platform=${isTV ? 'tvOS' : 'iOS'} Simulator`;
 
-      await createGymfile({
-        template: templatePath,
-        outputFile: gymfilePath,
+      const output = templateString({
+        input: template,
         vars: {
           SCHEME: scheme,
           BUILD_CONFIGURATION: buildConfiguration,
@@ -195,7 +190,9 @@ export function generateGymfileFromTemplateFunction(): BuildFunction {
             : {}),
           ...extra,
         },
+        mustache: false,
       });
+      await fs.writeFile(gymfilePath, output);
 
       const gymfileContents = await fs.readFile(gymfilePath, 'utf8');
       stepCtx.logger.info(`Successfully generated Gymfile: ${gymfileContents}`);
@@ -225,24 +222,4 @@ async function maybeReadEntitlementsAsync(
     logger.warn({ err }, 'Failed to read entitlements');
     return null;
   }
-}
-
-async function createGymfile({
-  template,
-  outputFile,
-  vars,
-}: {
-  template: string;
-  outputFile: string;
-  vars: Record<string, string | number | any>;
-}): Promise<void> {
-  await templateFile(template, vars, outputFile, { mustache: false });
-}
-
-async function saveTemplateToTemporaryFileAsync(template: string): Promise<string> {
-  const directory = path.join(os.tmpdir(), `gymfile-template-${uuid()}`);
-  await fs.mkdir(directory, { recursive: true });
-  const templatePath = path.join(directory, 'Gymfile.template');
-  await fs.writeFile(templatePath, template);
-  return templatePath;
 }

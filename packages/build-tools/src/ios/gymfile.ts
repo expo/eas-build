@@ -1,15 +1,9 @@
-import path from 'path';
-
-import { templateFile } from '@expo/template-file';
+import { templateString } from '@expo/template-file';
 import fs from 'fs-extra';
 
 import { Credentials } from './credentials/manager';
-
-const ARCHIVE_TEMPLATE_FILE_PATH = path.join(__dirname, '../../templates/Gymfile.archive.template');
-const SIMULATOR_TEMPLATE_FILE_PATH = path.join(
-  __dirname,
-  '../../templates/Gymfile.simulator.template'
-);
+import { GymfileArchiveTemplate } from '../../templates/Gymfile.archive';
+import { GymfileSimulatorTemplate } from '../../templates/Gymfile.simulator';
 
 interface ArchiveBuildOptions {
   outputFile: string;
@@ -58,7 +52,7 @@ export async function createGymfileForArchiveBuild({
 
   await fs.mkdirp(logsDirectory);
   await createGymfile({
-    template: ARCHIVE_TEMPLATE_FILE_PATH,
+    template: GymfileArchiveTemplate,
     outputFile,
     vars: {
       KEYCHAIN_PATH: credentials.keychainPath,
@@ -85,7 +79,7 @@ export async function createGymfileForSimulatorBuild({
 }: SimulatorBuildOptions): Promise<void> {
   await fs.mkdirp(logsDirectory);
   await createGymfile({
-    template: SIMULATOR_TEMPLATE_FILE_PATH,
+    template: GymfileSimulatorTemplate,
     outputFile,
     vars: {
       SCHEME: scheme,
@@ -107,5 +101,10 @@ async function createGymfile({
   outputFile: string;
   vars: Record<string, string | number | any>;
 }): Promise<void> {
-  await templateFile(template, vars, outputFile, { mustache: false });
+  const output = templateString({
+    input: template,
+    vars,
+    mustache: false,
+  });
+  await fs.writeFile(outputFile, output);
 }
