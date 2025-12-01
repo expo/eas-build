@@ -6,17 +6,6 @@ import { createGymfileForArchiveBuild, createGymfileForSimulatorBuild } from '..
 import { Credentials } from '../credentials/manager';
 import { DistributionType } from '../credentials/provisioningProfile';
 
-jest.mock('fs-extra', () => {
-  const memfs = require('memfs');
-  return {
-    ...memfs.fs,
-    ...memfs.fs.promises,
-    readFile: memfs.fs.promises.readFile,
-    writeFile: memfs.fs.promises.writeFile,
-    mkdirp: memfs.fs.promises.mkdir,
-  };
-});
-
 const originalFs = jest.requireActual('fs');
 
 // Read actual template files from the templates directory

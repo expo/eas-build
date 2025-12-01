@@ -5,17 +5,6 @@ import { vol } from 'memfs';
 import { createFastfileForResigningBuild } from '../fastfile';
 import { TargetProvisioningProfiles } from '../credentials/manager';
 
-jest.mock('fs-extra', () => {
-  const memfs = require('memfs');
-  return {
-    ...memfs.fs,
-    ...memfs.fs.promises,
-    readFile: memfs.fs.promises.readFile,
-    writeFile: memfs.fs.promises.writeFile,
-    mkdirp: memfs.fs.promises.mkdir,
-  };
-});
-
 const originalFs = jest.requireActual('fs');
 
 // Read actual template file from the templates directory

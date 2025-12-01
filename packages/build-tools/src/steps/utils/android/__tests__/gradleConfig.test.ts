@@ -4,33 +4,6 @@ import { vol } from 'memfs';
 
 import { injectCredentialsGradleConfig, injectConfigureVersionGradleConfig } from '../gradleConfig';
 
-jest.mock('fs-extra', () => {
-  const memfs = require('memfs');
-  return {
-    ...memfs.fs,
-    ...memfs.fs.promises,
-    readFile: memfs.fs.promises.readFile,
-    writeFile: memfs.fs.promises.writeFile,
-    mkdirp: memfs.fs.promises.mkdir,
-    remove: async (path: string) => {
-      try {
-        const stats = await memfs.fs.promises.stat(path);
-        if (stats.isDirectory()) {
-          await memfs.fs.promises.rmdir(path, { recursive: true });
-        } else {
-          await memfs.fs.promises.unlink(path);
-        }
-      } catch (err: any) {
-        if (err.code !== 'ENOENT') throw err;
-      }
-    },
-    copy: async (src: string, dest: string) => {
-      const content = await memfs.fs.promises.readFile(src);
-      await memfs.fs.promises.writeFile(dest, content);
-    },
-  };
-});
-
 const originalFs = jest.requireActual('fs');
 
 // Read actual template files from the templates directory
@@ -125,7 +98,7 @@ describe('gradleConfig', () => {
       const firstOccurrences = (
         contentAfterFirst.match(
           /apply from: "\.\/eas-build-inject-android-credentials\.gradle"/g
-        ) || []
+        ) ?? []
       ).length;
 
       // Call again
@@ -135,7 +108,7 @@ describe('gradleConfig', () => {
       const secondOccurrences = (
         contentAfterSecond.match(
           /apply from: "\.\/eas-build-inject-android-credentials\.gradle"/g
-        ) || []
+        ) ?? []
       ).length;
 
       expect(firstOccurrences).toBe(1);
@@ -224,7 +197,7 @@ describe('gradleConfig', () => {
       const buildGradlePath = '/workingdir/android/app/build.gradle';
       const contentAfterFirst = vol.readFileSync(buildGradlePath, 'utf-8') as string;
       const firstOccurrences = (
-        contentAfterFirst.match(/apply from: "\.\/eas-build-configure-version\.gradle"/g) || []
+        contentAfterFirst.match(/apply from: "\.\/eas-build-configure-version\.gradle"/g) ?? []
       ).length;
 
       // Call again
@@ -234,7 +207,7 @@ describe('gradleConfig', () => {
 
       const contentAfterSecond = vol.readFileSync(buildGradlePath, 'utf-8') as string;
       const secondOccurrences = (
-        contentAfterSecond.match(/apply from: "\.\/eas-build-configure-version\.gradle"/g) || []
+        contentAfterSecond.match(/apply from: "\.\/eas-build-configure-version\.gradle"/g) ?? []
       ).length;
 
       expect(firstOccurrences).toBe(1);
