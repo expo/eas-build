@@ -4,8 +4,7 @@ import fs from 'fs-extra';
 import { BuildFunction } from '@expo/steps';
 
 import { findPackagerRootDir } from '../../utils/packageManager';
-
-const NPMRC_TEMPLATE_PATH = path.join(__dirname, '../../../templates/npmrc');
+import { NpmrcTemplate } from '../../../templates/npmrc';
 
 export function createSetUpNpmrcBuildFunction(): BuildFunction {
   return new BuildFunction({
@@ -20,10 +19,9 @@ export function createSetUpNpmrcBuildFunction(): BuildFunction {
         if (await fs.pathExists(projectNpmrcPath)) {
           logger.info('.npmrc already exists in your project directory, skipping generation');
         } else {
-          const npmrcContents = await fs.readFile(NPMRC_TEMPLATE_PATH, 'utf8');
           logger.info('Creating .npmrc in your project directory with the following contents:');
-          logger.info(npmrcContents);
-          await fs.copy(NPMRC_TEMPLATE_PATH, projectNpmrcPath);
+          logger.info(NpmrcTemplate);
+          await fs.writeFile(projectNpmrcPath, NpmrcTemplate);
         }
       } else {
         const projectNpmrcPath = path.join(findPackagerRootDir(stepCtx.workingDirectory), '.npmrc');
