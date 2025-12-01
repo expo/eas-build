@@ -37,3 +37,5 @@ export async function templateFile(
     return outputFileContents;
   }
 }
+
+export default templateFile;

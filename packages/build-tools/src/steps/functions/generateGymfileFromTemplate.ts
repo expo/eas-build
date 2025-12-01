@@ -8,7 +8,7 @@ import { Ios } from '@expo/eas-build-job';
 import { IOSConfig } from '@expo/config-plugins';
 import plist from '@expo/plist';
 import { bunyan } from '@expo/logger';
-import templateFile from '@expo/template-file';
+import { templateFile } from '@expo/template-file';
 import { v4 as uuid } from 'uuid';
 
 import { IosBuildCredentialsSchema } from '../utils/ios/credentials/credentials';

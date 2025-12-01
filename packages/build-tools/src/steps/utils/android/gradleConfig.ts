@@ -3,7 +3,7 @@ import path from 'path';
 import { AndroidConfig } from '@expo/config-plugins';
 import { bunyan } from '@expo/logger';
 import fs from 'fs-extra';
-import templateFile from '@expo/template-file';
+import { templateFile } from '@expo/template-file';
 
 const EAS_BUILD_INJECT_CREDENTIALS_GRADLE_TEMPLATE_PATH = path.join(
   __dirname,
