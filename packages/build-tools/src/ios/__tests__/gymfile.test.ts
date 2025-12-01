@@ -3,6 +3,7 @@ import { vol } from 'memfs';
 
 import { createGymfileForArchiveBuild, createGymfileForSimulatorBuild } from '../gymfile';
 import { Credentials } from '../credentials/manager';
+import { DistributionType } from '../credentials/provisioningProfile';
 
 jest.mock('fs-extra');
 
@@ -37,17 +38,31 @@ describe('gymfile', () => {
     it('should create Gymfile with all variables substituted correctly', async () => {
       const mockCredentials: Credentials = {
         keychainPath: '/Users/expo/Library/Keychains/login.keychain',
-        distributionType: 'app-store',
+        distributionType: DistributionType.APP_STORE,
+        teamId: 'TEAM123',
+        applicationTargetProvisioningProfile: {} as any,
         targetProvisioningProfiles: {
           'com.example.app': {
             bundleIdentifier: 'com.example.app',
             uuid: 'aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee',
             path: '/path/to/profile1.mobileprovision',
+            target: 'com.example.app',
+            teamId: 'TEAM123',
+            name: 'Main App Profile',
+            developerCertificate: Buffer.from('cert'),
+            certificateCommonName: 'iPhone Distribution',
+            distributionType: DistributionType.APP_STORE,
           },
           'com.example.app.widget': {
             bundleIdentifier: 'com.example.app.widget',
             uuid: 'ffffffff-0000-1111-2222-333333333333',
             path: '/path/to/profile2.mobileprovision',
+            target: 'com.example.app.widget',
+            teamId: 'TEAM123',
+            name: 'Widget Profile',
+            developerCertificate: Buffer.from('cert'),
+            certificateCommonName: 'iPhone Distribution',
+            distributionType: DistributionType.APP_STORE,
           },
         },
       };
@@ -71,12 +86,20 @@ describe('gymfile', () => {
     it('should create Gymfile without build configuration when not provided', async () => {
       const mockCredentials: Credentials = {
         keychainPath: '/tmp/keychain',
-        distributionType: 'ad-hoc',
+        distributionType: DistributionType.AD_HOC,
+        teamId: 'TEAM123',
+        applicationTargetProvisioningProfile: {} as any,
         targetProvisioningProfiles: {
           'com.example.app': {
             bundleIdentifier: 'com.example.app',
             uuid: 'test-uuid',
             path: '/path/to/profile.mobileprovision',
+            target: 'com.example.app',
+            teamId: 'TEAM123',
+            name: 'Profile',
+            developerCertificate: Buffer.from('cert'),
+            certificateCommonName: 'iPhone Distribution',
+            distributionType: DistributionType.AD_HOC,
           },
         },
       };
@@ -99,12 +122,20 @@ describe('gymfile', () => {
     it('should include iCloud container environment when provided in entitlements', async () => {
       const mockCredentials: Credentials = {
         keychainPath: '/tmp/keychain',
-        distributionType: 'app-store',
+        distributionType: DistributionType.APP_STORE,
+        teamId: 'TEAM123',
+        applicationTargetProvisioningProfile: {} as any,
         targetProvisioningProfiles: {
           'com.example.app': {
             bundleIdentifier: 'com.example.app',
             uuid: 'test-uuid',
             path: '/path/to/profile.mobileprovision',
+            target: 'com.example.app',
+            teamId: 'TEAM123',
+            name: 'Profile',
+            developerCertificate: Buffer.from('cert'),
+            certificateCommonName: 'iPhone Distribution',
+            distributionType: DistributionType.APP_STORE,
           },
         },
       };
@@ -132,22 +163,42 @@ describe('gymfile', () => {
     it('should handle multiple provisioning profiles correctly', async () => {
       const mockCredentials: Credentials = {
         keychainPath: '/tmp/keychain',
-        distributionType: 'enterprise',
+        distributionType: DistributionType.ENTERPRISE,
+        teamId: 'TEAM123',
+        applicationTargetProvisioningProfile: {} as any,
         targetProvisioningProfiles: {
           'com.example.app': {
             bundleIdentifier: 'com.example.app',
             uuid: 'main-app-uuid',
             path: '/path/to/main.mobileprovision',
+            target: 'com.example.app',
+            teamId: 'TEAM123',
+            name: 'Main Profile',
+            developerCertificate: Buffer.from('cert'),
+            certificateCommonName: 'iPhone Distribution',
+            distributionType: DistributionType.ENTERPRISE,
           },
           'com.example.app.widget': {
             bundleIdentifier: 'com.example.app.widget',
             uuid: 'widget-uuid',
             path: '/path/to/widget.mobileprovision',
+            target: 'com.example.app.widget',
+            teamId: 'TEAM123',
+            name: 'Widget Profile',
+            developerCertificate: Buffer.from('cert'),
+            certificateCommonName: 'iPhone Distribution',
+            distributionType: DistributionType.ENTERPRISE,
           },
           'com.example.app.extension': {
             bundleIdentifier: 'com.example.app.extension',
             uuid: 'extension-uuid',
             path: '/path/to/extension.mobileprovision',
+            target: 'com.example.app.extension',
+            teamId: 'TEAM123',
+            name: 'Extension Profile',
+            developerCertificate: Buffer.from('cert'),
+            certificateCommonName: 'iPhone Distribution',
+            distributionType: DistributionType.ENTERPRISE,
           },
         },
       };
