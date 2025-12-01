@@ -1,9 +1,10 @@
 import { templateString } from '@expo/template-file';
 import fs from 'fs-extra';
 
+import { GymfileArchiveTemplate } from '../templates/GymfileArchive';
+import { GymfileSimulatorTemplate } from '../templates/GymfileSimulator';
+
 import { Credentials } from './credentials/manager';
-import { GymfileArchiveTemplate } from '../templates/Gymfile.archive';
-import { GymfileSimulatorTemplate } from '../templates/Gymfile.simulator';
 
 interface ArchiveBuildOptions {
   outputFile: string;

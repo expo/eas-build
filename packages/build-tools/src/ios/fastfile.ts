@@ -1,8 +1,9 @@
 import { templateString } from '@expo/template-file';
 import fs from 'fs-extra';
 
+import { FastfileResignTemplate } from '../templates/FastfileResign';
+
 import { TargetProvisioningProfiles } from './credentials/manager';
-import { FastfileResignTemplate } from '../templates/Fastfile.resign';
 
 export async function createFastfileForResigningBuild({
   outputFile,
