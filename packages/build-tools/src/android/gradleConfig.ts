@@ -5,7 +5,7 @@ import { Android } from '@expo/eas-build-job';
 import fs from 'fs-extra';
 
 import { BuildContext } from '../context';
-import { EasBuildGradle } from '../../templates/eas-build.gradle';
+import { EasBuildGradle } from '../templates/eas-build.gradle';
 const APPLY_EAS_BUILD_GRADLE_LINE = 'apply from: "./eas-build.gradle"';
 
 export async function configureBuildGradle(ctx: BuildContext<Android.Job>): Promise<void> {

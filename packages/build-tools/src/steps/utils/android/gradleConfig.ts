@@ -5,8 +5,8 @@ import { bunyan } from '@expo/logger';
 import fs from 'fs-extra';
 import { templateString } from '@expo/template-file';
 
-import { EasBuildInjectAndroidCredentialsGradle } from '../../../../templates/eas-build-inject-android-credentials.gradle';
-import { EasBuildConfigureVersionGradleTemplate } from '../../../../templates/eas-build-configure-version.gradle';
+import { EasBuildInjectAndroidCredentialsGradle } from '../../../templates/eas-build-inject-android-credentials.gradle';
+import { EasBuildConfigureVersionGradleTemplate } from '../../../templates/eas-build-configure-version.gradle';
 
 const APPLY_EAS_BUILD_INJECT_CREDENTIALS_GRADLE_LINE =
   'apply from: "./eas-build-inject-android-credentials.gradle"';

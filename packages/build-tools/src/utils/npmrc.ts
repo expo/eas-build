@@ -5,7 +5,7 @@ import { bunyan } from '@expo/logger';
 import fs from 'fs-extra';
 
 import { BuildContext } from '../context';
-import { NpmrcTemplate } from '../../templates/npmrc';
+import { NpmrcTemplate } from '../templates/npmrc';
 
 import { findPackagerRootDir } from './packageManager';
 

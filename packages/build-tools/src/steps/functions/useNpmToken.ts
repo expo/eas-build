@@ -4,7 +4,7 @@ import fs from 'fs-extra';
 import { BuildFunction } from '@expo/steps';
 
 import { findPackagerRootDir } from '../../utils/packageManager';
-import { NpmrcTemplate } from '../../../templates/npmrc';
+import { NpmrcTemplate } from '../../templates/npmrc';
 
 export function createSetUpNpmrcBuildFunction(): BuildFunction {
   return new BuildFunction({
