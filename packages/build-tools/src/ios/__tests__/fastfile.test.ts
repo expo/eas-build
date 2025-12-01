@@ -1,24 +1,13 @@
-import path from 'path';
-
 import { vol } from 'memfs';
 
 import { createFastfileForResigningBuild } from '../fastfile';
 import { TargetProvisioningProfiles } from '../credentials/manager';
 
-const originalFs = jest.requireActual('fs');
-
-// Read actual template file from the templates directory
-const RESIGN_TEMPLATE = originalFs.readFileSync(
-  path.join(__dirname, '../../../templates/Fastfile.resign.template'),
-  'utf-8'
-);
-
 describe('fastfile', () => {
   beforeEach(() => {
     vol.reset();
-    // Set up template file and /tmp directory in the mock filesystem
+    // Set up /tmp directory in the mock filesystem
     vol.fromJSON({
-      [path.join(__dirname, '../../../templates/Fastfile.resign.template')]: RESIGN_TEMPLATE,
       '/tmp/.keep': '', // Create /tmp directory
     });
   });

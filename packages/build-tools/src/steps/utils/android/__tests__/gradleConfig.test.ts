@@ -1,21 +1,7 @@
-import path from 'path';
-
 import { vol } from 'memfs';
 
 import { injectCredentialsGradleConfig, injectConfigureVersionGradleConfig } from '../gradleConfig';
-
-const originalFs = jest.requireActual('fs');
-
-// Read actual template files from the templates directory
-const CREDENTIALS_GRADLE = originalFs.readFileSync(
-  path.join(__dirname, '../../../../../templates/eas-build-inject-android-credentials.gradle'),
-  'utf-8'
-);
-
-const VERSION_GRADLE_TEMPLATE = originalFs.readFileSync(
-  path.join(__dirname, '../../../../../templates/eas-build-configure-version.gradle.template'),
-  'utf-8'
-);
+import { EasBuildInjectAndroidCredentialsGradle } from '../../../../templates/EasBuildInjectAndroidCredentialsGradle';
 
 // Sample build.gradle content
 const SAMPLE_BUILD_GRADLE = `apply plugin: "com.android.application"
@@ -44,16 +30,8 @@ describe('gradleConfig', () => {
       error: jest.fn(),
     };
 
-    // Set up template files and Android project structure in the mock filesystem
+    // Set up Android project structure in the mock filesystem
     vol.fromJSON({
-      [path.join(
-        __dirname,
-        '../../../../../templates/eas-build-inject-android-credentials.gradle'
-      )]: CREDENTIALS_GRADLE,
-      [path.join(
-        __dirname,
-        '../../../../../templates/eas-build-configure-version.gradle.template'
-      )]: VERSION_GRADLE_TEMPLATE,
       '/workingdir/android/app/build.gradle': SAMPLE_BUILD_GRADLE,
     });
   });
@@ -71,7 +49,7 @@ describe('gradleConfig', () => {
       const generatedContent = vol.readFileSync(credentialsGradlePath, 'utf-8') as string;
 
       // Verify the file was copied
-      expect(generatedContent).toBe(CREDENTIALS_GRADLE);
+      expect(generatedContent).toBe(EasBuildInjectAndroidCredentialsGradle);
       expect(generatedContent).toContain('// Build integration with EAS');
       expect(generatedContent).toContain('signingConfigs');
       expect(generatedContent).toContain('credentials.json');
@@ -125,7 +103,7 @@ describe('gradleConfig', () => {
 
       const generatedContent = vol.readFileSync(credentialsGradlePath, 'utf-8') as string;
       expect(generatedContent).not.toContain('// Old content');
-      expect(generatedContent).toBe(CREDENTIALS_GRADLE);
+      expect(generatedContent).toBe(EasBuildInjectAndroidCredentialsGradle);
     });
 
     it('should log info messages', async () => {
