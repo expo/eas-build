@@ -20,7 +20,7 @@ yarn build                      # Build all packages (required for interdependen
 ```bash
 yarn start                      # Watch mode for all packages (parallel)
 yarn watch                      # Same as start
-lerna run build                 # Build all packages
+yarn build                 # Build all packages
 ```
 
 ### Testing
@@ -28,10 +28,10 @@ lerna run build                 # Build all packages
 ```bash
 yarn test                       # Run tests for all packages
 yarn test:coverage              # Run tests with coverage
-lerna run test --scope=@expo/build-tools  # Run tests for specific package
+yarn test --scope=@expo/build-tools  # Run tests for specific package
 ```
 
-For a single package, you can also:
+For a single package (which is usually more convenient), you can also:
 
 ```bash
 cd packages/build-tools
@@ -44,6 +44,7 @@ yarn test path/to/test.test.ts # Run specific test file
 
 ```bash
 yarn lint                       # Lint all packages
+yarn lint --fix                 # Lint all packages and fix the lint issues
 ```
 
 ### Local Build Testing
@@ -66,15 +67,9 @@ eas build --local
 yarn release                    # Release new version (runs on GHA)
 ```
 
-After release, tag the version for EAS CLI:
-
-```bash
-npm dist-tag add eas-cli-local-build-plugin@VERSION eas-cli
-```
-
 ## Monorepo Architecture
 
-This is a Lerna-based monorepo with 10 packages. Understanding the package hierarchy is crucial:
+This is a Lerna-based monorepo.
 
 ### Core Packages
 
@@ -82,7 +77,7 @@ This is a Lerna-based monorepo with 10 packages. Understanding the package hiera
 
 - Defines all data structures for build operations (Job, BuildPhase, BuildMode, Platform, Workflow)
 - Provides type definitions and validation schemas (Zod, Joi)
-- Contains 45+ BuildPhase enum values that define the build pipeline stages
+- Contains BuildPhase enum that defines the traditional build pipeline stages
 - Key exports: `Job`, `BuildPhase`, `BuildMode`, `BuildTrigger`, `Workflow`, `ArchiveSource`
 
 **@expo/build-tools** - The main build execution engine
@@ -90,9 +85,8 @@ This is a Lerna-based monorepo with 10 packages. Understanding the package hiera
 - Orchestrates all build operations through `BuildContext<T extends Job>`
 - Contains platform-specific builders: `androidBuilder()`, `iosBuilder()`, `runCustomBuildAsync()`
 - Manages build phases, artifact uploading, caching, credentials
-- Provides 35+ built-in step functions for custom builds
-- Integrates with GraphQL API for EAS communication
-- Location: `packages/build-tools/src`
+- Provides functions for custom builds
+- Integrates with GraphQL API
 
 **@expo/steps** - Custom build workflow engine (ESM module)
 
@@ -122,26 +116,11 @@ This is a Lerna-based monorepo with 10 packages. Understanding the package hiera
 **create-eas-build-function** - CLI scaffolding tool for custom build functions
 **template-file** - Simple template file utility
 
-## Build Execution Flow
-
-Understanding the build flow is essential for working with this codebase:
-
-1. **Job Definition** arrives (from EAS API or local CLI)
-2. **Validation** using eas-build-job schemas
-3. **BuildContext creation** wraps the job
-4. **Builder selection** based on platform and build mode
-5. **Execution path**:
-   - **Traditional builds**: Setup → Install deps → Prebuild → Gradle/Fastlane → Upload artifacts
-   - **Custom builds**: Prepare sources → Parse config → Execute steps → Upload artifacts
-6. **Hooks execution** (npm/yarn scripts in package.json: `eas-build-pre-install`, `eas-build-post-install`, `eas-build-on-success`, `eas-build-on-error`, `eas-build-on-complete`)
-7. **Artifact upload** to GCS/R2
-8. **Status reporting** back to API
-
 ## Key Architectural Patterns
 
 ### Build Phases
 
-All build operations are wrapped in phases for tracking:
+Most traditional build operations are wrapped in phases for tracking:
 
 ```typescript
 await ctx.runBuildPhase(BuildPhase.INSTALL_DEPENDENCIES, async () => {
@@ -154,7 +133,7 @@ Phases can be marked as skipped, warning, or failed for granular reporting.
 ### Context Objects
 
 - **BuildContext** (`build-tools`): For traditional builds, wraps Job, manages phases/artifacts/caching
-- **CustomBuildContext** (`build-tools`): Implements `ExternalBuildContextProvider`, bridges BuildContext to steps framework
+- **CustomBuildContext** (`build-tools`): Implements `ExternalBuildContextProvider`, bridges BuildContext to steps framework, used in custom builds and generic jobs
 - **BuildStepGlobalContext** (`steps`): Manages step outputs, interpolation, shared state
 - **BuildStepContext** (`steps`): Per-step context with working directory and logger
 
@@ -176,7 +155,7 @@ Built-in step functions are in `packages/build-tools/src/steps/functions/`
 Uses jsep for expression evaluation:
 
 ```yaml
-if: ${{ steps.previous-step.outputs.success == 'true' && env.ENVIRONMENT == 'production' }}
+if: ${{ steps.previous_step.outputs.success == 'true' && env.ENVIRONMENT == 'production' }}
 ```
 
 ### Artifact Management
@@ -186,24 +165,6 @@ Artifacts tracked as `ArtifactToUpload`:
 - Managed artifacts (APK, IPA, AAB) with specific handling
 - Generic artifacts for any file
 - Upload via `ctx.uploadArtifact()` or `upload-artifact` step
-
-## Important Constraints
-
-### Breaking Changes to @expo/eas-build-job
-
-If you need to introduce breaking changes to `@expo/eas-build-job`:
-
-1. Contact CODEOWNERS first
-2. Coordinate with backend team to support both old and new formats
-3. Deploy changes in phases: API support → publish package → implement logic
-4. Example: Adding a required field needs default values for legacy requests
-
-### Updating local-build-plugin in EAS CLI
-
-1. Run `yarn release`
-2. Update `eas-build-job` package in EAS CLI if breaking changes
-3. Tag version: `npm dist-tag add eas-cli-local-build-plugin@VERSION eas-cli`
-4. Publish new EAS CLI version (uses fixed version based on `eas-cli` tag)
 
 ## Package Interdependencies
 
@@ -232,8 +193,8 @@ Most packages depend on `@expo/eas-build-job` as the source of truth for types.
 
 ### Working with Platform-Specific Builders
 
-- **Android builder** (`packages/build-tools/src/builders/android.ts`): Gradle-based, handles APK/AAB generation
-- **iOS builder** (`packages/build-tools/src/builders/ios.ts`): Fastlane/Xcode-based, handles IPA generation
+- **Android builder** (`packages/build-tools/src/builders/android.ts`): Gradle-based, handles APK/AAB generation, also see `functionGroups/build.ts`
+- **iOS builder** (`packages/build-tools/src/builders/ios.ts`): Fastlane/Xcode-based, handles IPA generation, also see `functionGroups/build.ts`
 - Both use `runBuilderWithHooksAsync()` which runs build result hooks (on-success, on-error, on-complete) from package.json
 
 ## Testing Strategy
@@ -246,6 +207,4 @@ Most packages depend on `@expo/eas-build-job` as the source of truth for types.
 
 ## Environment Requirements
 
-- Node.js >= 18 (Volta managed: Node 20.14.0, Yarn 1.22.22)
-- Package manager: Yarn 1.22.22 (specified in packageManager field)
-- TypeScript 5.5.4
+Node and Yarn versions are managed by Volta.
