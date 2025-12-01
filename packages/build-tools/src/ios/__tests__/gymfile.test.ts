@@ -65,31 +65,7 @@ describe('gymfile', () => {
       });
 
       const generatedContent = vol.readFileSync(outputFile, 'utf-8') as string;
-
-      // Verify the generated content has all variables substituted
-      expect(generatedContent).toContain('suppress_xcode_output(true)');
-      expect(generatedContent).toContain('clean(true)');
-      expect(generatedContent).toContain('scheme("MyApp")');
-      expect(generatedContent).toContain('configuration("Release")');
-      expect(generatedContent).toContain('method: "app-store"');
-      expect(generatedContent).toContain(
-        '"com.example.app" => "aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee"'
-      );
-      expect(generatedContent).toContain(
-        '"com.example.app.widget" => "ffffffff-0000-1111-2222-333333333333"'
-      );
-      expect(generatedContent).toContain(
-        'export_xcargs "OTHER_CODE_SIGN_FLAGS=\\"--keychain /Users/expo/Library/Keychains/login.keychain\\""'
-      );
-      expect(generatedContent).toContain('buildlog_path("/tmp/logs")');
-      expect(generatedContent).toContain('output_directory("/tmp/output")');
-
-      // Should not have any template variables remaining
-      expect(generatedContent).not.toContain('<%');
-      expect(generatedContent).not.toContain('%>');
-      expect(generatedContent).not.toContain('KEYCHAIN_PATH');
-      expect(generatedContent).not.toContain('SCHEME');
-      expect(generatedContent).not.toContain('EXPORT_METHOD');
+      expect(generatedContent).toMatchSnapshot();
     });
 
     it('should create Gymfile without build configuration when not provided', async () => {
@@ -117,12 +93,7 @@ describe('gymfile', () => {
       });
 
       const generatedContent = vol.readFileSync(outputFile, 'utf-8') as string;
-
-      expect(generatedContent).toContain('scheme("TestScheme")');
-      expect(generatedContent).toContain('clean(false)');
-      expect(generatedContent).toContain('method: "ad-hoc"');
-      // Should not have configuration line when buildConfiguration is undefined
-      expect(generatedContent).not.toContain('configuration(');
+      expect(generatedContent).toMatchSnapshot();
     });
 
     it('should include iCloud container environment when provided in entitlements', async () => {
@@ -154,38 +125,9 @@ describe('gymfile', () => {
       });
 
       const generatedContent = vol.readFileSync(outputFile, 'utf-8') as string;
-
-      expect(generatedContent).toContain('iCloudContainerEnvironment: "Production"');
+      expect(generatedContent).toMatchSnapshot();
     });
 
-    it('should not include iCloud container environment when not in entitlements', async () => {
-      const mockCredentials: Credentials = {
-        keychainPath: '/tmp/keychain',
-        distributionType: 'app-store',
-        targetProvisioningProfiles: {
-          'com.example.app': {
-            bundleIdentifier: 'com.example.app',
-            uuid: 'test-uuid',
-            path: '/path/to/profile.mobileprovision',
-          },
-        },
-      };
-
-      const outputFile = '/tmp/Gymfile';
-
-      await createGymfileForArchiveBuild({
-        outputFile,
-        credentials: mockCredentials,
-        scheme: 'MyApp',
-        outputDirectory: '/tmp/output',
-        clean: true,
-        logsDirectory: '/tmp/logs',
-      });
-
-      const generatedContent = vol.readFileSync(outputFile, 'utf-8') as string;
-
-      expect(generatedContent).not.toContain('iCloudContainerEnvironment');
-    });
 
     it('should handle multiple provisioning profiles correctly', async () => {
       const mockCredentials: Credentials = {
@@ -222,11 +164,7 @@ describe('gymfile', () => {
       });
 
       const generatedContent = vol.readFileSync(outputFile, 'utf-8') as string;
-
-      expect(generatedContent).toContain('method: "enterprise"');
-      expect(generatedContent).toContain('"com.example.app" => "main-app-uuid"');
-      expect(generatedContent).toContain('"com.example.app.widget" => "widget-uuid"');
-      expect(generatedContent).toContain('"com.example.app.extension" => "extension-uuid"');
+      expect(generatedContent).toMatchSnapshot();
     });
   });
 
@@ -245,24 +183,7 @@ describe('gymfile', () => {
       });
 
       const generatedContent = vol.readFileSync(outputFile, 'utf-8') as string;
-
-      // Verify all variables are substituted
-      expect(generatedContent).toContain('suppress_xcode_output(true)');
-      expect(generatedContent).toContain('clean(true)');
-      expect(generatedContent).toContain('scheme("MyApp")');
-      expect(generatedContent).toContain('configuration("Debug")');
-      expect(generatedContent).toContain('derived_data_path("/tmp/derived-data")');
-      expect(generatedContent).toContain('skip_package_ipa(true)');
-      expect(generatedContent).toContain('skip_archive(true)');
-      expect(generatedContent).toContain('destination("generic/platform=iOS Simulator")');
-      expect(generatedContent).toContain('disable_xcpretty(true)');
-      expect(generatedContent).toContain('buildlog_path("/tmp/logs")');
-
-      // Should not have any template variables remaining
-      expect(generatedContent).not.toContain('<%');
-      expect(generatedContent).not.toContain('%>');
-      expect(generatedContent).not.toContain('SCHEME');
-      expect(generatedContent).not.toContain('DERIVED_DATA_PATH');
+      expect(generatedContent).toMatchSnapshot();
     });
 
     it('should create Gymfile without configuration when not provided', async () => {
@@ -278,12 +199,7 @@ describe('gymfile', () => {
       });
 
       const generatedContent = vol.readFileSync(outputFile, 'utf-8') as string;
-
-      expect(generatedContent).toContain('scheme("TestApp")');
-      expect(generatedContent).toContain('clean(false)');
-      expect(generatedContent).toContain('destination("platform=iOS Simulator,name=iPhone 15")');
-      // Should not have configuration line when buildConfiguration is undefined
-      expect(generatedContent).not.toContain('configuration(');
+      expect(generatedContent).toMatchSnapshot();
     });
 
     it('should handle tvOS simulator destination', async () => {
@@ -300,8 +216,7 @@ describe('gymfile', () => {
       });
 
       const generatedContent = vol.readFileSync(outputFile, 'utf-8') as string;
-
-      expect(generatedContent).toContain('destination("generic/platform=tvOS Simulator")');
+      expect(generatedContent).toMatchSnapshot();
     });
   });
 });

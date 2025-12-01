@@ -53,29 +53,7 @@ describe('fastfile', () => {
       });
 
       const generatedContent = vol.readFileSync(outputFile, 'utf-8') as string;
-
-      // Verify the generated content has all variables substituted
-      expect(generatedContent).toContain('lane :do_resign do');
-      expect(generatedContent).toContain('resign(');
-      expect(generatedContent).toContain('ipa: "/builds/MyApp.ipa"');
-      expect(generatedContent).toContain('signing_identity: "iPhone Distribution: Example Inc (ABC123)"');
-      expect(generatedContent).toContain(
-        '"com.example.app" => "/path/to/profiles/main.mobileprovision"'
-      );
-      expect(generatedContent).toContain(
-        '"com.example.app.widget" => "/path/to/profiles/widget.mobileprovision"'
-      );
-      expect(generatedContent).toContain(
-        'keychain_path: "/Users/expo/Library/Keychains/login.keychain"'
-      );
-
-      // Should not have any template variables remaining
-      expect(generatedContent).not.toContain('<%');
-      expect(generatedContent).not.toContain('%>');
-      expect(generatedContent).not.toContain('IPA_PATH');
-      expect(generatedContent).not.toContain('SIGNING_IDENTITY');
-      expect(generatedContent).not.toContain('KEYCHAIN_PATH');
-      expect(generatedContent).not.toContain('PROFILES');
+      expect(generatedContent).toMatchSnapshot();
     });
 
     it('should handle single provisioning profile', async () => {
@@ -98,11 +76,7 @@ describe('fastfile', () => {
       });
 
       const generatedContent = vol.readFileSync(outputFile, 'utf-8') as string;
-
-      expect(generatedContent).toContain('ipa: "/tmp/app.ipa"');
-      expect(generatedContent).toContain('signing_identity: "iPhone Distribution"');
-      expect(generatedContent).toContain('"com.example.app" => "/tmp/profile.mobileprovision"');
-      expect(generatedContent).toContain('keychain_path: "/tmp/keychain"');
+      expect(generatedContent).toMatchSnapshot();
     });
 
     it('should handle multiple provisioning profiles correctly', async () => {
@@ -140,12 +114,7 @@ describe('fastfile', () => {
       });
 
       const generatedContent = vol.readFileSync(outputFile, 'utf-8') as string;
-
-      // All profiles should be present
-      expect(generatedContent).toContain('"com.example.app" => "/profiles/main.mobileprovision"');
-      expect(generatedContent).toContain('"com.example.app.widget" => "/profiles/widget.mobileprovision"');
-      expect(generatedContent).toContain('"com.example.app.extension" => "/profiles/extension.mobileprovision"');
-      expect(generatedContent).toContain('"com.example.app.intents" => "/profiles/intents.mobileprovision"');
+      expect(generatedContent).toMatchSnapshot();
     });
 
     it('should handle empty provisioning profiles', async () => {
@@ -162,13 +131,7 @@ describe('fastfile', () => {
       });
 
       const generatedContent = vol.readFileSync(outputFile, 'utf-8') as string;
-
-      // Should still have the basic structure
-      expect(generatedContent).toContain('lane :do_resign do');
-      expect(generatedContent).toContain('resign(');
-      expect(generatedContent).toContain('ipa: "/tmp/app.ipa"');
-      // Provisioning profile section should be empty
-      expect(generatedContent).toContain('provisioning_profile: {');
+      expect(generatedContent).toMatchSnapshot();
     });
 
     it('should handle paths with special characters and spaces', async () => {
@@ -191,15 +154,7 @@ describe('fastfile', () => {
       });
 
       const generatedContent = vol.readFileSync(outputFile, 'utf-8') as string;
-
-      expect(generatedContent).toContain('ipa: "/builds/My App (Release).ipa"');
-      expect(generatedContent).toContain('signing_identity: "iPhone Distribution: Example Inc (ABC123XYZ)"');
-      expect(generatedContent).toContain(
-        'keychain_path: "/Users/expo/Library/Keychains/login keychain.keychain"'
-      );
-      expect(generatedContent).toContain(
-        '"com.example.app" => "/path/with spaces/profile (1).mobileprovision"'
-      );
+      expect(generatedContent).toMatchSnapshot();
     });
 
     it('should produce valid Ruby syntax', async () => {
@@ -222,16 +177,7 @@ describe('fastfile', () => {
       });
 
       const generatedContent = vol.readFileSync(outputFile, 'utf-8') as string;
-
-      // Check for proper Ruby syntax elements
-      expect(generatedContent).toMatch(/lane :do_resign do/);
-      expect(generatedContent).toMatch(/resign\(/);
-      expect(generatedContent).toMatch(/\)/);
-      expect(generatedContent).toMatch(/end/);
-      // Should have proper key-value pairs
-      expect(generatedContent).toMatch(/ipa: ".+"/);
-      expect(generatedContent).toMatch(/signing_identity: ".+"/);
-      expect(generatedContent).toMatch(/keychain_path: ".+"/);
+      expect(generatedContent).toMatchSnapshot();
     });
   });
 });
