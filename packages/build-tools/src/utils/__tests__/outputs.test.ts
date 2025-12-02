@@ -124,10 +124,11 @@ describe(collectJobOutputs, () => {
       collectJobOutputs({
         jobOutputDefinitions: {
           test: '${{ 1 + 1 }}',
+          substring: '${{ substring("hello", 1, 3) }}',
         },
         interpolationContext,
       })
-    ).toEqual({ test: '2' });
+    ).toEqual({ test: '2', substring: 'el' });
 
     expect(
       collectJobOutputs({
