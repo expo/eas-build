@@ -106,6 +106,7 @@ const interpolationContext: JobInterpolationContext = {
     }
     return input;
   },
+  substring: (input: string, start: number, end?: number) => input.substring(start, end),
 };
 
 describe(collectJobOutputs, () => {
@@ -123,10 +124,11 @@ describe(collectJobOutputs, () => {
       collectJobOutputs({
         jobOutputDefinitions: {
           test: '${{ 1 + 1 }}',
+          substring: '${{ substring("hello", 1, 3) }}',
         },
         interpolationContext,
       })
-    ).toEqual({ test: '2' });
+    ).toEqual({ test: '2', substring: 'el' });
 
     expect(
       collectJobOutputs({

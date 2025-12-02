@@ -147,6 +147,7 @@ export class BuildStepGlobalContext {
         }
         return input;
       },
+      substring: (input: string, start: number, end?: number) => input.substring(start, end),
     };
   }
 
