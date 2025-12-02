@@ -254,6 +254,7 @@ export type DynamicInterpolationContext = {
   endsWith: (value: string, suffix: string) => boolean;
   hashFiles: (...globs: string[]) => string;
   replaceAll: (input: string, stringToReplace: string, replacementString: string) => string;
+  substring: (input: string, start: number, end?: number) => string;
 };
 
 export type WorkflowInterpolationContext = StaticWorkflowInterpolationContext &
