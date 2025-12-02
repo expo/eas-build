@@ -1,4 +1,5 @@
 import Joi from 'joi';
+import { z } from 'zod';
 
 import { Workflow } from './common';
 
@@ -202,6 +203,43 @@ export const MetadataSchema = Joi.object({
   selectedImage: Joi.string(),
   customNodeVersion: Joi.string(),
   environment: Joi.string(),
+});
+
+export const MetadataZ = z.object({
+  trackingContext: z.record(z.string(), z.union([z.string(), z.number(), z.boolean()])).optional(),
+  appVersion: z.string().optional(),
+  appBuildVersion: z.string().optional(),
+  cliVersion: z.string().optional(),
+  workflow: z.enum(['generic', 'managed']).optional(),
+  distribution: z.enum(['store', 'internal', 'simulator']).optional(),
+  credentialsSource: z.enum(['local', 'remote']).optional(),
+  sdkVersion: z.string().optional(),
+  runtimeVersion: z.string().optional(),
+  fingerprintHash: z.string().optional(),
+  reactNativeVersion: z.string().optional(),
+  channel: z.string().optional(),
+  appName: z.string().optional(),
+  appIdentifier: z.string().optional(),
+  buildProfile: z.string().optional(),
+  gitCommitHash: z
+    .string()
+    .length(40)
+    .regex(/^[0-9a-fA-F]+$/)
+    .optional(),
+  gitCommitMessage: z.string().max(4096).optional(),
+  isGitWorkingTreeDirty: z.boolean().optional(),
+  username: z.string().optional(),
+  iosEnterpriseProvisioning: z.enum(['adhoc', 'universal']).optional(),
+  message: z.string().max(1024).optional(),
+  runFromCI: z.boolean().optional(),
+  runWithNoWaitFlag: z.boolean().optional(),
+  customWorkflowName: z.string().optional(),
+  developmentClient: z.boolean().optional(),
+  requiredPackageManager: z.enum(['npm', 'pnpm', 'yarn', 'bun']).optional(),
+  simulator: z.boolean().optional(),
+  selectedImage: z.string().optional(),
+  customNodeVersion: z.string().optional(),
+  environment: z.string().optional(),
 });
 
 export function sanitizeMetadata(metadata: object): Metadata {
