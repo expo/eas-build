@@ -1,4 +1,4 @@
-// Build integration with EAS
+export const EasBuildGradle = `// Build integration with EAS
 
 import java.nio.file.Paths
 
@@ -51,4 +51,4 @@ android {
       signingConfig android.signingConfigs.release
     }
   }
-}
+}`;

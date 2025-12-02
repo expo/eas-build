@@ -1,4 +1,4 @@
-// Build integration with EAS
+export const EasBuildConfigureVersionGradleTemplate = `// Build integration with EAS
 
 import java.nio.file.Paths
 
@@ -31,3 +31,4 @@ android {
     }
   }
 }
+`;

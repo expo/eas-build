@@ -3,16 +3,10 @@ import path from 'path';
 import { AndroidConfig } from '@expo/config-plugins';
 import { bunyan } from '@expo/logger';
 import fs from 'fs-extra';
-import { templateFile } from '@expo/template-file';
+import { templateString } from '@expo/template-file';
 
-const EAS_BUILD_INJECT_CREDENTIALS_GRADLE_TEMPLATE_PATH = path.join(
-  __dirname,
-  '../../../../templates/eas-build-inject-android-credentials.gradle'
-);
-const EAS_BUILD_CONFIGURE_VERSION_GRADLE_TEMPLATE_PATH = path.join(
-  __dirname,
-  '../../../../templates/eas-build-configure-version.gradle.template'
-);
+import { EasBuildInjectAndroidCredentialsGradle } from '../../../templates/EasBuildInjectAndroidCredentialsGradle';
+import { EasBuildConfigureVersionGradleTemplate } from '../../../templates/EasBuildConfigureVersionGradle';
 
 const APPLY_EAS_BUILD_INJECT_CREDENTIALS_GRADLE_LINE =
   'apply from: "./eas-build-inject-android-credentials.gradle"';
@@ -68,7 +62,7 @@ function getEasBuildConfigureVersionGradlePath(workingDir: string): string {
 
 async function createEasBuildInjectCredentialsGradle(workingDir: string): Promise<void> {
   const targetPath = getEasBuildInjectCredentialsGradlePath(workingDir);
-  await fs.copy(EAS_BUILD_INJECT_CREDENTIALS_GRADLE_TEMPLATE_PATH, targetPath);
+  await fs.writeFile(targetPath, EasBuildInjectAndroidCredentialsGradle);
 }
 
 async function createEasBuildConfigureVersionGradle(
@@ -76,17 +70,15 @@ async function createEasBuildConfigureVersionGradle(
   { versionCode, versionName }: { versionCode?: string; versionName?: string }
 ): Promise<void> {
   const targetPath = getEasBuildConfigureVersionGradlePath(workingDir);
-  await templateFile(
-    EAS_BUILD_CONFIGURE_VERSION_GRADLE_TEMPLATE_PATH,
-    {
+  const output = templateString({
+    input: EasBuildConfigureVersionGradleTemplate,
+    vars: {
       VERSION_CODE: versionCode,
       VERSION_NAME: versionName,
     },
-    targetPath,
-    {
-      mustache: false,
-    }
-  );
+    mustache: false,
+  });
+  await fs.writeFile(targetPath, output);
 }
 
 async function addApplyInjectCredentialsConfigToBuildGradle(projectRoot: string): Promise<void> {

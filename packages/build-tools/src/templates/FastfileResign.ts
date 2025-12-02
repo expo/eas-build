@@ -1,4 +1,4 @@
-lane :do_resign do
+export const FastfileResignTemplate = `lane :do_resign do
   resign(
     ipa: "<%- IPA_PATH %>",
     signing_identity: "<%- SIGNING_IDENTITY %>",
@@ -8,3 +8,4 @@ lane :do_resign do
     keychain_path: "<%- KEYCHAIN_PATH %>"
   )
 end
+`;

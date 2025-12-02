@@ -1,31 +1,14 @@
-import path from 'path';
-
 import { vol } from 'memfs';
 
 import { createGymfileForArchiveBuild, createGymfileForSimulatorBuild } from '../gymfile';
 import { Credentials } from '../credentials/manager';
 import { DistributionType } from '../credentials/provisioningProfile';
 
-const originalFs = jest.requireActual('fs');
-
-// Read actual template files from the templates directory
-const ARCHIVE_TEMPLATE = originalFs.readFileSync(
-  path.join(__dirname, '../../../templates/Gymfile.archive.template'),
-  'utf-8'
-);
-
-const SIMULATOR_TEMPLATE = originalFs.readFileSync(
-  path.join(__dirname, '../../../templates/Gymfile.simulator.template'),
-  'utf-8'
-);
-
 describe('gymfile', () => {
   beforeEach(() => {
     vol.reset();
-    // Set up template files and /tmp directory in the mock filesystem
+    // Set up /tmp directory in the mock filesystem
     vol.fromJSON({
-      [path.join(__dirname, '../../../templates/Gymfile.archive.template')]: ARCHIVE_TEMPLATE,
-      [path.join(__dirname, '../../../templates/Gymfile.simulator.template')]: SIMULATOR_TEMPLATE,
       '/tmp/.keep': '', // Create /tmp directory
     });
   });

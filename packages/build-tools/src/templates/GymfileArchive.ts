@@ -1,4 +1,4 @@
-suppress_xcode_output(true)
+export const GymfileArchiveTemplate = `suppress_xcode_output(true)
 clean(<%- CLEAN %>)
 
 scheme("<%- SCHEME %>")
@@ -15,9 +15,10 @@ export_options({
 <% } %>
 })
 
-export_xcargs "OTHER_CODE_SIGN_FLAGS=\"--keychain <%- KEYCHAIN_PATH %>\""
+export_xcargs "OTHER_CODE_SIGN_FLAGS=\\"--keychain <%- KEYCHAIN_PATH %>\\""
 
 disable_xcpretty(true)
 buildlog_path("<%- LOGS_DIRECTORY %>")
 
 output_directory("<%- OUTPUT_DIRECTORY %>")
+`;

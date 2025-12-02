@@ -1,4 +1,4 @@
-suppress_xcode_output(true)
+export const GymfileSimulatorTemplate = `suppress_xcode_output(true)
 clean(<%- CLEAN %>)
 
 scheme("<%- SCHEME %>")
@@ -13,3 +13,4 @@ destination("<%- SCHEME_SIMULATOR_DESTINATION %>")
 
 disable_xcpretty(true)
 buildlog_path("<%- LOGS_DIRECTORY %>")
+`;
