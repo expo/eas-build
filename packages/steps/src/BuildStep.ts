@@ -146,6 +146,7 @@ export class BuildStep extends BuildStepOutputAccessor {
   private readonly internalId: string;
   private readonly inputById: BuildStepInputById;
   protected executed = false;
+  private spawnedProcess?: { kill: (signal?: string) => void };
 
   public static getNewId(userDefinedId?: string): string {
     return userDefinedId ?? uuidv4();
@@ -261,12 +262,18 @@ export class BuildStep extends BuildStepOutputAccessor {
         `Created temporary directory for step environment variables: ${this.envsDir}`
       );
 
-      const executionPromise =
-        this.command !== undefined ? this.executeCommandAsync() : this.executeFnAsync();
-
       if (this.timeoutMs !== undefined) {
+        const executionPromise =
+          this.command !== undefined ? this.executeCommandAsync() : this.executeFnAsync();
+
+        let timeoutId: NodeJS.Timeout | undefined;
         const timeoutPromise = new Promise<never>((_, reject) => {
-          setTimeout(() => {
+          timeoutId = setTimeout(() => {
+            // Kill the spawned process if it exists
+            if (this.spawnedProcess) {
+              this.ctx.logger.debug('Killing spawned process due to timeout');
+              this.spawnedProcess.kill('SIGTERM');
+            }
             reject(
               new BuildStepRuntimeError(
                 `Build step "${this.displayName}" timed out after ${this.timeoutMs}ms`
@@ -274,8 +281,17 @@ export class BuildStep extends BuildStepOutputAccessor {
             );
           }, this.timeoutMs);
         });
-        await Promise.race([executionPromise, timeoutPromise]);
+
+        try {
+          await Promise.race([executionPromise, timeoutPromise]);
+        } finally {
+          if (timeoutId) {
+            clearTimeout(timeoutId);
+          }
+        }
       } else {
+        const executionPromise =
+          this.command !== undefined ? this.executeCommandAsync() : this.executeFnAsync();
         await executionPromise;
       }
 
@@ -419,14 +435,23 @@ export class BuildStep extends BuildStepOutputAccessor {
       }
     }
 
-    await spawnAsync(shellCommand, args ?? [], {
+    const spawnPromise = spawnAsync(shellCommand, args ?? [], {
       cwd: this.ctx.workingDirectory,
       logger: this.ctx.logger,
       env: this.getScriptEnv(),
       // stdin is /dev/null, std{out,err} are piped into logger.
       stdio: ['ignore', 'pipe', 'pipe'],
     });
-    this.ctx.logger.debug(`Script completed successfully`);
+
+    // Store reference to child process for timeout handling
+    this.spawnedProcess = spawnPromise.child;
+
+    try {
+      await spawnPromise;
+      this.ctx.logger.debug(`Script completed successfully`);
+    } finally {
+      this.spawnedProcess = undefined;
+    }
   }
 
   private async executeFnAsync(): Promise<void> {
