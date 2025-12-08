@@ -538,7 +538,7 @@ describe(BuildStep, () => {
         const id = 'test1';
         const fn = jest.fn(
           async () =>
-            new Promise((resolve) => {
+            await new Promise((resolve) => {
               setTimeout(resolve, 2000); // 2 second delay
             })
         );
