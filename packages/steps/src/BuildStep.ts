@@ -267,12 +267,25 @@ export class BuildStep extends BuildStepOutputAccessor {
           this.command !== undefined ? this.executeCommandAsync() : this.executeFnAsync();
 
         let timeoutId: NodeJS.Timeout | undefined;
+        let killTimeoutId: NodeJS.Timeout | undefined;
         const timeoutPromise = new Promise<never>((_, reject) => {
           timeoutId = setTimeout(() => {
             // Kill the spawned process if it exists
             if (this.spawnedProcess) {
-              this.ctx.logger.debug('Killing spawned process due to timeout');
+              this.ctx.logger.debug(
+                'Step timed out, sending SIGTERM to spawned process for graceful shutdown'
+              );
               this.spawnedProcess.kill('SIGTERM');
+
+              // If process doesn't exit after grace period, force kill with SIGKILL
+              killTimeoutId = setTimeout(() => {
+                if (this.spawnedProcess) {
+                  this.ctx.logger.warn(
+                    'Process did not respond to SIGTERM, sending SIGKILL to force termination'
+                  );
+                  this.spawnedProcess.kill('SIGKILL');
+                }
+              }, 5000); // 5 second grace period
             }
             reject(
               new BuildStepRuntimeError(
@@ -287,6 +300,9 @@ export class BuildStep extends BuildStepOutputAccessor {
         } finally {
           if (timeoutId) {
             clearTimeout(timeoutId);
+          }
+          if (killTimeoutId) {
+            clearTimeout(killTimeoutId);
           }
         }
       } else {
