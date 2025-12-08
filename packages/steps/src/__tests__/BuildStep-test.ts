@@ -498,7 +498,82 @@ describe(BuildStep, () => {
         const abc = nullthrows(step.outputById.abc);
         expect(abc?.value).toBe('123');
       });
+    });
 
+    describe('timeout', () => {
+      it('succeeds when step completes within timeout', async () => {
+        const id = 'test1';
+        const command = 'sleep 0.1';
+        const displayName = BuildStep.getDisplayName({ id, command });
+
+        const step = new BuildStep(baseStepCtx, {
+          id,
+          command,
+          displayName,
+          timeoutMs: 1000, // 1 second timeout
+        });
+        await step.executeAsync();
+        expect(step.status).toBe(BuildStepStatus.SUCCESS);
+      });
+
+      it('fails when command exceeds timeout', async () => {
+        const id = 'test1';
+        const command = 'sleep 2';
+        const displayName = BuildStep.getDisplayName({ id, command });
+
+        const step = new BuildStep(baseStepCtx, {
+          id,
+          command,
+          displayName,
+          timeoutMs: 100, // 100ms timeout
+        });
+
+        const error = await getErrorAsync<BuildStepRuntimeError>(() => step.executeAsync());
+        expect(error).toBeInstanceOf(BuildStepRuntimeError);
+        expect(error.message).toMatch(/timed out after 100ms/);
+        expect(step.status).toBe(BuildStepStatus.FAIL);
+      });
+
+      it('fails when function exceeds timeout', async () => {
+        const id = 'test1';
+        const fn = jest.fn(
+          async () =>
+            new Promise((resolve) => {
+              setTimeout(resolve, 2000); // 2 second delay
+            })
+        );
+        const displayName = BuildStep.getDisplayName({ id });
+
+        const step = new BuildStep(baseStepCtx, {
+          id,
+          displayName,
+          fn,
+          timeoutMs: 100, // 100ms timeout
+        });
+
+        const error = await getErrorAsync<BuildStepRuntimeError>(() => step.executeAsync());
+        expect(error).toBeInstanceOf(BuildStepRuntimeError);
+        expect(error.message).toMatch(/timed out after 100ms/);
+        expect(step.status).toBe(BuildStepStatus.FAIL);
+      });
+
+      it('works without timeout when timeoutMs is undefined', async () => {
+        const id = 'test1';
+        const command = 'sleep 0.1';
+        const displayName = BuildStep.getDisplayName({ id, command });
+
+        const step = new BuildStep(baseStepCtx, {
+          id,
+          command,
+          displayName,
+          // No timeoutMs specified
+        });
+        await step.executeAsync();
+        expect(step.status).toBe(BuildStepStatus.SUCCESS);
+      });
+    });
+
+    describe('outputs', () => {
       it('works with strings with whitespaces passed as a value for an output parameter', async () => {
         const id = 'test1';
         const command = 'set-output abc "d o m i n i k"';

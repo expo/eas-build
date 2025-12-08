@@ -138,6 +138,7 @@ export class BuildStep extends BuildStepOutputAccessor {
   public readonly ctx: BuildStepContext;
   public readonly stepEnvOverrides: BuildStepEnv;
   public readonly ifCondition?: string;
+  public readonly timeoutMs?: number;
   public status: BuildStepStatus;
   private readonly outputsDir: string;
   private readonly envsDir: string;
@@ -192,6 +193,7 @@ export class BuildStep extends BuildStepOutputAccessor {
       supportedRuntimePlatforms: maybeSupportedRuntimePlatforms,
       env,
       ifCondition,
+      timeoutMs,
     }: {
       id: string;
       name?: string;
@@ -205,6 +207,7 @@ export class BuildStep extends BuildStepOutputAccessor {
       supportedRuntimePlatforms?: BuildRuntimePlatform[];
       env?: BuildStepEnv;
       ifCondition?: string;
+      timeoutMs?: number;
     }
   ) {
     assert(command !== undefined || fn !== undefined, 'Either command or fn must be defined.');
@@ -223,6 +226,7 @@ export class BuildStep extends BuildStepOutputAccessor {
     this.command = command;
     this.shell = shell ?? getDefaultShell();
     this.ifCondition = ifCondition;
+    this.timeoutMs = timeoutMs;
     this.status = BuildStepStatus.NEW;
 
     this.internalId = uuidv4();
@@ -257,7 +261,9 @@ export class BuildStep extends BuildStepOutputAccessor {
         `Created temporary directory for step environment variables: ${this.envsDir}`
       );
 
-      if (this.command !== undefined) {
+      if (this.timeoutMs !== undefined) {
+        await this.executeWithTimeoutAsync();
+      } else if (this.command !== undefined) {
         await this.executeCommandAsync();
       } else {
         await this.executeFnAsync();
@@ -294,6 +300,25 @@ export class BuildStep extends BuildStepOutputAccessor {
 
       await cleanUpStepTemporaryDirectoriesAsync(this.ctx.global, this.id);
     }
+  }
+
+  private async executeWithTimeoutAsync(): Promise<void> {
+    assert(this.timeoutMs !== undefined, 'timeoutMs must be defined');
+
+    const timeoutPromise = new Promise<never>((_, reject) => {
+      setTimeout(() => {
+        reject(
+          new BuildStepRuntimeError(
+            `Build step "${this.displayName}" timed out after ${this.timeoutMs}ms`
+          )
+        );
+      }, this.timeoutMs);
+    });
+
+    const executionPromise =
+      this.command !== undefined ? this.executeCommandAsync() : this.executeFnAsync();
+
+    await Promise.race([executionPromise, timeoutPromise]);
   }
 
   public canBeRunOnRuntimePlatform(): boolean {

@@ -284,6 +284,60 @@ describe(validateConfig, () => {
             validateConfig(BuildConfigSchema, buildConfig);
           }).toThrowError(/"build.steps\[0\].run.env.ENV1" must be a string/);
         });
+        test('valid timeout_minutes', () => {
+          const buildConfig = {
+            build: {
+              steps: [
+                {
+                  run: {
+                    command: 'echo 123',
+                    timeout_minutes: 5,
+                  },
+                },
+              ],
+            },
+          };
+
+          expect(() => {
+            validateConfig(BuildConfigSchema, buildConfig);
+          }).not.toThrowError();
+        });
+        test('invalid timeout_minutes (negative)', () => {
+          const buildConfig = {
+            build: {
+              steps: [
+                {
+                  run: {
+                    command: 'echo 123',
+                    timeout_minutes: -5,
+                  },
+                },
+              ],
+            },
+          };
+
+          expect(() => {
+            validateConfig(BuildConfigSchema, buildConfig);
+          }).toThrowError(/"build.steps\[0\].run.timeout_minutes" must be a positive number/);
+        });
+        test('invalid timeout_minutes (zero)', () => {
+          const buildConfig = {
+            build: {
+              steps: [
+                {
+                  run: {
+                    command: 'echo 123',
+                    timeout_minutes: 0,
+                  },
+                },
+              ],
+            },
+          };
+
+          expect(() => {
+            validateConfig(BuildConfigSchema, buildConfig);
+          }).toThrowError(/"build.steps\[0\].run.timeout_minutes" must be a positive number/);
+        });
         test('valid command', () => {
           const buildConfig = {
             build: {

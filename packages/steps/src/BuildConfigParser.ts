@@ -123,6 +123,7 @@ export class BuildConfigParser extends AbstractConfigParser {
       command,
       env,
       if: ifCondition,
+      timeout_minutes,
     } = run;
     const id = BuildStep.getNewId(maybeId);
     const displayName = BuildStep.getDisplayName({ id, name, command });
@@ -130,6 +131,7 @@ export class BuildConfigParser extends AbstractConfigParser {
       inputsConfig && this.createBuildStepInputsFromDefinition(inputsConfig, displayName);
     const outputs =
       outputsConfig && this.createBuildStepOutputsFromDefinition(outputsConfig, displayName);
+    const timeoutMs = timeout_minutes !== undefined ? timeout_minutes * 60 * 1000 : undefined;
     return new BuildStep(this.ctx, {
       id,
       inputs,
@@ -141,6 +143,7 @@ export class BuildConfigParser extends AbstractConfigParser {
       command,
       env,
       ifCondition,
+      timeoutMs,
     });
   }
 
@@ -226,6 +229,10 @@ export class BuildConfigParser extends AbstractConfigParser {
     const functionId = getFunctionIdFromBuildStepFunctionCall(buildStepFunctionCall);
     const buildFunctionCallConfig = buildStepFunctionCall[functionId];
     const buildFunction = buildFunctions[functionId];
+    const timeoutMs =
+      buildFunctionCallConfig.timeout_minutes !== undefined
+        ? buildFunctionCallConfig.timeout_minutes * 60 * 1000
+        : undefined;
     return buildFunction.createBuildStepFromFunctionCall(this.ctx, {
       id: buildFunctionCallConfig.id,
       name: buildFunctionCallConfig.name,
@@ -234,6 +241,7 @@ export class BuildConfigParser extends AbstractConfigParser {
       shell: buildFunctionCallConfig.shell,
       env: buildFunctionCallConfig.env,
       ifCondition: buildFunctionCallConfig.if,
+      timeoutMs,
     });
   }
 
