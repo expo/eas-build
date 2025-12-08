@@ -270,7 +270,15 @@ export class BuildStep extends BuildStepOutputAccessor {
         let killTimeoutId: NodeJS.Timeout | undefined;
         const timeoutPromise = new Promise<never>((_, reject) => {
           timeoutId = setTimeout(() => {
-            // Kill the spawned process if it exists
+            // Reject with timeout error FIRST, before killing the process
+            // This ensures the timeout error wins the race
+            reject(
+              new BuildStepRuntimeError(
+                `Build step "${this.displayName}" timed out after ${this.timeoutMs}ms`
+              )
+            );
+
+            // Then kill the spawned process if it exists
             if (this.spawnedProcess) {
               this.ctx.logger.debug(
                 'Step timed out, sending SIGTERM to spawned process for graceful shutdown'
@@ -287,11 +295,6 @@ export class BuildStep extends BuildStepOutputAccessor {
                 }
               }, 5000); // 5 second grace period
             }
-            reject(
-              new BuildStepRuntimeError(
-                `Build step "${this.displayName}" timed out after ${this.timeoutMs}ms`
-              )
-            );
           }, this.timeoutMs);
         });
 
