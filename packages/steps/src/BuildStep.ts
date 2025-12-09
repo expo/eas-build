@@ -146,6 +146,7 @@ export class BuildStep extends BuildStepOutputAccessor {
   private readonly internalId: string;
   private readonly inputById: BuildStepInputById;
   protected executed = false;
+  private spawnedProcess?: { kill: (signal?: string) => void };
 
   public static getNewId(userDefinedId?: string): string {
     return userDefinedId ?? uuidv4();
@@ -261,13 +262,15 @@ export class BuildStep extends BuildStepOutputAccessor {
         `Created temporary directory for step environment variables: ${this.envsDir}`
       );
 
-      const execution = this.command !== undefined ? this.executeCommand() : this.executeFn();
-
       if (this.timeoutMs !== undefined) {
+        const executionPromise =
+          this.command !== undefined ? this.executeCommandAsync() : this.executeFnAsync();
+
         let timeoutId: NodeJS.Timeout | undefined;
+        let killTimeoutId: NodeJS.Timeout | undefined;
         const timeoutPromise = new Promise<never>((_, reject) => {
           timeoutId = setTimeout(() => {
-            // Reject with timeout error FIRST, before terminating the process
+            // Reject with timeout error FIRST, before killing the process
             // This ensures the timeout error wins the race
             reject(
               new BuildStepRuntimeError(
@@ -275,20 +278,40 @@ export class BuildStep extends BuildStepOutputAccessor {
               )
             );
 
-            // Then terminate the execution (kills process for commands, no-op for functions)
-            execution.terminate();
+            // Then kill the spawned process if it exists
+            if (this.spawnedProcess) {
+              this.ctx.logger.debug(
+                'Step timed out, sending SIGTERM to spawned process for graceful shutdown'
+              );
+              this.spawnedProcess.kill('SIGTERM');
+
+              // If process doesn't exit after grace period, force kill with SIGKILL
+              killTimeoutId = setTimeout(() => {
+                if (this.spawnedProcess) {
+                  this.ctx.logger.warn(
+                    'Process did not respond to SIGTERM, sending SIGKILL to force termination'
+                  );
+                  this.spawnedProcess.kill('SIGKILL');
+                }
+              }, 5000); // 5 second grace period
+            }
           }, this.timeoutMs);
         });
 
         try {
-          await Promise.race([execution.promise, timeoutPromise]);
+          await Promise.race([executionPromise, timeoutPromise]);
         } finally {
           if (timeoutId) {
             clearTimeout(timeoutId);
           }
+          if (killTimeoutId) {
+            clearTimeout(killTimeoutId);
+          }
         }
       } else {
-        await execution.promise;
+        const executionPromise =
+          this.command !== undefined ? this.executeCommandAsync() : this.executeFnAsync();
+        await executionPromise;
       }
 
       this.ctx.logger.info(
@@ -388,10 +411,7 @@ export class BuildStep extends BuildStepOutputAccessor {
     };
   }
 
-  private executeCommand(): {
-    promise: Promise<void>;
-    terminate: () => void;
-  } {
+  private async executeCommandAsync(): Promise<void> {
     assert(this.command, 'Command must be defined.');
 
     const interpolatedCommand = interpolateJobContext({
@@ -405,101 +425,69 @@ export class BuildStep extends BuildStepOutputAccessor {
     );
     this.ctx.logger.debug(`Interpolated inputs in the command template`);
 
-    let childProcess: { kill: (signal?: string) => void } | undefined;
+    const scriptPath = await saveScriptToTemporaryFileAsync(this.ctx.global, this.id, command);
+    this.ctx.logger.debug(`Saved script to ${scriptPath}`);
 
-    const promise = (async () => {
-      const scriptPath = await saveScriptToTemporaryFileAsync(this.ctx.global, this.id, command);
-      this.ctx.logger.debug(`Saved script to ${scriptPath}`);
+    const { command: shellCommand, args } = getShellCommandAndArgs(this.shell, scriptPath);
+    this.ctx.logger.debug(
+      `Executing script: ${shellCommand}${args !== undefined ? ` ${args.join(' ')}` : ''}`
+    );
 
-      const { command: shellCommand, args } = getShellCommandAndArgs(this.shell, scriptPath);
-      this.ctx.logger.debug(
-        `Executing script: ${shellCommand}${args !== undefined ? ` ${args.join(' ')}` : ''}`
-      );
-
-      try {
-        const workingDirectoryStat = await fs.stat(this.ctx.workingDirectory);
-        if (!workingDirectoryStat.isDirectory()) {
-          this.ctx.logger.error(
-            `Working directory "${this.ctx.workingDirectory}" exists, but is not a directory`
-          );
-        }
-      } catch (err: any) {
-        if (err?.code === 'ENOENT') {
-          this.ctx.logger.error(
-            { err },
-            `Working directory "${this.ctx.workingDirectory}" does not exist`
-          );
-        } else {
-          this.ctx.logger.error(
-            { err },
-            `Cannot access working directory "${this.ctx.workingDirectory}"`
-          );
-        }
+    try {
+      const workingDirectoryStat = await fs.stat(this.ctx.workingDirectory);
+      if (!workingDirectoryStat.isDirectory()) {
+        this.ctx.logger.error(
+          `Working directory "${this.ctx.workingDirectory}" exists, but is not a directory`
+        );
       }
+    } catch (err: any) {
+      if (err?.code === 'ENOENT') {
+        this.ctx.logger.error(
+          { err },
+          `Working directory "${this.ctx.workingDirectory}" does not exist`
+        );
+      } else {
+        this.ctx.logger.error(
+          { err },
+          `Cannot access working directory "${this.ctx.workingDirectory}"`
+        );
+      }
+    }
 
-      const spawnPromise = spawnAsync(shellCommand, args ?? [], {
-        cwd: this.ctx.workingDirectory,
-        logger: this.ctx.logger,
-        env: this.getScriptEnv(),
-        // stdin is /dev/null, std{out,err} are piped into logger.
-        stdio: ['ignore', 'pipe', 'pipe'],
-      });
+    const spawnPromise = spawnAsync(shellCommand, args ?? [], {
+      cwd: this.ctx.workingDirectory,
+      logger: this.ctx.logger,
+      env: this.getScriptEnv(),
+      // stdin is /dev/null, std{out,err} are piped into logger.
+      stdio: ['ignore', 'pipe', 'pipe'],
+    });
 
-      childProcess = spawnPromise.child;
+    // Store reference to child process for timeout handling
+    this.spawnedProcess = spawnPromise.child;
 
+    try {
       await spawnPromise;
       this.ctx.logger.debug(`Script completed successfully`);
-    })();
-
-    const terminate = (): void => {
-      if (childProcess) {
-        this.ctx.logger.debug(
-          'Step timed out, sending SIGTERM to spawned process for graceful shutdown'
-        );
-        childProcess.kill('SIGTERM');
-
-        // If process doesn't exit after grace period, force kill with SIGKILL
-        setTimeout(() => {
-          if (childProcess) {
-            this.ctx.logger.warn(
-              'Process did not respond to SIGTERM, sending SIGKILL to force termination'
-            );
-            childProcess.kill('SIGKILL');
-          }
-        }, 5000); // 5 second grace period
-      }
-    };
-
-    return { promise, terminate };
+    } finally {
+      this.spawnedProcess = undefined;
+    }
   }
 
-  private executeFn(): {
-    promise: Promise<void>;
-    terminate: () => void;
-  } {
+  private async executeFnAsync(): Promise<void> {
     assert(this.fn, 'Function (fn) must be defined');
 
-    const promise = (async () => {
-      await this.fn(this.ctx, {
-        inputs: Object.fromEntries(
-          Object.entries(this.inputById).map(([key, input]) => [
-            key,
-            { value: input.getValue({ interpolationContext: this.getInterpolationContext() }) },
-          ])
-        ),
-        outputs: this.outputById,
-        env: this.getScriptEnv(),
-      });
+    await this.fn(this.ctx, {
+      inputs: Object.fromEntries(
+        Object.entries(this.inputById).map(([key, input]) => [
+          key,
+          { value: input.getValue({ interpolationContext: this.getInterpolationContext() }) },
+        ])
+      ),
+      outputs: this.outputById,
+      env: this.getScriptEnv(),
+    });
 
-      this.ctx.logger.debug(`Script completed successfully`);
-    })();
-
-    // Functions cannot be forcefully terminated in JavaScript
-    const terminate = (): void => {
-      // No-op: JavaScript doesn't support cancelling running functions
-    };
-
-    return { promise, terminate };
+    this.ctx.logger.debug(`Script completed successfully`);
   }
 
   private interpolateInputsOutputsAndGlobalContextInTemplate(
