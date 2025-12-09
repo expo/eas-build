@@ -54,6 +54,7 @@ export type BuildStepFunction = (
     inputs: { [key: string]: { value: unknown } };
     outputs: BuildStepOutputById;
     env: BuildStepEnv;
+    signal?: AbortSignal;
   }
 ) => unknown;
 
@@ -146,7 +147,6 @@ export class BuildStep extends BuildStepOutputAccessor {
   private readonly internalId: string;
   private readonly inputById: BuildStepInputById;
   protected executed = false;
-  private spawnedProcess?: { kill: (signal?: string) => void };
 
   public static getNewId(userDefinedId?: string): string {
     return userDefinedId ?? uuidv4();
@@ -263,12 +263,10 @@ export class BuildStep extends BuildStepOutputAccessor {
       );
 
       if (this.timeoutMs !== undefined) {
-        const executionPromise =
-          this.command !== undefined ? this.executeCommandAsync() : this.executeFnAsync();
+        const abortController = new AbortController();
 
         let timeoutId: NodeJS.Timeout | undefined;
-        let killTimeoutId: NodeJS.Timeout | undefined;
-        const timeoutPromise = new Promise<never>((_, reject) => {
+        const timeoutPromise = new Promise<void>((_, reject) => {
           timeoutId = setTimeout(() => {
             // Reject with timeout error FIRST, before killing the process
             // This ensures the timeout error wins the race
@@ -278,39 +276,27 @@ export class BuildStep extends BuildStepOutputAccessor {
               )
             );
 
-            // Then kill the spawned process if it exists
-            if (this.spawnedProcess) {
-              this.ctx.logger.debug(
-                'Step timed out, sending SIGTERM to spawned process for graceful shutdown'
-              );
-              this.spawnedProcess.kill('SIGTERM');
-
-              // If process doesn't exit after grace period, force kill with SIGKILL
-              killTimeoutId = setTimeout(() => {
-                if (this.spawnedProcess) {
-                  this.ctx.logger.warn(
-                    'Process did not respond to SIGTERM, sending SIGKILL to force termination'
-                  );
-                  this.spawnedProcess.kill('SIGKILL');
-                }
-              }, 5000); // 5 second grace period
-            }
+            abortController.abort();
           }, this.timeoutMs);
         });
 
         try {
-          await Promise.race([executionPromise, timeoutPromise]);
+          await Promise.race([
+            this.command !== undefined
+              ? this.executeCommandAsync({ signal: abortController.signal })
+              : this.executeFnAsync({ signal: abortController.signal }),
+            timeoutPromise,
+          ]);
         } finally {
           if (timeoutId) {
             clearTimeout(timeoutId);
           }
-          if (killTimeoutId) {
-            clearTimeout(killTimeoutId);
-          }
         }
       } else {
         const executionPromise =
-          this.command !== undefined ? this.executeCommandAsync() : this.executeFnAsync();
+          this.command !== undefined
+            ? this.executeCommandAsync({ signal: null })
+            : this.executeFnAsync({ signal: null });
         await executionPromise;
       }
 
@@ -411,7 +397,7 @@ export class BuildStep extends BuildStepOutputAccessor {
     };
   }
 
-  private async executeCommandAsync(): Promise<void> {
+  private async executeCommandAsync({ signal }: { signal: AbortSignal | null }): Promise<void> {
     assert(this.command, 'Command must be defined.');
 
     const interpolatedCommand = interpolateJobContext({
@@ -454,26 +440,18 @@ export class BuildStep extends BuildStepOutputAccessor {
       }
     }
 
-    const spawnPromise = spawnAsync(shellCommand, args ?? [], {
+    await spawnAsync(shellCommand, args ?? [], {
       cwd: this.ctx.workingDirectory,
       logger: this.ctx.logger,
       env: this.getScriptEnv(),
       // stdin is /dev/null, std{out,err} are piped into logger.
       stdio: ['ignore', 'pipe', 'pipe'],
+      signal: signal ?? undefined,
     });
-
-    // Store reference to child process for timeout handling
-    this.spawnedProcess = spawnPromise.child;
-
-    try {
-      await spawnPromise;
-      this.ctx.logger.debug(`Script completed successfully`);
-    } finally {
-      this.spawnedProcess = undefined;
-    }
+    this.ctx.logger.debug(`Script completed successfully`);
   }
 
-  private async executeFnAsync(): Promise<void> {
+  private async executeFnAsync({ signal }: { signal: AbortSignal | null }): Promise<void> {
     assert(this.fn, 'Function (fn) must be defined');
 
     await this.fn(this.ctx, {
@@ -485,6 +463,7 @@ export class BuildStep extends BuildStepOutputAccessor {
       ),
       outputs: this.outputById,
       env: this.getScriptEnv(),
+      signal: signal ?? undefined,
     });
 
     this.ctx.logger.debug(`Script completed successfully`);
