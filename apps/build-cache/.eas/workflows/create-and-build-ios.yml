@@ -1,0 +1,98 @@
+name: Create and Build Public Cache App (iOS)
+
+on:
+  workflow_dispatch: {}
+
+jobs:
+  create-and-build-ios:
+    name: Create public-cache app and build iOS
+    runs_on: macos-medium
+    env:
+      EAS_USE_CACHE: "1"
+    steps:
+      - name: Install dependencies
+        run: yarn install
+
+      - name: Create fresh expo app
+        run: |
+          # Create a new directory for the public-cache app
+          mkdir -p ../public-cache
+          cd ../public-cache
+
+          # Initialize a new Expo app
+          npx create-expo-app@latest . --template blank --no-install
+
+          # Update app.json with the correct name and slug
+          cat > app.json << 'EOF'
+          {
+            "expo": {
+              "name": "build-cache",
+              "slug": "build-cache",
+              "owner": "mustafastaging",
+              "version": "1.0.0",
+              "orientation": "portrait",
+              "icon": "./assets/icon.png",
+              "userInterfaceStyle": "light",
+              "newArchEnabled": true,
+              "splash": {
+                "image": "./assets/splash-icon.png",
+                "resizeMode": "contain",
+                "backgroundColor": "#ffffff"
+              },
+              "ios": {
+                "supportsTablet": true,
+                "bundleIdentifier": "com.yourcompany.publiccache"
+              },
+              "android": {
+                "adaptiveIcon": {
+                  "foregroundImage": "./assets/adaptive-icon.png",
+                  "backgroundColor": "#ffffff"
+                },
+                "package": "com.yourcompany.publiccache"
+              },
+              "web": {
+                "favicon": "./assets/favicon.png"
+              },
+              "extra": {
+                "eas": {
+                  "projectId": "1e65aacb-0938-4607-8c6b-9d896a1d8819"
+                }
+              }
+            }
+          }
+          EOF
+
+          # Install dependencies
+          yarn install
+
+      - name: Create EAS build configuration
+        run: |
+          cd ../public-cache
+          cat > eas.json << 'EOF'
+          {
+            "cli": {
+              "version": ">= 13.2.2"
+            },
+            "build": {
+              "development": {
+                "developmentClient": true,
+                "distribution": "internal"
+              },
+              "preview": {
+                "distribution": "internal",
+                "ios": {
+                  "simulator": true
+                }
+              },
+              "production": {}
+            },
+            "submit": {
+              "production": {}
+            }
+          }
+          EOF
+
+      - name: Run Local EAS Build (iOS)
+        run: |
+          cd ../public-cache
+          npx eas-cli build --platform ios --profile preview --local --non-interactive
