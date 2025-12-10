@@ -1,5 +1,10 @@
 {
   "name": "@expo/turtle-spawn",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/expo/eas-build.git",
+    "directory": "packages/turtle-spawn"
+  },
   "version": "1.0.221",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",

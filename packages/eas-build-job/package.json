@@ -1,5 +1,10 @@
 {
   "name": "@expo/eas-build-job",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/expo/eas-build.git",
+    "directory": "packages/eas-build-job"
+  },
   "version": "1.0.252",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",

@@ -1,5 +1,10 @@
 {
   "name": "@expo/template-file",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/expo/eas-build.git",
+    "directory": "packages/template-file"
+  },
   "version": "1.0.252",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",

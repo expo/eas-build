@@ -1,5 +1,10 @@
 {
   "name": "create-eas-build-function",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/expo/eas-build.git",
+    "directory": "packages/create-eas-build-function"
+  },
   "version": "1.0.259",
   "bin": {
     "create-eas-build-function": "./build/index.js"

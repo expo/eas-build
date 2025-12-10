@@ -1,5 +1,10 @@
 {
   "name": "eas-cli-local-build-plugin",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/expo/eas-build.git",
+    "directory": "packages/local-build-plugin"
+  },
   "version": "1.0.259",
   "description": "Tool for running EAS compatible builds on a local machine.",
   "main": "dist/main.js",
