@@ -18,24 +18,11 @@ jobs:
           registry-url: 'https://registry.npmjs.org/'
           scope: 'expo'
           node-version: 20
-      - name: Update npm
-        run: npm install -g npm@^11
       - name: Setup ncc
         run: npm install -g @vercel/ncc
       - name: Install dependencies
         run: yarn install --frozen-lockfile --check-files
       - name: Build
         run: yarn build
-      - name: Configure Lerna for npm publish
-        run: |
-          echo "$(jq '.npmClient = "npm"' lerna.json)" > lerna.json
-      - name: Configure git
-        run: |
-          git config --global user.email "support+ci@expo.io"
-          git config --global user.name "Expo Bot"
-      - name: Create a commit
-        run: |
-          git add .
-          git commit -m "commit temp changes for lerna to not complain"
       - name: Publish packages to npm
         run: yarn lerna publish from-package --yes --no-verify-access
