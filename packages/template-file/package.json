@@ -5,7 +5,7 @@
     "url": "https://github.com/expo/eas-build.git",
     "directory": "packages/template-file"
   },
-  "version": "1.0.252",
+  "version": "1.0.260",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "files": [
