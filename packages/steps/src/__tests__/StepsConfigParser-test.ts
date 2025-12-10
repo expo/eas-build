@@ -6,7 +6,6 @@ import { BuildFunctionGroup } from '../BuildFunctionGroup.js';
 import { BuildWorkflow } from '../BuildWorkflow.js';
 import { BuildConfigError, BuildStepRuntimeError } from '../errors.js';
 import { StepsConfigParser } from '../StepsConfigParser.js';
-import { getDefaultShell } from '../utils/shell/command.js';
 import { BuildStepInput, BuildStepInputValueTypeName } from '../BuildStepInput.js';
 
 import { createGlobalContextMock } from './utils/context.js';
@@ -277,7 +276,7 @@ describe(StepsConfigParser, () => {
       expect(step1.id).toMatch(UUID_REGEX);
       expect(step1.name).toBeUndefined();
       expect(step1.command).toBe('command1');
-      expect(step1.shell).toBe(getDefaultShell());
+      expect(step1.shell).toBe('/bin/bash -eo pipefail');
       expect(step1.fn).toBeUndefined();
       expect(step1.ctx.workingDirectory).toBe(ctx.defaultWorkingDirectory);
       expect(step1.stepEnvOverrides).toEqual({});

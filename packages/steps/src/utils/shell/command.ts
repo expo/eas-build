@@ -1,7 +1,3 @@
-export function getDefaultShell(): string {
-  return '/bin/bash -eo pipefail';
-}
-
 export function getShellCommandAndArgs(
   shell: string,
   script?: string
