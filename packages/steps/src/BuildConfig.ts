@@ -51,6 +51,7 @@ export type BuildFunctionCallConfig = {
   shell?: string;
   env?: BuildStepEnv;
   if?: string;
+  timeout_minutes?: number;
 };
 
 export type BuildStepInputs = Record<string, unknown>;
@@ -188,6 +189,7 @@ const BuildFunctionCallSchema = Joi.object({
   shell: Joi.string(),
   env: Joi.object().pattern(Joi.string(), Joi.string().allow('')),
   if: Joi.string(),
+  timeout_minutes: Joi.number().positive(),
 }).rename('working_directory', 'workingDirectory');
 
 const BuildStepConfigSchema = Joi.any<BuildStepConfig>()

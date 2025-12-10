@@ -54,6 +54,7 @@ export type BuildStepFunction = (
     inputs: { [key: string]: { value: unknown } };
     outputs: BuildStepOutputById;
     env: BuildStepEnv;
+    signal?: AbortSignal;
   }
 ) => unknown;
 
@@ -138,6 +139,7 @@ export class BuildStep extends BuildStepOutputAccessor {
   public readonly ctx: BuildStepContext;
   public readonly stepEnvOverrides: BuildStepEnv;
   public readonly ifCondition?: string;
+  public readonly timeoutMs?: number;
   public status: BuildStepStatus;
   private readonly outputsDir: string;
   private readonly envsDir: string;
@@ -192,6 +194,7 @@ export class BuildStep extends BuildStepOutputAccessor {
       supportedRuntimePlatforms: maybeSupportedRuntimePlatforms,
       env,
       ifCondition,
+      timeoutMs,
     }: {
       id: string;
       name?: string;
@@ -205,6 +208,7 @@ export class BuildStep extends BuildStepOutputAccessor {
       supportedRuntimePlatforms?: BuildRuntimePlatform[];
       env?: BuildStepEnv;
       ifCondition?: string;
+      timeoutMs?: number;
     }
   ) {
     assert(command !== undefined || fn !== undefined, 'Either command or fn must be defined.');
@@ -223,6 +227,7 @@ export class BuildStep extends BuildStepOutputAccessor {
     this.command = command;
     this.shell = shell ?? getDefaultShell();
     this.ifCondition = ifCondition;
+    this.timeoutMs = timeoutMs;
     this.status = BuildStepStatus.NEW;
 
     this.internalId = uuidv4();
@@ -257,10 +262,42 @@ export class BuildStep extends BuildStepOutputAccessor {
         `Created temporary directory for step environment variables: ${this.envsDir}`
       );
 
-      if (this.command !== undefined) {
-        await this.executeCommandAsync();
+      if (this.timeoutMs !== undefined) {
+        const abortController = new AbortController();
+
+        let timeoutId: NodeJS.Timeout | undefined;
+        const timeoutPromise = new Promise<void>((_, reject) => {
+          timeoutId = setTimeout(() => {
+            // Reject with timeout error FIRST, before killing the process
+            // This ensures the timeout error wins the race
+            reject(
+              new BuildStepRuntimeError(
+                `Build step "${this.displayName}" timed out after ${this.timeoutMs}ms`
+              )
+            );
+
+            abortController.abort();
+          }, this.timeoutMs);
+        });
+
+        try {
+          await Promise.race([
+            this.command !== undefined
+              ? this.executeCommandAsync({ signal: abortController.signal })
+              : this.executeFnAsync({ signal: abortController.signal }),
+            timeoutPromise,
+          ]);
+        } finally {
+          if (timeoutId) {
+            clearTimeout(timeoutId);
+          }
+        }
       } else {
-        await this.executeFnAsync();
+        const executionPromise =
+          this.command !== undefined
+            ? this.executeCommandAsync({ signal: null })
+            : this.executeFnAsync({ signal: null });
+        await executionPromise;
       }
 
       this.ctx.logger.info(
@@ -360,7 +397,7 @@ export class BuildStep extends BuildStepOutputAccessor {
     };
   }
 
-  private async executeCommandAsync(): Promise<void> {
+  private async executeCommandAsync({ signal }: { signal: AbortSignal | null }): Promise<void> {
     assert(this.command, 'Command must be defined.');
 
     const interpolatedCommand = interpolateJobContext({
@@ -409,11 +446,12 @@ export class BuildStep extends BuildStepOutputAccessor {
       env: this.getScriptEnv(),
       // stdin is /dev/null, std{out,err} are piped into logger.
       stdio: ['ignore', 'pipe', 'pipe'],
+      signal: signal ?? undefined,
     });
     this.ctx.logger.debug(`Script completed successfully`);
   }
 
-  private async executeFnAsync(): Promise<void> {
+  private async executeFnAsync({ signal }: { signal: AbortSignal | null }): Promise<void> {
     assert(this.fn, 'Function (fn) must be defined');
 
     await this.fn(this.ctx, {
@@ -425,6 +463,7 @@ export class BuildStep extends BuildStepOutputAccessor {
       ),
       outputs: this.outputById,
       env: this.getScriptEnv(),
+      signal: signal ?? undefined,
     });
 
     this.ctx.logger.debug(`Script completed successfully`);

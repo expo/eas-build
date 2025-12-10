@@ -87,6 +87,7 @@ export class BuildFunction {
       shell,
       env,
       ifCondition,
+      timeoutMs,
     }: {
       id?: string;
       name?: string;
@@ -95,6 +96,7 @@ export class BuildFunction {
       shell?: string;
       env?: BuildStepEnv;
       ifCondition?: string;
+      timeoutMs?: number;
     } = {}
   ): BuildStep {
     const buildStepId = BuildStep.getNewId(id);
@@ -131,6 +133,7 @@ export class BuildFunction {
       supportedRuntimePlatforms: this.supportedRuntimePlatforms,
       env,
       ifCondition,
+      timeoutMs,
     });
   }
 }
