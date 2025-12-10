@@ -186,7 +186,6 @@ function createStepsForIosBuildWithCredentials({
       },
     }
   );
-  const cacheStats = createCacheStatsBuildFunction().createBuildStepFromFunctionCall(globalCtx);
   return [
     createCheckoutBuildFunction().createBuildStepFromFunctionCall(globalCtx),
     createSetUpNpmrcBuildFunction().createBuildStepFromFunctionCall(globalCtx),
@@ -218,7 +217,7 @@ function createStepsForIosBuildWithCredentials({
       buildToolsContext
     ).createBuildStepFromFunctionCall(globalCtx),
     saveCache,
-    cacheStats,
+    createCacheStatsBuildFunction().createBuildStepFromFunctionCall(globalCtx),
   ];
 }
 
@@ -263,7 +262,6 @@ function createStepsForAndroidBuildWithoutCredentials({
       },
     }
   );
-  const cacheStats = createCacheStatsBuildFunction().createBuildStepFromFunctionCall(globalCtx);
   return [
     createCheckoutBuildFunction().createBuildStepFromFunctionCall(globalCtx),
     createSetUpNpmrcBuildFunction().createBuildStepFromFunctionCall(globalCtx),
@@ -290,7 +288,7 @@ function createStepsForAndroidBuildWithoutCredentials({
       buildToolsContext
     ).createBuildStepFromFunctionCall(globalCtx),
     saveCache,
-    cacheStats,
+    createCacheStatsBuildFunction().createBuildStepFromFunctionCall(globalCtx),
   ];
 }
 
@@ -335,7 +333,6 @@ function createStepsForAndroidBuildWithCredentials({
       },
     }
   );
-  const cacheStats = createCacheStatsBuildFunction().createBuildStepFromFunctionCall(globalCtx);
   return [
     createCheckoutBuildFunction().createBuildStepFromFunctionCall(globalCtx),
     createSetUpNpmrcBuildFunction().createBuildStepFromFunctionCall(globalCtx),
@@ -364,6 +361,6 @@ function createStepsForAndroidBuildWithCredentials({
       buildToolsContext
     ).createBuildStepFromFunctionCall(globalCtx),
     saveCache,
-    cacheStats,
+    createCacheStatsBuildFunction().createBuildStepFromFunctionCall(globalCtx),
   ];
 }
