@@ -21,7 +21,10 @@ import { createResolveBuildConfigBuildFunction } from '../functions/resolveBuild
 import { calculateEASUpdateRuntimeVersionFunction } from '../functions/calculateEASUpdateRuntimeVersion';
 import { eagerBundleBuildFunction } from '../functions/eagerBundle';
 import { shouldUseEagerBundle } from '../../common/eagerBundle';
-import { createRestoreBuildCacheFunction } from '../functions/restoreBuildCache';
+import {
+  createRestoreBuildCacheFunction,
+  createCacheStatsBuildFunction,
+} from '../functions/restoreBuildCache';
 import { createSaveBuildCacheFunction } from '../functions/saveBuildCache';
 
 interface HelperFunctionsInput {
@@ -183,6 +186,7 @@ function createStepsForIosBuildWithCredentials({
       },
     }
   );
+  const cacheStats = createCacheStatsBuildFunction().createBuildStepFromFunctionCall(globalCtx);
   return [
     createCheckoutBuildFunction().createBuildStepFromFunctionCall(globalCtx),
     createSetUpNpmrcBuildFunction().createBuildStepFromFunctionCall(globalCtx),
@@ -214,6 +218,7 @@ function createStepsForIosBuildWithCredentials({
       buildToolsContext
     ).createBuildStepFromFunctionCall(globalCtx),
     saveCache,
+    cacheStats,
   ];
 }
 
@@ -258,6 +263,7 @@ function createStepsForAndroidBuildWithoutCredentials({
       },
     }
   );
+  const cacheStats = createCacheStatsBuildFunction().createBuildStepFromFunctionCall(globalCtx);
   return [
     createCheckoutBuildFunction().createBuildStepFromFunctionCall(globalCtx),
     createSetUpNpmrcBuildFunction().createBuildStepFromFunctionCall(globalCtx),
@@ -284,6 +290,7 @@ function createStepsForAndroidBuildWithoutCredentials({
       buildToolsContext
     ).createBuildStepFromFunctionCall(globalCtx),
     saveCache,
+    cacheStats,
   ];
 }
 
@@ -328,6 +335,7 @@ function createStepsForAndroidBuildWithCredentials({
       },
     }
   );
+  const cacheStats = createCacheStatsBuildFunction().createBuildStepFromFunctionCall(globalCtx);
   return [
     createCheckoutBuildFunction().createBuildStepFromFunctionCall(globalCtx),
     createSetUpNpmrcBuildFunction().createBuildStepFromFunctionCall(globalCtx),
@@ -356,5 +364,6 @@ function createStepsForAndroidBuildWithCredentials({
       buildToolsContext
     ).createBuildStepFromFunctionCall(globalCtx),
     saveCache,
+    cacheStats,
   ];
 }
