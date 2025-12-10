@@ -9,6 +9,8 @@ jobs:
   publish-to-npm:
     name: Publish to npm
     runs-on: ubuntu-latest
+    permissions:
+      id-token: write
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -24,5 +26,3 @@ jobs:
         run: yarn build
       - name: Publish packages to npm
         run: yarn lerna publish from-package --yes --no-verify-access
-        env:
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_ACCESS_TOKEN }}
