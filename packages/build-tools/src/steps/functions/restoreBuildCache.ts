@@ -53,6 +53,17 @@ export function createRestoreBuildCacheFunction(): BuildFunction {
   });
 }
 
+export function createCacheStatsBuildFunction(): BuildFunction {
+  return new BuildFunction({
+    namespace: 'eas',
+    id: 'cache_stats',
+    name: 'Cache Stats',
+    fn: async (stepCtx, { env }) => {
+      await cacheStatsAsync({ logger: stepCtx.logger, env });
+    },
+  });
+}
+
 export async function restoreCcacheAsync({
   logger,
   workingDirectory,

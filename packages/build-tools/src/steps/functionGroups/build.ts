@@ -21,7 +21,10 @@ import { createResolveBuildConfigBuildFunction } from '../functions/resolveBuild
 import { calculateEASUpdateRuntimeVersionFunction } from '../functions/calculateEASUpdateRuntimeVersion';
 import { eagerBundleBuildFunction } from '../functions/eagerBundle';
 import { shouldUseEagerBundle } from '../../common/eagerBundle';
-import { createRestoreBuildCacheFunction } from '../functions/restoreBuildCache';
+import {
+  createRestoreBuildCacheFunction,
+  createCacheStatsBuildFunction,
+} from '../functions/restoreBuildCache';
 import { createSaveBuildCacheFunction } from '../functions/saveBuildCache';
 
 interface HelperFunctionsInput {
@@ -214,6 +217,7 @@ function createStepsForIosBuildWithCredentials({
       buildToolsContext
     ).createBuildStepFromFunctionCall(globalCtx),
     saveCache,
+    createCacheStatsBuildFunction().createBuildStepFromFunctionCall(globalCtx),
   ];
 }
 
@@ -284,6 +288,7 @@ function createStepsForAndroidBuildWithoutCredentials({
       buildToolsContext
     ).createBuildStepFromFunctionCall(globalCtx),
     saveCache,
+    createCacheStatsBuildFunction().createBuildStepFromFunctionCall(globalCtx),
   ];
 }
 
@@ -356,5 +361,6 @@ function createStepsForAndroidBuildWithCredentials({
       buildToolsContext
     ).createBuildStepFromFunctionCall(globalCtx),
     saveCache,
+    createCacheStatsBuildFunction().createBuildStepFromFunctionCall(globalCtx),
   ];
 }
