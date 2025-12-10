@@ -20,6 +20,9 @@ jobs:
           node-version: ${{ matrix.node }}
       - name: Setup ncc
         run: npm install -g @vercel/ncc
+      - name: Downgrade lerna
+        if: matrix.node == '18'
+        run: yarn add --ignore-workspace-root-check --dev lerna@^8
       - run: yarn install --frozen-lockfile --check-files
       - name: "gql.tada Checks"
         working-directory: packages/build-tools
