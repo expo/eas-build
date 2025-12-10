@@ -33,3 +33,4 @@ jobs:
       - run: yarn build
       - run: yarn test
       - run: yarn lint --max-warnings=0
+        if: matrix.node == '20'
