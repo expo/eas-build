@@ -26,5 +26,8 @@ jobs:
         run: yarn install --frozen-lockfile --check-files
       - name: Build
         run: yarn build
+      - name: Configure Lerna for npm publish
+        run: |
+          echo "$(jq '.npmClient = "npm"' lerna.json)" > lerna.json
       - name: Publish packages to npm
         run: yarn lerna publish from-package --yes --no-verify-access
