@@ -1,8 +1,5 @@
-// stolen from https://circleci.com/docs/configuration-reference/
-const DEFAULT_SHELL = '/bin/bash -eo pipefail';
-
 export function getDefaultShell(): string {
-  return DEFAULT_SHELL;
+  return '/bin/bash -eo pipefail';
 }
 
 export function getShellCommandAndArgs(
