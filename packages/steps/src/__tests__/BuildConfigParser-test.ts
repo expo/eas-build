@@ -6,7 +6,6 @@ import { BuildFunction } from '../BuildFunction.js';
 import { BuildStepFunction } from '../BuildStep.js';
 import { BuildWorkflow } from '../BuildWorkflow.js';
 import { BuildConfigError, BuildStepRuntimeError } from '../errors.js';
-import { getDefaultShell } from '../utils/shell/command.js';
 import { BuildRuntimePlatform } from '../BuildRuntimePlatform.js';
 import { BuildStepInputValueTypeName } from '../BuildStepInput.js';
 import { BuildFunctionGroup } from '../BuildFunctionGroup.js';
@@ -121,7 +120,7 @@ describe(BuildConfigParser, () => {
       expect(step1.name).toBeUndefined();
       expect(step1.command).toBe('echo "Hi!"');
       expect(step1.ctx.workingDirectory).toBe(ctx.defaultWorkingDirectory);
-      expect(step1.shell).toBe(getDefaultShell());
+      expect(step1.shell).toBe('/bin/bash -eo pipefail');
       expect(step1.stepEnvOverrides).toMatchObject({});
 
       // - run:
@@ -137,7 +136,7 @@ describe(BuildConfigParser, () => {
       expect(step2.name).toBe('Say HELLO');
       expect(step2.command).toMatchSnapshot();
       expect(step2.ctx.workingDirectory).toBe(ctx.defaultWorkingDirectory);
-      expect(step2.shell).toBe(getDefaultShell());
+      expect(step2.shell).toBe('/bin/bash -eo pipefail');
       expect(step2.stepEnvOverrides).toMatchObject({});
 
       // - run:
@@ -151,7 +150,7 @@ describe(BuildConfigParser, () => {
       expect(step3.name).toBeUndefined();
       expect(step3.command).toBe('echo "Step with an ID"');
       expect(step3.ctx.workingDirectory).toBe(ctx.defaultWorkingDirectory);
-      expect(step3.shell).toBe(getDefaultShell());
+      expect(step3.shell).toBe('/bin/bash -eo pipefail');
       expect(step3.stepEnvOverrides).toMatchObject({
         FOO: 'bar',
         BAR: 'baz',
@@ -168,7 +167,7 @@ describe(BuildConfigParser, () => {
       expect(step4.ctx.workingDirectory).toBe(
         path.join(ctx.defaultWorkingDirectory, 'relative/path/to/files')
       );
-      expect(step4.shell).toBe(getDefaultShell());
+      expect(step4.shell).toBe('/bin/bash -eo pipefail');
       expect(step4.stepEnvOverrides).toMatchObject({});
 
       // - run:
@@ -182,7 +181,7 @@ describe(BuildConfigParser, () => {
       expect(step5.ctx.workingDirectory).toBe(
         path.join(ctx.projectTargetDirectory, '/home/dsokal')
       );
-      expect(step5.shell).toBe(getDefaultShell());
+      expect(step5.shell).toBe('/bin/bash -eo pipefail');
       expect(step5.stepEnvOverrides).toMatchObject({});
 
       // - run:
@@ -228,7 +227,7 @@ describe(BuildConfigParser, () => {
       expect(step1.name).toBe('Say HI');
       expect(step1.command).toBe('echo "Hi, ${ inputs.name }, ${ inputs.boolean_value }!"');
       expect(step1.ctx.workingDirectory).toBe(ctx.defaultWorkingDirectory);
-      expect(step1.shell).toBe(getDefaultShell());
+      expect(step1.shell).toBe('/bin/bash -eo pipefail');
       expect(step1.inputs).toBeDefined();
       expect(step1.inputs?.[0].id).toBe('name');
       expect(
@@ -279,7 +278,7 @@ describe(BuildConfigParser, () => {
       expect(step1.name).toBeUndefined();
       expect(step1.command).toMatchSnapshot();
       expect(step1.ctx.workingDirectory).toBe(ctx.defaultWorkingDirectory);
-      expect(step1.shell).toBe(getDefaultShell());
+      expect(step1.shell).toBe('/bin/bash -eo pipefail');
       const { first_name, last_name } = step1.outputById;
       expect(first_name.id).toBe('first_name');
       expect(first_name.required).toBe(true);
@@ -303,7 +302,7 @@ describe(BuildConfigParser, () => {
       expect(step2.name).toBeUndefined();
       expect(step2.command).toMatchSnapshot();
       expect(step2.ctx.workingDirectory).toBe(ctx.defaultWorkingDirectory);
-      expect(step2.shell).toBe(getDefaultShell());
+      expect(step2.shell).toBe('/bin/bash -eo pipefail');
       const step2Outputs = step2.outputById;
       expect(step2Outputs.first_name.id).toBe('first_name');
       expect(step2Outputs.first_name.required).toBe(true);
@@ -342,7 +341,7 @@ describe(BuildConfigParser, () => {
       expect(step1.name).toBe('Hi!');
       expect(step1.command).toBe('echo "Hi, ${ inputs.name }!"');
       expect(step1.ctx.workingDirectory).toBe(ctx.defaultWorkingDirectory);
-      expect(step1.shell).toBe(getDefaultShell());
+      expect(step1.shell).toBe('/bin/bash -eo pipefail');
       expect(step1.inputs?.[0].id).toBe('name');
       expect(
         step1.inputs?.[0].getValue({ interpolationContext: ctx.getInterpolationContext() })
@@ -374,7 +373,7 @@ describe(BuildConfigParser, () => {
       expect(step2.name).toBe('Hi, Szymon!');
       expect(step2.command).toBe('echo "Hi, ${ inputs.name }!"');
       expect(step2.ctx.workingDirectory).toBe(ctx.defaultWorkingDirectory);
-      expect(step2.shell).toBe(getDefaultShell());
+      expect(step2.shell).toBe('/bin/bash -eo pipefail');
       expect(step2.inputs?.[0].id).toBe('name');
       expect(
         step2.inputs?.[0].getValue({ interpolationContext: ctx.getInterpolationContext() })
@@ -401,7 +400,7 @@ describe(BuildConfigParser, () => {
       expect(step3.name).toBe('Hi, Wojtek!');
       expect(step3.command).toBe('echo "Hi, Wojtek!"');
       expect(step3.ctx.workingDirectory).toBe(ctx.defaultWorkingDirectory);
-      expect(step3.shell).toBe(getDefaultShell());
+      expect(step3.shell).toBe('/bin/bash -eo pipefail');
       expect(step3.stepEnvOverrides).toMatchObject({});
 
       // - random:
@@ -411,7 +410,7 @@ describe(BuildConfigParser, () => {
       expect(step4.name).toBe('Generate random number');
       expect(step4.command).toBe('set-output value 6');
       expect(step4.ctx.workingDirectory).toBe(ctx.defaultWorkingDirectory);
-      expect(step4.shell).toBe(getDefaultShell());
+      expect(step4.shell).toBe('/bin/bash -eo pipefail');
       const { value } = step4.outputById;
       expect(value.id).toBe('value');
       expect(value.required).toBe(true);
@@ -425,7 +424,7 @@ describe(BuildConfigParser, () => {
       expect(step5.name).toBe(undefined);
       expect(step5.command).toBe('echo "${ inputs.value }"');
       expect(step5.ctx.workingDirectory).toBe(ctx.defaultWorkingDirectory);
-      expect(step5.shell).toBe(getDefaultShell());
+      expect(step5.shell).toBe('/bin/bash -eo pipefail');
       expect(step5.inputs?.[0].id).toBe('value');
       expect(step5.inputs?.[0].required).toBe(true);
       expect(step5.inputs?.[0].allowedValueTypeName).toBe(BuildStepInputValueTypeName.STRING);
@@ -440,7 +439,7 @@ describe(BuildConfigParser, () => {
       expect(step6.name).toBe('Hi!');
       expect(step6.command).toBe('echo "${ inputs.greeting }, ${ inputs.name }!"');
       expect(step6.ctx.workingDirectory).toBe(ctx.defaultWorkingDirectory);
-      expect(step6.shell).toBe(getDefaultShell());
+      expect(step6.shell).toBe('/bin/bash -eo pipefail');
       expect(step6.supportedRuntimePlatforms).toEqual([
         BuildRuntimePlatform.DARWIN,
         BuildRuntimePlatform.LINUX,

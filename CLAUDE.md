@@ -208,3 +208,9 @@ Most packages depend on `@expo/eas-build-job` as the source of truth for types.
 ## Environment Requirements
 
 Node and Yarn versions are managed by Volta.
+
+## Contributing changes to the Git repo
+
+- When possible, prepend commit messages with `[LIBRARY-BEING-CHANGED]`, e.g. `[steps] Add new step function`. Do not use prexies like `chore:` and `feat:`.
+- Commit messages should be concise. Only complex changes should be longer than one line.
+- Commit changes in logical groups.

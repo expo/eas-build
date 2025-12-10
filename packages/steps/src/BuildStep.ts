@@ -15,7 +15,7 @@ import {
   makeBuildStepOutputByIdMap,
 } from './BuildStepOutput.js';
 import { BIN_PATH } from './utils/shell/bin.js';
-import { getDefaultShell, getShellCommandAndArgs } from './utils/shell/command.js';
+import { getShellCommandAndArgs } from './utils/shell/command.js';
 import {
   cleanUpStepTemporaryDirectoriesAsync,
   getTemporaryEnvsDirPath,
@@ -225,7 +225,7 @@ export class BuildStep extends BuildStepOutputAccessor {
     this.outputById = outputById;
     this.fn = fn;
     this.command = command;
-    this.shell = shell ?? getDefaultShell();
+    this.shell = shell ?? '/bin/bash -eo pipefail';
     this.ifCondition = ifCondition;
     this.timeoutMs = timeoutMs;
     this.status = BuildStepStatus.NEW;
