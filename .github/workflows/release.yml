@@ -29,5 +29,13 @@ jobs:
       - name: Configure Lerna for npm publish
         run: |
           echo "$(jq '.npmClient = "npm"' lerna.json)" > lerna.json
+      - name: Configure git
+        run: |
+          git config --global user.email "support+ci@expo.io"
+          git config --global user.name "Expo Bot"
+      - name: Create a commit
+        run: |
+          git add .
+          git commit -m "commit temp changes for lerna to not complain"
       - name: Publish packages to npm
         run: yarn lerna publish from-package --yes --no-verify-access
