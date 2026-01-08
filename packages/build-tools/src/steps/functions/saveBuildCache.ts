@@ -20,6 +20,7 @@ export function createSaveBuildCacheFunction(evictUsedBefore: Date): BuildFuncti
     namespace: 'eas',
     id: 'save_build_cache',
     name: 'Save Cache',
+    __metricsId: 'eas/save_build_cache',
     inputProviders: [
       BuildStepInput.createProvider({
         id: 'platform',

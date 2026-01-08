@@ -309,5 +309,32 @@ describe(BuildFunction, () => {
       });
       expect(step.ifCondition).toBe('${ always() }');
     });
+    it('passes __metricsId to build step', () => {
+      const ctx = createGlobalContextMock();
+      const func = new BuildFunction({
+        id: 'test1',
+        name: 'Test function',
+        command: 'echo test',
+        __metricsId: 'eas/test',
+      });
+      const step = func.createBuildStepFromFunctionCall(ctx, {
+        id: 'buildStep1',
+        workingDirectory: ctx.defaultWorkingDirectory,
+      });
+      expect(step.__metricsId).toBe('eas/test');
+    });
+    it('has undefined __metricsId when not provided on function', () => {
+      const ctx = createGlobalContextMock();
+      const func = new BuildFunction({
+        id: 'test1',
+        name: 'Test function',
+        command: 'echo test',
+      });
+      const step = func.createBuildStepFromFunctionCall(ctx, {
+        id: 'buildStep1',
+        workingDirectory: ctx.defaultWorkingDirectory,
+      });
+      expect(step.__metricsId).toBeUndefined();
+    });
   });
 });

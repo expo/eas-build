@@ -140,6 +140,7 @@ export class BuildStep extends BuildStepOutputAccessor {
   public readonly stepEnvOverrides: BuildStepEnv;
   public readonly ifCondition?: string;
   public readonly timeoutMs?: number;
+  public readonly __metricsId?: string;
   public status: BuildStepStatus;
   private readonly outputsDir: string;
   private readonly envsDir: string;
@@ -195,6 +196,7 @@ export class BuildStep extends BuildStepOutputAccessor {
       env,
       ifCondition,
       timeoutMs,
+      __metricsId,
     }: {
       id: string;
       name?: string;
@@ -209,6 +211,7 @@ export class BuildStep extends BuildStepOutputAccessor {
       env?: BuildStepEnv;
       ifCondition?: string;
       timeoutMs?: number;
+      __metricsId?: string;
     }
   ) {
     assert(command !== undefined || fn !== undefined, 'Either command or fn must be defined.');
@@ -228,6 +231,7 @@ export class BuildStep extends BuildStepOutputAccessor {
     this.shell = shell ?? '/bin/bash -eo pipefail';
     this.ifCondition = ifCondition;
     this.timeoutMs = timeoutMs;
+    this.__metricsId = __metricsId;
     this.status = BuildStepStatus.NEW;
 
     this.internalId = uuidv4();

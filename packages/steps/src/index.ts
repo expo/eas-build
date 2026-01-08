@@ -16,3 +16,4 @@ export * from './interpolation.js';
 export * from './utils/shell/spawn.js';
 export * from './utils/jsepEval.js';
 export * from './utils/hashFiles.js';
+export { StepMetric, StepMetricResult, StepMetricsCollection } from './StepMetrics.js';

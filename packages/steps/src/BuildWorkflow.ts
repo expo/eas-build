@@ -1,6 +1,7 @@
 import { BuildFunctionById } from './BuildFunction.js';
 import { BuildStep } from './BuildStep.js';
 import { BuildStepGlobalContext } from './BuildStepContext.js';
+import { StepMetricResult } from './StepMetrics.js';
 
 export class BuildWorkflow {
   public readonly buildSteps: BuildStep[];
@@ -18,6 +19,7 @@ export class BuildWorkflow {
     let maybeError: Error | null = null;
     for (const step of this.buildSteps) {
       let shouldExecuteStep = false;
+
       try {
         shouldExecuteStep = step.shouldExecuteStep();
       } catch (err: any) {
@@ -28,20 +30,48 @@ export class BuildWorkflow {
         maybeError = maybeError ?? err;
         this.ctx.markAsFailed();
       }
+
+      const startTime = Date.now();
+      let stepResult: StepMetricResult | 'skipped';
+
       if (shouldExecuteStep) {
         try {
           await step.executeAsync();
+          stepResult = 'success';
         } catch (err: any) {
           maybeError = maybeError ?? err;
           this.ctx.markAsFailed();
+          stepResult = 'failed';
         }
       } else {
         step.skip();
+        stepResult = 'skipped';
       }
+
+      this.collectStepMetrics(step, stepResult, Date.now() - startTime);
     }
 
     if (maybeError) {
       throw maybeError;
     }
+  }
+
+  private collectStepMetrics(
+    step: BuildStep,
+    result: StepMetricResult | 'skipped',
+    durationMs: number
+  ): void {
+    if (result === 'skipped' || !step.__metricsId) {
+      return;
+    }
+
+    const platform = this.ctx.runtimePlatform === 'darwin' ? 'darwin' : 'linux';
+
+    this.ctx.addStepMetric({
+      metricsId: step.__metricsId,
+      result,
+      durationMs,
+      platform,
+    });
   }
 }

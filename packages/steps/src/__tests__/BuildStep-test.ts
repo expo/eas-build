@@ -204,6 +204,37 @@ describe(BuildStep, () => {
       );
       expect(step.ctx.logger).not.toBe(ctx.baseLogger);
     });
+
+    it('stores __metricsId when provided', () => {
+      const ctx = createGlobalContextMock();
+
+      const id = 'test1';
+      const command = 'echo hello';
+      const displayName = BuildStep.getDisplayName({ id, command });
+
+      const step = new BuildStep(ctx, {
+        id,
+        displayName,
+        command,
+        __metricsId: 'eas/test',
+      });
+      expect(step.__metricsId).toBe('eas/test');
+    });
+
+    it('has undefined __metricsId when not provided', () => {
+      const ctx = createGlobalContextMock();
+
+      const id = 'test1';
+      const command = 'echo hello';
+      const displayName = BuildStep.getDisplayName({ id, command });
+
+      const step = new BuildStep(ctx, {
+        id,
+        displayName,
+        command,
+      });
+      expect(step.__metricsId).toBeUndefined();
+    });
   });
 
   describe(BuildStep.prototype.executeAsync, () => {

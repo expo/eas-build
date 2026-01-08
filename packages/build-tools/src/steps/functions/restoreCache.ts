@@ -31,6 +31,7 @@ export function createRestoreCacheFunction(): BuildFunction {
     namespace: 'eas',
     id: 'restore_cache',
     name: 'Restore Cache',
+    __metricsId: 'eas/restore_cache',
     inputProviders: [
       BuildStepInput.createProvider({
         id: 'path',
