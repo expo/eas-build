@@ -1,5 +1,4 @@
 import path from 'path';
-import url from 'url';
 
 import { BuildConfigParser } from '../BuildConfigParser';
 import { BuildFunction } from '../BuildFunction';
@@ -13,8 +12,6 @@ import { BuildFunctionGroup } from '../BuildFunctionGroup';
 import { createGlobalContextMock } from './utils/context';
 import { getError, getErrorAsync } from './utils/error';
 import { UUID_REGEX } from './utils/uuid';
-
-const __dirname = url.fileURLToPath(new URL('.', import.meta.url));
 
 describe(BuildConfigParser, () => {
   describe('constructor', () => {

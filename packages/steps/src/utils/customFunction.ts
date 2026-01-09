@@ -1,6 +1,5 @@
 import path from 'path';
 
-import { createContext } from 'this-file';
 import fs from 'fs-extra';
 
 import { BuildStepFunction } from '../BuildStep';
@@ -10,9 +9,7 @@ import { SerializedBuildStepContext } from '../BuildStepContext';
 
 import { spawnAsync } from './shell/spawn';
 
-const thisFileCtx = createContext();
-
-export const SCRIPTS_PATH = path.join(thisFileCtx.dirname, '../../dist_commonjs/scripts');
+export const SCRIPTS_PATH = path.join(__dirname, '../../dist/scripts');
 
 type SerializedBuildStepInput = { serializedValue: string | undefined };
 

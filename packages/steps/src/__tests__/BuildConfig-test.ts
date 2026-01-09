@@ -1,6 +1,5 @@
 import assert from 'assert';
 import path from 'path';
-import url from 'url';
 
 import {
   BuildStepBareCommandRun,
@@ -25,8 +24,6 @@ import {
 import { BuildConfigError, BuildConfigYAMLError } from '../errors';
 
 import { getError, getErrorAsync } from './utils/error';
-
-const __dirname = url.fileURLToPath(new URL('.', import.meta.url));
 
 describe(readAndValidateBuildConfigFromPathAsync, () => {
   test('valid custom build config', async () => {
