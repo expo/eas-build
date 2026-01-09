@@ -138,7 +138,7 @@ export async function restoreCcacheAsync({
     );
   } catch (err: unknown) {
     if (
-      env.EAS_PUBLIC_CACHE === '1' &&
+      env.EAS_USE_PUBLIC_CACHE === '1' &&
       err instanceof TurtleFetchError &&
       err.response?.status === 404
     ) {
