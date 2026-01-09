@@ -137,7 +137,11 @@ export async function restoreCcacheAsync({
       `Cache restored successfully ${matchedKey === cacheKey ? '(direct hit)' : '(prefix match)'}`
     );
   } catch (err: unknown) {
-    if (err instanceof TurtleFetchError && err.response?.status === 404) {
+    if (
+      env.EAS_USE_PUBLIC_CACHE === '1' &&
+      err instanceof TurtleFetchError &&
+      err.response?.status === 404
+    ) {
       try {
         logger.info('No cache found for this key. Downloading public cache...');
         const { archivePath } = await downloadPublicCacheAsync({
