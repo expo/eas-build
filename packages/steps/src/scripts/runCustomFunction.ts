@@ -4,14 +4,14 @@ import { createLogger } from '@expo/logger';
 import { SpawnPromise, SpawnResult } from '@expo/spawn-async';
 import cloneDeep from 'lodash.clonedeep';
 
-import { BuildStepOutput } from '../BuildStepOutput.js';
+import { BuildStepOutput } from '../BuildStepOutput';
 import {
   SerializedCustomBuildFunctionArguments,
   deserializeInputs,
-} from '../utils/customFunction.js';
-import { BuildStepContext } from '../BuildStepContext.js';
-import { BuildStepFunction } from '../BuildStep.js';
-import { spawnAsync } from '../utils/shell/spawn.js';
+} from '../utils/customFunction';
+import { BuildStepContext } from '../BuildStepContext';
+import { BuildStepFunction } from '../BuildStep';
+import { spawnAsync } from '../utils/shell/spawn';
 
 async function runCustomJsFunctionAsync(): Promise<void> {
   const customJavascriptFunctionModulePath = process.argv[2];

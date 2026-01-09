@@ -1,13 +1,13 @@
 import path from 'path';
 import url from 'url';
 
-import { StepsConfigParser } from '../StepsConfigParser.js';
-import { BuildFunction } from '../BuildFunction.js';
-import { BuildConfigParser } from '../BuildConfigParser.js';
-import { BuildStep } from '../BuildStep.js';
+import { StepsConfigParser } from '../StepsConfigParser';
+import { BuildFunction } from '../BuildFunction';
+import { BuildConfigParser } from '../BuildConfigParser';
+import { BuildStep } from '../BuildStep';
 
-import { createGlobalContextMock } from './utils/context.js';
-import { UUID_REGEX } from './utils/uuid.js';
+import { createGlobalContextMock } from './utils/context';
+import { UUID_REGEX } from './utils/uuid';
 
 const __dirname = url.fileURLToPath(new URL('.', import.meta.url));
 

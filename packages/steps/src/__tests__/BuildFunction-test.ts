@@ -1,14 +1,14 @@
-import { BuildFunction } from '../BuildFunction.js';
-import { BuildStep, BuildStepFunction } from '../BuildStep.js';
+import { BuildFunction } from '../BuildFunction';
+import { BuildStep, BuildStepFunction } from '../BuildStep';
 import {
   BuildStepInput,
   BuildStepInputProvider,
   BuildStepInputValueTypeName,
-} from '../BuildStepInput.js';
-import { BuildStepOutput, BuildStepOutputProvider } from '../BuildStepOutput.js';
+} from '../BuildStepInput';
+import { BuildStepOutput, BuildStepOutputProvider } from '../BuildStepOutput';
 
-import { createGlobalContextMock } from './utils/context.js';
-import { UUID_REGEX } from './utils/uuid.js';
+import { createGlobalContextMock } from './utils/context';
+import { UUID_REGEX } from './utils/uuid';
 
 describe(BuildFunction, () => {
   describe('constructor', () => {

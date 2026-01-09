@@ -6,21 +6,17 @@ import { Env, JobInterpolationContext, StaticJobInterpolationContext } from '@ex
 import { bunyan } from '@expo/logger';
 import { v4 as uuidv4 } from 'uuid';
 
-import { StepMetricInput, StepMetricsCollection } from './StepMetrics.js';
-import { hashFiles } from './utils/hashFiles.js';
-import {
-  BuildStep,
-  BuildStepOutputAccessor,
-  SerializedBuildStepOutputAccessor,
-} from './BuildStep.js';
+import { StepMetricInput, StepMetricsCollection } from './StepMetrics';
+import { hashFiles } from './utils/hashFiles';
+import { BuildStep, BuildStepOutputAccessor, SerializedBuildStepOutputAccessor } from './BuildStep';
 import {
   getObjectValueForInterpolation,
   interpolateWithGlobalContext,
   parseOutputPath,
-} from './utils/template.js';
-import { BuildStepRuntimeError } from './errors.js';
-import { BuildRuntimePlatform } from './BuildRuntimePlatform.js';
-import { BuildStepEnv } from './BuildStepEnv.js';
+} from './utils/template';
+import { BuildStepRuntimeError } from './errors';
+import { BuildRuntimePlatform } from './BuildRuntimePlatform';
+import { BuildStepEnv } from './BuildStepEnv';
 
 interface SerializedExternalBuildContextProvider {
   projectSourceDirectory: string;
