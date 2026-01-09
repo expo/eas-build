@@ -3,12 +3,12 @@ import path from 'path';
 import { createContext } from 'this-file';
 import fs from 'fs-extra';
 
-import { BuildStepFunction } from '../BuildStep.js';
-import { BuildStepEnv } from '../BuildStepEnv.js';
-import { SerializedBuildStepOutput } from '../BuildStepOutput.js';
-import { SerializedBuildStepContext } from '../BuildStepContext.js';
+import { BuildStepFunction } from '../BuildStep';
+import { BuildStepEnv } from '../BuildStepEnv';
+import { SerializedBuildStepOutput } from '../BuildStepOutput';
+import { SerializedBuildStepContext } from '../BuildStepContext';
 
-import { spawnAsync } from './shell/spawn.js';
+import { spawnAsync } from './shell/spawn';
 
 const thisFileCtx = createContext();
 

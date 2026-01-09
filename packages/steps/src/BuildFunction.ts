@@ -1,12 +1,12 @@
 import assert from 'assert';
 
-import { BuildRuntimePlatform } from './BuildRuntimePlatform.js';
-import { BuildStep, BuildStepFunction } from './BuildStep.js';
-import { BuildStepGlobalContext } from './BuildStepContext.js';
-import { BuildStepInputProvider } from './BuildStepInput.js';
-import { BuildStepOutputProvider } from './BuildStepOutput.js';
-import { BuildStepEnv } from './BuildStepEnv.js';
-import { createCustomFunctionCall } from './utils/customFunction.js';
+import { BuildRuntimePlatform } from './BuildRuntimePlatform';
+import { BuildStep, BuildStepFunction } from './BuildStep';
+import { BuildStepGlobalContext } from './BuildStepContext';
+import { BuildStepInputProvider } from './BuildStepInput';
+import { BuildStepOutputProvider } from './BuildStepOutput';
+import { BuildStepEnv } from './BuildStepEnv';
+import { createCustomFunctionCall } from './utils/customFunction';
 
 export type BuildFunctionById = Record<string, BuildFunction>;
 export type BuildFunctionCallInputs = Record<string, unknown>;

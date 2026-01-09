@@ -21,10 +21,10 @@ import {
   mergeConfigWithImportedFunctions,
   BuildFunctions,
   readAndValidateBuildFunctionsConfigFileAsync,
-} from '../BuildConfig.js';
-import { BuildConfigError, BuildConfigYAMLError } from '../errors.js';
+} from '../BuildConfig';
+import { BuildConfigError, BuildConfigYAMLError } from '../errors';
 
-import { getError, getErrorAsync } from './utils/error.js';
+import { getError, getErrorAsync } from './utils/error';
 
 const __dirname = url.fileURLToPath(new URL('.', import.meta.url));
 

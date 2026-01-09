@@ -6,17 +6,17 @@ import { createContext } from 'this-file';
 import { v4 as uuidv4 } from 'uuid';
 import { jest } from '@jest/globals';
 
-import { BuildStepInput, BuildStepInputValueTypeName } from '../../BuildStepInput.js';
-import { BuildStepOutput } from '../../BuildStepOutput.js';
-import { createStepContextMock } from '../../__tests__/utils/context.js';
+import { BuildStepInput, BuildStepInputValueTypeName } from '../../BuildStepInput';
+import { BuildStepOutput } from '../../BuildStepOutput';
+import { createStepContextMock } from '../../__tests__/utils/context';
 import {
   cleanUpStepTemporaryDirectoriesAsync,
   getTemporaryEnvsDirPath,
   getTemporaryOutputsDirPath,
-} from '../../BuildTemporaryFiles.js';
-import { BIN_PATH } from '../../utils/shell/bin.js';
-import { createCustomFunctionCall } from '../../utils/customFunction.js';
-import { createMockLogger } from '../../__tests__/utils/logger.js';
+} from '../../BuildTemporaryFiles';
+import { BIN_PATH } from '../../utils/shell/bin';
+import { createCustomFunctionCall } from '../../utils/customFunction';
+import { createMockLogger } from '../../__tests__/utils/logger';
 
 describe('runCustomFunction', () => {
   test('can run custom function', async () => {

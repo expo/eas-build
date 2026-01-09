@@ -5,11 +5,11 @@ import path from 'path';
 import Joi from 'joi';
 import YAML from 'yaml';
 
-import { BuildConfigError, BuildWorkflowError } from './errors.js';
-import { BuildRuntimePlatform } from './BuildRuntimePlatform.js';
-import { BuildStepInputValueTypeName, BuildStepInputValueType } from './BuildStepInput.js';
-import { BuildStepEnv } from './BuildStepEnv.js';
-import { BUILD_STEP_OR_BUILD_GLOBAL_CONTEXT_REFERENCE_REGEX } from './utils/template.js';
+import { BuildConfigError, BuildWorkflowError } from './errors';
+import { BuildRuntimePlatform } from './BuildRuntimePlatform';
+import { BuildStepInputValueTypeName, BuildStepInputValueType } from './BuildStepInput';
+import { BuildStepEnv } from './BuildStepEnv';
+import { BUILD_STEP_OR_BUILD_GLOBAL_CONTEXT_REFERENCE_REGEX } from './utils/template';
 
 export type BuildFunctions = Record<string, BuildFunctionConfig>;
 

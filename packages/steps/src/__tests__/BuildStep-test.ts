@@ -5,21 +5,21 @@ import { jest } from '@jest/globals';
 import { instance, mock, verify, when } from 'ts-mockito';
 import { v4 as uuidv4 } from 'uuid';
 
-import { BuildStep, BuildStepFunction, BuildStepStatus } from '../BuildStep.js';
-import { BuildStepInput, BuildStepInputValueTypeName } from '../BuildStepInput.js';
-import { BuildStepGlobalContext, BuildStepContext } from '../BuildStepContext.js';
-import { BuildStepOutput } from '../BuildStepOutput.js';
-import { BuildStepRuntimeError } from '../errors.js';
-import { nullthrows } from '../utils/nullthrows.js';
-import { BuildRuntimePlatform } from '../BuildRuntimePlatform.js';
-import { spawnAsync } from '../utils/shell/spawn.js';
-import { BuildStepEnv } from '../BuildStepEnv.js';
-import { BuildFunction } from '../BuildFunction.js';
+import { BuildStep, BuildStepFunction, BuildStepStatus } from '../BuildStep';
+import { BuildStepInput, BuildStepInputValueTypeName } from '../BuildStepInput';
+import { BuildStepGlobalContext, BuildStepContext } from '../BuildStepContext';
+import { BuildStepOutput } from '../BuildStepOutput';
+import { BuildStepRuntimeError } from '../errors';
+import { nullthrows } from '../utils/nullthrows';
+import { BuildRuntimePlatform } from '../BuildRuntimePlatform';
+import { spawnAsync } from '../utils/shell/spawn';
+import { BuildStepEnv } from '../BuildStepEnv';
+import { BuildFunction } from '../BuildFunction';
 
-import { createGlobalContextMock } from './utils/context.js';
-import { createMockLogger } from './utils/logger.js';
-import { getError, getErrorAsync } from './utils/error.js';
-import { UUID_REGEX } from './utils/uuid.js';
+import { createGlobalContextMock } from './utils/context';
+import { createMockLogger } from './utils/logger';
+import { getError, getErrorAsync } from './utils/error';
+import { UUID_REGEX } from './utils/uuid';
 
 describe(BuildStep, () => {
   describe(BuildStep.getNewId, () => {
