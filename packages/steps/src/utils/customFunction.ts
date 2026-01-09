@@ -66,7 +66,7 @@ export function createCustomFunctionCall(rawCustomFunctionModulePath: string): B
       await spawnAsync(
         'node',
         [
-          path.join(SCRIPTS_PATH, 'runCustomFunction.cjs'),
+          path.join(SCRIPTS_PATH, 'runCustomFunction.js'),
           customFunctionModulePath,
           JSON.stringify(serializedArguments),
         ],

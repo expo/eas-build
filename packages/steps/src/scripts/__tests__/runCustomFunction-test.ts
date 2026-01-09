@@ -2,7 +2,6 @@ import path from 'path';
 import os from 'os';
 import fs from 'fs/promises';
 
-import { createContext } from 'this-file';
 import { v4 as uuidv4 } from 'uuid';
 import { jest } from '@jest/globals';
 
@@ -20,14 +19,13 @@ import { createMockLogger } from '../../__tests__/utils/logger';
 
 describe('runCustomFunction', () => {
   test('can run custom function', async () => {
-    const dirname = createContext().dirname;
     const projectSourceDirectory = path.join(os.tmpdir(), 'eas-build', uuidv4());
     await fs.mkdir(projectSourceDirectory, { recursive: true });
     const logger = createMockLogger();
     // return the same logger instance so we can expect calls on it later
     jest.spyOn(logger, 'child').mockImplementation(() => logger);
     const ctx = createStepContextMock({
-      projectTargetDirectory: path.resolve(dirname, '../../__tests__/fixtures'),
+      projectTargetDirectory: path.resolve(__dirname, '../../__tests__/fixtures'),
       projectSourceDirectory,
       logger,
     });
@@ -82,7 +80,7 @@ describe('runCustomFunction', () => {
       const currentPath = process.env.PATH;
       const newPath = currentPath ? `${BIN_PATH}:${currentPath}` : BIN_PATH;
       const fn = createCustomFunctionCall(
-        path.resolve(dirname, '../../__tests__/fixtures/my-custom-ts-function')
+        path.resolve(__dirname, '../../__tests__/fixtures/my-custom-ts-function')
       );
       const promise = fn(ctx, {
         env: {
