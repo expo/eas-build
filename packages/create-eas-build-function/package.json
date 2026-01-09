@@ -5,7 +5,7 @@
     "url": "https://github.com/expo/eas-build.git",
     "directory": "packages/create-eas-build-function"
   },
-  "version": "1.0.260",
+  "version": "1.0.262",
   "bin": {
     "create-eas-build-function": "./build/index.js"
   },
@@ -33,7 +33,7 @@
     "clean": "rimraf ./build/"
   },
   "dependencies": {
-    "@expo/steps": "1.0.260"
+    "@expo/steps": "1.0.262"
   },
   "devDependencies": {
     "@expo/package-manager": "1.7.0",
