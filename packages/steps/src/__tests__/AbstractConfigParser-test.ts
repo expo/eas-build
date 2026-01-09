@@ -1,5 +1,4 @@
 import path from 'path';
-import url from 'url';
 
 import { StepsConfigParser } from '../StepsConfigParser';
 import { BuildFunction } from '../BuildFunction';
@@ -8,8 +7,6 @@ import { BuildStep } from '../BuildStep';
 
 import { createGlobalContextMock } from './utils/context';
 import { UUID_REGEX } from './utils/uuid';
-
-const __dirname = url.fileURLToPath(new URL('.', import.meta.url));
 
 describe('Publish Update job', () => {
   it('parses job with steps and build config to the same workflow', async () => {
