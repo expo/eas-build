@@ -220,8 +220,6 @@ export async function cacheStatsAsync({
     const robotAccessToken = secrets?.robotAccessToken;
     const expoApiServerURL = env.__API_SERVER_URL;
     const buildId = env.EAS_BUILD_ID;
-    logger.info('Cache stats output', result.value.stdout);
-    logger.info('buildId', buildId);
 
     if (robotAccessToken && expoApiServerURL && buildId) {
       await sendCcacheStatsAsync({

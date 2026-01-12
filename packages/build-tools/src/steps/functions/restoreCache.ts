@@ -426,30 +426,16 @@ export async function sendCcacheStatsAsync({
       platform,
       ...stats,
     };
-    logger.info('Sending ccache stats payload:', payload);
-    const response = await turtleFetch(
-      new URL('v2/turtle-caches/stats', expoApiServerURL).toString(),
-      'POST',
-      {
-        json: payload,
-        headers: {
-          Authorization: `Bearer ${robotAccessToken}`,
-          'Content-Type': 'application/json',
-        },
-        retries: 2,
-        shouldThrowOnNotOk: true,
-      }
-    );
-    logger.info('Response from server:', response);
+    await turtleFetch(new URL('v2/turtle-caches/stats', expoApiServerURL).toString(), 'POST', {
+      json: payload,
+      headers: {
+        Authorization: `Bearer ${robotAccessToken}`,
+        'Content-Type': 'application/json',
+      },
+      retries: 2,
+      shouldThrowOnNotOk: true,
+    });
   } catch (err: any) {
-    if (err?.response) {
-      try {
-        const body = await err.response.text();
-        logger.warn('Failed to send ccache stats - response body:', body);
-      } catch {
-        // ignore
-      }
-    }
-    logger.warn('Failed to send ccache stats', err);
+    logger.warn('Failed to record ccache stats', err);
   }
 }
