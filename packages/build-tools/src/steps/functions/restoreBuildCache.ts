@@ -64,10 +64,16 @@ export function createCacheStatsBuildFunction(): BuildFunction {
     id: 'cache_stats',
     name: 'Cache Stats',
     fn: async (stepCtx, { env }) => {
+      const platform = stepCtx.global.staticContext.job.platform;
+      if (!platform) {
+        stepCtx.logger.warn('Platform not set, skipping cache stats');
+        return;
+      }
       await cacheStatsAsync({
         logger: stepCtx.logger,
         env,
         secrets: stepCtx.global.staticContext.job.secrets,
+        platform,
       });
     },
   });
@@ -175,10 +181,12 @@ export async function cacheStatsAsync({
   logger,
   env,
   secrets,
+  platform,
 }: {
   logger: bunyan;
   env: Record<string, string | undefined>;
   secrets?: { robotAccessToken?: string };
+  platform: string;
 }): Promise<void> {
   const enabled =
     env.EAS_RESTORE_CACHE === '1' || (env.EAS_USE_CACHE === '1' && env.EAS_RESTORE_CACHE !== '0');
@@ -212,6 +220,8 @@ export async function cacheStatsAsync({
     const robotAccessToken = secrets?.robotAccessToken;
     const expoApiServerURL = env.__API_SERVER_URL;
     const buildId = env.EAS_BUILD_ID;
+    logger.info('Cache stats output', result.value.stdout);
+    logger.info('buildId', buildId);
 
     if (robotAccessToken && expoApiServerURL && buildId) {
       await sendCcacheStatsAsync({
@@ -220,6 +230,7 @@ export async function cacheStatsAsync({
         robotAccessToken,
         buildId,
         statsOutput: result.value.stdout,
+        platform,
       });
     }
   }

@@ -25,6 +25,7 @@ import { turtleFetch, TurtleFetchError } from '../../utils/turtleFetch';
 import { PUBLIC_CACHE_KEY_PREFIX_BY_PLATFORM } from '../../utils/cacheKey';
 
 export interface CcacheStats {
+  cacheableCalls: number;
   cacheableCallsPercent: number;
   hitRatePercent: number;
   directHits: number;
@@ -347,6 +348,7 @@ export async function decompressCacheAsync({
 
 export function parseCcacheStats(output: string): CcacheStats {
   const stats: CcacheStats = {
+    cacheableCalls: 0,
     cacheableCallsPercent: 0,
     hitRatePercent: 0,
     directHits: 0,
@@ -358,9 +360,10 @@ export function parseCcacheStats(output: string): CcacheStats {
   };
 
   // Cacheable calls:       656 / 692 (94.80%)
-  const cacheableMatch = output.match(/Cacheable calls:\s+\d+\s*\/\s*\d+\s*\(\s*([\d.]+)%\)/);
+  const cacheableMatch = output.match(/Cacheable calls:\s+(\d+)\s*\/\s*\d+\s*\(\s*([\d.]+)%\)/);
   if (cacheableMatch) {
-    stats.cacheableCallsPercent = parseFloat(cacheableMatch[1]);
+    stats.cacheableCalls = parseInt(cacheableMatch[1], 10);
+    stats.cacheableCallsPercent = parseFloat(cacheableMatch[2]);
   }
 
   // Hits:                  0 / 656 ( 0.00%)
@@ -369,14 +372,14 @@ export function parseCcacheStats(output: string): CcacheStats {
     stats.hitRatePercent = parseFloat(hitsMatch[1]);
   }
 
-  // Direct:              0
-  const directMatch = output.match(/^\s*Direct:\s+(\d+)\s*$/m);
+  // Direct:              320 / 320 (100.0%)
+  const directMatch = output.match(/^\s*Direct:\s+(\d+)/m);
   if (directMatch) {
     stats.directHits = parseInt(directMatch[1], 10);
   }
 
-  // Preprocessed:        0
-  const preprocessedMatch = output.match(/^\s*Preprocessed:\s+(\d+)\s*$/m);
+  // Preprocessed:           0 / 320 ( 0.00%)
+  const preprocessedMatch = output.match(/^\s*Preprocessed:\s+(\d+)/m);
   if (preprocessedMatch) {
     stats.preprocessedHits = parseInt(preprocessedMatch[1], 10);
   }
@@ -406,29 +409,47 @@ export async function sendCcacheStatsAsync({
   robotAccessToken,
   buildId,
   statsOutput,
+  platform,
 }: {
   logger: bunyan;
   expoApiServerURL: string;
   robotAccessToken: string;
   buildId: string;
   statsOutput: string;
+  platform: string;
 }): Promise<void> {
   const stats = parseCcacheStats(statsOutput);
 
   try {
-    await turtleFetch(new URL('v2/turtle-caches/stats', expoApiServerURL).toString(), 'POST', {
-      json: {
-        buildId,
-        ...stats,
-      },
-      headers: {
-        Authorization: `Bearer ${robotAccessToken}`,
-        'Content-Type': 'application/json',
-      },
-      retries: 2,
-      shouldThrowOnNotOk: true,
-    });
-  } catch (err) {
-    logger.warn({ err }, 'Failed to send ccache stats');
+    const payload = {
+      buildId,
+      platform,
+      ...stats,
+    };
+    logger.info('Sending ccache stats payload:', payload);
+    const response = await turtleFetch(
+      new URL('v2/turtle-caches/stats', expoApiServerURL).toString(),
+      'POST',
+      {
+        json: payload,
+        headers: {
+          Authorization: `Bearer ${robotAccessToken}`,
+          'Content-Type': 'application/json',
+        },
+        retries: 2,
+        shouldThrowOnNotOk: true,
+      }
+    );
+    logger.info('Response from server:', response);
+  } catch (err: any) {
+    if (err?.response) {
+      try {
+        const body = await err.response.text();
+        logger.warn('Failed to send ccache stats - response body:', body);
+      } catch {
+        // ignore
+      }
+    }
+    logger.warn('Failed to send ccache stats', err);
   }
 }

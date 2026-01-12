@@ -189,6 +189,7 @@ async function buildAsync(ctx: BuildContext<Android.Job>): Promise<void> {
       logger: ctx.logger,
       env: ctx.env,
       secrets: ctx.job.secrets,
+      platform: ctx.job.platform,
     });
   });
 }
