@@ -5,10 +5,7 @@ import { SpawnPromise, SpawnResult } from '@expo/spawn-async';
 import cloneDeep from 'lodash.clonedeep';
 
 import { BuildStepOutput } from '../BuildStepOutput';
-import {
-  SerializedCustomBuildFunctionArguments,
-  deserializeInputs,
-} from '../utils/customFunction';
+import { SerializedCustomBuildFunctionArguments, deserializeInputs } from '../utils/customFunction';
 import { BuildStepContext } from '../BuildStepContext';
 import { BuildStepFunction } from '../BuildStep';
 import { spawnAsync } from '../utils/shell/spawn';

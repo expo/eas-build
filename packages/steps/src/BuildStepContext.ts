@@ -7,11 +7,7 @@ import { bunyan } from '@expo/logger';
 import { v4 as uuidv4 } from 'uuid';
 
 import { hashFiles } from './utils/hashFiles';
-import {
-  BuildStep,
-  BuildStepOutputAccessor,
-  SerializedBuildStepOutputAccessor,
-} from './BuildStep';
+import { BuildStep, BuildStepOutputAccessor, SerializedBuildStepOutputAccessor } from './BuildStep';
 import {
   getObjectValueForInterpolation,
   interpolateWithGlobalContext,
