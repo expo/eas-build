@@ -189,22 +189,26 @@ const GitHubContextZ = z.object({
         .object({
           name: z.string(),
         })
+        .passthrough()
         .optional(),
       head_commit: z
         .object({
           message: z.string(),
           id: z.string(),
         })
+        .passthrough()
         .optional(),
       pull_request: z
         .object({
           number: z.number(),
         })
+        .passthrough()
         .optional(),
       number: z.number().optional(),
       schedule: z.string().optional(),
       inputs: z.record(z.string(), z.union([z.string(), z.number(), z.boolean()])).optional(),
     })
+    .passthrough()
     .optional(),
 });
 
