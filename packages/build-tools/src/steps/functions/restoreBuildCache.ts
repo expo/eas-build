@@ -17,6 +17,7 @@ import {
 import { TurtleFetchError } from '../../utils/turtleFetch';
 
 import { downloadCacheAsync, decompressCacheAsync, downloadPublicCacheAsync } from './restoreCache';
+import { sendCcacheStatsAsync } from './ccacheStats';
 
 export function createRestoreBuildCacheFunction(): BuildFunction {
   return new BuildFunction({
@@ -59,7 +60,16 @@ export function createCacheStatsBuildFunction(): BuildFunction {
     id: 'cache_stats',
     name: 'Cache Stats',
     fn: async (stepCtx, { env }) => {
-      await cacheStatsAsync({ logger: stepCtx.logger, env });
+      const platform = stepCtx.global.staticContext.job.platform;
+      if (!platform) {
+        stepCtx.logger.warn('Platform not set, skipping cache stats');
+        return;
+      }
+      await cacheStatsAsync({
+        logger: stepCtx.logger,
+        env,
+        secrets: stepCtx.global.staticContext.job.secrets,
+      });
     },
   });
 }
@@ -169,9 +179,11 @@ export async function restoreCcacheAsync({
 export async function cacheStatsAsync({
   logger,
   env,
+  secrets,
 }: {
   logger: bunyan;
   env: Record<string, string | undefined>;
+  secrets?: { robotAccessToken?: string };
 }): Promise<void> {
   const enabled =
     env.EAS_RESTORE_CACHE === '1' || (env.EAS_USE_CACHE === '1' && env.EAS_RESTORE_CACHE !== '0');
@@ -192,7 +204,6 @@ export async function cacheStatsAsync({
     return;
   }
 
-  logger.info('Cache stats:');
   await asyncResult(
     spawnAsync('ccache', ['--show-stats', '-v'], {
       env,
@@ -200,4 +211,17 @@ export async function cacheStatsAsync({
       stdio: 'pipe',
     })
   );
+
+  const robotAccessToken = secrets?.robotAccessToken;
+  const expoApiServerURL = env.__API_SERVER_URL;
+  const buildId = env.EAS_BUILD_ID;
+
+  if (robotAccessToken && expoApiServerURL && buildId) {
+    await sendCcacheStatsAsync({
+      env,
+      expoApiServerURL,
+      robotAccessToken,
+      buildId,
+    });
+  }
 }
