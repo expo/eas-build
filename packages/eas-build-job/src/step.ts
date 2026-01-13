@@ -52,7 +52,8 @@ const CommonStepZ = z.object({
     .optional()
     .describe('Additional environment variables to set for the step.'),
   // Internal field for metrics collection. Not documented publicly.
-  __metricsId: z.string().optional(),
+  // YAML uses snake_case, but we transform to camelCase for internal use.
+  __metrics_id: z.string().optional(),
 });
 
 export const FunctionStepZ = CommonStepZ.extend({

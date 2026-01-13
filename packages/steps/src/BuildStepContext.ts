@@ -6,7 +6,7 @@ import { Env, JobInterpolationContext, StaticJobInterpolationContext } from '@ex
 import { bunyan } from '@expo/logger';
 import { v4 as uuidv4 } from 'uuid';
 
-import { StepMetric, StepMetricsCollection } from './StepMetrics.js';
+import { StepMetricInput, StepMetricsCollection } from './StepMetrics.js';
 import { hashFiles } from './utils/hashFiles.js';
 import {
   BuildStep,
@@ -192,8 +192,9 @@ export class BuildStepGlobalContext {
     return this._stepMetrics;
   }
 
-  public addStepMetric(metric: StepMetric): void {
-    this._stepMetrics.push(metric);
+  public addStepMetric(metric: StepMetricInput): void {
+    const platform = this.runtimePlatform === 'darwin' ? 'darwin' : 'linux';
+    this._stepMetrics.push({ ...metric, platform });
   }
 
   public wasCheckedOut(): boolean {

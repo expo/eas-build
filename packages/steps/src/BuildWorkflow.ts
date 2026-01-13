@@ -31,10 +31,9 @@ export class BuildWorkflow {
         this.ctx.markAsFailed();
       }
 
-      const startTime = Date.now();
-      let stepResult: StepMetricResult | 'skipped';
-
       if (shouldExecuteStep) {
+        const startTime = performance.now();
+        let stepResult: StepMetricResult;
         try {
           await step.executeAsync();
           stepResult = 'success';
@@ -42,13 +41,12 @@ export class BuildWorkflow {
           maybeError = maybeError ?? err;
           this.ctx.markAsFailed();
           stepResult = 'failed';
+        } finally {
+          this.collectStepMetrics(step, stepResult!, performance.now() - startTime);
         }
       } else {
         step.skip();
-        stepResult = 'skipped';
       }
-
-      this.collectStepMetrics(step, stepResult, Date.now() - startTime);
     }
 
     if (maybeError) {
@@ -58,20 +56,17 @@ export class BuildWorkflow {
 
   private collectStepMetrics(
     step: BuildStep,
-    result: StepMetricResult | 'skipped',
+    result: StepMetricResult,
     durationMs: number
   ): void {
-    if (result === 'skipped' || !step.__metricsId) {
+    if (!step.__metricsId) {
       return;
     }
-
-    const platform = this.ctx.runtimePlatform === 'darwin' ? 'darwin' : 'linux';
 
     this.ctx.addStepMetric({
       metricsId: step.__metricsId,
       result,
       durationMs,
-      platform,
     });
   }
 }

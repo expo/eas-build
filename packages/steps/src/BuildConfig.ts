@@ -193,8 +193,11 @@ const BuildFunctionCallSchema = Joi.object({
   if: Joi.string(),
   timeout_minutes: Joi.number().positive(),
   // Internal field for metrics collection. Not documented publicly.
+  // YAML uses __metrics_id (snake_case), renamed to __metricsId (camelCase) for internal use.
   __metricsId: Joi.string(),
-}).rename('working_directory', 'workingDirectory');
+})
+  .rename('working_directory', 'workingDirectory')
+  .rename('__metrics_id', '__metricsId');
 
 const BuildStepConfigSchema = Joi.any<BuildStepConfig>()
   .invalid(null)
