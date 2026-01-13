@@ -67,6 +67,23 @@ export async function setupAsync<TJob extends BuildJob>(ctx: BuildContext<TJob>)
     await runHookIfPresent(ctx, Hook.PRE_INSTALL);
   });
 
+  await ctx.runBuildPhase(BuildPhase.READ_EAS_JSON, async () => {
+    const projectDir = ctx.getReactNativeProjectDirectory();
+    const easJsonPath = path.join(projectDir, 'eas.json');
+    if (!fs.pathExistsSync(easJsonPath)) {
+      ctx.logger.error(`eas.json does not exist in ${projectDir}.`);
+    }
+
+    try {
+      const easJson = fs.readJSONSync(easJsonPath);
+
+      ctx.logger.info('Using eas.json:');
+      ctx.logger.info(JSON.stringify(easJson, null, 2));
+    } catch (err) {
+      ctx.logger.error({ err }, `Failed to parse or read eas.json.`);
+    }
+  });
+
   const packageJson = await ctx.runBuildPhase(BuildPhase.READ_PACKAGE_JSON, async () => {
     ctx.logger.info('Using package.json:');
     const packageJson = readPackageJson(ctx.getReactNativeProjectDirectory());
