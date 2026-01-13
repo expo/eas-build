@@ -205,7 +205,6 @@ async function buildAsync(ctx: BuildContext<Ios.Job>): Promise<void> {
       logger: ctx.logger,
       env: ctx.env,
       secrets: ctx.job.secrets,
-      platform: ctx.job.platform,
     });
   });
 }

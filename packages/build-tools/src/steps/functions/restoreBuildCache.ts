@@ -16,12 +16,8 @@ import {
 } from '../../utils/cacheKey';
 import { TurtleFetchError } from '../../utils/turtleFetch';
 
-import {
-  downloadCacheAsync,
-  decompressCacheAsync,
-  downloadPublicCacheAsync,
-  sendCcacheStatsAsync,
-} from './restoreCache';
+import { downloadCacheAsync, decompressCacheAsync, downloadPublicCacheAsync } from './restoreCache';
+import { sendCcacheStatsAsync } from './ccacheStats';
 
 export function createRestoreBuildCacheFunction(): BuildFunction {
   return new BuildFunction({
@@ -73,7 +69,6 @@ export function createCacheStatsBuildFunction(): BuildFunction {
         logger: stepCtx.logger,
         env,
         secrets: stepCtx.global.staticContext.job.secrets,
-        platform,
       });
     },
   });
@@ -181,12 +176,10 @@ export async function cacheStatsAsync({
   logger,
   env,
   secrets,
-  platform,
 }: {
   logger: bunyan;
   env: Record<string, string | undefined>;
   secrets?: { robotAccessToken?: string };
-  platform: string;
 }): Promise<void> {
   const enabled =
     env.EAS_RESTORE_CACHE === '1' || (env.EAS_USE_CACHE === '1' && env.EAS_RESTORE_CACHE !== '0');
@@ -207,11 +200,17 @@ export async function cacheStatsAsync({
     return;
   }
 
-  logger.info('Cache stats:');
-  const result = await asyncResult(
+  await asyncResult(
     spawnAsync('ccache', ['--show-stats', '-v'], {
       env,
       logger,
+      stdio: 'pipe',
+    })
+  );
+
+  const result = await asyncResult(
+    spawnAsync('ccache', ['--print-stats'], {
+      env,
       stdio: 'pipe',
     })
   );
@@ -228,7 +227,6 @@ export async function cacheStatsAsync({
         robotAccessToken,
         buildId,
         statsOutput: result.value.stdout,
-        platform,
       });
     }
   }

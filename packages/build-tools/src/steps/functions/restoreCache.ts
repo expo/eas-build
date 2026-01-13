@@ -24,18 +24,6 @@ import { getCacheVersion } from '../utils/cache';
 import { turtleFetch, TurtleFetchError } from '../../utils/turtleFetch';
 import { PUBLIC_CACHE_KEY_PREFIX_BY_PLATFORM } from '../../utils/cacheKey';
 
-export interface CcacheStats {
-  cacheableCalls: number;
-  cacheableCallsPercent: number;
-  hitRatePercent: number;
-  directHits: number;
-  preprocessedHits: number;
-  misses: number;
-  cacheSizeGiB: number;
-  cacheMaxSizeGiB: number;
-  cacheSizePercent: number;
-}
-
 const streamPipeline = promisify(stream.pipeline);
 
 export function createRestoreCacheFunction(): BuildFunction {
@@ -343,99 +331,5 @@ export async function decompressCacheAsync({
       .catch(() => false)
   ) {
     await fs.promises.rm(absoluteDir, { recursive: true, force: true });
-  }
-}
-
-export function parseCcacheStats(output: string): CcacheStats {
-  const stats: CcacheStats = {
-    cacheableCalls: 0,
-    cacheableCallsPercent: 0,
-    hitRatePercent: 0,
-    directHits: 0,
-    preprocessedHits: 0,
-    misses: 0,
-    cacheSizeGiB: 0,
-    cacheMaxSizeGiB: 0,
-    cacheSizePercent: 0,
-  };
-
-  // Cacheable calls:       656 / 692 (94.80%)
-  const cacheableMatch = output.match(/Cacheable calls:\s+(\d+)\s*\/\s*\d+\s*\(\s*([\d.]+)%\)/);
-  if (cacheableMatch) {
-    stats.cacheableCalls = parseInt(cacheableMatch[1], 10);
-    stats.cacheableCallsPercent = parseFloat(cacheableMatch[2]);
-  }
-
-  // Hits:                  0 / 656 ( 0.00%)
-  const hitsMatch = output.match(/^\s*Hits:\s+\d+\s*\/\s*\d+\s*\(\s*([\d.]+)%\)/m);
-  if (hitsMatch) {
-    stats.hitRatePercent = parseFloat(hitsMatch[1]);
-  }
-
-  // Direct:              320 / 320 (100.0%)
-  const directMatch = output.match(/^\s*Direct:\s+(\d+)/m);
-  if (directMatch) {
-    stats.directHits = parseInt(directMatch[1], 10);
-  }
-
-  // Preprocessed:           0 / 320 ( 0.00%)
-  const preprocessedMatch = output.match(/^\s*Preprocessed:\s+(\d+)/m);
-  if (preprocessedMatch) {
-    stats.preprocessedHits = parseInt(preprocessedMatch[1], 10);
-  }
-
-  // Misses:              656 / 656 (100.0%)
-  const missesMatch = output.match(/^\s*Misses:\s+(\d+)\s*\/\s*\d+/m);
-  if (missesMatch) {
-    stats.misses = parseInt(missesMatch[1], 10);
-  }
-
-  // Cache size (GiB):    0.1 / 5.0 ( 2.78%)
-  const cacheSizeMatch = output.match(
-    /Cache size \(GiB\):\s+([\d.]+)\s*\/\s*([\d.]+)\s*\(\s*([\d.]+)%\)/
-  );
-  if (cacheSizeMatch) {
-    stats.cacheSizeGiB = parseFloat(cacheSizeMatch[1]);
-    stats.cacheMaxSizeGiB = parseFloat(cacheSizeMatch[2]);
-    stats.cacheSizePercent = parseFloat(cacheSizeMatch[3]);
-  }
-
-  return stats;
-}
-
-export async function sendCcacheStatsAsync({
-  logger,
-  expoApiServerURL,
-  robotAccessToken,
-  buildId,
-  statsOutput,
-  platform,
-}: {
-  logger: bunyan;
-  expoApiServerURL: string;
-  robotAccessToken: string;
-  buildId: string;
-  statsOutput: string;
-  platform: string;
-}): Promise<void> {
-  const stats = parseCcacheStats(statsOutput);
-
-  try {
-    const payload = {
-      buildId,
-      platform,
-      ...stats,
-    };
-    await turtleFetch(new URL('v2/turtle-caches/stats', expoApiServerURL).toString(), 'POST', {
-      json: payload,
-      headers: {
-        Authorization: `Bearer ${robotAccessToken}`,
-        'Content-Type': 'application/json',
-      },
-      retries: 2,
-      shouldThrowOnNotOk: true,
-    });
-  } catch (err: any) {
-    logger.warn('Failed to record ccache stats', err);
   }
 }
