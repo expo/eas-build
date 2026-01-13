@@ -188,23 +188,20 @@ const GitHubContextZ = z.object({
     .and(
       z.object({
         label: z
-          .object({
+          .looseObject({
             name: z.string(),
           })
-          .passthrough()
           .optional(),
         head_commit: z
-          .object({
+          .looseObject({
             message: z.string(),
             id: z.string(),
           })
-          .passthrough()
           .optional(),
         pull_request: z
-          .object({
+          .looseObject({
             number: z.number(),
           })
-          .passthrough()
           .optional(),
         number: z.number().optional(),
         schedule: z.string().optional(),
