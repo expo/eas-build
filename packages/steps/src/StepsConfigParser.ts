@@ -128,6 +128,7 @@ export class StepsConfigParser extends AbstractConfigParser {
       command: step.run,
       env: step.env,
       ifCondition: step.if,
+      __metricsId: step.__metricsId,
     });
   }
 
