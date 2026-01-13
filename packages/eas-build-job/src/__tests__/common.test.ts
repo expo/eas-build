@@ -86,6 +86,14 @@ describe('GitHub context event payload passthrough', () => {
         filename: 'workflow.yml',
         url: 'https://expo.dev',
       },
+      app: {
+        id: 'app-id',
+        slug: 'app-slug',
+      },
+      account: {
+        id: 'account-id',
+        name: 'account-name',
+      },
     };
 
     const parsed = StaticWorkflowInterpolationContextZ.parse(context);
