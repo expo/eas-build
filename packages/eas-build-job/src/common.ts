@@ -184,27 +184,30 @@ const GitHubContextZ = z.object({
   repository: z.string().optional(),
   repository_owner: z.string().optional(),
   event: z
-    .object({
-      label: z
-        .object({
-          name: z.string(),
-        })
-        .optional(),
-      head_commit: z
-        .object({
-          message: z.string(),
-          id: z.string(),
-        })
-        .optional(),
-      pull_request: z
-        .object({
-          number: z.number(),
-        })
-        .optional(),
-      number: z.number().optional(),
-      schedule: z.string().optional(),
-      inputs: z.record(z.string(), z.union([z.string(), z.number(), z.boolean()])).optional(),
-    })
+    .record(z.string(), z.unknown())
+    .and(
+      z.object({
+        label: z
+          .looseObject({
+            name: z.string(),
+          })
+          .optional(),
+        head_commit: z
+          .looseObject({
+            message: z.string(),
+            id: z.string(),
+          })
+          .optional(),
+        pull_request: z
+          .looseObject({
+            number: z.number(),
+          })
+          .optional(),
+        number: z.number().optional(),
+        schedule: z.string().optional(),
+        inputs: z.record(z.string(), z.union([z.string(), z.number(), z.boolean()])).optional(),
+      })
+    )
     .optional(),
 });
 
