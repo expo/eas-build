@@ -222,7 +222,6 @@ export async function cacheStatsAsync({
 
     if (robotAccessToken && expoApiServerURL && buildId) {
       await sendCcacheStatsAsync({
-        logger,
         expoApiServerURL,
         robotAccessToken,
         buildId,

@@ -1,5 +1,3 @@
-import { bunyan } from '@expo/logger';
-
 import { turtleFetch } from '../../utils/turtleFetch';
 
 export interface CcacheStats {
@@ -78,13 +76,11 @@ function parseCcacheStats(output: string): CcacheStats | null {
 }
 
 export async function sendCcacheStatsAsync({
-  logger,
   expoApiServerURL,
   robotAccessToken,
   buildId,
   statsOutput,
 }: {
-  logger: bunyan;
   expoApiServerURL: string;
   robotAccessToken: string;
   buildId: string;
@@ -93,25 +89,20 @@ export async function sendCcacheStatsAsync({
   const stats = parseCcacheStats(statsOutput);
 
   if (!stats) {
-    logger.warn('Failed to parse ccache stats, skipping');
     return;
   }
 
-  try {
-    const payload = {
-      buildId,
-      ...stats,
-    };
-    await turtleFetch(new URL('v2/turtle-caches/stats', expoApiServerURL).toString(), 'POST', {
-      json: payload,
-      headers: {
-        Authorization: `Bearer ${robotAccessToken}`,
-        'Content-Type': 'application/json',
-      },
-      retries: 2,
-      shouldThrowOnNotOk: true,
-    });
-  } catch (err: any) {
-    logger.warn('Failed to record ccache stats', err);
-  }
+  const payload = {
+    buildId,
+    ...stats,
+  };
+  await turtleFetch(new URL('v2/turtle-caches/stats', expoApiServerURL).toString(), 'POST', {
+    json: payload,
+    headers: {
+      Authorization: `Bearer ${robotAccessToken}`,
+      'Content-Type': 'application/json',
+    },
+    retries: 2,
+    shouldThrowOnNotOk: true,
+  });
 }
