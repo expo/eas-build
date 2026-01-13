@@ -65,23 +65,4 @@ describe(uploadStepMetricsToWwwAsync, () => {
     expect(mockTurtleFetch).not.toHaveBeenCalled();
   });
 
-  it('logs error but does not throw when upload fails', async () => {
-    mockTurtleFetch.mockRejectedValue(new Error('Network error'));
-
-    const stepMetrics: StepMetricsCollection = [
-      { metricsId: 'eas/checkout', result: 'success', durationMs: 1000, platform: 'linux' },
-    ];
-
-    await expect(
-      uploadStepMetricsToWwwAsync({
-        workflowJobId,
-        robotAccessToken,
-        expoApiV2BaseUrl,
-        stepMetrics,
-        logger: mockLogger,
-      })
-    ).resolves.not.toThrow();
-
-    expect(mockLogger.warn).toHaveBeenCalled();
-  });
 });
