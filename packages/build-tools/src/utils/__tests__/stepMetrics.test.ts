@@ -64,5 +64,4 @@ describe(uploadStepMetricsToWwwAsync, () => {
 
     expect(mockTurtleFetch).not.toHaveBeenCalled();
   });
-
 });

@@ -38,9 +38,9 @@ export class BuildWorkflow {
           await step.executeAsync();
           stepResult = 'success';
         } catch (err: any) {
+          stepResult = 'failed';
           maybeError = maybeError ?? err;
           this.ctx.markAsFailed();
-          stepResult = 'failed';
         } finally {
           this.collectStepMetrics(step, stepResult!, performance.now() - startTime);
         }
