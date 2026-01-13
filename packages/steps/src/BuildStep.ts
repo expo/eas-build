@@ -6,29 +6,29 @@ import { Buffer } from 'buffer';
 import { v4 as uuidv4 } from 'uuid';
 import { JobInterpolationContext } from '@expo/eas-build-job';
 
-import { BuildStepContext, BuildStepGlobalContext } from './BuildStepContext.js';
-import { BuildStepInput, BuildStepInputById, makeBuildStepInputByIdMap } from './BuildStepInput.js';
+import { BuildStepContext, BuildStepGlobalContext } from './BuildStepContext';
+import { BuildStepInput, BuildStepInputById, makeBuildStepInputByIdMap } from './BuildStepInput';
 import {
   BuildStepOutput,
   BuildStepOutputById,
   SerializedBuildStepOutput,
   makeBuildStepOutputByIdMap,
-} from './BuildStepOutput.js';
-import { BIN_PATH } from './utils/shell/bin.js';
-import { getShellCommandAndArgs } from './utils/shell/command.js';
+} from './BuildStepOutput';
+import { BIN_PATH } from './utils/shell/bin';
+import { getShellCommandAndArgs } from './utils/shell/command';
 import {
   cleanUpStepTemporaryDirectoriesAsync,
   getTemporaryEnvsDirPath,
   getTemporaryOutputsDirPath,
   saveScriptToTemporaryFileAsync,
-} from './BuildTemporaryFiles.js';
-import { spawnAsync } from './utils/shell/spawn.js';
-import { interpolateWithInputs, interpolateWithOutputs } from './utils/template.js';
-import { BuildStepRuntimeError } from './errors.js';
-import { BuildStepEnv } from './BuildStepEnv.js';
-import { BuildRuntimePlatform } from './BuildRuntimePlatform.js';
-import { jsepEval } from './utils/jsepEval.js';
-import { interpolateJobContext } from './interpolation.js';
+} from './BuildTemporaryFiles';
+import { spawnAsync } from './utils/shell/spawn';
+import { interpolateWithInputs, interpolateWithOutputs } from './utils/template';
+import { BuildStepRuntimeError } from './errors';
+import { BuildStepEnv } from './BuildStepEnv';
+import { BuildRuntimePlatform } from './BuildRuntimePlatform';
+import { jsepEval } from './utils/jsepEval';
+import { interpolateJobContext } from './interpolation';
 
 export enum BuildStepStatus {
   NEW = 'new',

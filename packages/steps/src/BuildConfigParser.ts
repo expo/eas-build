@@ -16,23 +16,23 @@ import {
   isBuildStepBareFunctionOrFunctionGroupCall,
   isBuildStepCommandRun,
   readAndValidateBuildConfigFromPathAsync,
-} from './BuildConfig.js';
-import { BuildFunction, BuildFunctionById } from './BuildFunction.js';
-import { BuildStep } from './BuildStep.js';
+} from './BuildConfig';
+import { BuildFunction, BuildFunctionById } from './BuildFunction';
+import { BuildStep } from './BuildStep';
 import {
   BuildStepInput,
   BuildStepInputProvider,
   BuildStepInputValueTypeName,
-} from './BuildStepInput.js';
-import { BuildStepGlobalContext } from './BuildStepContext.js';
-import { BuildStepOutput, BuildStepOutputProvider } from './BuildStepOutput.js';
-import { BuildConfigError } from './errors.js';
+} from './BuildStepInput';
+import { BuildStepGlobalContext } from './BuildStepContext';
+import { BuildStepOutput, BuildStepOutputProvider } from './BuildStepOutput';
+import { BuildConfigError } from './errors';
 import {
   BuildFunctionGroup,
   BuildFunctionGroupById,
   createBuildFunctionGroupByIdMapping,
-} from './BuildFunctionGroup.js';
-import { AbstractConfigParser } from './AbstractConfigParser.js';
+} from './BuildFunctionGroup';
+import { AbstractConfigParser } from './AbstractConfigParser';
 
 export class BuildConfigParser extends AbstractConfigParser {
   private readonly configPath: string;

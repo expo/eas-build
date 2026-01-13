@@ -1,6 +1,6 @@
-import { BuildFunctionById } from './BuildFunction.js';
-import { BuildStep } from './BuildStep.js';
-import { BuildStepGlobalContext } from './BuildStepContext.js';
+import { BuildFunctionById } from './BuildFunction';
+import { BuildStep } from './BuildStep';
+import { BuildStepGlobalContext } from './BuildStepContext';
 
 export class BuildWorkflow {
   public readonly buildSteps: BuildStep[];
