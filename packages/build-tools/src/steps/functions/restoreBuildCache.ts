@@ -208,25 +208,16 @@ export async function cacheStatsAsync({
     })
   );
 
-  const result = await asyncResult(
-    spawnAsync('ccache', ['--print-stats'], {
+  const robotAccessToken = secrets?.robotAccessToken;
+  const expoApiServerURL = env.__API_SERVER_URL;
+  const buildId = env.EAS_BUILD_ID;
+
+  if (robotAccessToken && expoApiServerURL && buildId) {
+    await sendCcacheStatsAsync({
       env,
-      stdio: 'pipe',
-    })
-  );
-
-  if (result.ok) {
-    const robotAccessToken = secrets?.robotAccessToken;
-    const expoApiServerURL = env.__API_SERVER_URL;
-    const buildId = env.EAS_BUILD_ID;
-
-    if (robotAccessToken && expoApiServerURL && buildId) {
-      await sendCcacheStatsAsync({
-        expoApiServerURL,
-        robotAccessToken,
-        buildId,
-        statsOutput: result.value.stdout,
-      });
-    }
+      expoApiServerURL,
+      robotAccessToken,
+      buildId,
+    });
   }
 }

@@ -1,3 +1,6 @@
+import { spawnAsync } from '@expo/steps';
+import { asyncResult } from '@expo/results';
+
 import { turtleFetch } from '../../utils/turtleFetch';
 
 export interface CcacheStats {
@@ -76,33 +79,44 @@ function parseCcacheStats(output: string): CcacheStats | null {
 }
 
 export async function sendCcacheStatsAsync({
+  env,
   expoApiServerURL,
   robotAccessToken,
   buildId,
-  statsOutput,
 }: {
+  env: Record<string, string | undefined>;
   expoApiServerURL: string;
   robotAccessToken: string;
   buildId: string;
-  statsOutput: string;
 }): Promise<void> {
-  const stats = parseCcacheStats(statsOutput);
+  try {
+    const result = await asyncResult(
+      spawnAsync('ccache', ['--print-stats'], {
+        env,
+        stdio: 'pipe',
+      })
+    );
+    if (!result.ok) {
+      return;
+    }
+    const stats = parseCcacheStats(result.value.stdout);
 
-  if (!stats) {
-    return;
-  }
+    if (!stats) {
+      return;
+    }
 
-  const payload = {
-    buildId,
-    ...stats,
-  };
-  await turtleFetch(new URL('v2/turtle-caches/stats', expoApiServerURL).toString(), 'POST', {
-    json: payload,
-    headers: {
-      Authorization: `Bearer ${robotAccessToken}`,
-      'Content-Type': 'application/json',
-    },
-    retries: 2,
-    shouldThrowOnNotOk: true,
-  });
+    const payload = {
+      buildId,
+      ...stats,
+    };
+    await turtleFetch(new URL('v2/turtle-caches/stats', expoApiServerURL).toString(), 'POST', {
+      json: payload,
+      headers: {
+        Authorization: `Bearer ${robotAccessToken}`,
+        'Content-Type': 'application/json',
+      },
+      retries: 2,
+      shouldThrowOnNotOk: true,
+    });
+  } catch {}
 }
