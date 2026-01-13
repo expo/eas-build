@@ -227,14 +227,20 @@ export const StaticWorkflowInterpolationContextZ = z.object({
   github:
     // We need to .optional() to support jobs that are not triggered by a GitHub event.
     GitHubContextZ.optional(),
-  workflow: z
-    .object({
-      id: z.string(),
-      name: z.string(),
-      filename: z.string(),
-      url: z.string().url(),
-    })
-    .passthrough(),
+  workflow: z.looseObject({
+    id: z.string(),
+    name: z.string(),
+    filename: z.string(),
+    url: z.url(),
+  }),
+  app: z.looseObject({
+    id: z.string(),
+    slug: z.string(),
+  }),
+  account: z.looseObject({
+    id: z.string(),
+    name: z.string(),
+  }),
 });
 
 export type StaticWorkflowInterpolationContext = z.infer<
