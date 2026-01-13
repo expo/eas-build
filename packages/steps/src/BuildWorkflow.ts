@@ -54,11 +54,7 @@ export class BuildWorkflow {
     }
   }
 
-  private collectStepMetrics(
-    step: BuildStep,
-    result: StepMetricResult,
-    durationMs: number
-  ): void {
+  private collectStepMetrics(step: BuildStep, result: StepMetricResult, durationMs: number): void {
     if (!step.__metricsId) {
       return;
     }
