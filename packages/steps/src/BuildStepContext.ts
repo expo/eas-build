@@ -193,8 +193,7 @@ export class BuildStepGlobalContext {
   }
 
   public addStepMetric(metric: StepMetricInput): void {
-    const platform = this.runtimePlatform === 'darwin' ? 'darwin' : 'linux';
-    this._stepMetrics.push({ ...metric, platform });
+    this._stepMetrics.push({ ...metric, platform: this.runtimePlatform });
   }
 
   public wasCheckedOut(): boolean {

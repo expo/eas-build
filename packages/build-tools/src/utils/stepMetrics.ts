@@ -35,7 +35,7 @@ export async function uploadStepMetricsToWwwAsync({
       }
     );
     logger.info(`Uploaded ${stepMetrics.length} step metrics`);
-  } catch (err) {
-    logger.warn({ err }, 'Failed to upload step metrics');
+  } catch {
+    // Don't display unactionable error to the user, let's send it to Sentry in the future
   }
 }

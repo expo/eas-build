@@ -11,7 +11,7 @@ const mockTurtleFetch = turtleFetch as jest.MockedFunction<typeof turtleFetch>;
 describe(uploadStepMetricsToWwwAsync, () => {
   const workflowJobId = randomUUID();
   const robotAccessToken = 'test-token';
-  const expoApiV2BaseUrl = 'https://api.expo.dev/v2/';
+  const expoApiV2BaseUrl = 'http://exp.test/--/api/v2/';
 
   const mockLogger = {
     info: jest.fn(),
