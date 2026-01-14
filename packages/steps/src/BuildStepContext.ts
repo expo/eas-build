@@ -6,6 +6,7 @@ import { Env, JobInterpolationContext, StaticJobInterpolationContext } from '@ex
 import { bunyan } from '@expo/logger';
 import { v4 as uuidv4 } from 'uuid';
 
+import { StepMetricInput, StepMetricsCollection } from './StepMetrics.js';
 import { hashFiles } from './utils/hashFiles.js';
 import {
   BuildStep,
@@ -60,6 +61,7 @@ export class BuildStepGlobalContext {
   private didCheckOut = false;
   private _hasAnyPreviousStepFailed = false;
   private stepById: Record<string, BuildStepOutputAccessor> = {};
+  private readonly _stepMetrics: StepMetricsCollection = [];
 
   constructor(
     private readonly provider: ExternalBuildContextProvider,
@@ -184,6 +186,14 @@ export class BuildStepGlobalContext {
 
   public markAsFailed(): void {
     this._hasAnyPreviousStepFailed = true;
+  }
+
+  public get stepMetrics(): StepMetricsCollection {
+    return this._stepMetrics;
+  }
+
+  public addStepMetric(metric: StepMetricInput): void {
+    this._stepMetrics.push({ ...metric, platform: this.runtimePlatform });
   }
 
   public wasCheckedOut(): boolean {

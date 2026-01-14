@@ -24,6 +24,7 @@ export function createRestoreBuildCacheFunction(): BuildFunction {
     namespace: 'eas',
     id: 'restore_build_cache',
     name: 'Restore Cache',
+    __metricsId: 'eas/restore_build_cache',
     inputProviders: [
       BuildStepInput.createProvider({
         id: 'platform',
@@ -59,6 +60,7 @@ export function createCacheStatsBuildFunction(): BuildFunction {
     namespace: 'eas',
     id: 'cache_stats',
     name: 'Cache Stats',
+    __metricsId: 'eas/cache_stats',
     fn: async (stepCtx, { env }) => {
       const platform = stepCtx.global.staticContext.job.platform;
       if (!platform) {

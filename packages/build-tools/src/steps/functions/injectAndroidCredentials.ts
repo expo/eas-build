@@ -29,6 +29,7 @@ export function injectAndroidCredentialsFunction(): BuildFunction {
     namespace: 'eas',
     id: 'inject_android_credentials',
     name: 'Inject Android credentials',
+    __metricsId: 'eas/inject_android_credentials',
     inputProviders: [
       BuildStepInput.createProvider({
         id: 'credentials',

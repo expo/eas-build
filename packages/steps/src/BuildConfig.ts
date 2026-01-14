@@ -52,6 +52,8 @@ export type BuildFunctionCallConfig = {
   env?: BuildStepEnv;
   if?: string;
   timeout_minutes?: number;
+  // Internal field for metrics collection. Not documented publicly.
+  __metrics_id?: string;
 };
 
 export type BuildStepInputs = Record<string, unknown>;
@@ -190,6 +192,8 @@ const BuildFunctionCallSchema = Joi.object({
   env: Joi.object().pattern(Joi.string(), Joi.string().allow('')),
   if: Joi.string(),
   timeout_minutes: Joi.number().positive(),
+  // Internal field for metrics collection. Not documented publicly.
+  __metrics_id: Joi.string(),
 }).rename('working_directory', 'workingDirectory');
 
 const BuildStepConfigSchema = Joi.any<BuildStepConfig>()

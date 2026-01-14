@@ -124,6 +124,7 @@ export class BuildConfigParser extends AbstractConfigParser {
       env,
       if: ifCondition,
       timeout_minutes,
+      __metrics_id,
     } = run;
     const id = BuildStep.getNewId(maybeId);
     const displayName = BuildStep.getDisplayName({ id, name, command });
@@ -144,6 +145,7 @@ export class BuildConfigParser extends AbstractConfigParser {
       env,
       ifCondition,
       timeoutMs,
+      __metricsId: __metrics_id,
     });
   }
 

@@ -31,6 +31,7 @@ export function createInternalEasMaestroTestFunction(ctx: CustomBuildContext): B
   return new BuildFunction({
     namespace: 'eas',
     id: '__maestro_test',
+    __metricsId: 'eas/__maestro_test',
     inputProviders: [
       BuildStepInput.createProvider({
         allowedValueTypeName: BuildStepInputValueTypeName.STRING,
