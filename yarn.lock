@@ -771,6 +771,14 @@
     dotenv-expand "~11.0.6"
     getenv "^1.0.0"
 
+"@expo/json-file@^10.0.8":
+  version "10.0.8"
+  resolved "https://registry.yarnpkg.com/@expo/json-file/-/json-file-10.0.8.tgz#05e524d1ecc0011db0a6d66b525ea2f58cfe6d43"
+  integrity sha512-9LOTh1PgKizD1VXfGQ88LtDH0lRwq9lsTb4aichWTWSWqy3Ugfkhfm3BhzBIkJJfQQ5iJu3m/BoRlEIjoCGcnQ==
+  dependencies:
+    "@babel/code-frame" "~7.10.4"
+    json5 "^2.2.3"
+
 "@expo/json-file@^9.0.0", "@expo/json-file@~9.0.0":
   version "9.0.0"
   resolved "https://registry.yarnpkg.com/@expo/json-file/-/json-file-9.0.0.tgz#e3688c9b108cfd7e819f1354a9458ba6e93fc943"
@@ -780,23 +788,17 @@
     json5 "^2.2.3"
     write-file-atomic "^2.3.0"
 
-"@expo/package-manager@1.7.0":
-  version "1.7.0"
-  resolved "https://registry.yarnpkg.com/@expo/package-manager/-/package-manager-1.7.0.tgz#6d98090fdfa9d31ab885acb012d6615741594fd1"
-  integrity sha512-yWn5TIjd42wLHZjNtdZkvCkcxqUGxlI4YHb+bQmgm3tWZ8aBHnLhPb0rgU8+hVHCofmRvVUXfVZv8Uh+kkLXgw==
+"@expo/package-manager@1.9.10":
+  version "1.9.10"
+  resolved "https://registry.yarnpkg.com/@expo/package-manager/-/package-manager-1.9.10.tgz#5da3f4943f6fa44ddd7f0efe32a360040edd734a"
+  integrity sha512-axJm+NOj3jVxep49va/+L3KkF3YW/dkV+RwzqUJedZrv4LeTqOG4rhrCaCPXHTvLqCTDKu6j0Xyd28N7mnxsGA==
   dependencies:
-    "@expo/json-file" "^9.0.0"
+    "@expo/json-file" "^10.0.8"
     "@expo/spawn-async" "^1.7.2"
-    ansi-regex "^5.0.0"
     chalk "^4.0.0"
-    find-up "^5.0.0"
-    js-yaml "^3.13.1"
-    micromatch "^4.0.8"
     npm-package-arg "^11.0.0"
     ora "^3.4.0"
     resolve-workspace-root "^2.0.0"
-    split "^1.0.1"
-    sudo-prompt "9.1.1"
 
 "@expo/plist@^0.2.0":
   version "0.2.0"
@@ -7565,7 +7567,7 @@ merge2@^1.3.0:
   resolved "https://registry.yarnpkg.com/merge2/-/merge2-1.4.1.tgz#4368892f885e907455a6fd7dc55c0c9d404990ae"
   integrity sha512-8q7VEgMJW4J8tcfVPy8g09NcQwZdbwFEqhe/WZkoIzjn/3TGDwtOCYtXGxA3O8tPzpczCCDgv+P2P5y00ZJOOg==
 
-micromatch@^4.0.4, micromatch@^4.0.8:
+micromatch@^4.0.4:
   version "4.0.8"
   resolved "https://registry.yarnpkg.com/micromatch/-/micromatch-4.0.8.tgz#d66fa18f3a47076789320b9b1af32bd86d9fa202"
   integrity sha512-PXwfBhYu0hBCPw8Dn0E+WDYb7af3dSLVWKi3HGv84IdF4TyFoC0ysxFd0Goxw7nSv4T/PzEJQxsYsEiFCKo2BA==
@@ -10015,11 +10017,6 @@ sucrase@3.35.0:
     mz "^2.7.0"
     pirates "^4.0.1"
     ts-interface-checker "^0.1.9"
-
-sudo-prompt@9.1.1:
-  version "9.1.1"
-  resolved "https://registry.yarnpkg.com/sudo-prompt/-/sudo-prompt-9.1.1.tgz#73853d729770392caec029e2470db9c221754db0"
-  integrity sha512-es33J1g2HjMpyAhz8lOR+ICmXXAqTuKbuXuUWLhOLew20oN9oUCgCJx615U/v7aioZg7IX5lIh9x34vwneu4pA==
 
 supports-color@^5.3.0:
   version "5.5.0"
