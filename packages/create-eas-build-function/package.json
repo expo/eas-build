@@ -5,7 +5,7 @@
     "url": "https://github.com/expo/eas-build.git",
     "directory": "packages/create-eas-build-function"
   },
-  "version": "1.0.265",
+  "version": "1.0.266",
   "bin": {
     "create-eas-build-function": "./build/index.js"
   },
