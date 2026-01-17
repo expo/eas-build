@@ -1,4 +1,5 @@
 import Joi from 'joi';
+import { z } from 'zod';
 import { LoggerLevel } from '@expo/logger';
 
 import {
@@ -16,11 +17,24 @@ import {
   BuildMode,
   StaticWorkflowInterpolationContextZ,
   StaticWorkflowInterpolationContext,
+  ArchiveSourceZ,
+  EnvZ,
+  CacheZ,
+  EnvironmentSecretsZ,
+  CustomBuildConfigZ,
   CustomBuildConfigSchema,
 } from './common';
 import { Step } from './step';
 
 export type DistributionType = 'store' | 'internal' | 'simulator';
+
+const TargetCredentialsZ = z.object({
+  provisioningProfileBase64: z.string(),
+  distributionCertificate: z.object({
+    dataBase64: z.string(),
+    password: z.string(),
+  }),
+});
 
 const TargetCredentialsSchema = Joi.object().keys({
   provisioningProfileBase64: Joi.string().required(),
@@ -34,6 +48,8 @@ export interface TargetCredentials {
   provisioningProfileBase64: string;
   distributionCertificate: DistributionCertificate;
 }
+
+const BuildCredentialsZ = z.record(z.string(), TargetCredentialsZ);
 
 const BuildCredentialsSchema = Joi.object().pattern(
   Joi.string().required(),
@@ -59,6 +75,19 @@ export interface BuilderEnvironment {
   cocoapods?: string;
   env?: Env;
 }
+
+const BuilderEnvironmentZ = z.object({
+  image: z.string().optional(),
+  node: z.string().optional(),
+  corepack: z.boolean().optional(),
+  yarn: z.string().optional(),
+  pnpm: z.string().optional(),
+  bun: z.string().optional(),
+  bundler: z.string().optional(),
+  fastlane: z.string().optional(),
+  cocoapods: z.string().optional(),
+  env: EnvZ.optional(),
+});
 
 const BuilderEnvironmentSchema = Joi.object({
   image: Joi.string(),
@@ -140,6 +169,12 @@ export interface Job {
 
   environment?: string;
 }
+
+const SecretsZ = z.object({
+  buildCredentials: BuildCredentialsZ.optional(),
+  environmentSecrets: EnvironmentSecretsZ.optional(),
+  robotAccessToken: z.string().optional(),
+});
 
 const SecretsSchema = Joi.object({
   buildCredentials: BuildCredentialsSchema,
@@ -226,3 +261,103 @@ export const JobSchema = Joi.object({
     StaticWorkflowInterpolationContextZ.optional().parse(workflowInterpolationContext)
   ),
 }).concat(CustomBuildConfigSchema);
+
+export const JobZ = z
+  .object({
+    triggeredBy: z.nativeEnum(BuildTrigger).default(BuildTrigger.EAS_CLI),
+    projectArchive: ArchiveSourceZ,
+    platform: z.literal(Platform.IOS),
+    updates: z
+      .object({
+        channel: z.string().optional(),
+      })
+      .optional(),
+    builderEnvironment: BuilderEnvironmentZ.optional(),
+    cache: CacheZ.default({
+      disabled: false,
+      clear: false,
+      paths: [],
+    }),
+    developmentClient: z.boolean().optional(),
+    simulator: z.boolean().optional(),
+    version: z
+      .object({
+        buildNumber: z.string().optional(),
+      })
+      .optional(),
+    buildArtifactPaths: z.array(z.string()).optional(),
+
+    scheme: z.string().optional(),
+    buildConfiguration: z.string().optional(),
+    applicationArchivePath: z.string().optional(),
+
+    username: z.string().optional(),
+
+    experimental: z
+      .object({
+        prebuildCommand: z.string().optional(),
+      })
+      .optional(),
+    expoBuildUrl: z.string().url().optional(),
+    githubTriggerOptions: z
+      .object({
+        autoSubmit: z.boolean().default(false),
+        submitProfile: z.string().optional(),
+      })
+      .optional(),
+    loggerLevel: z.nativeEnum(LoggerLevel).optional(),
+
+    initiatingUserId: z.string(),
+    appId: z.string(),
+
+    environment: z.string().optional(),
+
+    workflowInterpolationContext: StaticWorkflowInterpolationContextZ.optional(),
+  })
+  .and(
+    z.discriminatedUnion('mode', [
+      z.object({
+        mode: z.literal(BuildMode.RESIGN),
+        type: z.nativeEnum(Workflow).optional(),
+        resign: z.object({
+          applicationArchiveSource: ArchiveSourceZ,
+        }),
+        projectRootDirectory: z.string().optional(),
+        secrets: SecretsZ.optional(),
+      }),
+      z.object({
+        mode: z.literal(BuildMode.BUILD),
+        type: z.nativeEnum(Workflow),
+        resign: z.undefined(),
+        projectRootDirectory: z.string(),
+        secrets: SecretsZ,
+      }),
+      z.object({
+        mode: z.literal(BuildMode.CUSTOM),
+        type: z.nativeEnum(Workflow),
+        resign: z.undefined(),
+        projectRootDirectory: z.string(),
+        secrets: SecretsZ.optional(),
+      }),
+      z.object({
+        mode: z.literal(BuildMode.REPACK),
+        type: z.nativeEnum(Workflow),
+        resign: z.undefined(),
+        projectRootDirectory: z.string(),
+        secrets: SecretsZ,
+      }),
+    ])
+  )
+  .and(
+    z.discriminatedUnion('triggeredBy', [
+      z.object({
+        triggeredBy: z.literal(BuildTrigger.GIT_BASED_INTEGRATION),
+        buildProfile: z.string(),
+      }),
+      z.object({
+        triggeredBy: z.literal(BuildTrigger.EAS_CLI),
+        buildProfile: z.string().optional(),
+      }),
+    ])
+  )
+  .and(CustomBuildConfigZ);

@@ -2,7 +2,7 @@ import { z } from 'zod';
 import { LoggerLevel } from '@expo/logger';
 
 import {
-  ArchiveSourceSchemaZ,
+  ArchiveSourceZ,
   BuildTrigger,
   EnvironmentSecretZ,
   StaticWorkflowInterpolationContextZ,
@@ -28,7 +28,7 @@ export namespace Generic {
 
   export type Job = z.infer<typeof JobZ>;
   export const JobZ = z.object({
-    projectArchive: ArchiveSourceSchemaZ,
+    projectArchive: ArchiveSourceZ,
     secrets: z.object({
       robotAccessToken: z.string(),
       environmentSecrets: z.array(EnvironmentSecretZ),

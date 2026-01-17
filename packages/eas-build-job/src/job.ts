@@ -1,4 +1,5 @@
 import Joi from 'joi';
+import { z } from 'zod';
 
 import { Platform } from './common';
 import * as Android from './android';
@@ -15,6 +16,11 @@ export const JobSchema = Joi.object<BuildJob>({
 })
   .when(Joi.object({ platform: Platform.ANDROID }).unknown(), { then: Android.JobSchema })
   .when(Joi.object({ platform: Platform.IOS }).unknown(), { then: Ios.JobSchema });
+
+export const JobZ = z.discriminatedUnion('platform', [
+  z.looseObject({ platform: Platform.ANDROID }).pipe(Android.JobZ),
+  z.looseObject({ platform: Platform.IOS }).pipe(Ios.JobZ),
+]);
 
 export function sanitizeBuildJob(rawJob: object): BuildJob {
   const { value, error } = JobSchema.validate(rawJob, {
