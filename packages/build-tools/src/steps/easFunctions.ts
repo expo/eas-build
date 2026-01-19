@@ -52,7 +52,7 @@ export function getEasFunctions(ctx: CustomBuildContext): BuildFunction[] {
     createRestoreCacheFunction(),
     createRestoreBuildCacheFunction(),
     createSaveCacheFunction(),
-    createSaveBuildCacheFunction(),
+    createSaveBuildCacheFunction(ctx.startTime),
     createCacheStatsBuildFunction(),
     configureEASUpdateIfInstalledFunction(),
     injectAndroidCredentialsFunction(),
