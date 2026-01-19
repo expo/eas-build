@@ -149,13 +149,14 @@ export async function restoreCcacheAsync({
       `Cache restored successfully ${matchedKey === cacheKey ? '(direct hit)' : '(prefix match)'}`
     );
   } catch (err: unknown) {
-    if (
-      env.EAS_USE_PUBLIC_CACHE === '1' &&
-      err instanceof TurtleFetchError &&
-      err.response?.status === 404
-    ) {
+    if (err instanceof TurtleFetchError && err.response?.status === 404) {
+      logger.info('No cache found for this key');
+    } else {
+      logger.warn('Failed to restore cache: ', err);
+    }
+    if (env.EAS_USE_PUBLIC_CACHE === '1') {
       try {
-        logger.info('No cache found for this key. Downloading public cache...');
+        logger.info('Downloading public cache...');
         const { archivePath } = await downloadPublicCacheAsync({
           logger,
           expoApiServerURL,
@@ -172,8 +173,6 @@ export async function restoreCcacheAsync({
       } catch (err: unknown) {
         logger.warn({ err }, 'Failed to download public cache');
       }
-    } else {
-      logger.warn({ err }, 'Failed to restore cache');
     }
   }
 }
