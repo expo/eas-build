@@ -33,6 +33,8 @@ import { createDownloadArtifactFunction } from './functions/downloadArtifact';
 import { createRestoreCacheFunction } from './functions/restoreCache';
 import { createSaveCacheFunction } from './functions/saveCache';
 import { createInternalEasMaestroTestFunction } from './functions/internalMaestroTest';
+import { createSaveBuildCacheFunction } from './functions/saveBuildCache';
+import { createRestoreBuildCacheFunction } from './functions/restoreBuildCache';
 
 export function getEasFunctions(ctx: CustomBuildContext): BuildFunction[] {
   const functions = [
@@ -44,10 +46,10 @@ export function getEasFunctions(ctx: CustomBuildContext): BuildFunction[] {
     createPrebuildBuildFunction(),
     createDownloadBuildFunction(),
     createRepackBuildFunction(),
-
     createRestoreCacheFunction(),
+    createRestoreBuildCacheFunction(),
     createSaveCacheFunction(),
-
+    createSaveBuildCacheFunction(),
     configureEASUpdateIfInstalledFunction(),
     injectAndroidCredentialsFunction(),
     configureAndroidVersionFunction(),

@@ -15,7 +15,7 @@ import { generateDefaultBuildCacheKeyAsync, getCcachePath } from '../../utils/ca
 
 import { compressCacheAsync, uploadCacheAsync } from './saveCache';
 
-export function createSaveBuildCacheFunction(evictUsedBefore: Date): BuildFunction {
+export function createSaveBuildCacheFunction(evictUsedBefore?: Date): BuildFunction {
   return new BuildFunction({
     namespace: 'eas',
     id: 'save_build_cache',
@@ -63,7 +63,7 @@ export async function saveCcacheAsync({
   logger: bunyan;
   workingDirectory: string;
   platform: Platform;
-  evictUsedBefore: Date;
+  evictUsedBefore?: Date;
   env: Record<string, string | undefined>;
   secrets?: { robotAccessToken?: string };
 }): Promise<void> {
@@ -100,15 +100,17 @@ export async function saveCcacheAsync({
 
     // Cache size can blow up over time over many builds, so evict stale files
     // and only upload what was used within this build's time window
-    const evictWindow = Math.floor((Date.now() - evictUsedBefore.getTime()) / 1000);
-    logger.info('Pruning cache...');
-    await asyncResult(
-      spawnAsync('ccache', ['--evict-older-than', evictWindow + 's'], {
-        env,
-        logger,
-        stdio: 'pipe',
-      })
-    );
+    if (evictUsedBefore) {
+      const evictWindow = Math.floor((Date.now() - evictUsedBefore.getTime()) / 1000);
+      logger.info('Pruning cache...');
+      await asyncResult(
+        spawnAsync('ccache', ['--evict-older-than', evictWindow + 's'], {
+          env,
+          logger,
+          stdio: 'pipe',
+        })
+      );
+    }
 
     logger.info('Preparing cache archive...');
 
