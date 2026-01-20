@@ -100,6 +100,7 @@ export async function saveCcacheAsync({
 
     // Cache size can blow up over time over many builds, so evict stale files
     // and only upload what was used within this build's time window
+
     const evictWindow = Math.floor((Date.now() - evictUsedBefore.getTime()) / 1000);
     logger.info('Pruning cache...');
     await asyncResult(
