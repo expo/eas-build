@@ -1,9 +1,10 @@
+import path from 'path';
+
 import { ExpoConfig } from '@expo/config';
 import { Android } from '@expo/eas-build-job';
 import spawn from '@expo/turtle-spawn';
 import { instance, mock, when } from 'ts-mockito';
 import fs from 'fs-extra';
-import path from 'path';
 
 import { BuildContext } from '../../context';
 import { PackageManager } from '../packageManager';

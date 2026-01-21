@@ -73,7 +73,7 @@ export async function setupAsync<TJob extends BuildJob>(ctx: BuildContext<TJob>)
       ctx.logger.info('Using eas.json:');
       ctx.logger.info(easJsonContents);
     } catch (err) {
-      ctx.logger.error({ err }, `Failed to parse or read eas.json.`);
+      ctx.logger.error({ err }, `Failed to read eas.json.`);
     }
   });
 

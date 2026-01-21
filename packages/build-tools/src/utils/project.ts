@@ -55,9 +55,5 @@ export function readEasJsonContents(projectDir: string): string {
     throw new Error(`eas.json does not exist in ${projectDir}.`);
   }
 
-  try {
-    return fs.readFileSync(easJsonPath, 'utf8');
-  } catch (err: any) {
-    throw new Error(`Failed to parse or read eas.json: ${err.message}`);
-  }
+  return fs.readFileSync(easJsonPath, 'utf8');
 }
