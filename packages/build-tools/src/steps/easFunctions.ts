@@ -18,6 +18,7 @@ import { configureIosVersionFunction } from './functions/configureIosVersion';
 import { generateGymfileFromTemplateFunction } from './functions/generateGymfileFromTemplate';
 import { runFastlaneFunction } from './functions/runFastlane';
 import { createStartAndroidEmulatorBuildFunction } from './functions/startAndroidEmulator';
+import { createStartCuttlefishDeviceBuildFunction } from './functions/startCuttlefishDevice';
 import { createStartIosSimulatorBuildFunction } from './functions/startIosSimulator';
 import { createInstallMaestroBuildFunction } from './functions/installMaestro';
 import { createGetCredentialsForBuildTriggeredByGithubIntegration } from './functions/getCredentialsForBuildTriggeredByGitHubIntegration';
@@ -65,6 +66,7 @@ export function getEasFunctions(ctx: CustomBuildContext): BuildFunction[] {
     generateGymfileFromTemplateFunction(),
     runFastlaneFunction(),
     createStartAndroidEmulatorBuildFunction(),
+    createStartCuttlefishDeviceBuildFunction(),
     createStartIosSimulatorBuildFunction(),
     createInstallMaestroBuildFunction(),
 
