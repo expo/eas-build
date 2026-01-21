@@ -17,7 +17,7 @@ import {
   isAtLeastNpm7Async,
   getPackageVersionFromPackageJson,
 } from '../utils/packageManager';
-import { readPackageJson } from '../utils/project';
+import { readEasJsonContents, readPackageJson } from '../utils/project';
 import { getParentAndDescendantProcessPidsAsync } from '../utils/processes';
 import { retryAsync } from '../utils/retry';
 
@@ -31,22 +31,6 @@ const INSTALL_DEPENDENCIES_KILL_TIMEOUT_MS = 30 * 60 * 1000;
 
 class DoctorTimeoutError extends Error {}
 class InstallDependenciesTimeoutError extends Error {}
-
-export function logEasJsonContents(ctx: Pick<BuildContext<BuildJob>, 'logger' | 'getReactNativeProjectDirectory'>): void {
-  const projectDir = ctx.getReactNativeProjectDirectory();
-  const easJsonPath = path.join(projectDir, 'eas.json');
-  if (!fs.pathExistsSync(easJsonPath)) {
-    ctx.logger.error(`eas.json does not exist in ${projectDir}.`);
-  }
-
-  try {
-    const easJsonContents = fs.readFileSync(easJsonPath, 'utf8');
-    ctx.logger.info('Using eas.json:');
-    ctx.logger.info(easJsonContents);
-  } catch (err) {
-    ctx.logger.error({ err }, `Failed to parse or read eas.json.`);
-  }
-}
 
 export async function setupAsync<TJob extends BuildJob>(ctx: BuildContext<TJob>): Promise<void> {
   await ctx.runBuildPhase(BuildPhase.PREPARE_PROJECT, async () => {
@@ -84,7 +68,13 @@ export async function setupAsync<TJob extends BuildJob>(ctx: BuildContext<TJob>)
   });
 
   await ctx.runBuildPhase(BuildPhase.READ_EAS_JSON, async () => {
-    logEasJsonContents(ctx);
+    try {
+      const easJsonContents = readEasJsonContents(ctx.getReactNativeProjectDirectory());
+      ctx.logger.info('Using eas.json:');
+      ctx.logger.info(easJsonContents);
+    } catch (err) {
+      ctx.logger.error({ err }, `Failed to parse or read eas.json.`);
+    }
   });
 
   const packageJson = await ctx.runBuildPhase(BuildPhase.READ_PACKAGE_JSON, async () => {

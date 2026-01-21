@@ -48,3 +48,16 @@ export function readPackageJson(projectDir: string): any {
     throw new Error(`Failed to parse or read package.json: ${err.message}`);
   }
 }
+
+export function readEasJsonContents(projectDir: string): string {
+  const easJsonPath = path.join(projectDir, 'eas.json');
+  if (!fs.pathExistsSync(easJsonPath)) {
+    throw new Error(`eas.json does not exist in ${projectDir}.`);
+  }
+
+  try {
+    return fs.readFileSync(easJsonPath, 'utf8');
+  } catch (err: any) {
+    throw new Error(`Failed to parse or read eas.json: ${err.message}`);
+  }
+}
