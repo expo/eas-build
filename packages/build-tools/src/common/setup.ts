@@ -17,7 +17,7 @@ import {
   isAtLeastNpm7Async,
   getPackageVersionFromPackageJson,
 } from '../utils/packageManager';
-import { readPackageJson } from '../utils/project';
+import { readEasJsonContents, readPackageJson } from '../utils/project';
 import { getParentAndDescendantProcessPidsAsync } from '../utils/processes';
 import { retryAsync } from '../utils/retry';
 
@@ -68,19 +68,12 @@ export async function setupAsync<TJob extends BuildJob>(ctx: BuildContext<TJob>)
   });
 
   await ctx.runBuildPhase(BuildPhase.READ_EAS_JSON, async () => {
-    const projectDir = ctx.getReactNativeProjectDirectory();
-    const easJsonPath = path.join(projectDir, 'eas.json');
-    if (!fs.pathExistsSync(easJsonPath)) {
-      ctx.logger.error(`eas.json does not exist in ${projectDir}.`);
-    }
-
     try {
-      const easJson = fs.readJSONSync(easJsonPath);
-
+      const easJsonContents = readEasJsonContents(ctx.getReactNativeProjectDirectory());
       ctx.logger.info('Using eas.json:');
-      ctx.logger.info(JSON.stringify(easJson, null, 2));
+      ctx.logger.info(easJsonContents);
     } catch (err) {
-      ctx.logger.error({ err }, `Failed to parse or read eas.json.`);
+      ctx.logger.error({ err }, `Failed to read eas.json.`);
     }
   });
 
