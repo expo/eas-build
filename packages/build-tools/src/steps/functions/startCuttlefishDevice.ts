@@ -1,4 +1,4 @@
-import { BuildFunction } from '@expo/steps';
+import { BuildFunction, BuildStepInput, BuildStepInputValueTypeName } from '@expo/steps';
 import spawn from '@expo/turtle-spawn';
 import { asyncResult } from '@expo/results';
 
@@ -10,7 +10,17 @@ export function createStartCuttlefishDeviceBuildFunction(): BuildFunction {
     id: 'start_cuttlefish_device',
     name: 'Start Cuttlefish Device',
     __metricsId: 'eas/start_cuttlefish_device',
-    fn: async ({ logger }, { env }) => {
+    inputProviders: [
+      BuildStepInput.createProvider({
+        id: 'count',
+        required: false,
+        defaultValue: 1,
+        allowedValueTypeName: BuildStepInputValueTypeName.NUMBER,
+      }),
+    ],
+    fn: async ({ logger }, { env, inputs }) => {
+      const count = Number(inputs.count ?? 1);
+
       const dependencyCheck = await asyncResult(
         Promise.all([spawn('docker', ['--version'], { env }), spawn('cvdr', ['--help'], { env })])
       );
@@ -69,7 +79,10 @@ export function createStartCuttlefishDeviceBuildFunction(): BuildFunction {
       }
 
       logger.info('Creating CVD');
-      await spawn('cvdr', ['create'], { env, logger });
+      await spawn('cvdr', ['create', ...(count > 1 ? ['--num_instances', String(count)] : [])], {
+        env,
+        logger,
+      });
 
       logger.info('Listing adb devices...');
       await spawn('adb', ['devices'], { env, logger });
