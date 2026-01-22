@@ -4,9 +4,6 @@ import { asyncResult } from '@expo/results';
 
 import { sleepAsync } from '../../utils/retry';
 
-const CVDR_READY_TIMEOUT_MS = 60_000;
-const CVDR_READY_POLL_INTERVAL_MS = 2_000;
-
 export function createStartCuttlefishDeviceBuildFunction(): BuildFunction {
   return new BuildFunction({
     namespace: 'eas',
@@ -15,10 +12,7 @@ export function createStartCuttlefishDeviceBuildFunction(): BuildFunction {
     __metricsId: 'eas/start_cuttlefish_device',
     fn: async ({ logger }, { env }) => {
       const dependencyCheck = await asyncResult(
-        Promise.all([
-          spawn('docker', ['--version'], { env, logger }),
-          spawn('cvdr', ['--help'], { env, logger }),
-        ])
+        Promise.all([spawn('docker', ['--version'], { env }), spawn('cvdr', ['--help'], { env })])
       );
       if (!dependencyCheck.ok) {
         logger.error(
@@ -29,6 +23,9 @@ export function createStartCuttlefishDeviceBuildFunction(): BuildFunction {
           'Cuttlefish device start is only supported on the latest Android worker image.'
         );
       }
+
+      logger.info('Starting adb server');
+      await spawn('adb', ['start-server'], { env, logger });
 
       logger.info('Starting Cuttlefish Orchestrator container');
 
@@ -53,16 +50,18 @@ export function createStartCuttlefishDeviceBuildFunction(): BuildFunction {
         { env, logger }
       );
 
-      const readyDeadline = Date.now() + CVDR_READY_TIMEOUT_MS;
+      // Wait a minute tops for cvdr to be ready
+      const readyDeadline = Date.now() + 60_000;
       let cvdrReady = false;
       while (Date.now() < readyDeadline) {
-        const result = await asyncResult(spawn('cvdr', ['list'], { env, logger }));
+        const result = await asyncResult(spawn('cvdr', ['list'], { env }));
         if (result.ok) {
           cvdrReady = true;
           logger.info('Cuttlefish Orchestrator is ready!');
           break;
         }
-        await sleepAsync(CVDR_READY_POLL_INTERVAL_MS);
+        // Chekc every second
+        await sleepAsync(1_000);
       }
 
       if (!cvdrReady) {
@@ -72,7 +71,7 @@ export function createStartCuttlefishDeviceBuildFunction(): BuildFunction {
       logger.info('Creating CVD');
       await spawn('cvdr', ['create'], { env, logger });
 
-      logger.info('Connecting to device...');
+      logger.info('Listing adb devices...');
       await spawn('adb', ['devices'], { env, logger });
       await spawn('adb', ['shell', 'input', 'keyevent', '82'], { env, logger });
     },
