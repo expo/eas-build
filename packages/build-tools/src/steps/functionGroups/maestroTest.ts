@@ -35,7 +35,7 @@ export function createEasMaestroTestFunctionGroup(
         required: false,
       }),
     ],
-    createBuildStepsFromFunctionGroupCall: (globalCtx, { inputs }) => {
+    createBuildStepsFromFunctionGroupCallAsync: async (globalCtx, { inputs }) => {
       const steps: BuildStep[] = [
         createInstallMaestroBuildFunction().createBuildStepFromFunctionCall(globalCtx),
       ];
@@ -45,9 +45,9 @@ export function createEasMaestroTestFunctionGroup(
           createStartIosSimulatorBuildFunction().createBuildStepFromFunctionCall(globalCtx)
         );
         const searchPath =
-          inputs.app_path.getValue({
+          (await inputs.app_path.getValueAsync({
             interpolationContext: globalCtx.getInterpolationContext(),
-          }) ?? 'ios/build/Build/Products/*simulator/*.app';
+          })) ?? 'ios/build/Build/Products/*simulator/*.app';
         steps.push(
           new BuildStep(globalCtx, {
             id: BuildStep.getNewId(),

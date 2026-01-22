@@ -14,36 +14,36 @@ export class BuildFunctionGroup {
   public readonly namespace: string;
   public readonly id: string;
   public readonly inputProviders?: BuildStepInputProvider[];
-  public readonly createBuildStepsFromFunctionGroupCall: (
+  public readonly createBuildStepsFromFunctionGroupCallAsync: (
     globalCtx: BuildStepGlobalContext,
     options?: {
       callInputs?: BuildFunctionCallInputs;
     }
-  ) => BuildStep[];
+  ) => Promise<BuildStep[]>;
 
   constructor({
     namespace,
     id,
     inputProviders,
-    createBuildStepsFromFunctionGroupCall,
+    createBuildStepsFromFunctionGroupCallAsync,
   }: {
     namespace: string;
     id: string;
     inputProviders?: BuildStepInputProvider[];
-    createBuildStepsFromFunctionGroupCall: (
+    createBuildStepsFromFunctionGroupCallAsync: (
       globalCtx: BuildStepGlobalContext,
       {
         inputs,
       }: {
         inputs: BuildStepInputById;
       }
-    ) => BuildStep[];
+    ) => Promise<BuildStep[]>;
   }) {
     this.namespace = namespace;
     this.id = id;
     this.inputProviders = inputProviders;
 
-    this.createBuildStepsFromFunctionGroupCall = (ctx, { callInputs = {} } = {}) => {
+    this.createBuildStepsFromFunctionGroupCallAsync = async (ctx, { callInputs = {} } = {}) => {
       const inputs = this.inputProviders?.map((inputProvider) => {
         const input = inputProvider(ctx, id);
         if (input.id in callInputs) {
@@ -51,7 +51,7 @@ export class BuildFunctionGroup {
         }
         return input;
       });
-      return createBuildStepsFromFunctionGroupCall(ctx, {
+      return await createBuildStepsFromFunctionGroupCallAsync(ctx, {
         inputs: makeBuildStepInputByIdMap(inputs),
       });
     };

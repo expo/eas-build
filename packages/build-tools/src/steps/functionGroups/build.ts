@@ -38,7 +38,7 @@ export function createEasBuildBuildFunctionGroup(
   return new BuildFunctionGroup({
     namespace: 'eas',
     id: 'build',
-    createBuildStepsFromFunctionGroupCall: (globalCtx) => {
+    createBuildStepsFromFunctionGroupCallAsync: async (globalCtx) => {
       if (buildToolsContext.job.platform === Platform.IOS) {
         if (buildToolsContext.job.simulator) {
           return createStepsForIosSimulatorBuild({

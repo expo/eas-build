@@ -21,7 +21,7 @@ export class BuildWorkflow {
       let shouldExecuteStep = false;
 
       try {
-        shouldExecuteStep = step.shouldExecuteStep();
+        shouldExecuteStep = await step.shouldExecuteStepAsync();
       } catch (err: any) {
         step.ctx.logger.error({ err });
         step.ctx.logger.error(
