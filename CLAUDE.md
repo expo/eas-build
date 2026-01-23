@@ -88,7 +88,7 @@ This is a Lerna-based monorepo.
 - Provides functions for custom builds
 - Integrates with GraphQL API
 
-**@expo/steps** - Custom build workflow engine (ESM module)
+**@expo/steps** - Custom build workflow engine
 
 - Framework for defining and executing custom build steps
 - Key abstractions:
