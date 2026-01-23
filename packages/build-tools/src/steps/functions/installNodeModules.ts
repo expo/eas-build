@@ -1,7 +1,6 @@
 import path from 'path';
 
-import { BuildFunction, BuildStepEnv } from '@expo/steps';
-import { BuildStepContext } from '@expo/steps/dist_esm/BuildStepContext';
+import { BuildFunction, BuildStepEnv, BuildStepContext } from '@expo/steps';
 
 import {
   findPackagerRootDir,

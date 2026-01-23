@@ -1,10 +1,10 @@
 import { instance, mock, verify, when } from 'ts-mockito';
 
-import { BuildStep } from '../BuildStep.js';
-import { BuildWorkflow } from '../BuildWorkflow.js';
-import { BuildRuntimePlatform } from '../BuildRuntimePlatform.js';
+import { BuildStep } from '../BuildStep';
+import { BuildWorkflow } from '../BuildWorkflow';
+import { BuildRuntimePlatform } from '../BuildRuntimePlatform';
 
-import { createGlobalContextMock } from './utils/context.js';
+import { createGlobalContextMock } from './utils/context';
 
 describe(BuildWorkflow, () => {
   describe(BuildWorkflow.prototype.executeAsync, () => {
