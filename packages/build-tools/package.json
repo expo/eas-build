@@ -5,7 +5,7 @@
     "url": "https://github.com/expo/eas-build.git",
     "directory": "packages/build-tools"
   },
-  "version": "1.0.270",
+  "version": "1.0.271",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "files": [
@@ -43,7 +43,7 @@
     "@expo/package-manager": "1.9.10",
     "@expo/plist": "^0.2.0",
     "@expo/results": "^1.0.0",
-    "@expo/steps": "1.0.265",
+    "@expo/steps": "1.0.271",
     "@expo/template-file": "1.0.260",
     "@expo/turtle-spawn": "1.0.260",
     "@expo/xcpretty": "^4.3.1",
