@@ -3,7 +3,7 @@ import fs from 'fs/promises';
 
 import spawn from '@expo/turtle-spawn';
 import fetch from 'node-fetch';
-import { ArchiveSourceType, Job, ArchiveSource, ArchiveSourceSchemaZ } from '@expo/eas-build-job';
+import { ArchiveSourceType, Job, ArchiveSource, ArchiveSourceZ } from '@expo/eas-build-job';
 import { bunyan } from '@expo/logger';
 import downloadFile from '@expo/downloader';
 import { z } from 'zod';
@@ -287,7 +287,7 @@ async function fetchProjectArchiveSourceAsync(ctx: BuildContext<Job>): Promise<A
     );
   }
 
-  const dataResult = z.object({ data: ArchiveSourceSchemaZ }).safeParse(jsonResult.value);
+  const dataResult = z.object({ data: ArchiveSourceZ }).safeParse(jsonResult.value);
   if (!dataResult.success) {
     throw new Error(
       `Unexpected data from server (${response.status}): ${z.prettifyError(dataResult.error)}`

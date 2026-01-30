@@ -90,7 +90,7 @@ export const ArchiveSourceSchema = Joi.object<ArchiveSource>({
     }),
   });
 
-export const ArchiveSourceSchemaZ = z.discriminatedUnion('type', [
+export const ArchiveSourceZ = z.discriminatedUnion('type', [
   z.object({
     type: z.literal(ArchiveSourceType.GIT),
     repositoryUrl: z.string().url(),
@@ -117,6 +117,7 @@ export const ArchiveSourceSchemaZ = z.discriminatedUnion('type', [
 
 export type Env = Record<string, string>;
 export const EnvSchema = Joi.object().pattern(Joi.string(), Joi.string());
+export const EnvZ = z.record(z.string(), z.string());
 
 export type EnvironmentSecret = {
   name: string;
@@ -136,6 +137,14 @@ export const EnvironmentSecretsSchema = Joi.array().items(
       .required(),
   })
 );
+export const EnvironmentSecretsZ = z.array(
+  z.object({
+    name: z.string(),
+    value: z.string(),
+    type: z.nativeEnum(EnvironmentSecretType),
+  })
+);
+
 export const EnvironmentSecretZ = z.object({
   name: z.string(),
   value: z.string(),
@@ -164,6 +173,15 @@ export const CacheSchema = Joi.object({
   cacheDefaultPaths: Joi.boolean(),
   customPaths: Joi.array().items(Joi.string()),
   paths: Joi.array().items(Joi.string()).default([]),
+});
+
+export const CacheZ = z.object({
+  disabled: z.boolean().default(false),
+  clear: z.boolean().default(false),
+  key: z.string().max(128).optional(),
+  cacheDefaultPaths: z.boolean().optional(),
+  customPaths: z.array(z.string()).optional(),
+  paths: z.array(z.string()).default([]),
 });
 
 export interface BuildPhaseStats {
@@ -295,6 +313,54 @@ export const CustomBuildConfigSchema = Joi.object().when('.mode', {
     outputs: Joi.any().strip(),
   }),
 });
+
+const CustomBuildConfigFieldsZ = z.object({
+  customBuildConfig: z
+    .object({
+      path: z.string(),
+    })
+    .optional(),
+  steps: z
+    .array(z.any())
+    .optional()
+    .refine((steps) => (steps ? validateSteps(steps) : true), 'steps validation'),
+  outputs: z.record(z.string(), z.string()).optional(),
+});
+
+const validateCustomBuildConfigRefinement = (
+  data: z.infer<typeof CustomBuildConfigFieldsZ>,
+  ctx: z.RefinementCtx
+) => {
+  if (!data.customBuildConfig?.path) {
+    if (!data.steps) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: 'steps are required when customBuildConfig.path is missing',
+        path: ['steps'],
+      });
+    }
+    if (!data.outputs) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: 'outputs are required when customBuildConfig.path is missing',
+        path: ['outputs'],
+      });
+    }
+  }
+};
+
+export const CustomBuildConfigZ = z.discriminatedUnion('mode', [
+  z.object({ mode: z.literal(BuildMode.BUILD) }),
+  z.object({ mode: z.literal(BuildMode.RESIGN) }),
+  z
+    .object({ mode: z.literal(BuildMode.CUSTOM) })
+    .merge(CustomBuildConfigFieldsZ)
+    .superRefine(validateCustomBuildConfigRefinement),
+  z
+    .object({ mode: z.literal(BuildMode.REPACK) })
+    .merge(CustomBuildConfigFieldsZ)
+    .superRefine(validateCustomBuildConfigRefinement),
+]);
 
 export enum EasCliNpmTags {
   STAGING = 'latest-eas-build-staging',
