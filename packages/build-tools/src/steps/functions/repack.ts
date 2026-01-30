@@ -78,6 +78,10 @@ export function createRepackBuildFunction(): BuildFunction {
       }
 
       const repackSpawnAsync = createSpawnAsyncStepAdapter({ verbose, logger: stepsCtx.logger });
+      const repackSpawnAsyncVerbose = createSpawnAsyncStepAdapter({
+        verbose: true,
+        logger: stepsCtx.logger,
+      });
 
       const tmpDir = await fs.promises.mkdtemp(path.join(os.tmpdir(), `repack-`));
       const workingDirectory = path.join(tmpDir, 'working-directory');
@@ -114,6 +118,7 @@ export function createRepackBuildFunction(): BuildFunction {
             }),
             logger: stepsCtx.logger,
             spawnAsync: repackSpawnAsync,
+            spawnAsyncVerbose: repackSpawnAsyncVerbose,
             verbose,
             env: {
               ...COMMON_FASTLANE_ENV,
