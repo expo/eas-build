@@ -1,3 +1,0 @@
-functions:
-  say_good_morning:
-    command: echo "Good morning!"

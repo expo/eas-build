@@ -1,7 +1,5 @@
-# @expo/logger
+# `@expo/logger`
 
-`@expo/logger` is a wrapper around `bunyan` library.
+This package has moved to the `expo/eas-cli` repository.
 
-## Repository
-
-https://github.com/expo/eas-build/tree/main/packages/logger
+https://github.com/expo/eas-cli/tree/main/packages/logger

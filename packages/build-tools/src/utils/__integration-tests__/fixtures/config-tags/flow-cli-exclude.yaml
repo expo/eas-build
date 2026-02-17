@@ -1,7 +1,0 @@
-appId: com.example.app
-name: flow-cli-exclude
-tags:
-  - cliExclude
----
-- assertTrue: true
-

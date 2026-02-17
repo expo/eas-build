@@ -1,7 +1,5 @@
-# @expo/turtle-spawn
+# `@expo/turtle-spawn`
 
-`@expo/turtle-spawn` is a wrapper around `@expo/spawn-async` library.
+This package has moved to the `expo/eas-cli` repository.
 
-## Repository
-
-https://github.com/expo/eas-build/tree/main/packages/turtle-spawn
+https://github.com/expo/eas-cli/tree/main/packages/turtle-spawn

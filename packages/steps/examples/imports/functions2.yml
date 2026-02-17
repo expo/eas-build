@@ -1,3 +1,0 @@
-functions:
-  say_hello:
-    command: echo "Hello!"

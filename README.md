@@ -1,14 +1,21 @@
-<p align="center">
-  <a href="https://expo.dev/">
-    <img alt="expo" height="128" src="assets/banner.png">
-    <h1 align="center">Expo</h1>
-  </a>
-</p>
+# eas-build (Archived)
 
-[![NPM](https://img.shields.io/npm/v/eas-cli-local-build-plugin/latest.svg)](https://npmjs.com/package/eas-cli-local-build-plugin)
-[![License](https://img.shields.io/badge/license-BSL-green.svg?style=flat)](https://github.com/expo/turtle/blob/master/LICENSE)
+This repository is a read-only archive.
 
-[![Expo Developers Discord](https://img.shields.io/badge/Expo%20Developers-e01563.svg?logo=discord)](https://discord.gg/4gtbPAdpaE)
-[![Expo Forums](https://img.shields.io/badge/Expo%20Forums-blue.svg)](https://forums.expo.dev/)
+All packages were moved and are now maintained in [`expo/eas-cli`](https://github.com/expo/eas-cli).
 
-This repository contains a set of libraries used by EAS Build service to process builds.
+Please open issues and pull requests in [`expo/eas-cli`](https://github.com/expo/eas-cli).
+
+## Package redirects
+
+| Package | New location |
+| --- | --- |
+| `@expo/build-tools` | https://github.com/expo/eas-cli/tree/main/packages/build-tools |
+| `create-eas-build-function` | https://github.com/expo/eas-cli/tree/main/packages/create-eas-build-function |
+| `@expo/downloader` | https://github.com/expo/eas-cli/tree/main/packages/downloader |
+| `@expo/eas-build-job` | https://github.com/expo/eas-cli/tree/main/packages/eas-build-job |
+| `eas-cli-local-build-plugin` | https://github.com/expo/eas-cli/tree/main/packages/local-build-plugin |
+| `@expo/logger` | https://github.com/expo/eas-cli/tree/main/packages/logger |
+| `@expo/steps` | https://github.com/expo/eas-cli/tree/main/packages/steps |
+| `@expo/template-file` | https://github.com/expo/eas-cli/tree/main/packages/template-file |
+| `@expo/turtle-spawn` | https://github.com/expo/eas-cli/tree/main/packages/turtle-spawn |

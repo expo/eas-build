@@ -1,7 +1,5 @@
-# @expo/eas-build-job
+# `@expo/eas-build-job`
 
-`@expo/eas-build-job` contains types and Joi schemas for job objects. It's used in `eas-cli` to create the job object and on EAS Build workers (and in `eas-cli-local-build-plugin`) to process the job and run the build.
+This package has moved to the `expo/eas-cli` repository.
 
-## Repository
-
-https://github.com/expo/eas-build/tree/main/packages/eas-build-job
+https://github.com/expo/eas-cli/tree/main/packages/eas-build-job
