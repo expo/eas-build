@@ -1,7 +1,0 @@
-{
-  "extends": "../../.eslintrc.json",
-  "plugins": ["async-protect"],
-  "rules": {
-    "async-protect/async-suffix": "error"
-  }
-}

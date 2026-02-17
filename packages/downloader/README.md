@@ -1,7 +1,5 @@
-# @expo/downloader
+# `@expo/downloader`
 
-`@expo/downloader` is a small helper library used to download files.
+This package has moved to the `expo/eas-cli` repository.
 
-## Repository
-
-https://github.com/expo/eas-build/tree/main/packages/downloader
+https://github.com/expo/eas-cli/tree/main/packages/downloader
