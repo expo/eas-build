@@ -1,7 +1,0 @@
-appId: com.example.app
-name: flow-inc-only
-tags:
-  - cfgInclude
----
-- assertTrue: true
-

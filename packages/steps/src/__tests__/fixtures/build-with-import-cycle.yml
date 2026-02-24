@@ -1,9 +1,0 @@
-import:
-  - functions-import-cycle.yml
-
-build:
-  name: Import!
-  steps:
-    - say_hi:
-        inputs:
-          name: Dominik
